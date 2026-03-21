@@ -7,6 +7,8 @@ const navLinks = [
   { to: "/search?type=warehouse", label: "Laopinnad" },
   { to: "/search?type=moving", label: "Kolimine" },
   { to: "/search?type=trailer", label: "Haagise rent" },
+  { to: "/how-it-works", label: "Kuidas töötab" },
+  { to: "/provider", label: "Pakkujatele" },
 ];
 
 export default function Navbar() {
@@ -24,7 +26,7 @@ export default function Navbar() {
           LaoMarket
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden items-center gap-1 lg:flex">
           {navLinks.map((l) => (
             <Link
               key={l.to}

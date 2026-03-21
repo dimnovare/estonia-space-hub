@@ -112,7 +112,9 @@ export default function HomePage() {
 
       {/* Map preview */}
       <section className="container-wide -mt-6 relative z-10">
-        <MapPlaceholder listings={ALL_LISTINGS} height="h-[280px] md:h-[350px]" />
+        <Suspense fallback={<div className="h-[350px] rounded-xl bg-secondary flex items-center justify-center text-muted-foreground">Kaart laeb...</div>}>
+          <InteractiveMap listings={ALL_LISTINGS} height="h-[280px] md:h-[350px]" />
+        </Suspense>
       </section>
 
       {/* How it works */}

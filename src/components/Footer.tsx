@@ -8,10 +8,11 @@ const footerLinks = {
     { label: "Haagise rent", to: "/search?type=trailer" },
   ],
   Ettevõte: [
-    { label: "Meist", to: "#" },
-    { label: "Kontakt", to: "#" },
-    { label: "Teenusepakkujatele", to: "#" },
-    { label: "KKK", to: "#" },
+    { label: "Meist", to: "/about" },
+    { label: "Kuidas see töötab", to: "/how-it-works" },
+    { label: "Kontakt", to: "/contact" },
+    { label: "Teenusepakkujatele", to: "/provider" },
+    { label: "KKK", to: "/faq" },
   ],
   Õiguslik: [
     { label: "Kasutustingimused", to: "#" },
