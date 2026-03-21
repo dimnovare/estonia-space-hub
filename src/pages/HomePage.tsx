@@ -1,0 +1,223 @@
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, Star, MapPin, ChevronDown, ChevronUp, Users, CheckCircle, TrendingUp, Building } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ALL_LISTINGS } from "@/data/mockData";
+import ListingCard from "@/components/ListingCard";
+import MapPlaceholder from "@/components/MapPlaceholder";
+
+const categories = [
+  { key: "all", label: "Kõik teenused", icon: Search },
+  { key: "warehouse", label: "Laopinnad", icon: Warehouse },
+  { key: "moving", label: "Kolimine", icon: Truck },
+  { key: "trailer", label: "Haagise rent", icon: CarFront },
+];
+
+const howItWorks = [
+  { icon: Search, title: "Otsi", desc: "Sisesta asukoht või teenuse tüüp ja leia parimad pakkumised." },
+  { icon: CheckCircle, title: "Võrdle", desc: "Võrdle hindu, asukohti ja tingimusi ühest kohast." },
+  { icon: ArrowRight, title: "Broneeri", desc: "Saada päring ja saa pakkumine otse teenusepakkujalt." },
+];
+
+const stats = [
+  { value: "150+", label: "Laopinda", icon: Building },
+  { value: "50+", label: "Teenusepakkujat", icon: Users },
+  { value: "4.7", label: "Keskmine hinne", icon: Star },
+  { value: "10k+", label: "Rahulolev klient", icon: TrendingUp },
+];
+
+const faqs = [
+  { q: "Kuidas LaoMarket töötab?", a: "LaoMarket koondab Eesti laopindade, kolimisteenuste ja haagiserentide pakkumised ühte kohta. Otsige, võrrelge ja saatke päring — meie edastame selle teenusepakkujale." },
+  { q: "Kas teenus on tasuta?", a: "Jah, otsing ja päringute saatmine on kasutajatele täiesti tasuta. Teenusepakkujad maksavad platvormi kasutamise eest." },
+  { q: "Kuidas saan oma laopinda lisada?", a: "Kui olete teenusepakkuja, saate liituda meie platvormiga ja lisada oma pakkumised. Võtke meiega ühendust." },
+  { q: "Kas ma saan broneeringu tühistada?", a: "Tühistamistingimused sõltuvad teenusepakkujast. Enne broneerimist näete alati tühistamistingimusi." },
+];
+
+export default function HomePage() {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set("q", searchQuery);
+    if (activeCategory !== "all") params.set("type", activeCategory);
+    navigate(`/search?${params.toString()}`);
+  };
+
+  const featured = ALL_LISTINGS.filter((l) => l.badge).slice(0, 4);
+
+  return (
+    <div>
+      {/* Hero */}
+      <section className="hero-gradient relative overflow-hidden py-20 md:py-28">
+        <div className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: "radial-gradient(circle at 30% 50%, hsl(30 90% 52% / 0.3), transparent 60%)",
+          }}
+        />
+        <div className="container-wide relative">
+          <div className="mx-auto max-w-3xl text-center">
+            <h1 className="font-display text-4xl font-bold leading-tight text-primary-foreground md:text-5xl lg:text-6xl">
+              Leia ideaalne <span className="text-gradient">laopind</span> Eestist
+            </h1>
+            <p className="mt-4 text-lg text-primary-foreground/70 md:text-xl">
+              Võrdle laopindu, kolimisteenuseid ja haagiserentide pakkumisi ühest kohast. Kiire, lihtne ja tasuta.
+            </p>
+
+            {/* Search bar */}
+            <div className="card-prominent mx-auto mt-8 max-w-2xl p-2">
+              <div className="flex gap-1 border-b border-border pb-2 mb-2 overflow-x-auto">
+                {categories.map((cat) => {
+                  const Icon = cat.icon;
+                  return (
+                    <button
+                      key={cat.key}
+                      onClick={() => setActiveCategory(cat.key)}
+                      className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                        activeCategory === cat.key
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-secondary"
+                      }`}
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                      {cat.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Sisesta aadress või linn..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                    className="w-full rounded-lg border-0 bg-secondary py-3 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                </div>
+                <Button onClick={handleSearch} className="shrink-0 bg-accent px-6 text-accent-foreground hover:bg-accent/90">
+                  <Search className="mr-2 h-4 w-4" />
+                  Otsi
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Map preview */}
+      <section className="container-wide -mt-6 relative z-10">
+        <MapPlaceholder listings={ALL_LISTINGS} height="h-[280px] md:h-[350px]" />
+      </section>
+
+      {/* How it works */}
+      <section className="container-wide py-16 md:py-20">
+        <h2 className="text-center font-display text-2xl font-bold md:text-3xl">Kuidas see töötab?</h2>
+        <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">
+          Kolm lihtsat sammu parima laopinna, kolimisteenuse või haagise leidmiseks.
+        </p>
+        <div className="mt-10 grid gap-6 md:grid-cols-3">
+          {howItWorks.map((step, i) => {
+            const Icon = step.icon;
+            return (
+              <div key={i} className="card-elevated p-6 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10">
+                  <Icon className="h-6 w-6 text-accent" />
+                </div>
+                <h3 className="mt-4 font-display text-lg font-semibold">{step.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{step.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Featured listings */}
+      <section className="surface-sunken py-16 md:py-20">
+        <div className="container-wide">
+          <div className="flex items-end justify-between">
+            <div>
+              <h2 className="font-display text-2xl font-bold md:text-3xl">Populaarsed pakkumised</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Enim otsitud ja soovitatud teenused</p>
+            </div>
+            <Link to="/search" className="hidden items-center gap-1 text-sm font-medium text-accent hover:underline md:flex">
+              Vaata kõiki <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {featured.map((l) => (
+              <ListingCard key={l.id} listing={l} />
+            ))}
+          </div>
+          <div className="mt-6 text-center md:hidden">
+            <Link to="/search">
+              <Button variant="outline">Vaata kõiki pakkumisi</Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats / Trust */}
+      <section className="container-wide py-16 md:py-20">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {stats.map((s, i) => {
+            const Icon = s.icon;
+            return (
+              <div key={i} className="flex items-center gap-4 rounded-xl border border-border p-5">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/5">
+                  <Icon className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <div className="font-display text-2xl font-bold">{s.value}</div>
+                  <div className="text-xs text-muted-foreground">{s.label}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Provider CTA */}
+      <section className="hero-gradient py-16 md:py-20">
+        <div className="container-wide text-center">
+          <h2 className="font-display text-2xl font-bold text-primary-foreground md:text-3xl">
+            Oled teenusepakkuja?
+          </h2>
+          <p className="mx-auto mt-3 max-w-lg text-sm text-primary-foreground/70">
+            Lisa oma laopind, kolimisteenus või haagiserent LaoMarket platvormile ja jõua tuhandete potentsiaalsete klientideni.
+          </p>
+          <Button className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90">
+            Liitu teenusepakkujana
+          </Button>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="container-wide py-16 md:py-20">
+        <h2 className="text-center font-display text-2xl font-bold md:text-3xl">Korduma kippuvad küsimused</h2>
+        <div className="mx-auto mt-8 max-w-2xl space-y-3">
+          {faqs.map((faq, i) => (
+            <div key={i} className="rounded-xl border border-border">
+              <button
+                onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                className="flex w-full items-center justify-between p-4 text-left text-sm font-medium"
+              >
+                {faq.q}
+                {openFaq === i ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+              </button>
+              {openFaq === i && (
+                <div className="border-t border-border px-4 pb-4 pt-2 text-sm text-muted-foreground">
+                  {faq.a}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}

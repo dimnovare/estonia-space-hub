@@ -1,0 +1,208 @@
+import { useState } from "react";
+import { useSearchParams, Link } from "react-router-dom";
+import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ALL_LISTINGS } from "@/data/mockData";
+
+const steps = ["Detailid", "Lisateenused", "Kontaktandmed", "Ülevaade"];
+
+const extras = [
+  { id: "packing", label: "Pakkimisabi", price: "15€" },
+  { id: "loading", label: "Laadimisabi", price: "20€" },
+  { id: "insurance", label: "Kindlustus", price: "10€/kuu" },
+  { id: "forklift", label: "Tõstukiteenus", price: "25€" },
+];
+
+export default function BookingPage() {
+  const [params] = useSearchParams();
+  const listingId = params.get("listing");
+  const listing = ALL_LISTINGS.find((l) => l.id === listingId);
+
+  const [step, setStep] = useState(0);
+  const [date, setDate] = useState("");
+  const [duration, setDuration] = useState("1 kuu");
+  const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [notes, setNotes] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  const toggleExtra = (id: string) =>
+    setSelectedExtras((prev) => (prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]));
+
+  if (submitted) {
+    return (
+      <div className="container-wide flex min-h-[60vh] items-center justify-center py-16">
+        <div className="mx-auto max-w-md text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
+            <CheckCircle className="h-8 w-8 text-success" />
+          </div>
+          <h1 className="mt-4 font-display text-2xl font-bold">Päring saadetud!</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Teie päring on edukalt saadetud. Teenusepakkuja võtab teiega ühendust 24 tunni jooksul.
+          </p>
+          <div className="mt-6 flex justify-center gap-3">
+            <Link to="/dashboard"><Button variant="outline">Minu päringud</Button></Link>
+            <Link to="/search"><Button className="bg-accent text-accent-foreground hover:bg-accent/90">Otsi edasi</Button></Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container-wide py-8">
+      <Link to={listing ? `/${listing.type}/${listing.id}` : "/search"} className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="h-4 w-4" /> Tagasi
+      </Link>
+
+      {/* Steps */}
+      <div className="mb-8 flex items-center gap-2">
+        {steps.map((s, i) => (
+          <div key={s} className="flex items-center gap-2">
+            <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
+              i <= step ? "bg-accent text-accent-foreground" : "bg-secondary text-muted-foreground"
+            }`}>
+              {i < step ? <Check className="h-4 w-4" /> : i + 1}
+            </div>
+            <span className={`hidden text-sm font-medium sm:inline ${i <= step ? "text-foreground" : "text-muted-foreground"}`}>{s}</span>
+            {i < steps.length - 1 && <div className="h-px w-6 bg-border sm:w-12" />}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid gap-8 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          {step === 0 && (
+            <div className="space-y-4">
+              <h2 className="font-display text-xl font-semibold">Valige detailid</h2>
+              {listing && (
+                <div className="flex items-center gap-3 rounded-xl border border-border p-3">
+                  <img src={listing.image} alt="" className="h-16 w-20 rounded-lg object-cover" />
+                  <div>
+                    <div className="text-sm font-semibold">{listing.title}</div>
+                    <div className="text-xs text-muted-foreground">{listing.city} · al. {listing.priceFrom}€</div>
+                  </div>
+                </div>
+              )}
+              <div>
+                <label className="mb-1 block text-sm font-medium">Soovitud kuupäev</label>
+                <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">Periood</label>
+                <select value={duration} onChange={(e) => setDuration(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent">
+                  <option>1 päev</option><option>1 nädal</option><option>1 kuu</option><option>3 kuud</option><option>6 kuud</option><option>12 kuud</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {step === 1 && (
+            <div className="space-y-4">
+              <h2 className="font-display text-xl font-semibold">Lisateenused</h2>
+              <p className="text-sm text-muted-foreground">Valige soovitud lisateenused (valikuline)</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {extras.map((e) => (
+                  <button
+                    key={e.id}
+                    onClick={() => toggleExtra(e.id)}
+                    className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-colors ${
+                      selectedExtras.includes(e.id) ? "border-accent bg-accent/5" : "border-border hover:border-muted-foreground"
+                    }`}
+                  >
+                    <div className={`flex h-5 w-5 items-center justify-center rounded border ${selectedExtras.includes(e.id) ? "border-accent bg-accent" : "border-border"}`}>
+                      {selectedExtras.includes(e.id) && <Check className="h-3 w-3 text-accent-foreground" />}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium">{e.label}</div>
+                      <div className="text-xs text-muted-foreground">al. {e.price}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-4">
+              <h2 className="font-display text-xl font-semibold">Kontaktandmed</h2>
+              <div>
+                <label className="mb-1 block text-sm font-medium">Nimi</label>
+                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Teie nimi" className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">E-post</label>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="teie@email.ee" className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">Telefon</label>
+                <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+372 ..." className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">Lisamärkused</label>
+                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Täiendav info..." className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="space-y-4">
+              <h2 className="font-display text-xl font-semibold">Ülevaade</h2>
+              <div className="space-y-3 rounded-xl border border-border p-4 text-sm">
+                {listing && <div className="flex justify-between"><span className="text-muted-foreground">Teenus</span><span className="font-medium">{listing.title}</span></div>}
+                <div className="flex justify-between"><span className="text-muted-foreground">Kuupäev</span><span className="font-medium">{date || "Pole valitud"}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Periood</span><span className="font-medium">{duration}</span></div>
+                {selectedExtras.length > 0 && (
+                  <div className="flex justify-between"><span className="text-muted-foreground">Lisateenused</span><span className="font-medium">{selectedExtras.map((e) => extras.find((x) => x.id === e)?.label).join(", ")}</span></div>
+                )}
+                <div className="border-t border-border pt-3">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Nimi</span><span className="font-medium">{name}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">E-post</span><span className="font-medium">{email}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Telefon</span><span className="font-medium">{phone}</span></div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Navigation */}
+          <div className="mt-8 flex justify-between">
+            {step > 0 ? (
+              <Button variant="outline" onClick={() => setStep(step - 1)}>
+                <ArrowLeft className="mr-2 h-4 w-4" /> Eelmine
+              </Button>
+            ) : <div />}
+            {step < steps.length - 1 ? (
+              <Button onClick={() => setStep(step + 1)} className="bg-accent text-accent-foreground hover:bg-accent/90">
+                Järgmine <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            ) : (
+              <Button onClick={() => setSubmitted(true)} className="bg-accent text-accent-foreground hover:bg-accent/90">
+                Saada päring <Check className="ml-2 h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Sidebar summary */}
+        <div className="hidden lg:block">
+          <div className="card-prominent sticky top-20 p-5">
+            <h3 className="text-sm font-semibold">Teie päring</h3>
+            {listing && (
+              <div className="mt-3 flex items-center gap-2">
+                <img src={listing.image} alt="" className="h-10 w-12 rounded object-cover" />
+                <div className="text-xs"><div className="font-medium">{listing.title}</div><div className="text-muted-foreground">{listing.city}</div></div>
+              </div>
+            )}
+            <div className="mt-4 space-y-1 text-xs text-muted-foreground">
+              {date && <p>Kuupäev: {date}</p>}
+              <p>Periood: {duration}</p>
+              {selectedExtras.length > 0 && <p>Lisateenused: {selectedExtras.length}</p>}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
