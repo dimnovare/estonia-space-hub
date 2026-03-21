@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Warehouse } from "lucide-react";
+import ruumlyLogo from "/ruumly-logo.png";
 
 const footerLinks = {
   Teenused: [
@@ -27,14 +27,11 @@ export default function Footer() {
       <div className="container-wide py-12">
         <div className="grid gap-8 md:grid-cols-4">
           <div>
-            <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent">
-                <Warehouse className="h-3.5 w-3.5 text-accent-foreground" />
-              </div>
-              LaoMarket
+            <Link to="/" className="inline-block">
+              <img src={ruumlyLogo} alt="Ruumly" className="h-6 brightness-0 invert" />
             </Link>
             <p className="mt-3 text-sm opacity-70">
-              Eesti suurim laopindade ja logistikateenuste platvorm. Leia, võrdle ja broneeri — kõik ühest kohast.
+              From storage to moving — all in one. Eesti suurim laopindade ja logistikateenuste platvorm.
             </p>
           </div>
           {Object.entries(footerLinks).map(([title, links]) => (
@@ -53,7 +50,7 @@ export default function Footer() {
           ))}
         </div>
         <div className="mt-10 border-t border-primary-foreground/10 pt-6 text-center text-xs opacity-50">
-          © {new Date().getFullYear()} LaoMarket. Kõik õigused kaitstud.
+          © {new Date().getFullYear()} Ruumly. Kõik õigused kaitstud.
         </div>
       </div>
     </footer>

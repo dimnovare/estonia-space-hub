@@ -1,7 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
-import { Warehouse, Menu, X, User } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import ruumlyLogo from "/ruumly-logo.png";
 
 const navLinks = [
   { to: "/search?type=warehouse", label: "Laopinnad" },
@@ -19,11 +20,8 @@ export default function Navbar() {
   return (
     <header className={`sticky top-0 z-50 border-b border-border backdrop-blur-md ${isHome ? "bg-card/80" : "bg-card/95"}`}>
       <div className="container-wide flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2.5 font-display text-xl font-bold text-foreground">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <Warehouse className="h-4 w-4 text-primary-foreground" />
-          </div>
-          LaoMarket
+        <Link to="/" className="flex items-center gap-2">
+          <img src={ruumlyLogo} alt="Ruumly" className="h-7" />
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex">
