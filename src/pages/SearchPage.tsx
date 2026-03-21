@@ -1,4 +1,4 @@
-import { useState, useMemo, lazy, Suspense } from "react";
+import { useState, useMemo, useEffect, lazy, Suspense } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SlidersHorizontal, X, ChevronDown, List, MapIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,11 @@ export default function SearchPage() {
 
   const [activeType, setActiveType] = useState<string>(initialType);
   const [sort, setSort] = useState("best");
+
+  // Sync activeType when URL param changes (e.g. clicking navbar links)
+  useEffect(() => {
+    setActiveType(initialType);
+  }, [initialType]);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<"list" | "map">("list");
@@ -287,8 +292,10 @@ export default function SearchPage() {
             {filtered.map((l) => (
               <div
                 key={l.id}
+                className={`cursor-pointer rounded-xl transition-all ${selectedListingId === l.id ? "ring-2 ring-accent" : ""}`}
                 onMouseEnter={() => setSelectedListingId(l.id)}
                 onMouseLeave={() => setSelectedListingId(null)}
+                onClick={() => setSelectedListingId(l.id)}
               >
                 <ListingCard listing={l} />
               </div>

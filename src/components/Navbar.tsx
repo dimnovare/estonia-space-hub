@@ -35,7 +35,7 @@ export default function Navbar() {
     >
       <div className="container-wide flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <img src={ruumlyLogo} alt="Ruumly" className="h-12" />
+          <img src={ruumlyLogo} alt="Ruumly" className="h-[4.5rem]" />
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex">
