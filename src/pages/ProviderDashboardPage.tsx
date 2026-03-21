@@ -329,6 +329,19 @@ function ProviderOrders() {
 }
 
 function ProviderListings() {
+  const [listings, setListings] = useState(mockListings.map(l => ({ ...l, images: ["/placeholder.svg"] })));
+  const [editId, setEditId] = useState<string | null>(null);
+
+  const handleImageUpload = (listingId: string) => {
+    // Simulate adding an uploaded image
+    const fakeUrl = `https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=300&fit=crop&t=${Date.now()}`;
+    setListings(prev => prev.map(l => l.id === listingId ? { ...l, images: [...l.images, fakeUrl] } : l));
+  };
+
+  const removeImage = (listingId: string, idx: number) => {
+    setListings(prev => prev.map(l => l.id === listingId ? { ...l, images: l.images.filter((_, i) => i !== idx) } : l));
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between">
@@ -336,23 +349,49 @@ function ProviderListings() {
         <Button className="bg-accent text-accent-foreground hover:bg-accent/90"><Plus className="mr-2 h-4 w-4" /> Lisa kuulutus</Button>
       </div>
       <div className="mt-6 space-y-3">
-        {mockListings.map((l) => (
-          <div key={l.id} className="flex items-center justify-between rounded-xl border border-border p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
-                <Warehouse className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div>
-                <div className="text-sm font-medium">{l.title}</div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <MapPin className="h-3 w-3" />{l.city} · {l.price}€/kuu · Täituvus {l.occupancy}%
+        {listings.map((l) => (
+          <div key={l.id} className="rounded-xl border border-border p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-14 w-14 rounded-lg bg-secondary overflow-hidden shrink-0">
+                  <img src={l.images[0]} alt={l.title} className="h-full w-full object-cover" />
+                </div>
+                <div>
+                  <div className="text-sm font-medium">{l.title}</div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <MapPin className="h-3 w-3" />{l.city} · {l.price}€/kuu · Täituvus {l.occupancy}%
+                  </div>
                 </div>
               </div>
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">{l.status}</span>
+                <Button variant="outline" size="sm" onClick={() => setEditId(editId === l.id ? null : l.id)}>
+                  <Image className="h-3.5 w-3.5 mr-1" /> Pildid
+                </Button>
+                <Button variant="outline" size="sm"><Edit className="h-3.5 w-3.5" /></Button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">{l.status}</span>
-              <Button variant="outline" size="sm"><Edit className="h-3.5 w-3.5" /></Button>
-            </div>
+
+            {editId === l.id && (
+              <div className="mt-4 border-t border-border pt-4">
+                <p className="text-xs font-semibold text-muted-foreground mb-2">Kuulutuse pildid</p>
+                <div className="flex flex-wrap gap-3">
+                  {l.images.map((img, idx) => (
+                    <div key={idx} className="group relative h-20 w-28 rounded-lg overflow-hidden border border-border">
+                      <img src={img} alt="" className="h-full w-full object-cover" />
+                      <button onClick={() => removeImage(l.id, idx)} className="absolute top-1 right-1 rounded-full bg-destructive/90 p-0.5 text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <button onClick={() => handleImageUpload(l.id)} className="flex h-20 w-28 flex-col items-center justify-center rounded-lg border-2 border-dashed border-border text-muted-foreground hover:border-accent hover:text-accent transition-colors">
+                    <Upload className="h-5 w-5" />
+                    <span className="text-[10px] mt-1">Lisa pilt</span>
+                  </button>
+                </div>
+                <p className="mt-2 text-[10px] text-muted-foreground">Esimene pilt kuvatakse otsingutulemuste kaardil ja kaardil.</p>
+              </div>
+            )}
           </div>
         ))}
       </div>
