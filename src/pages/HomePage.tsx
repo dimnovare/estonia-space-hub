@@ -36,10 +36,10 @@ export default function HomePage() {
   ];
 
   const faqs = [
-    { q: "Kuidas Ruumly töötab?", a: "Ruumly koondab Eesti laopindade, kolimisteenuste ja haagiserentide pakkumised ühte kohta. Otsige, võrrelge ja broneerige — meie kaudu on alati soodsam." },
-    { q: "Kas teenus on tasuta?", a: "Jah, otsing ja broneerimine on kasutajatele täiesti tasuta. Meie kaudu on hind isegi soodsam kui otse pakkuja juures." },
-    { q: "Kuidas saan oma laopinda lisada?", a: "Kui olete teenusepakkuja, saate liituda meie platvormiga ja lisada oma pakkumised. Võtke meiega ühendust." },
-    { q: "Kas ma saan broneeringu tühistada?", a: "Tühistamistingimused sõltuvad teenusepakkujast. Enne broneerimist näete alati tühistamistingimusi." },
+    { q: t("homeFaq.q1"), a: t("homeFaq.a1") },
+    { q: t("homeFaq.q2"), a: t("homeFaq.a2") },
+    { q: t("homeFaq.q3"), a: t("homeFaq.a3") },
+    { q: t("homeFaq.q4"), a: t("homeFaq.a4") },
   ];
 
   const handleSearch = () => {
