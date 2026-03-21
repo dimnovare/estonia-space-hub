@@ -1,22 +1,25 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
-  LayoutDashboard, List, Package, Calendar, Star, Settings, Users, CreditCard,
+  LayoutDashboard, List, Package, Calendar as CalendarIcon, Star, Settings, Users, CreditCard,
   TrendingUp, Eye, DollarSign, MapPin, Warehouse, Truck, CarFront, Edit, Plus,
-  ChevronRight, Clock, CheckCircle, BarChart3, Inbox, Check, X, Mail, Zap, Hand
+  ChevronRight, Clock, CheckCircle, BarChart3, Inbox, Check, X, Mail, Zap, Hand,
+  Image, Upload, Trash2, UserPlus, ChevronLeft
 } from "lucide-react";
 import { MOCK_ORDERS, ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG, type Order } from "@/data/mockOrders";
 import EmailTemplatePreview from "@/components/EmailTemplatePreview";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
+import { Calendar } from "@/components/ui/calendar";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 
 const sidebarLinks = [
   { id: "overview", label: "Ülevaade", icon: LayoutDashboard },
   { id: "orders", label: "Sissetulevad tellimused", icon: Inbox },
   { id: "listings", label: "Minu kuulutused", icon: List },
   { id: "bookings", label: "Broneeringud", icon: Package },
-  { id: "calendar", label: "Kalender", icon: Calendar },
+  { id: "calendar", label: "Kalender", icon: CalendarIcon },
   { id: "reviews", label: "Hinnangud", icon: Star },
   { id: "analytics", label: "Analüütika", icon: BarChart3 },
   { id: "profile", label: "Ettevõtte profiil", icon: Settings },
@@ -326,6 +329,19 @@ function ProviderOrders() {
 }
 
 function ProviderListings() {
+  const [listings, setListings] = useState(mockListings.map(l => ({ ...l, images: ["/placeholder.svg"] })));
+  const [editId, setEditId] = useState<string | null>(null);
+
+  const handleImageUpload = (listingId: string) => {
+    // Simulate adding an uploaded image
+    const fakeUrl = `https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=300&fit=crop&t=${Date.now()}`;
+    setListings(prev => prev.map(l => l.id === listingId ? { ...l, images: [...l.images, fakeUrl] } : l));
+  };
+
+  const removeImage = (listingId: string, idx: number) => {
+    setListings(prev => prev.map(l => l.id === listingId ? { ...l, images: l.images.filter((_, i) => i !== idx) } : l));
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between">
@@ -333,23 +349,49 @@ function ProviderListings() {
         <Button className="bg-accent text-accent-foreground hover:bg-accent/90"><Plus className="mr-2 h-4 w-4" /> Lisa kuulutus</Button>
       </div>
       <div className="mt-6 space-y-3">
-        {mockListings.map((l) => (
-          <div key={l.id} className="flex items-center justify-between rounded-xl border border-border p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
-                <Warehouse className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div>
-                <div className="text-sm font-medium">{l.title}</div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <MapPin className="h-3 w-3" />{l.city} · {l.price}€/kuu · Täituvus {l.occupancy}%
+        {listings.map((l) => (
+          <div key={l.id} className="rounded-xl border border-border p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-14 w-14 rounded-lg bg-secondary overflow-hidden shrink-0">
+                  <img src={l.images[0]} alt={l.title} className="h-full w-full object-cover" />
+                </div>
+                <div>
+                  <div className="text-sm font-medium">{l.title}</div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <MapPin className="h-3 w-3" />{l.city} · {l.price}€/kuu · Täituvus {l.occupancy}%
+                  </div>
                 </div>
               </div>
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">{l.status}</span>
+                <Button variant="outline" size="sm" onClick={() => setEditId(editId === l.id ? null : l.id)}>
+                  <Image className="h-3.5 w-3.5 mr-1" /> Pildid
+                </Button>
+                <Button variant="outline" size="sm"><Edit className="h-3.5 w-3.5" /></Button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">{l.status}</span>
-              <Button variant="outline" size="sm"><Edit className="h-3.5 w-3.5" /></Button>
-            </div>
+
+            {editId === l.id && (
+              <div className="mt-4 border-t border-border pt-4">
+                <p className="text-xs font-semibold text-muted-foreground mb-2">Kuulutuse pildid</p>
+                <div className="flex flex-wrap gap-3">
+                  {l.images.map((img, idx) => (
+                    <div key={idx} className="group relative h-20 w-28 rounded-lg overflow-hidden border border-border">
+                      <img src={img} alt="" className="h-full w-full object-cover" />
+                      <button onClick={() => removeImage(l.id, idx)} className="absolute top-1 right-1 rounded-full bg-destructive/90 p-0.5 text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <button onClick={() => handleImageUpload(l.id)} className="flex h-20 w-28 flex-col items-center justify-center rounded-lg border-2 border-dashed border-border text-muted-foreground hover:border-accent hover:text-accent transition-colors">
+                    <Upload className="h-5 w-5" />
+                    <span className="text-[10px] mt-1">Lisa pilt</span>
+                  </button>
+                </div>
+                <p className="mt-2 text-[10px] text-muted-foreground">Esimene pilt kuvatakse otsingutulemuste kaardil ja kaardil.</p>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -396,13 +438,77 @@ function ProviderBookings() {
 }
 
 function ProviderCalendar() {
+  const [date, setDate] = useState<Date | undefined>(new Date());
+
+  const bookingDates = [
+    new Date(2026, 3, 1), new Date(2026, 3, 2), new Date(2026, 3, 3),
+    new Date(2026, 2, 25), new Date(2026, 2, 15), new Date(2026, 2, 10),
+    new Date(2026, 2, 11), new Date(2026, 2, 12),
+  ];
+
+  const selectedBookings = mockProviderBookings.filter(b => {
+    if (!date) return false;
+    const bd = new Date(b.date);
+    return bd.toDateString() === date.toDateString();
+  });
+
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">Kalender</h1>
-      <div className="mt-6 flex flex-col items-center py-16 text-center">
-        <Calendar className="h-12 w-12 text-muted-foreground/30" />
-        <p className="mt-3 text-sm font-medium">Kalendrivaade tuleb peagi</p>
-        <p className="mt-1 text-xs text-muted-foreground">Siit saate hallata saadavust ja broneeringuid kalendrivaates.</p>
+      <p className="mt-1 text-sm text-muted-foreground">Vaadake broneeringuid kalendrivaates.</p>
+      <div className="mt-6 grid gap-6 lg:grid-cols-[auto_1fr]">
+        <div className="card-elevated p-4">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={setDate}
+            className="pointer-events-auto"
+            modifiers={{ booked: bookingDates }}
+            modifiersClassNames={{ booked: "bg-accent/20 text-accent font-bold" }}
+          />
+          <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground px-1">
+            <span className="h-3 w-3 rounded-sm bg-accent/20" /> Broneeritud kuupäev
+          </div>
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold">
+            {date ? date.toLocaleDateString("et-EE", { day: "numeric", month: "long", year: "numeric" }) : "Valige kuupäev"}
+          </h3>
+          {selectedBookings.length > 0 ? (
+            <div className="mt-3 space-y-2">
+              {selectedBookings.map(b => (
+                <div key={b.id} className="flex items-center justify-between rounded-xl border border-border p-4">
+                  <div>
+                    <p className="text-sm font-medium">{b.client}</p>
+                    <p className="text-xs text-muted-foreground">{b.listing} · {b.duration}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${b.status === "confirmed" ? "bg-success/10 text-success" : b.status === "pending" ? "bg-warning/10 text-warning" : "bg-accent/10 text-accent"}`}>
+                      {b.status === "confirmed" ? "Kinnitatud" : b.status === "pending" ? "Ootel" : "Aktiivne"}
+                    </span>
+                    <span className="text-sm font-semibold">€{b.total}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-muted-foreground">Sellel kuupäeval broneeringuid pole.</p>
+          )}
+          <div className="mt-6">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Lähiaja broneeringud</h4>
+            <div className="space-y-2">
+              {mockProviderBookings.map(b => (
+                <div key={b.id} className="flex items-center justify-between rounded-lg border border-border p-3 text-sm">
+                  <div>
+                    <span className="font-medium">{b.client}</span>
+                    <span className="text-muted-foreground"> · {b.listing}</span>
+                  </div>
+                  <span className="text-muted-foreground">{b.date}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -439,6 +545,23 @@ function ProviderReviews() {
 }
 
 function ProviderAnalytics() {
+  const viewsData = [
+    { month: "Okt", views: 120, bookings: 3 },
+    { month: "Nov", views: 180, bookings: 5 },
+    { month: "Dets", views: 210, bookings: 7 },
+    { month: "Jaan", views: 260, bookings: 6 },
+    { month: "Veebr", views: 310, bookings: 9 },
+    { month: "Märts", views: 390, bookings: 12 },
+  ];
+  const revenueData = [
+    { month: "Okt", revenue: 340 },
+    { month: "Nov", revenue: 580 },
+    { month: "Dets", revenue: 720 },
+    { month: "Jaan", revenue: 890 },
+    { month: "Veebr", revenue: 1050 },
+    { month: "Märts", revenue: 1240 },
+  ];
+
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">Analüütika</h1>
@@ -459,10 +582,32 @@ function ProviderAnalytics() {
           <div className="mt-1 text-xs text-muted-foreground">Stabiilne</div>
         </div>
       </div>
-      <div className="mt-6 rounded-xl border border-border p-8 flex items-center justify-center">
-        <div className="text-center">
-          <BarChart3 className="mx-auto h-12 w-12 text-muted-foreground/30" />
-          <p className="mt-3 text-sm text-muted-foreground">Detailne analüütika tuleb peagi</p>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <div className="card-elevated p-5">
+          <h3 className="text-sm font-semibold mb-4">Vaatamised ja broneeringud</h3>
+          <ResponsiveContainer width="100%" height={240}>
+            <AreaChart data={viewsData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+              <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+              <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+              <Area type="monotone" dataKey="views" stroke="hsl(var(--primary))" fill="hsl(var(--primary) / 0.1)" name="Vaatamised" />
+              <Area type="monotone" dataKey="bookings" stroke="hsl(var(--accent))" fill="hsl(var(--accent) / 0.1)" name="Broneeringud" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="card-elevated p-5">
+          <h3 className="text-sm font-semibold mb-4">Tulu (€)</h3>
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={revenueData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+              <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+              <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+              <Bar dataKey="revenue" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} name="Tulu" />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>
@@ -498,15 +643,79 @@ function ProviderProfile() {
 }
 
 function ProviderTeam() {
+  const [members, setMembers] = useState([
+    { id: 1, name: "Maria Saar", email: "maria@laopind.ee", role: "Omanik", status: "Aktiivne" },
+    { id: 2, name: "Janek Kivi", email: "janek@laopind.ee", role: "Haldur", status: "Aktiivne" },
+  ]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newRole, setNewRole] = useState("Haldur");
+
+  const addMember = () => {
+    if (!newName || !newEmail) return;
+    setMembers(prev => [...prev, { id: Date.now(), name: newName, email: newEmail, role: newRole, status: "Kutse saadetud" }]);
+    setNewName(""); setNewEmail(""); setNewRole("Haldur");
+    setDialogOpen(false);
+  };
+
+  const removeMember = (id: number) => setMembers(prev => prev.filter(m => m.id !== id));
+
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Meeskond</h1>
-      <div className="mt-6 flex flex-col items-center py-12 text-center">
-        <Users className="h-12 w-12 text-muted-foreground/30" />
-        <p className="mt-3 text-sm font-medium">Meeskonnaliikmed</p>
-        <p className="mt-1 text-xs text-muted-foreground">Lisage meeskonnaliikmeid, et hallata kuulutusi ja broneeringuid koos.</p>
-        <Button variant="outline" className="mt-4">Lisa liige</Button>
+      <div className="flex items-center justify-between">
+        <h1 className="font-display text-2xl font-bold">Meeskond</h1>
+        <Button className="bg-accent text-accent-foreground hover:bg-accent/90 gap-1" onClick={() => setDialogOpen(true)}>
+          <UserPlus className="h-4 w-4" /> Lisa liige
+        </Button>
       </div>
+      <div className="mt-6 space-y-3">
+        {members.map(m => (
+          <div key={m.id} className="flex items-center justify-between rounded-xl border border-border p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-sm">
+                {m.name.split(" ").map(n => n[0]).join("")}
+              </div>
+              <div>
+                <p className="text-sm font-medium">{m.name}</p>
+                <p className="text-xs text-muted-foreground">{m.email}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium">{m.role}</span>
+              <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${m.status === "Aktiivne" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>{m.status}</span>
+              {m.role !== "Omanik" && (
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10" onClick={() => removeMember(m.id)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Lisa meeskonnaliige</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Nimi</label>
+              <input value={newName} onChange={e => setNewName(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" placeholder="Täisnimi" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">E-post</label>
+              <input value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" placeholder="email@ettevote.ee" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Roll</label>
+              <select value={newRole} onChange={e => setNewRole(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm">
+                <option>Haldur</option><option>Vaataja</option><option>Raamatupidaja</option>
+              </select>
+            </div>
+            <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={addMember}>Saada kutse</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
