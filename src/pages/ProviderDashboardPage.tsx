@@ -76,7 +76,8 @@ export default function ProviderDashboardPage() {
           })}
         </div>
 
-        {tab === "overview" && <ProviderOverview />}
+        {tab === "overview" && <ProviderOverview onGoToOrders={() => setTab("orders")} />}
+        {tab === "orders" && <ProviderOrders />}
         {tab === "listings" && <ProviderListings />}
         {tab === "bookings" && <ProviderBookings />}
         {tab === "calendar" && <ProviderCalendar />}
