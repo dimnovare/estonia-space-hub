@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { MOCK_BOOKINGS, MOCK_NOTIFICATIONS, type Booking, type BookingStatus } from "@/data/mockBookings";
-import { MOCK_ORDERS, ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG, type Order } from "@/data/mockOrders";
+import { MOCK_ORDERS, ORDER_STATUS_CONFIG, type Order } from "@/data/mockOrders";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const statusConfig: Record<BookingStatus, { label: string; color: string; icon: typeof Clock }> = {
