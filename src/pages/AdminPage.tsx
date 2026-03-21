@@ -3,7 +3,7 @@ import {
   LayoutDashboard, List, MessageSquare, Settings, Users, FileText,
   TrendingUp, Eye, DollarSign, PlusCircle, Edit, Trash2, Warehouse, Truck, CarFront,
   X, Save, ChevronDown, Mail, Phone, Calendar, Shield, Globe, Bell, CreditCard, ToggleLeft,
-  Package, Wifi, Hand, Send,
+  Package, Wifi, Hand, Send, Search, CheckCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -525,11 +525,45 @@ function AdminInquiries() {
 
 /* ─── Users ─── */
 function AdminUsers() {
+  const [users, setUsers] = useState(initialUsers);
+  const [selectedUser, setSelectedUser] = useState<typeof initialUsers[0] | null>(null);
+  const [filterRole, setFilterRole] = useState("Kõik");
+  const [filterStatus, setFilterStatus] = useState("Kõik");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filtered = users.filter((u) => {
+    if (filterRole !== "Kõik" && u.role !== filterRole) return false;
+    if (filterStatus !== "Kõik" && u.status !== filterStatus) return false;
+    if (searchQuery && !u.name.toLowerCase().includes(searchQuery.toLowerCase()) && !u.email.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    return true;
+  });
+
+  const toggleStatus = (id: number) => {
+    setUsers((prev) => prev.map((u) => u.id === id ? { ...u, status: u.status === "Aktiivne" ? "Blokeeritud" : "Aktiivne" } : u));
+    if (selectedUser?.id === id) setSelectedUser((prev) => prev ? { ...prev, status: prev.status === "Aktiivne" ? "Blokeeritud" : "Aktiivne" } : prev);
+  };
+
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">Kasutajad</h1>
       <p className="mt-2 text-sm text-muted-foreground">Halda kasutajaid ja teenusepakkujaid.</p>
-      <div className="mt-6 overflow-x-auto rounded-xl border border-border">
+
+      {/* Filters */}
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Otsi nime või e-posti järgi..." className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm" />
+        </div>
+        <select value={filterRole} onChange={(e) => setFilterRole(e.target.value)} className="rounded-lg border border-border bg-card px-3 py-2 text-sm">
+          <option>Kõik</option><option>Klient</option><option>Pakkuja</option><option>Admin</option>
+        </select>
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-lg border border-border bg-card px-3 py-2 text-sm">
+          <option>Kõik</option><option>Aktiivne</option><option>Blokeeritud</option>
+        </select>
+        <span className="text-xs text-muted-foreground">{filtered.length} kasutajat</span>
+      </div>
+
+      <div className="mt-4 overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
             <tr>
@@ -539,11 +573,12 @@ function AdminUsers() {
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Registreeritud</th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Broneeringud</th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Staatus</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Tegevused</th>
             </tr>
           </thead>
           <tbody>
-            {initialUsers.map((u) => (
-              <tr key={u.id} className="border-b border-border last:border-0">
+            {filtered.map((u) => (
+              <tr key={u.id} className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors">
                 <td className="px-4 py-3 font-medium">{u.name}</td>
                 <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
                 <td className="px-4 py-3">
@@ -559,11 +594,65 @@ function AdminUsers() {
                     u.status === "Aktiivne" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
                   }`}>{u.status}</span>
                 </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setSelectedUser(u)}>
+                      <Eye className="h-3 w-3 mr-1" />Vaata
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => toggleStatus(u.id)}>
+                      {u.status === "Aktiivne" ? <><Shield className="h-3 w-3 mr-1" />Blokeeri</> : <><CheckCircle className="h-3 w-3 mr-1" />Aktiveeri</>}
+                    </Button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* User detail dialog */}
+      <Dialog open={!!selectedUser} onOpenChange={(o) => !o && setSelectedUser(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Kasutaja profiil</DialogTitle></DialogHeader>
+          {selectedUser && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary font-display text-xl font-bold">
+                  {selectedUser.name.split(" ").map((n) => n[0]).join("")}
+                </div>
+                <div>
+                  <p className="font-semibold">{selectedUser.name}</p>
+                  <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-lg bg-secondary/50 p-3">
+                  <p className="text-xs text-muted-foreground">Roll</p>
+                  <p className="text-sm font-medium">{selectedUser.role}</p>
+                </div>
+                <div className="rounded-lg bg-secondary/50 p-3">
+                  <p className="text-xs text-muted-foreground">Staatus</p>
+                  <p className={`text-sm font-medium ${selectedUser.status === "Aktiivne" ? "text-success" : "text-destructive"}`}>{selectedUser.status}</p>
+                </div>
+                <div className="rounded-lg bg-secondary/50 p-3">
+                  <p className="text-xs text-muted-foreground">Registreeritud</p>
+                  <p className="text-sm font-medium">{selectedUser.registered}</p>
+                </div>
+                <div className="rounded-lg bg-secondary/50 p-3">
+                  <p className="text-xs text-muted-foreground">Broneeringud</p>
+                  <p className="text-sm font-medium">{selectedUser.bookings}</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => toggleStatus(selectedUser.id)}>
+                  {selectedUser.status === "Aktiivne" ? "Blokeeri kasutaja" : "Aktiveeri kasutaja"}
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => setSelectedUser(null)}>Sulge</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
