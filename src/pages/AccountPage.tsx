@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { 
   LayoutDashboard, Package, Heart, Search, Settings, Bell, Shield, CreditCard, 
   HelpCircle, ChevronRight, Warehouse, Truck, CarFront, Clock, CheckCircle,
-  XCircle, Play, Calendar, MapPin, LogOut, User, Wifi, Mail, Hand, Send
+  XCircle, Play, Calendar, MapPin, LogOut, User, Send
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";

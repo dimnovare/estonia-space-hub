@@ -3,7 +3,7 @@ import {
   LayoutDashboard, List, MessageSquare, Settings, Users, FileText,
   TrendingUp, Eye, DollarSign, PlusCircle, Edit, Trash2, Warehouse, Truck, CarFront,
   X, Save, ChevronDown, Mail, Phone, Calendar, Shield, Globe, Bell, CreditCard, ToggleLeft,
-  Package, Wifi, Hand, Send,
+  Package, Wifi, Hand, Send, Search, CheckCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
