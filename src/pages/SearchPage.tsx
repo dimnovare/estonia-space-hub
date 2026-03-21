@@ -4,46 +4,31 @@ import { SlidersHorizontal, X, ChevronDown, List, MapIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ALL_LISTINGS, type Listing, type ListingType } from "@/data/mockData";
 import ListingCard from "@/components/ListingCard";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
-
-const sortOptions = [
-  { value: "best", label: "Parim vaste" },
-  { value: "cheapest", label: "Soodsaim" },
-  { value: "nearest", label: "Lähim" },
-  { value: "best-value", label: "Parim pakkumine" },
-  { value: "newest", label: "Uusim" },
-];
-
-const typeFilters = [
-  { value: "all", label: "Kõik" },
-  { value: "warehouse", label: "Laopinnad" },
-  { value: "moving", label: "Kolimine" },
-  { value: "trailer", label: "Haagise rent" },
-];
 
 export default function SearchPage() {
   const [searchParams] = useSearchParams();
   const initialType = (searchParams.get("type") as ListingType | "all") || "all";
   const query = searchParams.get("q") || "";
+  const { t } = useLanguage();
 
   const [activeType, setActiveType] = useState<string>(initialType);
   const [sort, setSort] = useState("best");
 
-  // Sync activeType when URL param changes (e.g. clicking navbar links)
   useEffect(() => {
     setActiveType(initialType);
   }, [initialType]);
+
   const [showFilters, setShowFilters] = useState(false);
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<"list" | "map">("list");
 
-  // Common filters
   const [availableNow, setAvailableNow] = useState(false);
   const [cityFilter, setCityFilter] = useState("");
   const [priceMax, setPriceMax] = useState("");
 
-  // Warehouse filters
   const [heated, setHeated] = useState(false);
   const [access24, setAccess24] = useState(false);
   const [indoor, setIndoor] = useState(false);
@@ -53,14 +38,27 @@ export default function SearchPage() {
   const [shortTerm, setShortTerm] = useState(false);
   const [longTerm, setLongTerm] = useState(false);
 
-  // Moving filters
   const [withVan, setWithVan] = useState(false);
   const [packingHelp, setPackingHelp] = useState(false);
   const [loadingHelp, setLoadingHelp] = useState(false);
   const [pricingFixed, setPricingFixed] = useState(false);
 
-  // Trailer filters
   const [trailerClosed, setTrailerClosed] = useState(false);
+
+  const sortOptions = [
+    { value: "best", label: t("search.sort.best") },
+    { value: "cheapest", label: t("search.sort.cheapest") },
+    { value: "nearest", label: t("search.sort.nearest") },
+    { value: "best-value", label: t("search.sort.bestValue") },
+    { value: "newest", label: t("search.sort.newest") },
+  ];
+
+  const typeFilters = [
+    { value: "all", label: t("search.type.all") },
+    { value: "warehouse", label: t("search.type.warehouse") },
+    { value: "moving", label: t("search.type.moving") },
+    { value: "trailer", label: t("search.type.trailer") },
+  ];
 
   const filtered = useMemo(() => {
     let results = ALL_LISTINGS;
@@ -81,7 +79,6 @@ export default function SearchPage() {
     }
     if (availableNow) results = results.filter((l) => l.availableNow);
 
-    // Warehouse-specific
     if (heated) results = results.filter((l) => l.type === "warehouse" && l.heated);
     if (access24) results = results.filter((l) => l.type === "warehouse" && l.access24_7);
     if (indoor) results = results.filter((l) => l.type === "warehouse" && l.indoor);
@@ -91,16 +88,13 @@ export default function SearchPage() {
     if (shortTerm) results = results.filter((l) => l.type === "warehouse" && l.shortTerm);
     if (longTerm) results = results.filter((l) => l.type === "warehouse" && l.longTerm);
 
-    // Moving-specific
     if (withVan) results = results.filter((l) => l.type === "moving" && l.withVan);
     if (packingHelp) results = results.filter((l) => l.type === "moving" && l.packingHelp);
     if (loadingHelp) results = results.filter((l) => l.type === "moving" && l.loadingHelp);
     if (pricingFixed) results = results.filter((l) => l.type === "moving" && l.pricingModel === "fixed");
 
-    // Trailer-specific
     if (trailerClosed) results = results.filter((l) => l.type === "trailer" && l.trailerType.toLowerCase().includes("kinnine"));
 
-    // Sort
     if (sort === "cheapest") results = [...results].sort((a, b) => a.priceFrom - b.priceFrom);
     if (sort === "nearest") results = [...results].sort((a, b) => a.rating - b.rating);
     if (sort === "best-value") results = [...results].sort((a, b) => b.rating - a.rating);
@@ -123,85 +117,47 @@ export default function SearchPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-col lg:flex-row">
-      {/* Map - desktop */}
       <div className="hidden lg:sticky lg:top-16 lg:block lg:h-[calc(100vh-4rem)] lg:w-1/2 xl:w-[55%]">
-        <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary text-muted-foreground">Kaart laeb...</div>}>
-          <InteractiveMap
-            listings={filtered}
-            className="rounded-none"
-            height="h-full"
-            selectedId={selectedListingId}
-            onMarkerClick={handleMarkerClick}
-          />
+        <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary text-muted-foreground">{t("map.loading")}</div>}>
+          <InteractiveMap listings={filtered} className="rounded-none" height="h-full" selectedId={selectedListingId} onMarkerClick={handleMarkerClick} />
         </Suspense>
       </div>
 
-      {/* Mobile map/list toggle */}
       <div className="flex items-center gap-2 border-b border-border bg-card p-2 lg:hidden">
-        <button
-          onClick={() => setMobileView("list")}
-          className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-colors ${mobileView === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-        >
-          <List className="h-3.5 w-3.5" /> Nimekiri
+        <button onClick={() => setMobileView("list")} className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-colors ${mobileView === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+          <List className="h-3.5 w-3.5" /> {t("search.list")}
         </button>
-        <button
-          onClick={() => setMobileView("map")}
-          className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-colors ${mobileView === "map" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-        >
-          <MapIcon className="h-3.5 w-3.5" /> Kaart
+        <button onClick={() => setMobileView("map")} className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-colors ${mobileView === "map" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+          <MapIcon className="h-3.5 w-3.5" /> {t("search.map")}
         </button>
       </div>
 
-      {/* Mobile map */}
       {mobileView === "map" && (
         <div className="h-[calc(100vh-8rem)] lg:hidden">
-          <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary">Kaart laeb...</div>}>
-            <InteractiveMap
-              listings={filtered}
-              className="rounded-none"
-              height="h-full"
-              selectedId={selectedListingId}
-              onMarkerClick={handleMarkerClick}
-            />
+          <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary">{t("map.loading")}</div>}>
+            <InteractiveMap listings={filtered} className="rounded-none" height="h-full" selectedId={selectedListingId} onMarkerClick={handleMarkerClick} />
           </Suspense>
         </div>
       )}
 
-      {/* Listings panel */}
       <div className={`flex-1 border-l border-border ${mobileView === "map" ? "hidden lg:block" : ""}`}>
-        {/* Top bar */}
         <div className="sticky top-16 z-10 border-b border-border bg-card px-4 py-3">
           <div className="flex flex-wrap items-center gap-2">
-            {typeFilters.map((t) => (
-              <button
-                key={t.value}
-                onClick={() => setActiveType(t.value)}
-                className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                  activeType === t.value ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {t.label}
+            {typeFilters.map((tf) => (
+              <button key={tf.value} onClick={() => setActiveType(tf.value)} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${activeType === tf.value ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
+                {tf.label}
               </button>
             ))}
             <div className="ml-auto flex items-center gap-2">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
-              >
+              <button onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary">
                 <SlidersHorizontal className="h-3.5 w-3.5" />
-                Filtrid
+                {t("search.filters")}
                 {activeFiltersCount > 0 && (
-                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">
-                    {activeFiltersCount}
-                  </span>
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">{activeFiltersCount}</span>
                 )}
               </button>
               <div className="relative">
-                <select
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value)}
-                  className="appearance-none rounded-lg border border-border bg-card py-1.5 pl-3 pr-7 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
-                >
+                <select value={sort} onChange={(e) => setSort(e.target.value)} className="appearance-none rounded-lg border border-border bg-card py-1.5 pl-3 pr-7 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-accent">
                   {sortOptions.map((s) => (
                     <option key={s.value} value={s.value}>{s.label}</option>
                   ))}
@@ -211,100 +167,75 @@ export default function SearchPage() {
             </div>
           </div>
 
-          {/* Filter panel */}
           {showFilters && (
             <div className="mt-3 space-y-3 border-t border-border pt-3">
-              {/* Common filters */}
               <div className="flex flex-wrap gap-2">
-                <input
-                  type="text"
-                  placeholder="Linn..."
-                  value={cityFilter}
-                  onChange={(e) => setCityFilter(e.target.value)}
-                  className="w-28 rounded-full border border-border bg-card px-3 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-accent"
-                />
-                <input
-                  type="number"
-                  placeholder="Max hind €"
-                  value={priceMax}
-                  onChange={(e) => setPriceMax(e.target.value)}
-                  className="w-28 rounded-full border border-border bg-card px-3 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-accent"
-                />
-                <FilterToggle label="Kohe saadaval" active={availableNow} onChange={setAvailableNow} />
+                <input type="text" placeholder={t("search.city")} value={cityFilter} onChange={(e) => setCityFilter(e.target.value)} className="w-28 rounded-full border border-border bg-card px-3 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-accent" />
+                <input type="number" placeholder={t("search.maxPrice")} value={priceMax} onChange={(e) => setPriceMax(e.target.value)} className="w-28 rounded-full border border-border bg-card px-3 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-accent" />
+                <FilterToggle label={t("search.availableNow")} active={availableNow} onChange={setAvailableNow} />
               </div>
 
-              {/* Category-specific filters */}
               {(activeType === "all" || activeType === "warehouse") && (
                 <div>
-                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Laopinna filtrid</div>
+                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("search.warehouseFilters")}</div>
                   <div className="flex flex-wrap gap-2">
-                    <FilterToggle label="Köetud" active={heated} onChange={setHeated} />
-                    <FilterToggle label="24/7 juurdepääs" active={access24} onChange={setAccess24} />
-                    <FilterToggle label="Siseruum" active={indoor} onChange={setIndoor} />
-                    <FilterToggle label="Turvatud" active={security} onChange={setSecurity} />
-                    <FilterToggle label="Laadimisplatvorm" active={loadingDock} onChange={setLoadingDock} />
-                    <FilterToggle label="Tõstuk" active={forkliftFilter} onChange={setForkliftFilter} />
-                    <FilterToggle label="Lühiajaline" active={shortTerm} onChange={setShortTerm} />
-                    <FilterToggle label="Pikaajaline" active={longTerm} onChange={setLongTerm} />
+                    <FilterToggle label={t("search.heated")} active={heated} onChange={setHeated} />
+                    <FilterToggle label={t("search.access24")} active={access24} onChange={setAccess24} />
+                    <FilterToggle label={t("search.indoor")} active={indoor} onChange={setIndoor} />
+                    <FilterToggle label={t("search.secured")} active={security} onChange={setSecurity} />
+                    <FilterToggle label={t("search.loadingDock")} active={loadingDock} onChange={setLoadingDock} />
+                    <FilterToggle label={t("search.forklift")} active={forkliftFilter} onChange={setForkliftFilter} />
+                    <FilterToggle label={t("search.shortTerm")} active={shortTerm} onChange={setShortTerm} />
+                    <FilterToggle label={t("search.longTerm")} active={longTerm} onChange={setLongTerm} />
                   </div>
                 </div>
               )}
 
               {(activeType === "all" || activeType === "moving") && (
                 <div>
-                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Kolimisteenuse filtrid</div>
+                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("search.movingFilters")}</div>
                   <div className="flex flex-wrap gap-2">
-                    <FilterToggle label="Kaubikuga" active={withVan} onChange={setWithVan} />
-                    <FilterToggle label="Pakkimisabi" active={packingHelp} onChange={setPackingHelp} />
-                    <FilterToggle label="Laadimisabi" active={loadingHelp} onChange={setLoadingHelp} />
-                    <FilterToggle label="Fikseeritud hind" active={pricingFixed} onChange={setPricingFixed} />
+                    <FilterToggle label={t("search.withVan")} active={withVan} onChange={setWithVan} />
+                    <FilterToggle label={t("search.packingHelp")} active={packingHelp} onChange={setPackingHelp} />
+                    <FilterToggle label={t("search.loadingHelp")} active={loadingHelp} onChange={setLoadingHelp} />
+                    <FilterToggle label={t("search.fixedPrice")} active={pricingFixed} onChange={setPricingFixed} />
                   </div>
                 </div>
               )}
 
               {(activeType === "all" || activeType === "trailer") && (
                 <div>
-                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Haagise filtrid</div>
+                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("search.trailerFilters")}</div>
                   <div className="flex flex-wrap gap-2">
-                    <FilterToggle label="Kinnine haagis" active={trailerClosed} onChange={setTrailerClosed} />
+                    <FilterToggle label={t("search.closedTrailer")} active={trailerClosed} onChange={setTrailerClosed} />
                   </div>
                 </div>
               )}
 
               {activeFiltersCount > 0 && (
-                <button
-                  onClick={clearAll}
-                  className="flex items-center gap-1 text-xs text-destructive hover:underline"
-                >
-                  <X className="h-3 w-3" /> Tühista kõik filtrid
+                <button onClick={clearAll} className="flex items-center gap-1 text-xs text-destructive hover:underline">
+                  <X className="h-3 w-3" /> {t("search.clearFilters")}
                 </button>
               )}
             </div>
           )}
         </div>
 
-        {/* Results */}
         <div className="p-4">
           <p className="mb-4 text-sm text-muted-foreground">
-            {filtered.length} tulemust{query && ` "${query}" kohta`}
+            {filtered.length} {t("search.results")}{query && ` ${t("search.forQuery")} "${query}"`}
           </p>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
             {filtered.map((l) => (
-              <div
-                key={l.id}
-                className={`cursor-pointer rounded-xl transition-all ${selectedListingId === l.id ? "ring-2 ring-accent" : ""}`}
-                onMouseEnter={() => setSelectedListingId(l.id)}
-                onMouseLeave={() => setSelectedListingId(null)}
-                onClick={() => setSelectedListingId(l.id)}
-              >
+              <div key={l.id} className={`cursor-pointer rounded-xl transition-all ${selectedListingId === l.id ? "ring-2 ring-accent" : ""}`} onMouseEnter={() => setSelectedListingId(l.id)} onMouseLeave={() => setSelectedListingId(null)} onClick={() => setSelectedListingId(l.id)}>
                 <ListingCard listing={l} />
               </div>
             ))}
           </div>
           {filtered.length === 0 && (
             <div className="py-20 text-center text-muted-foreground">
-              <p className="text-lg font-medium">Tulemusi ei leitud</p>
-              <p className="mt-1 text-sm">Proovige muuta filtreid või otsingupäringut.</p>
+              <p className="text-lg font-medium">{t("search.noResults")}</p>
+              <p className="mt-1 text-sm">{t("search.noResultsDesc")}</p>
             </div>
           )}
         </div>
@@ -315,12 +246,7 @@ export default function SearchPage() {
 
 function FilterToggle({ label, active, onChange }: { label: string; active: boolean; onChange: (v: boolean) => void }) {
   return (
-    <button
-      onClick={() => onChange(!active)}
-      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-        active ? "border-accent bg-accent/10 text-accent" : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
-      }`}
-    >
+    <button onClick={() => onChange(!active)} className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${active ? "border-accent bg-accent/10 text-accent" : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"}`}>
       {label}
     </button>
   );
