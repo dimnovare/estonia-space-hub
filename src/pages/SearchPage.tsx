@@ -29,6 +29,11 @@ export default function SearchPage() {
 
   const [activeType, setActiveType] = useState<string>(initialType);
   const [sort, setSort] = useState("best");
+
+  // Sync activeType when URL param changes (e.g. clicking navbar links)
+  useEffect(() => {
+    setActiveType(initialType);
+  }, [initialType]);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<"list" | "map">("list");
