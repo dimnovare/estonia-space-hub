@@ -47,7 +47,7 @@ export default function ProviderPage() {
       <section className="hero-gradient py-16 md:py-24">
         <div className="container-wide text-center">
           <h1 className="font-display text-3xl font-bold text-primary-foreground md:text-5xl">
-            Lisa oma teenus <span className="text-gradient">LaoMarket</span> platvormile
+            Lisa oma teenus <span className="text-gradient">Ruumly</span> platvormile
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-sm text-primary-foreground/70 md:text-base">
             Jõuage tuhandete potentsiaalsete klientideni. Lisage oma laopind, kolimisteenus või haagise rent meie platvormile ja hakake saama päringuid juba täna.

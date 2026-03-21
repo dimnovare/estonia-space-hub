@@ -35,7 +35,7 @@ export default function ContactPage() {
           {/* Contact info */}
           <div className="space-y-6">
             {[
-              { icon: Mail, label: "E-post", value: "info@laomarket.ee" },
+              { icon: Mail, label: "E-post", value: "info@ruumly.eu" },
               { icon: Phone, label: "Telefon", value: "+372 5XX XXXX" },
               { icon: MapPin, label: "Asukoht", value: "Tallinn, Eesti" },
               { icon: Clock, label: "Tööaeg", value: "E-R 9:00-18:00" },

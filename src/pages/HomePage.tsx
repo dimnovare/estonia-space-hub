@@ -28,7 +28,7 @@ const stats = [
 ];
 
 const faqs = [
-  { q: "Kuidas LaoMarket töötab?", a: "LaoMarket koondab Eesti laopindade, kolimisteenuste ja haagiserentide pakkumised ühte kohta. Otsige, võrrelge ja saatke päring — meie edastame selle teenusepakkujale." },
+  { q: "Kuidas Ruumly töötab?", a: "Ruumly koondab Eesti laopindade, kolimisteenuste ja haagiserentide pakkumised ühte kohta. Otsige, võrrelge ja saatke päring — meie edastame selle teenusepakkujale." },
   { q: "Kas teenus on tasuta?", a: "Jah, otsing ja päringute saatmine on kasutajatele täiesti tasuta. Teenusepakkujad maksavad platvormi kasutamise eest." },
   { q: "Kuidas saan oma laopinda lisada?", a: "Kui olete teenusepakkuja, saate liituda meie platvormiga ja lisada oma pakkumised. Võtke meiega ühendust." },
   { q: "Kas ma saan broneeringu tühistada?", a: "Tühistamistingimused sõltuvad teenusepakkujast. Enne broneerimist näete alati tühistamistingimusi." },
@@ -55,16 +55,17 @@ export default function HomePage() {
       <section className="hero-gradient relative overflow-hidden py-20 md:py-28">
         <div className="absolute inset-0 opacity-10"
           style={{
-            backgroundImage: "radial-gradient(circle at 30% 50%, hsl(30 90% 52% / 0.3), transparent 60%)",
+            backgroundImage: "radial-gradient(circle at 30% 50%, hsl(174 65% 47% / 0.3), transparent 60%)",
           }}
         />
         <div className="container-wide relative">
           <div className="mx-auto max-w-3xl text-center">
             <h1 className="font-display text-4xl font-bold leading-tight text-primary-foreground md:text-5xl lg:text-6xl">
-              Leia ideaalne <span className="text-gradient">laopind</span> Eestist
+              Find storage, moving, and logistics{" "}
+              <span className="text-gradient">in one place</span>
             </h1>
             <p className="mt-4 text-lg text-primary-foreground/70 md:text-xl">
-              Võrdle laopindu, kolimisteenuseid ja haagiserentide pakkumisi ühest kohast. Kiire, lihtne ja tasuta.
+              From storage to moving — all in one.
             </p>
 
             {/* Search bar */}
@@ -102,9 +103,16 @@ export default function HomePage() {
                 </div>
                 <Button onClick={handleSearch} className="shrink-0 bg-accent px-6 text-accent-foreground hover:bg-accent/90">
                   <Search className="mr-2 h-4 w-4" />
-                  Otsi
+                  Find storage
                 </Button>
               </div>
+            </div>
+
+            {/* Secondary CTA */}
+            <div className="mt-4">
+              <Link to="/provider" className="text-sm text-primary-foreground/60 underline decoration-primary-foreground/30 hover:text-primary-foreground/80 hover:decoration-primary-foreground/50 transition-colors">
+                List your space →
+              </Link>
             </div>
           </div>
         </div>
@@ -191,11 +199,11 @@ export default function HomePage() {
             Oled teenusepakkuja?
           </h2>
           <p className="mx-auto mt-3 max-w-lg text-sm text-primary-foreground/70">
-            Lisa oma laopind, kolimisteenus või haagiserent LaoMarket platvormile ja jõua tuhandete potentsiaalsete klientideni.
+            Lisa oma laopind, kolimisteenus või haagiserent Ruumly platvormile ja jõua tuhandete potentsiaalsete klientideni.
           </p>
           <Link to="/provider">
             <Button className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90">
-              Liitu teenusepakkujana
+              List your space
             </Button>
           </Link>
         </div>

@@ -36,7 +36,7 @@ export default function HowItWorksPage() {
     <div>
       <section className="hero-gradient py-16 md:py-24">
         <div className="container-wide text-center">
-          <h1 className="font-display text-3xl font-bold text-primary-foreground md:text-5xl">Kuidas LaoMarket töötab?</h1>
+          <h1 className="font-display text-3xl font-bold text-primary-foreground md:text-5xl">Kuidas Ruumly töötab?</h1>
           <p className="mx-auto mt-4 max-w-xl text-sm text-primary-foreground/70 md:text-base">
             Neli lihtsat sammu parima laopinna, kolimisteenuse või haagise leidmiseks.
           </p>
@@ -64,7 +64,7 @@ export default function HowItWorksPage() {
 
       <section className="surface-sunken py-16">
         <div className="container-wide">
-          <h2 className="text-center font-display text-2xl font-bold">Miks valida LaoMarket?</h2>
+          <h2 className="text-center font-display text-2xl font-bold">Miks valida Ruumly?</h2>
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {features.map((f, i) => {
               const Icon = f.icon;

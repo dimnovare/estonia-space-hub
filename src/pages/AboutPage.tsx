@@ -23,7 +23,7 @@ export default function AboutPage() {
             Eesti suurim lao- ja logistikaplatvorm
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-sm text-primary-foreground/70 md:text-base">
-            LaoMarket koondab Eesti parimad laopinnad, kolimisteenused ja haagiserendi pakkumised ühte kohta.
+            Ruumly koondab Eesti parimad laopinnad, kolimisteenused ja haagiserendi pakkumised ühte kohta.
           </p>
         </div>
       </section>
@@ -33,7 +33,7 @@ export default function AboutPage() {
           <div>
             <h2 className="font-display text-2xl font-bold md:text-3xl">Meie missioon</h2>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              LaoMarket loodi eesmärgiga muuta laopinna ja logistikateenuste leidmine Eestis lihtsamaks, kiiremaks ja läbipaistvamaks. Enne meid pidi klient helistama kümnele ettevõttele, et leida sobiv pakkumine. Nüüd saab kõik ühest kohast.
+              Ruumly loodi eesmärgiga muuta laopinna ja logistikateenuste leidmine Eestis lihtsamaks, kiiremaks ja läbipaistvamaks. Enne meid pidi klient helistama kümnele ettevõttele, et leida sobiv pakkumine. Nüüd saab kõik ühest kohast.
             </p>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
               Meie platvorm ühendab teenusepakkujad ja kliendid, pakkudes paremat ülevaadet hindadest, asukodadest ja tingimustest.

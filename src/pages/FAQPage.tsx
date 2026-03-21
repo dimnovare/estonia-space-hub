@@ -7,10 +7,10 @@ const faqCategories = [
   {
     title: "Üldised küsimused",
     items: [
-      { q: "Mis on LaoMarket?", a: "LaoMarket on Eesti suurim laopindade ja logistikateenuste võrdlusplatvorm. Koondame laopindade, kolimisteenuste ja haagiserentide pakkumised ühte kohta, et saaksite kiiresti ja mugavalt leida parima lahenduse." },
+      { q: "Mis on Ruumly?", a: "Ruumly on Eesti suurim laopindade ja logistikateenuste võrdlusplatvorm. Koondame laopindade, kolimisteenuste ja haagiserentide pakkumised ühte kohta, et saaksite kiiresti ja mugavalt leida parima lahenduse." },
       { q: "Kas teenus on tasuta?", a: "Jah, otsing ja päringute saatmine on kasutajatele täiesti tasuta. Teenusepakkujad maksavad platvormi kasutamise eest." },
-      { q: "Kuidas LaoMarket toimib?", a: "Sisestage soovitud asukoht ja teenuse tüüp, võrrelge pakkumisi ning saatke tasuta päring. Teenusepakkuja võtab teiega ühendust 24 tunni jooksul." },
-      { q: "Millistes linnades teenus toimib?", a: "LaoMarket toimib üle kogu Eesti. Suurimad piirkonnad on Tallinn, Tartu, Pärnu, Narva ja Haapsalu, kuid teenusepakkujaid on ka väiksemates linnades." },
+      { q: "Kuidas Ruumly toimib?", a: "Sisestage soovitud asukoht ja teenuse tüüp, võrrelge pakkumisi ning saatke tasuta päring. Teenusepakkuja võtab teiega ühendust 24 tunni jooksul." },
+      { q: "Millistes linnades teenus toimib?", a: "Ruumly toimib üle kogu Eesti. Suurimad piirkonnad on Tallinn, Tartu, Pärnu, Narva ja Haapsalu, kuid teenusepakkujaid on ka väiksemates linnades." },
     ],
   },
   {
@@ -43,7 +43,7 @@ export default function FAQPage() {
     <div className="container-wide py-12">
       <h1 className="text-center font-display text-3xl font-bold md:text-4xl">Korduma kippuvad küsimused</h1>
       <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">
-        Leidke vastused levinumatele küsimustele LaoMarketi kohta.
+        Leidke vastused levinumatele küsimustele Ruumlyi kohta.
       </p>
 
       <div className="mx-auto mt-12 max-w-3xl space-y-8">
