@@ -172,20 +172,20 @@ function BookingCard({ booking }: { booking: Booking }) {
           <DialogHeader><DialogTitle>{booking.listingTitle}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <div><span className="text-xs text-muted-foreground">Broneeringu ID</span><p className="text-sm font-medium">{booking.id}</p></div>
-              <div><span className="text-xs text-muted-foreground">Partner</span><p className="text-sm font-medium">{booking.provider}</p></div>
-              <div><span className="text-xs text-muted-foreground">Algus</span><p className="text-sm font-medium">{booking.startDate}</p></div>
-              <div><span className="text-xs text-muted-foreground">Periood</span><p className="text-sm font-medium">{booking.duration}</p></div>
+              <div><span className="text-xs text-muted-foreground">{t("req.requestId")}</span><p className="text-sm font-medium">{booking.id}</p></div>
+              <div><span className="text-xs text-muted-foreground">{t("detail.provider")}</span><p className="text-sm font-medium">{booking.provider}</p></div>
+              <div><span className="text-xs text-muted-foreground">{t("admin.startDate")}</span><p className="text-sm font-medium">{booking.startDate}</p></div>
+              <div><span className="text-xs text-muted-foreground">{t("req.period")}</span><p className="text-sm font-medium">{booking.duration}</p></div>
             </div>
             {order && (
               <div className="rounded-lg border border-border bg-secondary/30 p-3">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1"><Send className="h-3 w-3" /> Tellimuse staatus</p>
+                  <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1"><Send className="h-3 w-3" /> {t("admin.status")}</p>
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${ORDER_STATUS_CONFIG[order.status].color}`}>{ORDER_STATUS_CONFIG[order.status].label}</span>
                 </div>
-                {order.status === "sent" && <p className="mt-1 text-xs text-warning font-medium">⏳ Ootame partneri kinnitust...</p>}
-                {order.status === "confirmed" && <p className="mt-1 text-xs text-success font-medium">✓ Partner kinnitas teie broneeringu</p>}
-                {order.status === "rejected" && <p className="mt-1 text-xs text-destructive font-medium">✗ Partner lükkas broneeringu tagasi</p>}
+                {(order.status === "sent" || order.status === "sending") && <p className="mt-1 text-xs text-warning font-medium">⏳ {t("account.waitingConfirmation")}</p>}
+                {order.status === "confirmed" && <p className="mt-1 text-xs text-success font-medium">✓ {t("account.providerConfirmed")}</p>}
+                {order.status === "rejected" && <p className="mt-1 text-xs text-destructive font-medium">✗ {t("account.providerRejected")}</p>}
               </div>
             )}
             <div className="rounded-lg border border-border p-3">
