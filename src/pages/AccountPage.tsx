@@ -155,6 +155,8 @@ function BookingCard({ booking }: { booking: Booking }) {
   const Icon = typeIcons[booking.listingType];
   const status = statusConfig[booking.status];
   const StatusIcon = status.icon;
+  const order = MOCK_ORDERS.find((o) => o.bookingId === booking.id);
+  const IntIcon = order?.integrationType === "api" ? Wifi : order?.integrationType === "email" ? Mail : Hand;
 
   return (
     <>
@@ -181,7 +183,7 @@ function BookingCard({ booking }: { booking: Booking }) {
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{booking.listingTitle}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
@@ -190,21 +192,49 @@ function BookingCard({ booking }: { booking: Booking }) {
               <div><span className="text-xs text-muted-foreground">Algus</span><p className="text-sm font-medium">{booking.startDate}</p></div>
               <div><span className="text-xs text-muted-foreground">Periood</span><p className="text-sm font-medium">{booking.duration}</p></div>
             </div>
+
+            {/* Order fulfillment status */}
+            {order && (
+              <div className="rounded-lg border border-border bg-secondary/30 p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1"><Send className="h-3 w-3" /> Tellimuse staatus</p>
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${ORDER_STATUS_CONFIG[order.status].color}`}>{ORDER_STATUS_CONFIG[order.status].label}</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  <IntIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-muted-foreground">Edastatud:</span>
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${INTEGRATION_TYPE_CONFIG[order.integrationType].color}`}>{INTEGRATION_TYPE_CONFIG[order.integrationType].label}</span>
+                </div>
+                {order.status === "sent" && (
+                  <p className="mt-2 text-xs text-warning font-medium">⏳ Ootame partneri kinnitust...</p>
+                )}
+                {order.status === "confirmed" && (
+                  <p className="mt-2 text-xs text-success font-medium">✓ Partner kinnitas teie broneeringu</p>
+                )}
+                {order.status === "rejected" && (
+                  <p className="mt-2 text-xs text-destructive font-medium">✗ Partner lükkas broneeringu tagasi</p>
+                )}
+              </div>
+            )}
+
             <div className="rounded-lg border border-border p-3">
               <div className="flex justify-between text-sm"><span className="text-muted-foreground">Tavahind</span><span className="line-through">€{booking.basePrice}</span></div>
               <div className="flex justify-between text-sm font-medium"><span>Ruumly hind</span><span className="text-accent">€{booking.platformPrice}</span></div>
               {booking.extrasTotal > 0 && <div className="flex justify-between text-sm"><span className="text-muted-foreground">Lisateenused</span><span>€{booking.extrasTotal}</span></div>}
               <div className="mt-2 flex justify-between border-t border-border pt-2 text-sm font-bold"><span>Kokku</span><span>€{booking.total}</span></div>
             </div>
+
+            {/* Order timeline */}
             <div>
-              <p className="text-xs font-semibold text-muted-foreground mb-2">Ajalugu</p>
+              <p className="text-xs font-semibold text-muted-foreground mb-2">Tellimuse ajalugu</p>
               <div className="space-y-2">
-                {booking.timeline.map((t, i) => (
+                {(order?.timeline || booking.timeline.map((t) => ({ ...t, time: "", detail: undefined }))).map((t, i) => (
                   <div key={i} className="flex items-start gap-2">
-                    <div className="mt-1 h-2 w-2 rounded-full bg-accent shrink-0" />
+                    <div className="mt-1.5 h-2 w-2 rounded-full bg-accent shrink-0" />
                     <div>
                       <p className="text-xs font-medium">{t.event}</p>
-                      <p className="text-[10px] text-muted-foreground">{t.date}</p>
+                      {'detail' in t && t.detail && <p className="text-[10px] text-muted-foreground font-mono">{t.detail}</p>}
+                      <p className="text-[10px] text-muted-foreground">{t.date} {'time' in t && t.time ? t.time : ''}</p>
                     </div>
                   </div>
                 ))}
