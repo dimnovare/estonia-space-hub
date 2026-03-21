@@ -1,15 +1,18 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
-  LayoutDashboard, List, Package, Calendar, Star, Settings, Users, CreditCard,
+  LayoutDashboard, List, Package, Calendar as CalendarIcon, Star, Settings, Users, CreditCard,
   TrendingUp, Eye, DollarSign, MapPin, Warehouse, Truck, CarFront, Edit, Plus,
-  ChevronRight, Clock, CheckCircle, BarChart3, Inbox, Check, X, Mail, Zap, Hand
+  ChevronRight, Clock, CheckCircle, BarChart3, Inbox, Check, X, Mail, Zap, Hand,
+  Image, Upload, Trash2, UserPlus, ChevronLeft
 } from "lucide-react";
 import { MOCK_ORDERS, ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG, type Order } from "@/data/mockOrders";
 import EmailTemplatePreview from "@/components/EmailTemplatePreview";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
+import { Calendar } from "@/components/ui/calendar";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 
 const sidebarLinks = [
   { id: "overview", label: "Ülevaade", icon: LayoutDashboard },
