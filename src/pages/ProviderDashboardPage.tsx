@@ -506,6 +506,23 @@ function ProviderReviews() {
 }
 
 function ProviderAnalytics() {
+  const viewsData = [
+    { month: "Okt", views: 120, bookings: 3 },
+    { month: "Nov", views: 180, bookings: 5 },
+    { month: "Dets", views: 210, bookings: 7 },
+    { month: "Jaan", views: 260, bookings: 6 },
+    { month: "Veebr", views: 310, bookings: 9 },
+    { month: "Märts", views: 390, bookings: 12 },
+  ];
+  const revenueData = [
+    { month: "Okt", revenue: 340 },
+    { month: "Nov", revenue: 580 },
+    { month: "Dets", revenue: 720 },
+    { month: "Jaan", revenue: 890 },
+    { month: "Veebr", revenue: 1050 },
+    { month: "Märts", revenue: 1240 },
+  ];
+
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">Analüütika</h1>
@@ -526,10 +543,32 @@ function ProviderAnalytics() {
           <div className="mt-1 text-xs text-muted-foreground">Stabiilne</div>
         </div>
       </div>
-      <div className="mt-6 rounded-xl border border-border p-8 flex items-center justify-center">
-        <div className="text-center">
-          <BarChart3 className="mx-auto h-12 w-12 text-muted-foreground/30" />
-          <p className="mt-3 text-sm text-muted-foreground">Detailne analüütika tuleb peagi</p>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <div className="card-elevated p-5">
+          <h3 className="text-sm font-semibold mb-4">Vaatamised ja broneeringud</h3>
+          <ResponsiveContainer width="100%" height={240}>
+            <AreaChart data={viewsData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+              <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+              <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+              <Area type="monotone" dataKey="views" stroke="hsl(var(--primary))" fill="hsl(var(--primary) / 0.1)" name="Vaatamised" />
+              <Area type="monotone" dataKey="bookings" stroke="hsl(var(--accent))" fill="hsl(var(--accent) / 0.1)" name="Broneeringud" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="card-elevated p-5">
+          <h3 className="text-sm font-semibold mb-4">Tulu (€)</h3>
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={revenueData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+              <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+              <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+              <Bar dataKey="revenue" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} name="Tulu" />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>
