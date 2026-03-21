@@ -168,10 +168,15 @@ export default function InteractiveMap({
       bounds.push([listing.lat, listing.lng]);
     });
 
-    if (bounds.length > 1) {
-      mapInstance.current.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [40, 40] });
-    } else if (bounds.length === 1) {
-      mapInstance.current.setView(bounds[0] as L.LatLngExpression, 13);
+    // Only fit bounds when the set of listings changes, not on selectedId change
+    const listingsKey = listings.map(l => l.id).sort().join(",");
+    if (listingsKey !== prevListingsKey.current) {
+      prevListingsKey.current = listingsKey;
+      if (bounds.length > 1) {
+        mapInstance.current.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [40, 40] });
+      } else if (bounds.length === 1) {
+        mapInstance.current.setView(bounds[0] as L.LatLngExpression, 13);
+      }
     }
   }, [listings, selectedId, onMarkerClick]);
 
