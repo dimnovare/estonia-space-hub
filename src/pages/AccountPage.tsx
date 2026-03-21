@@ -25,18 +25,21 @@ const statusConfig: Record<BookingStatus, { label: string; color: string; icon: 
 
 const typeIcons = { warehouse: Warehouse, moving: Truck, trailer: CarFront };
 
-const sidebarLinks = [
-  { id: "overview", label: "Ülevaade", icon: LayoutDashboard },
-  { id: "bookings", label: "Broneeringud", icon: Package },
-  { id: "messages", label: "Sõnumid", icon: MessageSquare },
-  { id: "favorites", label: "Lemmikud", icon: Heart },
-  { id: "searches", label: "Salvestatud otsingud", icon: Search },
-  { id: "notifications", label: "Teavitused", icon: Bell },
-  { id: "profile", label: "Profiil", icon: User },
-  { id: "security", label: "Turvalisus", icon: Shield },
-  { id: "billing", label: "Arveldus", icon: CreditCard },
-  { id: "help", label: "Abi", icon: HelpCircle },
-];
+function useSidebarLinks() {
+  const { t } = useLanguage();
+  return [
+    { id: "overview", label: t("account.overview"), icon: LayoutDashboard },
+    { id: "bookings", label: t("account.bookings"), icon: Package },
+    { id: "messages", label: t("account.messages"), icon: MessageSquare },
+    { id: "favorites", label: t("account.favorites"), icon: Heart },
+    { id: "searches", label: t("account.searches"), icon: Search },
+    { id: "notifications", label: t("account.notifications"), icon: Bell },
+    { id: "profile", label: t("account.profile"), icon: User },
+    { id: "security", label: t("account.security"), icon: Shield },
+    { id: "billing", label: t("account.billing"), icon: CreditCard },
+    { id: "help", label: t("account.help"), icon: HelpCircle },
+  ];
+}
 
 export default function AccountPage() {
   const [searchParams] = useSearchParams();
@@ -45,6 +48,7 @@ export default function AccountPage() {
   const { t } = useLanguage();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const sidebarLinks = useSidebarLinks();
 
   useEffect(() => {
     const paramTab = searchParams.get("tab");
@@ -74,7 +78,7 @@ export default function AccountPage() {
             );
           })}
           <button onClick={handleLogout} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10">
-            <LogOut className="h-4 w-4" /> Logi välja
+            <LogOut className="h-4 w-4" /> {t("account.logout")}
           </button>
         </nav>
       </aside>
@@ -110,29 +114,30 @@ function AccountOverview({ onNavigate }: { onNavigate: (tab: string) => void }) 
   const active = MOCK_BOOKINGS.filter(b => b.status === "confirmed" || b.status === "active");
   const pending = MOCK_BOOKINGS.filter(b => b.status === "pending");
 
+  const { t } = useLanguage();
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Tere tulemast tagasi!</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Siin on ülevaade teie kontost.</p>
+      <h1 className="font-display text-2xl font-bold">{t("account.welcome")}</h1>
+      <p className="mt-1 text-sm text-muted-foreground">{t("account.welcomeDesc")}</p>
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">Aktiivsed broneeringud</div><div className="mt-1 font-display text-2xl font-bold">{active.length}</div></div>
-        <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">Ootel kinnitamist</div><div className="mt-1 font-display text-2xl font-bold text-warning">{pending.length}</div></div>
-        <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">Kokkuhoid kokku</div><div className="mt-1 font-display text-2xl font-bold text-accent">€{MOCK_BOOKINGS.reduce((s, b) => s + (b.basePrice - b.platformPrice), 0)}</div></div>
+        <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">{t("account.activeBookings")}</div><div className="mt-1 font-display text-2xl font-bold">{active.length}</div></div>
+        <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">{t("account.pendingApproval")}</div><div className="mt-1 font-display text-2xl font-bold text-warning">{pending.length}</div></div>
+        <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">{t("account.totalSavings")}</div><div className="mt-1 font-display text-2xl font-bold text-accent">€{MOCK_BOOKINGS.reduce((s, b) => s + (b.basePrice - b.platformPrice), 0)}</div></div>
       </div>
       {pending.length > 0 && (
-        <div className="mt-6"><h2 className="font-display text-lg font-semibold">Ootel broneeringud</h2><div className="mt-3 space-y-2">{pending.map(b => <BookingCard key={b.id} booking={b} />)}</div></div>
+        <div className="mt-6"><h2 className="font-display text-lg font-semibold">{t("account.pendingBookings")}</h2><div className="mt-3 space-y-2">{pending.map(b => <BookingCard key={b.id} booking={b} />)}</div></div>
       )}
       {active.length > 0 && (
-        <div className="mt-6"><h2 className="font-display text-lg font-semibold">Aktiivsed broneeringud</h2><div className="mt-3 space-y-2">{active.map(b => <BookingCard key={b.id} booking={b} />)}</div></div>
+        <div className="mt-6"><h2 className="font-display text-lg font-semibold">{t("account.activeBookings")}</h2><div className="mt-3 space-y-2">{active.map(b => <BookingCard key={b.id} booking={b} />)}</div></div>
       )}
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
         <button onClick={() => onNavigate("favorites")} className="flex items-center justify-between rounded-xl border border-border p-4 hover:bg-secondary transition-colors">
-          <span className="flex items-center gap-2 text-sm font-medium"><Heart className="h-4 w-4 text-accent" /> Lemmikud</span>
-          <span className="text-sm text-muted-foreground">2 salvestatud</span>
+          <span className="flex items-center gap-2 text-sm font-medium"><Heart className="h-4 w-4 text-accent" /> {t("account.favorites")}</span>
+          <span className="text-sm text-muted-foreground">2 {t("account.saved")}</span>
         </button>
         <button onClick={() => onNavigate("messages")} className="flex items-center justify-between rounded-xl border border-border p-4 hover:bg-secondary transition-colors">
-          <span className="flex items-center gap-2 text-sm font-medium"><MessageSquare className="h-4 w-4 text-accent" /> Sõnumid</span>
-          <span className="text-sm text-muted-foreground">{MOCK_MESSAGES.filter(m => !m.read && m.from !== "customer").length} lugemata</span>
+          <span className="flex items-center gap-2 text-sm font-medium"><MessageSquare className="h-4 w-4 text-accent" /> {t("account.messages")}</span>
+          <span className="text-sm text-muted-foreground">{MOCK_MESSAGES.filter(m => !m.read && m.from !== "customer").length} {t("account.unread")}</span>
         </button>
       </div>
     </div>
@@ -140,6 +145,7 @@ function AccountOverview({ onNavigate }: { onNavigate: (tab: string) => void }) 
 }
 
 function BookingCard({ booking }: { booking: Booking }) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const Icon = typeIcons[booking.listingType];
   const status = statusConfig[booking.status];
@@ -167,20 +173,20 @@ function BookingCard({ booking }: { booking: Booking }) {
           <DialogHeader><DialogTitle>{booking.listingTitle}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <div><span className="text-xs text-muted-foreground">Broneeringu ID</span><p className="text-sm font-medium">{booking.id}</p></div>
-              <div><span className="text-xs text-muted-foreground">Partner</span><p className="text-sm font-medium">{booking.provider}</p></div>
-              <div><span className="text-xs text-muted-foreground">Algus</span><p className="text-sm font-medium">{booking.startDate}</p></div>
-              <div><span className="text-xs text-muted-foreground">Periood</span><p className="text-sm font-medium">{booking.duration}</p></div>
+              <div><span className="text-xs text-muted-foreground">{t("req.requestId")}</span><p className="text-sm font-medium">{booking.id}</p></div>
+              <div><span className="text-xs text-muted-foreground">{t("detail.provider")}</span><p className="text-sm font-medium">{booking.provider}</p></div>
+              <div><span className="text-xs text-muted-foreground">{t("admin.startDate")}</span><p className="text-sm font-medium">{booking.startDate}</p></div>
+              <div><span className="text-xs text-muted-foreground">{t("req.period")}</span><p className="text-sm font-medium">{booking.duration}</p></div>
             </div>
             {order && (
               <div className="rounded-lg border border-border bg-secondary/30 p-3">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1"><Send className="h-3 w-3" /> Tellimuse staatus</p>
+                  <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1"><Send className="h-3 w-3" /> {t("admin.status")}</p>
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${ORDER_STATUS_CONFIG[order.status].color}`}>{ORDER_STATUS_CONFIG[order.status].label}</span>
                 </div>
-                {order.status === "sent" && <p className="mt-1 text-xs text-warning font-medium">⏳ Ootame partneri kinnitust...</p>}
-                {order.status === "confirmed" && <p className="mt-1 text-xs text-success font-medium">✓ Partner kinnitas teie broneeringu</p>}
-                {order.status === "rejected" && <p className="mt-1 text-xs text-destructive font-medium">✗ Partner lükkas broneeringu tagasi</p>}
+                {(order.status === "sent" || order.status === "sending") && <p className="mt-1 text-xs text-warning font-medium">⏳ {t("account.waitingConfirmation")}</p>}
+                {order.status === "confirmed" && <p className="mt-1 text-xs text-success font-medium">✓ {t("account.providerConfirmed")}</p>}
+                {order.status === "rejected" && <p className="mt-1 text-xs text-destructive font-medium">✗ {t("account.providerRejected")}</p>}
               </div>
             )}
             <div className="rounded-lg border border-border p-3">

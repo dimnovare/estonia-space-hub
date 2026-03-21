@@ -5,6 +5,9 @@ export type IntegrationType = "api" | "email" | "manual";
 export type OrderStatus = "created" | "sending" | "sent" | "confirmed" | "rejected" | "active" | "completed" | "cancelled";
 export type BookingStatus = "pending" | "confirmed" | "active" | "completed" | "cancelled";
 export type ListingType = "warehouse" | "moving" | "trailer";
+export type ApprovalMode = "auto" | "admin" | "provider";
+export type PostingMode = "api" | "email" | "manual";
+export type FulfillmentStatus = "awaiting_approval" | "approved" | "rejected" | "posting" | "posted" | "confirmed" | "failed" | "completed";
 
 export interface User {
   id: string;
@@ -39,6 +42,50 @@ export interface Supplier {
   notes?: string;
 }
 
+export interface PartnerIntegrationSettings {
+  id: string;
+  supplierId: string;
+  supplierName: string;
+  approvalMode: ApprovalMode;
+  postingMode: PostingMode;
+  fallbackPostingMode: PostingMode;
+  apiEndpoint?: string;
+  apiAuthType?: "bearer" | "basic" | "apikey";
+  apiAuthPlaceholder?: string;
+  recipientEmail?: string;
+  mappingProfile?: string;
+  isActive: boolean;
+  lastTestedAt?: string;
+  lastTestResult?: "success" | "failure";
+}
+
+export interface OrderRoutingRule {
+  id: string;
+  name: string;
+  partnerId?: string;
+  partnerName?: string;
+  serviceType?: ListingType;
+  orderType?: "standard" | "express" | "business";
+  priceThreshold?: number;
+  customerType?: "private" | "business";
+  requiresApproval: boolean;
+  approverRole: "admin" | "provider";
+  postingChannel: PostingMode;
+  priority: number;
+  isActive: boolean;
+}
+
+export interface FulfillmentEvent {
+  id: string;
+  orderId: string;
+  status: FulfillmentStatus;
+  actor: string;
+  actorRole: UserRole;
+  channel?: PostingMode;
+  detail?: string;
+  createdAt: string;
+}
+
 export interface Order {
   id: string;
   bookingId: string;
@@ -63,6 +110,11 @@ export interface Order {
   total: number;
   margin: number;
   status: OrderStatus;
+  approvalMode?: ApprovalMode;
+  approvedBy?: string;
+  approvedAt?: string;
+  postingChannel?: PostingMode;
+  fulfillmentEvents?: FulfillmentEvent[];
   createdAt: string;
   sentAt?: string;
   confirmedAt?: string;

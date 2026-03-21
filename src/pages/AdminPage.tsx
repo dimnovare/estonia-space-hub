@@ -4,58 +4,72 @@ import {
   TrendingUp, Eye, DollarSign, PlusCircle, Edit, Trash2, Warehouse, Truck, CarFront,
   X, Save, ChevronDown, Mail, Phone, Calendar, Shield, Globe, Bell, CreditCard, ToggleLeft,
   Package, Wifi, Hand, Send, Search, CheckCircle, Link2, Activity, Clock, AlertTriangle,
-  RefreshCw, ExternalLink, FileCode, Server, Zap
+  RefreshCw, ExternalLink, FileCode, Server, Zap, Route, Plug
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { MOCK_ORDERS, ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG, generateOrderEmailPreview, type Order, type OrderStatus } from "@/data/mockOrders";
 import { supplierService, userService, auditService } from "@/services";
-import type { Supplier, User as ServiceUser, AuditLogEntry } from "@/services/types";
-
-const sidebarLinks = [
-  { id: "dashboard", label: "Ülevaade", icon: LayoutDashboard },
-  { id: "listings", label: "Kuulutused", icon: List },
-  { id: "orders", label: "Tellimused", icon: Package },
-  { id: "suppliers", label: "Partnerid", icon: Link2 },
-  { id: "inquiries", label: "Päringud", icon: MessageSquare },
-  { id: "users", label: "Kasutajad", icon: Users },
-  { id: "content", label: "Sisu", icon: FileText },
-  { id: "audit", label: "Tegevuslogi", icon: Activity },
-  { id: "settings", label: "Seaded", icon: Settings },
-];
-
-const stats = [
-  { label: "Kuulutusi", value: "156", change: "+12%", icon: Eye },
-  { label: "Tellimusi", value: "342", change: "+24%", icon: Package },
-  { label: "Kasutajaid", value: "2,847", change: "+8%", icon: Users },
-  { label: "Tulu", value: "€4,230", change: "+18%", icon: DollarSign },
-];
-
-const initialInquiries = [
-  { id: 1, customer: "Andres Tamm", email: "andres@email.com", listing: "Laobox Tallinn", type: "warehouse", date: "2026-03-20", status: "Uus", notes: "" },
-  { id: 2, customer: "Kati Mets", email: "kati@email.com", listing: "KoliExpress", type: "moving", date: "2026-03-19", status: "Vastatud", notes: "Klient soovib lisainfot" },
-  { id: 3, customer: "Jüri Kask", email: "jyri@email.com", listing: "HaagisRent", type: "trailer", date: "2026-03-18", status: "Lõpetatud", notes: "" },
-  { id: 4, customer: "Maria Saar", email: "maria@email.com", listing: "MiniLadu Tartu", type: "warehouse", date: "2026-03-17", status: "Uus", notes: "" },
-];
-
-const initialListings = [
-  { id: "w1", title: "Laobox Tallinn Kesklinn", type: "warehouse", status: "Aktiivne", views: 234, inquiries: 18, price: 49, city: "Tallinn" },
-  { id: "w2", title: "MiniLadu Tartu", type: "warehouse", status: "Aktiivne", views: 156, inquiries: 8, price: 29, city: "Tartu" },
-  { id: "m1", title: "KoliExpress", type: "moving", status: "Aktiivne", views: 312, inquiries: 24, price: 45, city: "Tallinn" },
-  { id: "t1", title: "HaagisRent Tallinn", type: "trailer", status: "Peatatud", views: 89, inquiries: 5, price: 25, city: "Tallinn" },
-];
+import type { Supplier, User as ServiceUser, AuditLogEntry, PartnerIntegrationSettings, OrderRoutingRule, ApprovalMode, PostingMode } from "@/services/types";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const typeIcons: Record<string, typeof Warehouse> = { warehouse: Warehouse, moving: Truck, trailer: CarFront };
 
+// ─── Mock integration settings ───
+const MOCK_INTEGRATION_SETTINGS: PartnerIntegrationSettings[] = [
+  { id: "int-1", supplierId: "sup-1", supplierName: "Laobox OÜ", approvalMode: "auto", postingMode: "api", fallbackPostingMode: "email", apiEndpoint: "https://api.laobox.ee/v1/orders", apiAuthType: "bearer", apiAuthPlaceholder: "Bearer sk_live_***", recipientEmail: "orders@laobox.ee", mappingProfile: "laobox_v2", isActive: true, lastTestedAt: "2026-03-20 14:30", lastTestResult: "success" },
+  { id: "int-2", supplierId: "sup-2", supplierName: "MiniLadu AS", approvalMode: "admin", postingMode: "email", fallbackPostingMode: "manual", recipientEmail: "tiina@miniladu.ee", mappingProfile: "default", isActive: true },
+  { id: "int-3", supplierId: "sup-3", supplierName: "SecureStore OÜ", approvalMode: "auto", postingMode: "api", fallbackPostingMode: "email", apiEndpoint: "https://api.securestore.ee/bookings", apiAuthType: "apikey", apiAuthPlaceholder: "X-Api-Key: ***", recipientEmail: "bookings@securestore.ee", mappingProfile: "securestore_v1", isActive: true, lastTestedAt: "2026-03-19 09:15", lastTestResult: "success" },
+  { id: "int-4", supplierId: "sup-4", supplierName: "KoliExpress OÜ", approvalMode: "provider", postingMode: "email", fallbackPostingMode: "manual", recipientEmail: "andres@koliexpress.ee", mappingProfile: "default", isActive: true },
+  { id: "int-5", supplierId: "sup-5", supplierName: "HaagisRent OÜ", approvalMode: "admin", postingMode: "manual", fallbackPostingMode: "email", recipientEmail: "kristjan@haagisrent.ee", isActive: false },
+];
+
+const MOCK_ROUTING_RULES: OrderRoutingRule[] = [
+  { id: "rule-1", name: "API partnerid — automaatne", serviceType: "warehouse", requiresApproval: false, approverRole: "admin", postingChannel: "api", priority: 1, isActive: true },
+  { id: "rule-2", name: "Ärikliendid — admin kinnitab", customerType: "business", requiresApproval: true, approverRole: "admin", postingChannel: "email", priority: 2, isActive: true },
+  { id: "rule-3", name: "Kõrge hinnaga tellimused", priceThreshold: 500, requiresApproval: true, approverRole: "admin", postingChannel: "email", priority: 3, isActive: true },
+  { id: "rule-4", name: "Kolimine — partner kinnitab", serviceType: "moving", requiresApproval: true, approverRole: "provider", postingChannel: "email", priority: 4, isActive: true },
+  { id: "rule-5", name: "Haagise rent — manuaalne", serviceType: "trailer", requiresApproval: true, approverRole: "admin", postingChannel: "manual", priority: 5, isActive: false },
+];
+
+const initialInquiries = [
+  { id: 1, customer: "Andres Tamm", email: "andres@email.com", listing: "Laobox Tallinn", type: "warehouse", date: "2026-03-20", status: "new", notes: "" },
+  { id: 2, customer: "Kati Mets", email: "kati@email.com", listing: "KoliExpress", type: "moving", date: "2026-03-19", status: "answered", notes: "Klient soovib lisainfot" },
+  { id: 3, customer: "Jüri Kask", email: "jyri@email.com", listing: "HaagisRent", type: "trailer", date: "2026-03-18", status: "closed", notes: "" },
+  { id: 4, customer: "Maria Saar", email: "maria@email.com", listing: "MiniLadu Tartu", type: "warehouse", date: "2026-03-17", status: "new", notes: "" },
+];
+
+const initialListings = [
+  { id: "w1", title: "Laobox Tallinn Kesklinn", type: "warehouse", status: "active", views: 234, inquiries: 18, price: 49, city: "Tallinn" },
+  { id: "w2", title: "MiniLadu Tartu", type: "warehouse", status: "active", views: 156, inquiries: 8, price: 29, city: "Tartu" },
+  { id: "m1", title: "KoliExpress", type: "moving", status: "active", views: 312, inquiries: 24, price: 45, city: "Tallinn" },
+  { id: "t1", title: "HaagisRent Tallinn", type: "trailer", status: "paused", views: 89, inquiries: 5, price: 25, city: "Tallinn" },
+];
+
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const { t } = useLanguage();
+
+  const sidebarLinks = [
+    { id: "dashboard", label: t("admin.dashboard"), icon: LayoutDashboard },
+    { id: "listings", label: t("admin.listings"), icon: List },
+    { id: "orders", label: t("admin.orders"), icon: Package },
+    { id: "suppliers", label: t("admin.suppliers"), icon: Link2 },
+    { id: "integrations", label: t("admin.integrations"), icon: Plug },
+    { id: "routing", label: t("admin.routing"), icon: Route },
+    { id: "inquiries", label: t("admin.inquiries"), icon: MessageSquare },
+    { id: "users", label: t("admin.users"), icon: Users },
+    { id: "content", label: t("admin.content"), icon: FileText },
+    { id: "audit", label: t("admin.audit"), icon: Activity },
+    { id: "settings", label: t("admin.settings"), icon: Settings },
+  ];
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">
       <aside className="hidden w-56 shrink-0 border-r border-border bg-card lg:block">
         <div className="p-4">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Admin</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("admin.title")}</h2>
         </div>
         <nav className="space-y-0.5 px-2">
           {sidebarLinks.map((l) => {
@@ -71,7 +85,6 @@ export default function AdminPage() {
         </nav>
       </aside>
       <main className="flex-1 overflow-y-auto p-6">
-        {/* Mobile tabs */}
         <div className="mb-4 flex gap-2 overflow-x-auto lg:hidden">
           {sidebarLinks.map((l) => {
             const Icon = l.icon;
@@ -86,6 +99,8 @@ export default function AdminPage() {
         {activeTab === "listings" && <AdminListings />}
         {activeTab === "orders" && <AdminOrders />}
         {activeTab === "suppliers" && <AdminSuppliers />}
+        {activeTab === "integrations" && <AdminIntegrations />}
+        {activeTab === "routing" && <AdminRouting />}
         {activeTab === "inquiries" && <AdminInquiries />}
         {activeTab === "users" && <AdminUsers />}
         {activeTab === "content" && <AdminContent />}
@@ -98,9 +113,17 @@ export default function AdminPage() {
 
 /* ─── Dashboard ─── */
 function AdminDashboard() {
+  const { t } = useLanguage();
+  const stats = [
+    { label: t("admin.stats.listings"), value: "156", change: "+12%", icon: Eye },
+    { label: t("admin.stats.orders"), value: "342", change: "+24%", icon: Package },
+    { label: t("admin.stats.users"), value: "2,847", change: "+8%", icon: Users },
+    { label: t("admin.stats.revenue"), value: "€4,230", change: "+18%", icon: DollarSign },
+  ];
+
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Ülevaade</h1>
+      <h1 className="font-display text-2xl font-bold">{t("admin.dashboard")}</h1>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((s, i) => {
           const Icon = s.icon;
@@ -116,15 +139,15 @@ function AdminDashboard() {
           );
         })}
       </div>
-      <h2 className="mt-8 font-display text-lg font-semibold">Viimased päringud</h2>
+      <h2 className="mt-8 font-display text-lg font-semibold">{t("admin.recentInquiries")}</h2>
       <div className="mt-4 overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Klient</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Kuulutus</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Kuupäev</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Staatus</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.client")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.listing")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.date")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.status")}</th>
             </tr>
           </thead>
           <tbody>
@@ -134,7 +157,9 @@ function AdminDashboard() {
                 <td className="px-4 py-3 text-muted-foreground">{inq.listing}</td>
                 <td className="px-4 py-3 text-muted-foreground">{inq.date}</td>
                 <td className="px-4 py-3">
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inq.status === "Uus" ? "bg-accent/10 text-accent" : inq.status === "Vastatud" ? "bg-info/10 text-info" : "bg-muted text-muted-foreground"}`}>{inq.status}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inq.status === "new" ? "bg-accent/10 text-accent" : inq.status === "answered" ? "bg-info/10 text-info" : "bg-muted text-muted-foreground"}`}>
+                    {inq.status === "new" ? t("admin.new") : inq.status === "answered" ? t("admin.answered") : t("admin.closed")}
+                  </span>
                 </td>
               </tr>
             ))}
@@ -147,6 +172,7 @@ function AdminDashboard() {
 
 /* ─── Orders ─── */
 function AdminOrders() {
+  const { t } = useLanguage();
   const [orders, setOrders] = useState(MOCK_ORDERS);
   const [filter, setFilter] = useState<"all" | OrderStatus>("all");
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
@@ -161,11 +187,11 @@ function AdminOrders() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Tellimused</h1>
+      <h1 className="font-display text-2xl font-bold">{t("admin.orders")}</h1>
       <div className="mt-4 flex gap-2 overflow-x-auto">
         {(["all", "created", "sending", "sent", "confirmed", "rejected", "active", "completed"] as const).map((f) => (
           <button key={f} onClick={() => setFilter(f)} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
-            {f === "all" ? `Kõik (${orders.length})` : `${ORDER_STATUS_CONFIG[f].label} (${orders.filter((o) => o.status === f).length})`}
+            {f === "all" ? `${t("admin.all")} (${orders.length})` : `${ORDER_STATUS_CONFIG[f].label} (${orders.filter((o) => o.status === f).length})`}
           </button>
         ))}
       </div>
@@ -174,14 +200,14 @@ function AdminOrders() {
           <thead className="border-b border-border bg-secondary/50">
             <tr>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">ID</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Klient</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Teenus</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Partner</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Integratsioon</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Summa</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Marginaal</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Staatus</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Toimingud</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.client")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.service")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.partner")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.integration")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.amount")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.margin")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.status")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -199,7 +225,7 @@ function AdminOrders() {
                   <td className="px-4 py-3 font-medium">€{o.total}</td>
                   <td className="px-4 py-3 text-success font-medium">€{o.margin}</td>
                   <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusConf.color}`}>{statusConf.label}</span></td>
-                  <td className="px-4 py-3"><Button variant="outline" size="sm" onClick={() => setViewOrder(o)}>Vaata</Button></td>
+                  <td className="px-4 py-3"><Button variant="outline" size="sm" onClick={() => setViewOrder(o)}>{t("admin.view")}</Button></td>
                 </tr>
               );
             })}
@@ -209,36 +235,48 @@ function AdminOrders() {
 
       <Dialog open={!!viewOrder} onOpenChange={() => { setViewOrder(null); setEmailPreview(false); }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Tellimus {viewOrder?.id}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("admin.order")} {viewOrder?.id}</DialogTitle></DialogHeader>
           {viewOrder && !emailPreview && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div><span className="text-xs text-muted-foreground">Klient</span><p className="font-medium">{viewOrder.customerName}</p></div>
-                <div><span className="text-xs text-muted-foreground">E-post</span><p className="font-medium">{viewOrder.customerEmail}</p></div>
-                <div><span className="text-xs text-muted-foreground">Telefon</span><p className="font-medium">{viewOrder.customerPhone}</p></div>
-                <div><span className="text-xs text-muted-foreground">Teenus</span><p className="font-medium">{viewOrder.listingTitle}</p></div>
-                <div><span className="text-xs text-muted-foreground">Partner</span><p className="font-medium">{viewOrder.supplierName}</p></div>
-                <div><span className="text-xs text-muted-foreground">Integratsioon</span><p><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${INTEGRATION_TYPE_CONFIG[viewOrder.integrationType].color}`}>{INTEGRATION_TYPE_CONFIG[viewOrder.integrationType].label}</span></p></div>
-                <div><span className="text-xs text-muted-foreground">Algus</span><p className="font-medium">{viewOrder.startDate}</p></div>
-                <div><span className="text-xs text-muted-foreground">Periood</span><p className="font-medium">{viewOrder.duration}</p></div>
+                <div><span className="text-xs text-muted-foreground">{t("admin.client")}</span><p className="font-medium">{viewOrder.customerName}</p></div>
+                <div><span className="text-xs text-muted-foreground">{t("admin.email")}</span><p className="font-medium">{viewOrder.customerEmail}</p></div>
+                <div><span className="text-xs text-muted-foreground">{t("admin.phone")}</span><p className="font-medium">{viewOrder.customerPhone}</p></div>
+                <div><span className="text-xs text-muted-foreground">{t("admin.service")}</span><p className="font-medium">{viewOrder.listingTitle}</p></div>
+                <div><span className="text-xs text-muted-foreground">{t("admin.partner")}</span><p className="font-medium">{viewOrder.supplierName}</p></div>
+                <div><span className="text-xs text-muted-foreground">{t("admin.integration")}</span><p><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${INTEGRATION_TYPE_CONFIG[viewOrder.integrationType].color}`}>{INTEGRATION_TYPE_CONFIG[viewOrder.integrationType].label}</span></p></div>
+                <div><span className="text-xs text-muted-foreground">{t("admin.startDate")}</span><p className="font-medium">{viewOrder.startDate}</p></div>
+                <div><span className="text-xs text-muted-foreground">{t("admin.period")}</span><p className="font-medium">{viewOrder.duration}</p></div>
               </div>
+
+              {/* Fulfillment section */}
+              <div className="rounded-xl border border-accent/30 bg-accent/5 p-4">
+                <h3 className="flex items-center gap-2 text-sm font-semibold"><Route className="h-4 w-4 text-accent" /> Fulfillment</h3>
+                <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                  <div><span className="text-xs text-muted-foreground">{t("admin.approvalMode")}</span><p className="font-medium">{viewOrder.integrationType === "api" ? t("admin.approvalAuto") : t("admin.approvalAdmin")}</p></div>
+                  <div><span className="text-xs text-muted-foreground">{t("admin.postingChannel")}</span><p className="font-medium">{INTEGRATION_TYPE_CONFIG[viewOrder.integrationType].label}</p></div>
+                  {viewOrder.sentAt && <div><span className="text-xs text-muted-foreground">{t("admin.markSent")}</span><p className="font-medium">{viewOrder.sentAt}</p></div>}
+                  {viewOrder.confirmedAt && <div><span className="text-xs text-muted-foreground">{t("admin.markConfirmed")}</span><p className="font-medium">{viewOrder.confirmedAt}</p></div>}
+                </div>
+              </div>
+
               <div className="rounded-lg border border-border p-3 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Kliendi hind</span><span>€{viewOrder.platformPrice}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Partneri hind</span><span>€{viewOrder.supplierPrice}</span></div>
-                {viewOrder.extrasTotal > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Lisateenused</span><span>€{viewOrder.extrasTotal}</span></div>}
-                <div className="mt-2 flex justify-between border-t border-border pt-2 font-bold"><span>Kokku kliendilt</span><span>€{viewOrder.total}</span></div>
-                <div className="flex justify-between text-success font-medium"><span>Marginaal</span><span>€{viewOrder.margin}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("admin.clientPrice")}</span><span>€{viewOrder.platformPrice}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("admin.partnerPrice")}</span><span>€{viewOrder.supplierPrice}</span></div>
+                {viewOrder.extrasTotal > 0 && <div className="flex justify-between"><span className="text-muted-foreground">{t("admin.extras")}</span><span>€{viewOrder.extrasTotal}</span></div>}
+                <div className="mt-2 flex justify-between border-t border-border pt-2 font-bold"><span>{t("admin.totalFromClient")}</span><span>€{viewOrder.total}</span></div>
+                <div className="flex justify-between text-success font-medium"><span>{t("admin.margin")}</span><span>€{viewOrder.margin}</span></div>
               </div>
               <div>
-                <p className="text-xs font-semibold text-muted-foreground mb-2">Tellimuse ajalugu</p>
+                <p className="text-xs font-semibold text-muted-foreground mb-2">{t("admin.orderHistory")}</p>
                 <div className="space-y-2">
-                  {viewOrder.timeline.map((t, i) => (
+                  {viewOrder.timeline.map((tl, i) => (
                     <div key={i} className="flex items-start gap-2">
                       <div className="mt-1.5 h-2 w-2 rounded-full bg-accent shrink-0" />
                       <div>
-                        <p className="text-xs font-medium">{t.event}</p>
-                        {t.detail && <p className="text-[10px] text-muted-foreground font-mono">{t.detail}</p>}
-                        <p className="text-[10px] text-muted-foreground">{t.date} {t.time}</p>
+                        <p className="text-xs font-medium">{tl.event}</p>
+                        {tl.detail && <p className="text-[10px] text-muted-foreground font-mono">{tl.detail}</p>}
+                        <p className="text-[10px] text-muted-foreground">{tl.date} {tl.time}</p>
                       </div>
                     </div>
                   ))}
@@ -246,15 +284,15 @@ function AdminOrders() {
               </div>
               <div className="flex flex-wrap gap-2">
                 {viewOrder.integrationType === "email" && (
-                  <Button variant="outline" size="sm" onClick={() => setEmailPreview(true)}><Mail className="mr-1 h-3.5 w-3.5" /> Vaata e-kirja</Button>
+                  <Button variant="outline" size="sm" onClick={() => setEmailPreview(true)}><Mail className="mr-1 h-3.5 w-3.5" /> {t("admin.viewEmail")}</Button>
                 )}
                 {(viewOrder.status === "created" || viewOrder.status === "sending") && (
-                  <Button size="sm" onClick={() => updateOrderStatus(viewOrder.id, "sent")} className="bg-info text-white hover:bg-info/90"><Send className="mr-1 h-3.5 w-3.5" /> Märgi saadetud</Button>
+                  <Button size="sm" onClick={() => updateOrderStatus(viewOrder.id, "sent")} className="bg-info text-white hover:bg-info/90"><Send className="mr-1 h-3.5 w-3.5" /> {t("admin.markSent")}</Button>
                 )}
                 {viewOrder.status === "sent" && (
                   <>
-                    <Button size="sm" onClick={() => updateOrderStatus(viewOrder.id, "confirmed")} className="bg-success text-white hover:bg-success/90">Märgi kinnitatud</Button>
-                    <Button size="sm" variant="outline" onClick={() => updateOrderStatus(viewOrder.id, "rejected")} className="text-destructive">Märgi tagasi lükatud</Button>
+                    <Button size="sm" onClick={() => updateOrderStatus(viewOrder.id, "confirmed")} className="bg-success text-white hover:bg-success/90">{t("admin.markConfirmed")}</Button>
+                    <Button size="sm" variant="outline" onClick={() => updateOrderStatus(viewOrder.id, "rejected")} className="text-destructive">{t("admin.markRejected")}</Button>
                   </>
                 )}
               </div>
@@ -263,8 +301,8 @@ function AdminOrders() {
           {viewOrder && emailPreview && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold">E-kirja eelvaade</p>
-                <Button variant="outline" size="sm" onClick={() => setEmailPreview(false)}>Tagasi</Button>
+                <p className="text-sm font-semibold">{t("admin.emailPreview")}</p>
+                <Button variant="outline" size="sm" onClick={() => setEmailPreview(false)}>{t("admin.back")}</Button>
               </div>
               <pre className="rounded-lg border border-border bg-card p-4 text-xs whitespace-pre-wrap font-mono max-h-96 overflow-y-auto">{generateOrderEmailPreview(viewOrder)}</pre>
             </div>
@@ -277,6 +315,7 @@ function AdminOrders() {
 
 /* ─── Suppliers ─── */
 function AdminSuppliers() {
+  const { t } = useLanguage();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Supplier | null>(null);
@@ -304,8 +343,8 @@ function AdminSuppliers() {
   };
 
   const healthColor = (h: string) => h === "healthy" ? "bg-success/10 text-success" : h === "degraded" ? "bg-warning/10 text-warning" : "bg-destructive/10 text-destructive";
-  const healthLabel = (h: string) => h === "healthy" ? "Terve" : h === "degraded" ? "Häiritud" : "Offline";
-  const intIcon = (t: string) => t === "api" ? <Zap className="h-3.5 w-3.5" /> : t === "email" ? <Mail className="h-3.5 w-3.5" /> : <Hand className="h-3.5 w-3.5" />;
+  const healthLabel = (h: string) => h === "healthy" ? t("admin.healthy") : h === "degraded" ? t("admin.degraded") : t("admin.offline");
+  const intIcon = (tp: string) => tp === "api" ? <Zap className="h-3.5 w-3.5" /> : tp === "email" ? <Mail className="h-3.5 w-3.5" /> : <Hand className="h-3.5 w-3.5" />;
 
   if (loading) return <div className="flex items-center justify-center py-20"><RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
 
@@ -313,189 +352,345 @@ function AdminSuppliers() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold">Partnerid & integratsioonid</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Halda teenusepakkujaid, integratsioonitüüpe ja tellimuste edastamist.</p>
+          <h1 className="font-display text-2xl font-bold">{t("admin.suppliers")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t("admin.integrationDesc")}</p>
         </div>
       </div>
-
-      {/* Summary cards */}
       <div className="mt-6 grid gap-4 sm:grid-cols-4">
-        <div className="card-elevated p-4">
-          <div className="text-sm text-muted-foreground">Partnereid kokku</div>
-          <div className="mt-1 font-display text-2xl font-bold">{suppliers.length}</div>
-        </div>
-        <div className="card-elevated p-4">
-          <div className="text-sm text-muted-foreground">Aktiivsed</div>
-          <div className="mt-1 font-display text-2xl font-bold text-success">{suppliers.filter(s => s.isActive).length}</div>
-        </div>
-        <div className="card-elevated p-4">
-          <div className="text-sm text-muted-foreground">API integratsioonid</div>
-          <div className="mt-1 font-display text-2xl font-bold">{suppliers.filter(s => s.integrationType === "api").length}</div>
-        </div>
-        <div className="card-elevated p-4">
-          <div className="text-sm text-muted-foreground">Kokku tulu</div>
-          <div className="mt-1 font-display text-2xl font-bold">€{suppliers.reduce((s, sup) => s + sup.revenue, 0).toLocaleString()}</div>
-        </div>
+        <div className="card-elevated p-4"><div className="text-sm text-muted-foreground">{t("admin.totalPartners")}</div><div className="mt-1 font-display text-2xl font-bold">{suppliers.length}</div></div>
+        <div className="card-elevated p-4"><div className="text-sm text-muted-foreground">{t("admin.activePartners")}</div><div className="mt-1 font-display text-2xl font-bold text-success">{suppliers.filter(s => s.isActive).length}</div></div>
+        <div className="card-elevated p-4"><div className="text-sm text-muted-foreground">{t("admin.apiIntegrations")}</div><div className="mt-1 font-display text-2xl font-bold">{suppliers.filter(s => s.integrationType === "api").length}</div></div>
+        <div className="card-elevated p-4"><div className="text-sm text-muted-foreground">{t("admin.totalRevenue")}</div><div className="mt-1 font-display text-2xl font-bold">€{suppliers.reduce((s, sup) => s + sup.revenue, 0).toLocaleString()}</div></div>
       </div>
-
       <div className="mt-6 flex gap-2">
         {(["all", "active", "inactive"] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)} className={`rounded-full px-3 py-1.5 text-xs font-medium ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
-            {f === "all" ? "Kõik" : f === "active" ? "Aktiivsed" : "Mitteaktiivsed"}
+            {f === "all" ? t("admin.all") : f === "active" ? t("admin.active") : t("admin.inactive")}
           </button>
         ))}
       </div>
-
       <div className="mt-4 overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Partner</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Kontakt</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Integratsioon</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Tervis</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Kuulutusi</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Tellimusi</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Tulu</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Staatus</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Tegevused</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.partner")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.contact")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.integration")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.health")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.listingsCount")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.ordersCount")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.stats.revenue")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.status")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.actions")}</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map(s => (
               <tr key={s.id} className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors">
-                <td className="px-4 py-3">
-                  <div className="font-medium">{s.name}</div>
-                  <div className="text-[10px] text-muted-foreground font-mono">{s.registryCode}</div>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="text-xs">{s.contactName}</div>
-                  <div className="text-[10px] text-muted-foreground">{s.contactEmail}</div>
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${INTEGRATION_TYPE_CONFIG[s.integrationType].color}`}>
-                    {intIcon(s.integrationType)} {INTEGRATION_TYPE_CONFIG[s.integrationType].label}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${healthColor(s.integrationHealth)}`}>
-                    {s.integrationHealth === "healthy" ? <CheckCircle className="h-3 w-3" /> : s.integrationHealth === "degraded" ? <AlertTriangle className="h-3 w-3" /> : <X className="h-3 w-3" />}
-                    {healthLabel(s.integrationHealth)}
-                  </span>
-                </td>
+                <td className="px-4 py-3"><div className="font-medium">{s.name}</div><div className="text-[10px] text-muted-foreground font-mono">{s.registryCode}</div></td>
+                <td className="px-4 py-3"><div className="text-xs">{s.contactName}</div><div className="text-[10px] text-muted-foreground">{s.contactEmail}</div></td>
+                <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${INTEGRATION_TYPE_CONFIG[s.integrationType].color}`}>{intIcon(s.integrationType)} {INTEGRATION_TYPE_CONFIG[s.integrationType].label}</span></td>
+                <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${healthColor(s.integrationHealth)}`}>{healthLabel(s.integrationHealth)}</span></td>
                 <td className="px-4 py-3 text-muted-foreground">{s.listingCount}</td>
                 <td className="px-4 py-3 text-muted-foreground">{s.ordersTotal}</td>
                 <td className="px-4 py-3 font-medium">€{s.revenue.toLocaleString()}</td>
-                <td className="px-4 py-3">
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s.isActive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
-                    {s.isActive ? "Aktiivne" : "Mitteaktiivne"}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <Button variant="outline" size="sm" className="text-xs" onClick={() => { setSelected(s); setTestResult(null); }}>Vaata</Button>
-                </td>
+                <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s.isActive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{s.isActive ? t("admin.active") : t("admin.inactive")}</span></td>
+                <td className="px-4 py-3"><Button variant="outline" size="sm" className="text-xs" onClick={() => { setSelected(s); setTestResult(null); }}>{t("admin.view")}</Button></td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* Supplier detail dialog */}
       <Dialog open={!!selected} onOpenChange={(o) => { if (!o) { setSelected(null); setTestResult(null); } }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{selected?.name}</DialogTitle></DialogHeader>
           {selected && (
             <div className="space-y-5">
-              {/* Contact info */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-lg bg-secondary/50 p-3">
-                  <p className="text-xs text-muted-foreground">Kontaktisik</p>
-                  <p className="text-sm font-medium">{selected.contactName}</p>
-                </div>
-                <div className="rounded-lg bg-secondary/50 p-3">
-                  <p className="text-xs text-muted-foreground">E-post</p>
-                  <p className="text-sm font-medium">{selected.contactEmail}</p>
-                </div>
-                <div className="rounded-lg bg-secondary/50 p-3">
-                  <p className="text-xs text-muted-foreground">Telefon</p>
-                  <p className="text-sm font-medium">{selected.contactPhone}</p>
-                </div>
-                <div className="rounded-lg bg-secondary/50 p-3">
-                  <p className="text-xs text-muted-foreground">Registrikood</p>
-                  <p className="text-sm font-medium font-mono">{selected.registryCode}</p>
-                </div>
+                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">{t("admin.contactPerson")}</p><p className="text-sm font-medium">{selected.contactName}</p></div>
+                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">{t("admin.email")}</p><p className="text-sm font-medium">{selected.contactEmail}</p></div>
+                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">{t("admin.phone")}</p><p className="text-sm font-medium">{selected.contactPhone}</p></div>
+                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">{t("admin.registryCode")}</p><p className="text-sm font-medium font-mono">{selected.registryCode}</p></div>
               </div>
-
-              {/* Integration details */}
               <div className="rounded-xl border border-border p-4">
-                <h3 className="flex items-center gap-2 text-sm font-semibold"><Server className="h-4 w-4 text-accent" /> Integratsiooni seaded</h3>
+                <h3 className="flex items-center gap-2 text-sm font-semibold"><Server className="h-4 w-4 text-accent" /> {t("admin.integrationSettings")}</h3>
                 <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Tüüp</p>
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${INTEGRATION_TYPE_CONFIG[selected.integrationType].color}`}>
-                      {intIcon(selected.integrationType)} {INTEGRATION_TYPE_CONFIG[selected.integrationType].label}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Tervis</p>
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${healthColor(selected.integrationHealth)}`}>
-                      {healthLabel(selected.integrationHealth)}
-                    </span>
-                  </div>
-                  {selected.apiEndpoint && (
-                    <div className="col-span-2">
-                      <p className="text-xs text-muted-foreground">API Endpoint</p>
-                      <p className="font-mono text-xs mt-0.5 rounded-md bg-secondary px-2 py-1">{selected.apiEndpoint}</p>
-                    </div>
-                  )}
+                  <div><p className="text-xs text-muted-foreground">{t("admin.type")}</p><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${INTEGRATION_TYPE_CONFIG[selected.integrationType].color}`}>{intIcon(selected.integrationType)} {INTEGRATION_TYPE_CONFIG[selected.integrationType].label}</span></div>
+                  <div><p className="text-xs text-muted-foreground">{t("admin.health")}</p><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${healthColor(selected.integrationHealth)}`}>{healthLabel(selected.integrationHealth)}</span></div>
+                  {selected.apiEndpoint && (<div className="col-span-2"><p className="text-xs text-muted-foreground">{t("admin.apiEndpoint")}</p><p className="font-mono text-xs mt-0.5 rounded-md bg-secondary px-2 py-1">{selected.apiEndpoint}</p></div>)}
                 </div>
                 {selected.integrationType === "api" && (
                   <div className="mt-3">
                     <Button variant="outline" size="sm" className="gap-1.5" onClick={() => testIntegration(selected.id)} disabled={testingId === selected.id}>
                       {testingId === selected.id ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
-                      Testi ühendust
+                      {t("admin.testConnection")}
                     </Button>
                     {testResult && (
                       <div className={`mt-2 rounded-lg p-2 text-xs font-medium ${testResult.success ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
-                        {testResult.success ? `✓ Ühendus OK — ${testResult.latency}ms` : "✗ Ühendus ebaõnnestus"}
+                        {testResult.success ? `✓ ${t("admin.connectionOk")} — ${testResult.latency}ms` : `✗ ${t("admin.connectionFailed")}`}
                       </div>
                     )}
                   </div>
                 )}
               </div>
-
-              {/* Stats */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-lg bg-secondary/50 p-3 text-center">
-                  <p className="text-xs text-muted-foreground">Kuulutusi</p>
-                  <p className="text-lg font-bold">{selected.listingCount}</p>
-                </div>
-                <div className="rounded-lg bg-secondary/50 p-3 text-center">
-                  <p className="text-xs text-muted-foreground">Tellimusi</p>
-                  <p className="text-lg font-bold">{selected.ordersTotal}</p>
-                </div>
-                <div className="rounded-lg bg-secondary/50 p-3 text-center">
-                  <p className="text-xs text-muted-foreground">Tulu</p>
-                  <p className="text-lg font-bold text-accent">€{selected.revenue.toLocaleString()}</p>
+                <div className="rounded-lg bg-secondary/50 p-3 text-center"><p className="text-xs text-muted-foreground">{t("admin.listingsCount")}</p><p className="text-lg font-bold">{selected.listingCount}</p></div>
+                <div className="rounded-lg bg-secondary/50 p-3 text-center"><p className="text-xs text-muted-foreground">{t("admin.ordersCount")}</p><p className="text-lg font-bold">{selected.ordersTotal}</p></div>
+                <div className="rounded-lg bg-secondary/50 p-3 text-center"><p className="text-xs text-muted-foreground">{t("admin.stats.revenue")}</p><p className="text-lg font-bold text-accent">€{selected.revenue.toLocaleString()}</p></div>
+              </div>
+              {selected.lastOrderAt && <p className="text-xs text-muted-foreground">{t("admin.lastOrder")}: {selected.lastOrderAt}</p>}
+              {selected.notes && (
+                <div className="rounded-lg border border-warning/30 bg-warning/5 p-3"><p className="text-xs font-medium text-warning">{t("admin.notes")}</p><p className="text-xs text-muted-foreground mt-1">{selected.notes}</p></div>
+              )}
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => toggleStatus(selected.id)}>{selected.isActive ? t("admin.block") : t("admin.activate")}</Button>
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => setSelected(null)}>{t("admin.close")}</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+/* ─── Partner Integration Settings ─── */
+function AdminIntegrations() {
+  const { t } = useLanguage();
+  const [settings, setSettings] = useState(MOCK_INTEGRATION_SETTINGS);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editItem, setEditItem] = useState<PartnerIntegrationSettings | null>(null);
+
+  const approvalLabel = (m: ApprovalMode) => m === "auto" ? t("admin.approvalAuto") : m === "admin" ? t("admin.approvalAdmin") : t("admin.approvalProvider");
+  const postingLabel = (m: PostingMode) => m === "api" ? "API" : m === "email" ? "Email" : "Manual";
+  const approvalColor = (m: ApprovalMode) => m === "auto" ? "bg-success/10 text-success" : m === "admin" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent";
+
+  const openEdit = (item: PartnerIntegrationSettings) => { setEditItem({ ...item }); setEditOpen(true); };
+  const handleSave = () => {
+    if (!editItem) return;
+    setSettings(prev => prev.map(s => s.id === editItem.id ? editItem : s));
+    setEditOpen(false);
+  };
+
+  return (
+    <div>
+      <h1 className="font-display text-2xl font-bold">{t("admin.integrationTitle")}</h1>
+      <p className="mt-1 text-sm text-muted-foreground">{t("admin.integrationDesc")}</p>
+
+      <div className="mt-6 space-y-3">
+        {settings.map(s => (
+          <div key={s.id} className={`rounded-xl border p-4 transition-colors ${s.isActive ? "border-border" : "border-border bg-muted/30"}`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary"><Link2 className="h-5 w-5 text-muted-foreground" /></div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold">{s.supplierName}</span>
+                    {!s.isActive && <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-medium text-destructive">{t("admin.inactive")}</span>}
+                  </div>
+                  <div className="mt-0.5 flex items-center gap-3 text-xs text-muted-foreground">
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${approvalColor(s.approvalMode)}`}>{approvalLabel(s.approvalMode)}</span>
+                    <span>→ {postingLabel(s.postingMode)}</span>
+                    <span className="text-muted-foreground/50">({t("admin.fallbackMode")}: {postingLabel(s.fallbackPostingMode)})</span>
+                  </div>
                 </div>
               </div>
+              <div className="flex items-center gap-2">
+                {s.lastTestResult && (
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${s.lastTestResult === "success" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
+                    {s.lastTestResult === "success" ? "✓ OK" : "✗ Fail"}
+                  </span>
+                )}
+                <Button variant="outline" size="sm" onClick={() => openEdit(s)}><Edit className="h-3.5 w-3.5 mr-1" /> {t("admin.edit")}</Button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
 
-              {selected.lastOrderAt && (
-                <p className="text-xs text-muted-foreground">Viimane tellimus: {selected.lastOrderAt}</p>
-              )}
-              {selected.notes && (
-                <div className="rounded-lg border border-warning/30 bg-warning/5 p-3">
-                  <p className="text-xs font-medium text-warning">Märkused</p>
-                  <p className="text-xs text-muted-foreground mt-1">{selected.notes}</p>
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editItem?.supplierName} — {t("admin.integrationSettings")}</DialogTitle></DialogHeader>
+          {editItem && (
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.approvalMode")}</label>
+                <select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={editItem.approvalMode} onChange={e => setEditItem({ ...editItem, approvalMode: e.target.value as ApprovalMode })}>
+                  <option value="auto">{t("admin.approvalAuto")}</option>
+                  <option value="admin">{t("admin.approvalAdmin")}</option>
+                  <option value="provider">{t("admin.approvalProvider")}</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.postingMode")}</label>
+                  <select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={editItem.postingMode} onChange={e => setEditItem({ ...editItem, postingMode: e.target.value as PostingMode })}>
+                    <option value="api">API</option><option value="email">Email</option><option value="manual">Manual</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.fallbackMode")}</label>
+                  <select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={editItem.fallbackPostingMode} onChange={e => setEditItem({ ...editItem, fallbackPostingMode: e.target.value as PostingMode })}>
+                    <option value="api">API</option><option value="email">Email</option><option value="manual">Manual</option>
+                  </select>
+                </div>
+              </div>
+              {(editItem.postingMode === "api" || editItem.fallbackPostingMode === "api") && (
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.apiEndpoint")}</label>
+                  <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm font-mono" value={editItem.apiEndpoint || ""} onChange={e => setEditItem({ ...editItem, apiEndpoint: e.target.value })} placeholder="https://api.partner.ee/v1/orders" />
                 </div>
               )}
+              {(editItem.postingMode === "api" || editItem.fallbackPostingMode === "api") && (
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.apiAuth")}</label>
+                  <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm font-mono" value={editItem.apiAuthPlaceholder || ""} onChange={e => setEditItem({ ...editItem, apiAuthPlaceholder: e.target.value })} placeholder="Bearer sk_live_***" />
+                </div>
+              )}
+              {(editItem.postingMode === "email" || editItem.fallbackPostingMode === "email") && (
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.recipientEmail")}</label>
+                  <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={editItem.recipientEmail || ""} onChange={e => setEditItem({ ...editItem, recipientEmail: e.target.value })} placeholder="orders@partner.ee" />
+                </div>
+              )}
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.mappingProfile")}</label>
+                <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={editItem.mappingProfile || ""} onChange={e => setEditItem({ ...editItem, mappingProfile: e.target.value })} placeholder="default" />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                <span className="text-sm font-medium">{t("admin.active")}</span>
+                <button type="button" role="switch" aria-checked={editItem.isActive} onClick={() => setEditItem({ ...editItem, isActive: !editItem.isActive })}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${editItem.isActive ? "bg-accent" : "bg-muted"}`}>
+                  <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform duration-200 ${editItem.isActive ? "translate-x-[1.3rem]" : "translate-x-0.5"} mt-0.5`} />
+                </button>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setEditOpen(false)}>{t("admin.cancel")}</Button>
+                <Button onClick={handleSave} className="bg-accent text-accent-foreground hover:bg-accent/90"><Save className="mr-2 h-4 w-4" /> {t("admin.save")}</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
 
-              {/* Actions */}
-              <div className="flex gap-2 pt-2">
-                <Button variant="outline" size="sm" onClick={() => toggleStatus(selected.id)}>
-                  {selected.isActive ? "Deaktiveeri" : "Aktiveeri"}
-                </Button>
-                <Button variant="outline" size="sm" className="gap-1"><Send className="h-3.5 w-3.5" /> Saada uuesti viimane tellimus</Button>
+/* ─── Order Routing Rules ─── */
+function AdminRouting() {
+  const { t } = useLanguage();
+  const [rules, setRules] = useState(MOCK_ROUTING_RULES);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editItem, setEditItem] = useState<OrderRoutingRule | null>(null);
+  const [isNew, setIsNew] = useState(false);
+
+  const openNew = () => {
+    setEditItem({ id: `rule-${Date.now()}`, name: "", requiresApproval: true, approverRole: "admin", postingChannel: "email", priority: rules.length + 1, isActive: true });
+    setIsNew(true); setEditOpen(true);
+  };
+  const openEdit = (r: OrderRoutingRule) => { setEditItem({ ...r }); setIsNew(false); setEditOpen(true); };
+  const handleSave = () => {
+    if (!editItem) return;
+    if (isNew) setRules(prev => [...prev, editItem]);
+    else setRules(prev => prev.map(r => r.id === editItem.id ? editItem : r));
+    setEditOpen(false);
+  };
+  const toggleActive = (id: string) => setRules(prev => prev.map(r => r.id === id ? { ...r, isActive: !r.isActive } : r));
+
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-bold">{t("admin.routingTitle")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t("admin.routingDesc")}</p>
+        </div>
+        <Button onClick={openNew} className="bg-accent text-accent-foreground hover:bg-accent/90"><PlusCircle className="mr-2 h-4 w-4" /> {t("admin.addRule")}</Button>
+      </div>
+      <div className="mt-6 space-y-3">
+        {rules.sort((a, b) => a.priority - b.priority).map(r => (
+          <div key={r.id} className={`rounded-xl border p-4 transition-colors ${r.isActive ? "border-border" : "border-border bg-muted/30 opacity-60"}`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-xs font-bold text-muted-foreground">#{r.priority}</div>
+                <div>
+                  <div className="text-sm font-semibold">{r.name}</div>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[10px]">
+                    {r.serviceType && <span className="rounded-full bg-secondary px-2 py-0.5 font-medium text-muted-foreground">{r.serviceType === "warehouse" ? t("admin.warehouseType") : r.serviceType === "moving" ? t("admin.movingType") : t("admin.trailerType")}</span>}
+                    {r.customerType && <span className="rounded-full bg-secondary px-2 py-0.5 font-medium text-muted-foreground">{r.customerType === "private" ? t("admin.private") : t("admin.business")}</span>}
+                    {r.priceThreshold && <span className="rounded-full bg-secondary px-2 py-0.5 font-medium text-muted-foreground">≥ €{r.priceThreshold}</span>}
+                    <span className={`rounded-full px-2 py-0.5 font-medium ${r.requiresApproval ? "bg-warning/10 text-warning" : "bg-success/10 text-success"}`}>
+                      {r.requiresApproval ? `${t("admin.requiresApproval")}: ${r.approverRole}` : t("admin.approvalAuto")}
+                    </span>
+                    <span className="rounded-full bg-accent/10 px-2 py-0.5 font-medium text-accent">→ {r.postingChannel.toUpperCase()}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => toggleActive(r.id)} className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors ${r.isActive ? "bg-accent" : "bg-muted"}`}>
+                  <span className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${r.isActive ? "translate-x-[1rem]" : "translate-x-0.5"} mt-0.5`} />
+                </button>
+                <Button variant="ghost" size="sm" onClick={() => openEdit(r)}><Edit className="h-3.5 w-3.5" /></Button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>{isNew ? t("admin.addRule") : t("admin.edit")}</DialogTitle></DialogHeader>
+          {editItem && (
+            <div className="space-y-4">
+              <div><label className="text-xs font-medium text-muted-foreground">{t("admin.ruleName")}</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={editItem.name} onChange={e => setEditItem({ ...editItem, name: e.target.value })} /></div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.serviceType")}</label>
+                  <select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={editItem.serviceType || ""} onChange={e => setEditItem({ ...editItem, serviceType: (e.target.value || undefined) as any })}>
+                    <option value="">{t("admin.allTypes")}</option><option value="warehouse">{t("admin.warehouseType")}</option><option value="moving">{t("admin.movingType")}</option><option value="trailer">{t("admin.trailerType")}</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.customerType")}</label>
+                  <select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={editItem.customerType || ""} onChange={e => setEditItem({ ...editItem, customerType: (e.target.value || undefined) as any })}>
+                    <option value="">{t("admin.allTypes")}</option><option value="private">{t("admin.private")}</option><option value="business">{t("admin.business")}</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.priceThreshold")} (€)</label>
+                <input type="number" className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={editItem.priceThreshold || ""} onChange={e => setEditItem({ ...editItem, priceThreshold: Number(e.target.value) || undefined })} placeholder="500" />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                <span className="text-sm font-medium">{t("admin.requiresApproval")}</span>
+                <button type="button" role="switch" aria-checked={editItem.requiresApproval} onClick={() => setEditItem({ ...editItem, requiresApproval: !editItem.requiresApproval })}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors ${editItem.requiresApproval ? "bg-accent" : "bg-muted"}`}>
+                  <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${editItem.requiresApproval ? "translate-x-[1.3rem]" : "translate-x-0.5"} mt-0.5`} />
+                </button>
+              </div>
+              {editItem.requiresApproval && (
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.approverRole")}</label>
+                  <select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={editItem.approverRole} onChange={e => setEditItem({ ...editItem, approverRole: e.target.value as "admin" | "provider" })}>
+                    <option value="admin">{t("admin.title")}</option><option value="provider">{t("admin.provider")}</option>
+                  </select>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.postingChannel")}</label>
+                  <select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={editItem.postingChannel} onChange={e => setEditItem({ ...editItem, postingChannel: e.target.value as PostingMode })}>
+                    <option value="api">API</option><option value="email">Email</option><option value="manual">Manual</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.priority")}</label>
+                  <input type="number" className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={editItem.priority} onChange={e => setEditItem({ ...editItem, priority: Number(e.target.value) })} />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setEditOpen(false)}>{t("admin.cancel")}</Button>
+                <Button onClick={handleSave} className="bg-accent text-accent-foreground hover:bg-accent/90"><Save className="mr-2 h-4 w-4" /> {t("admin.save")}</Button>
               </div>
             </div>
           )}
@@ -507,12 +702,13 @@ function AdminSuppliers() {
 
 /* ─── Listings ─── */
 function AdminListings() {
+  const { t } = useLanguage();
   const [listings, setListings] = useState(initialListings);
   const [editOpen, setEditOpen] = useState(false);
   const [editItem, setEditItem] = useState<typeof initialListings[0] | null>(null);
   const [isNew, setIsNew] = useState(false);
 
-  const openNew = () => { setEditItem({ id: `new-${Date.now()}`, title: "", type: "warehouse", status: "Aktiivne", views: 0, inquiries: 0, price: 0, city: "" }); setIsNew(true); setEditOpen(true); };
+  const openNew = () => { setEditItem({ id: `new-${Date.now()}`, title: "", type: "warehouse", status: "active", views: 0, inquiries: 0, price: 0, city: "" }); setIsNew(true); setEditOpen(true); };
   const openEdit = (item: typeof initialListings[0]) => { setEditItem({ ...item }); setIsNew(false); setEditOpen(true); };
   const handleSave = () => { if (!editItem) return; if (isNew) setListings(prev => [...prev, editItem]); else setListings(prev => prev.map(l => l.id === editItem.id ? editItem : l)); setEditOpen(false); };
   const handleDelete = (id: string) => setListings(prev => prev.filter(l => l.id !== id));
@@ -520,20 +716,20 @@ function AdminListings() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">Kuulutused</h1>
-        <Button onClick={openNew} className="bg-accent text-accent-foreground hover:bg-accent/90"><PlusCircle className="mr-2 h-4 w-4" /> Lisa kuulutus</Button>
+        <h1 className="font-display text-2xl font-bold">{t("admin.listings")}</h1>
+        <Button onClick={openNew} className="bg-accent text-accent-foreground hover:bg-accent/90"><PlusCircle className="mr-2 h-4 w-4" /> {t("admin.addListing")}</Button>
       </div>
       <div className="mt-6 overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Pealkiri</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Tüüp</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Linn</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Hind</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Staatus</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Vaatamisi</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Toimingud</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.title_field")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.type")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.city")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.price")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.status")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.views")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -545,7 +741,7 @@ function AdminListings() {
                   <td className="px-4 py-3"><Icon className="h-4 w-4 text-muted-foreground" /></td>
                   <td className="px-4 py-3 text-muted-foreground">{l.city}</td>
                   <td className="px-4 py-3 text-muted-foreground">{l.price}€</td>
-                  <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${l.status === "Aktiivne" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>{l.status}</span></td>
+                  <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${l.status === "active" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>{l.status === "active" ? t("admin.active") : t("admin.paused")}</span></td>
                   <td className="px-4 py-3 text-muted-foreground">{l.views}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
@@ -561,21 +757,21 @@ function AdminListings() {
       </div>
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{isNew ? "Lisa uus kuulutus" : "Muuda kuulutust"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{isNew ? t("admin.addNewListing") : t("admin.editListing")}</DialogTitle></DialogHeader>
           {editItem && (
             <div className="space-y-4">
-              <div><label className="text-xs font-medium text-muted-foreground">Pealkiri</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={editItem.title} onChange={e => setEditItem({ ...editItem, title: e.target.value })} /></div>
+              <div><label className="text-xs font-medium text-muted-foreground">{t("admin.title_field")}</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={editItem.title} onChange={e => setEditItem({ ...editItem, title: e.target.value })} /></div>
               <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-xs font-medium text-muted-foreground">Tüüp</label><select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={editItem.type} onChange={e => setEditItem({ ...editItem, type: e.target.value })}><option value="warehouse">Laopind</option><option value="moving">Kolimine</option><option value="trailer">Haagise rent</option></select></div>
-                <div><label className="text-xs font-medium text-muted-foreground">Linn</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={editItem.city} onChange={e => setEditItem({ ...editItem, city: e.target.value })} /></div>
+                <div><label className="text-xs font-medium text-muted-foreground">{t("admin.type")}</label><select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={editItem.type} onChange={e => setEditItem({ ...editItem, type: e.target.value })}><option value="warehouse">{t("admin.warehouseType")}</option><option value="moving">{t("admin.movingType")}</option><option value="trailer">{t("admin.trailerType")}</option></select></div>
+                <div><label className="text-xs font-medium text-muted-foreground">{t("admin.city")}</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={editItem.city} onChange={e => setEditItem({ ...editItem, city: e.target.value })} /></div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-xs font-medium text-muted-foreground">Hind (€)</label><input type="number" className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={editItem.price} onChange={e => setEditItem({ ...editItem, price: Number(e.target.value) })} /></div>
-                <div><label className="text-xs font-medium text-muted-foreground">Staatus</label><select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={editItem.status} onChange={e => setEditItem({ ...editItem, status: e.target.value })}><option value="Aktiivne">Aktiivne</option><option value="Peatatud">Peatatud</option></select></div>
+                <div><label className="text-xs font-medium text-muted-foreground">{t("admin.price")} (€)</label><input type="number" className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={editItem.price} onChange={e => setEditItem({ ...editItem, price: Number(e.target.value) })} /></div>
+                <div><label className="text-xs font-medium text-muted-foreground">{t("admin.status")}</label><select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={editItem.status} onChange={e => setEditItem({ ...editItem, status: e.target.value })}><option value="active">{t("admin.active")}</option><option value="paused">{t("admin.paused")}</option></select></div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" onClick={() => setEditOpen(false)}>Tühista</Button>
-                <Button onClick={handleSave} className="bg-accent text-accent-foreground hover:bg-accent/90"><Save className="mr-2 h-4 w-4" /> Salvesta</Button>
+                <Button variant="outline" onClick={() => setEditOpen(false)}>{t("admin.cancel")}</Button>
+                <Button onClick={handleSave} className="bg-accent text-accent-foreground hover:bg-accent/90"><Save className="mr-2 h-4 w-4" /> {t("admin.save")}</Button>
               </div>
             </div>
           )}
@@ -587,26 +783,28 @@ function AdminListings() {
 
 /* ─── Inquiries ─── */
 function AdminInquiries() {
+  const { t } = useLanguage();
   const [inquiries, setInquiries] = useState(initialInquiries);
   const [viewOpen, setViewOpen] = useState(false);
   const [viewItem, setViewItem] = useState<typeof initialInquiries[0] | null>(null);
 
   const openView = (inq: typeof initialInquiries[0]) => { setViewItem({ ...inq }); setViewOpen(true); };
   const updateStatus = (id: number, status: string) => { setInquiries(prev => prev.map(i => i.id === id ? { ...i, status } : i)); if (viewItem?.id === id) setViewItem(prev => prev ? { ...prev, status } : prev); };
+  const statusLabel = (s: string) => s === "new" ? t("admin.new") : s === "answered" ? t("admin.answered") : t("admin.closed");
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Päringud</h1>
+      <h1 className="font-display text-2xl font-bold">{t("admin.inquiries")}</h1>
       <div className="mt-6 overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Klient</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">E-post</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Kuulutus</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Kuupäev</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Staatus</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Toimingud</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.client")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.email")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.listing")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.date")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.status")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -616,8 +814,8 @@ function AdminInquiries() {
                 <td className="px-4 py-3 text-muted-foreground">{inq.email}</td>
                 <td className="px-4 py-3 text-muted-foreground">{inq.listing}</td>
                 <td className="px-4 py-3 text-muted-foreground">{inq.date}</td>
-                <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inq.status === "Uus" ? "bg-accent/10 text-accent" : inq.status === "Vastatud" ? "bg-info/10 text-info" : "bg-muted text-muted-foreground"}`}>{inq.status}</span></td>
-                <td className="px-4 py-3"><Button variant="outline" size="sm" onClick={() => openView(inq)}>Vaata</Button></td>
+                <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inq.status === "new" ? "bg-accent/10 text-accent" : inq.status === "answered" ? "bg-info/10 text-info" : "bg-muted text-muted-foreground"}`}>{statusLabel(inq.status)}</span></td>
+                <td className="px-4 py-3"><Button variant="outline" size="sm" onClick={() => openView(inq)}>{t("admin.view")}</Button></td>
               </tr>
             ))}
           </tbody>
@@ -625,26 +823,26 @@ function AdminInquiries() {
       </div>
       <Dialog open={viewOpen} onOpenChange={setViewOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Päringu detailid</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("admin.inquiryDetails")}</DialogTitle></DialogHeader>
           {viewItem && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div><span className="text-xs text-muted-foreground">Klient</span><p className="font-medium">{viewItem.customer}</p></div>
-                <div><span className="text-xs text-muted-foreground">E-post</span><p className="font-medium">{viewItem.email}</p></div>
-                <div><span className="text-xs text-muted-foreground">Kuulutus</span><p className="font-medium">{viewItem.listing}</p></div>
-                <div><span className="text-xs text-muted-foreground">Kuupäev</span><p className="font-medium">{viewItem.date}</p></div>
+                <div><span className="text-xs text-muted-foreground">{t("admin.client")}</span><p className="font-medium">{viewItem.customer}</p></div>
+                <div><span className="text-xs text-muted-foreground">{t("admin.email")}</span><p className="font-medium">{viewItem.email}</p></div>
+                <div><span className="text-xs text-muted-foreground">{t("admin.listing")}</span><p className="font-medium">{viewItem.listing}</p></div>
+                <div><span className="text-xs text-muted-foreground">{t("admin.date")}</span><p className="font-medium">{viewItem.date}</p></div>
               </div>
               <div>
-                <span className="text-xs text-muted-foreground">Staatus</span>
-                <select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={viewItem.status} onChange={e => updateStatus(viewItem.id, e.target.value)}>
-                  <option value="Uus">Uus</option><option value="Vastatud">Vastatud</option><option value="Lõpetatud">Lõpetatud</option>
+                <span className="text-xs text-muted-foreground">{t("admin.status")}</span>
+                <select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={viewItem.status} onChange={e => updateStatus(viewItem.id, e.target.value)}>
+                  <option value="new">{t("admin.new")}</option><option value="answered">{t("admin.answered")}</option><option value="closed">{t("admin.closed")}</option>
                 </select>
               </div>
               <div>
-                <span className="text-xs text-muted-foreground">Märkmed</span>
-                <textarea className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" rows={3} value={viewItem.notes} onChange={e => setViewItem({ ...viewItem, notes: e.target.value })} placeholder="Lisa märkmed..." />
+                <span className="text-xs text-muted-foreground">{t("admin.notesField")}</span>
+                <textarea className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" rows={3} value={viewItem.notes} onChange={e => setViewItem({ ...viewItem, notes: e.target.value })} />
               </div>
-              <div className="flex justify-end"><Button onClick={() => setViewOpen(false)} className="bg-accent text-accent-foreground hover:bg-accent/90">Sulge</Button></div>
+              <div className="flex justify-end"><Button onClick={() => setViewOpen(false)} className="bg-accent text-accent-foreground hover:bg-accent/90">{t("admin.close")}</Button></div>
             </div>
           )}
         </DialogContent>
@@ -655,6 +853,7 @@ function AdminInquiries() {
 
 /* ─── Users ─── */
 function AdminUsers() {
+  const { t } = useLanguage();
   const [users, setUsers] = useState<ServiceUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<ServiceUser | null>(null);
@@ -662,9 +861,7 @@ function AdminUsers() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    userService.getAll().then(data => { setUsers(data); setLoading(false); });
-  }, []);
+  useEffect(() => { userService.getAll().then(data => { setUsers(data); setLoading(false); }); }, []);
 
   const filtered = users.filter(u => {
     if (filterRole !== "all" && u.role !== filterRole) return false;
@@ -678,39 +875,39 @@ function AdminUsers() {
     if (selectedUser?.id === id) setSelectedUser(prev => prev ? { ...prev, status: prev.status === "active" ? "blocked" as const : "active" as const } : prev);
   };
 
-  const roleLabel = (r: string) => r === "customer" ? "Klient" : r === "provider" ? "Pakkuja" : r === "admin" ? "Admin" : "Külaline";
+  const roleLabel = (r: string) => r === "customer" ? t("admin.customer") : r === "provider" ? t("admin.provider") : r === "admin" ? t("admin.title") : t("admin.guest");
 
   if (loading) return <div className="flex items-center justify-center py-20"><RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Kasutajad</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Halda kasutajaid ja teenusepakkujaid. {users.length} kasutajat kokku.</p>
+      <h1 className="font-display text-2xl font-bold">{t("admin.users")}</h1>
+      <p className="mt-2 text-sm text-muted-foreground">{users.length} {t("admin.usersTotal")}</p>
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Otsi nime või e-posti järgi..." className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm" />
+          <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder={t("admin.searchUsers")} className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm" />
         </div>
         <select value={filterRole} onChange={e => setFilterRole(e.target.value)} className="rounded-lg border border-border bg-card px-3 py-2 text-sm">
-          <option value="all">Kõik rollid</option><option value="customer">Klient</option><option value="provider">Pakkuja</option><option value="admin">Admin</option>
+          <option value="all">{t("admin.allRoles")}</option><option value="customer">{t("admin.customer")}</option><option value="provider">{t("admin.provider")}</option><option value="admin">{t("admin.title")}</option>
         </select>
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="rounded-lg border border-border bg-card px-3 py-2 text-sm">
-          <option value="all">Kõik staatused</option><option value="active">Aktiivne</option><option value="blocked">Blokeeritud</option>
+          <option value="all">{t("admin.allStatuses")}</option><option value="active">{t("admin.active")}</option><option value="blocked">{t("admin.blocked")}</option>
         </select>
-        <span className="text-xs text-muted-foreground">{filtered.length} kasutajat</span>
+        <span className="text-xs text-muted-foreground">{filtered.length} {t("admin.usersFound")}</span>
       </div>
       <div className="mt-4 overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Nimi</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">E-post</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Roll</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Registreeritud</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Viimane login</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Broneeringud</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Staatus</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Tegevused</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.name")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.email")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.role")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.registered")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.lastLogin")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.bookings")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.status")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -719,10 +916,7 @@ function AdminUsers() {
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">{u.name.split(" ").map(n => n[0]).join("")}</div>
-                    <div>
-                      <div className="font-medium">{u.name}</div>
-                      {u.company && <div className="text-[10px] text-muted-foreground">{u.company}</div>}
-                    </div>
+                    <div><div className="font-medium">{u.name}</div>{u.company && <div className="text-[10px] text-muted-foreground">{u.company}</div>}</div>
                   </div>
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
@@ -730,12 +924,12 @@ function AdminUsers() {
                 <td className="px-4 py-3 text-muted-foreground text-xs">{u.registeredAt}</td>
                 <td className="px-4 py-3 text-muted-foreground text-xs">{u.lastLoginAt || "—"}</td>
                 <td className="px-4 py-3 text-muted-foreground">{u.bookingsCount}</td>
-                <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${u.status === "active" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{u.status === "active" ? "Aktiivne" : "Blokeeritud"}</span></td>
+                <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${u.status === "active" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{u.status === "active" ? t("admin.active") : t("admin.blocked")}</span></td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setSelectedUser(u)}><Eye className="h-3 w-3 mr-1" />Vaata</Button>
+                    <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setSelectedUser(u)}><Eye className="h-3 w-3 mr-1" />{t("admin.view")}</Button>
                     <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => toggleStatus(u.id)}>
-                      {u.status === "active" ? <><Shield className="h-3 w-3 mr-1" />Blokeeri</> : <><CheckCircle className="h-3 w-3 mr-1" />Aktiveeri</>}
+                      {u.status === "active" ? <><Shield className="h-3 w-3 mr-1" />{t("admin.block")}</> : <><CheckCircle className="h-3 w-3 mr-1" />{t("admin.activate")}</>}
                     </Button>
                   </div>
                 </td>
@@ -746,28 +940,24 @@ function AdminUsers() {
       </div>
       <Dialog open={!!selectedUser} onOpenChange={o => !o && setSelectedUser(null)}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Kasutaja profiil</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("admin.userProfile")}</DialogTitle></DialogHeader>
           {selectedUser && (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary font-display text-xl font-bold">{selectedUser.name.split(" ").map(n => n[0]).join("")}</div>
-                <div>
-                  <p className="font-semibold">{selectedUser.name}</p>
-                  <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
-                  {selectedUser.company && <p className="text-xs text-accent">{selectedUser.company}</p>}
-                </div>
+                <div><p className="font-semibold">{selectedUser.name}</p><p className="text-sm text-muted-foreground">{selectedUser.email}</p>{selectedUser.company && <p className="text-xs text-accent">{selectedUser.company}</p>}</div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">Roll</p><p className="text-sm font-medium">{roleLabel(selectedUser.role)}</p></div>
-                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">Staatus</p><p className={`text-sm font-medium ${selectedUser.status === "active" ? "text-success" : "text-destructive"}`}>{selectedUser.status === "active" ? "Aktiivne" : "Blokeeritud"}</p></div>
-                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">Registreeritud</p><p className="text-sm font-medium">{selectedUser.registeredAt}</p></div>
-                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">Viimane login</p><p className="text-sm font-medium">{selectedUser.lastLoginAt || "—"}</p></div>
-                {selectedUser.phone && <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">Telefon</p><p className="text-sm font-medium">{selectedUser.phone}</p></div>}
-                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">Broneeringud</p><p className="text-sm font-medium">{selectedUser.bookingsCount}</p></div>
+                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">{t("admin.role")}</p><p className="text-sm font-medium">{roleLabel(selectedUser.role)}</p></div>
+                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">{t("admin.status")}</p><p className={`text-sm font-medium ${selectedUser.status === "active" ? "text-success" : "text-destructive"}`}>{selectedUser.status === "active" ? t("admin.active") : t("admin.blocked")}</p></div>
+                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">{t("admin.registered")}</p><p className="text-sm font-medium">{selectedUser.registeredAt}</p></div>
+                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">{t("admin.lastLogin")}</p><p className="text-sm font-medium">{selectedUser.lastLoginAt || "—"}</p></div>
+                {selectedUser.phone && <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">{t("admin.phone")}</p><p className="text-sm font-medium">{selectedUser.phone}</p></div>}
+                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">{t("admin.bookings")}</p><p className="text-sm font-medium">{selectedUser.bookingsCount}</p></div>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1" onClick={() => toggleStatus(selectedUser.id)}>{selectedUser.status === "active" ? "Blokeeri kasutaja" : "Aktiveeri kasutaja"}</Button>
-                <Button variant="outline" size="sm" className="flex-1" onClick={() => setSelectedUser(null)}>Sulge</Button>
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => toggleStatus(selectedUser.id)}>{selectedUser.status === "active" ? t("admin.blockUser") : t("admin.activateUser")}</Button>
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => setSelectedUser(null)}>{t("admin.close")}</Button>
               </div>
             </div>
           )}
@@ -779,12 +969,11 @@ function AdminUsers() {
 
 /* ─── Audit Log ─── */
 function AdminAudit() {
+  const { t } = useLanguage();
   const [logs, setLogs] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    auditService.getAll().then(data => { setLogs(data); setLoading(false); });
-  }, []);
+  useEffect(() => { auditService.getAll().then(data => { setLogs(data); setLoading(false); }); }, []);
 
   const actionColor = (a: string) => {
     if (a.includes("confirmed") || a.includes("activated")) return "bg-success/10 text-success";
@@ -797,14 +986,12 @@ function AdminAudit() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Tegevuslogi</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Platvormi sündmused ja tegevuste ajalugu.</p>
+      <h1 className="font-display text-2xl font-bold">{t("admin.auditTitle")}</h1>
+      <p className="mt-2 text-sm text-muted-foreground">{t("admin.auditDesc")}</p>
       <div className="mt-6 space-y-2">
         {logs.map(log => (
           <div key={log.id} className="flex items-start gap-3 rounded-xl border border-border p-4">
-            <div className="mt-0.5">
-              <Activity className="h-4 w-4 text-muted-foreground" />
-            </div>
+            <div className="mt-0.5"><Activity className="h-4 w-4 text-muted-foreground" /></div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium font-mono ${actionColor(log.action)}`}>{log.action}</span>
@@ -823,35 +1010,36 @@ function AdminAudit() {
 
 /* ─── Content ─── */
 function AdminContent() {
+  const { t } = useLanguage();
   const [editOpen, setEditOpen] = useState(false);
   const [editSection, setEditSection] = useState("");
   const [contentValues, setContentValues] = useState<Record<string, string>>({
-    "Avalehe hero": "Leia laopinda, kolimist ja logistikat ühest kohast",
-    "KKK küsimused": "Kuidas Ruumly töötab?\nKas broneerimine on tasuta?\nKuidas ma saan pakkujaks?",
-    "Kategooriad": "Laopinnad, Kolimine, Haagise rent",
-    "Jalus": "© 2026 Ruumly. Kõik õigused kaitstud.",
+    "Homepage hero": "Leia laopinda, kolimist ja logistikat ühest kohast",
+    "FAQ": "Kuidas Ruumly töötab?\nKas broneerimine on tasuta?\nKuidas ma saan pakkujaks?",
+    "Categories": "Laopinnad, Kolimine, Haagise rent",
+    "Footer": "© 2026 Ruumly. Kõik õigused kaitstud.",
   });
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Sisu haldus</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Muutke avalehe sisu, kategooriaid ja KKK-d.</p>
+      <h1 className="font-display text-2xl font-bold">{t("admin.contentManagement")}</h1>
+      <p className="mt-2 text-sm text-muted-foreground">{t("admin.contentDesc")}</p>
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         {Object.keys(contentValues).map(item => (
           <div key={item} className="card-elevated flex items-center justify-between p-4">
             <span className="text-sm font-medium">{item}</span>
-            <Button variant="outline" size="sm" onClick={() => { setEditSection(item); setEditOpen(true); }}>Muuda</Button>
+            <Button variant="outline" size="sm" onClick={() => { setEditSection(item); setEditOpen(true); }}>{t("admin.edit")}</Button>
           </div>
         ))}
       </div>
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Muuda: {editSection}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("admin.edit")}: {editSection}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <textarea className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" rows={6} value={contentValues[editSection] || ""} onChange={e => setContentValues({ ...contentValues, [editSection]: e.target.value })} />
+            <textarea className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" rows={6} value={contentValues[editSection] || ""} onChange={e => setContentValues({ ...contentValues, [editSection]: e.target.value })} />
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setEditOpen(false)}>Tühista</Button>
-              <Button onClick={() => setEditOpen(false)} className="bg-accent text-accent-foreground hover:bg-accent/90"><Save className="mr-2 h-4 w-4" /> Salvesta</Button>
+              <Button variant="outline" onClick={() => setEditOpen(false)}>{t("admin.cancel")}</Button>
+              <Button onClick={() => setEditOpen(false)} className="bg-accent text-accent-foreground hover:bg-accent/90"><Save className="mr-2 h-4 w-4" /> {t("admin.save")}</Button>
             </div>
           </div>
         </DialogContent>
@@ -862,6 +1050,7 @@ function AdminContent() {
 
 /* ─── Settings ─── */
 function AdminSettings() {
+  const { t } = useLanguage();
   const [settings, setSettings] = useState({
     siteName: "Ruumly", siteEmail: "info@ruumly.eu", sitePhone: "+372 5555 1234",
     defaultLanguage: "et", currency: "EUR", commissionRate: "10",
@@ -870,32 +1059,32 @@ function AdminSettings() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Seaded</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Platvormi ja konto seaded.</p>
+      <h1 className="font-display text-2xl font-bold">{t("admin.settingsTitle")}</h1>
+      <p className="mt-2 text-sm text-muted-foreground">{t("admin.settingsDesc")}</p>
       <div className="mt-6 space-y-6">
         <div className="rounded-xl border border-border p-5">
-          <h3 className="flex items-center gap-2 font-display text-base font-semibold"><Globe className="h-4 w-4 text-accent" /> Üldised seaded</h3>
+          <h3 className="flex items-center gap-2 font-display text-base font-semibold"><Globe className="h-4 w-4 text-accent" /> {t("admin.generalSettings")}</h3>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <div><label className="text-xs font-medium text-muted-foreground">Saidi nimi</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={settings.siteName} onChange={e => setSettings({ ...settings, siteName: e.target.value })} /></div>
-            <div><label className="text-xs font-medium text-muted-foreground">E-post</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={settings.siteEmail} onChange={e => setSettings({ ...settings, siteEmail: e.target.value })} /></div>
-            <div><label className="text-xs font-medium text-muted-foreground">Telefon</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={settings.sitePhone} onChange={e => setSettings({ ...settings, sitePhone: e.target.value })} /></div>
-            <div><label className="text-xs font-medium text-muted-foreground">Vaikimisi keel</label><select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={settings.defaultLanguage} onChange={e => setSettings({ ...settings, defaultLanguage: e.target.value })}><option value="et">Eesti</option><option value="en">English</option><option value="ru">Русский</option></select></div>
+            <div><label className="text-xs font-medium text-muted-foreground">{t("admin.siteName")}</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={settings.siteName} onChange={e => setSettings({ ...settings, siteName: e.target.value })} /></div>
+            <div><label className="text-xs font-medium text-muted-foreground">{t("admin.email")}</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={settings.siteEmail} onChange={e => setSettings({ ...settings, siteEmail: e.target.value })} /></div>
+            <div><label className="text-xs font-medium text-muted-foreground">{t("admin.phone")}</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={settings.sitePhone} onChange={e => setSettings({ ...settings, sitePhone: e.target.value })} /></div>
+            <div><label className="text-xs font-medium text-muted-foreground">{t("admin.defaultLanguage")}</label><select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={settings.defaultLanguage} onChange={e => setSettings({ ...settings, defaultLanguage: e.target.value })}><option value="et">Eesti</option><option value="en">English</option><option value="ru">Русский</option></select></div>
           </div>
         </div>
         <div className="rounded-xl border border-border p-5">
-          <h3 className="flex items-center gap-2 font-display text-base font-semibold"><CreditCard className="h-4 w-4 text-accent" /> Äri seaded</h3>
+          <h3 className="flex items-center gap-2 font-display text-base font-semibold"><CreditCard className="h-4 w-4 text-accent" /> {t("admin.businessSettings")}</h3>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <div><label className="text-xs font-medium text-muted-foreground">Valuuta</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={settings.currency} onChange={e => setSettings({ ...settings, currency: e.target.value })} /></div>
-            <div><label className="text-xs font-medium text-muted-foreground">Komisjonitasu (%)</label><input type="number" className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={settings.commissionRate} onChange={e => setSettings({ ...settings, commissionRate: e.target.value })} /></div>
+            <div><label className="text-xs font-medium text-muted-foreground">{t("admin.currency")}</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={settings.currency} onChange={e => setSettings({ ...settings, currency: e.target.value })} /></div>
+            <div><label className="text-xs font-medium text-muted-foreground">{t("admin.commission")}</label><input type="number" className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={settings.commissionRate} onChange={e => setSettings({ ...settings, commissionRate: e.target.value })} /></div>
           </div>
         </div>
         <div className="rounded-xl border border-border p-5">
-          <h3 className="flex items-center gap-2 font-display text-base font-semibold"><ToggleLeft className="h-4 w-4 text-accent" /> Lülitid</h3>
+          <h3 className="flex items-center gap-2 font-display text-base font-semibold"><ToggleLeft className="h-4 w-4 text-accent" /> {t("admin.toggles")}</h3>
           <div className="mt-4 space-y-3">
             {([
-              { key: "emailNotifications" as const, label: "E-posti teavitused", desc: "Saada teavitusi uutest päringutest" },
-              { key: "maintenanceMode" as const, label: "Hooldusrežiim", desc: "Lülita sait hooldusrežiimi" },
-              { key: "autoApproveListings" as const, label: "Automaatne kinnitamine", desc: "Kinnita uued kuulutused automaatselt" },
+              { key: "emailNotifications" as const, label: t("admin.emailNotifications"), desc: t("admin.emailNotificationsDesc") },
+              { key: "maintenanceMode" as const, label: t("admin.maintenanceMode"), desc: t("admin.maintenanceModeDesc") },
+              { key: "autoApproveListings" as const, label: t("admin.autoApprove"), desc: t("admin.autoApproveDesc") },
             ]).map(toggle => (
               <div key={toggle.key} className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div><div className="text-sm font-medium">{toggle.label}</div><div className="text-xs text-muted-foreground">{toggle.desc}</div></div>
@@ -907,7 +1096,7 @@ function AdminSettings() {
             ))}
           </div>
         </div>
-        <div className="flex justify-end"><Button className="bg-accent text-accent-foreground hover:bg-accent/90"><Save className="mr-2 h-4 w-4" /> Salvesta seaded</Button></div>
+        <div className="flex justify-end"><Button className="bg-accent text-accent-foreground hover:bg-accent/90"><Save className="mr-2 h-4 w-4" /> {t("admin.saveSettings")}</Button></div>
       </div>
     </div>
   );
