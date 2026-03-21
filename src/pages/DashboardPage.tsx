@@ -36,7 +36,7 @@ export default function DashboardPage() {
             </div>
             <div className="mt-4 space-y-3">
               {requests.map((r) => (
-                <div key={r.id} className="flex items-center justify-between rounded-lg border border-border p-3">
+                <Link key={r.id} to={`/dashboard/request/${r.id}`} className="flex items-center justify-between rounded-lg border border-border p-3 hover:bg-secondary transition-colors">
                   <div>
                     <div className="text-sm font-medium">{r.listing}</div>
                     <div className="mt-0.5 text-xs text-muted-foreground">{r.type} · {r.date}</div>
@@ -47,7 +47,7 @@ export default function DashboardPage() {
                     </span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
