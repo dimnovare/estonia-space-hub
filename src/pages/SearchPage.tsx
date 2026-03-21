@@ -1,10 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, lazy, Suspense } from "react";
 import { useSearchParams } from "react-router-dom";
-import { SlidersHorizontal, X, ChevronDown } from "lucide-react";
+import { SlidersHorizontal, X, ChevronDown, List, MapIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ALL_LISTINGS, type Listing, type ListingType } from "@/data/mockData";
 import ListingCard from "@/components/ListingCard";
-import MapPlaceholder from "@/components/MapPlaceholder";
+
+const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
 const sortOptions = [
   { value: "best", label: "Parim vaste" },
@@ -29,11 +30,32 @@ export default function SearchPage() {
   const [activeType, setActiveType] = useState<string>(initialType);
   const [sort, setSort] = useState("best");
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
+  const [mobileView, setMobileView] = useState<"list" | "map">("list");
 
-  // Filter state
+  // Common filters
+  const [availableNow, setAvailableNow] = useState(false);
+  const [cityFilter, setCityFilter] = useState("");
+  const [priceMax, setPriceMax] = useState("");
+
+  // Warehouse filters
   const [heated, setHeated] = useState(false);
   const [access24, setAccess24] = useState(false);
-  const [availableNow, setAvailableNow] = useState(false);
+  const [indoor, setIndoor] = useState(false);
+  const [security, setSecurity] = useState(false);
+  const [loadingDock, setLoadingDock] = useState(false);
+  const [forkliftFilter, setForkliftFilter] = useState(false);
+  const [shortTerm, setShortTerm] = useState(false);
+  const [longTerm, setLongTerm] = useState(false);
+
+  // Moving filters
+  const [withVan, setWithVan] = useState(false);
+  const [packingHelp, setPackingHelp] = useState(false);
+  const [loadingHelp, setLoadingHelp] = useState(false);
+  const [pricingFixed, setPricingFixed] = useState(false);
+
+  // Trailer filters
+  const [trailerClosed, setTrailerClosed] = useState(false);
 
   const filtered = useMemo(() => {
     let results = ALL_LISTINGS;
@@ -44,27 +66,104 @@ export default function SearchPage() {
         (l) => l.title.toLowerCase().includes(q) || l.city.toLowerCase().includes(q) || l.address.toLowerCase().includes(q)
       );
     }
+    if (cityFilter) {
+      const c = cityFilter.toLowerCase();
+      results = results.filter((l) => l.city.toLowerCase().includes(c));
+    }
+    if (priceMax) {
+      const max = parseInt(priceMax);
+      if (!isNaN(max)) results = results.filter((l) => l.priceFrom <= max);
+    }
+    if (availableNow) results = results.filter((l) => l.availableNow);
+
+    // Warehouse-specific
     if (heated) results = results.filter((l) => l.type === "warehouse" && l.heated);
     if (access24) results = results.filter((l) => l.type === "warehouse" && l.access24_7);
-    if (availableNow) results = results.filter((l) => l.availableNow);
+    if (indoor) results = results.filter((l) => l.type === "warehouse" && l.indoor);
+    if (security) results = results.filter((l) => l.type === "warehouse" && l.security);
+    if (loadingDock) results = results.filter((l) => l.type === "warehouse" && l.loadingDock);
+    if (forkliftFilter) results = results.filter((l) => l.type === "warehouse" && l.forklift);
+    if (shortTerm) results = results.filter((l) => l.type === "warehouse" && l.shortTerm);
+    if (longTerm) results = results.filter((l) => l.type === "warehouse" && l.longTerm);
+
+    // Moving-specific
+    if (withVan) results = results.filter((l) => l.type === "moving" && l.withVan);
+    if (packingHelp) results = results.filter((l) => l.type === "moving" && l.packingHelp);
+    if (loadingHelp) results = results.filter((l) => l.type === "moving" && l.loadingHelp);
+    if (pricingFixed) results = results.filter((l) => l.type === "moving" && l.pricingModel === "fixed");
+
+    // Trailer-specific
+    if (trailerClosed) results = results.filter((l) => l.type === "trailer" && l.trailerType.toLowerCase().includes("kinnine"));
 
     // Sort
     if (sort === "cheapest") results = [...results].sort((a, b) => a.priceFrom - b.priceFrom);
-    if (sort === "nearest") results = [...results].sort((a, b) => a.rating - b.rating); // placeholder
+    if (sort === "nearest") results = [...results].sort((a, b) => a.rating - b.rating);
+    if (sort === "best-value") results = [...results].sort((a, b) => b.rating - a.rating);
     return results;
-  }, [activeType, query, heated, access24, availableNow, sort]);
+  }, [activeType, query, cityFilter, priceMax, heated, access24, indoor, security, loadingDock, forkliftFilter, shortTerm, longTerm, withVan, packingHelp, loadingHelp, pricingFixed, trailerClosed, availableNow, sort]);
 
-  const activeFiltersCount = [heated, access24, availableNow].filter(Boolean).length;
+  const allFilters = [heated, access24, indoor, security, loadingDock, forkliftFilter, shortTerm, longTerm, withVan, packingHelp, loadingHelp, pricingFixed, trailerClosed, availableNow];
+  const activeFiltersCount = allFilters.filter(Boolean).length + (cityFilter ? 1 : 0) + (priceMax ? 1 : 0);
+
+  const clearAll = () => {
+    setHeated(false); setAccess24(false); setIndoor(false); setSecurity(false);
+    setLoadingDock(false); setForkliftFilter(false); setShortTerm(false); setLongTerm(false);
+    setWithVan(false); setPackingHelp(false); setLoadingHelp(false); setPricingFixed(false);
+    setTrailerClosed(false); setAvailableNow(false); setCityFilter(""); setPriceMax("");
+  };
+
+  const handleMarkerClick = (listing: Listing) => {
+    setSelectedListingId(listing.id);
+  };
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-col lg:flex-row">
-      {/* Map */}
-      <div className="h-[250px] lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:w-1/2 xl:w-[55%]">
-        <MapPlaceholder listings={filtered} className="rounded-none" height="h-full" />
+      {/* Map - desktop */}
+      <div className="hidden lg:sticky lg:top-16 lg:block lg:h-[calc(100vh-4rem)] lg:w-1/2 xl:w-[55%]">
+        <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary text-muted-foreground">Kaart laeb...</div>}>
+          <InteractiveMap
+            listings={filtered}
+            className="rounded-none"
+            height="h-full"
+            selectedId={selectedListingId}
+            onMarkerClick={handleMarkerClick}
+          />
+        </Suspense>
       </div>
 
+      {/* Mobile map/list toggle */}
+      <div className="flex items-center gap-2 border-b border-border bg-card p-2 lg:hidden">
+        <button
+          onClick={() => setMobileView("list")}
+          className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-colors ${mobileView === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+        >
+          <List className="h-3.5 w-3.5" /> Nimekiri
+        </button>
+        <button
+          onClick={() => setMobileView("map")}
+          className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-colors ${mobileView === "map" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+        >
+          <MapIcon className="h-3.5 w-3.5" /> Kaart
+        </button>
+      </div>
+
+      {/* Mobile map */}
+      {mobileView === "map" && (
+        <div className="h-[calc(100vh-8rem)] lg:hidden">
+          <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary">Kaart laeb...</div>}>
+            <InteractiveMap
+              listings={filtered}
+              className="rounded-none"
+              height="h-full"
+              selectedId={selectedListingId}
+              onMarkerClick={handleMarkerClick}
+            />
+          </Suspense>
+        </div>
+      )}
+
       {/* Listings panel */}
-      <div className="flex-1 border-l border-border">
+      <div className={`flex-1 border-l border-border ${mobileView === "map" ? "hidden lg:block" : ""}`}>
         {/* Top bar */}
         <div className="sticky top-16 z-10 border-b border-border bg-card px-4 py-3">
           <div className="flex flex-wrap items-center gap-2">
@@ -109,16 +208,70 @@ export default function SearchPage() {
 
           {/* Filter panel */}
           {showFilters && (
-            <div className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">
-              <FilterToggle label="Köetud" active={heated} onChange={setHeated} />
-              <FilterToggle label="24/7 juurdepääs" active={access24} onChange={setAccess24} />
-              <FilterToggle label="Kohe saadaval" active={availableNow} onChange={setAvailableNow} />
+            <div className="mt-3 space-y-3 border-t border-border pt-3">
+              {/* Common filters */}
+              <div className="flex flex-wrap gap-2">
+                <input
+                  type="text"
+                  placeholder="Linn..."
+                  value={cityFilter}
+                  onChange={(e) => setCityFilter(e.target.value)}
+                  className="w-28 rounded-full border border-border bg-card px-3 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-accent"
+                />
+                <input
+                  type="number"
+                  placeholder="Max hind €"
+                  value={priceMax}
+                  onChange={(e) => setPriceMax(e.target.value)}
+                  className="w-28 rounded-full border border-border bg-card px-3 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-accent"
+                />
+                <FilterToggle label="Kohe saadaval" active={availableNow} onChange={setAvailableNow} />
+              </div>
+
+              {/* Category-specific filters */}
+              {(activeType === "all" || activeType === "warehouse") && (
+                <div>
+                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Laopinna filtrid</div>
+                  <div className="flex flex-wrap gap-2">
+                    <FilterToggle label="Köetud" active={heated} onChange={setHeated} />
+                    <FilterToggle label="24/7 juurdepääs" active={access24} onChange={setAccess24} />
+                    <FilterToggle label="Siseruum" active={indoor} onChange={setIndoor} />
+                    <FilterToggle label="Turvatud" active={security} onChange={setSecurity} />
+                    <FilterToggle label="Laadimisplatvorm" active={loadingDock} onChange={setLoadingDock} />
+                    <FilterToggle label="Tõstuk" active={forkliftFilter} onChange={setForkliftFilter} />
+                    <FilterToggle label="Lühiajaline" active={shortTerm} onChange={setShortTerm} />
+                    <FilterToggle label="Pikaajaline" active={longTerm} onChange={setLongTerm} />
+                  </div>
+                </div>
+              )}
+
+              {(activeType === "all" || activeType === "moving") && (
+                <div>
+                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Kolimisteenuse filtrid</div>
+                  <div className="flex flex-wrap gap-2">
+                    <FilterToggle label="Kaubikuga" active={withVan} onChange={setWithVan} />
+                    <FilterToggle label="Pakkimisabi" active={packingHelp} onChange={setPackingHelp} />
+                    <FilterToggle label="Laadimisabi" active={loadingHelp} onChange={setLoadingHelp} />
+                    <FilterToggle label="Fikseeritud hind" active={pricingFixed} onChange={setPricingFixed} />
+                  </div>
+                </div>
+              )}
+
+              {(activeType === "all" || activeType === "trailer") && (
+                <div>
+                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Haagise filtrid</div>
+                  <div className="flex flex-wrap gap-2">
+                    <FilterToggle label="Kinnine haagis" active={trailerClosed} onChange={setTrailerClosed} />
+                  </div>
+                </div>
+              )}
+
               {activeFiltersCount > 0 && (
                 <button
-                  onClick={() => { setHeated(false); setAccess24(false); setAvailableNow(false); }}
+                  onClick={clearAll}
                   className="flex items-center gap-1 text-xs text-destructive hover:underline"
                 >
-                  <X className="h-3 w-3" /> Tühista
+                  <X className="h-3 w-3" /> Tühista kõik filtrid
                 </button>
               )}
             </div>
@@ -132,7 +285,13 @@ export default function SearchPage() {
           </p>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
             {filtered.map((l) => (
-              <ListingCard key={l.id} listing={l} />
+              <div
+                key={l.id}
+                onMouseEnter={() => setSelectedListingId(l.id)}
+                onMouseLeave={() => setSelectedListingId(null)}
+              >
+                <ListingCard listing={l} />
+              </div>
             ))}
           </div>
           {filtered.length === 0 && (

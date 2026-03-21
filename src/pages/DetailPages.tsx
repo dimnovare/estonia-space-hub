@@ -2,7 +2,9 @@ import { useParams, Link } from "react-router-dom";
 import { MapPin, Star, Check, ArrowLeft, Calendar, Shield, Thermometer, Clock, Truck as TruckIcon, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WAREHOUSES, MOVING_SERVICES, TRAILER_RENTALS } from "@/data/mockData";
-import MapPlaceholder from "@/components/MapPlaceholder";
+import { lazy, Suspense } from "react";
+
+const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
 export function WarehouseDetail() {
   const { id } = useParams();
@@ -68,7 +70,9 @@ export function WarehouseDetail() {
           {/* Map */}
           <h2 className="mt-8 font-display text-lg font-semibold">Asukoht</h2>
           <div className="mt-3">
-            <MapPlaceholder listings={[listing]} height="h-[200px]" />
+            <Suspense fallback={<div className="h-[200px] rounded-xl bg-secondary" />}>
+              <InteractiveMap listings={[listing]} height="h-[200px]" zoom={14} center={[listing.lat, listing.lng]} />
+            </Suspense>
           </div>
         </div>
 
