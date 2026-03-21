@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Listing } from "@/data/mockData";
@@ -19,16 +19,23 @@ const typeColors: Record<string, string> = {
   trailer: "#2EC4B6",
 };
 
-const typeSvgIcons: Record<string, string> = {
-  warehouse: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V12l8-8 8 8v10"/><path d="M9 22V14h6v8"/></svg>`,
-  moving: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18h2a1 1 0 0 0 1-1v-3.28a1 1 0 0 0-.684-.948l-1.923-.641a1 1 0 0 1-.684-.948V8a1 1 0 0 1 1-1h1.382a1 1 0 0 1 .894.553l1.448 2.894A1 1 0 0 0 20.382 11H22a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-1"/><circle cx="7" cy="18" r="2"/><circle cx="19" cy="18" r="2"/></svg>`,
-  trailer: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C1.4 11.3 1 12.1 1 13v3c0 .6.4 1 1 1h1"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>`,
+const typeLabels: Record<string, string> = {
+  warehouse: "Laopind",
+  moving: "Kolimine",
+  trailer: "Haagis",
+};
+
+// Simple, clear SVG icons that match between map and legend
+const typeIconPaths: Record<string, string> = {
+  warehouse: `<rect x="4" y="10" width="16" height="12" rx="1" fill="none" stroke="white" stroke-width="2"/><path d="M2 10l10-6 10 6" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`,
+  moving: `<rect x="1" y="6" width="12" height="12" rx="1" fill="none" stroke="white" stroke-width="2"/><path d="M13 10h4l3 4v4h-4" fill="none" stroke="white" stroke-width="2" stroke-linejoin="round"/><circle cx="6" cy="18" r="2" fill="none" stroke="white" stroke-width="2"/><circle cx="17" cy="18" r="2" fill="none" stroke="white" stroke-width="2"/>`,
+  trailer: `<rect x="1" y="7" width="14" height="10" rx="1" fill="none" stroke="white" stroke-width="2"/><path d="M15 14h5l2 3h1" fill="none" stroke="white" stroke-width="2" stroke-linejoin="round"/><circle cx="6" cy="17" r="2" fill="none" stroke="white" stroke-width="2"/><circle cx="18" cy="17" r="2" fill="none" stroke="white" stroke-width="2"/>`,
 };
 
 function createMarkerIcon(listing: Listing, isSelected: boolean) {
   const color = typeColors[listing.type] || "#1E3A5F";
   const size = isSelected ? 44 : 36;
-  const svgIcon = typeSvgIcons[listing.type] || typeSvgIcons.warehouse;
+  const iconPath = typeIconPaths[listing.type] || typeIconPaths.warehouse;
 
   return L.divIcon({
     className: "custom-marker",
@@ -55,7 +62,7 @@ function createMarkerIcon(listing: Listing, isSelected: boolean) {
           transition: all 0.2s ease;
         ">
           <div style="transform: rotate(45deg); display: flex; align-items: center; justify-content: center;">
-            ${svgIcon}
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">${iconPath}</svg>
           </div>
         </div>
         <div style="
@@ -89,6 +96,7 @@ export default function InteractiveMap({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
+  const markerMap = useRef<Map<string, L.Marker>>(new Map());
 
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return;
@@ -119,6 +127,7 @@ export default function InteractiveMap({
     if (!mapInstance.current || !markersRef.current) return;
 
     markersRef.current.clearLayers();
+    markerMap.current.clear();
 
     const bounds: L.LatLngExpression[] = [];
 
@@ -126,10 +135,11 @@ export default function InteractiveMap({
       const icon = createMarkerIcon(listing, listing.id === selectedId);
       const marker = L.marker([listing.lat, listing.lng], { icon });
 
-      const typeName = listing.type === "warehouse" ? "Laopind" : listing.type === "moving" ? "Kolimine" : "Haagise rent";
+      const typeName = typeLabels[listing.type] || listing.type;
       const typeColor = typeColors[listing.type];
 
-      marker.bindPopup(`
+      // Build popup HTML
+      const popupHtml = `
         <div style="min-width: 200px; font-family: 'DM Sans', sans-serif;">
           <img src="${listing.image}" alt="" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />
           <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #1E3A5F;">${listing.title}</div>
@@ -143,13 +153,18 @@ export default function InteractiveMap({
           </div>
           <div style="font-size: 11px; color: #888; margin-top: 4px;">⭐ ${listing.rating} (${listing.reviewCount} arvustust)</div>
         </div>
-      `, { maxWidth: 260 });
+      `;
 
-      if (onMarkerClick) {
-        marker.on("click", () => onMarkerClick(listing));
-      }
+      marker.bindPopup(popupHtml, { maxWidth: 260 });
+
+      // Single click: open popup AND notify parent
+      marker.on("click", () => {
+        marker.openPopup();
+        if (onMarkerClick) onMarkerClick(listing);
+      });
 
       marker.addTo(markersRef.current!);
+      markerMap.current.set(listing.id, marker);
       bounds.push([listing.lat, listing.lng]);
     });
 
@@ -160,28 +175,38 @@ export default function InteractiveMap({
     }
   }, [listings, selectedId, onMarkerClick]);
 
+  // When selectedId changes externally, open that marker's popup
+  useEffect(() => {
+    if (!selectedId || !mapInstance.current) return;
+    const marker = markerMap.current.get(selectedId);
+    if (marker) {
+      marker.openPopup();
+      mapInstance.current.panTo(marker.getLatLng(), { animate: true });
+    }
+  }, [selectedId]);
+
   return (
     <div className={`relative overflow-hidden rounded-xl ${height} ${className}`}>
       <div ref={mapRef} className="h-full w-full" />
+      {/* Legend - uses exact same icons as map pins */}
       <div className="absolute bottom-3 left-3 z-[1000] flex items-center gap-3 rounded-lg bg-card/95 px-3 py-2 text-xs font-medium shadow-lg backdrop-blur-sm">
-        <span className="flex items-center gap-1.5">
-          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full" style={{ background: typeColors.warehouse }}>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M4 22V12l8-8 8 8v10"/></svg>
+        {(["warehouse", "moving", "trailer"] as const).map((type) => (
+          <span key={type} className="flex items-center gap-1.5">
+            <span
+              className="inline-flex h-6 w-6 items-center justify-center rounded-full"
+              style={{ background: typeColors[type] }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                dangerouslySetInnerHTML={{ __html: typeIconPaths[type] }}
+              />
+            </span>
+            {typeLabels[type]}
           </span>
-          Laopind
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full" style={{ background: typeColors.moving }}>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11"/><circle cx="7" cy="18" r="2"/><circle cx="19" cy="18" r="2"/></svg>
-          </span>
-          Kolimine
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full" style={{ background: typeColors.trailer }}>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M19 17h2c.6 0 1-.4 1-1v-3"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
-          </span>
-          Haagis
-        </span>
+        ))}
       </div>
     </div>
   );

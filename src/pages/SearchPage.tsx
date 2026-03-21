@@ -287,8 +287,10 @@ export default function SearchPage() {
             {filtered.map((l) => (
               <div
                 key={l.id}
+                className={`cursor-pointer rounded-xl transition-all ${selectedListingId === l.id ? "ring-2 ring-accent" : ""}`}
                 onMouseEnter={() => setSelectedListingId(l.id)}
                 onMouseLeave={() => setSelectedListingId(null)}
+                onClick={() => setSelectedListingId(l.id)}
               >
                 <ListingCard listing={l} />
               </div>
