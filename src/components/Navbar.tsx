@@ -18,10 +18,12 @@ export default function Navbar() {
   const isHome = location.pathname === "/";
 
   return (
-    <header className={`sticky top-0 z-50 border-b border-border backdrop-blur-md ${isHome ? "bg-card/80" : "bg-card/95"}`}>
+    <header
+      className={`sticky top-0 z-50 border-b border-border backdrop-blur-md ${isHome ? "bg-card/80" : "bg-card/95"}`}
+    >
       <div className="container-wide flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <img src={ruumlyLogo} alt="Ruumly" className="h-12" />
+          <img src={ruumlyLogo} alt="Ruumly" className="h-24" />
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex">
@@ -44,7 +46,9 @@ export default function Navbar() {
             </Button>
           </Link>
           <Link to="/admin">
-            <Button variant="outline" size="sm">Admin</Button>
+            <Button variant="outline" size="sm">
+              Admin
+            </Button>
           </Link>
         </div>
 
@@ -67,7 +71,9 @@ export default function Navbar() {
           ))}
           <div className="mt-2 flex gap-2">
             <Link to="/dashboard" className="flex-1" onClick={() => setOpen(false)}>
-              <Button variant="outline" size="sm" className="w-full">Minu konto</Button>
+              <Button variant="outline" size="sm" className="w-full">
+                Minu konto
+              </Button>
             </Link>
           </div>
         </div>
