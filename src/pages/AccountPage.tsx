@@ -163,7 +163,6 @@ function BookingCard({ booking }: { booking: Booking }) {
   const status = statusConfig[booking.status];
   const StatusIcon = status.icon;
   const order = MOCK_ORDERS.find((o) => o.bookingId === booking.id);
-  const IntIcon = order?.integrationType === "api" ? Wifi : order?.integrationType === "email" ? Mail : Hand;
 
   return (
     <>
