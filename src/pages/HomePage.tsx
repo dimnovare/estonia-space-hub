@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, Star, MapPin, ChevronDown, ChevronUp, Users, CheckCircle, TrendingUp, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ALL_LISTINGS } from "@/data/mockData";
 import ListingCard from "@/components/ListingCard";
-import MapPlaceholder from "@/components/MapPlaceholder";
+
+const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
 const categories = [
   { key: "all", label: "Kõik teenused", icon: Search },
