@@ -1,26 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { useLanguage } from "@/i18n/LanguageContext";
 import ruumlyLogo from "/ruumly-logo.png";
-
-const footerLinks = {
-  Teenused: [
-    { label: "Laopinnad", to: "/search?type=warehouse" },
-    { label: "Kolimisteenus", to: "/search?type=moving" },
-    { label: "Haagise rent", to: "/search?type=trailer" },
-  ],
-  Ettevõte: [
-    { label: "Meist", to: "/about" },
-    { label: "Kuidas see töötab", to: "/how-it-works" },
-    { label: "Kontakt", to: "/contact" },
-    { label: "Teenusepakkujatele", to: "/provider" },
-    { label: "KKK", to: "/faq" },
-  ],
-  Õiguslik: [
-    { label: "Kasutustingimused", to: "/terms" },
-    { label: "Privaatsuspoliitika", to: "/privacy" },
-    { label: "Küpsised", to: "/cookies" },
-  ],
-};
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -31,6 +12,28 @@ function ScrollToTop() {
 }
 
 export default function Footer() {
+  const { t } = useLanguage();
+
+  const footerLinks = {
+    [t("footer.services")]: [
+      { label: t("footer.storage"), to: "/search?type=warehouse" },
+      { label: t("footer.movingService"), to: "/search?type=moving" },
+      { label: t("footer.trailerRental"), to: "/search?type=trailer" },
+    ],
+    [t("footer.company")]: [
+      { label: t("footer.about"), to: "/about" },
+      { label: t("footer.howItWorks"), to: "/how-it-works" },
+      { label: t("footer.contact"), to: "/contact" },
+      { label: t("footer.forProviders"), to: "/provider" },
+      { label: t("footer.faq"), to: "/faq" },
+    ],
+    [t("footer.legal")]: [
+      { label: t("footer.terms"), to: "/terms" },
+      { label: t("footer.privacy"), to: "/privacy" },
+      { label: t("footer.cookies"), to: "/cookies" },
+    ],
+  };
+
   return (
     <>
       <ScrollToTop />
@@ -39,10 +42,10 @@ export default function Footer() {
           <div className="grid gap-8 md:grid-cols-4">
             <div>
               <Link to="/" className="inline-block">
-                <img src={ruumlyLogo} alt="Ruumly" className="h-8 brightness-0 invert" />
+                <img src={ruumlyLogo} alt="Ruumly" className="h-[10rem] brightness-0 invert" />
               </Link>
               <p className="mt-3 text-sm opacity-70">
-                From storage to moving — all in one. Eesti suurim laopindade ja logistikateenuste platvorm.
+                {t("footer.tagline")}
               </p>
             </div>
             {Object.entries(footerLinks).map(([title, links]) => (
@@ -61,7 +64,7 @@ export default function Footer() {
             ))}
           </div>
           <div className="mt-10 border-t border-primary-foreground/10 pt-6 text-center text-xs opacity-50">
-            © {new Date().getFullYear()} Ruumly. Kõik õigused kaitstud.
+            © {new Date().getFullYear()} Ruumly. {t("footer.rights")}
           </div>
         </div>
       </footer>

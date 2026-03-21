@@ -4,41 +4,43 @@ import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, Star, Ma
 import { Button } from "@/components/ui/button";
 import { ALL_LISTINGS } from "@/data/mockData";
 import ListingCard from "@/components/ListingCard";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
-
-const categories = [
-  { key: "all", label: "Kõik teenused", icon: Search },
-  { key: "warehouse", label: "Laopinnad", icon: Warehouse },
-  { key: "moving", label: "Kolimine", icon: Truck },
-  { key: "trailer", label: "Haagise rent", icon: CarFront },
-];
-
-const howItWorks = [
-  { icon: Search, title: "Otsi", desc: "Sisesta asukoht või teenuse tüüp ja leia parimad pakkumised." },
-  { icon: CheckCircle, title: "Võrdle", desc: "Võrdle hindu, asukohti ja tingimusi ühest kohast." },
-  { icon: ArrowRight, title: "Broneeri", desc: "Saada päring ja saa pakkumine otse teenusepakkujalt." },
-];
-
-const stats = [
-  { value: "150+", label: "Laopinda", icon: Building },
-  { value: "50+", label: "Teenusepakkujat", icon: Users },
-  { value: "4.7", label: "Keskmine hinne", icon: Star },
-  { value: "10k+", label: "Rahulolev klient", icon: TrendingUp },
-];
-
-const faqs = [
-  { q: "Kuidas Ruumly töötab?", a: "Ruumly koondab Eesti laopindade, kolimisteenuste ja haagiserentide pakkumised ühte kohta. Otsige, võrrelge ja saatke päring — meie edastame selle teenusepakkujale." },
-  { q: "Kas teenus on tasuta?", a: "Jah, otsing ja päringute saatmine on kasutajatele täiesti tasuta. Teenusepakkujad maksavad platvormi kasutamise eest." },
-  { q: "Kuidas saan oma laopinda lisada?", a: "Kui olete teenusepakkuja, saate liituda meie platvormiga ja lisada oma pakkumised. Võtke meiega ühendust." },
-  { q: "Kas ma saan broneeringu tühistada?", a: "Tühistamistingimused sõltuvad teenusepakkujast. Enne broneerimist näete alati tühistamistingimusi." },
-];
 
 export default function HomePage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const { t } = useLanguage();
+
+  const categories = [
+    { key: "all", label: t("cat.all"), icon: Search },
+    { key: "warehouse", label: t("cat.warehouse"), icon: Warehouse },
+    { key: "moving", label: t("cat.moving"), icon: Truck },
+    { key: "trailer", label: t("cat.trailer"), icon: CarFront },
+  ];
+
+  const howItWorks = [
+    { icon: Search, title: t("how.step1"), desc: t("how.step1desc") },
+    { icon: CheckCircle, title: t("how.step2"), desc: t("how.step2desc") },
+    { icon: ArrowRight, title: t("how.step3"), desc: t("how.step3desc") },
+  ];
+
+  const stats = [
+    { value: "150+", label: t("stats.storage"), icon: Building },
+    { value: "50+", label: t("stats.providers"), icon: Users },
+    { value: "4.7", label: t("stats.rating"), icon: Star },
+    { value: "10k+", label: t("stats.clients"), icon: TrendingUp },
+  ];
+
+  const faqs = [
+    { q: "Kuidas Ruumly töötab?", a: "Ruumly koondab Eesti laopindade, kolimisteenuste ja haagiserentide pakkumised ühte kohta. Otsige, võrrelge ja broneerige — meie kaudu on alati soodsam." },
+    { q: "Kas teenus on tasuta?", a: "Jah, otsing ja broneerimine on kasutajatele täiesti tasuta. Meie kaudu on hind isegi soodsam kui otse pakkuja juures." },
+    { q: "Kuidas saan oma laopinda lisada?", a: "Kui olete teenusepakkuja, saate liituda meie platvormiga ja lisada oma pakkumised. Võtke meiega ühendust." },
+    { q: "Kas ma saan broneeringu tühistada?", a: "Tühistamistingimused sõltuvad teenusepakkujast. Enne broneerimist näete alati tühistamistingimusi." },
+  ];
 
   const handleSearch = () => {
     const params = new URLSearchParams();
@@ -54,21 +56,16 @@ export default function HomePage() {
       {/* Hero */}
       <section className="hero-gradient relative overflow-hidden py-20 md:py-28">
         <div className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: "radial-gradient(circle at 30% 50%, hsl(174 65% 47% / 0.3), transparent 60%)",
-          }}
+          style={{ backgroundImage: "radial-gradient(circle at 30% 50%, hsl(174 65% 47% / 0.3), transparent 60%)" }}
         />
         <div className="container-wide relative">
           <div className="mx-auto max-w-3xl text-center">
             <h1 className="font-display text-4xl font-bold leading-tight text-primary-foreground md:text-5xl lg:text-6xl">
-              Find storage, moving, and logistics{" "}
-              <span className="text-gradient">in one place</span>
+              {t("hero.title")}{" "}
+              <span className="text-gradient">{t("hero.titleHighlight")}</span>
             </h1>
-            <p className="mt-4 text-lg text-primary-foreground/70 md:text-xl">
-              From storage to moving — all in one.
-            </p>
+            <p className="mt-4 text-lg text-primary-foreground/70 md:text-xl">{t("hero.subtitle")}</p>
 
-            {/* Search bar */}
             <div className="card-prominent mx-auto mt-8 max-w-2xl p-2">
               <div className="flex gap-1 border-b border-border pb-2 mb-2 overflow-x-auto">
                 {categories.map((cat) => {
@@ -78,9 +75,7 @@ export default function HomePage() {
                       key={cat.key}
                       onClick={() => setActiveCategory(cat.key)}
                       className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                        activeCategory === cat.key
-                          ? "bg-primary text-primary-foreground"
-                          : "text-muted-foreground hover:bg-secondary"
+                        activeCategory === cat.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"
                       }`}
                     >
                       <Icon className="h-3.5 w-3.5" />
@@ -94,7 +89,7 @@ export default function HomePage() {
                   <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <input
                     type="text"
-                    placeholder="Sisesta aadress või linn..."
+                    placeholder={t("hero.searchPlaceholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -103,15 +98,14 @@ export default function HomePage() {
                 </div>
                 <Button onClick={handleSearch} className="shrink-0 bg-accent px-6 text-accent-foreground hover:bg-accent/90">
                   <Search className="mr-2 h-4 w-4" />
-                  Find storage
+                  {t("hero.search")}
                 </Button>
               </div>
             </div>
 
-            {/* Secondary CTA */}
             <div className="mt-4">
               <Link to="/provider" className="text-sm text-primary-foreground/60 underline decoration-primary-foreground/30 hover:text-primary-foreground/80 hover:decoration-primary-foreground/50 transition-colors">
-                List your space →
+                {t("hero.listSpace")}
               </Link>
             </div>
           </div>
@@ -120,17 +114,15 @@ export default function HomePage() {
 
       {/* Map preview */}
       <section className="container-wide -mt-6 relative z-10">
-        <Suspense fallback={<div className="h-[350px] rounded-xl bg-secondary flex items-center justify-center text-muted-foreground">Kaart laeb...</div>}>
+        <Suspense fallback={<div className="h-[350px] rounded-xl bg-secondary flex items-center justify-center text-muted-foreground">{t("map.loading")}</div>}>
           <InteractiveMap listings={ALL_LISTINGS} height="h-[280px] md:h-[350px]" />
         </Suspense>
       </section>
 
       {/* How it works */}
       <section className="container-wide py-16 md:py-20">
-        <h2 className="text-center font-display text-2xl font-bold md:text-3xl">Kuidas see töötab?</h2>
-        <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">
-          Kolm lihtsat sammu parima laopinna, kolimisteenuse või haagise leidmiseks.
-        </p>
+        <h2 className="text-center font-display text-2xl font-bold md:text-3xl">{t("how.title")}</h2>
+        <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">{t("how.subtitle")}</p>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {howItWorks.map((step, i) => {
             const Icon = step.icon;
@@ -152,11 +144,11 @@ export default function HomePage() {
         <div className="container-wide">
           <div className="flex items-end justify-between">
             <div>
-              <h2 className="font-display text-2xl font-bold md:text-3xl">Populaarsed pakkumised</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Enim otsitud ja soovitatud teenused</p>
+              <h2 className="font-display text-2xl font-bold md:text-3xl">{t("featured.title")}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{t("featured.subtitle")}</p>
             </div>
             <Link to="/search" className="hidden items-center gap-1 text-sm font-medium text-accent hover:underline md:flex">
-              Vaata kõiki <ArrowRight className="h-4 w-4" />
+              {t("featured.viewAll")} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -165,14 +157,12 @@ export default function HomePage() {
             ))}
           </div>
           <div className="mt-6 text-center md:hidden">
-            <Link to="/search">
-              <Button variant="outline">Vaata kõiki pakkumisi</Button>
-            </Link>
+            <Link to="/search"><Button variant="outline">{t("featured.viewAllMobile")}</Button></Link>
           </div>
         </div>
       </section>
 
-      {/* Stats / Trust */}
+      {/* Stats */}
       <section className="container-wide py-16 md:py-20">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {stats.map((s, i) => {
@@ -195,37 +185,26 @@ export default function HomePage() {
       {/* Provider CTA */}
       <section className="hero-gradient py-16 md:py-20">
         <div className="container-wide text-center">
-          <h2 className="font-display text-2xl font-bold text-primary-foreground md:text-3xl">
-            Oled teenusepakkuja?
-          </h2>
-          <p className="mx-auto mt-3 max-w-lg text-sm text-primary-foreground/70">
-            Lisa oma laopind, kolimisteenus või haagiserent Ruumly platvormile ja jõua tuhandete potentsiaalsete klientideni.
-          </p>
+          <h2 className="font-display text-2xl font-bold text-primary-foreground md:text-3xl">{t("provider.title")}</h2>
+          <p className="mx-auto mt-3 max-w-lg text-sm text-primary-foreground/70">{t("provider.desc")}</p>
           <Link to="/provider">
-            <Button className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90">
-              List your space
-            </Button>
+            <Button className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90">{t("provider.cta")}</Button>
           </Link>
         </div>
       </section>
 
       {/* FAQ */}
       <section className="container-wide py-16 md:py-20">
-        <h2 className="text-center font-display text-2xl font-bold md:text-3xl">Korduma kippuvad küsimused</h2>
+        <h2 className="text-center font-display text-2xl font-bold md:text-3xl">{t("faq.title")}</h2>
         <div className="mx-auto mt-8 max-w-2xl space-y-3">
           {faqs.map((faq, i) => (
             <div key={i} className="rounded-xl border border-border">
-              <button
-                onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                className="flex w-full items-center justify-between p-4 text-left text-sm font-medium"
-              >
+              <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="flex w-full items-center justify-between p-4 text-left text-sm font-medium">
                 {faq.q}
                 {openFaq === i ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
               </button>
               {openFaq === i && (
-                <div className="border-t border-border px-4 pb-4 pt-2 text-sm text-muted-foreground">
-                  {faq.a}
-                </div>
+                <div className="border-t border-border px-4 pb-4 pt-2 text-sm text-muted-foreground">{faq.a}</div>
               )}
             </div>
           ))}

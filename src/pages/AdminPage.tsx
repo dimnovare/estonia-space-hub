@@ -557,10 +557,13 @@ function AdminSettings() {
                   <div className="text-xs text-muted-foreground">{toggle.desc}</div>
                 </div>
                 <button
-                  onClick={() => setSettings({ ...settings, [toggle.key]: !settings[toggle.key] })}
-                  className={`relative h-6 w-11 rounded-full transition-colors ${settings[toggle.key] ? "bg-accent" : "bg-muted"}`}
+                  type="button"
+                  role="switch"
+                  aria-checked={settings[toggle.key]}
+                  onClick={() => setSettings((prev) => ({ ...prev, [toggle.key]: !prev[toggle.key] }))}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${settings[toggle.key] ? "bg-accent" : "bg-muted"}`}
                 >
-                  <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${settings[toggle.key] ? "translate-x-5" : "translate-x-0.5"}`} />
+                  <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform duration-200 ${settings[toggle.key] ? "translate-x-[1.3rem]" : "translate-x-0.5"} mt-0.5`} />
                 </button>
               </div>
             ))}

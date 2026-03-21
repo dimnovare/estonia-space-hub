@@ -1,22 +1,24 @@
 import { useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle } from "lucide-react";
+import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ALL_LISTINGS } from "@/data/mockData";
-
-const steps = ["Detailid", "Lisateenused", "Kontaktandmed", "Ülevaade"];
-
-const extras = [
-  { id: "packing", label: "Pakkimisabi", price: "15€" },
-  { id: "loading", label: "Laadimisabi", price: "20€" },
-  { id: "insurance", label: "Kindlustus", price: "10€/kuu" },
-  { id: "forklift", label: "Tõstukiteenus", price: "25€" },
-];
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function BookingPage() {
   const [params] = useSearchParams();
   const listingId = params.get("listing");
   const listing = ALL_LISTINGS.find((l) => l.id === listingId);
+  const { t } = useLanguage();
+
+  const steps = [t("booking.details"), t("booking.extras"), t("booking.contact"), t("booking.payment"), t("booking.review")];
+
+  const extras = [
+    { id: "packing", label: "Pakkimisabi", price: "15€" },
+    { id: "loading", label: "Laadimisabi", price: "20€" },
+    { id: "insurance", label: "Kindlustus", price: "10€/kuu" },
+    { id: "forklift", label: "Tõstukiteenus", price: "25€" },
+  ];
 
   const [step, setStep] = useState(0);
   const [date, setDate] = useState("");
@@ -26,10 +28,15 @@ export default function BookingPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("bank");
   const [submitted, setSubmitted] = useState(false);
 
   const toggleExtra = (id: string) =>
     setSelectedExtras((prev) => (prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]));
+
+  const publicPrice = listing ? Math.round(listing.priceFrom / 0.95) : 0;
+  const ourPrice = listing?.priceFrom || 0;
+  const savings = publicPrice - ourPrice;
 
   if (submitted) {
     return (
@@ -38,13 +45,11 @@ export default function BookingPage() {
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
             <CheckCircle className="h-8 w-8 text-success" />
           </div>
-          <h1 className="mt-4 font-display text-2xl font-bold">Päring saadetud!</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Teie päring on edukalt saadetud. Teenusepakkuja võtab teiega ühendust 24 tunni jooksul.
-          </p>
+          <h1 className="mt-4 font-display text-2xl font-bold">{t("booking.successTitle")}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{t("booking.successDesc")}</p>
           <div className="mt-6 flex justify-center gap-3">
-            <Link to="/dashboard"><Button variant="outline">Minu päringud</Button></Link>
-            <Link to="/search"><Button className="bg-accent text-accent-foreground hover:bg-accent/90">Otsi edasi</Button></Link>
+            <Link to="/dashboard"><Button variant="outline">{t("booking.myBookings")}</Button></Link>
+            <Link to="/search"><Button className="bg-accent text-accent-foreground hover:bg-accent/90">{t("booking.searchMore")}</Button></Link>
           </div>
         </div>
       </div>
@@ -54,7 +59,7 @@ export default function BookingPage() {
   return (
     <div className="container-wide py-8">
       <Link to={listing ? `/${listing.type}/${listing.id}` : "/search"} className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" /> Tagasi
+        <ArrowLeft className="h-4 w-4" /> {t("booking.back")}
       </Link>
 
       {/* Steps */}
@@ -67,7 +72,7 @@ export default function BookingPage() {
               {i < step ? <Check className="h-4 w-4" /> : i + 1}
             </div>
             <span className={`hidden text-sm font-medium sm:inline ${i <= step ? "text-foreground" : "text-muted-foreground"}`}>{s}</span>
-            {i < steps.length - 1 && <div className="h-px w-6 bg-border sm:w-12" />}
+            {i < steps.length - 1 && <div className="h-px w-6 bg-border sm:w-8" />}
           </div>
         ))}
       </div>
@@ -76,7 +81,7 @@ export default function BookingPage() {
         <div className="lg:col-span-2">
           {step === 0 && (
             <div className="space-y-4">
-              <h2 className="font-display text-xl font-semibold">Valige detailid</h2>
+              <h2 className="font-display text-xl font-semibold">{t("booking.selectDetails")}</h2>
               {listing && (
                 <div className="flex items-center gap-3 rounded-xl border border-border p-3">
                   <img src={listing.image} alt="" className="h-16 w-20 rounded-lg object-cover" />
@@ -87,11 +92,11 @@ export default function BookingPage() {
                 </div>
               )}
               <div>
-                <label className="mb-1 block text-sm font-medium">Soovitud kuupäev</label>
+                <label className="mb-1 block text-sm font-medium">{t("booking.date")}</label>
                 <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium">Periood</label>
+                <label className="mb-1 block text-sm font-medium">{t("booking.period")}</label>
                 <select value={duration} onChange={(e) => setDuration(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent">
                   <option>1 päev</option><option>1 nädal</option><option>1 kuu</option><option>3 kuud</option><option>6 kuud</option><option>12 kuud</option>
                 </select>
@@ -101,8 +106,8 @@ export default function BookingPage() {
 
           {step === 1 && (
             <div className="space-y-4">
-              <h2 className="font-display text-xl font-semibold">Lisateenused</h2>
-              <p className="text-sm text-muted-foreground">Valige soovitud lisateenused (valikuline)</p>
+              <h2 className="font-display text-xl font-semibold">{t("booking.extras")}</h2>
+              <p className="text-sm text-muted-foreground">{t("booking.selectExtras")}</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 {extras.map((e) => (
                   <button
@@ -127,21 +132,21 @@ export default function BookingPage() {
 
           {step === 2 && (
             <div className="space-y-4">
-              <h2 className="font-display text-xl font-semibold">Kontaktandmed</h2>
+              <h2 className="font-display text-xl font-semibold">{t("booking.contact")}</h2>
               <div>
-                <label className="mb-1 block text-sm font-medium">Nimi</label>
+                <label className="mb-1 block text-sm font-medium">{t("booking.name")}</label>
                 <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Teie nimi" className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium">E-post</label>
+                <label className="mb-1 block text-sm font-medium">{t("booking.email")}</label>
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="teie@email.ee" className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium">Telefon</label>
+                <label className="mb-1 block text-sm font-medium">{t("booking.phone")}</label>
                 <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+372 ..." className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium">Lisamärkused</label>
+                <label className="mb-1 block text-sm font-medium">{t("booking.notes")}</label>
                 <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Täiendav info..." className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
               </div>
             </div>
@@ -149,19 +154,62 @@ export default function BookingPage() {
 
           {step === 3 && (
             <div className="space-y-4">
-              <h2 className="font-display text-xl font-semibold">Ülevaade</h2>
+              <h2 className="font-display text-xl font-semibold">{t("booking.paymentMethod")}</h2>
+              <div className="space-y-3">
+                {[
+                  { id: "bank", icon: Building2, label: t("booking.bankTransfer"), desc: t("booking.bankTransferDesc") },
+                  { id: "card", icon: CreditCard, label: t("booking.creditCard"), desc: t("booking.creditCardDesc") },
+                  { id: "later", icon: Clock, label: t("booking.payLater"), desc: t("booking.payLaterDesc") },
+                ].map((pm) => {
+                  const Icon = pm.icon;
+                  return (
+                    <button
+                      key={pm.id}
+                      onClick={() => setPaymentMethod(pm.id)}
+                      className={`flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-colors ${
+                        paymentMethod === pm.id ? "border-accent bg-accent/5" : "border-border hover:border-muted-foreground"
+                      }`}
+                    >
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${paymentMethod === pm.id ? "bg-accent/10" : "bg-secondary"}`}>
+                        <Icon className={`h-5 w-5 ${paymentMethod === pm.id ? "text-accent" : "text-muted-foreground"}`} />
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold">{pm.label}</div>
+                        <div className="text-xs text-muted-foreground">{pm.desc}</div>
+                      </div>
+                      <div className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${paymentMethod === pm.id ? "border-accent" : "border-border"}`}>
+                        {paymentMethod === pm.id && <div className="h-2.5 w-2.5 rounded-full bg-accent" />}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="space-y-4">
+              <h2 className="font-display text-xl font-semibold">{t("booking.review")}</h2>
               <div className="space-y-3 rounded-xl border border-border p-4 text-sm">
-                {listing && <div className="flex justify-between"><span className="text-muted-foreground">Teenus</span><span className="font-medium">{listing.title}</span></div>}
-                <div className="flex justify-between"><span className="text-muted-foreground">Kuupäev</span><span className="font-medium">{date || "Pole valitud"}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Periood</span><span className="font-medium">{duration}</span></div>
+                {listing && <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.service")}</span><span className="font-medium">{listing.title}</span></div>}
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.date")}</span><span className="font-medium">{date || "—"}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.period")}</span><span className="font-medium">{duration}</span></div>
                 {selectedExtras.length > 0 && (
-                  <div className="flex justify-between"><span className="text-muted-foreground">Lisateenused</span><span className="font-medium">{selectedExtras.map((e) => extras.find((x) => x.id === e)?.label).join(", ")}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.extras")}</span><span className="font-medium">{selectedExtras.map((e) => extras.find((x) => x.id === e)?.label).join(", ")}</span></div>
                 )}
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.paymentMethod")}</span><span className="font-medium">{paymentMethod === "bank" ? t("booking.bankTransfer") : paymentMethod === "card" ? t("booking.creditCard") : t("booking.payLater")}</span></div>
                 <div className="border-t border-border pt-3">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Nimi</span><span className="font-medium">{name}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">E-post</span><span className="font-medium">{email}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Telefon</span><span className="font-medium">{phone}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.name")}</span><span className="font-medium">{name}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.email")}</span><span className="font-medium">{email}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.phone")}</span><span className="font-medium">{phone}</span></div>
                 </div>
+                {listing && (
+                  <div className="border-t border-border pt-3 space-y-1">
+                    <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.publicPrice")}</span><span className="font-medium line-through text-muted-foreground">{publicPrice}€</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.ourPrice")}</span><span className="font-bold text-accent">{ourPrice}€</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.savings")}</span><span className="font-bold text-success">{savings}€</span></div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -170,16 +218,16 @@ export default function BookingPage() {
           <div className="mt-8 flex justify-between">
             {step > 0 ? (
               <Button variant="outline" onClick={() => setStep(step - 1)}>
-                <ArrowLeft className="mr-2 h-4 w-4" /> Eelmine
+                <ArrowLeft className="mr-2 h-4 w-4" /> {t("booking.prev")}
               </Button>
             ) : <div />}
             {step < steps.length - 1 ? (
               <Button onClick={() => setStep(step + 1)} className="bg-accent text-accent-foreground hover:bg-accent/90">
-                Järgmine <ArrowRight className="ml-2 h-4 w-4" />
+                {t("booking.next")} <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             ) : (
               <Button onClick={() => setSubmitted(true)} className="bg-accent text-accent-foreground hover:bg-accent/90">
-                Saada päring <Check className="ml-2 h-4 w-4" />
+                {t("booking.confirm")} <Check className="ml-2 h-4 w-4" />
               </Button>
             )}
           </div>
@@ -188,7 +236,7 @@ export default function BookingPage() {
         {/* Sidebar summary */}
         <div className="hidden lg:block">
           <div className="card-prominent sticky top-20 p-5">
-            <h3 className="text-sm font-semibold">Teie päring</h3>
+            <h3 className="text-sm font-semibold">{t("booking.yourBooking")}</h3>
             {listing && (
               <div className="mt-3 flex items-center gap-2">
                 <img src={listing.image} alt="" className="h-10 w-12 rounded object-cover" />
@@ -196,10 +244,17 @@ export default function BookingPage() {
               </div>
             )}
             <div className="mt-4 space-y-1 text-xs text-muted-foreground">
-              {date && <p>Kuupäev: {date}</p>}
-              <p>Periood: {duration}</p>
-              {selectedExtras.length > 0 && <p>Lisateenused: {selectedExtras.length}</p>}
+              {date && <p>{t("booking.date")}: {date}</p>}
+              <p>{t("booking.period")}: {duration}</p>
+              {selectedExtras.length > 0 && <p>{t("booking.extras")}: {selectedExtras.length}</p>}
             </div>
+            {listing && (
+              <div className="mt-4 space-y-1 border-t border-border pt-3 text-xs">
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.publicPrice")}</span><span className="line-through text-muted-foreground">{publicPrice}€</span></div>
+                <div className="flex justify-between font-bold"><span>{t("booking.ourPrice")}</span><span className="text-accent">{ourPrice}€</span></div>
+                <div className="flex justify-between text-success font-medium"><span>{t("booking.savings")}</span><span>-{savings}€</span></div>
+              </div>
+            )}
           </div>
         </div>
       </div>
