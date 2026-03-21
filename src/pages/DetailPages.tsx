@@ -2,7 +2,9 @@ import { useParams, Link } from "react-router-dom";
 import { MapPin, Star, Check, ArrowLeft, Calendar, Shield, Thermometer, Clock, Truck as TruckIcon, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WAREHOUSES, MOVING_SERVICES, TRAILER_RENTALS } from "@/data/mockData";
-import MapPlaceholder from "@/components/MapPlaceholder";
+import { lazy, Suspense } from "react";
+
+const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
 export function WarehouseDetail() {
   const { id } = useParams();
