@@ -42,6 +42,20 @@ export function WarehouseDetail() {
   const { t } = useLanguage();
   if (!listing) return <NotFoundDetail />;
 
+  const extraOptions = [
+    { id: "packing", label: t("detail.packingHelp") },
+    { id: "loading", label: t("detail.loadingHelp") },
+    { id: "insurance", label: t("detail.insurance") },
+    { id: "forklift", label: t("detail.forkliftService") },
+  ];
+
+  const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
+
+  const toggleExtra = (id: string) =>
+    setSelectedExtras((prev) => prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]);
+
+  const bookingUrl = `/book?listing=${listing.id}&type=warehouse${selectedExtras.length ? `&extras=${selectedExtras.join(",")}` : ""}`;
+
   const publicPrice = Math.round(listing.priceFrom / 0.95);
   const savings = publicPrice - listing.priceFrom;
 
