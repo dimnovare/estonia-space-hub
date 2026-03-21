@@ -83,6 +83,7 @@ export default function AdminPage() {
       <main className="flex-1 p-6">
         {activeTab === "dashboard" && <AdminDashboard />}
         {activeTab === "listings" && <AdminListings />}
+        {activeTab === "orders" && <AdminOrders />}
         {activeTab === "inquiries" && <AdminInquiries />}
         {activeTab === "users" && <AdminUsers />}
         {activeTab === "content" && <AdminContent />}
