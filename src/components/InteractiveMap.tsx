@@ -44,7 +44,6 @@ function createMarkerIcon(listing: Listing, isSelected: boolean) {
         display: flex;
         flex-direction: column;
         align-items: center;
-        transform: translate(-50%, -100%);
         cursor: pointer;
         filter: ${isSelected ? 'drop-shadow(0 0 8px rgba(46, 196, 182, 0.5))' : 'none'};
       ">
@@ -80,7 +79,7 @@ function createMarkerIcon(listing: Listing, isSelected: boolean) {
       </div>
     `,
     iconSize: [size, size + 28],
-    iconAnchor: [size / 2, size + 28],
+    iconAnchor: [size / 2, size],
   });
 }
 
