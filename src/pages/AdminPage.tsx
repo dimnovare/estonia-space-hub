@@ -148,7 +148,151 @@ function AdminDashboard() {
   );
 }
 
-/* ─── Listings ─── */
+/* ─── Orders ─── */
+function AdminOrders() {
+  const [orders, setOrders] = useState(MOCK_ORDERS);
+  const [filter, setFilter] = useState<"all" | OrderStatus>("all");
+  const [viewOrder, setViewOrder] = useState<Order | null>(null);
+  const [emailPreview, setEmailPreview] = useState(false);
+
+  const filtered = filter === "all" ? orders : orders.filter((o) => o.status === filter);
+
+  const updateOrderStatus = (id: string, status: OrderStatus) => {
+    setOrders((prev) => prev.map((o) => o.id === id ? { ...o, status } : o));
+    if (viewOrder?.id === id) setViewOrder((prev) => prev ? { ...prev, status } : prev);
+  };
+
+  return (
+    <div>
+      <h1 className="font-display text-2xl font-bold">Tellimused</h1>
+      <div className="mt-4 flex gap-2 overflow-x-auto">
+        {(["all", "created", "sending", "sent", "confirmed", "rejected", "active", "completed"] as const).map((f) => (
+          <button key={f} onClick={() => setFilter(f)} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
+            {f === "all" ? `Kõik (${orders.length})` : `${ORDER_STATUS_CONFIG[f].label} (${orders.filter((o) => o.status === f).length})`}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-6 overflow-x-auto rounded-xl border border-border">
+        <table className="w-full text-sm">
+          <thead className="border-b border-border bg-secondary/50">
+            <tr>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">ID</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Klient</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Teenus</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Partner</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Integratsioon</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Summa</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Marginaal</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Staatus</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Toimingud</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((o) => {
+              const intConf = INTEGRATION_TYPE_CONFIG[o.integrationType];
+              const statusConf = ORDER_STATUS_CONFIG[o.status];
+              const IntIcon = o.integrationType === "api" ? Wifi : o.integrationType === "email" ? Mail : Hand;
+              return (
+                <tr key={o.id} className="border-b border-border last:border-0">
+                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{o.id}</td>
+                  <td className="px-4 py-3 font-medium">{o.customerName}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{o.listingTitle}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{o.supplierName}</td>
+                  <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${intConf.color}`}><IntIcon className="h-3 w-3" />{intConf.label}</span></td>
+                  <td className="px-4 py-3 font-medium">€{o.total}</td>
+                  <td className="px-4 py-3 text-success font-medium">€{o.margin}</td>
+                  <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusConf.color}`}>{statusConf.label}</span></td>
+                  <td className="px-4 py-3"><Button variant="outline" size="sm" onClick={() => setViewOrder(o)}>Vaata</Button></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <Dialog open={!!viewOrder} onOpenChange={() => { setViewOrder(null); setEmailPreview(false); }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Tellimus {viewOrder?.id}</DialogTitle></DialogHeader>
+          {viewOrder && !emailPreview && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div><span className="text-xs text-muted-foreground">Klient</span><p className="font-medium">{viewOrder.customerName}</p></div>
+                <div><span className="text-xs text-muted-foreground">E-post</span><p className="font-medium">{viewOrder.customerEmail}</p></div>
+                <div><span className="text-xs text-muted-foreground">Telefon</span><p className="font-medium">{viewOrder.customerPhone}</p></div>
+                <div><span className="text-xs text-muted-foreground">Teenus</span><p className="font-medium">{viewOrder.listingTitle}</p></div>
+                <div><span className="text-xs text-muted-foreground">Partner</span><p className="font-medium">{viewOrder.supplierName}</p></div>
+                <div><span className="text-xs text-muted-foreground">Integratsioon</span><p><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${INTEGRATION_TYPE_CONFIG[viewOrder.integrationType].color}`}>{INTEGRATION_TYPE_CONFIG[viewOrder.integrationType].label}</span></p></div>
+                <div><span className="text-xs text-muted-foreground">Algus</span><p className="font-medium">{viewOrder.startDate}</p></div>
+                <div><span className="text-xs text-muted-foreground">Periood</span><p className="font-medium">{viewOrder.duration}</p></div>
+              </div>
+
+              <div className="rounded-lg border border-border p-3 text-sm">
+                <div className="flex justify-between"><span className="text-muted-foreground">Kliendi hind</span><span>€{viewOrder.platformPrice}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Partneri hind</span><span>€{viewOrder.supplierPrice}</span></div>
+                {viewOrder.extrasTotal > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Lisateenused</span><span>€{viewOrder.extrasTotal}</span></div>}
+                <div className="mt-2 flex justify-between border-t border-border pt-2 font-bold"><span>Kokku kliendilt</span><span>€{viewOrder.total}</span></div>
+                <div className="flex justify-between text-success font-medium"><span>Marginaal</span><span>€{viewOrder.margin}</span></div>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground mb-2">Tellimuse ajalugu</p>
+                <div className="space-y-2">
+                  {viewOrder.timeline.map((t, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <div className="mt-1.5 h-2 w-2 rounded-full bg-accent shrink-0" />
+                      <div>
+                        <p className="text-xs font-medium">{t.event}</p>
+                        {t.detail && <p className="text-[10px] text-muted-foreground font-mono">{t.detail}</p>}
+                        <p className="text-[10px] text-muted-foreground">{t.date} {t.time}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {viewOrder.integrationType === "email" && (
+                  <Button variant="outline" size="sm" onClick={() => setEmailPreview(true)}>
+                    <Mail className="mr-1 h-3.5 w-3.5" /> Vaata e-kirja
+                  </Button>
+                )}
+                {(viewOrder.status === "created" || viewOrder.status === "sending") && (
+                  <Button size="sm" onClick={() => updateOrderStatus(viewOrder.id, "sent")} className="bg-info text-white hover:bg-info/90">
+                    <Send className="mr-1 h-3.5 w-3.5" /> Märgi saadetud
+                  </Button>
+                )}
+                {viewOrder.status === "sent" && (
+                  <>
+                    <Button size="sm" onClick={() => updateOrderStatus(viewOrder.id, "confirmed")} className="bg-success text-white hover:bg-success/90">Märgi kinnitatud</Button>
+                    <Button size="sm" variant="outline" onClick={() => updateOrderStatus(viewOrder.id, "rejected")} className="text-destructive">Märgi tagasi lükatud</Button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+          {viewOrder && emailPreview && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold">E-kirja eelvaade</p>
+                <Button variant="outline" size="sm" onClick={() => setEmailPreview(false)}>Tagasi</Button>
+              </div>
+              <div className="rounded-lg border border-border bg-secondary/30 p-3 text-xs">
+                <p><strong>Saaja:</strong> {MOCK_SUPPLIERS.find((s) => s.id === viewOrder.supplierId)?.contactEmail}</p>
+                <p><strong>Teema:</strong> Uus tellimus Ruumly platvormilt — {viewOrder.id}</p>
+              </div>
+              <pre className="rounded-lg border border-border bg-card p-4 text-xs whitespace-pre-wrap font-mono max-h-96 overflow-y-auto">
+                {generateOrderEmailPreview(viewOrder)}
+              </pre>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+
 function AdminListings() {
   const [listings, setListings] = useState(initialListings);
   const [editOpen, setEditOpen] = useState(false);
