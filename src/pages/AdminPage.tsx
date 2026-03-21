@@ -1,27 +1,33 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   LayoutDashboard, List, MessageSquare, Settings, Users, FileText,
   TrendingUp, Eye, DollarSign, PlusCircle, Edit, Trash2, Warehouse, Truck, CarFront,
   X, Save, ChevronDown, Mail, Phone, Calendar, Shield, Globe, Bell, CreditCard, ToggleLeft,
-  Package, Wifi, Hand, Send, Search, CheckCircle,
+  Package, Wifi, Hand, Send, Search, CheckCircle, Link2, Activity, Clock, AlertTriangle,
+  RefreshCw, ExternalLink, FileCode, Server, Zap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MOCK_ORDERS, MOCK_SUPPLIERS, ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG, generateOrderEmailPreview, type Order, type OrderStatus } from "@/data/mockOrders";
+import { Badge } from "@/components/ui/badge";
+import { MOCK_ORDERS, ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG, generateOrderEmailPreview, type Order, type OrderStatus } from "@/data/mockOrders";
+import { supplierService, userService, auditService } from "@/services";
+import type { Supplier, User as ServiceUser, AuditLogEntry } from "@/services/types";
 
 const sidebarLinks = [
   { id: "dashboard", label: "Ülevaade", icon: LayoutDashboard },
   { id: "listings", label: "Kuulutused", icon: List },
   { id: "orders", label: "Tellimused", icon: Package },
+  { id: "suppliers", label: "Partnerid", icon: Link2 },
   { id: "inquiries", label: "Päringud", icon: MessageSquare },
   { id: "users", label: "Kasutajad", icon: Users },
   { id: "content", label: "Sisu", icon: FileText },
+  { id: "audit", label: "Tegevuslogi", icon: Activity },
   { id: "settings", label: "Seaded", icon: Settings },
 ];
 
 const stats = [
   { label: "Kuulutusi", value: "156", change: "+12%", icon: Eye },
-  { label: "Päringuid", value: "342", change: "+24%", icon: MessageSquare },
+  { label: "Tellimusi", value: "342", change: "+24%", icon: Package },
   { label: "Kasutajaid", value: "2,847", change: "+8%", icon: Users },
   { label: "Tulu", value: "€4,230", change: "+18%", icon: DollarSign },
 ];
@@ -40,15 +46,6 @@ const initialListings = [
   { id: "t1", title: "HaagisRent Tallinn", type: "trailer", status: "Peatatud", views: 89, inquiries: 5, price: 25, city: "Tallinn" },
 ];
 
-const initialUsers = [
-  { id: 1, name: "Andres Tamm", email: "andres@email.com", role: "Klient", registered: "2025-11-05", bookings: 3, status: "Aktiivne" },
-  { id: 2, name: "Kati Mets", email: "kati@email.com", role: "Klient", registered: "2025-12-12", bookings: 1, status: "Aktiivne" },
-  { id: 3, name: "Jüri Kask", email: "jyri@email.com", role: "Klient", registered: "2026-01-08", bookings: 5, status: "Aktiivne" },
-  { id: 4, name: "Maria Saar", email: "maria@email.com", role: "Pakkuja", registered: "2025-10-20", bookings: 0, status: "Aktiivne" },
-  { id: 5, name: "Peeter Kuusk", email: "peeter@email.com", role: "Admin", registered: "2025-09-01", bookings: 0, status: "Aktiivne" },
-  { id: 6, name: "Liina Rebane", email: "liina@email.com", role: "Klient", registered: "2026-02-14", bookings: 2, status: "Blokeeritud" },
-];
-
 const typeIcons: Record<string, typeof Warehouse> = { warehouse: Warehouse, moving: Truck, trailer: CarFront };
 
 export default function AdminPage() {
@@ -65,28 +62,34 @@ export default function AdminPage() {
             const Icon = l.icon;
             const active = activeTab === l.id;
             return (
-              <button
-                key={l.id}
-                onClick={() => setActiveTab(l.id)}
-                className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {l.label}
+              <button key={l.id} onClick={() => setActiveTab(l.id)}
+                className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
+                <Icon className="h-4 w-4" />{l.label}
               </button>
             );
           })}
         </nav>
       </aside>
-
-      <main className="flex-1 p-6">
+      <main className="flex-1 overflow-y-auto p-6">
+        {/* Mobile tabs */}
+        <div className="mb-4 flex gap-2 overflow-x-auto lg:hidden">
+          {sidebarLinks.map((l) => {
+            const Icon = l.icon;
+            return (
+              <button key={l.id} onClick={() => setActiveTab(l.id)} className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${activeTab === l.id ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
+                <Icon className="h-3.5 w-3.5" /> {l.label}
+              </button>
+            );
+          })}
+        </div>
         {activeTab === "dashboard" && <AdminDashboard />}
         {activeTab === "listings" && <AdminListings />}
         {activeTab === "orders" && <AdminOrders />}
+        {activeTab === "suppliers" && <AdminSuppliers />}
         {activeTab === "inquiries" && <AdminInquiries />}
         {activeTab === "users" && <AdminUsers />}
         {activeTab === "content" && <AdminContent />}
+        {activeTab === "audit" && <AdminAudit />}
         {activeTab === "settings" && <AdminSettings />}
       </main>
     </div>
@@ -108,14 +111,11 @@ function AdminDashboard() {
                 <Icon className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="mt-2 font-display text-2xl font-bold">{s.value}</div>
-              <div className="mt-1 flex items-center gap-1 text-xs text-success">
-                <TrendingUp className="h-3 w-3" /> {s.change}
-              </div>
+              <div className="mt-1 flex items-center gap-1 text-xs text-success"><TrendingUp className="h-3 w-3" /> {s.change}</div>
             </div>
           );
         })}
       </div>
-
       <h2 className="mt-8 font-display text-lg font-semibold">Viimased päringud</h2>
       <div className="mt-4 overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-sm">
@@ -134,10 +134,7 @@ function AdminDashboard() {
                 <td className="px-4 py-3 text-muted-foreground">{inq.listing}</td>
                 <td className="px-4 py-3 text-muted-foreground">{inq.date}</td>
                 <td className="px-4 py-3">
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                    inq.status === "Uus" ? "bg-accent/10 text-accent" :
-                    inq.status === "Vastatud" ? "bg-info/10 text-info" : "bg-muted text-muted-foreground"
-                  }`}>{inq.status}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inq.status === "Uus" ? "bg-accent/10 text-accent" : inq.status === "Vastatud" ? "bg-info/10 text-info" : "bg-muted text-muted-foreground"}`}>{inq.status}</span>
                 </td>
               </tr>
             ))}
@@ -172,7 +169,6 @@ function AdminOrders() {
           </button>
         ))}
       </div>
-
       <div className="mt-6 overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
@@ -226,7 +222,6 @@ function AdminOrders() {
                 <div><span className="text-xs text-muted-foreground">Algus</span><p className="font-medium">{viewOrder.startDate}</p></div>
                 <div><span className="text-xs text-muted-foreground">Periood</span><p className="font-medium">{viewOrder.duration}</p></div>
               </div>
-
               <div className="rounded-lg border border-border p-3 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Kliendi hind</span><span>€{viewOrder.platformPrice}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Partneri hind</span><span>€{viewOrder.supplierPrice}</span></div>
@@ -234,7 +229,6 @@ function AdminOrders() {
                 <div className="mt-2 flex justify-between border-t border-border pt-2 font-bold"><span>Kokku kliendilt</span><span>€{viewOrder.total}</span></div>
                 <div className="flex justify-between text-success font-medium"><span>Marginaal</span><span>€{viewOrder.margin}</span></div>
               </div>
-
               <div>
                 <p className="text-xs font-semibold text-muted-foreground mb-2">Tellimuse ajalugu</p>
                 <div className="space-y-2">
@@ -250,17 +244,12 @@ function AdminOrders() {
                   ))}
                 </div>
               </div>
-
               <div className="flex flex-wrap gap-2">
                 {viewOrder.integrationType === "email" && (
-                  <Button variant="outline" size="sm" onClick={() => setEmailPreview(true)}>
-                    <Mail className="mr-1 h-3.5 w-3.5" /> Vaata e-kirja
-                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setEmailPreview(true)}><Mail className="mr-1 h-3.5 w-3.5" /> Vaata e-kirja</Button>
                 )}
                 {(viewOrder.status === "created" || viewOrder.status === "sending") && (
-                  <Button size="sm" onClick={() => updateOrderStatus(viewOrder.id, "sent")} className="bg-info text-white hover:bg-info/90">
-                    <Send className="mr-1 h-3.5 w-3.5" /> Märgi saadetud
-                  </Button>
+                  <Button size="sm" onClick={() => updateOrderStatus(viewOrder.id, "sent")} className="bg-info text-white hover:bg-info/90"><Send className="mr-1 h-3.5 w-3.5" /> Märgi saadetud</Button>
                 )}
                 {viewOrder.status === "sent" && (
                   <>
@@ -277,13 +266,7 @@ function AdminOrders() {
                 <p className="text-sm font-semibold">E-kirja eelvaade</p>
                 <Button variant="outline" size="sm" onClick={() => setEmailPreview(false)}>Tagasi</Button>
               </div>
-              <div className="rounded-lg border border-border bg-secondary/30 p-3 text-xs">
-                <p><strong>Saaja:</strong> {MOCK_SUPPLIERS.find((s) => s.id === viewOrder.supplierId)?.contactEmail}</p>
-                <p><strong>Teema:</strong> Uus tellimus Ruumly platvormilt — {viewOrder.id}</p>
-              </div>
-              <pre className="rounded-lg border border-border bg-card p-4 text-xs whitespace-pre-wrap font-mono max-h-96 overflow-y-auto">
-                {generateOrderEmailPreview(viewOrder)}
-              </pre>
+              <pre className="rounded-lg border border-border bg-card p-4 text-xs whitespace-pre-wrap font-mono max-h-96 overflow-y-auto">{generateOrderEmailPreview(viewOrder)}</pre>
             </div>
           )}
         </DialogContent>
@@ -292,46 +275,253 @@ function AdminOrders() {
   );
 }
 
+/* ─── Suppliers ─── */
+function AdminSuppliers() {
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Supplier | null>(null);
+  const [testingId, setTestingId] = useState<string | null>(null);
+  const [testResult, setTestResult] = useState<{ success: boolean; latency: number } | null>(null);
+  const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
 
+  useEffect(() => {
+    supplierService.getAll().then((data) => { setSuppliers(data); setLoading(false); });
+  }, []);
+
+  const filtered = filter === "all" ? suppliers : filter === "active" ? suppliers.filter(s => s.isActive) : suppliers.filter(s => !s.isActive);
+
+  const toggleStatus = (id: string) => {
+    setSuppliers(prev => prev.map(s => s.id === id ? { ...s, isActive: !s.isActive, integrationHealth: !s.isActive ? "healthy" : "offline" } : s));
+    if (selected?.id === id) setSelected(prev => prev ? { ...prev, isActive: !prev.isActive } : prev);
+  };
+
+  const testIntegration = async (id: string) => {
+    setTestingId(id);
+    setTestResult(null);
+    const result = await supplierService.testIntegration(id);
+    setTestResult(result);
+    setTestingId(null);
+  };
+
+  const healthColor = (h: string) => h === "healthy" ? "bg-success/10 text-success" : h === "degraded" ? "bg-warning/10 text-warning" : "bg-destructive/10 text-destructive";
+  const healthLabel = (h: string) => h === "healthy" ? "Terve" : h === "degraded" ? "Häiritud" : "Offline";
+  const intIcon = (t: string) => t === "api" ? <Zap className="h-3.5 w-3.5" /> : t === "email" ? <Mail className="h-3.5 w-3.5" /> : <Hand className="h-3.5 w-3.5" />;
+
+  if (loading) return <div className="flex items-center justify-center py-20"><RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
+
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-bold">Partnerid & integratsioonid</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Halda teenusepakkujaid, integratsioonitüüpe ja tellimuste edastamist.</p>
+        </div>
+      </div>
+
+      {/* Summary cards */}
+      <div className="mt-6 grid gap-4 sm:grid-cols-4">
+        <div className="card-elevated p-4">
+          <div className="text-sm text-muted-foreground">Partnereid kokku</div>
+          <div className="mt-1 font-display text-2xl font-bold">{suppliers.length}</div>
+        </div>
+        <div className="card-elevated p-4">
+          <div className="text-sm text-muted-foreground">Aktiivsed</div>
+          <div className="mt-1 font-display text-2xl font-bold text-success">{suppliers.filter(s => s.isActive).length}</div>
+        </div>
+        <div className="card-elevated p-4">
+          <div className="text-sm text-muted-foreground">API integratsioonid</div>
+          <div className="mt-1 font-display text-2xl font-bold">{suppliers.filter(s => s.integrationType === "api").length}</div>
+        </div>
+        <div className="card-elevated p-4">
+          <div className="text-sm text-muted-foreground">Kokku tulu</div>
+          <div className="mt-1 font-display text-2xl font-bold">€{suppliers.reduce((s, sup) => s + sup.revenue, 0).toLocaleString()}</div>
+        </div>
+      </div>
+
+      <div className="mt-6 flex gap-2">
+        {(["all", "active", "inactive"] as const).map(f => (
+          <button key={f} onClick={() => setFilter(f)} className={`rounded-full px-3 py-1.5 text-xs font-medium ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
+            {f === "all" ? "Kõik" : f === "active" ? "Aktiivsed" : "Mitteaktiivsed"}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-4 overflow-x-auto rounded-xl border border-border">
+        <table className="w-full text-sm">
+          <thead className="border-b border-border bg-secondary/50">
+            <tr>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Partner</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Kontakt</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Integratsioon</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Tervis</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Kuulutusi</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Tellimusi</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Tulu</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Staatus</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Tegevused</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(s => (
+              <tr key={s.id} className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors">
+                <td className="px-4 py-3">
+                  <div className="font-medium">{s.name}</div>
+                  <div className="text-[10px] text-muted-foreground font-mono">{s.registryCode}</div>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="text-xs">{s.contactName}</div>
+                  <div className="text-[10px] text-muted-foreground">{s.contactEmail}</div>
+                </td>
+                <td className="px-4 py-3">
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${INTEGRATION_TYPE_CONFIG[s.integrationType].color}`}>
+                    {intIcon(s.integrationType)} {INTEGRATION_TYPE_CONFIG[s.integrationType].label}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${healthColor(s.integrationHealth)}`}>
+                    {s.integrationHealth === "healthy" ? <CheckCircle className="h-3 w-3" /> : s.integrationHealth === "degraded" ? <AlertTriangle className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                    {healthLabel(s.integrationHealth)}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-muted-foreground">{s.listingCount}</td>
+                <td className="px-4 py-3 text-muted-foreground">{s.ordersTotal}</td>
+                <td className="px-4 py-3 font-medium">€{s.revenue.toLocaleString()}</td>
+                <td className="px-4 py-3">
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s.isActive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
+                    {s.isActive ? "Aktiivne" : "Mitteaktiivne"}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <Button variant="outline" size="sm" className="text-xs" onClick={() => { setSelected(s); setTestResult(null); }}>Vaata</Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Supplier detail dialog */}
+      <Dialog open={!!selected} onOpenChange={(o) => { if (!o) { setSelected(null); setTestResult(null); } }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{selected?.name}</DialogTitle></DialogHeader>
+          {selected && (
+            <div className="space-y-5">
+              {/* Contact info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-lg bg-secondary/50 p-3">
+                  <p className="text-xs text-muted-foreground">Kontaktisik</p>
+                  <p className="text-sm font-medium">{selected.contactName}</p>
+                </div>
+                <div className="rounded-lg bg-secondary/50 p-3">
+                  <p className="text-xs text-muted-foreground">E-post</p>
+                  <p className="text-sm font-medium">{selected.contactEmail}</p>
+                </div>
+                <div className="rounded-lg bg-secondary/50 p-3">
+                  <p className="text-xs text-muted-foreground">Telefon</p>
+                  <p className="text-sm font-medium">{selected.contactPhone}</p>
+                </div>
+                <div className="rounded-lg bg-secondary/50 p-3">
+                  <p className="text-xs text-muted-foreground">Registrikood</p>
+                  <p className="text-sm font-medium font-mono">{selected.registryCode}</p>
+                </div>
+              </div>
+
+              {/* Integration details */}
+              <div className="rounded-xl border border-border p-4">
+                <h3 className="flex items-center gap-2 text-sm font-semibold"><Server className="h-4 w-4 text-accent" /> Integratsiooni seaded</h3>
+                <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Tüüp</p>
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${INTEGRATION_TYPE_CONFIG[selected.integrationType].color}`}>
+                      {intIcon(selected.integrationType)} {INTEGRATION_TYPE_CONFIG[selected.integrationType].label}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Tervis</p>
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${healthColor(selected.integrationHealth)}`}>
+                      {healthLabel(selected.integrationHealth)}
+                    </span>
+                  </div>
+                  {selected.apiEndpoint && (
+                    <div className="col-span-2">
+                      <p className="text-xs text-muted-foreground">API Endpoint</p>
+                      <p className="font-mono text-xs mt-0.5 rounded-md bg-secondary px-2 py-1">{selected.apiEndpoint}</p>
+                    </div>
+                  )}
+                </div>
+                {selected.integrationType === "api" && (
+                  <div className="mt-3">
+                    <Button variant="outline" size="sm" className="gap-1.5" onClick={() => testIntegration(selected.id)} disabled={testingId === selected.id}>
+                      {testingId === selected.id ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
+                      Testi ühendust
+                    </Button>
+                    {testResult && (
+                      <div className={`mt-2 rounded-lg p-2 text-xs font-medium ${testResult.success ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
+                        {testResult.success ? `✓ Ühendus OK — ${testResult.latency}ms` : "✗ Ühendus ebaõnnestus"}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-lg bg-secondary/50 p-3 text-center">
+                  <p className="text-xs text-muted-foreground">Kuulutusi</p>
+                  <p className="text-lg font-bold">{selected.listingCount}</p>
+                </div>
+                <div className="rounded-lg bg-secondary/50 p-3 text-center">
+                  <p className="text-xs text-muted-foreground">Tellimusi</p>
+                  <p className="text-lg font-bold">{selected.ordersTotal}</p>
+                </div>
+                <div className="rounded-lg bg-secondary/50 p-3 text-center">
+                  <p className="text-xs text-muted-foreground">Tulu</p>
+                  <p className="text-lg font-bold text-accent">€{selected.revenue.toLocaleString()}</p>
+                </div>
+              </div>
+
+              {selected.lastOrderAt && (
+                <p className="text-xs text-muted-foreground">Viimane tellimus: {selected.lastOrderAt}</p>
+              )}
+              {selected.notes && (
+                <div className="rounded-lg border border-warning/30 bg-warning/5 p-3">
+                  <p className="text-xs font-medium text-warning">Märkused</p>
+                  <p className="text-xs text-muted-foreground mt-1">{selected.notes}</p>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" size="sm" onClick={() => toggleStatus(selected.id)}>
+                  {selected.isActive ? "Deaktiveeri" : "Aktiveeri"}
+                </Button>
+                <Button variant="outline" size="sm" className="gap-1"><Send className="h-3.5 w-3.5" /> Saada uuesti viimane tellimus</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+/* ─── Listings ─── */
 function AdminListings() {
   const [listings, setListings] = useState(initialListings);
   const [editOpen, setEditOpen] = useState(false);
   const [editItem, setEditItem] = useState<typeof initialListings[0] | null>(null);
   const [isNew, setIsNew] = useState(false);
 
-  const openNew = () => {
-    setEditItem({ id: `new-${Date.now()}`, title: "", type: "warehouse", status: "Aktiivne", views: 0, inquiries: 0, price: 0, city: "" });
-    setIsNew(true);
-    setEditOpen(true);
-  };
-
-  const openEdit = (item: typeof initialListings[0]) => {
-    setEditItem({ ...item });
-    setIsNew(false);
-    setEditOpen(true);
-  };
-
-  const handleSave = () => {
-    if (!editItem) return;
-    if (isNew) {
-      setListings((prev) => [...prev, editItem]);
-    } else {
-      setListings((prev) => prev.map((l) => (l.id === editItem.id ? editItem : l)));
-    }
-    setEditOpen(false);
-  };
-
-  const handleDelete = (id: string) => {
-    setListings((prev) => prev.filter((l) => l.id !== id));
-  };
+  const openNew = () => { setEditItem({ id: `new-${Date.now()}`, title: "", type: "warehouse", status: "Aktiivne", views: 0, inquiries: 0, price: 0, city: "" }); setIsNew(true); setEditOpen(true); };
+  const openEdit = (item: typeof initialListings[0]) => { setEditItem({ ...item }); setIsNew(false); setEditOpen(true); };
+  const handleSave = () => { if (!editItem) return; if (isNew) setListings(prev => [...prev, editItem]); else setListings(prev => prev.map(l => l.id === editItem.id ? editItem : l)); setEditOpen(false); };
+  const handleDelete = (id: string) => setListings(prev => prev.filter(l => l.id !== id));
 
   return (
     <div>
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Kuulutused</h1>
-        <Button onClick={openNew} className="bg-accent text-accent-foreground hover:bg-accent/90">
-          <PlusCircle className="mr-2 h-4 w-4" /> Lisa kuulutus
-        </Button>
+        <Button onClick={openNew} className="bg-accent text-accent-foreground hover:bg-accent/90"><PlusCircle className="mr-2 h-4 w-4" /> Lisa kuulutus</Button>
       </div>
       <div className="mt-6 overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-sm">
@@ -347,7 +537,7 @@ function AdminListings() {
             </tr>
           </thead>
           <tbody>
-            {listings.map((l) => {
+            {listings.map(l => {
               const Icon = typeIcons[l.type] || Warehouse;
               return (
                 <tr key={l.id} className="border-b border-border last:border-0">
@@ -355,11 +545,7 @@ function AdminListings() {
                   <td className="px-4 py-3"><Icon className="h-4 w-4 text-muted-foreground" /></td>
                   <td className="px-4 py-3 text-muted-foreground">{l.city}</td>
                   <td className="px-4 py-3 text-muted-foreground">{l.price}€</td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      l.status === "Aktiivne" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"
-                    }`}>{l.status}</span>
-                  </td>
+                  <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${l.status === "Aktiivne" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>{l.status}</span></td>
                   <td className="px-4 py-3 text-muted-foreground">{l.views}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
@@ -373,56 +559,23 @@ function AdminListings() {
           </tbody>
         </table>
       </div>
-
-      {/* Edit / Add dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{isNew ? "Lisa uus kuulutus" : "Muuda kuulutust"}</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>{isNew ? "Lisa uus kuulutus" : "Muuda kuulutust"}</DialogTitle></DialogHeader>
           {editItem && (
             <div className="space-y-4">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Pealkiri</label>
-                <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                  value={editItem.title} onChange={(e) => setEditItem({ ...editItem, title: e.target.value })} />
+              <div><label className="text-xs font-medium text-muted-foreground">Pealkiri</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={editItem.title} onChange={e => setEditItem({ ...editItem, title: e.target.value })} /></div>
+              <div className="grid grid-cols-2 gap-4">
+                <div><label className="text-xs font-medium text-muted-foreground">Tüüp</label><select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={editItem.type} onChange={e => setEditItem({ ...editItem, type: e.target.value })}><option value="warehouse">Laopind</option><option value="moving">Kolimine</option><option value="trailer">Haagise rent</option></select></div>
+                <div><label className="text-xs font-medium text-muted-foreground">Linn</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={editItem.city} onChange={e => setEditItem({ ...editItem, city: e.target.value })} /></div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">Tüüp</label>
-                  <select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                    value={editItem.type} onChange={(e) => setEditItem({ ...editItem, type: e.target.value })}>
-                    <option value="warehouse">Laopind</option>
-                    <option value="moving">Kolimine</option>
-                    <option value="trailer">Haagise rent</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">Linn</label>
-                  <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                    value={editItem.city} onChange={(e) => setEditItem({ ...editItem, city: e.target.value })} />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">Hind (€)</label>
-                  <input type="number" className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                    value={editItem.price} onChange={(e) => setEditItem({ ...editItem, price: Number(e.target.value) })} />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">Staatus</label>
-                  <select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                    value={editItem.status} onChange={(e) => setEditItem({ ...editItem, status: e.target.value })}>
-                    <option value="Aktiivne">Aktiivne</option>
-                    <option value="Peatatud">Peatatud</option>
-                  </select>
-                </div>
+                <div><label className="text-xs font-medium text-muted-foreground">Hind (€)</label><input type="number" className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={editItem.price} onChange={e => setEditItem({ ...editItem, price: Number(e.target.value) })} /></div>
+                <div><label className="text-xs font-medium text-muted-foreground">Staatus</label><select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={editItem.status} onChange={e => setEditItem({ ...editItem, status: e.target.value })}><option value="Aktiivne">Aktiivne</option><option value="Peatatud">Peatatud</option></select></div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" onClick={() => setEditOpen(false)}>Tühista</Button>
-                <Button onClick={handleSave} className="bg-accent text-accent-foreground hover:bg-accent/90">
-                  <Save className="mr-2 h-4 w-4" /> Salvesta
-                </Button>
+                <Button onClick={handleSave} className="bg-accent text-accent-foreground hover:bg-accent/90"><Save className="mr-2 h-4 w-4" /> Salvesta</Button>
               </div>
             </div>
           )}
@@ -438,15 +591,8 @@ function AdminInquiries() {
   const [viewOpen, setViewOpen] = useState(false);
   const [viewItem, setViewItem] = useState<typeof initialInquiries[0] | null>(null);
 
-  const openView = (inq: typeof initialInquiries[0]) => {
-    setViewItem({ ...inq });
-    setViewOpen(true);
-  };
-
-  const updateStatus = (id: number, status: string) => {
-    setInquiries((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i)));
-    if (viewItem?.id === id) setViewItem((prev) => prev ? { ...prev, status } : prev);
-  };
+  const openView = (inq: typeof initialInquiries[0]) => { setViewItem({ ...inq }); setViewOpen(true); };
+  const updateStatus = (id: number, status: string) => { setInquiries(prev => prev.map(i => i.id === id ? { ...i, status } : i)); if (viewItem?.id === id) setViewItem(prev => prev ? { ...prev, status } : prev); };
 
   return (
     <div>
@@ -464,32 +610,22 @@ function AdminInquiries() {
             </tr>
           </thead>
           <tbody>
-            {inquiries.map((inq) => (
+            {inquiries.map(inq => (
               <tr key={inq.id} className="border-b border-border last:border-0">
                 <td className="px-4 py-3 font-medium">{inq.customer}</td>
                 <td className="px-4 py-3 text-muted-foreground">{inq.email}</td>
                 <td className="px-4 py-3 text-muted-foreground">{inq.listing}</td>
                 <td className="px-4 py-3 text-muted-foreground">{inq.date}</td>
-                <td className="px-4 py-3">
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                    inq.status === "Uus" ? "bg-accent/10 text-accent" :
-                    inq.status === "Vastatud" ? "bg-info/10 text-info" : "bg-muted text-muted-foreground"
-                  }`}>{inq.status}</span>
-                </td>
-                <td className="px-4 py-3">
-                  <Button variant="outline" size="sm" onClick={() => openView(inq)}>Vaata</Button>
-                </td>
+                <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inq.status === "Uus" ? "bg-accent/10 text-accent" : inq.status === "Vastatud" ? "bg-info/10 text-info" : "bg-muted text-muted-foreground"}`}>{inq.status}</span></td>
+                <td className="px-4 py-3"><Button variant="outline" size="sm" onClick={() => openView(inq)}>Vaata</Button></td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-
       <Dialog open={viewOpen} onOpenChange={setViewOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Päringu detailid</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Päringu detailid</DialogTitle></DialogHeader>
           {viewItem && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -500,21 +636,15 @@ function AdminInquiries() {
               </div>
               <div>
                 <span className="text-xs text-muted-foreground">Staatus</span>
-                <select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                  value={viewItem.status} onChange={(e) => updateStatus(viewItem.id, e.target.value)}>
-                  <option value="Uus">Uus</option>
-                  <option value="Vastatud">Vastatud</option>
-                  <option value="Lõpetatud">Lõpetatud</option>
+                <select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={viewItem.status} onChange={e => updateStatus(viewItem.id, e.target.value)}>
+                  <option value="Uus">Uus</option><option value="Vastatud">Vastatud</option><option value="Lõpetatud">Lõpetatud</option>
                 </select>
               </div>
               <div>
                 <span className="text-xs text-muted-foreground">Märkmed</span>
-                <textarea className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" rows={3}
-                  value={viewItem.notes} onChange={(e) => setViewItem({ ...viewItem, notes: e.target.value })} placeholder="Lisa märkmed..." />
+                <textarea className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" rows={3} value={viewItem.notes} onChange={e => setViewItem({ ...viewItem, notes: e.target.value })} placeholder="Lisa märkmed..." />
               </div>
-              <div className="flex justify-end">
-                <Button onClick={() => setViewOpen(false)} className="bg-accent text-accent-foreground hover:bg-accent/90">Sulge</Button>
-              </div>
+              <div className="flex justify-end"><Button onClick={() => setViewOpen(false)} className="bg-accent text-accent-foreground hover:bg-accent/90">Sulge</Button></div>
             </div>
           )}
         </DialogContent>
@@ -525,44 +655,50 @@ function AdminInquiries() {
 
 /* ─── Users ─── */
 function AdminUsers() {
-  const [users, setUsers] = useState(initialUsers);
-  const [selectedUser, setSelectedUser] = useState<typeof initialUsers[0] | null>(null);
-  const [filterRole, setFilterRole] = useState("Kõik");
-  const [filterStatus, setFilterStatus] = useState("Kõik");
+  const [users, setUsers] = useState<ServiceUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedUser, setSelectedUser] = useState<ServiceUser | null>(null);
+  const [filterRole, setFilterRole] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filtered = users.filter((u) => {
-    if (filterRole !== "Kõik" && u.role !== filterRole) return false;
-    if (filterStatus !== "Kõik" && u.status !== filterStatus) return false;
+  useEffect(() => {
+    userService.getAll().then(data => { setUsers(data); setLoading(false); });
+  }, []);
+
+  const filtered = users.filter(u => {
+    if (filterRole !== "all" && u.role !== filterRole) return false;
+    if (filterStatus !== "all" && u.status !== filterStatus) return false;
     if (searchQuery && !u.name.toLowerCase().includes(searchQuery.toLowerCase()) && !u.email.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
 
-  const toggleStatus = (id: number) => {
-    setUsers((prev) => prev.map((u) => u.id === id ? { ...u, status: u.status === "Aktiivne" ? "Blokeeritud" : "Aktiivne" } : u));
-    if (selectedUser?.id === id) setSelectedUser((prev) => prev ? { ...prev, status: prev.status === "Aktiivne" ? "Blokeeritud" : "Aktiivne" } : prev);
+  const toggleStatus = (id: string) => {
+    setUsers(prev => prev.map(u => u.id === id ? { ...u, status: u.status === "active" ? "blocked" as const : "active" as const } : u));
+    if (selectedUser?.id === id) setSelectedUser(prev => prev ? { ...prev, status: prev.status === "active" ? "blocked" as const : "active" as const } : prev);
   };
+
+  const roleLabel = (r: string) => r === "customer" ? "Klient" : r === "provider" ? "Pakkuja" : r === "admin" ? "Admin" : "Külaline";
+
+  if (loading) return <div className="flex items-center justify-center py-20"><RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
 
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">Kasutajad</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Halda kasutajaid ja teenusepakkujaid.</p>
-
-      {/* Filters */}
+      <p className="mt-2 text-sm text-muted-foreground">Halda kasutajaid ja teenusepakkujaid. {users.length} kasutajat kokku.</p>
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Otsi nime või e-posti järgi..." className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm" />
+          <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Otsi nime või e-posti järgi..." className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm" />
         </div>
-        <select value={filterRole} onChange={(e) => setFilterRole(e.target.value)} className="rounded-lg border border-border bg-card px-3 py-2 text-sm">
-          <option>Kõik</option><option>Klient</option><option>Pakkuja</option><option>Admin</option>
+        <select value={filterRole} onChange={e => setFilterRole(e.target.value)} className="rounded-lg border border-border bg-card px-3 py-2 text-sm">
+          <option value="all">Kõik rollid</option><option value="customer">Klient</option><option value="provider">Pakkuja</option><option value="admin">Admin</option>
         </select>
-        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-lg border border-border bg-card px-3 py-2 text-sm">
-          <option>Kõik</option><option>Aktiivne</option><option>Blokeeritud</option>
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="rounded-lg border border-border bg-card px-3 py-2 text-sm">
+          <option value="all">Kõik staatused</option><option value="active">Aktiivne</option><option value="blocked">Blokeeritud</option>
         </select>
         <span className="text-xs text-muted-foreground">{filtered.length} kasutajat</span>
       </div>
-
       <div className="mt-4 overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
@@ -571,36 +707,35 @@ function AdminUsers() {
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">E-post</th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Roll</th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Registreeritud</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Viimane login</th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Broneeringud</th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Staatus</th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">Tegevused</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((u) => (
+            {filtered.map(u => (
               <tr key={u.id} className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors">
-                <td className="px-4 py-3 font-medium">{u.name}</td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">{u.name.split(" ").map(n => n[0]).join("")}</div>
+                    <div>
+                      <div className="font-medium">{u.name}</div>
+                      {u.company && <div className="text-[10px] text-muted-foreground">{u.company}</div>}
+                    </div>
+                  </div>
+                </td>
                 <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
-                <td className="px-4 py-3">
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                    u.role === "Admin" ? "bg-primary/10 text-primary" :
-                    u.role === "Pakkuja" ? "bg-accent/10 text-accent" : "bg-secondary text-muted-foreground"
-                  }`}>{u.role}</span>
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">{u.registered}</td>
-                <td className="px-4 py-3 text-muted-foreground">{u.bookings}</td>
-                <td className="px-4 py-3">
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                    u.status === "Aktiivne" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
-                  }`}>{u.status}</span>
-                </td>
+                <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${u.role === "admin" ? "bg-primary/10 text-primary" : u.role === "provider" ? "bg-accent/10 text-accent" : "bg-secondary text-muted-foreground"}`}>{roleLabel(u.role)}</span></td>
+                <td className="px-4 py-3 text-muted-foreground text-xs">{u.registeredAt}</td>
+                <td className="px-4 py-3 text-muted-foreground text-xs">{u.lastLoginAt || "—"}</td>
+                <td className="px-4 py-3 text-muted-foreground">{u.bookingsCount}</td>
+                <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${u.status === "active" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{u.status === "active" ? "Aktiivne" : "Blokeeritud"}</span></td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setSelectedUser(u)}>
-                      <Eye className="h-3 w-3 mr-1" />Vaata
-                    </Button>
+                    <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setSelectedUser(u)}><Eye className="h-3 w-3 mr-1" />Vaata</Button>
                     <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => toggleStatus(u.id)}>
-                      {u.status === "Aktiivne" ? <><Shield className="h-3 w-3 mr-1" />Blokeeri</> : <><CheckCircle className="h-3 w-3 mr-1" />Aktiveeri</>}
+                      {u.status === "active" ? <><Shield className="h-3 w-3 mr-1" />Blokeeri</> : <><CheckCircle className="h-3 w-3 mr-1" />Aktiveeri</>}
                     </Button>
                   </div>
                 </td>
@@ -609,50 +744,79 @@ function AdminUsers() {
           </tbody>
         </table>
       </div>
-
-      {/* User detail dialog */}
-      <Dialog open={!!selectedUser} onOpenChange={(o) => !o && setSelectedUser(null)}>
+      <Dialog open={!!selectedUser} onOpenChange={o => !o && setSelectedUser(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>Kasutaja profiil</DialogTitle></DialogHeader>
           {selectedUser && (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary font-display text-xl font-bold">
-                  {selectedUser.name.split(" ").map((n) => n[0]).join("")}
-                </div>
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary font-display text-xl font-bold">{selectedUser.name.split(" ").map(n => n[0]).join("")}</div>
                 <div>
                   <p className="font-semibold">{selectedUser.name}</p>
                   <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
+                  {selectedUser.company && <p className="text-xs text-accent">{selectedUser.company}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg bg-secondary/50 p-3">
-                  <p className="text-xs text-muted-foreground">Roll</p>
-                  <p className="text-sm font-medium">{selectedUser.role}</p>
-                </div>
-                <div className="rounded-lg bg-secondary/50 p-3">
-                  <p className="text-xs text-muted-foreground">Staatus</p>
-                  <p className={`text-sm font-medium ${selectedUser.status === "Aktiivne" ? "text-success" : "text-destructive"}`}>{selectedUser.status}</p>
-                </div>
-                <div className="rounded-lg bg-secondary/50 p-3">
-                  <p className="text-xs text-muted-foreground">Registreeritud</p>
-                  <p className="text-sm font-medium">{selectedUser.registered}</p>
-                </div>
-                <div className="rounded-lg bg-secondary/50 p-3">
-                  <p className="text-xs text-muted-foreground">Broneeringud</p>
-                  <p className="text-sm font-medium">{selectedUser.bookings}</p>
-                </div>
+                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">Roll</p><p className="text-sm font-medium">{roleLabel(selectedUser.role)}</p></div>
+                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">Staatus</p><p className={`text-sm font-medium ${selectedUser.status === "active" ? "text-success" : "text-destructive"}`}>{selectedUser.status === "active" ? "Aktiivne" : "Blokeeritud"}</p></div>
+                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">Registreeritud</p><p className="text-sm font-medium">{selectedUser.registeredAt}</p></div>
+                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">Viimane login</p><p className="text-sm font-medium">{selectedUser.lastLoginAt || "—"}</p></div>
+                {selectedUser.phone && <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">Telefon</p><p className="text-sm font-medium">{selectedUser.phone}</p></div>}
+                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">Broneeringud</p><p className="text-sm font-medium">{selectedUser.bookingsCount}</p></div>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1" onClick={() => toggleStatus(selectedUser.id)}>
-                  {selectedUser.status === "Aktiivne" ? "Blokeeri kasutaja" : "Aktiveeri kasutaja"}
-                </Button>
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => toggleStatus(selectedUser.id)}>{selectedUser.status === "active" ? "Blokeeri kasutaja" : "Aktiveeri kasutaja"}</Button>
                 <Button variant="outline" size="sm" className="flex-1" onClick={() => setSelectedUser(null)}>Sulge</Button>
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+/* ─── Audit Log ─── */
+function AdminAudit() {
+  const [logs, setLogs] = useState<AuditLogEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    auditService.getAll().then(data => { setLogs(data); setLoading(false); });
+  }, []);
+
+  const actionColor = (a: string) => {
+    if (a.includes("confirmed") || a.includes("activated")) return "bg-success/10 text-success";
+    if (a.includes("rejected") || a.includes("blocked") || a.includes("deactivated")) return "bg-destructive/10 text-destructive";
+    if (a.includes("sent")) return "bg-info/10 text-info";
+    return "bg-secondary text-muted-foreground";
+  };
+
+  if (loading) return <div className="flex items-center justify-center py-20"><RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
+
+  return (
+    <div>
+      <h1 className="font-display text-2xl font-bold">Tegevuslogi</h1>
+      <p className="mt-2 text-sm text-muted-foreground">Platvormi sündmused ja tegevuste ajalugu.</p>
+      <div className="mt-6 space-y-2">
+        {logs.map(log => (
+          <div key={log.id} className="flex items-start gap-3 rounded-xl border border-border p-4">
+            <div className="mt-0.5">
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium font-mono ${actionColor(log.action)}`}>{log.action}</span>
+                <span className="text-xs text-muted-foreground">→</span>
+                <span className="text-xs font-medium">{log.target}</span>
+              </div>
+              {log.detail && <p className="mt-1 text-xs text-muted-foreground">{log.detail}</p>}
+              <p className="mt-1 text-[10px] text-muted-foreground">{log.actor} · {log.createdAt}</p>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -668,41 +832,26 @@ function AdminContent() {
     "Jalus": "© 2026 Ruumly. Kõik õigused kaitstud.",
   });
 
-  const openEdit = (section: string) => {
-    setEditSection(section);
-    setEditOpen(true);
-  };
-
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">Sisu haldus</h1>
       <p className="mt-2 text-sm text-muted-foreground">Muutke avalehe sisu, kategooriaid ja KKK-d.</p>
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        {Object.keys(contentValues).map((item) => (
+        {Object.keys(contentValues).map(item => (
           <div key={item} className="card-elevated flex items-center justify-between p-4">
             <span className="text-sm font-medium">{item}</span>
-            <Button variant="outline" size="sm" onClick={() => openEdit(item)}>Muuda</Button>
+            <Button variant="outline" size="sm" onClick={() => { setEditSection(item); setEditOpen(true); }}>Muuda</Button>
           </div>
         ))}
       </div>
-
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Muuda: {editSection}</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Muuda: {editSection}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <textarea
-              className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-              rows={6}
-              value={contentValues[editSection] || ""}
-              onChange={(e) => setContentValues({ ...contentValues, [editSection]: e.target.value })}
-            />
+            <textarea className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" rows={6} value={contentValues[editSection] || ""} onChange={e => setContentValues({ ...contentValues, [editSection]: e.target.value })} />
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setEditOpen(false)}>Tühista</Button>
-              <Button onClick={() => setEditOpen(false)} className="bg-accent text-accent-foreground hover:bg-accent/90">
-                <Save className="mr-2 h-4 w-4" /> Salvesta
-              </Button>
+              <Button onClick={() => setEditOpen(false)} className="bg-accent text-accent-foreground hover:bg-accent/90"><Save className="mr-2 h-4 w-4" /> Salvesta</Button>
             </div>
           </div>
         </DialogContent>
@@ -714,104 +863,51 @@ function AdminContent() {
 /* ─── Settings ─── */
 function AdminSettings() {
   const [settings, setSettings] = useState({
-    siteName: "Ruumly",
-    siteEmail: "info@ruumly.eu",
-    sitePhone: "+372 5555 1234",
-    defaultLanguage: "et",
-    currency: "EUR",
-    commissionRate: "10",
-    emailNotifications: true,
-    maintenanceMode: false,
-    autoApproveListings: false,
+    siteName: "Ruumly", siteEmail: "info@ruumly.eu", sitePhone: "+372 5555 1234",
+    defaultLanguage: "et", currency: "EUR", commissionRate: "10",
+    emailNotifications: true, maintenanceMode: false, autoApproveListings: false,
   });
 
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">Seaded</h1>
       <p className="mt-2 text-sm text-muted-foreground">Platvormi ja konto seaded.</p>
-
       <div className="mt-6 space-y-6">
-        {/* General */}
         <div className="rounded-xl border border-border p-5">
           <h3 className="flex items-center gap-2 font-display text-base font-semibold"><Globe className="h-4 w-4 text-accent" /> Üldised seaded</h3>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Saidi nimi</label>
-              <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                value={settings.siteName} onChange={(e) => setSettings({ ...settings, siteName: e.target.value })} />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">E-post</label>
-              <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                value={settings.siteEmail} onChange={(e) => setSettings({ ...settings, siteEmail: e.target.value })} />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Telefon</label>
-              <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                value={settings.sitePhone} onChange={(e) => setSettings({ ...settings, sitePhone: e.target.value })} />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Vaikimisi keel</label>
-              <select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                value={settings.defaultLanguage} onChange={(e) => setSettings({ ...settings, defaultLanguage: e.target.value })}>
-                <option value="et">Eesti</option>
-                <option value="en">English</option>
-                <option value="ru">Русский</option>
-              </select>
-            </div>
+            <div><label className="text-xs font-medium text-muted-foreground">Saidi nimi</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={settings.siteName} onChange={e => setSettings({ ...settings, siteName: e.target.value })} /></div>
+            <div><label className="text-xs font-medium text-muted-foreground">E-post</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={settings.siteEmail} onChange={e => setSettings({ ...settings, siteEmail: e.target.value })} /></div>
+            <div><label className="text-xs font-medium text-muted-foreground">Telefon</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={settings.sitePhone} onChange={e => setSettings({ ...settings, sitePhone: e.target.value })} /></div>
+            <div><label className="text-xs font-medium text-muted-foreground">Vaikimisi keel</label><select className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={settings.defaultLanguage} onChange={e => setSettings({ ...settings, defaultLanguage: e.target.value })}><option value="et">Eesti</option><option value="en">English</option><option value="ru">Русский</option></select></div>
           </div>
         </div>
-
-        {/* Business */}
         <div className="rounded-xl border border-border p-5">
           <h3 className="flex items-center gap-2 font-display text-base font-semibold"><CreditCard className="h-4 w-4 text-accent" /> Äri seaded</h3>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Valuuta</label>
-              <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                value={settings.currency} onChange={(e) => setSettings({ ...settings, currency: e.target.value })} />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Komisjonitasu (%)</label>
-              <input type="number" className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                value={settings.commissionRate} onChange={(e) => setSettings({ ...settings, commissionRate: e.target.value })} />
-            </div>
+            <div><label className="text-xs font-medium text-muted-foreground">Valuuta</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={settings.currency} onChange={e => setSettings({ ...settings, currency: e.target.value })} /></div>
+            <div><label className="text-xs font-medium text-muted-foreground">Komisjonitasu (%)</label><input type="number" className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={settings.commissionRate} onChange={e => setSettings({ ...settings, commissionRate: e.target.value })} /></div>
           </div>
         </div>
-
-        {/* Toggles */}
         <div className="rounded-xl border border-border p-5">
           <h3 className="flex items-center gap-2 font-display text-base font-semibold"><ToggleLeft className="h-4 w-4 text-accent" /> Lülitid</h3>
           <div className="mt-4 space-y-3">
-            {[
+            {([
               { key: "emailNotifications" as const, label: "E-posti teavitused", desc: "Saada teavitusi uutest päringutest" },
               { key: "maintenanceMode" as const, label: "Hooldusrežiim", desc: "Lülita sait hooldusrežiimi" },
               { key: "autoApproveListings" as const, label: "Automaatne kinnitamine", desc: "Kinnita uued kuulutused automaatselt" },
-            ].map((toggle) => (
+            ]).map(toggle => (
               <div key={toggle.key} className="flex items-center justify-between rounded-lg border border-border p-3">
-                <div>
-                  <div className="text-sm font-medium">{toggle.label}</div>
-                  <div className="text-xs text-muted-foreground">{toggle.desc}</div>
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={settings[toggle.key]}
-                  onClick={() => setSettings((prev) => ({ ...prev, [toggle.key]: !prev[toggle.key] }))}
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${settings[toggle.key] ? "bg-accent" : "bg-muted"}`}
-                >
+                <div><div className="text-sm font-medium">{toggle.label}</div><div className="text-xs text-muted-foreground">{toggle.desc}</div></div>
+                <button type="button" role="switch" aria-checked={settings[toggle.key]} onClick={() => setSettings(prev => ({ ...prev, [toggle.key]: !prev[toggle.key] }))}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${settings[toggle.key] ? "bg-accent" : "bg-muted"}`}>
                   <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform duration-200 ${settings[toggle.key] ? "translate-x-[1.3rem]" : "translate-x-0.5"} mt-0.5`} />
                 </button>
               </div>
             ))}
           </div>
         </div>
-
-        <div className="flex justify-end">
-          <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
-            <Save className="mr-2 h-4 w-4" /> Salvesta seaded
-          </Button>
-        </div>
+        <div className="flex justify-end"><Button className="bg-accent text-accent-foreground hover:bg-accent/90"><Save className="mr-2 h-4 w-4" /> Salvesta seaded</Button></div>
       </div>
     </div>
   );
