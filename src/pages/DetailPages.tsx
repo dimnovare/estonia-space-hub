@@ -1,11 +1,39 @@
 import { useParams, Link } from "react-router-dom";
-import { MapPin, Star, Check, ArrowLeft, Calendar, Shield, BadgePercent } from "lucide-react";
+import { MapPin, Star, Check, ArrowLeft, Calendar, Shield, BadgePercent, Zap, Mail, Hand, Building2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WAREHOUSES, MOVING_SERVICES, TRAILER_RENTALS } from "@/data/mockData";
 import { lazy, Suspense } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { getSupplierForListing, INTEGRATION_TYPE_CONFIG } from "@/data/mockOrders";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
+
+function SupplierBadge({ listingId }: { listingId: string }) {
+  const supplier = getSupplierForListing(listingId);
+  if (!supplier) return null;
+  const intCfg = INTEGRATION_TYPE_CONFIG[supplier.integrationType];
+  const IntIcon = supplier.integrationType === "api" ? Zap : supplier.integrationType === "email" ? Mail : Hand;
+  return (
+    <div className="mt-4 rounded-lg border border-border p-3">
+      <div className="flex items-center gap-2">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary">
+          <Building2 className="h-4 w-4 text-muted-foreground" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-xs font-medium">{supplier.name}</div>
+          <div className="text-[10px] text-muted-foreground">Ruumly partner</div>
+        </div>
+        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${intCfg.color}`}>
+          <IntIcon className="h-3 w-3" /> {intCfg.label}
+        </span>
+      </div>
+      <div className="mt-2 flex items-center gap-1 text-[10px] text-muted-foreground">
+        <CheckCircle className="h-3 w-3 text-success" /> Verifitseeritud partner · {intCfg.description}
+      </div>
+    </div>
+  );
+}
+
 
 export function WarehouseDetail() {
   const { id } = useParams();
@@ -121,6 +149,7 @@ export function WarehouseDetail() {
             <div className="mt-4 rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
               {t("detail.provider")}: <strong className="text-foreground">{listing.provider}</strong>
             </div>
+            <SupplierBadge listingId={listing.id} />
           </div>
         </div>
       </div>
@@ -187,6 +216,7 @@ export function MovingDetail() {
             <div className="mt-4 rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
               {t("detail.provider")}: <strong className="text-foreground">{listing.provider}</strong>
             </div>
+            <SupplierBadge listingId={listing.id} />
           </div>
         </div>
       </div>
@@ -251,6 +281,7 @@ export function TrailerDetail() {
             <div className="mt-4 rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
               {t("detail.provider")}: <strong className="text-foreground">{listing.provider}</strong>
             </div>
+            <SupplierBadge listingId={listing.id} />
           </div>
         </div>
       </div>

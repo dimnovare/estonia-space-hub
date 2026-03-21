@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { 
   LayoutDashboard, Package, Heart, Search, Settings, Bell, Shield, CreditCard, 
   HelpCircle, ChevronRight, Warehouse, Truck, CarFront, Clock, CheckCircle,
@@ -35,10 +35,17 @@ const sidebarLinks = [
 ];
 
 export default function AccountPage() {
-  const [tab, setTab] = useState("overview");
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") || "overview";
+  const [tab, setTab] = useState(initialTab);
   const { t } = useLanguage();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const paramTab = searchParams.get("tab");
+    if (paramTab) setTab(paramTab);
+  }, [searchParams]);
 
   const handleLogout = () => { logout(); navigate("/"); };
 
