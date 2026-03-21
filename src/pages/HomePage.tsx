@@ -193,9 +193,11 @@ export default function HomePage() {
           <p className="mx-auto mt-3 max-w-lg text-sm text-primary-foreground/70">
             Lisa oma laopind, kolimisteenus või haagiserent LaoMarket platvormile ja jõua tuhandete potentsiaalsete klientideni.
           </p>
-          <Button className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90">
-            Liitu teenusepakkujana
-          </Button>
+          <Link to="/provider">
+            <Button className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90">
+              Liitu teenusepakkujana
+            </Button>
+          </Link>
         </div>
       </section>
 

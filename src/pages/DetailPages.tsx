@@ -70,7 +70,9 @@ export function WarehouseDetail() {
           {/* Map */}
           <h2 className="mt-8 font-display text-lg font-semibold">Asukoht</h2>
           <div className="mt-3">
-            <MapPlaceholder listings={[listing]} height="h-[200px]" />
+            <Suspense fallback={<div className="h-[200px] rounded-xl bg-secondary" />}>
+              <InteractiveMap listings={[listing]} height="h-[200px]" zoom={14} center={[listing.lat, listing.lng]} />
+            </Suspense>
           </div>
         </div>
 
