@@ -38,8 +38,9 @@ function SupplierBadge({ listingId }: { listingId: string }) {
 
 export function WarehouseDetail() {
   const { id } = useParams();
-  const listing = WAREHOUSES.find((w) => w.id === id);
   const { t } = useLanguage();
+  const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
+  const listing = WAREHOUSES.find((w) => w.id === id);
   if (!listing) return <NotFoundDetail />;
 
   const extraOptions = [
@@ -49,10 +50,8 @@ export function WarehouseDetail() {
     { id: "forklift", label: t("detail.forkliftService") },
   ];
 
-  const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
-
-  const toggleExtra = (id: string) =>
-    setSelectedExtras((prev) => prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]);
+  const toggleExtra = (eId: string) =>
+    setSelectedExtras((prev) => prev.includes(eId) ? prev.filter((e) => e !== eId) : [...prev, eId]);
 
   const bookingUrl = `/book?listing=${listing.id}&type=warehouse${selectedExtras.length ? `&extras=${selectedExtras.join(",")}` : ""}`;
 
