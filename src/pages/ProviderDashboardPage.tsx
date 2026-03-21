@@ -19,7 +19,7 @@ const sidebarLinks = [
   { id: "orders", label: "Sissetulevad tellimused", icon: Inbox },
   { id: "listings", label: "Minu kuulutused", icon: List },
   { id: "bookings", label: "Broneeringud", icon: Package },
-  { id: "calendar", label: "Kalender", icon: Calendar },
+  { id: "calendar", label: "Kalender", icon: CalendarIcon },
   { id: "reviews", label: "Hinnangud", icon: Star },
   { id: "analytics", label: "Analüütika", icon: BarChart3 },
   { id: "profile", label: "Ettevõtte profiil", icon: Settings },
