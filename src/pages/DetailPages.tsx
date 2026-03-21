@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { MapPin, Star, Check, ArrowLeft, Calendar, Shield, BadgePercent, Zap, Mail, Hand, Building2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,9 +38,22 @@ function SupplierBadge({ listingId }: { listingId: string }) {
 
 export function WarehouseDetail() {
   const { id } = useParams();
-  const listing = WAREHOUSES.find((w) => w.id === id);
   const { t } = useLanguage();
+  const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
+  const listing = WAREHOUSES.find((w) => w.id === id);
   if (!listing) return <NotFoundDetail />;
+
+  const extraOptions = [
+    { id: "packing", label: t("detail.packingHelp") },
+    { id: "loading", label: t("detail.loadingHelp") },
+    { id: "insurance", label: t("detail.insurance") },
+    { id: "forklift", label: t("detail.forkliftService") },
+  ];
+
+  const toggleExtra = (eId: string) =>
+    setSelectedExtras((prev) => prev.includes(eId) ? prev.filter((e) => e !== eId) : [...prev, eId]);
+
+  const bookingUrl = `/book?listing=${listing.id}&type=warehouse${selectedExtras.length ? `&extras=${selectedExtras.join(",")}` : ""}`;
 
   const publicPrice = Math.round(listing.priceFrom / 0.95);
   const savings = publicPrice - listing.priceFrom;
@@ -128,7 +142,7 @@ export function WarehouseDetail() {
               </div>
             </div>
 
-            <Link to={`/book?listing=${listing.id}&type=warehouse`}>
+            <Link to={bookingUrl}>
               <Button className="mt-6 w-full bg-accent text-accent-foreground hover:bg-accent/90">
                 {t("detail.bookNow")}
               </Button>
@@ -138,9 +152,9 @@ export function WarehouseDetail() {
             <div className="mt-6 border-t border-border pt-4">
               <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("detail.addServices")}</h4>
               <div className="mt-2 space-y-1.5">
-                {[t("detail.packingHelp"), t("detail.loadingHelp"), t("detail.insurance"), t("detail.forkliftService")].map((s) => (
-                  <label key={s} className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" className="rounded border-border" /> {s}
+                {extraOptions.map((opt) => (
+                  <label key={opt.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox" className="rounded border-border" checked={selectedExtras.includes(opt.id)} onChange={() => toggleExtra(opt.id)} /> {opt.label}
                   </label>
                 ))}
               </div>
