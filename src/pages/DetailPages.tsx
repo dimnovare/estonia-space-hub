@@ -156,6 +156,7 @@ export function WarehouseDetail() {
             <div className="mt-4 rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
               {t("detail.provider")}: <strong className="text-foreground">{listing.provider}</strong>
             </div>
+            <SupplierBadge listingId={listing.id} />
           </div>
         </div>
       </div>
