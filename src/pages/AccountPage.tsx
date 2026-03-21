@@ -25,18 +25,21 @@ const statusConfig: Record<BookingStatus, { label: string; color: string; icon: 
 
 const typeIcons = { warehouse: Warehouse, moving: Truck, trailer: CarFront };
 
-const sidebarLinks = [
-  { id: "overview", label: "Ülevaade", icon: LayoutDashboard },
-  { id: "bookings", label: "Broneeringud", icon: Package },
-  { id: "messages", label: "Sõnumid", icon: MessageSquare },
-  { id: "favorites", label: "Lemmikud", icon: Heart },
-  { id: "searches", label: "Salvestatud otsingud", icon: Search },
-  { id: "notifications", label: "Teavitused", icon: Bell },
-  { id: "profile", label: "Profiil", icon: User },
-  { id: "security", label: "Turvalisus", icon: Shield },
-  { id: "billing", label: "Arveldus", icon: CreditCard },
-  { id: "help", label: "Abi", icon: HelpCircle },
-];
+function useSidebarLinks() {
+  const { t } = useLanguage();
+  return [
+    { id: "overview", label: t("account.overview"), icon: LayoutDashboard },
+    { id: "bookings", label: t("account.bookings"), icon: Package },
+    { id: "messages", label: t("account.messages"), icon: MessageSquare },
+    { id: "favorites", label: t("account.favorites"), icon: Heart },
+    { id: "searches", label: t("account.searches"), icon: Search },
+    { id: "notifications", label: t("account.notifications"), icon: Bell },
+    { id: "profile", label: t("account.profile"), icon: User },
+    { id: "security", label: t("account.security"), icon: Shield },
+    { id: "billing", label: t("account.billing"), icon: CreditCard },
+    { id: "help", label: t("account.help"), icon: HelpCircle },
+  ];
+}
 
 export default function AccountPage() {
   const [searchParams] = useSearchParams();
