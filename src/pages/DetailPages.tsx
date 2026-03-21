@@ -142,7 +142,7 @@ export function WarehouseDetail() {
               </div>
             </div>
 
-            <Link to={`/book?listing=${listing.id}&type=warehouse`}>
+            <Link to={bookingUrl}>
               <Button className="mt-6 w-full bg-accent text-accent-foreground hover:bg-accent/90">
                 {t("detail.bookNow")}
               </Button>
@@ -152,9 +152,9 @@ export function WarehouseDetail() {
             <div className="mt-6 border-t border-border pt-4">
               <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("detail.addServices")}</h4>
               <div className="mt-2 space-y-1.5">
-                {[t("detail.packingHelp"), t("detail.loadingHelp"), t("detail.insurance"), t("detail.forkliftService")].map((s) => (
-                  <label key={s} className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" className="rounded border-border" /> {s}
+                {extraOptions.map((opt) => (
+                  <label key={opt.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox" className="rounded border-border" checked={selectedExtras.includes(opt.id)} onChange={() => toggleExtra(opt.id)} /> {opt.label}
                   </label>
                 ))}
               </div>
