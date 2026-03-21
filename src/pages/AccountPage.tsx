@@ -114,29 +114,30 @@ function AccountOverview({ onNavigate }: { onNavigate: (tab: string) => void }) 
   const active = MOCK_BOOKINGS.filter(b => b.status === "confirmed" || b.status === "active");
   const pending = MOCK_BOOKINGS.filter(b => b.status === "pending");
 
+  const { t } = useLanguage();
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Tere tulemast tagasi!</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Siin on ülevaade teie kontost.</p>
+      <h1 className="font-display text-2xl font-bold">{t("account.welcome")}</h1>
+      <p className="mt-1 text-sm text-muted-foreground">{t("account.welcomeDesc")}</p>
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">Aktiivsed broneeringud</div><div className="mt-1 font-display text-2xl font-bold">{active.length}</div></div>
-        <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">Ootel kinnitamist</div><div className="mt-1 font-display text-2xl font-bold text-warning">{pending.length}</div></div>
-        <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">Kokkuhoid kokku</div><div className="mt-1 font-display text-2xl font-bold text-accent">€{MOCK_BOOKINGS.reduce((s, b) => s + (b.basePrice - b.platformPrice), 0)}</div></div>
+        <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">{t("account.activeBookings")}</div><div className="mt-1 font-display text-2xl font-bold">{active.length}</div></div>
+        <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">{t("account.pendingApproval")}</div><div className="mt-1 font-display text-2xl font-bold text-warning">{pending.length}</div></div>
+        <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">{t("account.totalSavings")}</div><div className="mt-1 font-display text-2xl font-bold text-accent">€{MOCK_BOOKINGS.reduce((s, b) => s + (b.basePrice - b.platformPrice), 0)}</div></div>
       </div>
       {pending.length > 0 && (
-        <div className="mt-6"><h2 className="font-display text-lg font-semibold">Ootel broneeringud</h2><div className="mt-3 space-y-2">{pending.map(b => <BookingCard key={b.id} booking={b} />)}</div></div>
+        <div className="mt-6"><h2 className="font-display text-lg font-semibold">{t("account.pendingBookings")}</h2><div className="mt-3 space-y-2">{pending.map(b => <BookingCard key={b.id} booking={b} />)}</div></div>
       )}
       {active.length > 0 && (
-        <div className="mt-6"><h2 className="font-display text-lg font-semibold">Aktiivsed broneeringud</h2><div className="mt-3 space-y-2">{active.map(b => <BookingCard key={b.id} booking={b} />)}</div></div>
+        <div className="mt-6"><h2 className="font-display text-lg font-semibold">{t("account.activeBookings")}</h2><div className="mt-3 space-y-2">{active.map(b => <BookingCard key={b.id} booking={b} />)}</div></div>
       )}
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
         <button onClick={() => onNavigate("favorites")} className="flex items-center justify-between rounded-xl border border-border p-4 hover:bg-secondary transition-colors">
-          <span className="flex items-center gap-2 text-sm font-medium"><Heart className="h-4 w-4 text-accent" /> Lemmikud</span>
-          <span className="text-sm text-muted-foreground">2 salvestatud</span>
+          <span className="flex items-center gap-2 text-sm font-medium"><Heart className="h-4 w-4 text-accent" /> {t("account.favorites")}</span>
+          <span className="text-sm text-muted-foreground">2 {t("account.saved")}</span>
         </button>
         <button onClick={() => onNavigate("messages")} className="flex items-center justify-between rounded-xl border border-border p-4 hover:bg-secondary transition-colors">
-          <span className="flex items-center gap-2 text-sm font-medium"><MessageSquare className="h-4 w-4 text-accent" /> Sõnumid</span>
-          <span className="text-sm text-muted-foreground">{MOCK_MESSAGES.filter(m => !m.read && m.from !== "customer").length} lugemata</span>
+          <span className="flex items-center gap-2 text-sm font-medium"><MessageSquare className="h-4 w-4 text-accent" /> {t("account.messages")}</span>
+          <span className="text-sm text-muted-foreground">{MOCK_MESSAGES.filter(m => !m.read && m.from !== "customer").length} {t("account.unread")}</span>
         </button>
       </div>
     </div>
