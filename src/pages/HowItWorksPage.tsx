@@ -1,45 +1,30 @@
 import { Link } from "react-router-dom";
-import { Search, SlidersHorizontal, Send, CheckCircle, MapPin, Shield, Clock, ArrowRight } from "lucide-react";
+import { Search, SlidersHorizontal, CheckCircle, MapPin, Shield, Clock, ArrowRight, BadgePercent } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const steps = [
-  {
-    icon: Search,
-    title: "1. Otsige",
-    desc: "Sisestage soovitud asukoht, teenuse tüüp ja vajadused. Kasutage interaktiivset kaarti või otsingubaari.",
-  },
-  {
-    icon: SlidersHorizontal,
-    title: "2. Võrrelge",
-    desc: "Filtreerige tulemusi hinna, asukoha, omaduste ja saadavuse järgi. Näete kohe, milline pakkumine on soodsaim või lähim.",
-  },
-  {
-    icon: Send,
-    title: "3. Saatke päring",
-    desc: "Valige sobiv teenus ja saatke tasuta päring otse teenusepakkujale. Lisage soovitud kuupäev, periood ja lisateenused.",
-  },
-  {
-    icon: CheckCircle,
-    title: "4. Saage pakkumine",
-    desc: "Teenusepakkuja vastab teile 24 tunni jooksul. Võrrelge pakkumisi ja valige parim.",
-  },
-];
-
-const features = [
-  { icon: MapPin, title: "Interaktiivne kaart", desc: "Näete kõiki pakkumisi kaardil ja saate otsida asukoha järgi." },
-  { icon: Shield, title: "Kontrollitud pakkujad", desc: "Kõik teenusepakkujad on kontrollitud ja hinnatud teiste kasutajate poolt." },
-  { icon: Clock, title: "Kiire vastus", desc: "Keskmiselt saate pakkumise 12 tunni jooksul peale päringu saatmist." },
-];
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function HowItWorksPage() {
+  const { t } = useLanguage();
+
+  const steps = [
+    { icon: Search, title: t("hiw.step1"), desc: t("hiw.step1desc") },
+    { icon: SlidersHorizontal, title: t("hiw.step2"), desc: t("hiw.step2desc") },
+    { icon: BadgePercent, title: t("hiw.step3"), desc: t("hiw.step3desc") },
+    { icon: CheckCircle, title: t("hiw.step4"), desc: t("hiw.step4desc") },
+  ];
+
+  const features = [
+    { icon: MapPin, title: t("hiw.feat1"), desc: t("hiw.feat1desc") },
+    { icon: Shield, title: t("hiw.feat2"), desc: t("hiw.feat2desc") },
+    { icon: Clock, title: t("hiw.feat3"), desc: t("hiw.feat3desc") },
+  ];
+
   return (
     <div>
       <section className="hero-gradient py-16 md:py-24">
         <div className="container-wide text-center">
-          <h1 className="font-display text-3xl font-bold text-primary-foreground md:text-5xl">Kuidas Ruumly töötab?</h1>
-          <p className="mx-auto mt-4 max-w-xl text-sm text-primary-foreground/70 md:text-base">
-            Neli lihtsat sammu parima laopinna, kolimisteenuse või haagise leidmiseks.
-          </p>
+          <h1 className="font-display text-3xl font-bold text-primary-foreground md:text-5xl">{t("hiw.title")}</h1>
+          <p className="mx-auto mt-4 max-w-xl text-sm text-primary-foreground/70 md:text-base">{t("hiw.subtitle")}</p>
         </div>
       </section>
 
@@ -64,15 +49,13 @@ export default function HowItWorksPage() {
 
       <section className="surface-sunken py-16">
         <div className="container-wide">
-          <h2 className="text-center font-display text-2xl font-bold">Miks valida Ruumly?</h2>
+          <h2 className="text-center font-display text-2xl font-bold">{t("hiw.whyTitle")}</h2>
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {features.map((f, i) => {
               const Icon = f.icon;
               return (
                 <div key={i} className="card-elevated p-6 text-center">
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10">
-                    <Icon className="h-6 w-6 text-accent" />
-                  </div>
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10"><Icon className="h-6 w-6 text-accent" /></div>
                   <h3 className="mt-4 font-display text-lg font-semibold">{f.title}</h3>
                   <p className="mt-2 text-sm text-muted-foreground">{f.desc}</p>
                 </div>
@@ -83,11 +66,11 @@ export default function HowItWorksPage() {
       </section>
 
       <section className="container-wide py-16 text-center">
-        <h2 className="font-display text-2xl font-bold">Valmis alustama?</h2>
-        <p className="mt-2 text-sm text-muted-foreground">Otsing on tasuta ja ei kohusta millekski.</p>
+        <h2 className="font-display text-2xl font-bold">{t("hiw.readyCta")}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{t("hiw.readyDesc")}</p>
         <Link to="/search">
           <Button className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90" size="lg">
-            Alusta otsingut <ArrowRight className="ml-2 h-4 w-4" />
+            {t("hiw.startSearch")} <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </Link>
       </section>
