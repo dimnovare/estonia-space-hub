@@ -26,7 +26,8 @@ export default function BookingPage() {
   const [step, setStep] = useState(0);
   const [date, setDate] = useState("");
   const [duration, setDuration] = useState("1 kuu");
-  const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
+  const initialExtras = params.get("extras")?.split(",").filter(Boolean) || [];
+  const [selectedExtras, setSelectedExtras] = useState<string[]>(initialExtras);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
