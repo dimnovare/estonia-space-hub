@@ -48,6 +48,7 @@ export default function AccountPage() {
   const { t } = useLanguage();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const sidebarLinks = useSidebarLinks();
 
   useEffect(() => {
     const paramTab = searchParams.get("tab");
