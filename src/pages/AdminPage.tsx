@@ -3,13 +3,16 @@ import {
   LayoutDashboard, List, MessageSquare, Settings, Users, FileText,
   TrendingUp, Eye, DollarSign, PlusCircle, Edit, Trash2, Warehouse, Truck, CarFront,
   X, Save, ChevronDown, Mail, Phone, Calendar, Shield, Globe, Bell, CreditCard, ToggleLeft,
+  Package, Wifi, Hand, Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { MOCK_ORDERS, MOCK_SUPPLIERS, ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG, generateOrderEmailPreview, type Order, type OrderStatus } from "@/data/mockOrders";
 
 const sidebarLinks = [
   { id: "dashboard", label: "Ülevaade", icon: LayoutDashboard },
   { id: "listings", label: "Kuulutused", icon: List },
+  { id: "orders", label: "Tellimused", icon: Package },
   { id: "inquiries", label: "Päringud", icon: MessageSquare },
   { id: "users", label: "Kasutajad", icon: Users },
   { id: "content", label: "Sisu", icon: FileText },
