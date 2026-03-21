@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import { Clock, Heart, Search, Bell, ChevronRight, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Clock, Heart, Search, Bell, ChevronRight } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const requests = [
   { id: "r1", listing: "Laobox Tallinn Kesklinn", type: "Laopind", date: "2026-03-18", status: "Ootel", statusColor: "bg-warning" },
@@ -19,18 +19,19 @@ const savedSearches = [
 ];
 
 export default function DashboardPage() {
+  const { t } = useLanguage();
+
   return (
     <div className="container-wide py-8">
-      <h1 className="font-display text-2xl font-bold md:text-3xl">Minu konto</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Halda oma päringuid, lemmikuid ja salvestatud otsinguid.</p>
+      <h1 className="font-display text-2xl font-bold md:text-3xl">{t("dash.title")}</h1>
+      <p className="mt-1 text-sm text-muted-foreground">{t("dash.subtitle")}</p>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-3">
-        {/* Requests */}
         <div className="lg:col-span-2">
           <div className="card-prominent p-5">
             <div className="flex items-center justify-between">
               <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
-                <Clock className="h-5 w-5 text-accent" /> Minu päringud
+                <Clock className="h-5 w-5 text-accent" /> {t("dash.requests")}
               </h2>
               <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">{requests.length}</span>
             </div>
@@ -42,9 +43,7 @@ export default function DashboardPage() {
                     <div className="mt-0.5 text-xs text-muted-foreground">{r.type} · {r.date}</div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium text-accent-foreground ${r.statusColor}`}>
-                      {r.status}
-                    </span>
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium text-accent-foreground ${r.statusColor}`}>{r.status}</span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
                 </Link>
@@ -53,12 +52,10 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Sidebar */}
         <div className="space-y-6">
-          {/* Favorites */}
           <div className="card-prominent p-5">
             <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
-              <Heart className="h-5 w-5 text-accent" /> Lemmikud
+              <Heart className="h-5 w-5 text-accent" /> {t("dash.favorites")}
             </h2>
             <div className="mt-3 space-y-2">
               {favorites.map((f) => (
@@ -73,17 +70,16 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Saved searches */}
           <div className="card-prominent p-5">
             <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
-              <Search className="h-5 w-5 text-accent" /> Salvestatud otsingud
+              <Search className="h-5 w-5 text-accent" /> {t("dash.savedSearches")}
             </h2>
             <div className="mt-3 space-y-2">
               {savedSearches.map((s) => (
                 <Link key={s.id} to="/search" className="flex items-center justify-between rounded-lg border border-border p-2.5 text-sm hover:bg-secondary">
                   <div>
                     <div className="font-medium">{s.query}</div>
-                    <div className="text-xs text-muted-foreground">{s.results} tulemust</div>
+                    <div className="text-xs text-muted-foreground">{s.results} {t("dash.resultsCount")}</div>
                   </div>
                   <Bell className="h-4 w-4 text-muted-foreground" />
                 </Link>
