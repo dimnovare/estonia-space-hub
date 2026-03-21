@@ -96,6 +96,7 @@ export default function InteractiveMap({
   const mapInstance = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
   const markerMap = useRef<Map<string, L.Marker>>(new Map());
+  const prevListingsKey = useRef("");
 
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return;
