@@ -1,18 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock } from "lucide-react";
+import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ALL_LISTINGS } from "@/data/mockData";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { getSupplierForListing, INTEGRATION_TYPE_CONFIG } from "@/data/mockOrders";
+
+type SubmitPhase = "submitting" | "sending" | "waiting" | "done";
 
 export default function BookingPage() {
   const [params] = useSearchParams();
   const listingId = params.get("listing");
   const listing = ALL_LISTINGS.find((l) => l.id === listingId);
   const { t } = useLanguage();
+  const supplier = listingId ? getSupplierForListing(listingId) : undefined;
 
   const steps = [t("booking.details"), t("booking.extras"), t("booking.contact"), t("booking.payment"), t("booking.review")];
-
   const extras = [
     { id: "packing", label: "Pakkimisabi", price: "15€" },
     { id: "loading", label: "Laadimisabi", price: "20€" },
@@ -30,6 +33,7 @@ export default function BookingPage() {
   const [notes, setNotes] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("bank");
   const [submitted, setSubmitted] = useState(false);
+  const [phase, setPhase] = useState<SubmitPhase>("submitting");
 
   const toggleExtra = (id: string) =>
     setSelectedExtras((prev) => (prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]));
@@ -38,19 +42,71 @@ export default function BookingPage() {
   const ourPrice = listing?.priceFrom || 0;
   const savings = publicPrice - ourPrice;
 
+  useEffect(() => {
+    if (!submitted) return;
+    setPhase("submitting");
+    const t1 = setTimeout(() => setPhase("sending"), 1200);
+    const t2 = setTimeout(() => setPhase("waiting"), 2800);
+    const t3 = setTimeout(() => setPhase("done"), 4200);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [submitted]);
+
   if (submitted) {
+    const integrationLabel = supplier ? INTEGRATION_TYPE_CONFIG[supplier.integrationType] : null;
+    const IntIcon = supplier?.integrationType === "api" ? Wifi : supplier?.integrationType === "email" ? Mail : Hand;
+
     return (
       <div className="container-wide flex min-h-[60vh] items-center justify-center py-16">
-        <div className="mx-auto max-w-md text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
-            <CheckCircle className="h-8 w-8 text-success" />
+        <div className="mx-auto max-w-lg w-full">
+          <div className="text-center">
+            {phase === "done" ? (
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
+                <CheckCircle className="h-8 w-8 text-success" />
+              </div>
+            ) : (
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent/10">
+                <Loader2 className="h-8 w-8 text-accent animate-spin" />
+              </div>
+            )}
+            <h1 className="mt-4 font-display text-2xl font-bold">
+              {phase === "submitting" && "Tellimus luuakse..."}
+              {phase === "sending" && "Saadame partnerile..."}
+              {phase === "waiting" && "Ootame kinnitust..."}
+              {phase === "done" && t("booking.successTitle")}
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {phase === "done" ? t("booking.successDesc") : "Palun oodake..."}
+            </p>
           </div>
-          <h1 className="mt-4 font-display text-2xl font-bold">{t("booking.successTitle")}</h1>
-          <p className="mt-2 text-sm text-muted-foreground">{t("booking.successDesc")}</p>
-          <div className="mt-6 flex justify-center gap-3">
-            <Link to="/dashboard"><Button variant="outline">{t("booking.myBookings")}</Button></Link>
-            <Link to="/search"><Button className="bg-accent text-accent-foreground hover:bg-accent/90">{t("booking.searchMore")}</Button></Link>
+
+          <div className="mt-8 space-y-3">
+            {[
+              { label: "Tellimus loodud", done: phase !== "submitting" },
+              { label: supplier?.integrationType === "api" ? "Saadetud API kaudu" : supplier?.integrationType === "email" ? "Saadetud e-postiga partnerile" : "Ootame operaatori tegevust", done: phase === "waiting" || phase === "done" },
+              { label: "Ootame partneri kinnitust", done: phase === "done" },
+            ].map((s, i) => (
+              <div key={i} className={`flex items-center gap-3 rounded-lg border p-3 transition-all ${s.done ? "border-success/30 bg-success/5" : "border-border"}`}>
+                {s.done ? <CheckCircle className="h-5 w-5 text-success shrink-0" /> : <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30 shrink-0" />}
+                <span className={`text-sm font-medium ${s.done ? "text-foreground" : "text-muted-foreground"}`}>{s.label}</span>
+              </div>
+            ))}
           </div>
+
+          {phase === "done" && supplier && integrationLabel && (
+            <div className="mt-4 flex items-center justify-center gap-2 rounded-lg border border-border bg-secondary/30 p-3">
+              <IntIcon className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Integratsioon: </span>
+              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${integrationLabel.color}`}>{integrationLabel.label}</span>
+              <span className="text-xs text-muted-foreground">· {supplier.name}</span>
+            </div>
+          )}
+
+          {phase === "done" && (
+            <div className="mt-6 flex justify-center gap-3">
+              <Link to="/account"><Button variant="outline">{t("booking.myBookings")}</Button></Link>
+              <Link to="/search"><Button className="bg-accent text-accent-foreground hover:bg-accent/90">{t("booking.searchMore")}</Button></Link>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -62,13 +118,10 @@ export default function BookingPage() {
         <ArrowLeft className="h-4 w-4" /> {t("booking.back")}
       </Link>
 
-      {/* Steps */}
       <div className="mb-8 flex items-center gap-2">
         {steps.map((s, i) => (
           <div key={s} className="flex items-center gap-2">
-            <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
-              i <= step ? "bg-accent text-accent-foreground" : "bg-secondary text-muted-foreground"
-            }`}>
+            <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${i <= step ? "bg-accent text-accent-foreground" : "bg-secondary text-muted-foreground"}`}>
               {i < step ? <Check className="h-4 w-4" /> : i + 1}
             </div>
             <span className={`hidden text-sm font-medium sm:inline ${i <= step ? "text-foreground" : "text-muted-foreground"}`}>{s}</span>
@@ -110,13 +163,7 @@ export default function BookingPage() {
               <p className="text-sm text-muted-foreground">{t("booking.selectExtras")}</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 {extras.map((e) => (
-                  <button
-                    key={e.id}
-                    onClick={() => toggleExtra(e.id)}
-                    className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-colors ${
-                      selectedExtras.includes(e.id) ? "border-accent bg-accent/5" : "border-border hover:border-muted-foreground"
-                    }`}
-                  >
+                  <button key={e.id} onClick={() => toggleExtra(e.id)} className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-colors ${selectedExtras.includes(e.id) ? "border-accent bg-accent/5" : "border-border hover:border-muted-foreground"}`}>
                     <div className={`flex h-5 w-5 items-center justify-center rounded border ${selectedExtras.includes(e.id) ? "border-accent bg-accent" : "border-border"}`}>
                       {selectedExtras.includes(e.id) && <Check className="h-3 w-3 text-accent-foreground" />}
                     </div>
@@ -163,13 +210,7 @@ export default function BookingPage() {
                 ].map((pm) => {
                   const Icon = pm.icon;
                   return (
-                    <button
-                      key={pm.id}
-                      onClick={() => setPaymentMethod(pm.id)}
-                      className={`flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-colors ${
-                        paymentMethod === pm.id ? "border-accent bg-accent/5" : "border-border hover:border-muted-foreground"
-                      }`}
-                    >
+                    <button key={pm.id} onClick={() => setPaymentMethod(pm.id)} className={`flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-colors ${paymentMethod === pm.id ? "border-accent bg-accent/5" : "border-border hover:border-muted-foreground"}`}>
                       <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${paymentMethod === pm.id ? "bg-accent/10" : "bg-secondary"}`}>
                         <Icon className={`h-5 w-5 ${paymentMethod === pm.id ? "text-accent" : "text-muted-foreground"}`} />
                       </div>
@@ -203,6 +244,13 @@ export default function BookingPage() {
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.email")}</span><span className="font-medium">{email}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.phone")}</span><span className="font-medium">{phone}</span></div>
                 </div>
+                {/* Supplier info in review */}
+                {supplier && (
+                  <div className="border-t border-border pt-3">
+                    <div className="flex justify-between"><span className="text-muted-foreground">Partner</span><span className="font-medium">{supplier.name}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Edastusviis</span><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${INTEGRATION_TYPE_CONFIG[supplier.integrationType].color}`}>{INTEGRATION_TYPE_CONFIG[supplier.integrationType].label}</span></div>
+                  </div>
+                )}
                 {listing && (
                   <div className="border-t border-border pt-3 space-y-1">
                     <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.publicPrice")}</span><span className="font-medium line-through text-muted-foreground">{publicPrice}€</span></div>
@@ -214,7 +262,6 @@ export default function BookingPage() {
             </div>
           )}
 
-          {/* Navigation */}
           <div className="mt-8 flex justify-between">
             {step > 0 ? (
               <Button variant="outline" onClick={() => setStep(step - 1)}>
@@ -233,7 +280,6 @@ export default function BookingPage() {
           </div>
         </div>
 
-        {/* Sidebar summary */}
         <div className="hidden lg:block">
           <div className="card-prominent sticky top-20 p-5">
             <h3 className="text-sm font-semibold">{t("booking.yourBooking")}</h3>
@@ -253,6 +299,13 @@ export default function BookingPage() {
                 <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.publicPrice")}</span><span className="line-through text-muted-foreground">{publicPrice}€</span></div>
                 <div className="flex justify-between font-bold"><span>{t("booking.ourPrice")}</span><span className="text-accent">{ourPrice}€</span></div>
                 <div className="flex justify-between text-success font-medium"><span>{t("booking.savings")}</span><span>-{savings}€</span></div>
+              </div>
+            )}
+            {/* Supplier badge in sidebar */}
+            {supplier && (
+              <div className="mt-3 border-t border-border pt-3 text-xs">
+                <span className="text-muted-foreground">Partner: </span>
+                <span className="font-medium">{supplier.name}</span>
               </div>
             )}
           </div>
