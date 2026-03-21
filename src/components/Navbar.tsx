@@ -75,7 +75,7 @@ export default function Navbar() {
             <div className="relative">
               <div className="flex items-center gap-1">
                 {unreadCount > 0 && (
-                  <Link to="/account" className="relative p-2">
+                  <Link to="/account?tab=notifications" className="relative p-2">
                     <Bell className="h-4 w-4 text-muted-foreground" />
                     <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-accent-foreground">{unreadCount}</span>
                   </Link>

@@ -91,7 +91,9 @@ export default function ProviderDashboardPage() {
   );
 }
 
-function ProviderOverview() {
+function ProviderOverview({ onGoToOrders }: { onGoToOrders: () => void }) {
+  const pendingOrders = MOCK_ORDERS.filter(o => o.status === "sent" || o.status === "created");
+
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">Partneri ülevaade</h1>
@@ -116,6 +118,32 @@ function ProviderOverview() {
         })}
       </div>
 
+      {pendingOrders.length > 0 && (
+        <>
+          <div className="mt-8 flex items-center justify-between">
+            <h2 className="font-display text-lg font-semibold flex items-center gap-2">
+              <Inbox className="h-5 w-5 text-warning" /> Ootel tellimused
+              <span className="rounded-full bg-warning/10 px-2 py-0.5 text-xs font-bold text-warning">{pendingOrders.length}</span>
+            </h2>
+            <button onClick={onGoToOrders} className="text-xs font-medium text-accent hover:underline">Vaata kõiki →</button>
+          </div>
+          <div className="mt-3 space-y-2">
+            {pendingOrders.map((o) => (
+              <div key={o.id} className="flex items-center justify-between rounded-xl border border-warning/30 bg-warning/5 p-4">
+                <div>
+                  <div className="text-sm font-medium">{o.customerName}</div>
+                  <div className="text-xs text-muted-foreground">{o.listingTitle} · {o.startDate} · {o.duration}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold">€{o.supplierPrice}</span>
+                  <span className="rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning">Ootel</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
       <h2 className="mt-8 font-display text-lg font-semibold">Viimased broneeringud</h2>
       <div className="mt-3 space-y-2">
         {mockProviderBookings.slice(0, 3).map((b) => (
@@ -133,6 +161,166 @@ function ProviderOverview() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function ProviderOrders() {
+  const [orders, setOrders] = useState(MOCK_ORDERS);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [filter, setFilter] = useState<string>("all");
+  const [showEmail, setShowEmail] = useState(false);
+
+  const filtered = filter === "all" ? orders : orders.filter(o => o.status === filter);
+
+  const handleAccept = (orderId: string) => {
+    setOrders(prev => prev.map(o => o.id === orderId ? {
+      ...o, status: "confirmed" as const, confirmedAt: new Date().toISOString().slice(0, 16).replace("T", " "),
+      timeline: [...o.timeline, { date: new Date().toISOString().slice(0, 10), time: new Date().toTimeString().slice(0, 5), event: "Partner kinnitas tellimuse", status: "confirmed" as const }]
+    } : o));
+    if (selectedOrder?.id === orderId) setSelectedOrder(null);
+  };
+
+  const handleReject = (orderId: string) => {
+    setOrders(prev => prev.map(o => o.id === orderId ? {
+      ...o, status: "rejected" as const,
+      timeline: [...o.timeline, { date: new Date().toISOString().slice(0, 10), time: new Date().toTimeString().slice(0, 5), event: "Partner lükkas tagasi", status: "rejected" as const }]
+    } : o));
+    if (selectedOrder?.id === orderId) setSelectedOrder(null);
+  };
+
+  const integrationIcon = (type: string) => {
+    if (type === "api") return <Zap className="h-3.5 w-3.5" />;
+    if (type === "email") return <Mail className="h-3.5 w-3.5" />;
+    return <Hand className="h-3.5 w-3.5" />;
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <h1 className="font-display text-2xl font-bold">Sissetulevad tellimused</h1>
+      </div>
+
+      <div className="mt-4 flex gap-2 overflow-x-auto">
+        {[
+          { key: "all", label: "Kõik" },
+          { key: "sent", label: "Ootel kinnitust" },
+          { key: "confirmed", label: "Kinnitatud" },
+          { key: "rejected", label: "Tagasi lükatud" },
+          { key: "completed", label: "Lõpetatud" },
+        ].map(f => (
+          <button key={f.key} onClick={() => setFilter(f.key)} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${filter === f.key ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:bg-secondary/80"}`}>
+            {f.label}
+            {f.key === "sent" && <span className="ml-1.5 rounded-full bg-warning/20 px-1.5 text-warning">{orders.filter(o => o.status === "sent" || o.status === "created").length}</span>}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-6 space-y-3">
+        {filtered.length === 0 && (
+          <div className="py-12 text-center text-sm text-muted-foreground">Tellimusi ei leitud.</div>
+        )}
+        {filtered.map((order) => {
+          const statusCfg = ORDER_STATUS_CONFIG[order.status];
+          const intCfg = INTEGRATION_TYPE_CONFIG[order.integrationType];
+          const isPending = order.status === "sent" || order.status === "created";
+          return (
+            <div key={order.id} className={`rounded-xl border p-4 transition-colors ${isPending ? "border-warning/30 bg-warning/5" : "border-border"}`}>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono text-muted-foreground">{order.id}</span>
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusCfg.color}`}>{statusCfg.label}</span>
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${intCfg.color}`}>
+                      {integrationIcon(order.integrationType)} {intCfg.label}
+                    </span>
+                  </div>
+                  <div className="mt-2 text-sm font-medium">{order.listingTitle}</div>
+                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                    <span>Klient: <strong className="text-foreground">{order.customerName}</strong></span>
+                    <span>{order.startDate} · {order.duration}</span>
+                    <span>{order.city}</span>
+                  </div>
+                  {order.extras.length > 0 && (
+                    <div className="mt-1 flex gap-1">{order.extras.map(e => <span key={e} className="rounded bg-secondary px-1.5 py-0.5 text-[10px]">{e}</span>)}</div>
+                  )}
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="font-display text-lg font-bold">€{order.supplierPrice}</div>
+                  <div className="text-[10px] text-muted-foreground">Partneri hind</div>
+                </div>
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {isPending && (
+                  <>
+                    <Button size="sm" className="bg-success text-success-foreground hover:bg-success/90 gap-1" onClick={() => handleAccept(order.id)}>
+                      <Check className="h-3.5 w-3.5" /> Kinnita
+                    </Button>
+                    <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1" onClick={() => handleReject(order.id)}>
+                      <X className="h-3.5 w-3.5" /> Lükka tagasi
+                    </Button>
+                  </>
+                )}
+                <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setSelectedOrder(order); setShowEmail(false); }}>Vaata detaile</Button>
+                {order.integrationType === "email" && (
+                  <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => { setSelectedOrder(order); setShowEmail(true); }}>
+                    <Mail className="h-3 w-3" /> E-kirja eelvaade
+                  </Button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {selectedOrder && (
+        <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Tellimus {selectedOrder.id}</DialogTitle>
+            </DialogHeader>
+            {showEmail ? (
+              <EmailTemplatePreview order={selectedOrder} />
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div><span className="text-xs text-muted-foreground">Klient</span><p className="font-medium">{selectedOrder.customerName}</p></div>
+                  <div><span className="text-xs text-muted-foreground">E-post</span><p>{selectedOrder.customerEmail}</p></div>
+                  <div><span className="text-xs text-muted-foreground">Telefon</span><p>{selectedOrder.customerPhone}</p></div>
+                  <div><span className="text-xs text-muted-foreground">Linn</span><p>{selectedOrder.city}</p></div>
+                  <div><span className="text-xs text-muted-foreground">Teenus</span><p className="font-medium">{selectedOrder.listingTitle}</p></div>
+                  <div><span className="text-xs text-muted-foreground">Periood</span><p>{selectedOrder.startDate} · {selectedOrder.duration}</p></div>
+                </div>
+                <div className="rounded-lg bg-secondary p-3 text-sm">
+                  <div className="flex justify-between"><span>Partneri hind</span><span className="font-medium">€{selectedOrder.supplierPrice}</span></div>
+                  {selectedOrder.extrasTotal > 0 && <div className="flex justify-between mt-1"><span>Lisateenused</span><span>€{selectedOrder.extrasTotal}</span></div>}
+                  <div className="flex justify-between mt-1 pt-1 border-t border-border font-semibold"><span>Kokku</span><span>€{selectedOrder.supplierPrice + selectedOrder.extrasTotal}</span></div>
+                </div>
+                <div>
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Tellimuse ajalugu</h4>
+                  <div className="space-y-2">
+                    {selectedOrder.timeline.map((t, i) => (
+                      <div key={i} className="flex gap-3 text-xs">
+                        <span className="w-20 shrink-0 text-muted-foreground">{t.date}<br />{t.time}</span>
+                        <div>
+                          <p className="font-medium">{t.event}</p>
+                          {t.detail && <p className="text-muted-foreground mt-0.5">{t.detail}</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {selectedOrder.notes && (
+                  <div className="rounded-lg bg-warning/5 border border-warning/20 p-3 text-xs text-muted-foreground">
+                    <strong>Märkused:</strong> {selectedOrder.notes}
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
