@@ -28,7 +28,7 @@ export default function Footer() {
         <div className="grid gap-8 md:grid-cols-4">
           <div>
             <Link to="/" className="inline-block">
-              <img src={ruumlyLogo} alt="Ruumly" className="h-6 brightness-0 invert" />
+              <img src={ruumlyLogo} alt="Ruumly" className="h-8 brightness-0 invert" />
             </Link>
             <p className="mt-3 text-sm opacity-70">
               From storage to moving — all in one. Eesti suurim laopindade ja logistikateenuste platvorm.
