@@ -399,13 +399,77 @@ function ProviderBookings() {
 }
 
 function ProviderCalendar() {
+  const [date, setDate] = useState<Date | undefined>(new Date());
+
+  const bookingDates = [
+    new Date(2026, 3, 1), new Date(2026, 3, 2), new Date(2026, 3, 3),
+    new Date(2026, 2, 25), new Date(2026, 2, 15), new Date(2026, 2, 10),
+    new Date(2026, 2, 11), new Date(2026, 2, 12),
+  ];
+
+  const selectedBookings = mockProviderBookings.filter(b => {
+    if (!date) return false;
+    const bd = new Date(b.date);
+    return bd.toDateString() === date.toDateString();
+  });
+
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">Kalender</h1>
-      <div className="mt-6 flex flex-col items-center py-16 text-center">
-        <Calendar className="h-12 w-12 text-muted-foreground/30" />
-        <p className="mt-3 text-sm font-medium">Kalendrivaade tuleb peagi</p>
-        <p className="mt-1 text-xs text-muted-foreground">Siit saate hallata saadavust ja broneeringuid kalendrivaates.</p>
+      <p className="mt-1 text-sm text-muted-foreground">Vaadake broneeringuid kalendrivaates.</p>
+      <div className="mt-6 grid gap-6 lg:grid-cols-[auto_1fr]">
+        <div className="card-elevated p-4">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={setDate}
+            className="pointer-events-auto"
+            modifiers={{ booked: bookingDates }}
+            modifiersClassNames={{ booked: "bg-accent/20 text-accent font-bold" }}
+          />
+          <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground px-1">
+            <span className="h-3 w-3 rounded-sm bg-accent/20" /> Broneeritud kuupäev
+          </div>
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold">
+            {date ? date.toLocaleDateString("et-EE", { day: "numeric", month: "long", year: "numeric" }) : "Valige kuupäev"}
+          </h3>
+          {selectedBookings.length > 0 ? (
+            <div className="mt-3 space-y-2">
+              {selectedBookings.map(b => (
+                <div key={b.id} className="flex items-center justify-between rounded-xl border border-border p-4">
+                  <div>
+                    <p className="text-sm font-medium">{b.client}</p>
+                    <p className="text-xs text-muted-foreground">{b.listing} · {b.duration}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${b.status === "confirmed" ? "bg-success/10 text-success" : b.status === "pending" ? "bg-warning/10 text-warning" : "bg-accent/10 text-accent"}`}>
+                      {b.status === "confirmed" ? "Kinnitatud" : b.status === "pending" ? "Ootel" : "Aktiivne"}
+                    </span>
+                    <span className="text-sm font-semibold">€{b.total}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-muted-foreground">Sellel kuupäeval broneeringuid pole.</p>
+          )}
+          <div className="mt-6">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Lähiaja broneeringud</h4>
+            <div className="space-y-2">
+              {mockProviderBookings.map(b => (
+                <div key={b.id} className="flex items-center justify-between rounded-lg border border-border p-3 text-sm">
+                  <div>
+                    <span className="font-medium">{b.client}</span>
+                    <span className="text-muted-foreground"> · {b.listing}</span>
+                  </div>
+                  <span className="text-muted-foreground">{b.date}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
