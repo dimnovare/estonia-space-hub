@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const sidebarLinks = [
   { id: "overview", label: "Ülevaade", icon: LayoutDashboard },
+  { id: "orders", label: "Sissetulevad tellimused", icon: Inbox },
   { id: "listings", label: "Minu kuulutused", icon: List },
   { id: "bookings", label: "Broneeringud", icon: Package },
   { id: "calendar", label: "Kalender", icon: Calendar },
