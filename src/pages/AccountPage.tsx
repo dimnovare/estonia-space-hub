@@ -200,26 +200,21 @@ function BookingCard({ booking }: { booking: Booking }) {
               <div><span className="text-xs text-muted-foreground">Periood</span><p className="text-sm font-medium">{booking.duration}</p></div>
             </div>
 
-            {/* Order fulfillment status */}
+            {/* Order fulfillment status — customer-friendly, no integration details */}
             {order && (
               <div className="rounded-lg border border-border bg-secondary/30 p-3">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1"><Send className="h-3 w-3" /> Tellimuse staatus</p>
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${ORDER_STATUS_CONFIG[order.status].color}`}>{ORDER_STATUS_CONFIG[order.status].label}</span>
                 </div>
-                <div className="flex items-center gap-2 text-xs">
-                  <IntIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-muted-foreground">Edastatud:</span>
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${INTEGRATION_TYPE_CONFIG[order.integrationType].color}`}>{INTEGRATION_TYPE_CONFIG[order.integrationType].label}</span>
-                </div>
                 {order.status === "sent" && (
-                  <p className="mt-2 text-xs text-warning font-medium">⏳ Ootame partneri kinnitust...</p>
+                  <p className="mt-1 text-xs text-warning font-medium">⏳ Ootame partneri kinnitust...</p>
                 )}
                 {order.status === "confirmed" && (
-                  <p className="mt-2 text-xs text-success font-medium">✓ Partner kinnitas teie broneeringu</p>
+                  <p className="mt-1 text-xs text-success font-medium">✓ Partner kinnitas teie broneeringu</p>
                 )}
                 {order.status === "rejected" && (
-                  <p className="mt-2 text-xs text-destructive font-medium">✗ Partner lükkas broneeringu tagasi</p>
+                  <p className="mt-1 text-xs text-destructive font-medium">✗ Partner lükkas broneeringu tagasi</p>
                 )}
               </div>
             )}
