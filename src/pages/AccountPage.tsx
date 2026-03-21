@@ -145,6 +145,7 @@ function AccountOverview({ onNavigate }: { onNavigate: (tab: string) => void }) 
 }
 
 function BookingCard({ booking }: { booking: Booking }) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const Icon = typeIcons[booking.listingType];
   const status = statusConfig[booking.status];
