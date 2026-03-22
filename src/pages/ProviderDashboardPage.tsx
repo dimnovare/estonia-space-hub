@@ -342,10 +342,11 @@ function ProviderOrders() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">Sissetulevad tellimused</h1>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h1 className="font-display text-xl sm:text-2xl font-bold">Sissetulevad tellimused</h1>
         <Button variant="outline" size="sm" className="gap-1" onClick={exportCSV}>
-          <Download className="h-3.5 w-3.5" /> Ekspordi CSV
+          <Download className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Ekspordi</span> CSV
+        </Button>
         </Button>
       </div>
 
