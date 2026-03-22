@@ -529,6 +529,7 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.myAccount": "My account",
     "nav.login": "Log in",
     "nav.logout": "Log out",
+    "nav.home": "Home",
     "nav.providerDashboard": "Provider dashboard",
 
     "hero.title": "Find storage, moving, and logistics",
