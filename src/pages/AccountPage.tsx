@@ -71,7 +71,7 @@ function MobileAccountNav({ tab, setTab, sidebarLinks, unreadMessages, unreadNot
             {sidebarLinks.map((l) => {
               const Icon = l.icon;
               const active = tab === l.id;
-              const unread = l.id === "notifications" ? MOCK_NOTIFICATIONS.filter(n => !n.read).length : l.id === "messages" ? unreadMessages : 0;
+              const unread = l.id === "notifications" ? unreadNotifications : l.id === "messages" ? unreadMessages : 0;
               return (
                 <button key={l.id} onClick={() => { setTab(l.id); setOpen(false); }} className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
                   <span className="flex items-center gap-2.5"><Icon className="h-4 w-4" />{l.label}</span>
