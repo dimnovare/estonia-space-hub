@@ -113,7 +113,7 @@ export default function HomePage() {
       </section>
 
       {/* Map preview */}
-      <section className="container-wide -mt-6 relative z-10">
+      <section className="container-wide mt-0 sm:-mt-6 relative z-10">
         <Suspense fallback={<div className="h-[350px] rounded-xl bg-secondary flex items-center justify-center text-muted-foreground">{t("map.loading")}</div>}>
           <InteractiveMap listings={ALL_LISTINGS} height="h-[280px] md:h-[350px]" />
         </Suspense>
