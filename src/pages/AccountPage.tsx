@@ -301,7 +301,10 @@ function BookingCard({ booking }: { booking: Booking }) {
 
 function AccountBookings() {
   const [filter, setFilter] = useState<"all" | BookingStatus>("all");
-  const filtered = filter === "all" ? MOCK_BOOKINGS : MOCK_BOOKINGS.filter(b => b.status === filter);
+  const { data: bookings = [], isLoading } = useBookings();
+  const filtered = filter === "all" ? bookings : bookings.filter(b => b.status === filter);
+
+  if (isLoading) return <SkeletonList count={4} />;
 
   return (
     <div>
@@ -309,7 +312,7 @@ function AccountBookings() {
       <div className="mt-4 hidden sm:flex gap-2 overflow-x-auto">
         {(["all", "pending", "confirmed", "active", "completed", "cancelled"] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
-            {f === "all" ? "Kõik" : statusConfig[f].label} ({f === "all" ? MOCK_BOOKINGS.length : MOCK_BOOKINGS.filter(b => b.status === f).length})
+            {f === "all" ? "Kõik" : statusConfig[f].label} ({f === "all" ? bookings.length : bookings.filter(b => b.status === f).length})
           </button>
         ))}
       </div>
@@ -317,12 +320,12 @@ function AccountBookings() {
         value={filter}
         onChange={(e) => setFilter(e.target.value as BookingStatus | "all")}
         className="mt-4 w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent sm:hidden">
-        <option value="all">Kõik ({MOCK_BOOKINGS.length})</option>
-        <option value="pending">Ootel ({MOCK_BOOKINGS.filter(b => b.status === "pending").length})</option>
-        <option value="confirmed">Kinnitatud ({MOCK_BOOKINGS.filter(b => b.status === "confirmed").length})</option>
-        <option value="active">Aktiivne ({MOCK_BOOKINGS.filter(b => b.status === "active").length})</option>
-        <option value="completed">Lõpetatud ({MOCK_BOOKINGS.filter(b => b.status === "completed").length})</option>
-        <option value="cancelled">Tühistatud ({MOCK_BOOKINGS.filter(b => b.status === "cancelled").length})</option>
+        <option value="all">Kõik ({bookings.length})</option>
+        <option value="pending">Ootel ({bookings.filter(b => b.status === "pending").length})</option>
+        <option value="confirmed">Kinnitatud ({bookings.filter(b => b.status === "confirmed").length})</option>
+        <option value="active">Aktiivne ({bookings.filter(b => b.status === "active").length})</option>
+        <option value="completed">Lõpetatud ({bookings.filter(b => b.status === "completed").length})</option>
+        <option value="cancelled">Tühistatud ({bookings.filter(b => b.status === "cancelled").length})</option>
       </select>
       <div className="mt-4 space-y-2">
         {filtered.length === 0 ? (
