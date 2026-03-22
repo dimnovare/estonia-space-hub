@@ -48,10 +48,10 @@ function useSidebarLinks() {
   ];
 }
 
-function MobileAccountNav({ tab, setTab, sidebarLinks, unreadMessages, onLogout }: {
+function MobileAccountNav({ tab, setTab, sidebarLinks, unreadMessages, unreadNotifications, onLogout }: {
   tab: string; setTab: (t: string) => void;
   sidebarLinks: { id: string; label: string; icon: typeof LayoutDashboard }[];
-  unreadMessages: number; onLogout: () => void;
+  unreadMessages: number; unreadNotifications: number; onLogout: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const { t } = useLanguage();
