@@ -260,6 +260,7 @@ const translations: Record<Language, Record<string, string>> = {
     "detail.checkAvailability": "Kontrolli saadavust",
     "detail.secured": "Turvatud",
     "detail.noSecurity": "Ilma turvata",
+    "detail.from": "alates",
     "detail.bookNow": "Broneeri kohe",
     "detail.savingsNote": "Meie kaudu kuni 5% soodsam",
     "detail.save": "Säästad",
