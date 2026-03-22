@@ -107,7 +107,7 @@ export default function BookingPage() {
   }
 
   return (
-    <div className="container-wide py-8">
+    <div className="container-wide py-8 pb-24 lg:pb-8">
       <Link to={listing ? `/${listing.type}/${listing.id}` : "/search"} className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> {t("booking.back")}
       </Link>
