@@ -754,6 +754,7 @@ const translations: Record<Language, Record<string, string>> = {
     "detail.checkAvailability": "Check availability",
     "detail.secured": "Secured",
     "detail.noSecurity": "No security",
+    "detail.from": "from",
     "detail.bookNow": "Book now",
     "detail.savingsNote": "Up to 5% cheaper through us",
     "detail.save": "Save",
