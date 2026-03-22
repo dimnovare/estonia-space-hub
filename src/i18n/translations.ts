@@ -1489,6 +1489,11 @@ const translations: Record<Language, Record<string, string>> = {
     "prov.complete": "Завершить",
     "prov.pauseIntake": "Приостановить приём",
     "prov.resumeIntake": "Возобновить приём",
+
+    "badge.cheapest": "Выгоднее",
+    "badge.closest": "Ближайший",
+    "badge.bestValue": "Лучшее предложение",
+    "badge.promoted": "Рекомендуем",
   },
 };
 

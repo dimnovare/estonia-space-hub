@@ -132,6 +132,8 @@ export interface OrderTimeline {
 
 export interface Booking {
   id: string;
+  userId?: string;
+  supplierId?: string;
   listingId: string;
   listingTitle: string;
   listingType: ListingType;

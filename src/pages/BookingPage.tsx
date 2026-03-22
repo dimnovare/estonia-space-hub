@@ -289,13 +289,7 @@ export default function BookingPage() {
                 <div className="flex justify-between text-success font-medium"><span>{t("booking.savings")}</span><span>-{savings}€</span></div>
               </div>
             )}
-            {/* Supplier badge in sidebar */}
-            {supplier && (
-              <div className="mt-3 border-t border-border pt-3 text-xs">
-                <span className="text-muted-foreground">Partner: </span>
-                <span className="font-medium">{supplier.name}</span>
-              </div>
-            )}
+            
           </div>
         </div>
       </div>
