@@ -270,7 +270,14 @@ function ProviderOverview({ onGoToOrders }: { onGoToOrders: () => void }) {
 
 // ─── Orders with Bulk Actions ───
 function ProviderOrders() {
-  const [orders, setOrders] = useState(MOCK_ORDERS);
+  const { data: initialOrders = [] } = useOrders();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [initialized, setInitialized] = useState(false);
+
+  if (initialOrders.length > 0 && !initialized) {
+    setOrders(initialOrders);
+    setInitialized(true);
+  }
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [filter, setFilter] = useState<string>("all");
   const [showEmail, setShowEmail] = useState(false);
