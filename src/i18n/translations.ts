@@ -33,7 +33,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Hero
     "hero.title": "Leia laopinda, kolimist ja logistikat",
     "hero.titleHighlight": "ühest kohast",
-    "hero.subtitle": "Laopindadest kolimiseni — kõik ühest kohast.",
+    "hero.subtitle": "Laopinnast kolimiseni — kõik ühest kohast.",
     "hero.search": "Otsi",
     "hero.searchPlaceholder": "Sisesta aadress või linn...",
     "hero.listSpace": "Lisa oma pind →",
