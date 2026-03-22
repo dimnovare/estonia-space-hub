@@ -795,7 +795,32 @@ function AdminListings() {
         <h1 className="font-display text-xl sm:text-2xl font-bold">{t("admin.listings")}</h1>
         <Button onClick={openNew} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90"><PlusCircle className="mr-1 h-3.5 w-3.5" /> {t("admin.addListing")}</Button>
       </div>
-      <div className="mt-6 overflow-x-auto rounded-xl border border-border">
+      {/* Mobile cards */}
+      <div className="mt-4 space-y-2 sm:hidden">
+        {listings.map(l => {
+          const Icon = typeIcons[l.type] || Warehouse;
+          return (
+            <div key={l.id} className="rounded-xl border border-border p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="text-sm font-medium truncate">{l.title}</span>
+                </div>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${l.status === "active" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>{l.status === "active" ? t("admin.active") : t("admin.paused")}</span>
+              </div>
+              <div className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
+                <span>{l.city} · {l.price}€ · {l.views} vaatamist</span>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => openEdit(l)} className="rounded p-1 hover:bg-secondary"><Edit className="h-3.5 w-3.5 text-muted-foreground" /></button>
+                  <button onClick={() => handleDelete(l.id)} className="rounded p-1 hover:bg-secondary"><Trash2 className="h-3.5 w-3.5 text-destructive" /></button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {/* Desktop table */}
+      <div className="mt-6 hidden rounded-xl border border-border sm:block">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
             <tr>
