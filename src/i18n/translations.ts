@@ -2258,7 +2258,7 @@ const translations: Record<Language, Record<string, string>> = {
     "toast.notificationRead": "Уведомление отмечено как прочитанное",
     "toast.settingsSaved": "Настройки сохранены!",
 
-    "account.favorites": "Избранное",
+    "account.favorites.title": "Избранное",
     "account.favorites.empty": "Вы ещё не добавили избранное",
     "account.favorites.cta": "Искать предложения",
     "account.savedSearches": "Сохранённые поиски",
