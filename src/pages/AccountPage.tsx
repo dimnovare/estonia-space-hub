@@ -377,7 +377,7 @@ function AccountMessages() {
           {bookingIds.length === 0 ? (
             <div className="flex flex-col items-center py-8 text-center"><MessageSquare className="h-8 w-8 text-muted-foreground/30" /><p className="mt-2 text-xs text-muted-foreground">Sõnumeid pole veel.</p></div>
           ) : bookingIds.map(bid => {
-            const bk = MOCK_BOOKINGS.find(b => b.id === bid);
+            const bk = bookings.find(b => b.id === bid);
             const lastMsg = [...messages.filter(m => m.bookingId === bid)].pop();
             const unread = messages.filter(m => m.bookingId === bid && !m.read && m.from !== "customer").length;
             return (
