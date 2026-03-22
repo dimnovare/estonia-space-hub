@@ -16,6 +16,8 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.forProviders": "Pakkujatele",
     "nav.myAccount": "Minu konto",
     "nav.login": "Logi sisse",
+    "nav.logout": "Logi välja",
+    "nav.providerDashboard": "Partneri paneel",
 
     // Hero
     "hero.title": "Leia laopinda, kolimist ja logistikat",
@@ -518,6 +520,8 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.forProviders": "For partners",
     "nav.myAccount": "My account",
     "nav.login": "Log in",
+    "nav.logout": "Log out",
+    "nav.providerDashboard": "Provider dashboard",
 
     "hero.title": "Find storage, moving, and logistics",
     "hero.titleHighlight": "in one place",
@@ -1000,6 +1004,8 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.forProviders": "Партнёрам",
     "nav.myAccount": "Мой аккаунт",
     "nav.login": "Войти",
+    "nav.logout": "Выйти",
+    "nav.providerDashboard": "Панель партнёра",
 
     "hero.title": "Найдите склад, переезд и логистику",
     "hero.titleHighlight": "в одном месте",

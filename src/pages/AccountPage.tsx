@@ -99,13 +99,31 @@ export default function AccountPage() {
   const handleLogout = () => { logout(); navigate("/"); };
   const unreadMessages = MOCK_MESSAGES.filter(m => !m.read && m.from !== "customer").length;
 
+  const { role } = useAuth();
+
+  const roleDashboardLinks = role === "admin"
+    ? [{ to: "/admin", label: "Admin", icon: "🛡️" }]
+    : role === "provider"
+    ? [{ to: "/provider/dashboard", label: t("nav.providerDashboard") || "Partneri paneel", icon: "📊" }]
+    : [];
+
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">
       <aside className="hidden w-56 shrink-0 border-r border-border bg-card lg:block">
         <div className="p-4">
           <p className="text-sm font-semibold">{user?.name}</p>
           <p className="text-xs text-muted-foreground">{user?.email}</p>
+          <span className="mt-1 inline-block rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent capitalize">{role}</span>
         </div>
+        {roleDashboardLinks.length > 0 && (
+          <div className="px-2 mb-2">
+            {roleDashboardLinks.map(dl => (
+              <Link key={dl.to} to={dl.to} className="flex items-center gap-2 rounded-lg border border-dashed border-accent/30 bg-accent/5 px-3 py-2 text-sm font-medium text-accent hover:bg-accent/10 transition-colors">
+                <span>{dl.icon}</span> {dl.label} <ChevronRight className="ml-auto h-3.5 w-3.5" />
+              </Link>
+            ))}
+          </div>
+        )}
         <nav className="space-y-0.5 px-2">
           {sidebarLinks.map((l) => {
             const Icon = l.icon;
@@ -127,6 +145,15 @@ export default function AccountPage() {
       <main className="flex-1 p-4 sm:p-6">
         {/* Mobile: compact dropdown navigation */}
         <div className="mb-4 lg:hidden">
+          {roleDashboardLinks.length > 0 && (
+            <div className="mb-2 flex gap-2">
+              {roleDashboardLinks.map(dl => (
+                <Link key={dl.to} to={dl.to} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-dashed border-accent/30 bg-accent/5 px-3 py-2 text-xs font-medium text-accent">
+                  <span>{dl.icon}</span> {dl.label}
+                </Link>
+              ))}
+            </div>
+          )}
           <MobileAccountNav tab={tab} setTab={setTab} sidebarLinks={sidebarLinks} unreadMessages={unreadMessages} onLogout={handleLogout} />
         </div>
 
@@ -148,16 +175,35 @@ export default function AccountPage() {
 function AccountOverview({ onNavigate }: { onNavigate: (tab: string) => void }) {
   const active = MOCK_BOOKINGS.filter(b => b.status === "confirmed" || b.status === "active");
   const pending = MOCK_BOOKINGS.filter(b => b.status === "pending");
+  const { role } = useAuth();
 
   const { t } = useLanguage();
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">{t("account.welcome")}</h1>
+      <div className="flex flex-wrap items-center gap-3">
+        <h1 className="font-display text-2xl font-bold">{t("account.welcome")}</h1>
+        <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-semibold text-accent capitalize">{role}</span>
+      </div>
       <p className="mt-1 text-sm text-muted-foreground">{t("account.welcomeDesc")}</p>
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+
+      {/* Role dashboard shortcuts */}
+      {role === "provider" && (
+        <Link to="/provider/dashboard" className="mt-4 flex items-center justify-between rounded-xl border border-accent/20 bg-accent/5 p-4 hover:bg-accent/10 transition-colors">
+          <span className="flex items-center gap-2 text-sm font-medium text-accent"><LayoutDashboard className="h-4 w-4" /> {t("nav.providerDashboard") || "Partneri paneel"}</span>
+          <ChevronRight className="h-4 w-4 text-accent" />
+        </Link>
+      )}
+      {role === "admin" && (
+        <Link to="/admin" className="mt-4 flex items-center justify-between rounded-xl border border-accent/20 bg-accent/5 p-4 hover:bg-accent/10 transition-colors">
+          <span className="flex items-center gap-2 text-sm font-medium text-accent"><Shield className="h-4 w-4" /> Admin</span>
+          <ChevronRight className="h-4 w-4 text-accent" />
+        </Link>
+      )}
+
+      <div className="mt-6 grid gap-4 grid-cols-2 sm:grid-cols-3">
         <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">{t("account.activeBookings")}</div><div className="mt-1 font-display text-2xl font-bold">{active.length}</div></div>
         <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">{t("account.pendingApproval")}</div><div className="mt-1 font-display text-2xl font-bold text-warning">{pending.length}</div></div>
-        <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">{t("account.totalSavings")}</div><div className="mt-1 font-display text-2xl font-bold text-accent">€{MOCK_BOOKINGS.reduce((s, b) => s + (b.basePrice - b.platformPrice), 0)}</div></div>
+        <div className="card-elevated p-5 col-span-2 sm:col-span-1"><div className="text-sm text-muted-foreground">{t("account.totalSavings")}</div><div className="mt-1 font-display text-2xl font-bold text-accent">€{MOCK_BOOKINGS.reduce((s, b) => s + (b.basePrice - b.platformPrice), 0)}</div></div>
       </div>
       {pending.length > 0 && (
         <div className="mt-6"><h2 className="font-display text-lg font-semibold">{t("account.pendingBookings")}</h2><div className="mt-3 space-y-2">{pending.map(b => <BookingCard key={b.id} booking={b} />)}</div></div>

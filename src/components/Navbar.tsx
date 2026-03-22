@@ -1,5 +1,5 @@
 import { Link, useLocation, useSearchParams, useNavigate } from "react-router-dom";
-import { Menu, X, User, LogIn, LogOut, ChevronDown, Bell } from "lucide-react";
+import { Menu, X, User, LogIn, LogOut, ChevronDown, Bell, LayoutDashboard, Shield } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -39,8 +39,6 @@ export default function Navbar() {
     setUserMenuOpen(false);
     navigate("/");
   };
-
-  const accountPath = role === "admin" ? "/admin" : role === "provider" ? "/provider/dashboard" : "/account";
 
   return (
     <header className={`sticky top-0 z-50 border-b border-border backdrop-blur-md ${isHome ? "bg-card/80" : "bg-card/95"}`}>
@@ -98,21 +96,21 @@ export default function Navbar() {
                       <p className="text-xs text-muted-foreground">{user?.email}</p>
                       <span className="mt-1 inline-block rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent capitalize">{role}</span>
                     </div>
-                    <Link to={accountPath} onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-secondary">
+                    <Link to="/account" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-secondary">
                       <User className="h-4 w-4 text-muted-foreground" /> {t("nav.myAccount")}
                     </Link>
                     {role === "provider" && (
                       <Link to="/provider/dashboard" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-secondary">
-                        <User className="h-4 w-4 text-muted-foreground" /> Partneri paneel
+                        <LayoutDashboard className="h-4 w-4 text-muted-foreground" /> {t("nav.providerDashboard") || "Partneri paneel"}
                       </Link>
                     )}
                     {role === "admin" && (
                       <Link to="/admin" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-secondary">
-                        <User className="h-4 w-4 text-muted-foreground" /> Admin
+                        <Shield className="h-4 w-4 text-muted-foreground" /> Admin
                       </Link>
                     )}
                     <button onClick={handleLogout} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-destructive hover:bg-destructive/10">
-                      <LogOut className="h-4 w-4" /> Logi välja
+                      <LogOut className="h-4 w-4" /> {t("nav.logout") || "Logi välja"}
                     </button>
                   </div>
                 </>
@@ -157,25 +155,22 @@ export default function Navbar() {
           <div className="mt-2 flex flex-col gap-1.5">
             {isAuthenticated ? (
               <>
-                {/* Role-based navigation links */}
-                {role === "admin" && (
-                  <Link to="/admin" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary" onClick={() => setOpen(false)}>
-                    <User className="h-4 w-4 text-muted-foreground" /> Admin
-                  </Link>
-                )}
+                <Link to="/account" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary" onClick={() => setOpen(false)}>
+                  <User className="h-4 w-4 text-muted-foreground" /> {t("nav.myAccount")}
+                </Link>
                 {role === "provider" && (
                   <Link to="/provider/dashboard" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary" onClick={() => setOpen(false)}>
-                    <User className="h-4 w-4 text-muted-foreground" /> Partneri paneel
+                    <LayoutDashboard className="h-4 w-4 text-muted-foreground" /> {t("nav.providerDashboard") || "Partneri paneel"}
                   </Link>
                 )}
-                <div className="flex gap-2 mt-1">
-                  <Link to={accountPath} className="flex-1" onClick={() => setOpen(false)}>
-                    <Button variant="outline" size="sm" className="w-full">{t("nav.myAccount")}</Button>
+                {role === "admin" && (
+                  <Link to="/admin" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary" onClick={() => setOpen(false)}>
+                    <Shield className="h-4 w-4 text-muted-foreground" /> Admin
                   </Link>
-                  <Button size="sm" variant="outline" className="text-destructive" onClick={() => { handleLogout(); setOpen(false); }}>
-                    <LogOut className="h-4 w-4" />
-                  </Button>
-                </div>
+                )}
+                <Button size="sm" variant="outline" className="text-destructive mt-1" onClick={() => { handleLogout(); setOpen(false); }}>
+                  <LogOut className="h-4 w-4 mr-1" /> {t("nav.logout") || "Logi välja"}
+                </Button>
               </>
             ) : (
               <div className="flex gap-2">
