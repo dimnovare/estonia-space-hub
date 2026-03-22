@@ -164,6 +164,8 @@ export default function AccountPage() {
 
         {tab === "overview" && <AccountOverview onNavigate={setTab} />}
         {tab === "bookings" && <AccountBookings />}
+        {tab === "favorites" && <AccountFavorites />}
+        {tab === "searches" && <AccountSearches />}
         {tab === "messages" && <AccountMessages />}
         {tab === "notifications" && <AccountNotifications />}
         {tab === "profile" && <AccountProfile />}
