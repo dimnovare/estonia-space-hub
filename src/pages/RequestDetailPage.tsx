@@ -52,14 +52,14 @@ export default function RequestDetailPage() {
       <div className="container-wide py-12 text-center">
         <XCircle className="mx-auto h-12 w-12 text-muted-foreground" />
         <h1 className="mt-4 font-display text-2xl font-bold">{t("req.notFound")}</h1>
-        <Link to="/dashboard"><Button variant="outline" className="mt-4">{t("req.back")}</Button></Link>
+        <Link to="/account?tab=bookings"><Button variant="outline" className="mt-4">{t("req.back")}</Button></Link>
       </div>
     );
   }
 
   return (
     <div className="container-wide py-8">
-      <Link to="/dashboard" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
+      <Link to="/account?tab=bookings" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
         <ArrowLeft className="h-4 w-4" /> {t("req.backToDashboard")}
       </Link>
 

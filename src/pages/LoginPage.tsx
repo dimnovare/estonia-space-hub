@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, Loader2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,9 +20,11 @@ export default function LoginPage() {
   const { t } = useLanguage();
   const { login, register, loginWithGoogle, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as any)?.from || "/account";
 
   if (isAuthenticated) {
-    navigate("/account");
+    navigate(from, { replace: true });
     return null;
   }
 
@@ -32,7 +34,7 @@ export default function LoginPage() {
     try {
       await login(email, password);
       toast.success(t("login.successLogin"));
-      navigate("/account");
+      navigate(from, { replace: true });
     } catch { toast.error("Login failed"); }
     setLoading(false);
   };
@@ -43,7 +45,7 @@ export default function LoginPage() {
     try {
       await register(name, email, password);
       toast.success(t("login.successRegister"));
-      navigate("/account");
+      navigate(from, { replace: true });
     } catch { toast.error("Registration failed"); }
     setLoading(false);
   };
@@ -53,7 +55,7 @@ export default function LoginPage() {
     try {
       await loginWithGoogle();
       toast.success(t("login.successLogin"));
-      navigate("/account");
+      navigate(from, { replace: true });
     } catch { toast.error("Google login failed"); }
     setLoading(false);
   };

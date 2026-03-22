@@ -98,6 +98,7 @@ export default function SearchPage() {
     if (sort === "cheapest") results = [...results].sort((a, b) => a.priceFrom - b.priceFrom);
     if (sort === "rating") results = [...results].sort((a, b) => b.rating - a.rating);
     if (sort === "best-value") results = [...results].sort((a, b) => b.rating - a.rating);
+    if (sort === "newest") results = [...results].sort((a, b) => b.id.localeCompare(a.id));
     return results;
   }, [activeType, query, cityFilter, priceMax, heated, access24, indoor, security, loadingDock, forkliftFilter, shortTerm, longTerm, withVan, packingHelp, loadingHelp, pricingFixed, trailerClosed, availableNow, sort]);
 

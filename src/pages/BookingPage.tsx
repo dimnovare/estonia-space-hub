@@ -93,18 +93,11 @@ export default function BookingPage() {
             ))}
           </div>
 
-          {phase === "done" && supplier && integrationLabel && (
-            <div className="mt-4 flex items-center justify-center gap-2 rounded-lg border border-border bg-secondary/30 p-3">
-              <IntIcon className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">Integratsioon: </span>
-              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${integrationLabel.color}`}>{integrationLabel.label}</span>
-              <span className="text-xs text-muted-foreground">· {supplier.name}</span>
-            </div>
-          )}
+          
 
           {phase === "done" && (
             <div className="mt-6 flex justify-center gap-3">
-              <Link to="/account"><Button variant="outline">{t("booking.myBookings")}</Button></Link>
+              <Link to="/account?tab=bookings"><Button variant="outline">{t("booking.myBookings")}</Button></Link>
               <Link to="/search"><Button className="bg-accent text-accent-foreground hover:bg-accent/90">{t("booking.searchMore")}</Button></Link>
             </div>
           )}
@@ -245,13 +238,7 @@ export default function BookingPage() {
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.email")}</span><span className="font-medium">{email}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.phone")}</span><span className="font-medium">{phone}</span></div>
                 </div>
-                {/* Supplier info in review */}
-                {supplier && (
-                  <div className="border-t border-border pt-3">
-                    <div className="flex justify-between"><span className="text-muted-foreground">Partner</span><span className="font-medium">{supplier.name}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Edastusviis</span><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${INTEGRATION_TYPE_CONFIG[supplier.integrationType].color}`}>{INTEGRATION_TYPE_CONFIG[supplier.integrationType].label}</span></div>
-                  </div>
-                )}
+                
                 {listing && (
                   <div className="border-t border-border pt-3 space-y-1">
                     <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.publicPrice")}</span><span className="font-medium line-through text-muted-foreground">{publicPrice}€</span></div>
@@ -302,13 +289,7 @@ export default function BookingPage() {
                 <div className="flex justify-between text-success font-medium"><span>{t("booking.savings")}</span><span>-{savings}€</span></div>
               </div>
             )}
-            {/* Supplier badge in sidebar */}
-            {supplier && (
-              <div className="mt-3 border-t border-border pt-3 text-xs">
-                <span className="text-muted-foreground">Partner: </span>
-                <span className="font-medium">{supplier.name}</span>
-              </div>
-            )}
+            
           </div>
         </div>
       </div>

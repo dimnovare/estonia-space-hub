@@ -22,7 +22,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Hero
     "hero.title": "Leia laopinda, kolimist ja logistikat",
     "hero.titleHighlight": "ühest kohast",
-    "hero.subtitle": "From storage to moving — all in one.",
+    "hero.subtitle": "Laopindadest kolimiseni — kõik ühest kohast.",
     "hero.search": "Otsi",
     "hero.searchPlaceholder": "Sisesta aadress või linn...",
     "hero.listSpace": "Lisa oma pind →",
@@ -172,9 +172,9 @@ const translations: Record<Language, Record<string, string>> = {
     "search.forQuery": "kohta",
     "search.sort.best": "Parim vaste",
     "search.sort.cheapest": "Soodsaim",
-    "search.sort.nearest": "Lähim",
+    "search.sort.rating": "Parim hinnang",
     "search.sort.bestValue": "Parim pakkumine",
-    "search.sort.newest": "Uusim",
+    "search.sort.newest": "Uusimad",
     "search.type.all": "Kõik",
     "search.type.warehouse": "Laopinnad",
     "search.type.moving": "Kolimine",
@@ -510,6 +510,12 @@ const translations: Record<Language, Record<string, string>> = {
     "prov.complete": "Märgi lõpetatuks",
     "prov.pauseIntake": "Peata vastuvõtt",
     "prov.resumeIntake": "Jätka vastuvõttu",
+
+    // Badges
+    "badge.cheapest": "Soodsaim",
+    "badge.closest": "Lähim",
+    "badge.bestValue": "Parim pakkumine",
+    "badge.promoted": "Soovitatud",
   },
 
   en: {
@@ -663,7 +669,7 @@ const translations: Record<Language, Record<string, string>> = {
     "search.forQuery": "for",
     "search.sort.best": "Best match",
     "search.sort.cheapest": "Cheapest",
-    "search.sort.nearest": "Nearest",
+    "search.sort.rating": "Best rated",
     "search.sort.bestValue": "Best value",
     "search.sort.newest": "Newest",
     "search.type.all": "All",
@@ -994,6 +1000,11 @@ const translations: Record<Language, Record<string, string>> = {
     "prov.complete": "Mark completed",
     "prov.pauseIntake": "Pause intake",
     "prov.resumeIntake": "Resume intake",
+
+    "badge.cheapest": "Cheapest",
+    "badge.closest": "Nearest",
+    "badge.bestValue": "Best value",
+    "badge.promoted": "Promoted",
   },
 
   ru: {
@@ -1147,9 +1158,9 @@ const translations: Record<Language, Record<string, string>> = {
     "search.forQuery": "по запросу",
     "search.sort.best": "Лучшее совпадение",
     "search.sort.cheapest": "Самый дешёвый",
-    "search.sort.nearest": "Ближайший",
+    "search.sort.rating": "По рейтингу",
     "search.sort.bestValue": "Лучшее предложение",
-    "search.sort.newest": "Новейший",
+    "search.sort.newest": "Новые",
     "search.type.all": "Все",
     "search.type.warehouse": "Склады",
     "search.type.moving": "Переезд",
@@ -1478,6 +1489,11 @@ const translations: Record<Language, Record<string, string>> = {
     "prov.complete": "Завершить",
     "prov.pauseIntake": "Приостановить приём",
     "prov.resumeIntake": "Возобновить приём",
+
+    "badge.cheapest": "Выгоднее",
+    "badge.closest": "Ближайший",
+    "badge.bestValue": "Лучшее предложение",
+    "badge.promoted": "Рекомендуем",
   },
 };
 

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation, Outlet } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -37,44 +37,43 @@ function ScrollToTop() {
   return null;
 }
 
-function useShowFooter() {
-  const { pathname } = useLocation();
-  const hideOn = ["/search", "/admin", "/account", "/provider/dashboard", "/provider/onboarding"];
-  return !hideOn.some(p => pathname.startsWith(p));
-}
+const WithFooter = () => <><Outlet /><Footer /></>;
+const NoFooter = () => <Outlet />;
 
 function AppContent() {
-  const showFooter = useShowFooter();
   return (
     <>
       <ScrollToTop />
       <Navbar />
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/search" element={<SearchPage />} />
-        <Route path="/warehouse/:id" element={<WarehouseDetail />} />
-        <Route path="/moving/:id" element={<MovingDetail />} />
-        <Route path="/trailer/:id" element={<TrailerDetail />} />
-        <Route path="/book" element={<ProtectedRoute><BookingPage /></ProtectedRoute>} />
-        <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
-        <Route path="/dashboard/request/:id" element={<ProtectedRoute><RequestDetailPage /></ProtectedRoute>} />
-        <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />
-        <Route path="/admin/*" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />
-        <Route path="/provider" element={<ProviderPage />} />
-        <Route path="/provider/onboarding" element={<ProviderOnboardingPage />} />
-        <Route path="/provider/dashboard" element={<ProtectedRoute allowedRoles={["provider", "admin"]}><ProviderDashboardPage /></ProtectedRoute>} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/how-it-works" element={<HowItWorksPage />} />
-        <Route path="/faq" element={<FAQPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/terms" element={<TermsPage />} />
-        <Route path="/privacy" element={<PrivacyPage />} />
-        <Route path="/cookies" element={<CookiePage />} />
-        <Route path="*" element={<NotFound />} />
+        <Route element={<NoFooter />}>
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />
+          <Route path="/admin/*" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />
+          <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
+          <Route path="/account/request/:id" element={<ProtectedRoute><RequestDetailPage /></ProtectedRoute>} />
+          <Route path="/provider/dashboard" element={<ProtectedRoute allowedRoles={["provider", "admin"]}><ProviderDashboardPage /></ProtectedRoute>} />
+          <Route path="/provider/onboarding" element={<ProtectedRoute><ProviderOnboardingPage /></ProtectedRoute>} />
+        </Route>
+        <Route element={<WithFooter />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/warehouse/:id" element={<WarehouseDetail />} />
+          <Route path="/moving/:id" element={<MovingDetail />} />
+          <Route path="/trailer/:id" element={<TrailerDetail />} />
+          <Route path="/book" element={<ProtectedRoute><BookingPage /></ProtectedRoute>} />
+          <Route path="/provider" element={<ProviderPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/how-it-works" element={<HowItWorksPage />} />
+          <Route path="/faq" element={<FAQPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/cookies" element={<CookiePage />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
       </Routes>
-      {showFooter && <Footer />}
-      <DevRoleSwitcher />
+      {import.meta.env.DEV && <DevRoleSwitcher />}
     </>
   );
 }
