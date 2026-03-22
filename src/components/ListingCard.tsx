@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { MapPin, Star, Warehouse, Truck, CarFront } from "lucide-react";
-import type { Listing } from "@/data/mockData";
+import type { Listing } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const badgeStyles: Record<string, string> = {
