@@ -49,7 +49,7 @@ export default function Navbar() {
     <header className={`sticky top-0 z-50 border-b border-border backdrop-blur-md ${isHome ? "bg-card/80" : "bg-card/95"}`}>
       <div className="container-wide flex h-20 lg:h-[88px] items-center justify-between">
         <Link to="/" className="flex-shrink-0 flex items-center">
-          <img src={ruumlyLogo} alt="Ruumly" className="h-10 sm:h-12 lg:h-[60px] w-auto object-contain" />
+          <img src={ruumlyLogo} alt="Ruumly" className="h-12 sm:h-14 lg:h-[64px] w-auto object-contain min-h-[48px]" />
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex">
