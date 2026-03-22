@@ -36,7 +36,7 @@ export default function Footer() {
                 alt="Ruumly"
                 className="h-[36px] sm:h-[42px] lg:h-[50px] w-auto object-contain"
                 style={{
-                  filter: 'brightness(0) invert(1) drop-shadow(0 0.5px 0 rgba(46,196,182,0.6)) drop-shadow(0 -0.5px 0 rgba(46,196,182,0.4))'
+                  filter: 'brightness(0) invert(1) drop-shadow(0 1px 0 rgba(46,196,182,0.8)) drop-shadow(0.5px 0 0 rgba(46,196,182,0.7)) drop-shadow(-0.5px 0 0 rgba(46,196,182,0.7)) drop-shadow(0 -0.5px 0 rgba(46,196,182,0.5))'
                 }}
               />
             </Link>
