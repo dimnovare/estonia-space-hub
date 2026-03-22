@@ -29,6 +29,7 @@ export default function BookingPage() {
   ];
 
   const [step, setStep] = useState(0);
+  const [showMobileSummary, setShowMobileSummary] = useState(false);
   const initialExtras = params.get("extras")?.split(",").filter(Boolean) || [];
   const [selectedExtras, setSelectedExtras] = useState<string[]>(initialExtras);
   const [paymentMethod, setPaymentMethod] = useState("bank");

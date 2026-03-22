@@ -24,7 +24,21 @@ export default function AdminAudit() {
     <div>
       <h1 className="font-display text-2xl font-bold">{t("admin.auditTitle")}</h1>
       <p className="mt-2 text-sm text-muted-foreground">{t("admin.auditDesc")}</p>
-      <div className="mt-6 space-y-2">
+      {/* Mobile cards */}
+      <div className="mt-4 space-y-2 md:hidden">
+        {logs.map((log) => (
+          <div key={log.id} className="rounded-xl border border-border p-3">
+            <div className="flex items-center justify-between">
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium font-mono ${actionColor(log.action)}`}>{log.action}</span>
+              <span className="text-[10px] text-muted-foreground">{log.createdAt}</span>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">{log.actor} → {log.target}</p>
+            {log.detail && <p className="mt-1 text-xs text-muted-foreground">{log.detail}</p>}
+          </div>
+        ))}
+      </div>
+      {/* Desktop list */}
+      <div className="mt-6 hidden md:block space-y-2">
         {logs.map(log => (
           <div key={log.id} className="flex items-start gap-3 rounded-xl border border-border p-4">
             <div className="mt-0.5"><Activity className="h-4 w-4 text-muted-foreground" /></div>
