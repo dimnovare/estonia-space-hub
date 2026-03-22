@@ -6,6 +6,10 @@ export function useListings(filters?: ListingFilters) {
   return useQuery({ queryKey: ["listings", filters], queryFn: () => listingService.search(filters) });
 }
 
+export function useAllListings() {
+  return useQuery({ queryKey: ["listings", "all"], queryFn: () => listingService.search() });
+}
+
 export function useListing(id: string | undefined) {
   return useQuery({ queryKey: ["listing", id], queryFn: () => listingService.getById(id!), enabled: !!id });
 }
@@ -20,7 +24,10 @@ export function useBookings() {
 
 export function useCreateBooking() {
   const qc = useQueryClient();
-  return useMutation({ mutationFn: (input: CreateBookingInput) => bookingService.create(input), onSuccess: () => qc.invalidateQueries({ queryKey: ["bookings"] }) });
+  return useMutation({
+    mutationFn: (input: CreateBookingInput) => bookingService.create(input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["bookings"] }),
+  });
 }
 
 export function useOrders() {
