@@ -972,7 +972,27 @@ function AdminUsers() {
         </select>
         <span className="text-xs text-muted-foreground">{filtered.length} {t("admin.usersFound")}</span>
       </div>
-      <div className="mt-4 overflow-x-auto rounded-xl border border-border">
+      {/* Mobile cards */}
+      <div className="mt-4 space-y-2 md:hidden">
+        {filtered.map(u => (
+          <button key={u.id} onClick={() => setSelectedUser(u)} className="w-full rounded-xl border border-border p-3 text-left hover:bg-secondary/50 transition-colors">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">{u.name.split(" ").map(n => n[0]).join("")}</div>
+                <div className="min-w-0"><p className="text-sm font-medium truncate">{u.name}</p><p className="text-[10px] text-muted-foreground truncate">{u.email}</p></div>
+              </div>
+              <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${u.status === "active" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{u.status === "active" ? t("admin.active") : t("admin.blocked")}</span>
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${u.role === "admin" ? "bg-primary/10 text-primary" : u.role === "provider" ? "bg-accent/10 text-accent" : "bg-secondary text-muted-foreground"}`}>{roleLabel(u.role)}</span>
+              <span className="text-[10px] text-muted-foreground">{u.bookingsCount} bron.</span>
+            </div>
+          </button>
+        ))}
+      </div>
+      {/* Desktop table */}
+      <div className="mt-4 hidden rounded-xl border border-border md:block">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
             <tr>
@@ -1013,6 +1033,7 @@ function AdminUsers() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
       <Dialog open={!!selectedUser} onOpenChange={o => !o && setSelectedUser(null)}>
         <DialogContent className="max-w-md">
