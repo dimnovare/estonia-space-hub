@@ -194,7 +194,8 @@ export default function ProviderDashboardPage() {
 
 // ─── Overview ───
 function ProviderOverview({ onGoToOrders }: { onGoToOrders: () => void }) {
-  const pendingOrders = MOCK_ORDERS.filter(o => o.status === "sent" || o.status === "created");
+  const { data: allOrders = [] } = useOrders();
+  const pendingOrders = allOrders.filter(o => o.status === "sent" || o.status === "created");
 
   return (
     <div>
