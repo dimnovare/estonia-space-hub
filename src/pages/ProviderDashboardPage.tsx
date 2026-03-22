@@ -347,7 +347,6 @@ function ProviderOrders() {
         <Button variant="outline" size="sm" className="gap-1" onClick={exportCSV}>
           <Download className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Ekspordi</span> CSV
         </Button>
-        </Button>
       </div>
 
       <div className="mt-4 flex gap-2 overflow-x-auto">
