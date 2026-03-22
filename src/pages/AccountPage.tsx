@@ -488,18 +488,33 @@ function AccountNotifications() {
 
 function AccountProfile() {
   const { user, updateProfile } = useAuth();
-  const [name, setName] = useState(user?.name || "");
-  const [phone, setPhone] = useState(user?.phone || "");
+  const form = useForm<ProfileForm>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: { name: user?.name || "", phone: user?.phone || "" },
+  });
+
+  const onSubmit = (data: ProfileForm) => {
+    updateProfile({ name: data.name, phone: data.phone || "" });
+    toast.success("Profiil uuendatud");
+  };
 
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">Profiili seaded</h1>
-      <div className="mt-6 max-w-lg space-y-4">
-        <div><label className="text-xs font-medium text-muted-foreground">Nimi</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={name} onChange={e => setName(e.target.value)} /></div>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 max-w-lg space-y-4">
+        <div>
+          <label className="text-xs font-medium text-muted-foreground">Nimi</label>
+          <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" {...form.register("name")} />
+          {form.formState.errors.name && <p className="mt-1 text-xs text-destructive">{form.formState.errors.name.message}</p>}
+        </div>
         <div><label className="text-xs font-medium text-muted-foreground">E-post</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-muted-foreground" value={user?.email || ""} disabled /></div>
-        <div><label className="text-xs font-medium text-muted-foreground">Telefon</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={phone} onChange={e => setPhone(e.target.value)} /></div>
-        <Button onClick={() => updateProfile({ name, phone })} className="bg-accent text-accent-foreground hover:bg-accent/90">Salvesta muudatused</Button>
-      </div>
+        <div>
+          <label className="text-xs font-medium text-muted-foreground">Telefon</label>
+          <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" {...form.register("phone")} />
+          {form.formState.errors.phone && <p className="mt-1 text-xs text-destructive">{form.formState.errors.phone.message}</p>}
+        </div>
+        <Button type="submit" className="bg-accent text-accent-foreground hover:bg-accent/90">Salvesta muudatused</Button>
+      </form>
     </div>
   );
 }
