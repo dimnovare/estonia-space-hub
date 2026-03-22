@@ -40,6 +40,8 @@ function useSidebarLinks() {
   return [
     { id: "overview", label: t("account.overview"), icon: LayoutDashboard },
     { id: "bookings", label: t("account.bookings"), icon: Package },
+    { id: "favorites", label: t("account.favorites"), icon: Heart },
+    { id: "searches", label: t("account.savedSearches"), icon: Search },
     { id: "messages", label: t("account.messages"), icon: MessageSquare },
     { id: "notifications", label: t("account.notifications"), icon: Bell },
     { id: "profile", label: t("account.profile"), icon: User },
