@@ -19,6 +19,16 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.logout": "Logi välja",
     "nav.home": "Avaleht",
     "nav.providerDashboard": "Partneri paneel",
+    "provider.nav.overview": "Ülevaade",
+    "provider.nav.orders": "Sissetulevad tellimused",
+    "provider.nav.listings": "Minu kuulutused",
+    "provider.nav.bookings": "Broneeringud",
+    "provider.nav.calendar": "Kalender",
+    "provider.nav.reviews": "Hinnangud",
+    "provider.nav.analytics": "Analüütika",
+    "provider.nav.profile": "Ettevõtte profiil",
+    "provider.nav.team": "Meeskond",
+    "provider.nav.billing": "Väljamaksed",
 
     // Hero
     "hero.title": "Leia laopinda, kolimist ja logistikat",
