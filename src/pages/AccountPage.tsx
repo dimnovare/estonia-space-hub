@@ -83,16 +83,10 @@ export default function AccountPage() {
         </nav>
       </aside>
 
-      <main className="flex-1 p-6">
-        <div className="mb-6 flex gap-2 overflow-x-auto lg:hidden">
-          {sidebarLinks.map((l) => {
-            const Icon = l.icon;
-            return (
-              <button key={l.id} onClick={() => setTab(l.id)} className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${tab === l.id ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
-                <Icon className="h-3.5 w-3.5" /> {l.label}
-              </button>
-            );
-          })}
+      <main className="flex-1 p-4 sm:p-6">
+        {/* Mobile: compact dropdown navigation */}
+        <div className="mb-4 lg:hidden">
+          <MobileAccountNav tab={tab} setTab={setTab} sidebarLinks={sidebarLinks} unreadMessages={unreadMessages} onLogout={handleLogout} />
         </div>
 
         {tab === "overview" && <AccountOverview onNavigate={setTab} />}
