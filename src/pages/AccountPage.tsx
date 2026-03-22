@@ -31,8 +31,6 @@ function useSidebarLinks() {
     { id: "overview", label: t("account.overview"), icon: LayoutDashboard },
     { id: "bookings", label: t("account.bookings"), icon: Package },
     { id: "messages", label: t("account.messages"), icon: MessageSquare },
-    { id: "favorites", label: t("account.favorites"), icon: Heart },
-    { id: "searches", label: t("account.searches"), icon: Search },
     { id: "notifications", label: t("account.notifications"), icon: Bell },
     { id: "profile", label: t("account.profile"), icon: User },
     { id: "security", label: t("account.security"), icon: Shield },
