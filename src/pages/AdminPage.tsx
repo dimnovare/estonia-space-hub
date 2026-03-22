@@ -226,7 +226,28 @@ function AdminOrders() {
           </button>
         ))}
       </div>
-      <div className="mt-6 overflow-x-auto rounded-xl border border-border">
+      {/* Mobile cards */}
+      <div className="mt-6 space-y-2 md:hidden">
+        {filtered.map((o) => {
+          const statusConf = ORDER_STATUS_CONFIG[o.status];
+          return (
+            <button key={o.id} onClick={() => setViewOrder(o)} className="w-full rounded-xl border border-border p-3 text-left hover:bg-secondary/50 transition-colors">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono text-muted-foreground">{o.id}</span>
+                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusConf.color}`}>{statusConf.label}</span>
+              </div>
+              <p className="mt-1 text-sm font-medium truncate">{o.listingTitle}</p>
+              <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+                <span>{o.customerName}</span>
+                <span className="font-medium text-foreground">€{o.total}</span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      {/* Desktop table */}
+      <div className="mt-6 hidden rounded-xl border border-border md:block">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
             <tr>
@@ -262,6 +283,7 @@ function AdminOrders() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       <Dialog open={!!viewOrder} onOpenChange={() => { setViewOrder(null); setEmailPreview(false); }}>
