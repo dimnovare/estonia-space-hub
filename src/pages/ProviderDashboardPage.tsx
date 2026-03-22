@@ -69,11 +69,15 @@ export default function ProviderDashboardPage() {
   const [notifications, setNotifications] = useState(mockProviderNotifications);
   const [showNotifications, setShowNotifications] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   const markRead = (id: number) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+
+  const currentTab = sidebarLinks.find(l => l.id === tab);
+  const CurrentIcon = currentTab?.icon || LayoutDashboard;
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">
@@ -96,20 +100,35 @@ export default function ProviderDashboardPage() {
         </nav>
       </aside>
 
-      <main className="flex-1 p-6">
-        {/* Top bar with notifications */}
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex gap-2 overflow-x-auto lg:hidden">
-            {sidebarLinks.map((l) => {
-              const Icon = l.icon;
-              return (
-                <button key={l.id} onClick={() => setTab(l.id)} className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${tab === l.id ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
-                  <Icon className="h-3.5 w-3.5" /> {l.label}
-                </button>
-              );
-            })}
+      <main className="flex-1 overflow-x-hidden p-4 sm:p-6">
+        {/* Top bar with mobile nav + notifications */}
+        <div className="mb-4 flex items-center justify-between gap-3">
+          {/* Mobile dropdown nav */}
+          <div className="flex-1 lg:hidden relative">
+            <button onClick={() => setMobileNavOpen(!mobileNavOpen)} className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium">
+              <span className="flex items-center gap-2.5"><CurrentIcon className="h-4 w-4 text-muted-foreground" />{currentTab?.label}</span>
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${mobileNavOpen ? "rotate-180" : ""}`} />
+            </button>
+            {mobileNavOpen && (
+              <>
+                <div className="fixed inset-0 z-30" onClick={() => setMobileNavOpen(false)} />
+                <div className="absolute left-0 right-0 top-full z-40 mt-1 rounded-xl border border-border bg-card p-1 shadow-xl max-h-[60vh] overflow-y-auto">
+                  {sidebarLinks.map((l) => {
+                    const Icon = l.icon;
+                    const badge = l.id === "orders" ? MOCK_ORDERS.filter(o => o.status === "sent" || o.status === "created").length : 0;
+                    return (
+                      <button key={l.id} onClick={() => { setTab(l.id); setMobileNavOpen(false); }} className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${tab === l.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
+                        <span className="flex items-center gap-2.5"><Icon className="h-4 w-4" />{l.label}</span>
+                        {badge > 0 && <span className="flex h-5 w-5 items-center justify-center rounded-full bg-warning text-[10px] font-bold text-warning-foreground">{badge}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </div>
-          <div className="ml-auto flex items-center gap-2">
+
+          <div className="ml-auto flex items-center gap-2 shrink-0">
             <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setSoundEnabled(!soundEnabled)} title={soundEnabled ? "Lülita heli välja" : "Lülita heli sisse"}>
               {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
             </Button>
@@ -121,7 +140,7 @@ export default function ProviderDashboardPage() {
                 )}
               </Button>
               {showNotifications && (
-                <div className="absolute right-0 top-10 z-50 w-80 rounded-xl border border-border bg-card shadow-xl">
+                <div className="absolute right-0 top-10 z-50 w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-card shadow-xl">
                   <div className="flex items-center justify-between border-b border-border p-3">
                     <span className="text-sm font-semibold">Teavitused</span>
                     <button onClick={markAllRead} className="text-xs text-accent hover:underline">Märgi loetuks</button>
@@ -323,10 +342,10 @@ function ProviderOrders() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">Sissetulevad tellimused</h1>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h1 className="font-display text-xl sm:text-2xl font-bold">Sissetulevad tellimused</h1>
         <Button variant="outline" size="sm" className="gap-1" onClick={exportCSV}>
-          <Download className="h-3.5 w-3.5" /> Ekspordi CSV
+          <Download className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Ekspordi</span> CSV
         </Button>
       </div>
 
@@ -347,15 +366,15 @@ function ProviderOrders() {
 
       {/* Bulk actions bar */}
       {selectedIds.size > 0 && (
-        <div className="mt-4 flex items-center gap-3 rounded-lg border border-accent/30 bg-accent/5 p-3">
+        <div className="mt-4 flex flex-wrap items-center gap-2 sm:gap-3 rounded-lg border border-accent/30 bg-accent/5 p-3">
           <span className="text-sm font-medium">{selectedIds.size} tellimust valitud</span>
           <Button size="sm" className="bg-success text-success-foreground hover:bg-success/90 gap-1" onClick={bulkAccept}>
-            <Check className="h-3.5 w-3.5" /> Kinnita kõik
+            <Check className="h-3.5 w-3.5" /> Kinnita
           </Button>
           <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1" onClick={bulkReject}>
             <X className="h-3.5 w-3.5" /> Lükka tagasi
           </Button>
-          <button onClick={() => setSelectedIds(new Set())} className="ml-auto text-xs text-muted-foreground hover:text-foreground">Tühista valik</button>
+          <button onClick={() => setSelectedIds(new Set())} className="ml-auto text-xs text-muted-foreground hover:text-foreground">Tühista</button>
         </div>
       )}
 
@@ -388,12 +407,9 @@ function ProviderOrders() {
                     </button>
                   )}
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                       <span className="text-xs font-mono text-muted-foreground">{order.id}</span>
                       <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusCfg.color}`}>{statusCfg.label}</span>
-                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${intCfg.color}`}>
-                        {integrationIcon(order.integrationType)} {intCfg.label}
-                      </span>
                     </div>
                     <div className="mt-2 text-sm font-medium">{order.listingTitle}</div>
                     <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
