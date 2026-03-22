@@ -41,7 +41,24 @@ export default function ProviderBilling() {
         </div>
       </div>
 
-      <div className="mt-6 overflow-x-auto rounded-xl border border-border">
+      {/* Mobile cards */}
+      <div className="mt-6 space-y-2 sm:hidden">
+        {[
+          { date: "01.03.2026", amount: "€980", ref: "PAY-2026-003" },
+          { date: "01.02.2026", amount: "€1,120", ref: "PAY-2026-002" },
+          { date: "01.01.2026", amount: "€870", ref: "PAY-2026-001" },
+        ].map((p, i) => (
+          <div key={i} className="rounded-xl border border-border p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">{p.amount}</span>
+              <span className="rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">{t("provider.billing.paid")}</span>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">{p.date} · {p.ref}</p>
+          </div>
+        ))}
+      </div>
+      {/* Desktop table */}
+      <div className="mt-6 hidden sm:block overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
             <tr>

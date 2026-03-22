@@ -1,5 +1,5 @@
 import { useState, useMemo, lazy, Suspense } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListings } from "@/hooks/queries";
@@ -131,10 +131,30 @@ export default function SearchPage() {
       </div>
 
       {mobileView === "map" && (
-        <div className="h-[calc(100vh-8rem)] lg:hidden">
+        <div className="h-[calc(100vh-8rem)] lg:hidden relative">
           <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary">{t("map.loading")}</div>}>
             <InteractiveMap listings={filtered} className="rounded-none" height="h-full" selectedId={selectedListingId} onMarkerClick={handleMarkerClick} />
           </Suspense>
+          {selectedListingId && (() => {
+            const selected = filtered.find(l => l.id === selectedListingId);
+            if (!selected) return null;
+            return (
+              <div className="absolute bottom-4 left-4 right-4 z-[1000]">
+                <Link to={`/${selected.type}/${selected.id}`} onClick={() => setSelectedListingId(null)}
+                  className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-lg">
+                  <img src={selected.image} alt="" className="h-16 w-20 rounded-lg object-cover shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">{selected.title}</div>
+                    <div className="text-xs text-muted-foreground">{selected.city} · {selected.address}</div>
+                    <div className="mt-1 flex items-center gap-2">
+                      <span className="text-sm font-bold text-accent">al. {selected.priceFrom}€</span>
+                      <span className="text-xs text-muted-foreground">★ {selected.rating}</span>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            );
+          })()}
         </div>
       )}
 
