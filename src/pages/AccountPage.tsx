@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { profileSchema, passwordSchema, type ProfileForm, type PasswordForm } from "@/lib/schemas";
+import { toast } from "sonner";
 import { 
   LayoutDashboard, Package, Heart, Search, Settings, Bell, Shield, CreditCard, 
   HelpCircle, ChevronRight, ChevronDown, Warehouse, Truck, CarFront, Clock, CheckCircle,
