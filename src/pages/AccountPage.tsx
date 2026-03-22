@@ -233,7 +233,8 @@ function BookingCard({ booking }: { booking: Booking }) {
   const Icon = typeIcons[booking.listingType];
   const status = statusConfig[booking.status];
   const StatusIcon = status.icon;
-  const order = MOCK_ORDERS.find(o => o.bookingId === booking.id);
+  const { data: orders = [] } = useOrders();
+  const order = orders.find(o => o.bookingId === booking.id);
 
   return (
     <>
