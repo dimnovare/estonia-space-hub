@@ -17,6 +17,7 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.myAccount": "Minu konto",
     "nav.login": "Logi sisse",
     "nav.logout": "Logi välja",
+    "nav.home": "Avaleht",
     "nav.providerDashboard": "Partneri paneel",
 
     // Hero
