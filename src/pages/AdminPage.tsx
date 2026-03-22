@@ -896,7 +896,20 @@ function AdminInquiries() {
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">{t("admin.inquiries")}</h1>
-      <div className="mt-6 overflow-x-auto rounded-xl border border-border">
+      {/* Mobile cards */}
+      <div className="mt-4 space-y-2 sm:hidden">
+        {inquiries.map(inq => (
+          <button key={inq.id} onClick={() => openView(inq)} className="w-full rounded-xl border border-border p-3 text-left hover:bg-secondary/50 transition-colors">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">{inq.customer}</span>
+              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inq.status === "new" ? "bg-accent/10 text-accent" : inq.status === "answered" ? "bg-info/10 text-info" : "bg-muted text-muted-foreground"}`}>{statusLabel(inq.status)}</span>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">{inq.listing} · {inq.date}</p>
+          </button>
+        ))}
+      </div>
+      {/* Desktop table */}
+      <div className="mt-6 hidden rounded-xl border border-border sm:block">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
             <tr>
