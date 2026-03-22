@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { listingService, bookingService, orderService, supplierService, userService, notificationService, invoiceService, messageService, auditService, integrationSettingsService, routingRuleService } from "@/services";
 import type { ListingFilters, CreateBookingInput } from "@/services/types";
+import { toast } from "sonner";
 
 export function useListings(filters?: ListingFilters) {
   return useQuery({ queryKey: ["listings", filters], queryFn: () => listingService.search(filters) });
@@ -26,7 +27,13 @@ export function useCreateBooking() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: CreateBookingInput) => bookingService.create(input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["bookings"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["bookings"] });
+      toast.success("Broneering loodud!");
+    },
+    onError: () => {
+      toast.error("Midagi läks valesti. Palun proovige uuesti.");
+    },
   });
 }
 
