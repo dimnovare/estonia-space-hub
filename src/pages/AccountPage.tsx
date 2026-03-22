@@ -99,13 +99,31 @@ export default function AccountPage() {
   const handleLogout = () => { logout(); navigate("/"); };
   const unreadMessages = MOCK_MESSAGES.filter(m => !m.read && m.from !== "customer").length;
 
+  const { role } = useAuth();
+
+  const roleDashboardLinks = role === "admin"
+    ? [{ to: "/admin", label: "Admin", icon: "🛡️" }]
+    : role === "provider"
+    ? [{ to: "/provider/dashboard", label: t("nav.providerDashboard") || "Partneri paneel", icon: "📊" }]
+    : [];
+
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">
       <aside className="hidden w-56 shrink-0 border-r border-border bg-card lg:block">
         <div className="p-4">
           <p className="text-sm font-semibold">{user?.name}</p>
           <p className="text-xs text-muted-foreground">{user?.email}</p>
+          <span className="mt-1 inline-block rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent capitalize">{role}</span>
         </div>
+        {roleDashboardLinks.length > 0 && (
+          <div className="px-2 mb-2">
+            {roleDashboardLinks.map(dl => (
+              <Link key={dl.to} to={dl.to} className="flex items-center gap-2 rounded-lg border border-dashed border-accent/30 bg-accent/5 px-3 py-2 text-sm font-medium text-accent hover:bg-accent/10 transition-colors">
+                <span>{dl.icon}</span> {dl.label} <ChevronRight className="ml-auto h-3.5 w-3.5" />
+              </Link>
+            ))}
+          </div>
+        )}
         <nav className="space-y-0.5 px-2">
           {sidebarLinks.map((l) => {
             const Icon = l.icon;
@@ -127,6 +145,15 @@ export default function AccountPage() {
       <main className="flex-1 p-4 sm:p-6">
         {/* Mobile: compact dropdown navigation */}
         <div className="mb-4 lg:hidden">
+          {roleDashboardLinks.length > 0 && (
+            <div className="mb-2 flex gap-2">
+              {roleDashboardLinks.map(dl => (
+                <Link key={dl.to} to={dl.to} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-dashed border-accent/30 bg-accent/5 px-3 py-2 text-xs font-medium text-accent">
+                  <span>{dl.icon}</span> {dl.label}
+                </Link>
+              ))}
+            </div>
+          )}
           <MobileAccountNav tab={tab} setTab={setTab} sidebarLinks={sidebarLinks} unreadMessages={unreadMessages} onLogout={handleLogout} />
         </div>
 
