@@ -1,5 +1,5 @@
 import { MapPin } from "lucide-react";
-import type { Listing } from "@/data/mockData";
+import type { Listing } from "@/services/types";
 
 interface MapPlaceholderProps {
   listings?: Listing[];

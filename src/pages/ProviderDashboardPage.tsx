@@ -8,7 +8,9 @@ import {
   Image, Upload, Trash2, UserPlus, ChevronLeft, Bell, Volume2, VolumeX, Download,
   FileText, Ban, Lock, Unlock, ChevronDown, AlertCircle
 } from "lucide-react";
-import { MOCK_ORDERS, ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG, type Order } from "@/data/mockOrders";
+import { useOrders } from "@/hooks/useOrders";
+import { ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
+import type { Order } from "@/services/types";
 import EmailTemplatePreview from "@/components/EmailTemplatePreview";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -77,6 +79,7 @@ export default function ProviderDashboardPage() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const { data: allOrders = [] } = useOrders();
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -96,7 +99,7 @@ export default function ProviderDashboardPage() {
         <nav className="space-y-0.5 px-2">
           {sidebarLinks.map((l) => {
             const Icon = l.icon;
-            const badge = l.id === "orders" ? MOCK_ORDERS.filter(o => o.status === "sent" || o.status === "created").length : 0;
+            const badge = l.id === "orders" ? allOrders.filter(o => o.status === "sent" || o.status === "created").length : 0;
             return (
               <button key={l.id} onClick={() => setTab(l.id)} className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors ${tab === l.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
                 <span className="flex items-center gap-2.5"><Icon className="h-4 w-4" />{l.label}</span>
@@ -122,7 +125,7 @@ export default function ProviderDashboardPage() {
                 <div className="absolute left-0 right-0 top-full z-40 mt-1 rounded-xl border border-border bg-card p-1 shadow-xl max-h-[60vh] overflow-y-auto">
                   {sidebarLinks.map((l) => {
                     const Icon = l.icon;
-                    const badge = l.id === "orders" ? MOCK_ORDERS.filter(o => o.status === "sent" || o.status === "created").length : 0;
+                    const badge = l.id === "orders" ? allOrders.filter(o => o.status === "sent" || o.status === "created").length : 0;
                     return (
                       <button key={l.id} onClick={() => { setTab(l.id); setMobileNavOpen(false); }} className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${tab === l.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
                         <span className="flex items-center gap-2.5"><Icon className="h-4 w-4" />{l.label}</span>
@@ -191,7 +194,8 @@ export default function ProviderDashboardPage() {
 
 // ─── Overview ───
 function ProviderOverview({ onGoToOrders }: { onGoToOrders: () => void }) {
-  const pendingOrders = MOCK_ORDERS.filter(o => o.status === "sent" || o.status === "created");
+  const { data: allOrders = [] } = useOrders();
+  const pendingOrders = allOrders.filter(o => o.status === "sent" || o.status === "created");
 
   return (
     <div>
@@ -266,7 +270,14 @@ function ProviderOverview({ onGoToOrders }: { onGoToOrders: () => void }) {
 
 // ─── Orders with Bulk Actions ───
 function ProviderOrders() {
-  const [orders, setOrders] = useState(MOCK_ORDERS);
+  const { data: initialOrders = [] } = useOrders();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [initialized, setInitialized] = useState(false);
+
+  if (initialOrders.length > 0 && !initialized) {
+    setOrders(initialOrders);
+    setInitialized(true);
+  }
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [filter, setFilter] = useState<string>("all");
   const [showEmail, setShowEmail] = useState(false);

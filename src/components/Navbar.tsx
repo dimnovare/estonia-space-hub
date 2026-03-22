@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { LANGUAGES } from "@/i18n/translations";
 import { useAuth } from "@/contexts/AuthContext";
-import { MOCK_NOTIFICATIONS } from "@/data/mockBookings";
+import { useNotifications } from "@/hooks/useNotifications";
 import ruumlyLogo from "/ruumly-logo.png";
 
 const navLinks = [
@@ -32,7 +32,8 @@ export default function Navbar() {
   const currentType = searchParams.get("type");
   const { language, setLanguage, t } = useLanguage();
   const { user, isAuthenticated, role, logout } = useAuth();
-  const unreadCount = MOCK_NOTIFICATIONS.filter((n) => !n.read).length;
+  const { data: notifications = [] } = useNotifications();
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const handleLogout = () => {
     logout();

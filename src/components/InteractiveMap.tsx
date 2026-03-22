@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import type { Listing } from "@/data/mockData";
+import type { Listing } from "@/services/types";
 
 interface InteractiveMapProps {
   listings?: Listing[];

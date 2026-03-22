@@ -3,7 +3,7 @@ import { Mail, Zap, Hand, RefreshCw, Server, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supplierService } from "@/services";
-import { INTEGRATION_TYPE_CONFIG } from "@/data/mockOrders";
+import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
 import type { Supplier } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
 

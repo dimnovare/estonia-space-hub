@@ -1,4 +1,5 @@
-import { Order, generateOrderEmailPreview } from "@/data/mockOrders";
+import type { Order } from "@/services/types";
+import { generateOrderEmailPreview } from "@/lib/constants";
 
 interface EmailTemplatePreviewProps {
   order: Order;

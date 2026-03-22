@@ -2,8 +2,9 @@ import { useState, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, Star, MapPin, ChevronDown, ChevronUp, Users, CheckCircle, TrendingUp, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ALL_LISTINGS } from "@/data/mockData";
+import { useFeaturedListings, useAllListings } from "@/hooks/queries";
 import ListingCard from "@/components/ListingCard";
+import { SkeletonCard } from "@/components/SkeletonCard";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
@@ -14,6 +15,10 @@ export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const { t } = useLanguage();
+
+  const { data: featured = [], isLoading: featuredLoading } = useFeaturedListings();
+  const { data: allResult } = useAllListings();
+  const allListings = allResult?.data || [];
 
   const categories = [
     { key: "all", label: t("cat.all"), icon: Search },
@@ -48,8 +53,6 @@ export default function HomePage() {
     if (activeCategory !== "all") params.set("type", activeCategory);
     navigate(`/search?${params.toString()}`);
   };
-
-  const featured = ALL_LISTINGS.filter((l) => l.badge).slice(0, 4);
 
   return (
     <div>
@@ -115,7 +118,7 @@ export default function HomePage() {
       {/* Map preview */}
       <section className="container-wide mt-0 sm:-mt-6 relative z-10">
         <Suspense fallback={<div className="h-[350px] rounded-xl bg-secondary flex items-center justify-center text-muted-foreground">{t("map.loading")}</div>}>
-          <InteractiveMap listings={ALL_LISTINGS} height="h-[280px] md:h-[350px]" />
+          <InteractiveMap listings={allListings} height="h-[280px] md:h-[350px]" />
         </Suspense>
       </section>
 
@@ -152,9 +155,10 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {featured.map((l) => (
-              <ListingCard key={l.id} listing={l} />
-            ))}
+            {featuredLoading
+              ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
+              : featured.map((l) => <ListingCard key={l.id} listing={l} />)
+            }
           </div>
           <div className="mt-6 text-center md:hidden">
             <Link to="/search"><Button variant="outline">{t("featured.viewAllMobile")}</Button></Link>
