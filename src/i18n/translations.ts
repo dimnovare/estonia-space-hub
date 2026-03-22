@@ -510,6 +510,12 @@ const translations: Record<Language, Record<string, string>> = {
     "prov.complete": "Märgi lõpetatuks",
     "prov.pauseIntake": "Peata vastuvõtt",
     "prov.resumeIntake": "Jätka vastuvõttu",
+
+    // Badges
+    "badge.cheapest": "Soodsaim",
+    "badge.closest": "Lähim",
+    "badge.bestValue": "Parim pakkumine",
+    "badge.promoted": "Soovitatud",
   },
 
   en: {
