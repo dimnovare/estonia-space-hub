@@ -93,14 +93,7 @@ export default function BookingPage() {
             ))}
           </div>
 
-          {phase === "done" && supplier && integrationLabel && (
-            <div className="mt-4 flex items-center justify-center gap-2 rounded-lg border border-border bg-secondary/30 p-3">
-              <IntIcon className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">Integratsioon: </span>
-              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${integrationLabel.color}`}>{integrationLabel.label}</span>
-              <span className="text-xs text-muted-foreground">· {supplier.name}</span>
-            </div>
-          )}
+          
 
           {phase === "done" && (
             <div className="mt-6 flex justify-center gap-3">
