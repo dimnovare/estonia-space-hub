@@ -41,6 +41,47 @@ function useSidebarLinks() {
   ];
 }
 
+function MobileAccountNav({ tab, setTab, sidebarLinks, unreadMessages, onLogout }: {
+  tab: string; setTab: (t: string) => void;
+  sidebarLinks: { id: string; label: string; icon: typeof LayoutDashboard }[];
+  unreadMessages: number; onLogout: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const { t } = useLanguage();
+  const current = sidebarLinks.find(l => l.id === tab);
+  const CurrentIcon = current?.icon || LayoutDashboard;
+
+  return (
+    <div className="relative">
+      <button onClick={() => setOpen(!open)} className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium">
+        <span className="flex items-center gap-2.5"><CurrentIcon className="h-4 w-4 text-muted-foreground" />{current?.label || tab}</span>
+        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
+          <div className="absolute left-0 right-0 top-full z-40 mt-1 rounded-xl border border-border bg-card p-1 shadow-xl max-h-[60vh] overflow-y-auto">
+            {sidebarLinks.map((l) => {
+              const Icon = l.icon;
+              const active = tab === l.id;
+              const unread = l.id === "notifications" ? MOCK_NOTIFICATIONS.filter(n => !n.read).length : l.id === "messages" ? unreadMessages : 0;
+              return (
+                <button key={l.id} onClick={() => { setTab(l.id); setOpen(false); }} className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
+                  <span className="flex items-center gap-2.5"><Icon className="h-4 w-4" />{l.label}</span>
+                  {unread > 0 && <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">{unread}</span>}
+                </button>
+              );
+            })}
+            <button onClick={() => { onLogout(); setOpen(false); }} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10">
+              <LogOut className="h-4 w-4" /> {t("account.logout")}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function AccountPage() {
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") || "overview";

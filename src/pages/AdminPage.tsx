@@ -65,6 +65,10 @@ export default function AdminPage() {
     { id: "settings", label: t("admin.settings"), icon: Settings },
   ];
 
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const currentTab = sidebarLinks.find(l => l.id === activeTab);
+  const CurrentIcon = currentTab?.icon || LayoutDashboard;
+
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">
       <aside className="hidden w-56 shrink-0 border-r border-border bg-card lg:block">
@@ -84,16 +88,28 @@ export default function AdminPage() {
           })}
         </nav>
       </aside>
-      <main className="flex-1 overflow-y-auto p-6">
-        <div className="mb-4 flex gap-2 overflow-x-auto lg:hidden">
-          {sidebarLinks.map((l) => {
-            const Icon = l.icon;
-            return (
-              <button key={l.id} onClick={() => setActiveTab(l.id)} className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${activeTab === l.id ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
-                <Icon className="h-3.5 w-3.5" /> {l.label}
-              </button>
-            );
-          })}
+      <main className="flex-1 overflow-x-hidden p-4 sm:p-6">
+        {/* Mobile: dropdown nav */}
+        <div className="mb-4 lg:hidden relative">
+          <button onClick={() => setMobileNavOpen(!mobileNavOpen)} className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium">
+            <span className="flex items-center gap-2.5"><CurrentIcon className="h-4 w-4 text-muted-foreground" />{currentTab?.label}</span>
+            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${mobileNavOpen ? "rotate-180" : ""}`} />
+          </button>
+          {mobileNavOpen && (
+            <>
+              <div className="fixed inset-0 z-30" onClick={() => setMobileNavOpen(false)} />
+              <div className="absolute left-0 right-0 top-full z-40 mt-1 rounded-xl border border-border bg-card p-1 shadow-xl max-h-[60vh] overflow-y-auto">
+                {sidebarLinks.map((l) => {
+                  const Icon = l.icon;
+                  return (
+                    <button key={l.id} onClick={() => { setActiveTab(l.id); setMobileNavOpen(false); }} className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${activeTab === l.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
+                      <Icon className="h-4 w-4" />{l.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
         {activeTab === "dashboard" && <AdminDashboard />}
         {activeTab === "listings" && <AdminListings />}
