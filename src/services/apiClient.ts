@@ -1,0 +1,37 @@
+const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+
+class ApiClient {
+  private getToken(): string | null {
+    try {
+      const auth = localStorage.getItem("ruumly-auth");
+      if (auth) return JSON.parse(auth).token || null;
+    } catch {}
+    return null;
+  }
+
+  async request<T>(endpoint: string, config: { method?: string; body?: unknown } = {}): Promise<T> {
+    const { method = "GET", body } = config;
+    const token = this.getToken();
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (response.status === 401) {
+      localStorage.removeItem("ruumly-auth");
+      window.location.href = "/login";
+      throw new Error("Unauthorized");
+    }
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    return response.json();
+  }
+
+  get<T>(endpoint: string) { return this.request<T>(endpoint); }
+  post<T>(endpoint: string, body: unknown) { return this.request<T>(endpoint, { method: "POST", body }); }
+  patch<T>(endpoint: string, body: unknown) { return this.request<T>(endpoint, { method: "PATCH", body }); }
+  delete<T>(endpoint: string) { return this.request<T>(endpoint, { method: "DELETE" }); }
+}
+
+export const apiClient = new ApiClient();

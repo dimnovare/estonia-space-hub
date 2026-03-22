@@ -1,15 +1,6 @@
-import { Link, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import ruumlyLogo from "/ruumly-logo.png";
-
-function ScrollToTop() {
-  const { pathname } = useLocation();
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-  return null;
-}
 
 export default function Footer() {
   const { t } = useLanguage();
@@ -35,9 +26,7 @@ export default function Footer() {
   };
 
   return (
-    <>
-      <ScrollToTop />
-      <footer className="border-t border-border bg-primary text-primary-foreground">
+    <footer className="border-t border-border bg-primary text-primary-foreground">
         <div className="container-wide py-12">
           <div className="grid gap-8 md:grid-cols-4">
             <div>

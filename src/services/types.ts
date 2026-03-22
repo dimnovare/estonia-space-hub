@@ -188,3 +188,93 @@ export interface AuditLogEntry {
   detail?: string;
   createdAt: string;
 }
+
+// ─── Listing Types ───
+
+export interface ListingBase {
+  id: string;
+  type: ListingType;
+  supplierId: string;
+  title: string;
+  provider: string;
+  address: string;
+  city: string;
+  lat: number;
+  lng: number;
+  priceFrom: number;
+  priceUnit: string;
+  image: string;
+  images: string[];
+  availableNow: boolean;
+  rating: number;
+  reviewCount: number;
+  badge?: "cheapest" | "closest" | "best-value" | "promoted";
+  description: string;
+}
+
+export interface WarehouseListing extends ListingBase {
+  type: "warehouse";
+  size: number;
+  sizeUnit: string;
+  heated: boolean;
+  indoor: boolean;
+  access24_7: boolean;
+  security: boolean;
+  loadingDock: boolean;
+  forklift: boolean;
+  shortTerm: boolean;
+  longTerm: boolean;
+  features: string[];
+}
+
+export interface MovingListing extends ListingBase {
+  type: "moving";
+  serviceArea: string[];
+  withVan: boolean;
+  packingHelp: boolean;
+  loadingHelp: boolean;
+  pricingModel: "fixed" | "hourly";
+  services: string[];
+}
+
+export interface TrailerListing extends ListingBase {
+  type: "trailer";
+  trailerType: string;
+  weightClass: string;
+  requirements: string[];
+}
+
+export type Listing = WarehouseListing | MovingListing | TrailerListing;
+
+export interface ListingFilters {
+  type?: ListingType;
+  city?: string;
+  priceMax?: number;
+  features?: string[];
+  availableNow?: boolean;
+  query?: string;
+  sort?: "best" | "cheapest" | "rating" | "newest";
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+}
+
+export interface CreateBookingInput {
+  listingId: string;
+  startDate: string;
+  endDate?: string;
+  duration: string;
+  extras: string[];
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  paymentMethod: "bank" | "card" | "later";
+  notes?: string;
+}

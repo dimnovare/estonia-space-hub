@@ -13,6 +13,8 @@ export default function DevRoleSwitcher() {
   const { role, switchRole } = useAuth();
   const [open, setOpen] = useState(false);
 
+  if (import.meta.env.PROD) return null;
+
   return (
     <div className="fixed bottom-4 right-4 z-[100]">
       {open && (

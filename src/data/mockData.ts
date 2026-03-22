@@ -1,273 +1,72 @@
 import { Warehouse, Truck, CarFront } from "lucide-react";
+import type { WarehouseListing, MovingListing, TrailerListing, Listing, ListingType } from "@/services/types";
 
-export type ListingType = "warehouse" | "moving" | "trailer";
+export type { WarehouseListing, MovingListing, TrailerListing, Listing, ListingType };
 
-export interface WarehouseListing {
-  id: string;
-  type: "warehouse";
-  title: string;
-  provider: string;
-  address: string;
-  city: string;
-  lat: number;
-  lng: number;
-  priceFrom: number;
-  priceUnit: string;
-  size: number;
-  sizeUnit: string;
-  image: string;
-  images: string[];
-  heated: boolean;
-  indoor: boolean;
-  access24_7: boolean;
-  security: boolean;
-  loadingDock: boolean;
-  forklift: boolean;
-  shortTerm: boolean;
-  longTerm: boolean;
-  availableNow: boolean;
-  rating: number;
-  reviewCount: number;
-  badge?: "cheapest" | "closest" | "best-value" | "promoted";
-  description: string;
-  features: string[];
-}
-
-export interface MovingListing {
-  id: string;
-  type: "moving";
-  title: string;
-  provider: string;
-  address: string;
-  city: string;
-  lat: number;
-  lng: number;
-  priceFrom: number;
-  priceUnit: string;
-  image: string;
-  images: string[];
-  serviceArea: string[];
-  withVan: boolean;
-  packingHelp: boolean;
-  loadingHelp: boolean;
-  pricingModel: "fixed" | "hourly";
-  availableNow: boolean;
-  rating: number;
-  reviewCount: number;
-  badge?: "cheapest" | "closest" | "best-value" | "promoted";
-  description: string;
-  services: string[];
-}
-
-export interface TrailerListing {
-  id: string;
-  type: "trailer";
-  title: string;
-  provider: string;
-  address: string;
-  city: string;
-  lat: number;
-  lng: number;
-  priceFrom: number;
-  priceUnit: string;
-  image: string;
-  images: string[];
-  trailerType: string;
-  weightClass: string;
-  availableNow: boolean;
-  rating: number;
-  reviewCount: number;
-  badge?: "cheapest" | "closest" | "best-value" | "promoted";
-  description: string;
-  requirements: string[];
-}
-
-export type Listing = WarehouseListing | MovingListing | TrailerListing;
-
-// Accurate Estonian coordinates
 export const WAREHOUSES: WarehouseListing[] = [
   {
-    id: "w1",
-    type: "warehouse",
-    title: "Laobox Tallinn Kesklinn",
-    provider: "Laobox OÜ",
-    address: "Pärnu mnt 139",
-    city: "Tallinn",
-    lat: 59.4127,
-    lng: 24.7277,
-    priceFrom: 49,
-    priceUnit: "€/kuu",
-    size: 5,
-    sizeUnit: "m²",
+    id: "w1", type: "warehouse", supplierId: "sup-1",
+    title: "Laobox Tallinn Kesklinn", provider: "Laobox OÜ", address: "Pärnu mnt 139", city: "Tallinn",
+    lat: 59.4127, lng: 24.7277, priceFrom: 49, priceUnit: "€/kuu", size: 5, sizeUnit: "m²",
     image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&h=400&fit=crop",
-    images: [
-      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1553413077-190dd305871c?w=800&h=600&fit=crop",
-    ],
-    heated: true,
-    indoor: true,
-    access24_7: true,
-    security: true,
-    loadingDock: false,
-    forklift: false,
-    shortTerm: true,
-    longTerm: true,
-    availableNow: true,
-    rating: 4.8,
-    reviewCount: 124,
-    badge: "promoted",
+    images: ["https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&h=600&fit=crop", "https://images.unsplash.com/photo-1553413077-190dd305871c?w=800&h=600&fit=crop"],
+    heated: true, indoor: true, access24_7: true, security: true, loadingDock: false, forklift: false,
+    shortTerm: true, longTerm: true, availableNow: true, rating: 4.8, reviewCount: 124, badge: "promoted",
     description: "Kaasaegne iseteeninduslik laoruum Tallinna kesklinnas. Ideaalne nii eraklientidele kui ettevõtetele.",
     features: ["Kliimakontroll", "VideoValve 24/7", "Iseteenindus", "Lihtne juurdepääs"],
   },
   {
-    id: "w2",
-    type: "warehouse",
-    title: "MiniLadu Tartu",
-    provider: "MiniLadu AS",
-    address: "Ringtee 75",
-    city: "Tartu",
-    lat: 58.3726,
-    lng: 26.7158,
-    priceFrom: 29,
-    priceUnit: "€/kuu",
-    size: 3,
-    sizeUnit: "m²",
+    id: "w2", type: "warehouse", supplierId: "sup-2",
+    title: "MiniLadu Tartu", provider: "MiniLadu AS", address: "Ringtee 75", city: "Tartu",
+    lat: 58.3726, lng: 26.7158, priceFrom: 29, priceUnit: "€/kuu", size: 3, sizeUnit: "m²",
     image: "https://images.unsplash.com/photo-1553413077-190dd305871c?w=600&h=400&fit=crop",
-    images: [
-      "https://images.unsplash.com/photo-1553413077-190dd305871c?w=800&h=600&fit=crop",
-    ],
-    heated: false,
-    indoor: true,
-    access24_7: true,
-    security: true,
-    loadingDock: true,
-    forklift: false,
-    shortTerm: true,
-    longTerm: true,
-    availableNow: true,
-    rating: 4.5,
-    reviewCount: 67,
-    badge: "cheapest",
+    images: ["https://images.unsplash.com/photo-1553413077-190dd305871c?w=800&h=600&fit=crop"],
+    heated: false, indoor: true, access24_7: true, security: true, loadingDock: true, forklift: false,
+    shortTerm: true, longTerm: true, availableNow: true, rating: 4.5, reviewCount: 67, badge: "cheapest",
     description: "Soodne laoruum Tartus. Sobiv mööbli, hooajaasjade või ärikauba hoiustamiseks.",
     features: ["Laadimisplatvorm", "Valve", "Paindlikud lepingud"],
   },
   {
-    id: "w3",
-    type: "warehouse",
-    title: "SecureStore Ülemiste",
-    provider: "SecureStore OÜ",
-    address: "Suur-Sõjamäe 10a",
-    city: "Tallinn",
-    lat: 59.4219,
-    lng: 24.7955,
-    priceFrom: 79,
-    priceUnit: "€/kuu",
-    size: 10,
-    sizeUnit: "m²",
+    id: "w3", type: "warehouse", supplierId: "sup-3",
+    title: "SecureStore Ülemiste", provider: "SecureStore OÜ", address: "Suur-Sõjamäe 10a", city: "Tallinn",
+    lat: 59.4219, lng: 24.7955, priceFrom: 79, priceUnit: "€/kuu", size: 10, sizeUnit: "m²",
     image: "https://images.unsplash.com/photo-1565610222536-ef125c59da2e?w=600&h=400&fit=crop",
-    images: [
-      "https://images.unsplash.com/photo-1565610222536-ef125c59da2e?w=800&h=600&fit=crop",
-    ],
-    heated: true,
-    indoor: true,
-    access24_7: true,
-    security: true,
-    loadingDock: true,
-    forklift: true,
-    shortTerm: false,
-    longTerm: true,
-    availableNow: false,
-    rating: 4.9,
-    reviewCount: 203,
-    badge: "best-value",
+    images: ["https://images.unsplash.com/photo-1565610222536-ef125c59da2e?w=800&h=600&fit=crop"],
+    heated: true, indoor: true, access24_7: true, security: true, loadingDock: true, forklift: true,
+    shortTerm: false, longTerm: true, availableNow: false, rating: 4.9, reviewCount: 203, badge: "best-value",
     description: "Kõrgeima turvatasemega laoruum Ülemiste piirkonnas. Ideaalne väärtuslikuma kauba hoiustamiseks.",
     features: ["Kaheastmeline turvakontroll", "Kindlustus", "Tõstuk", "Laadimisplatvorm", "Kliimakontroll"],
   },
   {
-    id: "w4",
-    type: "warehouse",
-    title: "Pärnu Laokeskus",
-    provider: "Pärnu Ladu OÜ",
-    address: "Savi 25",
-    city: "Pärnu",
-    lat: 58.3859,
-    lng: 24.4971,
-    priceFrom: 35,
-    priceUnit: "€/kuu",
-    size: 6,
-    sizeUnit: "m²",
+    id: "w4", type: "warehouse", supplierId: "sup-6",
+    title: "Pärnu Laokeskus", provider: "Pärnu Ladu OÜ", address: "Savi 25", city: "Pärnu",
+    lat: 58.3859, lng: 24.4971, priceFrom: 35, priceUnit: "€/kuu", size: 6, sizeUnit: "m²",
     image: "https://images.unsplash.com/photo-1600585152220-90363fe7e115?w=600&h=400&fit=crop",
     images: [],
-    heated: false,
-    indoor: true,
-    access24_7: false,
-    security: true,
-    loadingDock: false,
-    forklift: false,
-    shortTerm: true,
-    longTerm: true,
-    availableNow: true,
-    rating: 4.2,
-    reviewCount: 31,
+    heated: false, indoor: true, access24_7: false, security: true, loadingDock: false, forklift: false,
+    shortTerm: true, longTerm: true, availableNow: true, rating: 4.2, reviewCount: 31,
     description: "Taskukohane laopind Pärnus. Sobib hooajaasjade ja väikeettevõtte vajadusteks.",
     features: ["Valve", "Hea asukoht", "Paindlik leping"],
   },
   {
-    id: "w5",
-    type: "warehouse",
-    title: "NordicStorage Tallinn",
-    provider: "NordicStorage OÜ",
-    address: "Kadaka tee 56",
-    city: "Tallinn",
-    lat: 59.3956,
-    lng: 24.6651,
-    priceFrom: 59,
-    priceUnit: "€/kuu",
-    size: 8,
-    sizeUnit: "m²",
+    id: "w5", type: "warehouse", supplierId: "sup-1",
+    title: "NordicStorage Tallinn", provider: "NordicStorage OÜ", address: "Kadaka tee 56", city: "Tallinn",
+    lat: 59.3956, lng: 24.6651, priceFrom: 59, priceUnit: "€/kuu", size: 8, sizeUnit: "m²",
     image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&h=400&fit=crop",
     images: [],
-    heated: true,
-    indoor: true,
-    access24_7: true,
-    security: true,
-    loadingDock: true,
-    forklift: true,
-    shortTerm: false,
-    longTerm: true,
-    availableNow: true,
-    rating: 4.6,
-    reviewCount: 89,
-    badge: "closest",
+    heated: true, indoor: true, access24_7: true, security: true, loadingDock: true, forklift: true,
+    shortTerm: false, longTerm: true, availableNow: true, rating: 4.6, reviewCount: 89, badge: "closest",
     description: "Professionaalne laohoone Mustamäel. Ideaalne ettevõtetele, kes vajavad regulaarset juurdepääsu kaubale.",
     features: ["Tõstuk", "Laadimisplatvorm", "24/7 juurdepääs", "Kindlustus", "Kliimakontroll"],
   },
   {
-    id: "w6",
-    type: "warehouse",
-    title: "Viljandi MiniLadu",
-    provider: "Viljandi Laod OÜ",
-    address: "Vaksali 12",
-    city: "Viljandi",
-    lat: 58.3639,
-    lng: 25.5900,
-    priceFrom: 22,
-    priceUnit: "€/kuu",
-    size: 4,
-    sizeUnit: "m²",
+    id: "w6", type: "warehouse", supplierId: "sup-2",
+    title: "Viljandi MiniLadu", provider: "Viljandi Laod OÜ", address: "Vaksali 12", city: "Viljandi",
+    lat: 58.3639, lng: 25.5900, priceFrom: 22, priceUnit: "€/kuu", size: 4, sizeUnit: "m²",
     image: "https://images.unsplash.com/photo-1553413077-190dd305871c?w=600&h=400&fit=crop",
     images: [],
-    heated: false,
-    indoor: true,
-    access24_7: false,
-    security: true,
-    loadingDock: false,
-    forklift: false,
-    shortTerm: true,
-    longTerm: true,
-    availableNow: true,
-    rating: 4.0,
-    reviewCount: 15,
+    heated: false, indoor: true, access24_7: false, security: true, loadingDock: false, forklift: false,
+    shortTerm: true, longTerm: true, availableNow: true, rating: 4.0, reviewCount: 15,
     description: "Odav ladu Viljandis. Sobib hooajaasjade ja väiksema kauba hoiustamiseks.",
     features: ["Valve", "Paindlik leping"],
   },
@@ -275,103 +74,50 @@ export const WAREHOUSES: WarehouseListing[] = [
 
 export const MOVING_SERVICES: MovingListing[] = [
   {
-    id: "m1",
-    type: "moving",
-    title: "KoliExpress",
-    provider: "KoliExpress OÜ",
-    address: "Peterburi tee 81",
-    city: "Tallinn",
-    lat: 59.4369,
-    lng: 24.7926,
-    priceFrom: 45,
-    priceUnit: "€/h",
+    id: "m1", type: "moving", supplierId: "sup-4",
+    title: "KoliExpress", provider: "KoliExpress OÜ", address: "Peterburi tee 81", city: "Tallinn",
+    lat: 59.4369, lng: 24.7926, priceFrom: 45, priceUnit: "€/h",
     image: "https://images.unsplash.com/photo-1600518464441-9154a4dea21b?w=600&h=400&fit=crop",
-    images: [
-      "https://images.unsplash.com/photo-1600518464441-9154a4dea21b?w=800&h=600&fit=crop",
-    ],
+    images: ["https://images.unsplash.com/photo-1600518464441-9154a4dea21b?w=800&h=600&fit=crop"],
     serviceArea: ["Tallinn", "Harjumaa", "Kogu Eesti"],
-    withVan: true,
-    packingHelp: true,
-    loadingHelp: true,
-    pricingModel: "hourly",
-    availableNow: true,
-    rating: 4.7,
-    reviewCount: 189,
-    badge: "promoted",
+    withVan: true, packingHelp: true, loadingHelp: true, pricingModel: "hourly",
+    availableNow: true, rating: 4.7, reviewCount: 189, badge: "promoted",
     description: "Kiire ja usaldusväärne kolimisteenus Tallinnas ja üle Eesti. Pakume ka pakkimis- ja laadimisabi.",
     services: ["Kolimine", "Pakkimine", "Laadimine", "Mööbli kokkupanek", "Prügi äravedu"],
   },
   {
-    id: "m2",
-    type: "moving",
-    title: "VeoPro Tartu",
-    provider: "VeoPro OÜ",
-    address: "Turu 45",
-    city: "Tartu",
-    lat: 58.3776,
-    lng: 26.7290,
-    priceFrom: 35,
-    priceUnit: "€/h",
+    id: "m2", type: "moving", supplierId: "sup-2",
+    title: "VeoPro Tartu", provider: "VeoPro OÜ", address: "Turu 45", city: "Tartu",
+    lat: 58.3776, lng: 26.7290, priceFrom: 35, priceUnit: "€/h",
     image: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&h=400&fit=crop",
     images: [],
     serviceArea: ["Tartu", "Tartumaa"],
-    withVan: true,
-    packingHelp: false,
-    loadingHelp: true,
-    pricingModel: "hourly",
-    availableNow: true,
-    rating: 4.4,
-    reviewCount: 78,
-    badge: "cheapest",
+    withVan: true, packingHelp: false, loadingHelp: true, pricingModel: "hourly",
+    availableNow: true, rating: 4.4, reviewCount: 78, badge: "cheapest",
     description: "Soodne kolimisteenus Tartus. Kiire ja korralik teenindus.",
     services: ["Kolimine", "Laadimine", "Transport"],
   },
   {
-    id: "m3",
-    type: "moving",
-    title: "FlexMove Pärnu",
-    provider: "FlexMove OÜ",
-    address: "Riia mnt 130",
-    city: "Pärnu",
-    lat: 58.3714,
-    lng: 24.5136,
-    priceFrom: 40,
-    priceUnit: "€/h",
+    id: "m3", type: "moving", supplierId: "sup-6",
+    title: "FlexMove Pärnu", provider: "FlexMove OÜ", address: "Riia mnt 130", city: "Pärnu",
+    lat: 58.3714, lng: 24.5136, priceFrom: 40, priceUnit: "€/h",
     image: "https://images.unsplash.com/photo-1600518464441-9154a4dea21b?w=600&h=400&fit=crop",
     images: [],
     serviceArea: ["Pärnu", "Pärnumaa"],
-    withVan: true,
-    packingHelp: true,
-    loadingHelp: true,
-    pricingModel: "hourly",
-    availableNow: false,
-    rating: 4.3,
-    reviewCount: 42,
+    withVan: true, packingHelp: true, loadingHelp: true, pricingModel: "hourly",
+    availableNow: false, rating: 4.3, reviewCount: 42,
     description: "Professionaalne kolimisteenus Pärnus ja ümbruses. Pakume täisteenust koos pakkimisega.",
     services: ["Kolimine", "Pakkimine", "Laadimine", "Transport"],
   },
   {
-    id: "m4",
-    type: "moving",
-    title: "BudgetKoli",
-    provider: "BudgetKoli OÜ",
-    address: "Endla 45",
-    city: "Tallinn",
-    lat: 59.4308,
-    lng: 24.7267,
-    priceFrom: 25,
-    priceUnit: "€/h",
+    id: "m4", type: "moving", supplierId: "sup-4",
+    title: "BudgetKoli", provider: "BudgetKoli OÜ", address: "Endla 45", city: "Tallinn",
+    lat: 59.4308, lng: 24.7267, priceFrom: 25, priceUnit: "€/h",
     image: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&h=400&fit=crop",
     images: [],
     serviceArea: ["Tallinn", "Harjumaa"],
-    withVan: true,
-    packingHelp: false,
-    loadingHelp: false,
-    pricingModel: "fixed",
-    availableNow: true,
-    rating: 4.1,
-    reviewCount: 56,
-    badge: "cheapest",
+    withVan: true, packingHelp: false, loadingHelp: false, pricingModel: "fixed",
+    availableNow: true, rating: 4.1, reviewCount: 56, badge: "cheapest",
     description: "Eesti soodsaim kolimisteenus. Fikseeritud hind ilma üllatusteta.",
     services: ["Transport", "Kolimine"],
   },
@@ -379,89 +125,46 @@ export const MOVING_SERVICES: MovingListing[] = [
 
 export const TRAILER_RENTALS: TrailerListing[] = [
   {
-    id: "t1",
-    type: "trailer",
-    title: "HaagisRent Tallinn",
-    provider: "HaagisRent OÜ",
-    address: "Tehnika 14",
-    city: "Tallinn",
-    lat: 59.4283,
-    lng: 24.7544,
-    priceFrom: 25,
-    priceUnit: "€/päev",
+    id: "t1", type: "trailer", supplierId: "sup-5",
+    title: "HaagisRent Tallinn", provider: "HaagisRent OÜ", address: "Tehnika 14", city: "Tallinn",
+    lat: 59.4283, lng: 24.7544, priceFrom: 25, priceUnit: "€/päev",
     image: "https://images.unsplash.com/photo-1601628828688-632f38a5a7d0?w=600&h=400&fit=crop",
     images: [],
-    trailerType: "Kinnine haagis",
-    weightClass: "750 kg",
-    availableNow: true,
-    rating: 4.6,
-    reviewCount: 95,
-    badge: "closest",
+    trailerType: "Kinnine haagis", weightClass: "750 kg",
+    availableNow: true, rating: 4.6, reviewCount: 95, badge: "closest",
     description: "Haagiste rent Tallinnas. Lai valik erinevaid haagiseid kinnistest avatud haagisteni.",
     requirements: ["B-kategooria juhiluba", "Krediitkaart", "Isikut tõendav dokument"],
   },
   {
-    id: "t2",
-    type: "trailer",
-    title: "Haagis24 Tartu",
-    provider: "Haagis24 OÜ",
-    address: "Aardla 130",
-    city: "Tartu",
-    lat: 58.3648,
-    lng: 26.7056,
-    priceFrom: 20,
-    priceUnit: "€/päev",
+    id: "t2", type: "trailer", supplierId: "sup-2",
+    title: "Haagis24 Tartu", provider: "Haagis24 OÜ", address: "Aardla 130", city: "Tartu",
+    lat: 58.3648, lng: 26.7056, priceFrom: 20, priceUnit: "€/päev",
     image: "https://images.unsplash.com/photo-1562962230-16e4623d36e6?w=600&h=400&fit=crop",
     images: [],
-    trailerType: "Avatud haagis",
-    weightClass: "500 kg",
-    availableNow: true,
-    rating: 4.3,
-    reviewCount: 42,
-    badge: "cheapest",
+    trailerType: "Avatud haagis", weightClass: "500 kg",
+    availableNow: true, rating: 4.3, reviewCount: 42, badge: "cheapest",
     description: "Soodsad haagised rendiks Tartus. Saadaval 24/7 iseteenindusega.",
     requirements: ["B-kategooria juhiluba", "Deposiit"],
   },
   {
-    id: "t3",
-    type: "trailer",
-    title: "AutoHaagis Pärnu",
-    provider: "AutoHaagis OÜ",
-    address: "Lai 12",
-    city: "Pärnu",
-    lat: 58.3867,
-    lng: 24.5030,
-    priceFrom: 22,
-    priceUnit: "€/päev",
+    id: "t3", type: "trailer", supplierId: "sup-6",
+    title: "AutoHaagis Pärnu", provider: "AutoHaagis OÜ", address: "Lai 12", city: "Pärnu",
+    lat: 58.3867, lng: 24.5030, priceFrom: 22, priceUnit: "€/päev",
     image: "https://images.unsplash.com/photo-1601628828688-632f38a5a7d0?w=600&h=400&fit=crop",
     images: [],
-    trailerType: "Kinnine haagis",
-    weightClass: "1000 kg",
-    availableNow: true,
-    rating: 4.5,
-    reviewCount: 38,
+    trailerType: "Kinnine haagis", weightClass: "1000 kg",
+    availableNow: true, rating: 4.5, reviewCount: 38,
     description: "Kvaliteetsed haagised rendiks Pärnus. Suured kinnised haagised kuni 1000 kg.",
     requirements: ["B-kategooria juhiluba", "Krediitkaart", "Kindlustus"],
   },
   {
-    id: "t4",
-    type: "trailer",
-    title: "RentTrailer Narva",
-    provider: "RentTrailer OÜ",
-    address: "Kangelaste prospekt 30",
-    city: "Narva",
-    lat: 59.3796,
-    lng: 28.1790,
-    priceFrom: 18,
-    priceUnit: "€/päev",
+    id: "t4", type: "trailer", supplierId: "sup-5",
+    title: "RentTrailer Narva", provider: "RentTrailer OÜ", address: "Kangelaste prospekt 30", city: "Narva",
+    lat: 59.3796, lng: 28.1790, priceFrom: 18, priceUnit: "€/päev",
     image: "https://images.unsplash.com/photo-1562962230-16e4623d36e6?w=600&h=400&fit=crop",
     images: [],
-    trailerType: "Avatud haagis",
-    weightClass: "750 kg",
-    availableNow: false,
-    rating: 4.0,
-    reviewCount: 19,
-    badge: "cheapest",
+    trailerType: "Avatud haagis", weightClass: "750 kg",
+    availableNow: false, rating: 4.0, reviewCount: 19, badge: "cheapest",
     description: "Soodsad haagised Narvas ja Ida-Virumaal.",
     requirements: ["B-kategooria juhiluba", "Deposiit 100€"],
   },

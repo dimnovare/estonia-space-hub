@@ -48,7 +48,7 @@ export default function SearchPage() {
   const sortOptions = [
     { value: "best", label: t("search.sort.best") },
     { value: "cheapest", label: t("search.sort.cheapest") },
-    { value: "nearest", label: t("search.sort.nearest") },
+    { value: "rating", label: t("search.sort.rating") },
     { value: "best-value", label: t("search.sort.bestValue") },
     { value: "newest", label: t("search.sort.newest") },
   ];
@@ -96,7 +96,7 @@ export default function SearchPage() {
     if (trailerClosed) results = results.filter((l) => l.type === "trailer" && l.trailerType.toLowerCase().includes("kinnine"));
 
     if (sort === "cheapest") results = [...results].sort((a, b) => a.priceFrom - b.priceFrom);
-    if (sort === "nearest") results = [...results].sort((a, b) => a.rating - b.rating);
+    if (sort === "rating") results = [...results].sort((a, b) => b.rating - a.rating);
     if (sort === "best-value") results = [...results].sort((a, b) => b.rating - a.rating);
     return results;
   }, [activeType, query, cityFilter, priceMax, heated, access24, indoor, security, loadingDock, forkliftFilter, shortTerm, longTerm, withVan, packingHelp, loadingHelp, pricingFixed, trailerClosed, availableNow, sort]);
