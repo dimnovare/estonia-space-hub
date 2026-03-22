@@ -72,6 +72,7 @@ export default function ProviderDashboardPage() {
   const tab = searchParams.get("ptab") || "overview";
   const setTab = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("ptab", id); return n; }, { replace: true });
   const { user } = useAuth();
+  const sidebarLinks = useSidebarLinks();
   const [notifications, setNotifications] = useState(mockProviderNotifications);
   const [showNotifications, setShowNotifications] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
