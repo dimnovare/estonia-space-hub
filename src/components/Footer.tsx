@@ -31,7 +31,7 @@ export default function Footer() {
         <div className="grid gap-8 md:grid-cols-4">
           <div>
             <Link to="/" className="inline-block">
-              <img src={ruumlyLogo} alt="Ruumly" className="h-8 w-auto object-contain brightness-0 invert" />
+              <img src={ruumlyLogo} alt="Ruumly" className="h-7 sm:h-8 lg:h-9 w-auto object-contain brightness-0 invert" />
             </Link>
             <p className="mt-3 text-sm opacity-70">
               {t("footer.tagline")}
