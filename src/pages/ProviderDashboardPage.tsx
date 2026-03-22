@@ -8,7 +8,9 @@ import {
   Image, Upload, Trash2, UserPlus, ChevronLeft, Bell, Volume2, VolumeX, Download,
   FileText, Ban, Lock, Unlock, ChevronDown, AlertCircle
 } from "lucide-react";
-import { MOCK_ORDERS, ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG, type Order } from "@/data/mockOrders";
+import { useOrders } from "@/hooks/useOrders";
+import { ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
+import type { Order } from "@/services/types";
 import EmailTemplatePreview from "@/components/EmailTemplatePreview";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
