@@ -699,7 +699,7 @@ const translations: Record<Language, Record<string, string>> = {
     "toast.settingsSaved": "Seaded salvestatud!",
 
     // Account empty states
-    "account.favorites": "Lemmikud",
+    "account.favorites.title": "Lemmikud",
     "account.favorites.empty": "Sa ei ole veel lemmikuid lisanud",
     "account.favorites.cta": "Otsi pakkumisi",
     "account.savedSearches": "Salvestatud otsingud",
