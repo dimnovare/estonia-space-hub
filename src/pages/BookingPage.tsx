@@ -238,13 +238,7 @@ export default function BookingPage() {
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.email")}</span><span className="font-medium">{email}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.phone")}</span><span className="font-medium">{phone}</span></div>
                 </div>
-                {/* Supplier info in review */}
-                {supplier && (
-                  <div className="border-t border-border pt-3">
-                    <div className="flex justify-between"><span className="text-muted-foreground">Partner</span><span className="font-medium">{supplier.name}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Edastusviis</span><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${INTEGRATION_TYPE_CONFIG[supplier.integrationType].color}`}>{INTEGRATION_TYPE_CONFIG[supplier.integrationType].label}</span></div>
-                  </div>
-                )}
+                
                 {listing && (
                   <div className="border-t border-border pt-3 space-y-1">
                     <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.publicPrice")}</span><span className="font-medium line-through text-muted-foreground">{publicPrice}€</span></div>
