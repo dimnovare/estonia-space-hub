@@ -1340,6 +1340,10 @@ const translations: Record<Language, Record<string, string>> = {
     "provider.features.business": "For business clients",
 
     "badge.cheapest": "Cheapest",
+    "badge.closest": "Nearest",
+    "badge.bestValue": "Best value",
+    "badge.promoted": "Promoted",
+  },
 
   ru: {
     "nav.storage": "Склады",
