@@ -157,6 +157,30 @@ export default function BookingPage() {
         ))}
       </div>
 
+      {/* Mobile collapsible summary */}
+      <div className="lg:hidden mb-4">
+        <button onClick={() => setShowMobileSummary(!showMobileSummary)}
+          className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm">
+          <span className="font-medium truncate">{listing?.title}</span>
+          <span className="font-bold text-accent shrink-0 ml-2">{ourPrice}€</span>
+        </button>
+        {showMobileSummary && (
+          <div className="mt-1 rounded-xl border border-border bg-card p-4 text-sm space-y-2">
+            {listing && (
+              <div className="flex items-center gap-2">
+                <img src={listing.image} alt="" className="h-10 w-12 rounded object-cover" />
+                <div className="text-xs"><div className="font-medium">{listing.title}</div><div className="text-muted-foreground">{listing.city}</div></div>
+              </div>
+            )}
+            <div className="space-y-1 text-xs border-t border-border pt-2">
+              <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.publicPrice")}</span><span className="line-through text-muted-foreground">{publicPrice}€</span></div>
+              <div className="flex justify-between font-bold"><span>{t("booking.ourPrice")}</span><span className="text-accent">{ourPrice}€</span></div>
+              <div className="flex justify-between text-success font-medium"><span>{t("booking.savings")}</span><span>-{savings}€</span></div>
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
           {step === 0 && (
