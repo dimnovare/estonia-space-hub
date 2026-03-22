@@ -79,6 +79,7 @@ export default function ProviderDashboardPage() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const { data: allOrders = [] } = useOrders();
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
