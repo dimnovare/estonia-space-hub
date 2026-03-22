@@ -17,18 +17,21 @@ import { Calendar } from "@/components/ui/calendar";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Badge } from "@/components/ui/badge";
 
-const sidebarLinks = [
-  { id: "overview", label: "Ülevaade", icon: LayoutDashboard },
-  { id: "orders", label: "Sissetulevad tellimused", icon: Inbox },
-  { id: "listings", label: "Minu kuulutused", icon: List },
-  { id: "bookings", label: "Broneeringud", icon: Package },
-  { id: "calendar", label: "Kalender", icon: CalendarIcon },
-  { id: "reviews", label: "Hinnangud", icon: Star },
-  { id: "analytics", label: "Analüütika", icon: BarChart3 },
-  { id: "profile", label: "Ettevõtte profiil", icon: Settings },
-  { id: "team", label: "Meeskond", icon: Users },
-  { id: "billing", label: "Väljamaksed", icon: CreditCard },
-];
+function useSidebarLinks() {
+  const { t } = useLanguage();
+  return [
+    { id: "overview", label: t("provider.nav.overview"), icon: LayoutDashboard },
+    { id: "orders", label: t("provider.nav.orders"), icon: Inbox },
+    { id: "listings", label: t("provider.nav.listings"), icon: List },
+    { id: "bookings", label: t("provider.nav.bookings"), icon: Package },
+    { id: "calendar", label: t("provider.nav.calendar"), icon: CalendarIcon },
+    { id: "reviews", label: t("provider.nav.reviews"), icon: Star },
+    { id: "analytics", label: t("provider.nav.analytics"), icon: BarChart3 },
+    { id: "profile", label: t("provider.nav.profile"), icon: Settings },
+    { id: "team", label: t("provider.nav.team"), icon: Users },
+    { id: "billing", label: t("provider.nav.billing"), icon: CreditCard },
+  ];
+}
 
 const mockListings = [
   { id: "w1", title: "Laobox Tallinn Kesklinn", type: "warehouse", status: "Aktiivne", views: 234, bookings: 18, price: 49, city: "Tallinn", occupancy: 85 },

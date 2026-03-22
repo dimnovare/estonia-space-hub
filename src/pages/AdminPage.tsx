@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { MOCK_ORDERS, ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG, generateOrderEmailPreview, type Order, type OrderStatus } from "@/data/mockOrders";
 import { supplierService, userService, auditService } from "@/services";
+import { MOCK_USERS, MOCK_SUPPLIERS } from "@/services/mockStore";
 import type { Supplier, User as ServiceUser, AuditLogEntry, PartnerIntegrationSettings, OrderRoutingRule, ApprovalMode, PostingMode } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
 
