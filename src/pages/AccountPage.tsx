@@ -322,7 +322,7 @@ function AccountMessages() {
         {/* Chat area */}
         <div className="rounded-xl border border-border">
           {!selectedBooking ? (
-            <div className="flex flex-col items-center justify-center py-20"><MessageSquare className="h-10 w-10 text-muted-foreground/20" /><p className="mt-3 text-sm text-muted-foreground">Valige vestlus vasakult.</p></div>
+            <div className="flex flex-col items-center justify-center py-12 sm:py-20"><MessageSquare className="h-10 w-10 text-muted-foreground/20" /><p className="mt-3 text-sm text-muted-foreground">Valige vestlus.</p></div>
           ) : (
             <div className="flex h-[500px] flex-col">
               <div className="border-b border-border p-3">
