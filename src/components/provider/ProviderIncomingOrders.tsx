@@ -1,0 +1,256 @@
+import { useState } from "react";
+import { Check, X, Mail, Zap, Hand, Download } from "lucide-react";
+import { useOrders } from "@/hooks/useOrders";
+import { ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
+import type { Order } from "@/services/types";
+import EmailTemplatePreview from "@/components/EmailTemplatePreview";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+export default function ProviderIncomingOrders() {
+  const { data: initialOrders = [] } = useOrders();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [initialized, setInitialized] = useState(false);
+
+  if (initialOrders.length > 0 && !initialized) {
+    setOrders(initialOrders);
+    setInitialized(true);
+  }
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [filter, setFilter] = useState<string>("all");
+  const [showEmail, setShowEmail] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const filtered = filter === "all" ? orders : orders.filter(o => o.status === filter);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    const pendingIds = filtered.filter(o => o.status === "sent" || o.status === "created").map(o => o.id);
+    if (pendingIds.every(id => selectedIds.has(id))) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(pendingIds));
+    }
+  };
+
+  const now = () => ({ date: new Date().toISOString().slice(0, 10), time: new Date().toTimeString().slice(0, 5) });
+
+  const bulkAccept = () => {
+    const n = now();
+    setOrders(prev => prev.map(o => selectedIds.has(o.id) ? {
+      ...o, status: "confirmed" as const, confirmedAt: `${n.date} ${n.time}`,
+      timeline: [...o.timeline, { ...n, event: "Partner kinnitas tellimuse", status: "confirmed" as const }]
+    } : o));
+    setSelectedIds(new Set());
+  };
+
+  const bulkReject = () => {
+    const n = now();
+    setOrders(prev => prev.map(o => selectedIds.has(o.id) ? {
+      ...o, status: "rejected" as const,
+      timeline: [...o.timeline, { ...n, event: "Partner lükkas tagasi", status: "rejected" as const }]
+    } : o));
+    setSelectedIds(new Set());
+  };
+
+  const handleAccept = (orderId: string) => {
+    const n = now();
+    setOrders(prev => prev.map(o => o.id === orderId ? {
+      ...o, status: "confirmed" as const, confirmedAt: `${n.date} ${n.time}`,
+      timeline: [...o.timeline, { ...n, event: "Partner kinnitas tellimuse", status: "confirmed" as const }]
+    } : o));
+    if (selectedOrder?.id === orderId) setSelectedOrder(null);
+  };
+
+  const handleReject = (orderId: string) => {
+    const n = now();
+    setOrders(prev => prev.map(o => o.id === orderId ? {
+      ...o, status: "rejected" as const,
+      timeline: [...o.timeline, { ...n, event: "Partner lükkas tagasi", status: "rejected" as const }]
+    } : o));
+    if (selectedOrder?.id === orderId) setSelectedOrder(null);
+  };
+
+  const integrationIcon = (type: string) => {
+    if (type === "api") return <Zap className="h-3.5 w-3.5" />;
+    if (type === "email") return <Mail className="h-3.5 w-3.5" />;
+    return <Hand className="h-3.5 w-3.5" />;
+  };
+
+  const exportCSV = () => {
+    const headers = ["Tellimus", "Klient", "Teenus", "Linn", "Algus", "Periood", "Partneri hind", "Staatus"];
+    const rows = filtered.map(o => [o.id, o.customerName, o.listingTitle, o.city, o.startDate, o.duration, `€${o.supplierPrice}`, ORDER_STATUS_CONFIG[o.status].label]);
+    const csv = [headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `tellimused_${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h1 className="font-display text-xl sm:text-2xl font-bold">Sissetulevad tellimused</h1>
+        <Button variant="outline" size="sm" className="gap-1" onClick={exportCSV}>
+          <Download className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Ekspordi</span> CSV
+        </Button>
+      </div>
+
+      <div className="mt-4 flex gap-2 overflow-x-auto">
+        {[
+          { key: "all", label: "Kõik" },
+          { key: "sent", label: "Ootel kinnitust" },
+          { key: "confirmed", label: "Kinnitatud" },
+          { key: "rejected", label: "Tagasi lükatud" },
+          { key: "completed", label: "Lõpetatud" },
+        ].map(f => (
+          <button key={f.key} onClick={() => setFilter(f.key)} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${filter === f.key ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:bg-secondary/80"}`}>
+            {f.label}
+            {f.key === "sent" && <span className="ml-1.5 rounded-full bg-warning/20 px-1.5 text-warning">{orders.filter(o => o.status === "sent" || o.status === "created").length}</span>}
+          </button>
+        ))}
+      </div>
+
+      {selectedIds.size > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-2 sm:gap-3 rounded-lg border border-accent/30 bg-accent/5 p-3">
+          <span className="text-sm font-medium">{selectedIds.size} tellimust valitud</span>
+          <Button size="sm" className="bg-success text-success-foreground hover:bg-success/90 gap-1" onClick={bulkAccept}>
+            <Check className="h-3.5 w-3.5" /> Kinnita
+          </Button>
+          <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1" onClick={bulkReject}>
+            <X className="h-3.5 w-3.5" /> Lükka tagasi
+          </Button>
+          <button onClick={() => setSelectedIds(new Set())} className="ml-auto text-xs text-muted-foreground hover:text-foreground">Tühista</button>
+        </div>
+      )}
+
+      <div className="mt-4 flex items-center gap-2">
+        <button onClick={selectAll} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground">
+          <div className={`h-4 w-4 rounded border transition-colors flex items-center justify-center ${filtered.filter(o => o.status === "sent" || o.status === "created").every(o => selectedIds.has(o.id)) && filtered.some(o => o.status === "sent" || o.status === "created") ? "bg-accent border-accent" : "border-border"}`}>
+            {filtered.filter(o => o.status === "sent" || o.status === "created").every(o => selectedIds.has(o.id)) && filtered.some(o => o.status === "sent" || o.status === "created") && <Check className="h-3 w-3 text-accent-foreground" />}
+          </div>
+          Vali kõik ootel
+        </button>
+      </div>
+
+      <div className="mt-3 space-y-3">
+        {filtered.length === 0 && (
+          <div className="py-12 text-center text-sm text-muted-foreground">Tellimusi ei leitud.</div>
+        )}
+        {filtered.map((order) => {
+          const statusCfg = ORDER_STATUS_CONFIG[order.status];
+          const intCfg = INTEGRATION_TYPE_CONFIG[order.integrationType];
+          const isPending = order.status === "sent" || order.status === "created";
+          const isSelected = selectedIds.has(order.id);
+          return (
+            <div key={order.id} className={`rounded-xl border p-4 transition-colors ${isPending ? "border-warning/30 bg-warning/5" : "border-border"} ${isSelected ? "ring-2 ring-accent" : ""}`}>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  {isPending && (
+                    <button onClick={() => toggleSelect(order.id)} className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors ${isSelected ? "bg-accent border-accent" : "border-border hover:border-accent"}`}>
+                      {isSelected && <Check className="h-3 w-3 text-accent-foreground" />}
+                    </button>
+                  )}
+                  <div>
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                      <span className="text-xs font-mono text-muted-foreground">{order.id}</span>
+                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusCfg.color}`}>{statusCfg.label}</span>
+                    </div>
+                    <div className="mt-2 text-sm font-medium">{order.listingTitle}</div>
+                    <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                      <span>Klient: <strong className="text-foreground">{order.customerName}</strong></span>
+                      <span>{order.startDate} · {order.duration}</span>
+                      <span>{order.city}</span>
+                    </div>
+                    {order.extras.length > 0 && (
+                      <div className="mt-1 flex gap-1">{order.extras.map(e => <span key={e} className="rounded bg-secondary px-1.5 py-0.5 text-[10px]">{e}</span>)}</div>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="font-display text-lg font-bold">€{order.supplierPrice}</div>
+                  <div className="text-[10px] text-muted-foreground">Partneri hind</div>
+                </div>
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {isPending && (
+                  <>
+                    <Button size="sm" className="bg-success text-success-foreground hover:bg-success/90 gap-1" onClick={() => handleAccept(order.id)}>
+                      <Check className="h-3.5 w-3.5" /> Kinnita
+                    </Button>
+                    <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1" onClick={() => handleReject(order.id)}>
+                      <X className="h-3.5 w-3.5" /> Lükka tagasi
+                    </Button>
+                  </>
+                )}
+                <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setSelectedOrder(order); setShowEmail(false); }}>Vaata detaile</Button>
+                {order.integrationType === "email" && (
+                  <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => { setSelectedOrder(order); setShowEmail(true); }}>
+                    <Mail className="h-3 w-3" /> E-kirja eelvaade
+                  </Button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {selectedOrder && (
+        <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Tellimus {selectedOrder.id}</DialogTitle>
+            </DialogHeader>
+            {showEmail ? (
+              <EmailTemplatePreview order={selectedOrder} />
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div><span className="text-xs text-muted-foreground">Klient</span><p className="font-medium">{selectedOrder.customerName}</p></div>
+                  <div><span className="text-xs text-muted-foreground">E-post</span><p>{selectedOrder.customerEmail}</p></div>
+                  <div><span className="text-xs text-muted-foreground">Telefon</span><p>{selectedOrder.customerPhone}</p></div>
+                  <div><span className="text-xs text-muted-foreground">Linn</span><p>{selectedOrder.city}</p></div>
+                  <div><span className="text-xs text-muted-foreground">Teenus</span><p className="font-medium">{selectedOrder.listingTitle}</p></div>
+                  <div><span className="text-xs text-muted-foreground">Periood</span><p>{selectedOrder.startDate} · {selectedOrder.duration}</p></div>
+                </div>
+                <div className="rounded-lg bg-secondary p-3 text-sm">
+                  <div className="flex justify-between"><span>Partneri hind</span><span className="font-medium">€{selectedOrder.supplierPrice}</span></div>
+                  {selectedOrder.extrasTotal > 0 && <div className="flex justify-between mt-1"><span>Lisateenused</span><span>€{selectedOrder.extrasTotal}</span></div>}
+                  <div className="flex justify-between mt-1 pt-1 border-t border-border font-semibold"><span>Kokku</span><span>€{selectedOrder.supplierPrice + selectedOrder.extrasTotal}</span></div>
+                </div>
+                <div>
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Tellimuse ajalugu</h4>
+                  <div className="space-y-2">
+                    {selectedOrder.timeline.map((t, i) => (
+                      <div key={i} className="flex gap-3 text-xs">
+                        <span className="w-20 shrink-0 text-muted-foreground">{t.date}<br />{t.time}</span>
+                        <div>
+                          <p className="font-medium">{t.event}</p>
+                          {t.detail && <p className="text-muted-foreground mt-0.5">{t.detail}</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {selectedOrder.notes && (
+                  <div className="rounded-lg bg-warning/5 border border-warning/20 p-3 text-xs text-muted-foreground">
+                    <strong>Märkused:</strong> {selectedOrder.notes}
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
+  );
+}
