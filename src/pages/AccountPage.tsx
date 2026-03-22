@@ -474,18 +474,19 @@ function AccountSearches() {
 }
 
 function AccountNotifications() {
-  const allRead = MOCK_NOTIFICATIONS.every(n => n.read);
+  const { data: notifications = [] } = useNotifications();
+  const allRead = notifications.length === 0 || notifications.every((n: any) => n.read);
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">Teavitused</h1>
-      {MOCK_NOTIFICATIONS.length === 0 || allRead ? (
+      {allRead ? (
         <div className="py-12 text-center text-sm text-muted-foreground">
           <Bell className="mx-auto h-8 w-8 text-muted-foreground/20 mb-3" />
           Kõik teatised on loetud.
         </div>
       ) : (
         <div className="mt-4 space-y-2">
-          {MOCK_NOTIFICATIONS.map(n => (
+          {notifications.map((n: any) => (
             <div key={n.id} className={`rounded-xl border border-border p-4 ${n.read ? "opacity-60" : ""}`}>
               <div className="flex items-start justify-between">
                 <div><p className="text-sm font-medium">{n.title}</p><p className="mt-0.5 text-xs text-muted-foreground">{n.desc}</p></div>
