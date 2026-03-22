@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -27,8 +27,57 @@ import TermsPage from "@/pages/TermsPage";
 import PrivacyPage from "@/pages/PrivacyPage";
 import CookiePage from "@/pages/CookiePage";
 import NotFound from "@/pages/NotFound";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient();
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
+
+function useShowFooter() {
+  const { pathname } = useLocation();
+  const hideOn = ["/search", "/admin", "/account", "/provider/dashboard", "/provider/onboarding"];
+  return !hideOn.some(p => pathname.startsWith(p));
+}
+
+function AppContent() {
+  const showFooter = useShowFooter();
+  return (
+    <>
+      <ScrollToTop />
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/warehouse/:id" element={<WarehouseDetail />} />
+        <Route path="/moving/:id" element={<MovingDetail />} />
+        <Route path="/trailer/:id" element={<TrailerDetail />} />
+        <Route path="/book" element={<ProtectedRoute><BookingPage /></ProtectedRoute>} />
+        <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
+        <Route path="/dashboard/request/:id" element={<ProtectedRoute><RequestDetailPage /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />
+        <Route path="/admin/*" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />
+        <Route path="/provider" element={<ProviderPage />} />
+        <Route path="/provider/onboarding" element={<ProviderOnboardingPage />} />
+        <Route path="/provider/dashboard" element={<ProtectedRoute allowedRoles={["provider", "admin"]}><ProviderDashboardPage /></ProtectedRoute>} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/how-it-works" element={<HowItWorksPage />} />
+        <Route path="/faq" element={<FAQPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/cookies" element={<CookiePage />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      {showFooter && <Footer />}
+      <DevRoleSwitcher />
+    </>
+  );
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -37,41 +86,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Navbar />
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/warehouse/:id" element={<WarehouseDetail />} />
-            <Route path="/moving/:id" element={<MovingDetail />} />
-            <Route path="/trailer/:id" element={<TrailerDetail />} />
-            <Route path="/book" element={<BookingPage />} />
-            <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
-            <Route path="/dashboard/request/:id" element={<ProtectedRoute><RequestDetailPage /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />
-            <Route path="/admin/*" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />
-            <Route path="/provider" element={<ProviderPage />} />
-            <Route path="/provider/onboarding" element={<ProviderOnboardingPage />} />
-            <Route path="/provider/dashboard" element={<ProtectedRoute allowedRoles={["provider", "admin"]}><ProviderDashboardPage /></ProtectedRoute>} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/how-it-works" element={<HowItWorksPage />} />
-            <Route path="/faq" element={<FAQPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/terms" element={<TermsPage />} />
-            <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/cookies" element={<CookiePage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <Routes>
-            <Route path="/search" element={null} />
-            <Route path="/admin/*" element={null} />
-            <Route path="/account" element={null} />
-            <Route path="/provider/dashboard" element={null} />
-            <Route path="/provider/onboarding" element={null} />
-            <Route path="*" element={<Footer />} />
-          </Routes>
-          <DevRoleSwitcher />
+          <AppContent />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

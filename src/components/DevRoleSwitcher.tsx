@@ -10,6 +10,7 @@ const roles: { role: UserRole; label: string; color: string }[] = [
 ];
 
 export default function DevRoleSwitcher() {
+  if (import.meta.env.PROD) return null;
   const { role, switchRole } = useAuth();
   const [open, setOpen] = useState(false);
 
