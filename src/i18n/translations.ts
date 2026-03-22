@@ -1004,6 +1004,8 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.forProviders": "Партнёрам",
     "nav.myAccount": "Мой аккаунт",
     "nav.login": "Войти",
+    "nav.logout": "Выйти",
+    "nav.providerDashboard": "Панель партнёра",
 
     "hero.title": "Найдите склад, переезд и логистику",
     "hero.titleHighlight": "в одном месте",
