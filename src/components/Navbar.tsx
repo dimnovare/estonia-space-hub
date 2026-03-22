@@ -106,7 +106,7 @@ export default function Navbar() {
                     )}
                     {role === "admin" && (
                       <Link to="/admin" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-secondary">
-                        <Shield className="h-4 w-    4 text-muted-foreground" /> Admin
+                        <Shield className="h-4 w-4 text-muted-foreground" /> Admin
                       </Link>
                     )}
                     <button onClick={handleLogout} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-destructive hover:bg-destructive/10">
