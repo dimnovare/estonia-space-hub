@@ -422,7 +422,29 @@ function AdminSuppliers() {
           </button>
         ))}
       </div>
-      <div className="mt-4 overflow-x-auto rounded-xl border border-border">
+      {/* Mobile cards */}
+      <div className="mt-4 space-y-2 md:hidden">
+        {filtered.map(s => (
+          <button key={s.id} onClick={() => { setSelected(s); setTestResult(null); }} className="w-full rounded-xl border border-border p-3 text-left hover:bg-secondary/50 transition-colors">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">{s.name}</p>
+                <p className="text-[10px] text-muted-foreground">{s.contactEmail}</p>
+              </div>
+              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s.isActive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{s.isActive ? t("admin.active") : t("admin.inactive")}</span>
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${INTEGRATION_TYPE_CONFIG[s.integrationType].color}`}>{intIcon(s.integrationType)} {INTEGRATION_TYPE_CONFIG[s.integrationType].label}</span>
+              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${healthColor(s.integrationHealth)}`}>{healthLabel(s.integrationHealth)}</span>
+              <span className="text-xs text-muted-foreground">{s.listingCount} kuulutust</span>
+              <span className="text-xs font-medium">€{s.revenue.toLocaleString()}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+      {/* Desktop table */}
+      <div className="mt-4 hidden rounded-xl border border-border md:block">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
             <tr>
@@ -453,6 +475,7 @@ function AdminSuppliers() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       <Dialog open={!!selected} onOpenChange={(o) => { if (!o) { setSelected(null); setTestResult(null); } }}>
