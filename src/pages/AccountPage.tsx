@@ -175,16 +175,35 @@ export default function AccountPage() {
 function AccountOverview({ onNavigate }: { onNavigate: (tab: string) => void }) {
   const active = MOCK_BOOKINGS.filter(b => b.status === "confirmed" || b.status === "active");
   const pending = MOCK_BOOKINGS.filter(b => b.status === "pending");
+  const { role } = useAuth();
 
   const { t } = useLanguage();
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">{t("account.welcome")}</h1>
+      <div className="flex flex-wrap items-center gap-3">
+        <h1 className="font-display text-2xl font-bold">{t("account.welcome")}</h1>
+        <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-semibold text-accent capitalize">{role}</span>
+      </div>
       <p className="mt-1 text-sm text-muted-foreground">{t("account.welcomeDesc")}</p>
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+
+      {/* Role dashboard shortcuts */}
+      {role === "provider" && (
+        <Link to="/provider/dashboard" className="mt-4 flex items-center justify-between rounded-xl border border-accent/20 bg-accent/5 p-4 hover:bg-accent/10 transition-colors">
+          <span className="flex items-center gap-2 text-sm font-medium text-accent"><LayoutDashboard className="h-4 w-4" /> {t("nav.providerDashboard") || "Partneri paneel"}</span>
+          <ChevronRight className="h-4 w-4 text-accent" />
+        </Link>
+      )}
+      {role === "admin" && (
+        <Link to="/admin" className="mt-4 flex items-center justify-between rounded-xl border border-accent/20 bg-accent/5 p-4 hover:bg-accent/10 transition-colors">
+          <span className="flex items-center gap-2 text-sm font-medium text-accent"><Shield className="h-4 w-4" /> Admin</span>
+          <ChevronRight className="h-4 w-4 text-accent" />
+        </Link>
+      )}
+
+      <div className="mt-6 grid gap-4 grid-cols-2 sm:grid-cols-3">
         <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">{t("account.activeBookings")}</div><div className="mt-1 font-display text-2xl font-bold">{active.length}</div></div>
         <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">{t("account.pendingApproval")}</div><div className="mt-1 font-display text-2xl font-bold text-warning">{pending.length}</div></div>
-        <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">{t("account.totalSavings")}</div><div className="mt-1 font-display text-2xl font-bold text-accent">€{MOCK_BOOKINGS.reduce((s, b) => s + (b.basePrice - b.platformPrice), 0)}</div></div>
+        <div className="card-elevated p-5 col-span-2 sm:col-span-1"><div className="text-sm text-muted-foreground">{t("account.totalSavings")}</div><div className="mt-1 font-display text-2xl font-bold text-accent">€{MOCK_BOOKINGS.reduce((s, b) => s + (b.basePrice - b.platformPrice), 0)}</div></div>
       </div>
       {pending.length > 0 && (
         <div className="mt-6"><h2 className="font-display text-lg font-semibold">{t("account.pendingBookings")}</h2><div className="mt-3 space-y-2">{pending.map(b => <BookingCard key={b.id} booking={b} />)}</div></div>
