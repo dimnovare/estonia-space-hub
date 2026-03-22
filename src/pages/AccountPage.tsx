@@ -87,7 +87,7 @@ export default function AccountPage() {
   const initialTab = searchParams.get("tab") || "overview";
   const [tab, setTab] = useState(initialTab);
   const { t } = useLanguage();
-  const { user, logout } = useAuth();
+  const { user, logout, role } = useAuth();
   const navigate = useNavigate();
   const sidebarLinks = useSidebarLinks();
 
@@ -98,8 +98,6 @@ export default function AccountPage() {
 
   const handleLogout = () => { logout(); navigate("/"); };
   const unreadMessages = MOCK_MESSAGES.filter(m => !m.read && m.from !== "customer").length;
-
-  const { role } = useAuth();
 
   const roleDashboardLinks = role === "admin"
     ? [{ to: "/admin", label: "Admin", icon: "🛡️" }]
