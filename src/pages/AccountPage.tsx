@@ -83,18 +83,13 @@ function MobileAccountNav({ tab, setTab, sidebarLinks, unreadMessages, onLogout 
 }
 
 export default function AccountPage() {
-  const [searchParams] = useSearchParams();
-  const initialTab = searchParams.get("tab") || "overview";
-  const [tab, setTab] = useState(initialTab);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get("tab") || "overview";
+  const setTab = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("tab", id); return n; }, { replace: true });
   const { t } = useLanguage();
   const { user, logout, role } = useAuth();
   const navigate = useNavigate();
   const sidebarLinks = useSidebarLinks();
-
-  useEffect(() => {
-    const paramTab = searchParams.get("tab");
-    if (paramTab) setTab(paramTab);
-  }, [searchParams]);
 
   const handleLogout = () => { logout(); navigate("/"); };
   const unreadMessages = MOCK_MESSAGES.filter(m => !m.read && m.from !== "customer").length;

@@ -71,9 +71,13 @@ export function WarehouseDetail() {
 
   return (
     <div className="container-wide py-6 pb-24 lg:pb-6">
-      <Link to="/search?type=warehouse" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" /> {t("detail.backToSearch")}
-      </Link>
+      <nav className="mb-4 flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Link to="/" className="hover:text-foreground transition-colors">{t("nav.home")}</Link>
+        <span className="opacity-40">/</span>
+        <Link to="/search?type=warehouse" className="hover:text-foreground transition-colors">{t("nav.storage")}</Link>
+        <span className="opacity-40">/</span>
+        <span className="text-foreground font-medium truncate max-w-[180px] sm:max-w-[280px]">{listing.title}</span>
+      </nav>
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">

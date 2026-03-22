@@ -49,7 +49,9 @@ const initialListings = [
 ];
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "dashboard";
+  const setActiveTab = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("tab", id); return n; }, { replace: true });
   const { t } = useLanguage();
 
   const sidebarLinks = [
