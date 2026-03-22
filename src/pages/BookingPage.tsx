@@ -293,6 +293,31 @@ export default function BookingPage() {
           </div>
         </div>
       </div>
+
+      {/* Mobile sticky price bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border bg-card p-3 lg:hidden">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="text-xs text-muted-foreground truncate max-w-[160px]">{listing?.title}</div>
+            <div className="font-display text-base font-bold">
+              {ourPrice}€
+              {selectedExtras.length > 0 && <span className="text-xs font-normal text-muted-foreground ml-1">(+lisad)</span>}
+            </div>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            {step > 0 && (
+              <Button variant="outline" size="sm" onClick={() => setStep(step - 1)}>
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            )}
+            <Button
+              onClick={step < steps.length - 1 ? () => setStep(step + 1) : () => setSubmitted(true)}
+              className="bg-accent text-accent-foreground hover:bg-accent/90 px-6">
+              {step < steps.length - 1 ? t("booking.next") : t("booking.confirm")}
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
