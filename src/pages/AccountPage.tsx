@@ -31,8 +31,6 @@ function useSidebarLinks() {
     { id: "overview", label: t("account.overview"), icon: LayoutDashboard },
     { id: "bookings", label: t("account.bookings"), icon: Package },
     { id: "messages", label: t("account.messages"), icon: MessageSquare },
-    { id: "favorites", label: t("account.favorites"), icon: Heart },
-    { id: "searches", label: t("account.searches"), icon: Search },
     { id: "notifications", label: t("account.notifications"), icon: Bell },
     { id: "profile", label: t("account.profile"), icon: User },
     { id: "security", label: t("account.security"), icon: Shield },
@@ -153,8 +151,6 @@ export default function AccountPage() {
         {tab === "overview" && <AccountOverview onNavigate={setTab} />}
         {tab === "bookings" && <AccountBookings />}
         {tab === "messages" && <AccountMessages />}
-        {tab === "favorites" && <AccountFavorites />}
-        {tab === "searches" && <AccountSearches />}
         {tab === "notifications" && <AccountNotifications />}
         {tab === "profile" && <AccountProfile />}
         {tab === "security" && <AccountSecurity />}
@@ -205,13 +201,13 @@ function AccountOverview({ onNavigate }: { onNavigate: (tab: string) => void }) 
         <div className="mt-6"><h2 className="font-display text-lg font-semibold">{t("account.activeBookings")}</h2><div className="mt-3 space-y-2">{active.map(b => <BookingCard key={b.id} booking={b} />)}</div></div>
       )}
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
-        <button onClick={() => onNavigate("favorites")} className="flex items-center justify-between rounded-xl border border-border p-4 hover:bg-secondary transition-colors">
-          <span className="flex items-center gap-2 text-sm font-medium"><Heart className="h-4 w-4 text-accent" /> {t("account.favorites")}</span>
-          <span className="text-sm text-muted-foreground">2 {t("account.saved")}</span>
-        </button>
         <button onClick={() => onNavigate("messages")} className="flex items-center justify-between rounded-xl border border-border p-4 hover:bg-secondary transition-colors">
           <span className="flex items-center gap-2 text-sm font-medium"><MessageSquare className="h-4 w-4 text-accent" /> {t("account.messages")}</span>
           <span className="text-sm text-muted-foreground">{MOCK_MESSAGES.filter(m => !m.read && m.from !== "customer").length} {t("account.unread")}</span>
+        </button>
+        <button onClick={() => onNavigate("bookings")} className="flex items-center justify-between rounded-xl border border-border p-4 hover:bg-secondary transition-colors">
+          <span className="flex items-center gap-2 text-sm font-medium"><Package className="h-4 w-4 text-accent" /> {t("account.bookings")}</span>
+          <span className="text-sm text-muted-foreground">{MOCK_BOOKINGS.length}</span>
         </button>
       </div>
     </div>
@@ -296,16 +292,38 @@ function AccountBookings() {
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">Broneeringud</h1>
-      <div className="mt-4 flex gap-2 overflow-x-auto">
+      <div className="mt-4 hidden sm:flex gap-2 overflow-x-auto">
         {(["all", "pending", "confirmed", "active", "completed", "cancelled"] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
             {f === "all" ? "Kõik" : statusConfig[f].label} ({f === "all" ? MOCK_BOOKINGS.length : MOCK_BOOKINGS.filter(b => b.status === f).length})
           </button>
         ))}
       </div>
+      <select
+        value={filter}
+        onChange={(e) => setFilter(e.target.value as BookingStatus | "all")}
+        className="mt-4 w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent sm:hidden">
+        <option value="all">Kõik ({MOCK_BOOKINGS.length})</option>
+        <option value="pending">Ootel ({MOCK_BOOKINGS.filter(b => b.status === "pending").length})</option>
+        <option value="confirmed">Kinnitatud ({MOCK_BOOKINGS.filter(b => b.status === "confirmed").length})</option>
+        <option value="active">Aktiivne ({MOCK_BOOKINGS.filter(b => b.status === "active").length})</option>
+        <option value="completed">Lõpetatud ({MOCK_BOOKINGS.filter(b => b.status === "completed").length})</option>
+        <option value="cancelled">Tühistatud ({MOCK_BOOKINGS.filter(b => b.status === "cancelled").length})</option>
+      </select>
       <div className="mt-4 space-y-2">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center py-12 text-center"><Package className="h-12 w-12 text-muted-foreground/30" /><p className="mt-3 text-sm text-muted-foreground">Selle filtriga broneeringuid pole.</p></div>
+          <div className="py-20 text-center">
+            <Package className="mx-auto h-10 w-10 text-muted-foreground/20" />
+            <p className="mt-4 font-display text-base font-semibold">
+              {filter === "all" ? "Broneeringuid ei leitud" : "Selle staatusega broneeringuid pole"}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {filter === "all" ? "Broneeri esimene teenus ja see ilmub siia." : "Proovige teist filtrit."}
+            </p>
+            {filter === "all" && (
+              <Link to="/search"><Button className="mt-5 bg-accent text-accent-foreground">Otsi teenuseid</Button></Link>
+            )}
+          </div>
         ) : filtered.map(b => <BookingCard key={b.id} booking={b} />)}
       </div>
     </div>
@@ -438,20 +456,28 @@ function AccountSearches() {
 }
 
 function AccountNotifications() {
+  const allRead = MOCK_NOTIFICATIONS.every(n => n.read);
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">Teavitused</h1>
-      <div className="mt-4 space-y-2">
-        {MOCK_NOTIFICATIONS.map(n => (
-          <div key={n.id} className={`rounded-xl border border-border p-4 ${n.read ? "opacity-60" : ""}`}>
-            <div className="flex items-start justify-between">
-              <div><p className="text-sm font-medium">{n.title}</p><p className="mt-0.5 text-xs text-muted-foreground">{n.desc}</p></div>
-              {!n.read && <div className="mt-1 h-2 w-2 rounded-full bg-accent shrink-0" />}
+      {MOCK_NOTIFICATIONS.length === 0 || allRead ? (
+        <div className="py-12 text-center text-sm text-muted-foreground">
+          <Bell className="mx-auto h-8 w-8 text-muted-foreground/20 mb-3" />
+          Kõik teatised on loetud.
+        </div>
+      ) : (
+        <div className="mt-4 space-y-2">
+          {MOCK_NOTIFICATIONS.map(n => (
+            <div key={n.id} className={`rounded-xl border border-border p-4 ${n.read ? "opacity-60" : ""}`}>
+              <div className="flex items-start justify-between">
+                <div><p className="text-sm font-medium">{n.title}</p><p className="mt-0.5 text-xs text-muted-foreground">{n.desc}</p></div>
+                {!n.read && <div className="mt-1 h-2 w-2 rounded-full bg-accent shrink-0" />}
+              </div>
+              <p className="mt-2 text-[10px] text-muted-foreground">{n.time}</p>
             </div>
-            <p className="mt-2 text-[10px] text-muted-foreground">{n.time}</p>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -488,11 +514,12 @@ function AccountSecurity() {
             <Button variant="outline" size="sm" className="mt-3" onClick={() => setChangingPw(true)}>Muuda parooli</Button>
           ) : (
             <div className="mt-3 space-y-3">
+              <p className="text-xs text-muted-foreground">Paroolivahetus on hetkel demonstratsioonrežiimis.</p>
               <input type="password" placeholder="Praegune parool" className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
               <input type="password" placeholder="Uus parool" className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
               <input type="password" placeholder="Kinnita uus parool" className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
               <div className="flex gap-2">
-                <Button size="sm" className="bg-accent text-accent-foreground" onClick={() => setChangingPw(false)}>Salvesta</Button>
+                <Button size="sm" className="bg-accent text-accent-foreground" onClick={() => { setChangingPw(false); }}>Salvesta (demo)</Button>
                 <Button variant="outline" size="sm" onClick={() => setChangingPw(false)}>Tühista</Button>
               </div>
             </div>
