@@ -48,7 +48,7 @@ export default function SearchPage() {
   const sortOptions = [
     { value: "best", label: t("search.sort.best") },
     { value: "cheapest", label: t("search.sort.cheapest") },
-    { value: "nearest", label: t("search.sort.nearest") },
+    { value: "rating", label: t("search.sort.rating") },
     { value: "best-value", label: t("search.sort.bestValue") },
     { value: "newest", label: t("search.sort.newest") },
   ];
