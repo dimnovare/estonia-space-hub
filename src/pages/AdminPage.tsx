@@ -156,7 +156,22 @@ function AdminDashboard() {
         })}
       </div>
       <h2 className="mt-8 font-display text-lg font-semibold">{t("admin.recentInquiries")}</h2>
-      <div className="mt-4 overflow-x-auto rounded-xl border border-border">
+      {/* Mobile cards */}
+      <div className="mt-4 space-y-2 sm:hidden">
+        {initialInquiries.map((inq) => (
+          <div key={inq.id} className="rounded-xl border border-border p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">{inq.customer}</span>
+              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inq.status === "new" ? "bg-accent/10 text-accent" : inq.status === "answered" ? "bg-info/10 text-info" : "bg-muted text-muted-foreground"}`}>
+                {inq.status === "new" ? t("admin.new") : inq.status === "answered" ? t("admin.answered") : t("admin.closed")}
+              </span>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">{inq.listing} · {inq.date}</p>
+          </div>
+        ))}
+      </div>
+      {/* Desktop table */}
+      <div className="mt-4 hidden rounded-xl border border-border sm:block">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
             <tr>
@@ -211,7 +226,28 @@ function AdminOrders() {
           </button>
         ))}
       </div>
-      <div className="mt-6 overflow-x-auto rounded-xl border border-border">
+      {/* Mobile cards */}
+      <div className="mt-6 space-y-2 md:hidden">
+        {filtered.map((o) => {
+          const statusConf = ORDER_STATUS_CONFIG[o.status];
+          return (
+            <button key={o.id} onClick={() => setViewOrder(o)} className="w-full rounded-xl border border-border p-3 text-left hover:bg-secondary/50 transition-colors">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono text-muted-foreground">{o.id}</span>
+                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusConf.color}`}>{statusConf.label}</span>
+              </div>
+              <p className="mt-1 text-sm font-medium truncate">{o.listingTitle}</p>
+              <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+                <span>{o.customerName}</span>
+                <span className="font-medium text-foreground">€{o.total}</span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      {/* Desktop table */}
+      <div className="mt-6 hidden rounded-xl border border-border md:block">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
             <tr>
@@ -247,6 +283,7 @@ function AdminOrders() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       <Dialog open={!!viewOrder} onOpenChange={() => { setViewOrder(null); setEmailPreview(false); }}>
@@ -372,7 +409,7 @@ function AdminSuppliers() {
           <p className="mt-1 text-sm text-muted-foreground">{t("admin.integrationDesc")}</p>
         </div>
       </div>
-      <div className="mt-6 grid gap-4 sm:grid-cols-4">
+      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="card-elevated p-4"><div className="text-sm text-muted-foreground">{t("admin.totalPartners")}</div><div className="mt-1 font-display text-2xl font-bold">{suppliers.length}</div></div>
         <div className="card-elevated p-4"><div className="text-sm text-muted-foreground">{t("admin.activePartners")}</div><div className="mt-1 font-display text-2xl font-bold text-success">{suppliers.filter(s => s.isActive).length}</div></div>
         <div className="card-elevated p-4"><div className="text-sm text-muted-foreground">{t("admin.apiIntegrations")}</div><div className="mt-1 font-display text-2xl font-bold">{suppliers.filter(s => s.integrationType === "api").length}</div></div>
@@ -385,7 +422,29 @@ function AdminSuppliers() {
           </button>
         ))}
       </div>
-      <div className="mt-4 overflow-x-auto rounded-xl border border-border">
+      {/* Mobile cards */}
+      <div className="mt-4 space-y-2 md:hidden">
+        {filtered.map(s => (
+          <button key={s.id} onClick={() => { setSelected(s); setTestResult(null); }} className="w-full rounded-xl border border-border p-3 text-left hover:bg-secondary/50 transition-colors">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">{s.name}</p>
+                <p className="text-[10px] text-muted-foreground">{s.contactEmail}</p>
+              </div>
+              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s.isActive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{s.isActive ? t("admin.active") : t("admin.inactive")}</span>
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${INTEGRATION_TYPE_CONFIG[s.integrationType].color}`}>{intIcon(s.integrationType)} {INTEGRATION_TYPE_CONFIG[s.integrationType].label}</span>
+              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${healthColor(s.integrationHealth)}`}>{healthLabel(s.integrationHealth)}</span>
+              <span className="text-xs text-muted-foreground">{s.listingCount} kuulutust</span>
+              <span className="text-xs font-medium">€{s.revenue.toLocaleString()}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+      {/* Desktop table */}
+      <div className="mt-4 hidden rounded-xl border border-border md:block">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
             <tr>
@@ -416,6 +475,7 @@ function AdminSuppliers() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       <Dialog open={!!selected} onOpenChange={(o) => { if (!o) { setSelected(null); setTestResult(null); } }}>
@@ -731,11 +791,36 @@ function AdminListings() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">{t("admin.listings")}</h1>
-        <Button onClick={openNew} className="bg-accent text-accent-foreground hover:bg-accent/90"><PlusCircle className="mr-2 h-4 w-4" /> {t("admin.addListing")}</Button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h1 className="font-display text-xl sm:text-2xl font-bold">{t("admin.listings")}</h1>
+        <Button onClick={openNew} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90"><PlusCircle className="mr-1 h-3.5 w-3.5" /> {t("admin.addListing")}</Button>
       </div>
-      <div className="mt-6 overflow-x-auto rounded-xl border border-border">
+      {/* Mobile cards */}
+      <div className="mt-4 space-y-2 sm:hidden">
+        {listings.map(l => {
+          const Icon = typeIcons[l.type] || Warehouse;
+          return (
+            <div key={l.id} className="rounded-xl border border-border p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="text-sm font-medium truncate">{l.title}</span>
+                </div>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${l.status === "active" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>{l.status === "active" ? t("admin.active") : t("admin.paused")}</span>
+              </div>
+              <div className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
+                <span>{l.city} · {l.price}€ · {l.views} vaatamist</span>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => openEdit(l)} className="rounded p-1 hover:bg-secondary"><Edit className="h-3.5 w-3.5 text-muted-foreground" /></button>
+                  <button onClick={() => handleDelete(l.id)} className="rounded p-1 hover:bg-secondary"><Trash2 className="h-3.5 w-3.5 text-destructive" /></button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {/* Desktop table */}
+      <div className="mt-6 hidden rounded-xl border border-border sm:block">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
             <tr>
@@ -811,7 +896,20 @@ function AdminInquiries() {
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">{t("admin.inquiries")}</h1>
-      <div className="mt-6 overflow-x-auto rounded-xl border border-border">
+      {/* Mobile cards */}
+      <div className="mt-4 space-y-2 sm:hidden">
+        {inquiries.map(inq => (
+          <button key={inq.id} onClick={() => openView(inq)} className="w-full rounded-xl border border-border p-3 text-left hover:bg-secondary/50 transition-colors">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">{inq.customer}</span>
+              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inq.status === "new" ? "bg-accent/10 text-accent" : inq.status === "answered" ? "bg-info/10 text-info" : "bg-muted text-muted-foreground"}`}>{statusLabel(inq.status)}</span>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">{inq.listing} · {inq.date}</p>
+          </button>
+        ))}
+      </div>
+      {/* Desktop table */}
+      <div className="mt-6 hidden rounded-xl border border-border sm:block">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
             <tr>
@@ -899,8 +997,8 @@ function AdminUsers() {
     <div>
       <h1 className="font-display text-2xl font-bold">{t("admin.users")}</h1>
       <p className="mt-2 text-sm text-muted-foreground">{users.length} {t("admin.usersTotal")}</p>
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px]">
+      <div className="mt-4 flex flex-wrap items-center gap-2 sm:gap-3">
+        <div className="relative w-full sm:flex-1 sm:min-w-[200px] sm:w-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder={t("admin.searchUsers")} className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm" />
         </div>
@@ -912,7 +1010,27 @@ function AdminUsers() {
         </select>
         <span className="text-xs text-muted-foreground">{filtered.length} {t("admin.usersFound")}</span>
       </div>
-      <div className="mt-4 overflow-x-auto rounded-xl border border-border">
+      {/* Mobile cards */}
+      <div className="mt-4 space-y-2 md:hidden">
+        {filtered.map(u => (
+          <button key={u.id} onClick={() => setSelectedUser(u)} className="w-full rounded-xl border border-border p-3 text-left hover:bg-secondary/50 transition-colors">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">{u.name.split(" ").map(n => n[0]).join("")}</div>
+                <div className="min-w-0"><p className="text-sm font-medium truncate">{u.name}</p><p className="text-[10px] text-muted-foreground truncate">{u.email}</p></div>
+              </div>
+              <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${u.status === "active" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{u.status === "active" ? t("admin.active") : t("admin.blocked")}</span>
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${u.role === "admin" ? "bg-primary/10 text-primary" : u.role === "provider" ? "bg-accent/10 text-accent" : "bg-secondary text-muted-foreground"}`}>{roleLabel(u.role)}</span>
+              <span className="text-[10px] text-muted-foreground">{u.bookingsCount} bron.</span>
+            </div>
+          </button>
+        ))}
+      </div>
+      {/* Desktop table */}
+      <div className="mt-4 hidden rounded-xl border border-border md:block">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
             <tr>
@@ -953,6 +1071,7 @@ function AdminUsers() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
       <Dialog open={!!selectedUser} onOpenChange={o => !o && setSelectedUser(null)}>
         <DialogContent className="max-w-md">
