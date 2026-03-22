@@ -1000,6 +1000,11 @@ const translations: Record<Language, Record<string, string>> = {
     "prov.complete": "Mark completed",
     "prov.pauseIntake": "Pause intake",
     "prov.resumeIntake": "Resume intake",
+
+    "badge.cheapest": "Cheapest",
+    "badge.closest": "Nearest",
+    "badge.bestValue": "Best value",
+    "badge.promoted": "Promoted",
   },
 
   ru: {
