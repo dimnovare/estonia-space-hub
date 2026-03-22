@@ -81,7 +81,7 @@ export default function ProviderDashboardPage() {
       <aside className="hidden w-56 shrink-0 border-r border-border bg-card lg:block">
         <div className="p-4">
           <p className="text-sm font-semibold">{user?.company || user?.name}</p>
-          <p className="text-xs text-muted-foreground">Partneri paneel</p>
+          <p className="text-xs text-muted-foreground">{t("provider.panel")}</p>
         </div>
         <nav className="space-y-0.5 px-2">
           {sidebarLinks.map((l) => {
