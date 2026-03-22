@@ -250,7 +250,7 @@ export default function BookingPage() {
             </div>
           )}
 
-          <div className="mt-8 flex justify-between">
+          <div className="mt-8 hidden lg:flex justify-between">
             {step > 0 ? (
               <Button variant="outline" onClick={() => setStep(step - 1)}>
                 <ArrowLeft className="mr-2 h-4 w-4" /> {t("booking.prev")}
