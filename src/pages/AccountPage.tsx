@@ -593,7 +593,8 @@ function AccountSecurity() {
 }
 
 function AccountBilling() {
-  const invoices = MOCK_INVOICES;
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  useEffect(() => { invoiceService.getAll().then(setInvoices); }, []);
 
   return (
     <div>
