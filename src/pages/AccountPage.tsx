@@ -13,11 +13,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { MOCK_BOOKINGS, MOCK_NOTIFICATIONS, type Booking, type BookingStatus } from "@/data/mockBookings";
-import { MOCK_ORDERS, ORDER_STATUS_CONFIG, type Order } from "@/data/mockOrders";
+import { useBookings } from "@/hooks/useBookings";
+import { useNotifications } from "@/hooks/useNotifications";
+import { useOrders } from "@/hooks/useOrders";
+import { ORDER_STATUS_CONFIG, type Order } from "@/data/mockOrders";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MOCK_INVOICES, MOCK_MESSAGES } from "@/services/mockStore";
+import { MOCK_MESSAGES } from "@/services/mockStore";
+import type { Booking, BookingStatus } from "@/services/types";
 import type { Invoice, Message } from "@/services/types";
+import { SkeletonList } from "@/components/SkeletonCard";
+import { invoiceService } from "@/services";
 
 const statusConfig: Record<BookingStatus, { label: string; color: string; icon: typeof Clock }> = {
   pending: { label: "Ootel", color: "bg-warning/10 text-warning", icon: Clock },
