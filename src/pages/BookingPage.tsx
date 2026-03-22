@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ALL_LISTINGS } from "@/data/mockData";
+import { useListing, useCreateBooking, useSuppliers } from "@/hooks/queries";
+import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { getSupplierForListing, INTEGRATION_TYPE_CONFIG } from "@/data/mockOrders";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { bookingDetailsSchema, bookingContactSchema, type BookingDetailsForm, type BookingContactForm } from "@/lib/schemas";
@@ -14,9 +14,11 @@ type SubmitPhase = "submitting" | "sending" | "waiting" | "done";
 export default function BookingPage() {
   const [params] = useSearchParams();
   const listingId = params.get("listing");
-  const listing = ALL_LISTINGS.find((l) => l.id === listingId);
+  const { data: listing } = useListing(listingId || "");
   const { t } = useLanguage();
-  const supplier = listingId ? getSupplierForListing(listingId) : undefined;
+  const { data: suppliers = [] } = useSuppliers();
+  const supplier = listing ? suppliers.find(s => s.id === listing.supplierId) : undefined;
+  const createBooking = useCreateBooking();
 
   const steps = [t("booking.details"), t("booking.extras"), t("booking.contact"), t("booking.payment"), t("booking.review")];
   const extras = [
@@ -59,6 +61,18 @@ export default function BookingPage() {
     } else if (step < steps.length - 1) {
       setStep(step + 1);
     } else {
+      // Submit booking via mutation
+      createBooking.mutate({
+        listingId: listingId!,
+        startDate: detailsForm.getValues("date"),
+        duration: detailsForm.getValues("duration"),
+        extras: selectedExtras,
+        contactName: contactForm.getValues("name"),
+        contactEmail: contactForm.getValues("email"),
+        contactPhone: contactForm.getValues("phone"),
+        paymentMethod: paymentMethod as "bank" | "card" | "later",
+        notes: contactForm.getValues("notes"),
+      });
       setSubmitted(true);
     }
   };
@@ -280,11 +294,11 @@ export default function BookingPage() {
                 <ArrowLeft className="mr-2 h-4 w-4" /> {t("booking.prev")}
               </Button>
             ) : <div />}
-            <Button onClick={handleNext} className="bg-accent text-accent-foreground hover:bg-accent/90">
+            <Button onClick={handleNext} disabled={createBooking.isPending} className="bg-accent text-accent-foreground hover:bg-accent/90">
               {step < steps.length - 1 ? (
                 <>{t("booking.next")} <ArrowRight className="ml-2 h-4 w-4" /></>
               ) : (
-                <>{t("booking.confirm")} <Check className="ml-2 h-4 w-4" /></>
+                <>{createBooking.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}{t("booking.confirm")} <Check className="ml-2 h-4 w-4" /></>
               )}
             </Button>
           </div>
@@ -331,7 +345,7 @@ export default function BookingPage() {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             )}
-            <Button onClick={handleNext} className="bg-accent text-accent-foreground hover:bg-accent/90 px-6">
+            <Button onClick={handleNext} disabled={createBooking.isPending} className="bg-accent text-accent-foreground hover:bg-accent/90 px-6">
               {step < steps.length - 1 ? t("booking.next") : t("booking.confirm")}
             </Button>
           </div>

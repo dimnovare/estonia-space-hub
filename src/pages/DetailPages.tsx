@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { MapPin, Star, Check, ArrowLeft, Calendar, Shield, BadgePercent, Zap, Mail, Hand, Building2, CheckCircle } from "lucide-react";
+import { MapPin, Star, Check, ArrowLeft, Calendar, Shield, BadgePercent, Zap, Mail, Hand, Building2, CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { WAREHOUSES, MOVING_SERVICES, TRAILER_RENTALS } from "@/data/mockData";
+import { useListing, useSuppliers } from "@/hooks/queries";
+import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
 import { lazy, Suspense } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { getSupplierForListing, INTEGRATION_TYPE_CONFIG } from "@/data/mockOrders";
+import type { Listing, WarehouseListing, MovingListing, TrailerListing } from "@/services/types";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
-function SupplierBadge({ listingId }: { listingId: string }) {
-  const supplier = getSupplierForListing(listingId);
+function SupplierBadge({ supplierId }: { supplierId?: string }) {
+  const { data: suppliers = [] } = useSuppliers();
+  const supplier = suppliers.find(s => s.id === supplierId);
   if (!supplier) return null;
   const intCfg = INTEGRATION_TYPE_CONFIG[supplier.integrationType];
   const IntIcon = supplier.integrationType === "api" ? Zap : supplier.integrationType === "email" ? Mail : Hand;
@@ -35,13 +37,24 @@ function SupplierBadge({ listingId }: { listingId: string }) {
   );
 }
 
+function LoadingDetail() {
+  return (
+    <div className="container-wide flex items-center justify-center py-20">
+      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
 
 export function WarehouseDetail() {
   const { id } = useParams();
   const { t } = useLanguage();
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
-  const listing = WAREHOUSES.find((w) => w.id === id);
-  if (!listing) return <NotFoundDetail />;
+  const { data: listing, isLoading } = useListing(id);
+
+  if (isLoading) return <LoadingDetail />;
+  if (!listing || listing.type !== "warehouse") return <NotFoundDetail />;
+  const wListing = listing as WarehouseListing;
 
   const extraOptions = [
     { id: "packing", label: t("detail.packingHelp") },
@@ -53,20 +66,20 @@ export function WarehouseDetail() {
   const toggleExtra = (eId: string) =>
     setSelectedExtras((prev) => prev.includes(eId) ? prev.filter((e) => e !== eId) : [...prev, eId]);
 
-  const bookingUrl = `/book?listing=${listing.id}&type=warehouse${selectedExtras.length ? `&extras=${selectedExtras.join(",")}` : ""}`;
+  const bookingUrl = `/book?listing=${wListing.id}&type=warehouse${selectedExtras.length ? `&extras=${selectedExtras.join(",")}` : ""}`;
 
-  const publicPrice = Math.round(listing.priceFrom / 0.95);
-  const savings = publicPrice - listing.priceFrom;
+  const publicPrice = Math.round(wListing.priceFrom / 0.95);
+  const savings = publicPrice - wListing.priceFrom;
 
   const extras = [
-    { label: t("detail.heated"), value: listing.heated },
-    { label: t("detail.indoor"), value: listing.indoor },
-    { label: t("detail.access24"), value: listing.access24_7 },
-    { label: t("detail.security"), value: listing.security },
-    { label: t("detail.loadingDock"), value: listing.loadingDock },
-    { label: t("detail.forklift"), value: listing.forklift },
-    { label: t("detail.shortTerm"), value: listing.shortTerm },
-    { label: t("detail.longTerm"), value: listing.longTerm },
+    { label: t("detail.heated"), value: wListing.heated },
+    { label: t("detail.indoor"), value: wListing.indoor },
+    { label: t("detail.access24"), value: wListing.access24_7 },
+    { label: t("detail.security"), value: wListing.security },
+    { label: t("detail.loadingDock"), value: wListing.loadingDock },
+    { label: t("detail.forklift"), value: wListing.forklift },
+    { label: t("detail.shortTerm"), value: wListing.shortTerm },
+    { label: t("detail.longTerm"), value: wListing.longTerm },
   ];
 
   return (
@@ -76,21 +89,21 @@ export function WarehouseDetail() {
         <span className="opacity-40">/</span>
         <Link to="/search?type=warehouse" className="hover:text-foreground transition-colors">{t("nav.storage")}</Link>
         <span className="opacity-40">/</span>
-        <span className="text-foreground font-medium truncate max-w-[180px] sm:max-w-[280px]">{listing.title}</span>
+        <span className="text-foreground font-medium truncate max-w-[180px] sm:max-w-[280px]">{wListing.title}</span>
       </nav>
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <div className="overflow-hidden rounded-xl">
-            <img src={listing.image} alt={listing.title} className="h-[300px] w-full object-cover md:h-[400px]" />
+            <img src={wListing.image} alt={wListing.title} className="h-[300px] w-full object-cover md:h-[400px]" />
           </div>
 
-          <h1 className="mt-6 font-display text-2xl font-bold md:text-3xl">{listing.title}</h1>
+          <h1 className="mt-6 font-display text-2xl font-bold md:text-3xl">{wListing.title}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1"><MapPin className="h-4 w-4" /> {listing.address}, {listing.city}</span>
-            <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" /> {listing.rating} ({listing.reviewCount} {t("detail.reviews")})</span>
+            <span className="flex items-center gap-1"><MapPin className="h-4 w-4" /> {wListing.address}, {wListing.city}</span>
+            <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" /> {wListing.rating} ({wListing.reviewCount} {t("detail.reviews")})</span>
           </div>
-          <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{listing.description}</p>
+          <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{wListing.description}</p>
 
           <h2 className="mt-8 font-display text-lg font-semibold">{t("detail.features")}</h2>
           <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -102,11 +115,11 @@ export function WarehouseDetail() {
             ))}
           </div>
 
-          {listing.features.length > 0 && (
+          {wListing.features.length > 0 && (
             <>
               <h2 className="mt-8 font-display text-lg font-semibold">{t("detail.includes")}</h2>
               <ul className="mt-3 space-y-2">
-                {listing.features.map((f) => (
+                {wListing.features.map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm"><Check className="h-4 w-4 text-accent" /> {f}</li>
                 ))}
               </ul>
@@ -116,7 +129,7 @@ export function WarehouseDetail() {
           <h2 className="mt-8 font-display text-lg font-semibold">{t("detail.location")}</h2>
           <div className="mt-3">
             <Suspense fallback={<div className="h-[200px] rounded-xl bg-secondary" />}>
-              <InteractiveMap listings={[listing]} height="h-[200px]" zoom={14} center={[listing.lat, listing.lng]} />
+              <InteractiveMap listings={[wListing]} height="h-[200px]" zoom={14} center={[wListing.lat, wListing.lng]} />
             </Suspense>
           </div>
         </div>
@@ -124,8 +137,8 @@ export function WarehouseDetail() {
         <div>
           <div className="card-prominent sticky top-20 p-6">
             <div className="flex items-baseline gap-1">
-              <span className="font-display text-3xl font-bold">al. {listing.priceFrom}€</span>
-              <span className="text-sm text-muted-foreground">/ {listing.priceUnit.replace("€/", "")}</span>
+              <span className="font-display text-3xl font-bold">al. {wListing.priceFrom}€</span>
+              <span className="text-sm text-muted-foreground">/ {wListing.priceUnit.replace("€/", "")}</span>
             </div>
             <div className="mt-1 flex items-center gap-2">
               <span className="text-xs line-through text-muted-foreground">{publicPrice}€</span>
@@ -133,16 +146,16 @@ export function WarehouseDetail() {
                 <BadgePercent className="h-3 w-3" /> {t("detail.save")} {savings}€
               </span>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">al. {listing.size} {listing.sizeUnit}</p>
+            <p className="mt-1 text-xs text-muted-foreground">al. {wListing.size} {wListing.sizeUnit}</p>
 
             <div className="mt-4 space-y-2 text-sm">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Calendar className="h-4 w-4" />
-                {listing.availableNow ? t("detail.availableNow") : t("detail.checkAvailability")}
+                {wListing.availableNow ? t("detail.availableNow") : t("detail.checkAvailability")}
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Shield className="h-4 w-4" />
-                {listing.security ? t("detail.secured") : t("detail.noSecurity")}
+                {wListing.security ? t("detail.secured") : t("detail.noSecurity")}
               </div>
             </div>
 
@@ -165,9 +178,9 @@ export function WarehouseDetail() {
             </div>
 
             <div className="mt-4 rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
-              {t("detail.provider")}: <strong className="text-foreground">{listing.provider}</strong>
+              {t("detail.provider")}: <strong className="text-foreground">{wListing.provider}</strong>
             </div>
-            <SupplierBadge listingId={listing.id} />
+            <SupplierBadge supplierId={wListing.supplierId} />
           </div>
         </div>
       </div>
@@ -177,8 +190,8 @@ export function WarehouseDetail() {
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-xs text-muted-foreground">{t("detail.from")}</div>
-            <div className="font-display text-lg font-bold">{listing.priceFrom}€
-              <span className="text-xs font-normal text-muted-foreground ml-1">/{listing.priceUnit.replace("€/","")}</span>
+            <div className="font-display text-lg font-bold">{wListing.priceFrom}€
+              <span className="text-xs font-normal text-muted-foreground ml-1">/{wListing.priceUnit.replace("€/","")}</span>
             </div>
           </div>
           <Link to={bookingUrl} className="shrink-0">
@@ -192,12 +205,15 @@ export function WarehouseDetail() {
 
 export function MovingDetail() {
   const { id } = useParams();
-  const listing = MOVING_SERVICES.find((m) => m.id === id);
   const { t } = useLanguage();
-  if (!listing) return <NotFoundDetail />;
+  const { data: listing, isLoading } = useListing(id);
 
-  const publicPrice = Math.round(listing.priceFrom / 0.95);
-  const savings = publicPrice - listing.priceFrom;
+  if (isLoading) return <LoadingDetail />;
+  if (!listing || listing.type !== "moving") return <NotFoundDetail />;
+  const mListing = listing as MovingListing;
+
+  const publicPrice = Math.round(mListing.priceFrom / 0.95);
+  const savings = publicPrice - mListing.priceFrom;
 
   return (
     <div className="container-wide py-6 pb-24 lg:pb-6">
@@ -206,28 +222,28 @@ export function MovingDetail() {
         <span className="opacity-40">/</span>
         <Link to="/search?type=moving" className="hover:text-foreground transition-colors">{t("nav.moving")}</Link>
         <span className="opacity-40">/</span>
-        <span className="text-foreground font-medium truncate max-w-[180px] sm:max-w-[280px]">{listing.title}</span>
+        <span className="text-foreground font-medium truncate max-w-[180px] sm:max-w-[280px]">{mListing.title}</span>
       </nav>
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <img src={listing.image} alt={listing.title} className="h-[300px] w-full rounded-xl object-cover md:h-[400px]" />
-          <h1 className="mt-6 font-display text-2xl font-bold md:text-3xl">{listing.title}</h1>
+          <img src={mListing.image} alt={mListing.title} className="h-[300px] w-full rounded-xl object-cover md:h-[400px]" />
+          <h1 className="mt-6 font-display text-2xl font-bold md:text-3xl">{mListing.title}</h1>
           <div className="mt-2 flex items-center gap-3 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1"><MapPin className="h-4 w-4" /> {listing.city}</span>
-            <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" /> {listing.rating} ({listing.reviewCount})</span>
+            <span className="flex items-center gap-1"><MapPin className="h-4 w-4" /> {mListing.city}</span>
+            <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" /> {mListing.rating} ({mListing.reviewCount})</span>
           </div>
-          <p className="mt-4 text-sm text-muted-foreground">{listing.description}</p>
+          <p className="mt-4 text-sm text-muted-foreground">{mListing.description}</p>
 
           <h2 className="mt-8 font-display text-lg font-semibold">{t("detail.servicesIncluded")}</h2>
           <ul className="mt-3 space-y-2">
-            {listing.services.map((s) => (
+            {mListing.services.map((s) => (
               <li key={s} className="flex items-center gap-2 text-sm"><Check className="h-4 w-4 text-accent" /> {s}</li>
             ))}
           </ul>
 
           <h2 className="mt-8 font-display text-lg font-semibold">{t("detail.serviceArea")}</h2>
           <div className="mt-3 flex flex-wrap gap-2">
-            {listing.serviceArea.map((a) => (
+            {mListing.serviceArea.map((a) => (
               <span key={a} className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-foreground">{a}</span>
             ))}
           </div>
@@ -236,8 +252,8 @@ export function MovingDetail() {
         <div>
           <div className="card-prominent sticky top-20 p-6">
             <div className="flex items-baseline gap-1">
-              <span className="font-display text-3xl font-bold">al. {listing.priceFrom}€</span>
-              <span className="text-sm text-muted-foreground">/ {listing.priceUnit.replace("€/", "")}</span>
+              <span className="font-display text-3xl font-bold">al. {mListing.priceFrom}€</span>
+              <span className="text-sm text-muted-foreground">/ {mListing.priceUnit.replace("€/", "")}</span>
             </div>
             <div className="mt-1 flex items-center gap-2">
               <span className="text-xs line-through text-muted-foreground">{publicPrice}€</span>
@@ -245,15 +261,15 @@ export function MovingDetail() {
                 <BadgePercent className="h-3 w-3" /> {t("detail.save")} {savings}€
               </span>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">{listing.pricingModel === "hourly" ? t("detail.hourlyRate") : t("detail.fixedPrice")}</p>
-            <Link to={`/book?listing=${listing.id}&type=moving`}>
+            <p className="mt-1 text-xs text-muted-foreground">{mListing.pricingModel === "hourly" ? t("detail.hourlyRate") : t("detail.fixedPrice")}</p>
+            <Link to={`/book?listing=${mListing.id}&type=moving`}>
               <Button className="mt-6 w-full bg-accent text-accent-foreground hover:bg-accent/90">{t("detail.bookNow")}</Button>
             </Link>
             <p className="mt-2 text-center text-xs text-muted-foreground">{t("detail.savingsNote")}</p>
             <div className="mt-4 rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
-              {t("detail.provider")}: <strong className="text-foreground">{listing.provider}</strong>
+              {t("detail.provider")}: <strong className="text-foreground">{mListing.provider}</strong>
             </div>
-            <SupplierBadge listingId={listing.id} />
+            <SupplierBadge supplierId={mListing.supplierId} />
           </div>
         </div>
       </div>
@@ -263,11 +279,11 @@ export function MovingDetail() {
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-xs text-muted-foreground">{t("detail.from")}</div>
-            <div className="font-display text-lg font-bold">{listing.priceFrom}€
-              <span className="text-xs font-normal text-muted-foreground ml-1">/{listing.priceUnit.replace("€/","")}</span>
+            <div className="font-display text-lg font-bold">{mListing.priceFrom}€
+              <span className="text-xs font-normal text-muted-foreground ml-1">/{mListing.priceUnit.replace("€/","")}</span>
             </div>
           </div>
-          <Link to={`/book?listing=${listing.id}&type=moving`} className="shrink-0">
+          <Link to={`/book?listing=${mListing.id}&type=moving`} className="shrink-0">
             <Button className="bg-accent text-accent-foreground hover:bg-accent/90 px-6">{t("detail.bookNow")}</Button>
           </Link>
         </div>
@@ -278,12 +294,15 @@ export function MovingDetail() {
 
 export function TrailerDetail() {
   const { id } = useParams();
-  const listing = TRAILER_RENTALS.find((t) => t.id === id);
   const { t } = useLanguage();
-  if (!listing) return <NotFoundDetail />;
+  const { data: listing, isLoading } = useListing(id);
 
-  const publicPrice = Math.round(listing.priceFrom / 0.95);
-  const savings = publicPrice - listing.priceFrom;
+  if (isLoading) return <LoadingDetail />;
+  if (!listing || listing.type !== "trailer") return <NotFoundDetail />;
+  const tListing = listing as TrailerListing;
+
+  const publicPrice = Math.round(tListing.priceFrom / 0.95);
+  const savings = publicPrice - tListing.priceFrom;
 
   return (
     <div className="container-wide py-6 pb-24 lg:pb-6">
@@ -292,27 +311,27 @@ export function TrailerDetail() {
         <span className="opacity-40">/</span>
         <Link to="/search?type=trailer" className="hover:text-foreground transition-colors">{t("nav.trailer")}</Link>
         <span className="opacity-40">/</span>
-        <span className="text-foreground font-medium truncate max-w-[180px] sm:max-w-[280px]">{listing.title}</span>
+        <span className="text-foreground font-medium truncate max-w-[180px] sm:max-w-[280px]">{tListing.title}</span>
       </nav>
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <img src={listing.image} alt={listing.title} className="h-[300px] w-full rounded-xl object-cover md:h-[400px]" />
-          <h1 className="mt-6 font-display text-2xl font-bold md:text-3xl">{listing.title}</h1>
+          <img src={tListing.image} alt={tListing.title} className="h-[300px] w-full rounded-xl object-cover md:h-[400px]" />
+          <h1 className="mt-6 font-display text-2xl font-bold md:text-3xl">{tListing.title}</h1>
           <div className="mt-2 flex items-center gap-3 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1"><MapPin className="h-4 w-4" /> {listing.address}, {listing.city}</span>
-            <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" /> {listing.rating} ({listing.reviewCount})</span>
+            <span className="flex items-center gap-1"><MapPin className="h-4 w-4" /> {tListing.address}, {tListing.city}</span>
+            <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" /> {tListing.rating} ({tListing.reviewCount})</span>
           </div>
-          <p className="mt-4 text-sm text-muted-foreground">{listing.description}</p>
+          <p className="mt-4 text-sm text-muted-foreground">{tListing.description}</p>
 
           <h2 className="mt-8 font-display text-lg font-semibold">{t("detail.specifications")}</h2>
           <div className="mt-3 grid grid-cols-2 gap-3">
-            <div className="rounded-lg border border-border p-3"><div className="text-xs text-muted-foreground">{t("detail.trailerType")}</div><div className="mt-0.5 text-sm font-medium">{listing.trailerType}</div></div>
-            <div className="rounded-lg border border-border p-3"><div className="text-xs text-muted-foreground">{t("detail.weightClass")}</div><div className="mt-0.5 text-sm font-medium">{listing.weightClass}</div></div>
+            <div className="rounded-lg border border-border p-3"><div className="text-xs text-muted-foreground">{t("detail.trailerType")}</div><div className="mt-0.5 text-sm font-medium">{tListing.trailerType}</div></div>
+            <div className="rounded-lg border border-border p-3"><div className="text-xs text-muted-foreground">{t("detail.weightClass")}</div><div className="mt-0.5 text-sm font-medium">{tListing.weightClass}</div></div>
           </div>
 
           <h2 className="mt-8 font-display text-lg font-semibold">{t("detail.requirements")}</h2>
           <ul className="mt-3 space-y-2">
-            {listing.requirements.map((r) => (
+            {tListing.requirements.map((r) => (
               <li key={r} className="flex items-center gap-2 text-sm"><Check className="h-4 w-4 text-accent" /> {r}</li>
             ))}
           </ul>
@@ -321,8 +340,8 @@ export function TrailerDetail() {
         <div>
           <div className="card-prominent sticky top-20 p-6">
             <div className="flex items-baseline gap-1">
-              <span className="font-display text-3xl font-bold">al. {listing.priceFrom}€</span>
-              <span className="text-sm text-muted-foreground">/ {listing.priceUnit.replace("€/", "")}</span>
+              <span className="font-display text-3xl font-bold">al. {tListing.priceFrom}€</span>
+              <span className="text-sm text-muted-foreground">/ {tListing.priceUnit.replace("€/", "")}</span>
             </div>
             <div className="mt-1 flex items-center gap-2">
               <span className="text-xs line-through text-muted-foreground">{publicPrice}€</span>
@@ -330,14 +349,14 @@ export function TrailerDetail() {
                 <BadgePercent className="h-3 w-3" /> {t("detail.save")} {savings}€
               </span>
             </div>
-            <Link to={`/book?listing=${listing.id}&type=trailer`}>
+            <Link to={`/book?listing=${tListing.id}&type=trailer`}>
               <Button className="mt-6 w-full bg-accent text-accent-foreground hover:bg-accent/90">{t("detail.bookNow")}</Button>
             </Link>
             <p className="mt-2 text-center text-xs text-muted-foreground">{t("detail.savingsNote")}</p>
             <div className="mt-4 rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
-              {t("detail.provider")}: <strong className="text-foreground">{listing.provider}</strong>
+              {t("detail.provider")}: <strong className="text-foreground">{tListing.provider}</strong>
             </div>
-            <SupplierBadge listingId={listing.id} />
+            <SupplierBadge supplierId={tListing.supplierId} />
           </div>
         </div>
       </div>
@@ -347,11 +366,11 @@ export function TrailerDetail() {
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-xs text-muted-foreground">{t("detail.from")}</div>
-            <div className="font-display text-lg font-bold">{listing.priceFrom}€
-              <span className="text-xs font-normal text-muted-foreground ml-1">/{listing.priceUnit.replace("€/","")}</span>
+            <div className="font-display text-lg font-bold">{tListing.priceFrom}€
+              <span className="text-xs font-normal text-muted-foreground ml-1">/{tListing.priceUnit.replace("€/","")}</span>
             </div>
           </div>
-          <Link to={`/book?listing=${listing.id}&type=trailer`} className="shrink-0">
+          <Link to={`/book?listing=${tListing.id}&type=trailer`} className="shrink-0">
             <Button className="bg-accent text-accent-foreground hover:bg-accent/90 px-6">{t("detail.bookNow")}</Button>
           </Link>
         </div>

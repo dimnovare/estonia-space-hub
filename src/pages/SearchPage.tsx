@@ -1,8 +1,9 @@
 import { useState, useMemo, lazy, Suspense } from "react";
 import { useSearchParams } from "react-router-dom";
-import { SlidersHorizontal, X, ChevronDown, List, MapIcon } from "lucide-react";
+import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ALL_LISTINGS, type Listing, type ListingType } from "@/data/mockData";
+import { useListings } from "@/hooks/queries";
+import type { Listing, ListingType, ListingFilters } from "@/services/types";
 import ListingCard from "@/components/ListingCard";
 import { useLanguage } from "@/i18n/LanguageContext";
 
@@ -32,6 +33,38 @@ export default function SearchPage() {
   const pricingFixed = searchParams.get("pricingFixed") === "true";
   const trailerClosed = searchParams.get("trailerClosed") === "true";
   const availableNow = searchParams.get("availableNow") === "true";
+
+  // Build filters for the service layer
+  const filters: ListingFilters = useMemo(() => ({
+    type: activeType !== "all" ? activeType as ListingType : undefined,
+    query: query || undefined,
+    city: cityFilter || undefined,
+    priceMax: priceMax ? parseInt(priceMax) : undefined,
+    availableNow: availableNow || undefined,
+    sort: sort as any,
+  }), [activeType, query, cityFilter, priceMax, availableNow, sort]);
+
+  const { data: result, isLoading } = useListings(filters);
+  const serverFiltered = result?.data || [];
+
+  // Client-side post-filters for feature-specific booleans
+  const filtered = useMemo(() => {
+    let results = serverFiltered;
+    if (heated) results = results.filter((l) => l.type === "warehouse" && (l as any).heated);
+    if (access24) results = results.filter((l) => l.type === "warehouse" && (l as any).access24_7);
+    if (indoor) results = results.filter((l) => l.type === "warehouse" && (l as any).indoor);
+    if (security) results = results.filter((l) => l.type === "warehouse" && (l as any).security);
+    if (loadingDock) results = results.filter((l) => l.type === "warehouse" && (l as any).loadingDock);
+    if (forkliftFilter) results = results.filter((l) => l.type === "warehouse" && (l as any).forklift);
+    if (shortTerm) results = results.filter((l) => l.type === "warehouse" && (l as any).shortTerm);
+    if (longTerm) results = results.filter((l) => l.type === "warehouse" && (l as any).longTerm);
+    if (withVan) results = results.filter((l) => l.type === "moving" && (l as any).withVan);
+    if (packingHelp) results = results.filter((l) => l.type === "moving" && (l as any).packingHelp);
+    if (loadingHelp) results = results.filter((l) => l.type === "moving" && (l as any).loadingHelp);
+    if (pricingFixed) results = results.filter((l) => l.type === "moving" && (l as any).pricingModel === "fixed");
+    if (trailerClosed) results = results.filter((l) => l.type === "trailer" && (l as any).trailerType.toLowerCase().includes("kinnine"));
+    return results;
+  }, [serverFiltered, heated, access24, indoor, security, loadingDock, forkliftFilter, shortTerm, longTerm, withVan, packingHelp, loadingHelp, pricingFixed, trailerClosed]);
 
   // Local-only UI state
   const [showFilters, setShowFilters] = useState(false);
@@ -63,48 +96,6 @@ export default function SearchPage() {
     { value: "moving", label: t("search.type.moving") },
     { value: "trailer", label: t("search.type.trailer") },
   ];
-
-  const filtered = useMemo(() => {
-    let results = ALL_LISTINGS;
-    if (activeType !== "all") results = results.filter((l) => l.type === activeType);
-    if (query) {
-      const q = query.toLowerCase();
-      results = results.filter(
-        (l) => l.title.toLowerCase().includes(q) || l.city.toLowerCase().includes(q) || l.address.toLowerCase().includes(q)
-      );
-    }
-    if (cityFilter) {
-      const c = cityFilter.toLowerCase();
-      results = results.filter((l) => l.city.toLowerCase().includes(c));
-    }
-    if (priceMax) {
-      const max = parseInt(priceMax);
-      if (!isNaN(max)) results = results.filter((l) => l.priceFrom <= max);
-    }
-    if (availableNow) results = results.filter((l) => l.availableNow);
-
-    if (heated) results = results.filter((l) => l.type === "warehouse" && l.heated);
-    if (access24) results = results.filter((l) => l.type === "warehouse" && l.access24_7);
-    if (indoor) results = results.filter((l) => l.type === "warehouse" && l.indoor);
-    if (security) results = results.filter((l) => l.type === "warehouse" && l.security);
-    if (loadingDock) results = results.filter((l) => l.type === "warehouse" && l.loadingDock);
-    if (forkliftFilter) results = results.filter((l) => l.type === "warehouse" && l.forklift);
-    if (shortTerm) results = results.filter((l) => l.type === "warehouse" && l.shortTerm);
-    if (longTerm) results = results.filter((l) => l.type === "warehouse" && l.longTerm);
-
-    if (withVan) results = results.filter((l) => l.type === "moving" && l.withVan);
-    if (packingHelp) results = results.filter((l) => l.type === "moving" && l.packingHelp);
-    if (loadingHelp) results = results.filter((l) => l.type === "moving" && l.loadingHelp);
-    if (pricingFixed) results = results.filter((l) => l.type === "moving" && l.pricingModel === "fixed");
-
-    if (trailerClosed) results = results.filter((l) => l.type === "trailer" && l.trailerType.toLowerCase().includes("kinnine"));
-
-    if (sort === "cheapest") results = [...results].sort((a, b) => a.priceFrom - b.priceFrom);
-    if (sort === "rating") results = [...results].sort((a, b) => b.rating - a.rating);
-    if (sort === "best-value") results = [...results].sort((a, b) => b.rating - a.rating);
-    if (sort === "newest") results = [...results].sort((a, b) => b.id.localeCompare(a.id));
-    return results;
-  }, [activeType, query, cityFilter, priceMax, heated, access24, indoor, security, loadingDock, forkliftFilter, shortTerm, longTerm, withVan, packingHelp, loadingHelp, pricingFixed, trailerClosed, availableNow, sort]);
 
   const allFilters = [heated, access24, indoor, security, loadingDock, forkliftFilter, shortTerm, longTerm, withVan, packingHelp, loadingHelp, pricingFixed, trailerClosed, availableNow];
   const activeFiltersCount = allFilters.filter(Boolean).length + (cityFilter ? 1 : 0) + (priceMax ? 1 : 0);
@@ -233,21 +224,29 @@ export default function SearchPage() {
         </div>
 
         <div className="p-4">
-          <p className="mb-4 text-sm text-muted-foreground">
-            {filtered.length} {t("search.results")}{query && ` ${t("search.forQuery")} "${query}"`}
-          </p>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
-            {filtered.map((l) => (
-              <div key={l.id} className={`cursor-pointer rounded-xl transition-all ${selectedListingId === l.id ? "ring-2 ring-accent" : ""}`} onMouseEnter={() => setSelectedListingId(l.id)} onMouseLeave={() => setSelectedListingId(null)} onClick={() => setSelectedListingId(l.id)}>
-                <ListingCard listing={l} />
-              </div>
-            ))}
-          </div>
-          {filtered.length === 0 && (
-            <div className="py-20 text-center text-muted-foreground">
-              <p className="text-lg font-medium">{t("search.noResults")}</p>
-              <p className="mt-1 text-sm">{t("search.noResultsDesc")}</p>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
+          ) : (
+            <>
+              <p className="mb-4 text-sm text-muted-foreground">
+                {filtered.length} {t("search.results")}{query && ` ${t("search.forQuery")} "${query}"`}
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
+                {filtered.map((l) => (
+                  <div key={l.id} className={`cursor-pointer rounded-xl transition-all ${selectedListingId === l.id ? "ring-2 ring-accent" : ""}`} onMouseEnter={() => setSelectedListingId(l.id)} onMouseLeave={() => setSelectedListingId(null)} onClick={() => setSelectedListingId(l.id)}>
+                    <ListingCard listing={l} />
+                  </div>
+                ))}
+              </div>
+              {filtered.length === 0 && (
+                <div className="py-20 text-center text-muted-foreground">
+                  <p className="text-lg font-medium">{t("search.noResults")}</p>
+                  <p className="mt-1 text-sm">{t("search.noResultsDesc")}</p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
