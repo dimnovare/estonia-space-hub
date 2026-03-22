@@ -433,46 +433,32 @@ function AccountMessages() {
 }
 
 function AccountFavorites() {
-  const favorites = [
-    { id: "w1", title: "Laobox Tallinn Kesklinn", city: "Tallinn", price: "49€/kuu", type: "warehouse" as const },
-    { id: "w3", title: "SecureStore Ülemiste", city: "Tallinn", price: "79€/kuu", type: "warehouse" as const },
-  ];
+  const { t } = useLanguage();
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Lemmikud</h1>
-      <div className="mt-4 space-y-2">
-        {favorites.map(f => {
-          const Icon = typeIcons[f.type];
-          return (
-            <Link key={f.id} to={`/${f.type}/${f.id}`} className="flex items-center justify-between rounded-xl border border-border p-4 hover:bg-secondary transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary"><Icon className="h-5 w-5 text-muted-foreground" /></div>
-                <div><div className="text-sm font-medium">{f.title}</div><div className="text-xs text-muted-foreground">{f.city} · {f.price}</div></div>
-              </div>
-              <Heart className="h-4 w-4 text-accent fill-accent" />
-            </Link>
-          );
-        })}
+      <h1 className="font-display text-2xl font-bold">{t("account.favorites.title")}</h1>
+      <div className="py-16 text-center">
+        <Heart className="mx-auto h-12 w-12 text-muted-foreground/20" />
+        <p className="mt-4 text-sm text-muted-foreground">{t("account.favorites.empty")}</p>
+        <Link to="/search">
+          <Button className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90">{t("account.favorites.cta")}</Button>
+        </Link>
       </div>
     </div>
   );
 }
 
 function AccountSearches() {
-  const searches = [
-    { id: "s1", query: "Köetud ladu Tallinnas, al. 5m²", results: 12, alert: true },
-    { id: "s2", query: "Kolimine Tartus", results: 3, alert: false },
-  ];
+  const { t } = useLanguage();
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Salvestatud otsingud</h1>
-      <div className="mt-4 space-y-2">
-        {searches.map(s => (
-          <Link key={s.id} to="/search" className="flex items-center justify-between rounded-xl border border-border p-4 hover:bg-secondary transition-colors">
-            <div><div className="text-sm font-medium">{s.query}</div><div className="text-xs text-muted-foreground">{s.results} tulemust</div></div>
-            <div className="flex items-center gap-2">{s.alert && <Bell className="h-4 w-4 text-accent" />}<ChevronRight className="h-4 w-4 text-muted-foreground" /></div>
-          </Link>
-        ))}
+      <h1 className="font-display text-2xl font-bold">{t("account.savedSearches")}</h1>
+      <div className="py-16 text-center">
+        <Search className="mx-auto h-12 w-12 text-muted-foreground/20" />
+        <p className="mt-4 text-sm text-muted-foreground">{t("account.savedSearches.empty")}</p>
+        <Link to="/search">
+          <Button className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90">{t("account.savedSearches.cta")}</Button>
+        </Link>
       </div>
     </div>
   );
