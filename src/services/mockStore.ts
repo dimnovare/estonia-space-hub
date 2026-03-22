@@ -1,5 +1,5 @@
 // ─── Centralized Mock Data Store ───
-import type { User, Supplier, Invoice, Message, AuditLogEntry } from "./types";
+import type { User, Supplier, Invoice, Message, AuditLogEntry, PartnerIntegrationSettings, OrderRoutingRule } from "./types";
 
 export const MOCK_USERS: User[] = [
   { id: "u1", name: "Andres Tamm", email: "andres@email.com", role: "customer", phone: "+372 5551 2345", status: "active", registeredAt: "2025-11-05", lastLoginAt: "2026-03-20", bookingsCount: 3 },
@@ -46,4 +46,22 @@ export const MOCK_AUDIT_LOG: AuditLogEntry[] = [
   { id: "log-6", action: "user.blocked", actor: "Peeter Kuusk", target: "Liina Rebane", detail: "Kasutaja blokeeritud kahtlase tegevuse tõttu", createdAt: "2026-03-15 16:00" },
   { id: "log-7", action: "listing.updated", actor: "Maria Saar", target: "Laobox Tallinn Kesklinn", detail: "Hind muudetud: 45€ → 49€", createdAt: "2026-03-14 09:30" },
   { id: "log-8", action: "supplier.deactivated", actor: "Peeter Kuusk", target: "Pärnu Ladu OÜ", detail: "Partner deaktiveeritud — leping lõppenud", createdAt: "2026-03-10 14:00" },
+];
+
+// ─── Integration Settings ───
+export const MOCK_INTEGRATION_SETTINGS: PartnerIntegrationSettings[] = [
+  { id: "int-1", supplierId: "sup-1", supplierName: "Laobox OÜ", approvalMode: "auto", postingMode: "api", fallbackPostingMode: "email", apiEndpoint: "https://api.laobox.ee/v1/orders", apiAuthType: "bearer", apiAuthPlaceholder: "Bearer sk_live_***", recipientEmail: "orders@laobox.ee", mappingProfile: "laobox_v2", isActive: true, lastTestedAt: "2026-03-20 14:30", lastTestResult: "success" },
+  { id: "int-2", supplierId: "sup-2", supplierName: "MiniLadu AS", approvalMode: "admin", postingMode: "email", fallbackPostingMode: "manual", recipientEmail: "tiina@miniladu.ee", mappingProfile: "default", isActive: true },
+  { id: "int-3", supplierId: "sup-3", supplierName: "SecureStore OÜ", approvalMode: "auto", postingMode: "api", fallbackPostingMode: "email", apiEndpoint: "https://api.securestore.ee/bookings", apiAuthType: "apikey", apiAuthPlaceholder: "X-Api-Key: ***", recipientEmail: "bookings@securestore.ee", mappingProfile: "securestore_v1", isActive: true, lastTestedAt: "2026-03-19 09:15", lastTestResult: "success" },
+  { id: "int-4", supplierId: "sup-4", supplierName: "KoliExpress OÜ", approvalMode: "provider", postingMode: "email", fallbackPostingMode: "manual", recipientEmail: "andres@koliexpress.ee", mappingProfile: "default", isActive: true },
+  { id: "int-5", supplierId: "sup-5", supplierName: "HaagisRent OÜ", approvalMode: "admin", postingMode: "manual", fallbackPostingMode: "email", recipientEmail: "kristjan@haagisrent.ee", isActive: false },
+];
+
+// ─── Routing Rules ───
+export const MOCK_ROUTING_RULES: OrderRoutingRule[] = [
+  { id: "rule-1", name: "API partnerid — automaatne", serviceType: "warehouse", requiresApproval: false, approverRole: "admin", postingChannel: "api", priority: 1, isActive: true },
+  { id: "rule-2", name: "Ärikliendid — admin kinnitab", customerType: "business", requiresApproval: true, approverRole: "admin", postingChannel: "email", priority: 2, isActive: true },
+  { id: "rule-3", name: "Kõrge hinnaga tellimused", priceThreshold: 500, requiresApproval: true, approverRole: "admin", postingChannel: "email", priority: 3, isActive: true },
+  { id: "rule-4", name: "Kolimine — partner kinnitab", serviceType: "moving", requiresApproval: true, approverRole: "provider", postingChannel: "email", priority: 4, isActive: true },
+  { id: "rule-5", name: "Haagise rent — manuaalne", serviceType: "trailer", requiresApproval: true, approverRole: "admin", postingChannel: "manual", priority: 5, isActive: false },
 ];

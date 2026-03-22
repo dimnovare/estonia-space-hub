@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import type { UserRole } from "@/services/types";
 
-export type UserRole = "guest" | "customer" | "provider" | "admin";
+export type { UserRole };
 
 export interface MockUser {
   id: string;
