@@ -26,9 +26,7 @@ export default function Footer() {
   };
 
   return (
-    <>
-      <ScrollToTop />
-      <footer className="border-t border-border bg-primary text-primary-foreground">
+    <footer className="border-t border-border bg-primary text-primary-foreground">
         <div className="container-wide py-12">
           <div className="grid gap-8 md:grid-cols-4">
             <div>

@@ -10,9 +10,10 @@ const roles: { role: UserRole; label: string; color: string }[] = [
 ];
 
 export default function DevRoleSwitcher() {
-  if (import.meta.env.PROD) return null;
   const { role, switchRole } = useAuth();
   const [open, setOpen] = useState(false);
+
+  if (import.meta.env.PROD) return null;
 
   return (
     <div className="fixed bottom-4 right-4 z-[100]">
