@@ -97,7 +97,7 @@ export default function BookingPage() {
 
           {phase === "done" && (
             <div className="mt-6 flex justify-center gap-3">
-              <Link to="/account"><Button variant="outline">{t("booking.myBookings")}</Button></Link>
+              <Link to="/account?tab=bookings"><Button variant="outline">{t("booking.myBookings")}</Button></Link>
               <Link to="/search"><Button className="bg-accent text-accent-foreground hover:bg-accent/90">{t("booking.searchMore")}</Button></Link>
             </div>
           )}
