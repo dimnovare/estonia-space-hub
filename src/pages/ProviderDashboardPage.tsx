@@ -758,7 +758,23 @@ function ProviderBookings() {
           <Download className="h-3.5 w-3.5" /> Ekspordi CSV
         </Button>
       </div>
-      <div className="mt-6 overflow-x-auto rounded-xl border border-border">
+      {/* Mobile cards */}
+      <div className="mt-6 space-y-2 sm:hidden">
+        {mockProviderBookings.map((b) => (
+          <div key={b.id} className="rounded-xl border border-border p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">{b.client}</span>
+              <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${b.status === "confirmed" ? "bg-success/10 text-success" : b.status === "pending" ? "bg-warning/10 text-warning" : "bg-accent/10 text-accent"}`}>
+                {b.status === "confirmed" ? "Kinnitatud" : b.status === "pending" ? "Ootel" : "Aktiivne"}
+              </span>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">{b.listing} · {b.date} · {b.duration}</p>
+            <p className="mt-1 text-sm font-semibold">€{b.total}</p>
+          </div>
+        ))}
+      </div>
+      {/* Desktop table */}
+      <div className="mt-6 hidden rounded-xl border border-border sm:block">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
             <tr>
