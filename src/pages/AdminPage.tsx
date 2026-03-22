@@ -134,10 +134,10 @@ export default function AdminPage() {
 function AdminDashboard() {
   const { t } = useLanguage();
   const stats = [
-    { label: t("admin.stats.listings"), value: "156", change: "+12%", icon: Eye },
-    { label: t("admin.stats.orders"), value: "342", change: "+24%", icon: Package },
-    { label: t("admin.stats.users"), value: "2,847", change: "+8%", icon: Users },
-    { label: t("admin.stats.revenue"), value: "€4,230", change: "+18%", icon: DollarSign },
+    { label: t("admin.stats.listings"), value: initialListings.length.toString(), change: "+12%", icon: Eye },
+    { label: t("admin.stats.orders"), value: MOCK_ORDERS.length.toString(), change: "+24%", icon: Package },
+    { label: t("admin.stats.users"), value: MOCK_USERS.length.toLocaleString(), change: "+8%", icon: Users },
+    { label: t("admin.stats.revenue"), value: "€" + MOCK_SUPPLIERS.reduce((s, sup) => s + sup.revenue, 0).toLocaleString(), change: "+18%", icon: DollarSign },
   ];
 
   return (
