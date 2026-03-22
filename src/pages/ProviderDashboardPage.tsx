@@ -124,7 +124,7 @@ export default function ProviderDashboardPage() {
           </div>
 
           <div className="ml-auto flex items-center gap-2 shrink-0">
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setSoundEnabled(!soundEnabled)} title={soundEnabled ? "Lülita heli välja" : "Lülita heli sisse"}>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setSoundEnabled(!soundEnabled)} title={soundEnabled ? t("provider.notifications.soundOn") : t("provider.notifications.soundOff")}>
               {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
             </Button>
             <div className="relative">
@@ -137,8 +137,8 @@ export default function ProviderDashboardPage() {
               {showNotifications && (
                 <div className="absolute right-0 top-10 z-50 w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-card shadow-xl">
                   <div className="flex items-center justify-between border-b border-border p-3">
-                    <span className="text-sm font-semibold">Teavitused</span>
-                    <button onClick={markAllRead} className="text-xs text-accent hover:underline">Märgi loetuks</button>
+                    <span className="text-sm font-semibold">{t("provider.notifications.title")}</span>
+                    <button onClick={markAllRead} className="text-xs text-accent hover:underline">{t("provider.notifications.markRead")}</button>
                   </div>
                   <div className="max-h-80 overflow-y-auto">
                     {notifications.map(n => (
