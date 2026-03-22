@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Mail, Phone, MapPin, Clock, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function ContactPage() {
+  const { t } = useLanguage();
   const [submitted, setSubmitted] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -16,8 +18,8 @@ export default function ContactPage() {
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
             <CheckCircle className="h-8 w-8 text-success" />
           </div>
-          <h1 className="mt-4 font-display text-2xl font-bold">Sõnum saadetud!</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Vastame teile 24 tunni jooksul.</p>
+          <h1 className="mt-4 font-display text-2xl font-bold">{t("contact.success")}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{t("contact.successDesc")}</p>
         </div>
       </div>
     );
@@ -26,19 +28,16 @@ export default function ContactPage() {
   return (
     <div className="container-wide py-12">
       <div className="mx-auto max-w-4xl">
-        <h1 className="text-center font-display text-3xl font-bold md:text-4xl">Võtke meiega ühendust</h1>
-        <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">
-          Kas teil on küsimusi? Saatke meile sõnum ja vastame esimesel võimalusel.
-        </p>
+        <h1 className="text-center font-display text-3xl font-bold md:text-4xl">{t("contact.title")}</h1>
+        <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">{t("contact.subtitle")}</p>
 
         <div className="mt-12 grid gap-10 md:grid-cols-3">
-          {/* Contact info */}
           <div className="space-y-6">
             {[
-              { icon: Mail, label: "E-post", value: "info@ruumly.eu" },
-              { icon: Phone, label: "Telefon", value: "+372 5XX XXXX" },
-              { icon: MapPin, label: "Asukoht", value: "Tallinn, Eesti" },
-              { icon: Clock, label: "Tööaeg", value: "E-R 9:00-18:00" },
+              { icon: Mail, label: t("contact.email"), value: "info@ruumly.eu" },
+              { icon: Phone, label: t("contact.phone"), value: "+372 5XX XXXX" },
+              { icon: MapPin, label: t("contact.location"), value: "Tallinn, Eesti" },
+              { icon: Clock, label: t("contact.hours"), value: t("contact.hoursValue") },
             ].map((c, i) => {
               const Icon = c.icon;
               return (
@@ -55,30 +54,29 @@ export default function ContactPage() {
             })}
           </div>
 
-          {/* Form */}
           <div className="md:col-span-2">
             <div className="card-prominent p-6">
               <div className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block text-sm font-medium">Nimi</label>
+                    <label className="mb-1 block text-sm font-medium">{t("contact.name")}</label>
                     <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                   </div>
                   <div>
-                    <label className="mb-1 block text-sm font-medium">E-post</label>
+                    <label className="mb-1 block text-sm font-medium">{t("contact.email")}</label>
                     <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                   </div>
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium">Teema</label>
+                  <label className="mb-1 block text-sm font-medium">{t("contact.subject")}</label>
                   <input type="text" value={subject} onChange={(e) => setSubject(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium">Sõnum</label>
+                  <label className="mb-1 block text-sm font-medium">{t("contact.message")}</label>
                   <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={5} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                 </div>
                 <Button onClick={() => setSubmitted(true)} className="w-full bg-accent text-accent-foreground hover:bg-accent/90" size="lg">
-                  Saada sõnum
+                  {t("contact.send")}
                 </Button>
               </div>
             </div>

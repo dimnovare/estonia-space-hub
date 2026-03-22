@@ -646,19 +646,23 @@ function AccountBilling() {
 }
 
 function AccountHelp() {
+  const { t } = useLanguage();
+  const helpLinks = [
+    { to: "/faq", title: t("account.help.faq"), desc: t("account.help.faqDesc") },
+    { to: "/contact", title: t("account.help.contact"), desc: t("account.help.contactDesc") },
+    { to: "/how-it-works", title: t("account.help.howItWorks"), desc: t("account.help.howItWorksDesc") },
+  ];
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Abi ja tugi</h1>
-      <div className="mt-6 space-y-3">
-        <Link to="/faq" className="flex items-center justify-between rounded-xl border border-border p-4 hover:bg-secondary transition-colors">
-          <span className="text-sm font-medium">Korduma kippuvad küsimused</span><ChevronRight className="h-4 w-4 text-muted-foreground" />
-        </Link>
-        <Link to="/contact" className="flex items-center justify-between rounded-xl border border-border p-4 hover:bg-secondary transition-colors">
-          <span className="text-sm font-medium">Võta ühendust</span><ChevronRight className="h-4 w-4 text-muted-foreground" />
-        </Link>
-        <Link to="/how-it-works" className="flex items-center justify-between rounded-xl border border-border p-4 hover:bg-secondary transition-colors">
-          <span className="text-sm font-medium">Kuidas Ruumly töötab</span><ChevronRight className="h-4 w-4 text-muted-foreground" />
-        </Link>
+      <h1 className="font-display text-2xl font-bold">{t("account.help.title")}</h1>
+      <div className="mt-6 grid gap-3 sm:grid-cols-3">
+        {helpLinks.map((link) => (
+          <Link key={link.to} to={link.to} className="flex flex-col rounded-xl border border-border p-5 hover:bg-secondary transition-colors">
+            <span className="text-sm font-medium">{link.title}</span>
+            <span className="mt-1 text-xs text-muted-foreground">{link.desc}</span>
+            <ChevronRight className="mt-auto pt-2 h-6 w-4 text-muted-foreground" />
+          </Link>
+        ))}
       </div>
     </div>
   );

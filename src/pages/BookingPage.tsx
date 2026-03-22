@@ -22,10 +22,10 @@ export default function BookingPage() {
 
   const steps = [t("booking.details"), t("booking.extras"), t("booking.contact"), t("booking.payment"), t("booking.review")];
   const extras = [
-    { id: "packing", label: "Pakkimisabi", price: "15€" },
-    { id: "loading", label: "Laadimisabi", price: "20€" },
-    { id: "insurance", label: "Kindlustus", price: "10€/kuu" },
-    { id: "forklift", label: "Tõstukiteenus", price: "25€" },
+    { id: "packing", label: t("booking.extra.packing"), price: "15€" },
+    { id: "loading", label: t("booking.extra.loading"), price: "20€" },
+    { id: "insurance", label: t("booking.extra.insurance"), price: "10€/kuu" },
+    { id: "forklift", label: t("booking.extra.forklift"), price: "25€" },
   ];
 
   const [step, setStep] = useState(0);
