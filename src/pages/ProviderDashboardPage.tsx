@@ -366,15 +366,15 @@ function ProviderOrders() {
 
       {/* Bulk actions bar */}
       {selectedIds.size > 0 && (
-        <div className="mt-4 flex items-center gap-3 rounded-lg border border-accent/30 bg-accent/5 p-3">
+        <div className="mt-4 flex flex-wrap items-center gap-2 sm:gap-3 rounded-lg border border-accent/30 bg-accent/5 p-3">
           <span className="text-sm font-medium">{selectedIds.size} tellimust valitud</span>
           <Button size="sm" className="bg-success text-success-foreground hover:bg-success/90 gap-1" onClick={bulkAccept}>
-            <Check className="h-3.5 w-3.5" /> Kinnita kõik
+            <Check className="h-3.5 w-3.5" /> Kinnita
           </Button>
           <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1" onClick={bulkReject}>
             <X className="h-3.5 w-3.5" /> Lükka tagasi
           </Button>
-          <button onClick={() => setSelectedIds(new Set())} className="ml-auto text-xs text-muted-foreground hover:text-foreground">Tühista valik</button>
+          <button onClick={() => setSelectedIds(new Set())} className="ml-auto text-xs text-muted-foreground hover:text-foreground">Tühista</button>
         </div>
       )}
 
