@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Check, Warehouse, Truck, CarFront, TrendingUp, Users, Shield, DollarSign, CheckCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Check, Warehouse, Truck, CarFront, TrendingUp, Users, Shield, DollarSign, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const benefits = [
@@ -16,31 +16,6 @@ const serviceTypes = [
 ];
 
 export default function ProviderPage() {
-  const [submitted, setSubmitted] = useState(false);
-  const [selectedType, setSelectedType] = useState("");
-  const [company, setCompany] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [city, setCity] = useState("");
-  const [message, setMessage] = useState("");
-
-  if (submitted) {
-    return (
-      <div className="container-wide flex min-h-[60vh] items-center justify-center py-16">
-        <div className="mx-auto max-w-md text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
-            <CheckCircle className="h-8 w-8 text-success" />
-          </div>
-          <h1 className="mt-4 font-display text-2xl font-bold">Täname liitumissoovi eest!</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Oleme teie taotluse kätte saanud ja võtame teiega ühendust 48 tunni jooksul.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div>
       {/* Hero */}
@@ -73,77 +48,43 @@ export default function ProviderPage() {
         </div>
       </section>
 
-      {/* Join form */}
+      {/* Service types */}
+      <section className="container-wide pb-8">
+        <h2 className="text-center font-display text-2xl font-bold md:text-3xl">Milliseid teenuseid saab lisada?</h2>
+        <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          {serviceTypes.map((t) => {
+            const Icon = t.icon;
+            return (
+              <div key={t.key} className="card-elevated flex items-center gap-4 p-5">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10">
+                  <Icon className="h-6 w-6 text-accent" />
+                </div>
+                <div>
+                  <h3 className="font-display text-sm font-semibold">{t.label}</h3>
+                  <div className="mt-1 flex items-center gap-1 text-xs text-success">
+                    <Check className="h-3 w-3" /> Aktiivne kategooria
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* CTA — links to /provider/onboarding */}
       <section className="surface-sunken py-16">
         <div className="container-wide">
-          <div className="mx-auto max-w-2xl">
-            <h2 className="text-center font-display text-2xl font-bold md:text-3xl">Liitu teenusepakkujana</h2>
-            <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">
-              Täitke allolev vorm ja meie meeskond võtab teiega ühendust.
+          <div className="mx-auto max-w-lg text-center">
+            <h2 className="font-display text-2xl font-bold md:text-3xl">Valmis liituma?</h2>
+            <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground">
+              Täitke lühike registreerimisvorm ja meie meeskond võtab teiega ühendust 48 tunni jooksul.
             </p>
-
-            <div className="mt-8 space-y-5">
-              {/* Service type */}
-              <div>
-                <label className="mb-2 block text-sm font-medium">Teenuse tüüp</label>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  {serviceTypes.map((t) => {
-                    const Icon = t.icon;
-                    return (
-                      <button
-                        key={t.key}
-                        onClick={() => setSelectedType(t.key)}
-                        className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-colors ${
-                          selectedType === t.key ? "border-accent bg-accent/5" : "border-border bg-card hover:border-muted-foreground"
-                        }`}
-                      >
-                        <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${selectedType === t.key ? "bg-accent/10" : "bg-secondary"}`}>
-                          <Icon className={`h-4 w-4 ${selectedType === t.key ? "text-accent" : "text-muted-foreground"}`} />
-                        </div>
-                        <span className="text-sm font-medium">{t.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-sm font-medium">Ettevõtte nimi</label>
-                  <input type="text" value={company} onChange={(e) => setCompany(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm font-medium">Kontaktisiku nimi</label>
-                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm font-medium">E-post</label>
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm font-medium">Telefon</label>
-                  <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium">Asukoht / linn</label>
-                <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium">Lisainfo</label>
-                <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={4} placeholder="Kirjeldage oma teenust, hindu, asukohta jne..." className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-              </div>
-
-              <Button
-                onClick={() => setSubmitted(true)}
-                className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
-                size="lg"
-              >
-                Saada liitumistaotlus
+            <Link to="/provider/onboarding">
+              <Button size="lg" className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90 px-8">
+                Alusta registreerumist <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
-            </div>
+            </Link>
+            <p className="mt-3 text-xs text-muted-foreground">Tasuta · Ei nõua lepingut · Kinnitamine 48 tunniga</p>
           </div>
         </div>
       </section>
