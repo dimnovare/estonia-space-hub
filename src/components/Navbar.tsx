@@ -154,25 +154,38 @@ export default function Navbar() {
               {LANGUAGES.map((lang) => (<option key={lang.code} value={lang.code}>{lang.flag} {lang.label}</option>))}
             </select>
           </div>
-          <div className="mt-2 flex gap-2">
+          <div className="mt-2 flex flex-col gap-1.5">
             {isAuthenticated ? (
               <>
-                <Link to={accountPath} className="flex-1" onClick={() => setOpen(false)}>
-                  <Button variant="outline" size="sm" className="w-full">{t("nav.myAccount")}</Button>
-                </Link>
-                <Button size="sm" variant="outline" className="text-destructive" onClick={() => { handleLogout(); setOpen(false); }}>
-                  <LogOut className="h-4 w-4" />
-                </Button>
+                {/* Role-based navigation links */}
+                {role === "admin" && (
+                  <Link to="/admin" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary" onClick={() => setOpen(false)}>
+                    <User className="h-4 w-4 text-muted-foreground" /> Admin
+                  </Link>
+                )}
+                {role === "provider" && (
+                  <Link to="/provider/dashboard" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary" onClick={() => setOpen(false)}>
+                    <User className="h-4 w-4 text-muted-foreground" /> Partneri paneel
+                  </Link>
+                )}
+                <div className="flex gap-2 mt-1">
+                  <Link to={accountPath} className="flex-1" onClick={() => setOpen(false)}>
+                    <Button variant="outline" size="sm" className="w-full">{t("nav.myAccount")}</Button>
+                  </Link>
+                  <Button size="sm" variant="outline" className="text-destructive" onClick={() => { handleLogout(); setOpen(false); }}>
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </div>
               </>
             ) : (
-              <>
+              <div className="flex gap-2">
                 <Link to="/account" className="flex-1" onClick={() => setOpen(false)}>
                   <Button variant="outline" size="sm" className="w-full">{t("nav.myAccount")}</Button>
                 </Link>
                 <Link to="/login" className="flex-1" onClick={() => setOpen(false)}>
                   <Button size="sm" className="w-full bg-accent text-accent-foreground">{t("nav.login")}</Button>
                 </Link>
-              </>
+              </div>
             )}
           </div>
         </div>

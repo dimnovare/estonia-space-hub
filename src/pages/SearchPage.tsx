@@ -124,10 +124,10 @@ export default function SearchPage() {
       </div>
 
       <div className="flex items-center gap-2 border-b border-border bg-card p-2 lg:hidden">
-        <button onClick={() => setMobileView("list")} className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-colors ${mobileView === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+        <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileView("list"); }} className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-colors ${mobileView === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
           <List className="h-3.5 w-3.5" /> {t("search.list")}
         </button>
-        <button onClick={() => setMobileView("map")} className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-colors ${mobileView === "map" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+        <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileView("map"); }} className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-colors ${mobileView === "map" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
           <MapIcon className="h-3.5 w-3.5" /> {t("search.map")}
         </button>
       </div>
