@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, lazy, Suspense } from "react";
+import { useState, useMemo, lazy, Suspense } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SlidersHorizontal, X, ChevronDown, List, MapIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,41 +9,45 @@ import { useLanguage } from "@/i18n/LanguageContext";
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
 export default function SearchPage() {
-  const [searchParams] = useSearchParams();
-  const initialType = (searchParams.get("type") as ListingType | "all") || "all";
+  const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
   const { t } = useLanguage();
 
-  const [activeType, setActiveType] = useState<string>(initialType);
-  const [sort, setSort] = useState("best");
+  // All filter state derived from URL
+  const activeType = (searchParams.get("type") as ListingType | "all") || "all";
+  const sort = searchParams.get("sort") || "best";
+  const cityFilter = searchParams.get("city") || "";
+  const priceMax = searchParams.get("priceMax") || "";
+  const heated = searchParams.get("heated") === "true";
+  const access24 = searchParams.get("access24") === "true";
+  const indoor = searchParams.get("indoor") === "true";
+  const security = searchParams.get("security") === "true";
+  const loadingDock = searchParams.get("loadingDock") === "true";
+  const forkliftFilter = searchParams.get("forklift") === "true";
+  const shortTerm = searchParams.get("shortTerm") === "true";
+  const longTerm = searchParams.get("longTerm") === "true";
+  const withVan = searchParams.get("withVan") === "true";
+  const packingHelp = searchParams.get("packingHelp") === "true";
+  const loadingHelp = searchParams.get("loadingHelp") === "true";
+  const pricingFixed = searchParams.get("pricingFixed") === "true";
+  const trailerClosed = searchParams.get("trailerClosed") === "true";
+  const availableNow = searchParams.get("availableNow") === "true";
 
-  useEffect(() => {
-    setActiveType(initialType);
-  }, [initialType]);
-
+  // Local-only UI state
   const [showFilters, setShowFilters] = useState(false);
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<"list" | "map">("list");
 
-  const [availableNow, setAvailableNow] = useState(false);
-  const [cityFilter, setCityFilter] = useState("");
-  const [priceMax, setPriceMax] = useState("");
-
-  const [heated, setHeated] = useState(false);
-  const [access24, setAccess24] = useState(false);
-  const [indoor, setIndoor] = useState(false);
-  const [security, setSecurity] = useState(false);
-  const [loadingDock, setLoadingDock] = useState(false);
-  const [forkliftFilter, setForkliftFilter] = useState(false);
-  const [shortTerm, setShortTerm] = useState(false);
-  const [longTerm, setLongTerm] = useState(false);
-
-  const [withVan, setWithVan] = useState(false);
-  const [packingHelp, setPackingHelp] = useState(false);
-  const [loadingHelp, setLoadingHelp] = useState(false);
-  const [pricingFixed, setPricingFixed] = useState(false);
-
-  const [trailerClosed, setTrailerClosed] = useState(false);
+  function updateFilters(updates: Record<string, string>) {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      Object.entries(updates).forEach(([k, v]) => {
+        if (v && v !== "false" && v !== "") next.set(k, v);
+        else next.delete(k);
+      });
+      return next;
+    }, { replace: true });
+  }
 
   const sortOptions = [
     { value: "best", label: t("search.sort.best") },
@@ -105,12 +109,14 @@ export default function SearchPage() {
   const allFilters = [heated, access24, indoor, security, loadingDock, forkliftFilter, shortTerm, longTerm, withVan, packingHelp, loadingHelp, pricingFixed, trailerClosed, availableNow];
   const activeFiltersCount = allFilters.filter(Boolean).length + (cityFilter ? 1 : 0) + (priceMax ? 1 : 0);
 
-  const clearAll = () => {
-    setHeated(false); setAccess24(false); setIndoor(false); setSecurity(false);
-    setLoadingDock(false); setForkliftFilter(false); setShortTerm(false); setLongTerm(false);
-    setWithVan(false); setPackingHelp(false); setLoadingHelp(false); setPricingFixed(false);
-    setTrailerClosed(false); setAvailableNow(false); setCityFilter(""); setPriceMax("");
-  };
+  function clearAll() {
+    setSearchParams(prev => {
+      const next = new URLSearchParams();
+      if (prev.get("type")) next.set("type", prev.get("type")!);
+      if (prev.get("q")) next.set("q", prev.get("q")!);
+      return next;
+    }, { replace: true });
+  }
 
   const handleMarkerClick = (listing: Listing) => {
     setSelectedListingId(listing.id);
@@ -141,11 +147,12 @@ export default function SearchPage() {
         </div>
       )}
 
+      {/* Sticky filter header — always visible on mobile (even in map mode) */}
       <div className={`flex-1 border-l border-border ${mobileView === "map" ? "hidden lg:block" : ""}`}>
         <div className="sticky top-16 z-10 border-b border-border bg-card px-4 py-3">
           <div className="flex flex-wrap items-center gap-2">
             {typeFilters.map((tf) => (
-              <button key={tf.value} onClick={() => setActiveType(tf.value)} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${activeType === tf.value ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
+              <button key={tf.value} onClick={() => updateFilters({ type: tf.value === "all" ? "" : tf.value })} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${activeType === tf.value ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
                 {tf.label}
               </button>
             ))}
@@ -158,7 +165,7 @@ export default function SearchPage() {
                 )}
               </button>
               <div className="relative">
-                <select value={sort} onChange={(e) => setSort(e.target.value)} className="appearance-none rounded-lg border border-border bg-card py-1.5 pl-3 pr-7 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-accent">
+                <select value={sort} onChange={(e) => updateFilters({ sort: e.target.value })} className="appearance-none rounded-lg border border-border bg-card py-1.5 pl-3 pr-7 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-accent">
                   {sortOptions.map((s) => (
                     <option key={s.value} value={s.value}>{s.label}</option>
                   ))}
@@ -171,23 +178,23 @@ export default function SearchPage() {
           {showFilters && (
             <div className="mt-3 space-y-3 border-t border-border pt-3">
               <div className="flex flex-wrap gap-2">
-                <input type="text" placeholder={t("search.city")} value={cityFilter} onChange={(e) => setCityFilter(e.target.value)} className="w-28 rounded-full border border-border bg-card px-3 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-accent" />
-                <input type="number" placeholder={t("search.maxPrice")} value={priceMax} onChange={(e) => setPriceMax(e.target.value)} className="w-28 rounded-full border border-border bg-card px-3 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-accent" />
-                <FilterToggle label={t("search.availableNow")} active={availableNow} onChange={setAvailableNow} />
+                <input type="text" placeholder={t("search.city")} value={cityFilter} onChange={(e) => updateFilters({ city: e.target.value })} className="w-28 rounded-full border border-border bg-card px-3 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-accent" />
+                <input type="number" placeholder={t("search.maxPrice")} value={priceMax} onChange={(e) => updateFilters({ priceMax: e.target.value })} className="w-28 rounded-full border border-border bg-card px-3 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-accent" />
+                <FilterToggle label={t("search.availableNow")} active={availableNow} onChange={(v) => updateFilters({ availableNow: v ? "true" : "" })} />
               </div>
 
               {(activeType === "all" || activeType === "warehouse") && (
                 <div>
                   <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("search.warehouseFilters")}</div>
                   <div className="flex flex-wrap gap-2">
-                    <FilterToggle label={t("search.heated")} active={heated} onChange={setHeated} />
-                    <FilterToggle label={t("search.access24")} active={access24} onChange={setAccess24} />
-                    <FilterToggle label={t("search.indoor")} active={indoor} onChange={setIndoor} />
-                    <FilterToggle label={t("search.secured")} active={security} onChange={setSecurity} />
-                    <FilterToggle label={t("search.loadingDock")} active={loadingDock} onChange={setLoadingDock} />
-                    <FilterToggle label={t("search.forklift")} active={forkliftFilter} onChange={setForkliftFilter} />
-                    <FilterToggle label={t("search.shortTerm")} active={shortTerm} onChange={setShortTerm} />
-                    <FilterToggle label={t("search.longTerm")} active={longTerm} onChange={setLongTerm} />
+                    <FilterToggle label={t("search.heated")} active={heated} onChange={(v) => updateFilters({ heated: v ? "true" : "" })} />
+                    <FilterToggle label={t("search.access24")} active={access24} onChange={(v) => updateFilters({ access24: v ? "true" : "" })} />
+                    <FilterToggle label={t("search.indoor")} active={indoor} onChange={(v) => updateFilters({ indoor: v ? "true" : "" })} />
+                    <FilterToggle label={t("search.secured")} active={security} onChange={(v) => updateFilters({ security: v ? "true" : "" })} />
+                    <FilterToggle label={t("search.loadingDock")} active={loadingDock} onChange={(v) => updateFilters({ loadingDock: v ? "true" : "" })} />
+                    <FilterToggle label={t("search.forklift")} active={forkliftFilter} onChange={(v) => updateFilters({ forklift: v ? "true" : "" })} />
+                    <FilterToggle label={t("search.shortTerm")} active={shortTerm} onChange={(v) => updateFilters({ shortTerm: v ? "true" : "" })} />
+                    <FilterToggle label={t("search.longTerm")} active={longTerm} onChange={(v) => updateFilters({ longTerm: v ? "true" : "" })} />
                   </div>
                 </div>
               )}
@@ -196,10 +203,10 @@ export default function SearchPage() {
                 <div>
                   <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("search.movingFilters")}</div>
                   <div className="flex flex-wrap gap-2">
-                    <FilterToggle label={t("search.withVan")} active={withVan} onChange={setWithVan} />
-                    <FilterToggle label={t("search.packingHelp")} active={packingHelp} onChange={setPackingHelp} />
-                    <FilterToggle label={t("search.loadingHelp")} active={loadingHelp} onChange={setLoadingHelp} />
-                    <FilterToggle label={t("search.fixedPrice")} active={pricingFixed} onChange={setPricingFixed} />
+                    <FilterToggle label={t("search.withVan")} active={withVan} onChange={(v) => updateFilters({ withVan: v ? "true" : "" })} />
+                    <FilterToggle label={t("search.packingHelp")} active={packingHelp} onChange={(v) => updateFilters({ packingHelp: v ? "true" : "" })} />
+                    <FilterToggle label={t("search.loadingHelp")} active={loadingHelp} onChange={(v) => updateFilters({ loadingHelp: v ? "true" : "" })} />
+                    <FilterToggle label={t("search.fixedPrice")} active={pricingFixed} onChange={(v) => updateFilters({ pricingFixed: v ? "true" : "" })} />
                   </div>
                 </div>
               )}
@@ -208,15 +215,18 @@ export default function SearchPage() {
                 <div>
                   <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("search.trailerFilters")}</div>
                   <div className="flex flex-wrap gap-2">
-                    <FilterToggle label={t("search.closedTrailer")} active={trailerClosed} onChange={setTrailerClosed} />
+                    <FilterToggle label={t("search.closedTrailer")} active={trailerClosed} onChange={(v) => updateFilters({ trailerClosed: v ? "true" : "" })} />
                   </div>
                 </div>
               )}
 
               {activeFiltersCount > 0 && (
-                <button onClick={clearAll} className="flex items-center gap-1 text-xs text-destructive hover:underline">
-                  <X className="h-3 w-3" /> {t("search.clearFilters")}
-                </button>
+                <Button variant="outline" size="sm" onClick={clearAll}
+                  className="mt-1 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive">
+                  <X className="h-3.5 w-3.5 mr-1.5" />
+                  {t("search.clearFilters")}
+                  <span className="ml-1 font-bold">({activeFiltersCount})</span>
+                </Button>
               )}
             </div>
           )}
