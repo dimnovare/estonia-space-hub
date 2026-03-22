@@ -278,7 +278,7 @@ export function TrailerDetail() {
   const savings = publicPrice - listing.priceFrom;
 
   return (
-    <div className="container-wide py-6">
+    <div className="container-wide py-6 pb-24 lg:pb-6">
       <Link to="/search?type=trailer" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> {t("detail.backToSearch")}
       </Link>
