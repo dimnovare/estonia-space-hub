@@ -1244,6 +1244,7 @@ const translations: Record<Language, Record<string, string>> = {
     "detail.checkAvailability": "Уточнить наличие",
     "detail.secured": "Охраняемый",
     "detail.noSecurity": "Без охраны",
+    "detail.from": "от",
     "detail.bookNow": "Забронировать",
     "detail.savingsNote": "Через нас до 5% дешевле",
     "detail.save": "Экономия",
