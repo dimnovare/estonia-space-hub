@@ -99,7 +99,7 @@ export default function ProviderDashboardPage() {
         <nav className="space-y-0.5 px-2">
           {sidebarLinks.map((l) => {
             const Icon = l.icon;
-            const badge = l.id === "orders" ? MOCK_ORDERS.filter(o => o.status === "sent" || o.status === "created").length : 0;
+            const badge = l.id === "orders" ? allOrders.filter(o => o.status === "sent" || o.status === "created").length : 0;
             return (
               <button key={l.id} onClick={() => setTab(l.id)} className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors ${tab === l.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
                 <span className="flex items-center gap-2.5"><Icon className="h-4 w-4" />{l.label}</span>
