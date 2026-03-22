@@ -352,10 +352,11 @@ function AccountMessages() {
   const [selectedBooking, setSelectedBooking] = useState<string | null>(null);
   const [newMsg, setNewMsg] = useState("");
   const [messages, setMessages] = useState<Message[]>(MOCK_MESSAGES);
+  const { data: bookings = [] } = useBookings();
 
   const bookingIds = [...new Set(messages.map(m => m.bookingId))];
   const activeMessages = selectedBooking ? messages.filter(m => m.bookingId === selectedBooking) : [];
-  const booking = selectedBooking ? MOCK_BOOKINGS.find(b => b.id === selectedBooking) : null;
+  const booking = selectedBooking ? bookings.find(b => b.id === selectedBooking) : null;
 
   const sendMessage = () => {
     if (!newMsg.trim() || !selectedBooking) return;
