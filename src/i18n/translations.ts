@@ -1997,5 +1997,7 @@ const translations: Record<Language, Record<string, string>> = {
     "badge.closest": "Ближайший",
     "badge.bestValue": "Лучшее предложение",
     "badge.promoted": "Рекомендуем",
+  },
+};
 
 export default translations;
