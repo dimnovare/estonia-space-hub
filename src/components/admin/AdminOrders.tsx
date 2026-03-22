@@ -2,15 +2,25 @@ import { useState } from "react";
 import { Mail, Wifi, Hand, Send, Package, Route } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MOCK_ORDERS, ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG, generateOrderEmailPreview, type Order, type OrderStatus } from "@/data/mockOrders";
+import { useOrders } from "@/hooks/useOrders";
+import { ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG, generateOrderEmailPreview } from "@/lib/constants";
+import type { Order, OrderStatus } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function AdminOrders() {
   const { t } = useLanguage();
-  const [orders, setOrders] = useState(MOCK_ORDERS);
+  const { data: initialOrders = [] } = useOrders();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [initialized, setInitialized] = useState(false);
   const [filter, setFilter] = useState<"all" | OrderStatus>("all");
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
   const [emailPreview, setEmailPreview] = useState(false);
+
+  // Sync from query data once
+  if (initialOrders.length > 0 && !initialized) {
+    setOrders(initialOrders);
+    setInitialized(true);
+  }
 
   const filtered = filter === "all" ? orders : orders.filter((o) => o.status === filter);
 

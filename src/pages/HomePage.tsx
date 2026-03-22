@@ -4,7 +4,7 @@ import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, Star, Ma
 import { Button } from "@/components/ui/button";
 import { useFeaturedListings, useAllListings } from "@/hooks/queries";
 import ListingCard from "@/components/ListingCard";
-import SkeletonCard from "@/components/SkeletonCard";
+import { SkeletonCard } from "@/components/SkeletonCard";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));

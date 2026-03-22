@@ -1,6 +1,6 @@
 import { Eye, Package, Users, DollarSign, TrendingUp } from "lucide-react";
-import { MOCK_ORDERS } from "@/data/mockOrders";
-import { MOCK_USERS, MOCK_SUPPLIERS } from "@/services/mockStore";
+import { useOrders } from "@/hooks/useOrders";
+import { useUsers, useSuppliers } from "@/hooks/queries";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const initialListings = [
@@ -21,11 +21,15 @@ export { initialListings, initialInquiries };
 
 export default function AdminDashboard() {
   const { t } = useLanguage();
+  const { data: orders = [] } = useOrders();
+  const { data: users = [] } = useUsers();
+  const { data: suppliers = [] } = useSuppliers();
+
   const stats = [
     { label: t("admin.stats.listings"), value: initialListings.length.toString(), change: "+12%", icon: Eye },
-    { label: t("admin.stats.orders"), value: MOCK_ORDERS.length.toString(), change: "+24%", icon: Package },
-    { label: t("admin.stats.users"), value: MOCK_USERS.length.toLocaleString(), change: "+8%", icon: Users },
-    { label: t("admin.stats.revenue"), value: "€" + MOCK_SUPPLIERS.reduce((s, sup) => s + sup.revenue, 0).toLocaleString(), change: "+18%", icon: DollarSign },
+    { label: t("admin.stats.orders"), value: orders.length.toString(), change: "+24%", icon: Package },
+    { label: t("admin.stats.users"), value: users.length.toLocaleString(), change: "+8%", icon: Users },
+    { label: t("admin.stats.revenue"), value: "€" + suppliers.reduce((s, sup) => s + sup.revenue, 0).toLocaleString(), change: "+18%", icon: DollarSign },
   ];
 
   return (
