@@ -138,9 +138,17 @@ export default function Navbar() {
           )}
         </div>
 
-        <button className="md:hidden" onClick={() => setOpen(!open)}>
-          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        <div className="flex items-center gap-1 md:hidden">
+          {isAuthenticated && unreadCount > 0 && (
+            <Link to="/account?tab=notifications" className="relative p-2 rounded-lg hover:bg-secondary">
+              <Bell className="h-5 w-5 text-muted-foreground" />
+              <span className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-accent-foreground">{unreadCount}</span>
+            </Link>
+          )}
+          <button className="p-2 rounded-lg hover:bg-secondary" onClick={() => setOpen(!open)}>
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
 
       {open && (
