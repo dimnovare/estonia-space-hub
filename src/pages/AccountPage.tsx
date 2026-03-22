@@ -292,16 +292,38 @@ function AccountBookings() {
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">Broneeringud</h1>
-      <div className="mt-4 flex gap-2 overflow-x-auto">
+      <div className="mt-4 hidden sm:flex gap-2 overflow-x-auto">
         {(["all", "pending", "confirmed", "active", "completed", "cancelled"] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
             {f === "all" ? "Kõik" : statusConfig[f].label} ({f === "all" ? MOCK_BOOKINGS.length : MOCK_BOOKINGS.filter(b => b.status === f).length})
           </button>
         ))}
       </div>
+      <select
+        value={filter}
+        onChange={(e) => setFilter(e.target.value as BookingStatus | "all")}
+        className="mt-4 w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent sm:hidden">
+        <option value="all">Kõik ({MOCK_BOOKINGS.length})</option>
+        <option value="pending">Ootel ({MOCK_BOOKINGS.filter(b => b.status === "pending").length})</option>
+        <option value="confirmed">Kinnitatud ({MOCK_BOOKINGS.filter(b => b.status === "confirmed").length})</option>
+        <option value="active">Aktiivne ({MOCK_BOOKINGS.filter(b => b.status === "active").length})</option>
+        <option value="completed">Lõpetatud ({MOCK_BOOKINGS.filter(b => b.status === "completed").length})</option>
+        <option value="cancelled">Tühistatud ({MOCK_BOOKINGS.filter(b => b.status === "cancelled").length})</option>
+      </select>
       <div className="mt-4 space-y-2">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center py-12 text-center"><Package className="h-12 w-12 text-muted-foreground/30" /><p className="mt-3 text-sm text-muted-foreground">Selle filtriga broneeringuid pole.</p></div>
+          <div className="py-20 text-center">
+            <Package className="mx-auto h-10 w-10 text-muted-foreground/20" />
+            <p className="mt-4 font-display text-base font-semibold">
+              {filter === "all" ? "Broneeringuid ei leitud" : "Selle staatusega broneeringuid pole"}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {filter === "all" ? "Broneeri esimene teenus ja see ilmub siia." : "Proovige teist filtrit."}
+            </p>
+            {filter === "all" && (
+              <Link to="/search"><Button className="mt-5 bg-accent text-accent-foreground">Otsi teenuseid</Button></Link>
+            )}
+          </div>
         ) : filtered.map(b => <BookingCard key={b.id} booking={b} />)}
       </div>
     </div>
