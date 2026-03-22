@@ -959,8 +959,8 @@ function AdminUsers() {
     <div>
       <h1 className="font-display text-2xl font-bold">{t("admin.users")}</h1>
       <p className="mt-2 text-sm text-muted-foreground">{users.length} {t("admin.usersTotal")}</p>
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px]">
+      <div className="mt-4 flex flex-wrap items-center gap-2 sm:gap-3">
+        <div className="relative w-full sm:flex-1 sm:min-w-[200px] sm:w-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder={t("admin.searchUsers")} className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm" />
         </div>
