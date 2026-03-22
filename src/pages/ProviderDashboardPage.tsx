@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { useLanguage } from "@/i18n/LanguageContext";
 import {
   LayoutDashboard, List, Package, Calendar as CalendarIcon, Star, Settings, Users, CreditCard,
   TrendingUp, Eye, DollarSign, MapPin, Warehouse, Truck, CarFront, Edit, Plus,
