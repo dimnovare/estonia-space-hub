@@ -13,11 +13,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { MOCK_BOOKINGS, MOCK_NOTIFICATIONS, type Booking, type BookingStatus } from "@/data/mockBookings";
-import { MOCK_ORDERS, ORDER_STATUS_CONFIG, type Order } from "@/data/mockOrders";
+import { useBookings } from "@/hooks/useBookings";
+import { useNotifications } from "@/hooks/useNotifications";
+import { useOrders } from "@/hooks/useOrders";
+import { ORDER_STATUS_CONFIG, type Order } from "@/data/mockOrders";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MOCK_INVOICES, MOCK_MESSAGES } from "@/services/mockStore";
+import { MOCK_MESSAGES } from "@/services/mockStore";
+import type { Booking, BookingStatus } from "@/services/types";
 import type { Invoice, Message } from "@/services/types";
+import { SkeletonList } from "@/components/SkeletonCard";
+import { invoiceService } from "@/services";
 
 const statusConfig: Record<BookingStatus, { label: string; color: string; icon: typeof Clock }> = {
   pending: { label: "Ootel", color: "bg-warning/10 text-warning", icon: Clock },
@@ -43,10 +48,10 @@ function useSidebarLinks() {
   ];
 }
 
-function MobileAccountNav({ tab, setTab, sidebarLinks, unreadMessages, onLogout }: {
+function MobileAccountNav({ tab, setTab, sidebarLinks, unreadMessages, unreadNotifications, onLogout }: {
   tab: string; setTab: (t: string) => void;
   sidebarLinks: { id: string; label: string; icon: typeof LayoutDashboard }[];
-  unreadMessages: number; onLogout: () => void;
+  unreadMessages: number; unreadNotifications: number; onLogout: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const { t } = useLanguage();
@@ -66,7 +71,7 @@ function MobileAccountNav({ tab, setTab, sidebarLinks, unreadMessages, onLogout 
             {sidebarLinks.map((l) => {
               const Icon = l.icon;
               const active = tab === l.id;
-              const unread = l.id === "notifications" ? MOCK_NOTIFICATIONS.filter(n => !n.read).length : l.id === "messages" ? unreadMessages : 0;
+              const unread = l.id === "notifications" ? unreadNotifications : l.id === "messages" ? unreadMessages : 0;
               return (
                 <button key={l.id} onClick={() => { setTab(l.id); setOpen(false); }} className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
                   <span className="flex items-center gap-2.5"><Icon className="h-4 w-4" />{l.label}</span>
@@ -95,6 +100,8 @@ export default function AccountPage() {
 
   const handleLogout = () => { logout(); navigate("/"); };
   const unreadMessages = MOCK_MESSAGES.filter(m => !m.read && m.from !== "customer").length;
+  const { data: notifications = [] } = useNotifications();
+  const unreadNotifications = notifications.filter((n: any) => !n.read).length;
 
   const roleDashboardLinks = role === "admin"
     ? [{ to: "/admin", label: "Admin", icon: "🛡️" }]
@@ -123,7 +130,7 @@ export default function AccountPage() {
           {sidebarLinks.map((l) => {
             const Icon = l.icon;
             const active = tab === l.id;
-            const unread = l.id === "notifications" ? MOCK_NOTIFICATIONS.filter(n => !n.read).length : l.id === "messages" ? unreadMessages : 0;
+            const unread = l.id === "notifications" ? unreadNotifications : l.id === "messages" ? unreadMessages : 0;
             return (
               <button key={l.id} onClick={() => setTab(l.id)} className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
                 <span className="flex items-center gap-2.5"><Icon className="h-4 w-4" />{l.label}</span>
@@ -149,7 +156,7 @@ export default function AccountPage() {
               ))}
             </div>
           )}
-          <MobileAccountNav tab={tab} setTab={setTab} sidebarLinks={sidebarLinks} unreadMessages={unreadMessages} onLogout={handleLogout} />
+          <MobileAccountNav tab={tab} setTab={setTab} sidebarLinks={sidebarLinks} unreadMessages={unreadMessages} unreadNotifications={unreadNotifications} onLogout={handleLogout} />
         </div>
 
         {tab === "overview" && <AccountOverview onNavigate={setTab} />}
@@ -166,11 +173,13 @@ export default function AccountPage() {
 }
 
 function AccountOverview({ onNavigate }: { onNavigate: (tab: string) => void }) {
-  const active = MOCK_BOOKINGS.filter(b => b.status === "confirmed" || b.status === "active");
-  const pending = MOCK_BOOKINGS.filter(b => b.status === "pending");
+  const { data: bookings = [], isLoading } = useBookings();
+  const active = bookings.filter(b => b.status === "confirmed" || b.status === "active");
+  const pending = bookings.filter(b => b.status === "pending");
   const { role } = useAuth();
 
   const { t } = useLanguage();
+  if (isLoading) return <SkeletonList count={3} />;
   return (
     <div>
       <div className="flex flex-wrap items-center gap-3">
@@ -196,7 +205,7 @@ function AccountOverview({ onNavigate }: { onNavigate: (tab: string) => void }) 
       <div className="mt-6 grid gap-4 grid-cols-2 sm:grid-cols-3">
         <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">{t("account.activeBookings")}</div><div className="mt-1 font-display text-2xl font-bold">{active.length}</div></div>
         <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">{t("account.pendingApproval")}</div><div className="mt-1 font-display text-2xl font-bold text-warning">{pending.length}</div></div>
-        <div className="card-elevated p-5 col-span-2 sm:col-span-1"><div className="text-sm text-muted-foreground">{t("account.totalSavings")}</div><div className="mt-1 font-display text-2xl font-bold text-accent">€{MOCK_BOOKINGS.reduce((s, b) => s + (b.basePrice - b.platformPrice), 0)}</div></div>
+        <div className="card-elevated p-5 col-span-2 sm:col-span-1"><div className="text-sm text-muted-foreground">{t("account.totalSavings")}</div><div className="mt-1 font-display text-2xl font-bold text-accent">€{bookings.reduce((s, b) => s + (b.basePrice - b.platformPrice), 0)}</div></div>
       </div>
       {pending.length > 0 && (
         <div className="mt-6"><h2 className="font-display text-lg font-semibold">{t("account.pendingBookings")}</h2><div className="mt-3 space-y-2">{pending.map(b => <BookingCard key={b.id} booking={b} />)}</div></div>
@@ -211,7 +220,7 @@ function AccountOverview({ onNavigate }: { onNavigate: (tab: string) => void }) 
         </button>
         <button onClick={() => onNavigate("bookings")} className="flex items-center justify-between rounded-xl border border-border p-4 hover:bg-secondary transition-colors">
           <span className="flex items-center gap-2 text-sm font-medium"><Package className="h-4 w-4 text-accent" /> {t("account.bookings")}</span>
-          <span className="text-sm text-muted-foreground">{MOCK_BOOKINGS.length}</span>
+          <span className="text-sm text-muted-foreground">{bookings.length}</span>
         </button>
       </div>
     </div>
@@ -224,7 +233,8 @@ function BookingCard({ booking }: { booking: Booking }) {
   const Icon = typeIcons[booking.listingType];
   const status = statusConfig[booking.status];
   const StatusIcon = status.icon;
-  const order = MOCK_ORDERS.find(o => o.bookingId === booking.id);
+  const { data: orders = [] } = useOrders();
+  const order = orders.find(o => o.bookingId === booking.id);
 
   return (
     <>
@@ -291,7 +301,10 @@ function BookingCard({ booking }: { booking: Booking }) {
 
 function AccountBookings() {
   const [filter, setFilter] = useState<"all" | BookingStatus>("all");
-  const filtered = filter === "all" ? MOCK_BOOKINGS : MOCK_BOOKINGS.filter(b => b.status === filter);
+  const { data: bookings = [], isLoading } = useBookings();
+  const filtered = filter === "all" ? bookings : bookings.filter(b => b.status === filter);
+
+  if (isLoading) return <SkeletonList count={4} />;
 
   return (
     <div>
@@ -299,7 +312,7 @@ function AccountBookings() {
       <div className="mt-4 hidden sm:flex gap-2 overflow-x-auto">
         {(["all", "pending", "confirmed", "active", "completed", "cancelled"] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
-            {f === "all" ? "Kõik" : statusConfig[f].label} ({f === "all" ? MOCK_BOOKINGS.length : MOCK_BOOKINGS.filter(b => b.status === f).length})
+            {f === "all" ? "Kõik" : statusConfig[f].label} ({f === "all" ? bookings.length : bookings.filter(b => b.status === f).length})
           </button>
         ))}
       </div>
@@ -307,12 +320,12 @@ function AccountBookings() {
         value={filter}
         onChange={(e) => setFilter(e.target.value as BookingStatus | "all")}
         className="mt-4 w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent sm:hidden">
-        <option value="all">Kõik ({MOCK_BOOKINGS.length})</option>
-        <option value="pending">Ootel ({MOCK_BOOKINGS.filter(b => b.status === "pending").length})</option>
-        <option value="confirmed">Kinnitatud ({MOCK_BOOKINGS.filter(b => b.status === "confirmed").length})</option>
-        <option value="active">Aktiivne ({MOCK_BOOKINGS.filter(b => b.status === "active").length})</option>
-        <option value="completed">Lõpetatud ({MOCK_BOOKINGS.filter(b => b.status === "completed").length})</option>
-        <option value="cancelled">Tühistatud ({MOCK_BOOKINGS.filter(b => b.status === "cancelled").length})</option>
+        <option value="all">Kõik ({bookings.length})</option>
+        <option value="pending">Ootel ({bookings.filter(b => b.status === "pending").length})</option>
+        <option value="confirmed">Kinnitatud ({bookings.filter(b => b.status === "confirmed").length})</option>
+        <option value="active">Aktiivne ({bookings.filter(b => b.status === "active").length})</option>
+        <option value="completed">Lõpetatud ({bookings.filter(b => b.status === "completed").length})</option>
+        <option value="cancelled">Tühistatud ({bookings.filter(b => b.status === "cancelled").length})</option>
       </select>
       <div className="mt-4 space-y-2">
         {filtered.length === 0 ? (
@@ -339,10 +352,11 @@ function AccountMessages() {
   const [selectedBooking, setSelectedBooking] = useState<string | null>(null);
   const [newMsg, setNewMsg] = useState("");
   const [messages, setMessages] = useState<Message[]>(MOCK_MESSAGES);
+  const { data: bookings = [] } = useBookings();
 
   const bookingIds = [...new Set(messages.map(m => m.bookingId))];
   const activeMessages = selectedBooking ? messages.filter(m => m.bookingId === selectedBooking) : [];
-  const booking = selectedBooking ? MOCK_BOOKINGS.find(b => b.id === selectedBooking) : null;
+  const booking = selectedBooking ? bookings.find(b => b.id === selectedBooking) : null;
 
   const sendMessage = () => {
     if (!newMsg.trim() || !selectedBooking) return;
@@ -363,7 +377,7 @@ function AccountMessages() {
           {bookingIds.length === 0 ? (
             <div className="flex flex-col items-center py-8 text-center"><MessageSquare className="h-8 w-8 text-muted-foreground/30" /><p className="mt-2 text-xs text-muted-foreground">Sõnumeid pole veel.</p></div>
           ) : bookingIds.map(bid => {
-            const bk = MOCK_BOOKINGS.find(b => b.id === bid);
+            const bk = bookings.find(b => b.id === bid);
             const lastMsg = [...messages.filter(m => m.bookingId === bid)].pop();
             const unread = messages.filter(m => m.bookingId === bid && !m.read && m.from !== "customer").length;
             return (
@@ -460,18 +474,19 @@ function AccountSearches() {
 }
 
 function AccountNotifications() {
-  const allRead = MOCK_NOTIFICATIONS.every(n => n.read);
+  const { data: notifications = [] } = useNotifications();
+  const allRead = notifications.length === 0 || notifications.every((n: any) => n.read);
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">Teavitused</h1>
-      {MOCK_NOTIFICATIONS.length === 0 || allRead ? (
+      {allRead ? (
         <div className="py-12 text-center text-sm text-muted-foreground">
           <Bell className="mx-auto h-8 w-8 text-muted-foreground/20 mb-3" />
           Kõik teatised on loetud.
         </div>
       ) : (
         <div className="mt-4 space-y-2">
-          {MOCK_NOTIFICATIONS.map(n => (
+          {notifications.map((n: any) => (
             <div key={n.id} className={`rounded-xl border border-border p-4 ${n.read ? "opacity-60" : ""}`}>
               <div className="flex items-start justify-between">
                 <div><p className="text-sm font-medium">{n.title}</p><p className="mt-0.5 text-xs text-muted-foreground">{n.desc}</p></div>
@@ -578,7 +593,8 @@ function AccountSecurity() {
 }
 
 function AccountBilling() {
-  const invoices = MOCK_INVOICES;
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  useEffect(() => { invoiceService.getAll().then(setInvoices); }, []);
 
   return (
     <div>
