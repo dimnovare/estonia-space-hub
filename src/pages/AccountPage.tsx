@@ -100,6 +100,8 @@ export default function AccountPage() {
 
   const handleLogout = () => { logout(); navigate("/"); };
   const unreadMessages = MOCK_MESSAGES.filter(m => !m.read && m.from !== "customer").length;
+  const { data: notifications = [] } = useNotifications();
+  const unreadNotifications = notifications.filter((n: any) => !n.read).length;
 
   const roleDashboardLinks = role === "admin"
     ? [{ to: "/admin", label: "Admin", icon: "🛡️" }]
@@ -128,7 +130,7 @@ export default function AccountPage() {
           {sidebarLinks.map((l) => {
             const Icon = l.icon;
             const active = tab === l.id;
-            const unread = l.id === "notifications" ? MOCK_NOTIFICATIONS.filter(n => !n.read).length : l.id === "messages" ? unreadMessages : 0;
+            const unread = l.id === "notifications" ? unreadNotifications : l.id === "messages" ? unreadMessages : 0;
             return (
               <button key={l.id} onClick={() => setTab(l.id)} className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
                 <span className="flex items-center gap-2.5"><Icon className="h-4 w-4" />{l.label}</span>
@@ -154,7 +156,7 @@ export default function AccountPage() {
               ))}
             </div>
           )}
-          <MobileAccountNav tab={tab} setTab={setTab} sidebarLinks={sidebarLinks} unreadMessages={unreadMessages} onLogout={handleLogout} />
+          <MobileAccountNav tab={tab} setTab={setTab} sidebarLinks={sidebarLinks} unreadMessages={unreadMessages} unreadNotifications={unreadNotifications} onLogout={handleLogout} />
         </div>
 
         {tab === "overview" && <AccountOverview onNavigate={setTab} />}
