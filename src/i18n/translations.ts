@@ -1369,7 +1369,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     "hero.title": "Найдите склад, переезд и логистику",
     "hero.titleHighlight": "в одном месте",
-    "hero.subtitle": "From storage to moving — all in one.",
+    "hero.subtitle": "От склада до переезда — всё в одном месте.",
     "hero.search": "Поиск",
     "hero.searchPlaceholder": "Введите адрес или город...",
     "hero.listSpace": "Разместить объект →",
