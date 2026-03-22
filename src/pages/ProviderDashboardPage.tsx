@@ -407,12 +407,9 @@ function ProviderOrders() {
                     </button>
                   )}
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                       <span className="text-xs font-mono text-muted-foreground">{order.id}</span>
                       <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusCfg.color}`}>{statusCfg.label}</span>
-                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${intCfg.color}`}>
-                        {integrationIcon(order.integrationType)} {intCfg.label}
-                      </span>
                     </div>
                     <div className="mt-2 text-sm font-medium">{order.listingTitle}</div>
                     <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
