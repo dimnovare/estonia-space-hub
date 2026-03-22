@@ -52,12 +52,18 @@ function useSidebarLinks() {
 }
 
 export default function ProviderDashboardPage() {
+  const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get("ptab") || "overview";
   const setTab = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("ptab", id); return n; }, { replace: true });
   const { user } = useAuth();
   const sidebarLinks = useSidebarLinks();
-  const [notifications, setNotifications] = useState(mockProviderNotifications);
+  const [notifications, setNotifications] = useState([
+    { id: 1, type: "order" as const, title: t("provider.notifications.newOrder"), message: "KoliExpress — Kati Mets", time: "2 min", read: false },
+    { id: 2, type: "order" as const, title: t("provider.notifications.newOrder"), message: "Laobox Tallinn — Maria Saar", time: "15 min", read: false },
+    { id: 3, type: "review" as const, title: t("provider.notifications.newReview"), message: "Andres T. — Laobox Tallinn 5/5", time: "1h", read: true },
+    { id: 4, type: "system" as const, title: t("provider.notifications.payoutDone"), message: "€1,054 → EE38 2200...", time: "1d", read: true },
+  ]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
