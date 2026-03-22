@@ -70,7 +70,7 @@ export function WarehouseDetail() {
   ];
 
   return (
-    <div className="container-wide py-6">
+    <div className="container-wide py-6 pb-24 lg:pb-6">
       <Link to="/search?type=warehouse" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> {t("detail.backToSearch")}
       </Link>
@@ -167,6 +167,21 @@ export function WarehouseDetail() {
           </div>
         </div>
       </div>
+
+      {/* Mobile sticky CTA */}
+      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border bg-card p-3 lg:hidden">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="text-xs text-muted-foreground">{t("detail.from")}</div>
+            <div className="font-display text-lg font-bold">{listing.priceFrom}€
+              <span className="text-xs font-normal text-muted-foreground ml-1">/{listing.priceUnit.replace("€/","")}</span>
+            </div>
+          </div>
+          <Link to={bookingUrl} className="shrink-0">
+            <Button className="bg-accent text-accent-foreground hover:bg-accent/90 px-6">{t("detail.bookNow")}</Button>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
@@ -181,7 +196,7 @@ export function MovingDetail() {
   const savings = publicPrice - listing.priceFrom;
 
   return (
-    <div className="container-wide py-6">
+    <div className="container-wide py-6 pb-24 lg:pb-6">
       <Link to="/search?type=moving" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> {t("detail.backToSearch")}
       </Link>
@@ -234,6 +249,21 @@ export function MovingDetail() {
           </div>
         </div>
       </div>
+
+      {/* Mobile sticky CTA */}
+      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border bg-card p-3 lg:hidden">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="text-xs text-muted-foreground">{t("detail.from")}</div>
+            <div className="font-display text-lg font-bold">{listing.priceFrom}€
+              <span className="text-xs font-normal text-muted-foreground ml-1">/{listing.priceUnit.replace("€/","")}</span>
+            </div>
+          </div>
+          <Link to={`/book?listing=${listing.id}&type=moving`} className="shrink-0">
+            <Button className="bg-accent text-accent-foreground hover:bg-accent/90 px-6">{t("detail.bookNow")}</Button>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
@@ -248,7 +278,7 @@ export function TrailerDetail() {
   const savings = publicPrice - listing.priceFrom;
 
   return (
-    <div className="container-wide py-6">
+    <div className="container-wide py-6 pb-24 lg:pb-6">
       <Link to="/search?type=trailer" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> {t("detail.backToSearch")}
       </Link>
@@ -297,6 +327,21 @@ export function TrailerDetail() {
             </div>
             <SupplierBadge listingId={listing.id} />
           </div>
+        </div>
+      </div>
+
+      {/* Mobile sticky CTA */}
+      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border bg-card p-3 lg:hidden">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="text-xs text-muted-foreground">{t("detail.from")}</div>
+            <div className="font-display text-lg font-bold">{listing.priceFrom}€
+              <span className="text-xs font-normal text-muted-foreground ml-1">/{listing.priceUnit.replace("€/","")}</span>
+            </div>
+          </div>
+          <Link to={`/book?listing=${listing.id}&type=trailer`} className="shrink-0">
+            <Button className="bg-accent text-accent-foreground hover:bg-accent/90 px-6">{t("detail.bookNow")}</Button>
+          </Link>
         </div>
       </div>
     </div>

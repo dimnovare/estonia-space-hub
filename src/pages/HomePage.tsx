@@ -67,7 +67,7 @@ export default function HomePage() {
             <p className="mt-4 text-lg text-primary-foreground/70 md:text-xl">{t("hero.subtitle")}</p>
 
             <div className="card-prominent mx-auto mt-8 max-w-2xl p-2">
-              <div className="flex gap-1 border-b border-border pb-2 mb-2 overflow-x-auto">
+              <div className="flex flex-wrap gap-1 border-b border-border pb-2 mb-2">
                 {categories.map((cat) => {
                   const Icon = cat.icon;
                   return (
