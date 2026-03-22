@@ -669,7 +669,7 @@ const translations: Record<Language, Record<string, string>> = {
     "search.forQuery": "for",
     "search.sort.best": "Best match",
     "search.sort.cheapest": "Cheapest",
-    "search.sort.nearest": "Nearest",
+    "search.sort.rating": "Best rated",
     "search.sort.bestValue": "Best value",
     "search.sort.newest": "Newest",
     "search.type.all": "All",
