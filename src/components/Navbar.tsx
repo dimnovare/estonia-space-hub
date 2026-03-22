@@ -13,7 +13,7 @@ const navLinks = [
   { to: "/search?type=moving", tKey: "nav.moving", matchType: "moving" },
   { to: "/search?type=trailer", tKey: "nav.trailer", matchType: "trailer" },
   { to: "/how-it-works", tKey: "nav.howItWorks", matchType: "" },
-  { to: "/provider", tKey: "nav.forProviders", matchType: "" },
+  { to: "/provider", tKey: "nav.forProviders", matchType: "", isProviderLink: true },
 ];
 
 function isLinkActive(link: typeof navLinks[0], pathname: string, searchType: string | null) {
@@ -40,18 +40,24 @@ export default function Navbar() {
     navigate("/");
   };
 
+  const getLinkHref = (link: typeof navLinks[0]) => {
+    if (link.isProviderLink && role === "provider") return "/provider/dashboard";
+    return link.to;
+  };
+
   return (
     <header className={`sticky top-0 z-50 border-b border-border backdrop-blur-md ${isHome ? "bg-card/80" : "bg-card/95"}`}>
       <div className="container-wide flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <img src={ruumlyLogo} alt="Ruumly" className="h-10" />
+          <img src={ruumlyLogo} alt="Ruumly" className="h-8 w-auto object-contain" />
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex">
           {navLinks.map((l) => {
+            const href = getLinkHref(l);
             const active = isLinkActive(l, location.pathname, currentType);
             return (
-              <Link key={l.to} to={l.to} className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${active ? "bg-accent/10 text-accent" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
+              <Link key={l.tKey} to={href} className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${active ? "bg-accent/10 text-accent" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
                 {t(l.tKey)}
               </Link>
             );
@@ -99,9 +105,9 @@ export default function Navbar() {
                     <Link to="/account" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-secondary">
                       <User className="h-4 w-4 text-muted-foreground" /> {t("nav.myAccount")}
                     </Link>
-                    {role === "provider" && (
+                    {(role === "provider" || role === "admin") && (
                       <Link to="/provider/dashboard" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-secondary">
-                        <LayoutDashboard className="h-4 w-4 text-muted-foreground" /> {t("nav.providerDashboard") || "Partneri paneel"}
+                        <LayoutDashboard className="h-4 w-4 text-muted-foreground" /> {t("nav.providerDashboard")}
                       </Link>
                     )}
                     {role === "admin" && (
@@ -110,7 +116,7 @@ export default function Navbar() {
                       </Link>
                     )}
                     <button onClick={handleLogout} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-destructive hover:bg-destructive/10">
-                      <LogOut className="h-4 w-4" /> {t("nav.logout") || "Logi välja"}
+                      <LogOut className="h-4 w-4" /> {t("nav.logout")}
                     </button>
                   </div>
                 </>
@@ -118,7 +124,7 @@ export default function Navbar() {
             </div>
           ) : (
             <>
-              <Link to="/account">
+              <Link to="/login">
                 <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
                   <User className="h-4 w-4" /> {t("nav.myAccount")}
                 </Button>
@@ -140,9 +146,10 @@ export default function Navbar() {
       {open && (
         <div className="border-t border-border bg-card px-4 pb-4 pt-2 md:hidden">
           {navLinks.map((l) => {
+            const href = getLinkHref(l);
             const active = isLinkActive(l, location.pathname, currentType);
             return (
-              <Link key={l.to} to={l.to} className={`block rounded-lg px-3 py-2.5 text-sm font-medium ${active ? "bg-accent/10 text-accent" : "text-foreground"}`} onClick={() => setOpen(false)}>
+              <Link key={l.tKey} to={href} className={`block rounded-lg px-3 py-2.5 text-sm font-medium ${active ? "bg-accent/10 text-accent" : "text-foreground"}`} onClick={() => setOpen(false)}>
                 {t(l.tKey)}
               </Link>
             );
@@ -158,9 +165,9 @@ export default function Navbar() {
                 <Link to="/account" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary" onClick={() => setOpen(false)}>
                   <User className="h-4 w-4 text-muted-foreground" /> {t("nav.myAccount")}
                 </Link>
-                {role === "provider" && (
+                {(role === "provider" || role === "admin") && (
                   <Link to="/provider/dashboard" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary" onClick={() => setOpen(false)}>
-                    <LayoutDashboard className="h-4 w-4 text-muted-foreground" /> {t("nav.providerDashboard") || "Partneri paneel"}
+                    <LayoutDashboard className="h-4 w-4 text-muted-foreground" /> {t("nav.providerDashboard")}
                   </Link>
                 )}
                 {role === "admin" && (
@@ -169,12 +176,12 @@ export default function Navbar() {
                   </Link>
                 )}
                 <Button size="sm" variant="outline" className="text-destructive mt-1" onClick={() => { handleLogout(); setOpen(false); }}>
-                  <LogOut className="h-4 w-4 mr-1" /> {t("nav.logout") || "Logi välja"}
+                  <LogOut className="h-4 w-4 mr-1" /> {t("nav.logout")}
                 </Button>
               </>
             ) : (
               <div className="flex gap-2">
-                <Link to="/account" className="flex-1" onClick={() => setOpen(false)}>
+                <Link to="/login" className="flex-1" onClick={() => setOpen(false)}>
                   <Button variant="outline" size="sm" className="w-full">{t("nav.myAccount")}</Button>
                 </Link>
                 <Link to="/login" className="flex-1" onClick={() => setOpen(false)}>

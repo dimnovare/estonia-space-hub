@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { MapPin, Star, Warehouse, Truck, CarFront } from "lucide-react";
 import type { Listing } from "@/data/mockData";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const badgeStyles: Record<string, string> = {
   cheapest: "badge-cheapest",
@@ -9,11 +10,11 @@ const badgeStyles: Record<string, string> = {
   promoted: "badge-promoted",
 };
 
-const badgeLabels: Record<string, string> = {
-  cheapest: "Soodsaim",
-  closest: "Lähim",
-  "best-value": "Parim pakkumine",
-  promoted: "Soovitatud",
+const badgeKeys: Record<string, string> = {
+  cheapest: "badge.cheapest",
+  closest: "badge.closest",
+  "best-value": "badge.bestValue",
+  promoted: "badge.promoted",
 };
 
 const typeIcons = {
@@ -25,6 +26,7 @@ const typeIcons = {
 export default function ListingCard({ listing }: { listing: Listing }) {
   const Icon = typeIcons[listing.type];
   const detailPath = `/${listing.type}/${listing.id}`;
+  const { t } = useLanguage();
 
   return (
     <Link to={detailPath} className="card-elevated group block overflow-hidden">
@@ -37,7 +39,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
         />
         {listing.badge && (
           <span className={`absolute left-3 top-3 ${badgeStyles[listing.badge]}`}>
-            {badgeLabels[listing.badge]}
+            {t(badgeKeys[listing.badge])}
           </span>
         )}
         <div className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-card/90 backdrop-blur-sm">

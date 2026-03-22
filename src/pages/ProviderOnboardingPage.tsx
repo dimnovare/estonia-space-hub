@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, Warehouse, Truck, CarFront, Building2, User, Upload, CheckCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
 
 const steps = ["Ettevõtte tüüp", "Ettevõtte andmed", "Teenuse info", "Dokumendid", "Tingimused"];
 
@@ -26,7 +25,6 @@ export default function ProviderOnboardingPage() {
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [agreed, setAgreed] = useState(false);
-  const { switchRole } = useAuth();
   const navigate = useNavigate();
 
   const toggleService = (key: string) => setSelectedServices((p) => p.includes(key) ? p.filter((s) => s !== key) : [...p, key]);
@@ -47,11 +45,8 @@ export default function ProviderOnboardingPage() {
             <p className="text-xs text-muted-foreground">Taotluse staatus</p>
             <p className="mt-1 text-sm font-medium text-warning">⏳ Ülevaatamisel</p>
           </div>
-          <div className="mt-6 flex justify-center gap-3">
-            <Button variant="outline" onClick={() => navigate("/")}>Avalehele</Button>
-            <Button onClick={() => { switchRole("provider"); navigate("/provider/dashboard"); }} className="bg-accent text-accent-foreground hover:bg-accent/90">
-              Partneri paneeli (demo)
-            </Button>
+          <div className="mt-6 flex justify-center">
+            <Button variant="outline" onClick={() => navigate("/")}>Tagasi avalehele</Button>
           </div>
         </div>
       </div>
@@ -63,7 +58,6 @@ export default function ProviderOnboardingPage() {
       <h1 className="font-display text-2xl font-bold">Liitu partnerina</h1>
       <p className="mt-1 text-sm text-muted-foreground">Täitke allolev vorm, et lisada oma teenus Ruumly platvormile.</p>
 
-      {/* Steps */}
       <div className="mt-6 mb-8 flex items-center gap-2">
         {steps.map((s, i) => (
           <div key={s} className="flex items-center gap-2">

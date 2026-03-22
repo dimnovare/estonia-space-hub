@@ -1,5 +1,6 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth, type UserRole } from "@/contexts/AuthContext";
+import { Loader2 } from "lucide-react";
 
 interface Props {
   children: React.ReactNode;
@@ -7,9 +8,18 @@ interface Props {
 }
 
 export default function ProtectedRoute({ children, allowedRoles }: Props) {
-  const { isAuthenticated, role } = useAuth();
+  const { isAuthenticated, role, isInitializing } = useAuth();
+  const location = useLocation();
 
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (isInitializing) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-accent" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   if (allowedRoles && !allowedRoles.includes(role)) return <Navigate to="/" replace />;
 
   return <>{children}</>;

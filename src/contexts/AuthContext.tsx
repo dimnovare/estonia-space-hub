@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import type { UserRole } from "@/services/types";
 
 export type { UserRole };
@@ -12,11 +12,15 @@ export interface MockUser {
   company?: string;
   phone?: string;
   createdAt: string;
+  status?: "active" | "blocked";
+  registeredAt?: string;
+  bookingsCount?: number;
 }
 
 interface AuthContextType {
   user: MockUser | null;
   isAuthenticated: boolean;
+  isInitializing: boolean;
   role: UserRole;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
@@ -27,22 +31,25 @@ interface AuthContextType {
 }
 
 const MOCK_USERS: Record<UserRole, MockUser> = {
-  guest: { id: "", name: "", email: "", role: "guest", createdAt: "" },
-  customer: { id: "u1", name: "Andres Tamm", email: "andres@email.com", role: "customer", phone: "+372 5551 2345", createdAt: "2025-11-05" },
-  provider: { id: "u4", name: "Maria Saar", email: "maria@laopind.ee", role: "provider", company: "Laobox OÜ", phone: "+372 5123 4567", createdAt: "2025-10-20" },
-  admin: { id: "u5", name: "Peeter Kuusk", email: "peeter@ruumly.eu", role: "admin", phone: "+372 5555 1234", createdAt: "2025-09-01" },
+  guest: { id: "", name: "", email: "", role: "guest", createdAt: "", status: "active", registeredAt: "", bookingsCount: 0 },
+  customer: { id: "u1", name: "Andres Tamm", email: "andres@email.com", role: "customer", phone: "+372 5551 2345", createdAt: "2025-11-05", status: "active", registeredAt: "2025-11-05", bookingsCount: 3 },
+  provider: { id: "u4", name: "Maria Saar", email: "maria@laopind.ee", role: "provider", company: "Laobox OÜ", phone: "+372 5123 4567", createdAt: "2025-10-20", status: "active", registeredAt: "2025-10-20", bookingsCount: 0 },
+  admin: { id: "u5", name: "Peeter Kuusk", email: "peeter@ruumly.eu", role: "admin", phone: "+372 5555 1234", createdAt: "2025-09-01", status: "active", registeredAt: "2025-09-01", bookingsCount: 0 },
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<MockUser | null>(() => {
+  const [user, setUser] = useState<MockUser | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  useEffect(() => {
     try {
       const stored = localStorage.getItem("ruumly-auth");
-      if (stored) return JSON.parse(stored);
+      if (stored) setUser(JSON.parse(stored));
     } catch {}
-    return null;
-  });
+    setIsInitializing(false);
+  }, []);
 
   const persist = (u: MockUser | null) => {
     setUser(u);
@@ -87,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider value={{
       user,
       isAuthenticated: !!user,
+      isInitializing,
       role: user?.role || "guest",
       login, register, loginWithGoogle, logout, switchRole, updateProfile,
     }}>

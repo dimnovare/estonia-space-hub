@@ -27,35 +27,35 @@ export default function Footer() {
 
   return (
     <footer className="border-t border-border bg-primary text-primary-foreground">
-        <div className="container-wide py-12">
-          <div className="grid gap-8 md:grid-cols-4">
-            <div>
-              <Link to="/" className="inline-block">
-                <img src={ruumlyLogo} alt="Ruumly" className="h-[10rem] brightness-0 invert" />
-              </Link>
-              <p className="mt-3 text-sm opacity-70">
-                {t("footer.tagline")}
-              </p>
+      <div className="container-wide py-12">
+        <div className="grid gap-8 md:grid-cols-4">
+          <div>
+            <Link to="/" className="inline-block">
+              <img src={ruumlyLogo} alt="Ruumly" className="h-8 w-auto object-contain brightness-0 invert" />
+            </Link>
+            <p className="mt-3 text-sm opacity-70">
+              {t("footer.tagline")}
+            </p>
+          </div>
+          {Object.entries(footerLinks).map(([title, links]) => (
+            <div key={title}>
+              <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider opacity-60">{title}</h4>
+              <ul className="space-y-2">
+                {links.map((l) => (
+                  <li key={l.label}>
+                    <Link to={l.to} className="text-sm opacity-70 transition-opacity hover:opacity-100">
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
-            {Object.entries(footerLinks).map(([title, links]) => (
-              <div key={title}>
-                <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider opacity-60">{title}</h4>
-                <ul className="space-y-2">
-                  {links.map((l) => (
-                    <li key={l.label}>
-                      <Link to={l.to} className="text-sm opacity-70 transition-opacity hover:opacity-100">
-                        {l.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          <div className="mt-10 border-t border-primary-foreground/10 pt-6 text-center text-xs opacity-50">
-            © {new Date().getFullYear()} Ruumly. {t("footer.rights")}
-          </div>
+          ))}
         </div>
-      </footer>
+        <div className="mt-10 border-t border-primary-foreground/10 pt-6 text-center text-xs opacity-50">
+          © {new Date().getFullYear()} Ruumly. {t("footer.rights")}
+        </div>
+      </div>
+    </footer>
   );
 }
