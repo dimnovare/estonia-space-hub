@@ -8,6 +8,7 @@ import { LanguageProvider } from "@/i18n/LanguageContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import DevRoleSwitcher from "@/components/DevRoleSwitcher";
 import HomePage from "@/pages/HomePage";
 import SearchPage from "@/pages/SearchPage";
