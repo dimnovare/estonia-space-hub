@@ -791,9 +791,9 @@ function AdminListings() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">{t("admin.listings")}</h1>
-        <Button onClick={openNew} className="bg-accent text-accent-foreground hover:bg-accent/90"><PlusCircle className="mr-2 h-4 w-4" /> {t("admin.addListing")}</Button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h1 className="font-display text-xl sm:text-2xl font-bold">{t("admin.listings")}</h1>
+        <Button onClick={openNew} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90"><PlusCircle className="mr-1 h-3.5 w-3.5" /> {t("admin.addListing")}</Button>
       </div>
       <div className="mt-6 overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-sm">
