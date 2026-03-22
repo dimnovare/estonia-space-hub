@@ -52,12 +52,18 @@ function useSidebarLinks() {
 }
 
 export default function ProviderDashboardPage() {
+  const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get("ptab") || "overview";
   const setTab = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("ptab", id); return n; }, { replace: true });
   const { user } = useAuth();
   const sidebarLinks = useSidebarLinks();
-  const [notifications, setNotifications] = useState(mockProviderNotifications);
+  const [notifications, setNotifications] = useState([
+    { id: 1, type: "order" as const, title: t("provider.notifications.newOrder"), message: "KoliExpress — Kati Mets", time: "2 min", read: false },
+    { id: 2, type: "order" as const, title: t("provider.notifications.newOrder"), message: "Laobox Tallinn — Maria Saar", time: "15 min", read: false },
+    { id: 3, type: "review" as const, title: t("provider.notifications.newReview"), message: "Andres T. — Laobox Tallinn 5/5", time: "1h", read: true },
+    { id: 4, type: "system" as const, title: t("provider.notifications.payoutDone"), message: "€1,054 → EE38 2200...", time: "1d", read: true },
+  ]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -75,7 +81,7 @@ export default function ProviderDashboardPage() {
       <aside className="hidden w-56 shrink-0 border-r border-border bg-card lg:block">
         <div className="p-4">
           <p className="text-sm font-semibold">{user?.company || user?.name}</p>
-          <p className="text-xs text-muted-foreground">Partneri paneel</p>
+          <p className="text-xs text-muted-foreground">{t("provider.panel")}</p>
         </div>
         <nav className="space-y-0.5 px-2">
           {sidebarLinks.map((l) => {
@@ -118,7 +124,7 @@ export default function ProviderDashboardPage() {
           </div>
 
           <div className="ml-auto flex items-center gap-2 shrink-0">
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setSoundEnabled(!soundEnabled)} title={soundEnabled ? "Lülita heli välja" : "Lülita heli sisse"}>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setSoundEnabled(!soundEnabled)} title={soundEnabled ? t("provider.notifications.soundOn") : t("provider.notifications.soundOff")}>
               {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
             </Button>
             <div className="relative">
@@ -131,8 +137,8 @@ export default function ProviderDashboardPage() {
               {showNotifications && (
                 <div className="absolute right-0 top-10 z-50 w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-card shadow-xl">
                   <div className="flex items-center justify-between border-b border-border p-3">
-                    <span className="text-sm font-semibold">Teavitused</span>
-                    <button onClick={markAllRead} className="text-xs text-accent hover:underline">Märgi loetuks</button>
+                    <span className="text-sm font-semibold">{t("provider.notifications.title")}</span>
+                    <button onClick={markAllRead} className="text-xs text-accent hover:underline">{t("provider.notifications.markRead")}</button>
                   </div>
                   <div className="max-h-80 overflow-y-auto">
                     {notifications.map(n => (

@@ -1,5 +1,6 @@
 import { List, Package, Eye, DollarSign, TrendingUp, Inbox } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const mockProviderBookings = [
   { id: "PB-001", client: "Andres Tamm", listing: "Laobox Tallinn", date: "2026-04-01", duration: "3 kuud", total: 170, status: "confirmed" },
@@ -10,18 +11,19 @@ const mockProviderBookings = [
 export { mockProviderBookings };
 
 export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () => void }) {
+  const { t } = useLanguage();
   const { data: allOrders = [] } = useOrders();
   const pendingOrders = allOrders.filter(o => o.status === "sent" || o.status === "created");
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Partneri ülevaade</h1>
+      <h1 className="font-display text-2xl font-bold">{t("provider.overview.title")}</h1>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: "Kuulutused", value: "2", icon: List, change: "" },
-          { label: "Broneeringud (kuu)", value: "8", icon: Package, change: "+33%" },
-          { label: "Vaatamisi (kuu)", value: "390", icon: Eye, change: "+12%" },
-          { label: "Tulu (kuu)", value: "€1,240", icon: DollarSign, change: "+18%" },
+          { label: t("provider.overview.listings"), value: "2", icon: List, change: "" },
+          { label: t("provider.overview.bookingsMonth"), value: "8", icon: Package, change: "+33%" },
+          { label: t("provider.overview.viewsMonth"), value: "390", icon: Eye, change: "+12%" },
+          { label: t("provider.overview.revenueMonth"), value: "€1,240", icon: DollarSign, change: "+18%" },
         ].map((s, i) => {
           const Icon = s.icon;
           return (
@@ -41,10 +43,10 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
         <>
           <div className="mt-8 flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold flex items-center gap-2">
-              <Inbox className="h-5 w-5 text-warning" /> Ootel tellimused
+              <Inbox className="h-5 w-5 text-warning" /> {t("provider.overview.pendingOrders")}
               <span className="rounded-full bg-warning/10 px-2 py-0.5 text-xs font-bold text-warning">{pendingOrders.length}</span>
             </h2>
-            <button onClick={onGoToOrders} className="text-xs font-medium text-accent hover:underline">Vaata kõiki →</button>
+            <button onClick={onGoToOrders} className="text-xs font-medium text-accent hover:underline">{t("provider.overview.viewAll")}</button>
           </div>
           <div className="mt-3 space-y-2">
             {pendingOrders.map((o) => (
@@ -55,7 +57,7 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold">€{o.supplierPrice}</span>
-                  <span className="rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning">Ootel</span>
+                  <span className="rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning">{t("provider.overview.pending")}</span>
                 </div>
               </div>
             ))}
@@ -63,7 +65,7 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
         </>
       )}
 
-      <h2 className="mt-8 font-display text-lg font-semibold">Viimased broneeringud</h2>
+      <h2 className="mt-8 font-display text-lg font-semibold">{t("provider.overview.recentBookings")}</h2>
       <div className="mt-3 space-y-2">
         {mockProviderBookings.slice(0, 3).map((b) => (
           <div key={b.id} className="flex items-center justify-between rounded-xl border border-border p-4">
@@ -73,7 +75,7 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
             </div>
             <div className="flex items-center gap-3">
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${b.status === "confirmed" ? "bg-success/10 text-success" : b.status === "pending" ? "bg-warning/10 text-warning" : "bg-accent/10 text-accent"}`}>
-                {b.status === "confirmed" ? "Kinnitatud" : b.status === "pending" ? "Ootel" : "Aktiivne"}
+                {b.status === "confirmed" ? t("provider.overview.confirmed") : b.status === "pending" ? t("provider.overview.pending") : t("provider.overview.active")}
               </span>
               <span className="text-sm font-semibold">€{b.total}</span>
             </div>

@@ -1,11 +1,14 @@
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { mockProviderBookings } from "./ProviderOverview";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function ProviderBookings() {
+  const { t } = useLanguage();
+
   const exportCSV = () => {
-    const headers = ["ID", "Klient", "Kuulutus", "Kuupäev", "Periood", "Summa", "Staatus"];
-    const rows = mockProviderBookings.map(b => [b.id, b.client, b.listing, b.date, b.duration, `€${b.total}`, b.status === "confirmed" ? "Kinnitatud" : b.status === "pending" ? "Ootel" : "Aktiivne"]);
+    const headers = [t("provider.bookings.id"), t("provider.bookings.client"), t("provider.bookings.listing"), t("provider.bookings.date"), t("provider.bookings.amount"), t("provider.bookings.status")];
+    const rows = mockProviderBookings.map(b => [b.id, b.client, b.listing, b.date, `€${b.total}`, b.status === "confirmed" ? t("provider.bookings.confirmed") : b.status === "pending" ? t("provider.bookings.pending") : t("provider.bookings.active")]);
     const csv = [headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -17,9 +20,9 @@ export default function ProviderBookings() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">Broneeringud</h1>
+        <h1 className="font-display text-2xl font-bold">{t("provider.bookings.title")}</h1>
         <Button variant="outline" size="sm" className="gap-1" onClick={exportCSV}>
-          <Download className="h-3.5 w-3.5" /> Ekspordi CSV
+          <Download className="h-3.5 w-3.5" /> {t("provider.bookings.exportCsv")}
         </Button>
       </div>
       <div className="mt-6 space-y-2 sm:hidden">
@@ -28,7 +31,7 @@ export default function ProviderBookings() {
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">{b.client}</span>
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${b.status === "confirmed" ? "bg-success/10 text-success" : b.status === "pending" ? "bg-warning/10 text-warning" : "bg-accent/10 text-accent"}`}>
-                {b.status === "confirmed" ? "Kinnitatud" : b.status === "pending" ? "Ootel" : "Aktiivne"}
+                {b.status === "confirmed" ? t("provider.bookings.confirmed") : b.status === "pending" ? t("provider.bookings.pending") : t("provider.bookings.active")}
               </span>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">{b.listing} · {b.date} · {b.duration}</p>
@@ -40,12 +43,12 @@ export default function ProviderBookings() {
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">ID</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Klient</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Kuulutus</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Kuupäev</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Summa</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Staatus</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("provider.bookings.id")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("provider.bookings.client")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("provider.bookings.listing")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("provider.bookings.date")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("provider.bookings.amount")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("provider.bookings.status")}</th>
             </tr>
           </thead>
           <tbody>
@@ -58,7 +61,7 @@ export default function ProviderBookings() {
                 <td className="px-4 py-3 font-medium">€{b.total}</td>
                 <td className="px-4 py-3">
                   <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${b.status === "confirmed" ? "bg-success/10 text-success" : b.status === "pending" ? "bg-warning/10 text-warning" : "bg-accent/10 text-accent"}`}>
-                    {b.status === "confirmed" ? "Kinnitatud" : b.status === "pending" ? "Ootel" : "Aktiivne"}
+                    {b.status === "confirmed" ? t("provider.bookings.confirmed") : b.status === "pending" ? t("provider.bookings.pending") : t("provider.bookings.active")}
                   </span>
                 </td>
               </tr>

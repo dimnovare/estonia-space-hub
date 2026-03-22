@@ -1,4 +1,5 @@
 import { Star } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const mockReviews = [
   { id: 1, author: "Andres T.", rating: 5, text: "Suurepärane laoruumid ja kiire teenindus!", date: "2026-03-10", listing: "Laobox Tallinn" },
@@ -7,15 +8,16 @@ const mockReviews = [
 ];
 
 export default function ProviderReviews() {
+  const { t } = useLanguage();
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Hinnangud</h1>
+      <h1 className="font-display text-2xl font-bold">{t("provider.reviews.title")}</h1>
       <div className="mt-2 flex items-center gap-3">
         <div className="flex items-center gap-1">
           <Star className="h-5 w-5 fill-warning text-warning" />
           <span className="font-display text-xl font-bold">4.7</span>
         </div>
-        <span className="text-sm text-muted-foreground">{mockReviews.length} hinnangut</span>
+        <span className="text-sm text-muted-foreground">{mockReviews.length} {t("provider.reviews.count")}</span>
       </div>
       <div className="mt-6 space-y-3">
         {mockReviews.map((r) => (

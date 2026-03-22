@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { Check, X, Mail, Zap, Hand, Download } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
-import { ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
+import { ORDER_STATUS_CONFIG } from "@/lib/constants";
 import type { Order } from "@/services/types";
 import EmailTemplatePreview from "@/components/EmailTemplatePreview";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function ProviderIncomingOrders() {
+  const { t } = useLanguage();
   const { data: initialOrders = [] } = useOrders();
   const [orders, setOrders] = useState<Order[]>([]);
   const [initialized, setInitialized] = useState(false);
@@ -78,12 +80,6 @@ export default function ProviderIncomingOrders() {
     if (selectedOrder?.id === orderId) setSelectedOrder(null);
   };
 
-  const integrationIcon = (type: string) => {
-    if (type === "api") return <Zap className="h-3.5 w-3.5" />;
-    if (type === "email") return <Mail className="h-3.5 w-3.5" />;
-    return <Hand className="h-3.5 w-3.5" />;
-  };
-
   const exportCSV = () => {
     const headers = ["Tellimus", "Klient", "Teenus", "Linn", "Algus", "Periood", "Partneri hind", "Staatus"];
     const rows = filtered.map(o => [o.id, o.customerName, o.listingTitle, o.city, o.startDate, o.duration, `€${o.supplierPrice}`, ORDER_STATUS_CONFIG[o.status].label]);
@@ -98,19 +94,19 @@ export default function ProviderIncomingOrders() {
   return (
     <div>
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="font-display text-xl sm:text-2xl font-bold">Sissetulevad tellimused</h1>
+        <h1 className="font-display text-xl sm:text-2xl font-bold">{t("provider.orders.title")}</h1>
         <Button variant="outline" size="sm" className="gap-1" onClick={exportCSV}>
-          <Download className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Ekspordi</span> CSV
+          <Download className="h-3.5 w-3.5" /> <span className="hidden sm:inline">{t("provider.orders.exportCsv").replace(" CSV", "")}</span> CSV
         </Button>
       </div>
 
       <div className="mt-4 flex gap-2 overflow-x-auto">
         {[
-          { key: "all", label: "Kõik" },
-          { key: "sent", label: "Ootel kinnitust" },
-          { key: "confirmed", label: "Kinnitatud" },
-          { key: "rejected", label: "Tagasi lükatud" },
-          { key: "completed", label: "Lõpetatud" },
+          { key: "all", label: t("provider.orders.all") },
+          { key: "sent", label: t("provider.orders.awaitingConfirmation") },
+          { key: "confirmed", label: t("provider.orders.confirmed") },
+          { key: "rejected", label: t("provider.orders.rejected") },
+          { key: "completed", label: t("provider.orders.completed") },
         ].map(f => (
           <button key={f.key} onClick={() => setFilter(f.key)} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${filter === f.key ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:bg-secondary/80"}`}>
             {f.label}
@@ -121,14 +117,14 @@ export default function ProviderIncomingOrders() {
 
       {selectedIds.size > 0 && (
         <div className="mt-4 flex flex-wrap items-center gap-2 sm:gap-3 rounded-lg border border-accent/30 bg-accent/5 p-3">
-          <span className="text-sm font-medium">{selectedIds.size} tellimust valitud</span>
+          <span className="text-sm font-medium">{selectedIds.size} {t("provider.orders.selected")}</span>
           <Button size="sm" className="bg-success text-success-foreground hover:bg-success/90 gap-1" onClick={bulkAccept}>
-            <Check className="h-3.5 w-3.5" /> Kinnita
+            <Check className="h-3.5 w-3.5" /> {t("provider.orders.accept")}
           </Button>
           <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1" onClick={bulkReject}>
-            <X className="h-3.5 w-3.5" /> Lükka tagasi
+            <X className="h-3.5 w-3.5" /> {t("provider.orders.reject")}
           </Button>
-          <button onClick={() => setSelectedIds(new Set())} className="ml-auto text-xs text-muted-foreground hover:text-foreground">Tühista</button>
+          <button onClick={() => setSelectedIds(new Set())} className="ml-auto text-xs text-muted-foreground hover:text-foreground">{t("provider.orders.cancel")}</button>
         </div>
       )}
 
@@ -137,17 +133,16 @@ export default function ProviderIncomingOrders() {
           <div className={`h-4 w-4 rounded border transition-colors flex items-center justify-center ${filtered.filter(o => o.status === "sent" || o.status === "created").every(o => selectedIds.has(o.id)) && filtered.some(o => o.status === "sent" || o.status === "created") ? "bg-accent border-accent" : "border-border"}`}>
             {filtered.filter(o => o.status === "sent" || o.status === "created").every(o => selectedIds.has(o.id)) && filtered.some(o => o.status === "sent" || o.status === "created") && <Check className="h-3 w-3 text-accent-foreground" />}
           </div>
-          Vali kõik ootel
+          {t("provider.orders.selectAllPending")}
         </button>
       </div>
 
       <div className="mt-3 space-y-3">
         {filtered.length === 0 && (
-          <div className="py-12 text-center text-sm text-muted-foreground">Tellimusi ei leitud.</div>
+          <div className="py-12 text-center text-sm text-muted-foreground">{t("provider.orders.noOrders")}</div>
         )}
         {filtered.map((order) => {
           const statusCfg = ORDER_STATUS_CONFIG[order.status];
-          const intCfg = INTEGRATION_TYPE_CONFIG[order.integrationType];
           const isPending = order.status === "sent" || order.status === "created";
           const isSelected = selectedIds.has(order.id);
           return (
@@ -166,7 +161,7 @@ export default function ProviderIncomingOrders() {
                     </div>
                     <div className="mt-2 text-sm font-medium">{order.listingTitle}</div>
                     <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                      <span>Klient: <strong className="text-foreground">{order.customerName}</strong></span>
+                      <span>{t("provider.orders.client")}: <strong className="text-foreground">{order.customerName}</strong></span>
                       <span>{order.startDate} · {order.duration}</span>
                       <span>{order.city}</span>
                     </div>
@@ -177,7 +172,7 @@ export default function ProviderIncomingOrders() {
                 </div>
                 <div className="text-right shrink-0">
                   <div className="font-display text-lg font-bold">€{order.supplierPrice}</div>
-                  <div className="text-[10px] text-muted-foreground">Partneri hind</div>
+                  <div className="text-[10px] text-muted-foreground">{t("provider.orders.partnerPrice")}</div>
                 </div>
               </div>
 
@@ -185,17 +180,17 @@ export default function ProviderIncomingOrders() {
                 {isPending && (
                   <>
                     <Button size="sm" className="bg-success text-success-foreground hover:bg-success/90 gap-1" onClick={() => handleAccept(order.id)}>
-                      <Check className="h-3.5 w-3.5" /> Kinnita
+                      <Check className="h-3.5 w-3.5" /> {t("provider.orders.accept")}
                     </Button>
                     <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1" onClick={() => handleReject(order.id)}>
-                      <X className="h-3.5 w-3.5" /> Lükka tagasi
+                      <X className="h-3.5 w-3.5" /> {t("provider.orders.reject")}
                     </Button>
                   </>
                 )}
-                <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setSelectedOrder(order); setShowEmail(false); }}>Vaata detaile</Button>
+                <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setSelectedOrder(order); setShowEmail(false); }}>{t("provider.orders.viewDetails")}</Button>
                 {order.integrationType === "email" && (
                   <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => { setSelectedOrder(order); setShowEmail(true); }}>
-                    <Mail className="h-3 w-3" /> E-kirja eelvaade
+                    <Mail className="h-3 w-3" /> {t("provider.orders.emailPreview")}
                   </Button>
                 )}
               </div>
@@ -208,34 +203,34 @@ export default function ProviderIncomingOrders() {
         <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
           <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Tellimus {selectedOrder.id}</DialogTitle>
+              <DialogTitle>{t("provider.orders.order")} {selectedOrder.id}</DialogTitle>
             </DialogHeader>
             {showEmail ? (
               <EmailTemplatePreview order={selectedOrder} />
             ) : (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div><span className="text-xs text-muted-foreground">Klient</span><p className="font-medium">{selectedOrder.customerName}</p></div>
-                  <div><span className="text-xs text-muted-foreground">E-post</span><p>{selectedOrder.customerEmail}</p></div>
-                  <div><span className="text-xs text-muted-foreground">Telefon</span><p>{selectedOrder.customerPhone}</p></div>
-                  <div><span className="text-xs text-muted-foreground">Linn</span><p>{selectedOrder.city}</p></div>
-                  <div><span className="text-xs text-muted-foreground">Teenus</span><p className="font-medium">{selectedOrder.listingTitle}</p></div>
-                  <div><span className="text-xs text-muted-foreground">Periood</span><p>{selectedOrder.startDate} · {selectedOrder.duration}</p></div>
+                  <div><span className="text-xs text-muted-foreground">{t("provider.orders.client")}</span><p className="font-medium">{selectedOrder.customerName}</p></div>
+                  <div><span className="text-xs text-muted-foreground">{t("provider.team.email")}</span><p>{selectedOrder.customerEmail}</p></div>
+                  <div><span className="text-xs text-muted-foreground">{t("booking.phone")}</span><p>{selectedOrder.customerPhone}</p></div>
+                  <div><span className="text-xs text-muted-foreground">{t("provider.listings.city")}</span><p>{selectedOrder.city}</p></div>
+                  <div><span className="text-xs text-muted-foreground">{t("admin.service")}</span><p className="font-medium">{selectedOrder.listingTitle}</p></div>
+                  <div><span className="text-xs text-muted-foreground">{t("admin.period")}</span><p>{selectedOrder.startDate} · {selectedOrder.duration}</p></div>
                 </div>
                 <div className="rounded-lg bg-secondary p-3 text-sm">
-                  <div className="flex justify-between"><span>Partneri hind</span><span className="font-medium">€{selectedOrder.supplierPrice}</span></div>
-                  {selectedOrder.extrasTotal > 0 && <div className="flex justify-between mt-1"><span>Lisateenused</span><span>€{selectedOrder.extrasTotal}</span></div>}
-                  <div className="flex justify-between mt-1 pt-1 border-t border-border font-semibold"><span>Kokku</span><span>€{selectedOrder.supplierPrice + selectedOrder.extrasTotal}</span></div>
+                  <div className="flex justify-between"><span>{t("provider.orders.partnerPrice")}</span><span className="font-medium">€{selectedOrder.supplierPrice}</span></div>
+                  {selectedOrder.extrasTotal > 0 && <div className="flex justify-between mt-1"><span>{t("provider.orders.extras")}</span><span>€{selectedOrder.extrasTotal}</span></div>}
+                  <div className="flex justify-between mt-1 pt-1 border-t border-border font-semibold"><span>{t("provider.orders.total")}</span><span>€{selectedOrder.supplierPrice + selectedOrder.extrasTotal}</span></div>
                 </div>
                 <div>
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Tellimuse ajalugu</h4>
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t("provider.orders.orderHistory")}</h4>
                   <div className="space-y-2">
-                    {selectedOrder.timeline.map((t, i) => (
+                    {selectedOrder.timeline.map((tl, i) => (
                       <div key={i} className="flex gap-3 text-xs">
-                        <span className="w-20 shrink-0 text-muted-foreground">{t.date}<br />{t.time}</span>
+                        <span className="w-20 shrink-0 text-muted-foreground">{tl.date}<br />{tl.time}</span>
                         <div>
-                          <p className="font-medium">{t.event}</p>
-                          {t.detail && <p className="text-muted-foreground mt-0.5">{t.detail}</p>}
+                          <p className="font-medium">{tl.event}</p>
+                          {tl.detail && <p className="text-muted-foreground mt-0.5">{tl.detail}</p>}
                         </div>
                       </div>
                     ))}
@@ -243,7 +238,7 @@ export default function ProviderIncomingOrders() {
                 </div>
                 {selectedOrder.notes && (
                   <div className="rounded-lg bg-warning/5 border border-warning/20 p-3 text-xs text-muted-foreground">
-                    <strong>Märkused:</strong> {selectedOrder.notes}
+                    <strong>{t("provider.orders.notes")}:</strong> {selectedOrder.notes}
                   </div>
                 )}
               </div>
