@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   LayoutDashboard, List, Package, Calendar as CalendarIcon, Star, Settings, Users, CreditCard,
   TrendingUp, Eye, DollarSign, MapPin, Warehouse, Truck, CarFront, Edit, Plus,
@@ -64,7 +64,9 @@ const mockProviderNotifications: ProviderNotification[] = [
 ];
 
 export default function ProviderDashboardPage() {
-  const [tab, setTab] = useState("overview");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get("ptab") || "overview";
+  const setTab = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("ptab", id); return n; }, { replace: true });
   const { user } = useAuth();
   const [notifications, setNotifications] = useState(mockProviderNotifications);
   const [showNotifications, setShowNotifications] = useState(false);
