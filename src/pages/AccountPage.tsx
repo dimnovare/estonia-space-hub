@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { profileSchema, passwordSchema, type ProfileForm, type PasswordForm } from "@/lib/schemas";
+import { toast } from "sonner";
 import { 
   LayoutDashboard, Package, Heart, Search, Settings, Bell, Shield, CreditCard, 
   HelpCircle, ChevronRight, ChevronDown, Warehouse, Truck, CarFront, Clock, CheckCircle,
@@ -484,24 +488,48 @@ function AccountNotifications() {
 
 function AccountProfile() {
   const { user, updateProfile } = useAuth();
-  const [name, setName] = useState(user?.name || "");
-  const [phone, setPhone] = useState(user?.phone || "");
+  const form = useForm<ProfileForm>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: { name: user?.name || "", phone: user?.phone || "" },
+  });
+
+  const onSubmit = (data: ProfileForm) => {
+    updateProfile({ name: data.name, phone: data.phone || "" });
+    toast.success("Profiil uuendatud");
+  };
 
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">Profiili seaded</h1>
-      <div className="mt-6 max-w-lg space-y-4">
-        <div><label className="text-xs font-medium text-muted-foreground">Nimi</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={name} onChange={e => setName(e.target.value)} /></div>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 max-w-lg space-y-4">
+        <div>
+          <label className="text-xs font-medium text-muted-foreground">Nimi</label>
+          <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" {...form.register("name")} />
+          {form.formState.errors.name && <p className="mt-1 text-xs text-destructive">{form.formState.errors.name.message}</p>}
+        </div>
         <div><label className="text-xs font-medium text-muted-foreground">E-post</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-muted-foreground" value={user?.email || ""} disabled /></div>
-        <div><label className="text-xs font-medium text-muted-foreground">Telefon</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" value={phone} onChange={e => setPhone(e.target.value)} /></div>
-        <Button onClick={() => updateProfile({ name, phone })} className="bg-accent text-accent-foreground hover:bg-accent/90">Salvesta muudatused</Button>
-      </div>
+        <div>
+          <label className="text-xs font-medium text-muted-foreground">Telefon</label>
+          <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" {...form.register("phone")} />
+          {form.formState.errors.phone && <p className="mt-1 text-xs text-destructive">{form.formState.errors.phone.message}</p>}
+        </div>
+        <Button type="submit" className="bg-accent text-accent-foreground hover:bg-accent/90">Salvesta muudatused</Button>
+      </form>
     </div>
   );
 }
 
 function AccountSecurity() {
   const [changingPw, setChangingPw] = useState(false);
+  const pwForm = useForm<PasswordForm>({
+    resolver: zodResolver(passwordSchema),
+  });
+
+  const onSubmit = () => {
+    toast.success("Demo: parool uuendatud");
+    setChangingPw(false);
+    pwForm.reset();
+  };
 
   return (
     <div>
@@ -513,16 +541,25 @@ function AccountSecurity() {
           {!changingPw ? (
             <Button variant="outline" size="sm" className="mt-3" onClick={() => setChangingPw(true)}>Muuda parooli</Button>
           ) : (
-            <div className="mt-3 space-y-3">
+            <form onSubmit={pwForm.handleSubmit(onSubmit)} className="mt-3 space-y-3">
               <p className="text-xs text-muted-foreground">Paroolivahetus on hetkel demonstratsioonrežiimis.</p>
-              <input type="password" placeholder="Praegune parool" className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-              <input type="password" placeholder="Uus parool" className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-              <input type="password" placeholder="Kinnita uus parool" className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-              <div className="flex gap-2">
-                <Button size="sm" className="bg-accent text-accent-foreground" onClick={() => { setChangingPw(false); }}>Salvesta (demo)</Button>
-                <Button variant="outline" size="sm" onClick={() => setChangingPw(false)}>Tühista</Button>
+              <div>
+                <input type="password" placeholder="Praegune parool" {...pwForm.register("currentPassword")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                {pwForm.formState.errors.currentPassword && <p className="mt-1 text-xs text-destructive">{pwForm.formState.errors.currentPassword.message}</p>}
               </div>
-            </div>
+              <div>
+                <input type="password" placeholder="Uus parool" {...pwForm.register("newPassword")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                {pwForm.formState.errors.newPassword && <p className="mt-1 text-xs text-destructive">{pwForm.formState.errors.newPassword.message}</p>}
+              </div>
+              <div>
+                <input type="password" placeholder="Kinnita uus parool" {...pwForm.register("confirmPassword")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                {pwForm.formState.errors.confirmPassword && <p className="mt-1 text-xs text-destructive">{pwForm.formState.errors.confirmPassword.message}</p>}
+              </div>
+              <div className="flex gap-2">
+                <Button type="submit" size="sm" className="bg-accent text-accent-foreground">Salvesta</Button>
+                <Button variant="outline" size="sm" type="button" onClick={() => { setChangingPw(false); pwForm.reset(); }}>Tühista</Button>
+              </div>
+            </form>
           )}
         </div>
         <div className="rounded-xl border border-border p-4">

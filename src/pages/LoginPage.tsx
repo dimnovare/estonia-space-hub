@@ -7,43 +7,45 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema, registerSchema, type LoginForm, type RegisterForm } from "@/lib/schemas";
 
 type AuthView = "login" | "register" | "forgot" | "forgot-sent" | "reset";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [view, setView] = useState<AuthView>("login");
   const [loading, setLoading] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
   const { t } = useLanguage();
-  const { login, register, loginWithGoogle, isAuthenticated } = useAuth();
+  const { login, register: authRegister, loginWithGoogle, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from || "/account";
+
+  const loginForm = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
+  const registerForm = useForm<RegisterForm>({ resolver: zodResolver(registerSchema) });
 
   if (isAuthenticated) {
     navigate(from, { replace: true });
     return null;
   }
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async (data: LoginForm) => {
     setLoading(true);
     try {
-      await login(email, password);
+      await login(data.email, data.password);
       toast.success(t("login.successLogin"));
       navigate(from, { replace: true });
     } catch { toast.error("Login failed"); }
     setLoading(false);
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleRegister = async (data: RegisterForm) => {
     setLoading(true);
     try {
-      await register(name, email, password);
+      await authRegister(data.name, data.email, data.password);
       toast.success(t("login.successRegister"));
       navigate(from, { replace: true });
     } catch { toast.error("Registration failed"); }
@@ -91,10 +93,10 @@ export default function LoginPage() {
           <p className="mt-2 text-sm text-muted-foreground">{t("login.forgotDesc")}</p>
           <form onSubmit={handleForgotPassword} className="mt-6 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">{t("login.email")}</Label>
+              <Label htmlFor="forgot-email">{t("login.email")}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="email" type="email" placeholder={t("login.emailPlaceholder")} value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10" required />
+                <Input id="forgot-email" type="email" placeholder={t("login.emailPlaceholder")} value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} className="pl-10" required />
               </div>
             </div>
             <Button type="submit" className="w-full bg-accent py-5 text-accent-foreground hover:bg-accent/90">{t("login.sendReset")}</Button>
@@ -136,42 +138,77 @@ export default function LoginPage() {
           <div className="h-px flex-1 bg-border" />
         </div>
 
-        <form onSubmit={isRegister ? handleRegister : handleLogin} className="space-y-4">
-          {isRegister && (
+        {isRegister ? (
+          <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">{t("login.name")}</Label>
-              <Input id="name" placeholder={t("login.namePlaceholder")} value={name} onChange={(e) => setName(e.target.value)} required />
+              <Label htmlFor="reg-name">{t("login.name")}</Label>
+              <Input id="reg-name" placeholder={t("login.namePlaceholder")} {...registerForm.register("name")} />
+              {registerForm.formState.errors.name && <p className="text-xs text-destructive">{registerForm.formState.errors.name.message}</p>}
             </div>
-          )}
-          <div className="space-y-2">
-            <Label htmlFor="email">{t("login.email")}</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input id="email" type="email" placeholder={t("login.emailPlaceholder")} value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10" required />
+            <div className="space-y-2">
+              <Label htmlFor="reg-email">{t("login.email")}</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input id="reg-email" type="email" placeholder={t("login.emailPlaceholder")} {...registerForm.register("email")} className="pl-10" />
+              </div>
+              {registerForm.formState.errors.email && <p className="text-xs text-destructive">{registerForm.formState.errors.email.message}</p>}
             </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">{t("login.password")}</Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10 pr-10" required />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+            <div className="space-y-2">
+              <Label htmlFor="reg-password">{t("login.password")}</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input id="reg-password" type={showPassword ? "text" : "password"} placeholder="••••••••" {...registerForm.register("password")} className="pl-10 pr-10" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {registerForm.formState.errors.password && <p className="text-xs text-destructive">{registerForm.formState.errors.password.message}</p>}
             </div>
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="reg-confirm">{t("login.confirmPassword") || "Kinnita parool"}</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input id="reg-confirm" type={showPassword ? "text" : "password"} placeholder="••••••••" {...registerForm.register("confirmPassword")} className="pl-10" />
+              </div>
+              {registerForm.formState.errors.confirmPassword && <p className="text-xs text-destructive">{registerForm.formState.errors.confirmPassword.message}</p>}
+            </div>
+            <Button type="submit" className="w-full bg-accent py-5 text-accent-foreground hover:bg-accent/90" disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {t("login.register")}
+            </Button>
+          </form>
+        ) : (
+          <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="login-email">{t("login.email")}</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input id="login-email" type="email" placeholder={t("login.emailPlaceholder")} {...loginForm.register("email")} className="pl-10" />
+              </div>
+              {loginForm.formState.errors.email && <p className="text-xs text-destructive">{loginForm.formState.errors.email.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="login-password">{t("login.password")}</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input id="login-password" type={showPassword ? "text" : "password"} placeholder="••••••••" {...loginForm.register("password")} className="pl-10 pr-10" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {loginForm.formState.errors.password && <p className="text-xs text-destructive">{loginForm.formState.errors.password.message}</p>}
+            </div>
 
-          {!isRegister && (
             <div className="text-right">
               <button type="button" onClick={() => setView("forgot")} className="text-xs text-accent hover:underline">{t("login.forgotPassword")}</button>
             </div>
-          )}
 
-          <Button type="submit" className="w-full bg-accent py-5 text-accent-foreground hover:bg-accent/90" disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isRegister ? t("login.register") : t("login.title")}
-          </Button>
-        </form>
+            <Button type="submit" className="w-full bg-accent py-5 text-accent-foreground hover:bg-accent/90" disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {t("login.title")}
+            </Button>
+          </form>
+        )}
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           {isRegister ? t("login.hasAccount") : t("login.noAccount")}{" "}

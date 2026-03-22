@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { ALL_LISTINGS } from "@/data/mockData";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { getSupplierForListing, INTEGRATION_TYPE_CONFIG } from "@/data/mockOrders";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { bookingDetailsSchema, bookingContactSchema, type BookingDetailsForm, type BookingContactForm } from "@/lib/schemas";
 
 type SubmitPhase = "submitting" | "sending" | "waiting" | "done";
 
@@ -24,17 +27,21 @@ export default function BookingPage() {
   ];
 
   const [step, setStep] = useState(0);
-  const [date, setDate] = useState("");
-  const [duration, setDuration] = useState("1 kuu");
   const initialExtras = params.get("extras")?.split(",").filter(Boolean) || [];
   const [selectedExtras, setSelectedExtras] = useState<string[]>(initialExtras);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [notes, setNotes] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("bank");
   const [submitted, setSubmitted] = useState(false);
   const [phase, setPhase] = useState<SubmitPhase>("submitting");
+
+  const detailsForm = useForm<BookingDetailsForm>({
+    resolver: zodResolver(bookingDetailsSchema),
+    defaultValues: { date: "", duration: "1 kuu" },
+  });
+
+  const contactForm = useForm<BookingContactForm>({
+    resolver: zodResolver(bookingContactSchema),
+    defaultValues: { name: "", email: "", phone: "", notes: "" },
+  });
 
   const toggleExtra = (id: string) =>
     setSelectedExtras((prev) => (prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]));
@@ -42,6 +49,19 @@ export default function BookingPage() {
   const publicPrice = listing ? Math.round(listing.priceFrom / 0.95) : 0;
   const ourPrice = listing?.priceFrom || 0;
   const savings = publicPrice - ourPrice;
+  const pricing = listing ? { total: ourPrice, extrasTotal: selectedExtras.length * 15 } : null;
+
+  const handleNext = () => {
+    if (step === 0) {
+      detailsForm.handleSubmit(() => setStep(1))();
+    } else if (step === 2) {
+      contactForm.handleSubmit(() => setStep(3))();
+    } else if (step < steps.length - 1) {
+      setStep(step + 1);
+    } else {
+      setSubmitted(true);
+    }
+  };
 
   useEffect(() => {
     if (!submitted) return;
@@ -93,8 +113,6 @@ export default function BookingPage() {
             ))}
           </div>
 
-          
-
           {phase === "done" && (
             <div className="mt-6 flex justify-center gap-3">
               <Link to="/account?tab=bookings"><Button variant="outline">{t("booking.myBookings")}</Button></Link>
@@ -140,13 +158,15 @@ export default function BookingPage() {
               )}
               <div>
                 <label className="mb-1 block text-sm font-medium">{t("booking.date")}</label>
-                <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                <input type="date" {...detailsForm.register("date")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                {detailsForm.formState.errors.date && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.date.message}</p>}
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium">{t("booking.period")}</label>
-                <select value={duration} onChange={(e) => setDuration(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent">
+                <select {...detailsForm.register("duration")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent">
                   <option>1 päev</option><option>1 nädal</option><option>1 kuu</option><option>3 kuud</option><option>6 kuud</option><option>12 kuud</option>
                 </select>
+                {detailsForm.formState.errors.duration && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.duration.message}</p>}
               </div>
             </div>
           )}
@@ -176,19 +196,23 @@ export default function BookingPage() {
               <h2 className="font-display text-xl font-semibold">{t("booking.contact")}</h2>
               <div>
                 <label className="mb-1 block text-sm font-medium">{t("booking.name")}</label>
-                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Teie nimi" className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                <input type="text" {...contactForm.register("name")} placeholder="Teie nimi" className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                {contactForm.formState.errors.name && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.name.message}</p>}
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium">{t("booking.email")}</label>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="teie@email.ee" className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                <input type="email" {...contactForm.register("email")} placeholder="teie@email.ee" className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                {contactForm.formState.errors.email && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.email.message}</p>}
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium">{t("booking.phone")}</label>
-                <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+372 ..." className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                <input type="tel" {...contactForm.register("phone")} placeholder="+372 ..." className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                {contactForm.formState.errors.phone && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.phone.message}</p>}
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium">{t("booking.notes")}</label>
-                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Täiendav info..." className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                <textarea {...contactForm.register("notes")} rows={3} placeholder="Täiendav info..." className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                {contactForm.formState.errors.notes && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.notes.message}</p>}
               </div>
             </div>
           )}
@@ -227,16 +251,16 @@ export default function BookingPage() {
               <h2 className="font-display text-xl font-semibold">{t("booking.review")}</h2>
               <div className="space-y-3 rounded-xl border border-border p-4 text-sm">
                 {listing && <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.service")}</span><span className="font-medium">{listing.title}</span></div>}
-                <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.date")}</span><span className="font-medium">{date || "—"}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.period")}</span><span className="font-medium">{duration}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.date")}</span><span className="font-medium">{detailsForm.getValues("date") || "—"}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.period")}</span><span className="font-medium">{detailsForm.getValues("duration")}</span></div>
                 {selectedExtras.length > 0 && (
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.extras")}</span><span className="font-medium">{selectedExtras.map((e) => extras.find((x) => x.id === e)?.label).join(", ")}</span></div>
                 )}
                 <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.paymentMethod")}</span><span className="font-medium">{paymentMethod === "bank" ? t("booking.bankTransfer") : paymentMethod === "card" ? t("booking.creditCard") : t("booking.payLater")}</span></div>
                 <div className="border-t border-border pt-3">
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.name")}</span><span className="font-medium">{name}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.email")}</span><span className="font-medium">{email}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.phone")}</span><span className="font-medium">{phone}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.name")}</span><span className="font-medium">{contactForm.getValues("name")}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.email")}</span><span className="font-medium">{contactForm.getValues("email")}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.phone")}</span><span className="font-medium">{contactForm.getValues("phone")}</span></div>
                 </div>
                 
                 {listing && (
@@ -256,15 +280,13 @@ export default function BookingPage() {
                 <ArrowLeft className="mr-2 h-4 w-4" /> {t("booking.prev")}
               </Button>
             ) : <div />}
-            {step < steps.length - 1 ? (
-              <Button onClick={() => setStep(step + 1)} className="bg-accent text-accent-foreground hover:bg-accent/90">
-                {t("booking.next")} <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            ) : (
-              <Button onClick={() => setSubmitted(true)} className="bg-accent text-accent-foreground hover:bg-accent/90">
-                {t("booking.confirm")} <Check className="ml-2 h-4 w-4" />
-              </Button>
-            )}
+            <Button onClick={handleNext} className="bg-accent text-accent-foreground hover:bg-accent/90">
+              {step < steps.length - 1 ? (
+                <>{t("booking.next")} <ArrowRight className="ml-2 h-4 w-4" /></>
+              ) : (
+                <>{t("booking.confirm")} <Check className="ml-2 h-4 w-4" /></>
+              )}
+            </Button>
           </div>
         </div>
 
@@ -278,8 +300,8 @@ export default function BookingPage() {
               </div>
             )}
             <div className="mt-4 space-y-1 text-xs text-muted-foreground">
-              {date && <p>{t("booking.date")}: {date}</p>}
-              <p>{t("booking.period")}: {duration}</p>
+              {detailsForm.watch("date") && <p>{t("booking.date")}: {detailsForm.watch("date")}</p>}
+              <p>{t("booking.period")}: {detailsForm.watch("duration")}</p>
               {selectedExtras.length > 0 && <p>{t("booking.extras")}: {selectedExtras.length}</p>}
             </div>
             {listing && (
@@ -289,7 +311,6 @@ export default function BookingPage() {
                 <div className="flex justify-between text-success font-medium"><span>{t("booking.savings")}</span><span>-{savings}€</span></div>
               </div>
             )}
-            
           </div>
         </div>
       </div>
@@ -300,8 +321,8 @@ export default function BookingPage() {
           <div>
             <div className="text-xs text-muted-foreground truncate max-w-[160px]">{listing?.title}</div>
             <div className="font-display text-base font-bold">
-              {ourPrice}€
-              {selectedExtras.length > 0 && <span className="text-xs font-normal text-muted-foreground ml-1">(+lisad)</span>}
+              {pricing ? `${pricing.total + pricing.extrasTotal}€` : "—"}
+              {pricing && pricing.extrasTotal > 0 && <span className="text-xs font-normal text-muted-foreground ml-1">(+lisad)</span>}
             </div>
           </div>
           <div className="flex gap-2 shrink-0">
@@ -310,9 +331,7 @@ export default function BookingPage() {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             )}
-            <Button
-              onClick={step < steps.length - 1 ? () => setStep(step + 1) : () => setSubmitted(true)}
-              className="bg-accent text-accent-foreground hover:bg-accent/90 px-6">
+            <Button onClick={handleNext} className="bg-accent text-accent-foreground hover:bg-accent/90 px-6">
               {step < steps.length - 1 ? t("booking.next") : t("booking.confirm")}
             </Button>
           </div>
