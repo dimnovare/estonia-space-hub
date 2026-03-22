@@ -1481,7 +1481,7 @@ const translations: Record<Language, Record<string, string>> = {
     "toast.notificationRead": "Notification marked as read",
     "toast.settingsSaved": "Settings saved!",
 
-    "account.favorites": "Favorites",
+    "account.favorites.title": "Favorites",
     "account.favorites.empty": "You haven't added any favorites yet",
     "account.favorites.cta": "Browse listings",
     "account.savedSearches": "Saved searches",
