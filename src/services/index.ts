@@ -122,8 +122,20 @@ export const orderService = {
   async getAll(): Promise<Order[]> {
     return apiClient.get<Order[]>("/orders");
   },
+  async getById(id: string): Promise<Order | undefined> {
+    try { return await apiClient.get<Order>(`/orders/${id}`); } catch { return undefined; }
+  },
   async getByBookingId(bookingId: string): Promise<Order | undefined> {
-    return apiClient.get<Order>(`/orders/by-booking/${bookingId}`);
+    try { return await apiClient.get<Order>(`/orders/by-booking/${bookingId}`); } catch { return undefined; }
+  },
+  async approve(id: string): Promise<Order> {
+    return apiClient.post<Order>(`/orders/${id}/approve`, {});
+  },
+  async reject(id: string, reason: string): Promise<Order> {
+    return apiClient.post<Order>(`/orders/${id}/reject`, { reason });
+  },
+  async confirm(id: string): Promise<Order> {
+    return apiClient.post<Order>(`/orders/${id}/confirm`, {});
   },
   async updateStatus(id: string, status: OrderStatus): Promise<Order> {
     return apiClient.patch<Order>(`/orders/${id}/status`, { status });

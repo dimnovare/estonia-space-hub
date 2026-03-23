@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
-import { Check, X, Mail, Zap, Hand, Download } from "lucide-react";
-import { useOrders } from "@/hooks/useOrders";
+import { useState } from "react";
+import { Check, X, Mail, Download } from "lucide-react";
+import { useOrders, useApproveOrder, useRejectOrder } from "@/hooks/useOrders";
+import { SkeletonList } from "@/components/SkeletonCard";
 import { ORDER_STATUS_CONFIG } from "@/lib/constants";
 import type { Order } from "@/services/types";
 import EmailTemplatePreview from "@/components/EmailTemplatePreview";
@@ -10,12 +11,9 @@ import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function ProviderIncomingOrders() {
   const { t } = useLanguage();
-  const { data: initialOrders = [] } = useOrders();
-  const [orders, setOrders] = useState<Order[]>([]);
-
-  useEffect(() => {
-    if (initialOrders.length > 0) setOrders(initialOrders);
-  }, [initialOrders]);
+  const { data: orders = [], isLoading } = useOrders();
+  const approveOrder = useApproveOrder();
+  const rejectOrder  = useRejectOrder();
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [filter, setFilter] = useState<string>("all");
@@ -41,42 +39,16 @@ export default function ProviderIncomingOrders() {
     }
   };
 
-  const now = () => ({ date: new Date().toISOString().slice(0, 10), time: new Date().toTimeString().slice(0, 5) });
-
   const bulkAccept = () => {
-    const n = now();
-    setOrders(prev => prev.map(o => selectedIds.has(o.id) ? {
-      ...o, status: "confirmed" as const, confirmedAt: `${n.date} ${n.time}`,
-      timeline: [...o.timeline, { ...n, event: "Partner kinnitas tellimuse", status: "confirmed" as const }]
-    } : o));
-    setSelectedIds(new Set());
+    const ids = Array.from(selectedIds);
+    Promise.all(ids.map(id => approveOrder.mutateAsync(id)))
+      .then(() => setSelectedIds(new Set()));
   };
 
   const bulkReject = () => {
-    const n = now();
-    setOrders(prev => prev.map(o => selectedIds.has(o.id) ? {
-      ...o, status: "rejected" as const,
-      timeline: [...o.timeline, { ...n, event: "Partner lükkas tagasi", status: "rejected" as const }]
-    } : o));
-    setSelectedIds(new Set());
-  };
-
-  const handleAccept = (orderId: string) => {
-    const n = now();
-    setOrders(prev => prev.map(o => o.id === orderId ? {
-      ...o, status: "confirmed" as const, confirmedAt: `${n.date} ${n.time}`,
-      timeline: [...o.timeline, { ...n, event: "Partner kinnitas tellimuse", status: "confirmed" as const }]
-    } : o));
-    if (selectedOrder?.id === orderId) setSelectedOrder(null);
-  };
-
-  const handleReject = (orderId: string) => {
-    const n = now();
-    setOrders(prev => prev.map(o => o.id === orderId ? {
-      ...o, status: "rejected" as const,
-      timeline: [...o.timeline, { ...n, event: "Partner lükkas tagasi", status: "rejected" as const }]
-    } : o));
-    if (selectedOrder?.id === orderId) setSelectedOrder(null);
+    const ids = Array.from(selectedIds);
+    Promise.all(ids.map(id => rejectOrder.mutateAsync({ id, reason: "Partner lükkas tagasi" })))
+      .then(() => setSelectedIds(new Set()));
   };
 
   const exportCSV = () => {
@@ -90,6 +62,8 @@ export default function ProviderIncomingOrders() {
     URL.revokeObjectURL(url);
   };
 
+  const isMutating = approveOrder.isPending || rejectOrder.isPending;
+
   return (
     <div>
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -101,10 +75,10 @@ export default function ProviderIncomingOrders() {
 
       <div className="mt-4 flex gap-2 overflow-x-auto">
         {[
-          { key: "all", label: t("provider.orders.all") },
-          { key: "sent", label: t("provider.orders.awaitingConfirmation") },
+          { key: "all",       label: t("provider.orders.all") },
+          { key: "sent",      label: t("provider.orders.awaitingConfirmation") },
           { key: "confirmed", label: t("provider.orders.confirmed") },
-          { key: "rejected", label: t("provider.orders.rejected") },
+          { key: "rejected",  label: t("provider.orders.rejected") },
           { key: "completed", label: t("provider.orders.completed") },
         ].map(f => (
           <button key={f.key} onClick={() => setFilter(f.key)} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${filter === f.key ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:bg-secondary/80"}`}>
@@ -114,13 +88,19 @@ export default function ProviderIncomingOrders() {
         ))}
       </div>
 
+      {isLoading && (
+        <div className="mt-4">
+          <SkeletonList count={3} />
+        </div>
+      )}
+
       {selectedIds.size > 0 && (
         <div className="mt-4 flex flex-wrap items-center gap-2 sm:gap-3 rounded-lg border border-accent/30 bg-accent/5 p-3">
           <span className="text-sm font-medium">{selectedIds.size} {t("provider.orders.selected")}</span>
-          <Button size="sm" className="bg-success text-success-foreground hover:bg-success/90 gap-1" onClick={bulkAccept}>
+          <Button size="sm" className="bg-success text-success-foreground hover:bg-success/90 gap-1" disabled={isMutating} onClick={bulkAccept}>
             <Check className="h-3.5 w-3.5" /> {t("provider.orders.accept")}
           </Button>
-          <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1" onClick={bulkReject}>
+          <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1" disabled={isMutating} onClick={bulkReject}>
             <X className="h-3.5 w-3.5" /> {t("provider.orders.reject")}
           </Button>
           <button onClick={() => setSelectedIds(new Set())} className="ml-auto text-xs text-muted-foreground hover:text-foreground">{t("provider.orders.cancel")}</button>
@@ -137,7 +117,7 @@ export default function ProviderIncomingOrders() {
       </div>
 
       <div className="mt-3 space-y-3">
-        {filtered.length === 0 && (
+        {filtered.length === 0 && !isLoading && (
           <div className="py-12 text-center text-sm text-muted-foreground">{t("provider.orders.noOrders")}</div>
         )}
         {filtered.map((order) => {
@@ -178,11 +158,11 @@ export default function ProviderIncomingOrders() {
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {isPending && (
                   <>
-                    <Button size="sm" className="bg-success text-success-foreground hover:bg-success/90 gap-1" onClick={() => handleAccept(order.id)}>
-                      <Check className="h-3.5 w-3.5" /> {t("provider.orders.accept")}
+                    <Button size="sm" className="bg-success text-success-foreground hover:bg-success/90 gap-1" disabled={isMutating} onClick={() => approveOrder.mutate(order.id, { onSuccess: () => setSelectedOrder(null) })}>
+                      <Check className="h-3.5 w-3.5" /> {approveOrder.isPending ? "..." : t("provider.orders.accept")}
                     </Button>
-                    <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1" onClick={() => handleReject(order.id)}>
-                      <X className="h-3.5 w-3.5" /> {t("provider.orders.reject")}
+                    <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1" disabled={isMutating} onClick={() => rejectOrder.mutate({ id: order.id, reason: "Partner lükkas tagasi" }, { onSuccess: () => setSelectedOrder(null) })}>
+                      <X className="h-3.5 w-3.5" /> {rejectOrder.isPending ? "..." : t("provider.orders.reject")}
                     </Button>
                   </>
                 )}
@@ -242,11 +222,27 @@ export default function ProviderIncomingOrders() {
                 )}
                 {(selectedOrder.status === "sent" || selectedOrder.status === "created") && (
                   <div className="flex gap-2 pt-2 border-t border-border">
-                    <Button size="sm" className="bg-success text-success-foreground hover:bg-success/90 gap-1" onClick={() => { handleAccept(selectedOrder.id); }}>
-                      <Check className="h-3.5 w-3.5" /> {t("provider.orders.accept")}
+                    <Button
+                      size="sm"
+                      className="bg-success text-success-foreground hover:bg-success/90 gap-1"
+                      disabled={isMutating}
+                      onClick={() => approveOrder.mutate(selectedOrder.id, { onSuccess: () => setSelectedOrder(null) })}
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      {approveOrder.isPending ? "..." : t("provider.orders.accept")}
                     </Button>
-                    <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1" onClick={() => { handleReject(selectedOrder.id); }}>
-                      <X className="h-3.5 w-3.5" /> {t("provider.orders.reject")}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1"
+                      disabled={isMutating}
+                      onClick={() => rejectOrder.mutate(
+                        { id: selectedOrder.id, reason: "Partner lükkas tagasi" },
+                        { onSuccess: () => setSelectedOrder(null) }
+                      )}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      {rejectOrder.isPending ? "..." : t("provider.orders.reject")}
                     </Button>
                   </div>
                 )}

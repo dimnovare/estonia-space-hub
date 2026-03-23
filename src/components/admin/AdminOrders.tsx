@@ -1,30 +1,26 @@
-import { useState, useEffect } from "react";
-import { Mail, Wifi, Hand, Send, Package, Route } from "lucide-react";
+import { useState } from "react";
+import { Mail, Wifi, Hand, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useOrders } from "@/hooks/useOrders";
+import { useOrders, useApproveOrder, useRejectOrder, useConfirmOrder, useUpdateOrderStatus } from "@/hooks/useOrders";
+import { SkeletonList } from "@/components/SkeletonCard";
 import { ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG, generateOrderEmailPreview } from "@/lib/constants";
 import type { Order, OrderStatus } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function AdminOrders() {
   const { t } = useLanguage();
-  const { data: initialOrders = [] } = useOrders();
-  const [orders, setOrders] = useState<Order[]>([]);
+  const { data: orders = [], isLoading } = useOrders();
+  const updateStatus  = useUpdateOrderStatus();
+  const approveOrder  = useApproveOrder();
+  const rejectOrder   = useRejectOrder();
+  const confirmOrder  = useConfirmOrder();
+
   const [filter, setFilter] = useState<"all" | OrderStatus>("all");
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
   const [emailPreview, setEmailPreview] = useState(false);
 
-  useEffect(() => {
-    if (initialOrders.length > 0) setOrders(initialOrders);
-  }, [initialOrders]);
-
   const filtered = filter === "all" ? orders : orders.filter((o) => o.status === filter);
-
-  const updateOrderStatus = (id: string, status: OrderStatus) => {
-    setOrders((prev) => prev.map((o) => o.id === id ? { ...o, status } : o));
-    if (viewOrder?.id === id) setViewOrder((prev) => prev ? { ...prev, status } : prev);
-  };
 
   return (
     <div>
@@ -36,6 +32,13 @@ export default function AdminOrders() {
           </button>
         ))}
       </div>
+
+      {isLoading && (
+        <div className="mt-6">
+          <SkeletonList count={3} />
+        </div>
+      )}
+
       {/* Mobile cards */}
       <div className="mt-6 space-y-2 md:hidden">
         {filtered.map((o) => {
@@ -55,44 +58,45 @@ export default function AdminOrders() {
           );
         })}
       </div>
+
       {/* Desktop table */}
       <div className="mt-6 hidden rounded-xl border border-border md:block">
         <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="border-b border-border bg-secondary/50">
-            <tr>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">ID</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.client")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.service")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.partner")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.integration")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.amount")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.margin")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.status")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.actions")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((o) => {
-              const intConf = INTEGRATION_TYPE_CONFIG[o.integrationType];
-              const statusConf = ORDER_STATUS_CONFIG[o.status];
-              const IntIcon = o.integrationType === "api" ? Wifi : o.integrationType === "email" ? Mail : Hand;
-              return (
-                <tr key={o.id} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{o.id}</td>
-                  <td className="px-4 py-3 font-medium">{o.customerName}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{o.listingTitle}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{o.supplierName}</td>
-                  <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${intConf.color}`}><IntIcon className="h-3 w-3" />{intConf.label}</span></td>
-                  <td className="px-4 py-3 font-medium">€{o.total}</td>
-                  <td className="px-4 py-3 text-success font-medium">€{o.margin}</td>
-                  <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusConf.color}`}>{statusConf.label}</span></td>
-                  <td className="px-4 py-3"><Button variant="outline" size="sm" onClick={() => setViewOrder(o)}>{t("admin.view")}</Button></td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+          <table className="w-full text-sm">
+            <thead className="border-b border-border bg-secondary/50">
+              <tr>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">ID</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.client")}</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.service")}</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.partner")}</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.integration")}</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.amount")}</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.margin")}</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.status")}</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.actions")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((o) => {
+                const intConf = INTEGRATION_TYPE_CONFIG[o.integrationType];
+                const statusConf = ORDER_STATUS_CONFIG[o.status];
+                const IntIcon = o.integrationType === "api" ? Wifi : o.integrationType === "email" ? Mail : Hand;
+                return (
+                  <tr key={o.id} className="border-b border-border last:border-0">
+                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{o.id}</td>
+                    <td className="px-4 py-3 font-medium">{o.customerName}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{o.listingTitle}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{o.supplierName}</td>
+                    <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${intConf.color}`}><IntIcon className="h-3 w-3" />{intConf.label}</span></td>
+                    <td className="px-4 py-3 font-medium">€{o.total}</td>
+                    <td className="px-4 py-3 text-success font-medium">€{o.margin}</td>
+                    <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusConf.color}`}>{statusConf.label}</span></td>
+                    <td className="px-4 py-3"><Button variant="outline" size="sm" onClick={() => setViewOrder(o)}>{t("admin.view")}</Button></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -112,7 +116,7 @@ export default function AdminOrders() {
                 <div><span className="text-xs text-muted-foreground">{t("admin.period")}</span><p className="font-medium">{viewOrder.duration}</p></div>
               </div>
               <div className="rounded-xl border border-accent/30 bg-accent/5 p-4">
-                <h3 className="flex items-center gap-2 text-sm font-semibold"><Route className="h-4 w-4 text-accent" /> Fulfillment</h3>
+                <h3 className="flex items-center gap-2 text-sm font-semibold"><Send className="h-4 w-4 text-accent" /> Fulfillment</h3>
                 <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                   <div><span className="text-xs text-muted-foreground">{t("admin.approvalMode")}</span><p className="font-medium">{viewOrder.integrationType === "api" ? t("admin.approvalAuto") : t("admin.approvalAdmin")}</p></div>
                   <div><span className="text-xs text-muted-foreground">{t("admin.postingChannel")}</span><p className="font-medium">{INTEGRATION_TYPE_CONFIG[viewOrder.integrationType].label}</p></div>
@@ -147,13 +151,46 @@ export default function AdminOrders() {
                   <Button variant="outline" size="sm" onClick={() => setEmailPreview(true)}><Mail className="mr-1 h-3.5 w-3.5" /> {t("admin.viewEmail")}</Button>
                 )}
                 {(viewOrder.status === "created" || viewOrder.status === "sending") && (
-                  <Button size="sm" onClick={() => updateOrderStatus(viewOrder.id, "sent")} className="bg-info text-white hover:bg-info/90"><Send className="mr-1 h-3.5 w-3.5" /> {t("admin.markSent")}</Button>
+                  <Button
+                    size="sm"
+                    disabled={updateStatus.isPending}
+                    onClick={() => updateStatus.mutate({ id: viewOrder.id, status: "sent" })}
+                    className="bg-info text-white hover:bg-info/90"
+                  >
+                    <Send className="mr-1 h-3.5 w-3.5" />
+                    {updateStatus.isPending ? "..." : t("admin.markSent")}
+                  </Button>
                 )}
                 {viewOrder.status === "sent" && (
                   <>
-                    <Button size="sm" onClick={() => updateOrderStatus(viewOrder.id, "confirmed")} className="bg-success text-white hover:bg-success/90">{t("admin.markConfirmed")}</Button>
-                    <Button size="sm" variant="outline" onClick={() => updateOrderStatus(viewOrder.id, "rejected")} className="text-destructive">{t("admin.markRejected")}</Button>
+                    <Button
+                      size="sm"
+                      disabled={approveOrder.isPending}
+                      onClick={() => approveOrder.mutate(viewOrder.id)}
+                      className="bg-success text-white hover:bg-success/90"
+                    >
+                      {approveOrder.isPending ? "..." : t("admin.markConfirmed")}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={rejectOrder.isPending}
+                      onClick={() => rejectOrder.mutate({ id: viewOrder.id, reason: "Admin rejected" })}
+                      className="text-destructive"
+                    >
+                      {rejectOrder.isPending ? "..." : t("admin.markRejected")}
+                    </Button>
                   </>
+                )}
+                {viewOrder.status === "confirmed" && (
+                  <Button
+                    size="sm"
+                    disabled={confirmOrder.isPending}
+                    onClick={() => confirmOrder.mutate(viewOrder.id)}
+                    className="bg-primary text-primary-foreground"
+                  >
+                    {confirmOrder.isPending ? "..." : t("admin.markConfirmed")}
+                  </Button>
                 )}
               </div>
             </div>
