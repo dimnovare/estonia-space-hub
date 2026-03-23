@@ -261,6 +261,19 @@ export const securityService = {
   },
 };
 
+// ─── Public Settings Service ────────────────────────────────────────────────
+export const publicSettingsService = {
+  async getPublic(): Promise<{
+    siteName: string;
+    siteEmail: string;
+    sitePhone: string;
+    openHours: string;
+    openHoursSat: string;
+  }> {
+    return apiClient.get("/settings/public");
+  },
+};
+
 export type {
   User, Supplier, Order, Booking, Notification, Invoice, Message,
   AuditLogEntry, OrderStatus, PartnerIntegrationSettings, OrderRoutingRule,

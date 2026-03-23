@@ -6,6 +6,7 @@ import { useFeaturedListings, useAllListings } from "@/hooks/queries";
 import ListingCard from "@/components/ListingCard";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
@@ -16,6 +17,7 @@ export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const { t } = useLanguage();
+  const settings = usePlatformSettings();
 
   const { data: featured = [], isLoading: featuredLoading } = useFeaturedListings();
   const { data: allResult } = useAllListings();
@@ -119,16 +121,32 @@ export default function HomePage() {
 
             {/* Contact info */}
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs text-primary-foreground/50">
-              <a href="tel:+3725551234" className="flex items-center gap-1 hover:text-primary-foreground transition-colors">
-                <Phone className="h-3 w-3" />
-                +372 555 1234
-              </a>
-              <span>·</span>
-              <a href="mailto:info@ruumly.eu" className="hover:text-primary-foreground transition-colors">
-                info@ruumly.eu
-              </a>
-              <span>·</span>
-              <span>E–R 9–18</span>
+              {settings.sitePhone && (
+                <>
+                  <a href={`tel:${settings.sitePhone.replace(/\s/g, "")}`} className="flex items-center gap-1 hover:text-primary-foreground transition-colors">
+                    <Phone className="h-3 w-3" />
+                    {settings.sitePhone}
+                  </a>
+                  <span>·</span>
+                </>
+              )}
+              {settings.siteEmail && (
+                <>
+                  <a href={`mailto:${settings.siteEmail}`} className="hover:text-primary-foreground transition-colors">
+                    {settings.siteEmail}
+                  </a>
+                  <span>·</span>
+                </>
+              )}
+              {settings.openHours && (
+                <span>{settings.openHours}</span>
+              )}
+              {settings.openHoursSat && (
+                <>
+                  <span>·</span>
+                  <span>{settings.openHoursSat}</span>
+                </>
+              )}
             </div>
 
             <div className="mt-3">

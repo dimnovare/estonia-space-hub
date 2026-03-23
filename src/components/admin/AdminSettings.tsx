@@ -9,6 +9,8 @@ const DEFAULT_SETTINGS = {
   siteName:               "Ruumly",
   siteEmail:              "info@ruumly.eu",
   sitePhone:              "+372 5555 1234",
+  openHours:              "E–R 9–18",
+  openHoursSat:           "",
   defaultLanguage:        "et",
   currency:               "EUR",
   defaultPartnerDiscount: "20",
@@ -94,6 +96,16 @@ export default function AdminSettings() {
             <div>
               <label className="text-xs font-medium text-muted-foreground">{t("admin.phone")}</label>
               <input className={inp} value={settings.sitePhone} onChange={e => set("sitePhone", e.target.value)} />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">{t("admin.openHours")}</label>
+              <input className={inp} value={settings.openHours} onChange={e => set("openHours", e.target.value)} placeholder="E–R 9–18" />
+              <p className="mt-0.5 text-[10px] text-muted-foreground">Kuvatakse esilehel kontaktinfo kõrval</p>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">{t("admin.openHoursSat")}</label>
+              <input className={inp} value={settings.openHoursSat} onChange={e => set("openHoursSat", e.target.value)} placeholder="L 10–14 (tühi = peidus)" />
+              <p className="mt-0.5 text-[10px] text-muted-foreground">Laupäeva lahtiolekuajad (jäta tühjaks kui suletud)</p>
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground">{t("admin.defaultLanguage")}</label>
