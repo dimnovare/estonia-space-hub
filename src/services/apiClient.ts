@@ -25,9 +25,43 @@ class ApiClient {
     }
     if (response.status === 401) {
       if (token) {
-        // Only redirect when a token was actually sent (expired/revoked session)
+        const refresh = localStorage.getItem("ruumly-refresh");
+        if (refresh) {
+          try {
+            const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ refreshToken: refresh }),
+            });
+            if (refreshRes.ok) {
+              const data = await refreshRes.json();
+              localStorage.setItem("ruumly-token", data.accessToken);
+              if (data.refreshToken) {
+                localStorage.setItem("ruumly-refresh", data.refreshToken);
+              }
+              const retryHeaders: Record<string, string> = {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${data.accessToken}`,
+              };
+              const retry = await fetch(`${API_BASE_URL}${endpoint}`, {
+                method,
+                headers: retryHeaders,
+                body: body ? JSON.stringify(body) : undefined,
+              });
+              if (retry.ok) {
+                const cl = retry.headers.get("content-length");
+                const ct = retry.headers.get("content-type") ?? "";
+                if (retry.status === 204 || cl === "0" || !ct.includes("application/json")) {
+                  return undefined as unknown as T;
+                }
+                return retry.json() as Promise<T>;
+              }
+            }
+          } catch {}
+        }
         localStorage.removeItem("ruumly-auth");
         localStorage.removeItem("ruumly-token");
+        localStorage.removeItem("ruumly-refresh");
         window.location.href = "/login";
       }
       throw new Error("Unauthorized");

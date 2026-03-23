@@ -16,6 +16,7 @@ export interface MockUser {
   status?: "active" | "blocked";
   registeredAt?: string;
   bookingsCount?: number;
+  hasGoogleAccount?: boolean;
 }
 
 interface AuthResponse {
@@ -63,6 +64,7 @@ function normalizeUser(raw: AuthResponse["user"]): MockUser {
     createdAt: raw.registeredAt,
     registeredAt: raw.registeredAt,
     bookingsCount: raw.bookingsCount,
+    hasGoogleAccount: (raw as any).hasGoogleAccount ?? false,
   };
 }
 
