@@ -20,7 +20,7 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.home": "Avaleht",
     "nav.providerDashboard": "Partneri paneel",
     "provider.nav.overview": "Ülevaade",
-    "provider.nav.orders": "Sissetulevad tellimused",
+    "provider.nav.orders": "Tellimused",
     "provider.nav.listings": "Minu kuulutused",
     "provider.nav.bookings": "Broneeringud",
     "provider.nav.calendar": "Kalender",
