@@ -44,6 +44,13 @@ export default function ListingCard({ listing }: { listing: Listing }) {
             {t(badgeKeys[listing.badge])}
           </span>
         )}
+        <button
+          onClick={e => { e.preventDefault(); e.stopPropagation(); toggle(listing.id); }}
+          className={`absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full transition-colors ${isFavorite(listing.id) ? "bg-white text-red-500" : "bg-card/80 text-muted-foreground hover:text-red-400"}`}
+          title={isFavorite(listing.id) ? "Eemalda lemmikutest" : "Lisa lemmikutesse"}
+        >
+          <Heart className={`h-4 w-4 ${isFavorite(listing.id) ? "fill-current" : ""}`} />
+        </button>
         <div className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-card/90 backdrop-blur-sm">
           <Icon className="h-4 w-4 text-foreground" />
         </div>
