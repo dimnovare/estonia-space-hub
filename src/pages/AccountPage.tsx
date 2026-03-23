@@ -361,23 +361,55 @@ function AccountBookings() {
 
 /* ─── Messages ─── */
 function AccountMessages() {
+  const { data: bookings = [] } = useBookings();
+  const queryClient = useQueryClient();
   const [selectedBooking, setSelectedBooking] = useState<string | null>(null);
   const [newMsg, setNewMsg] = useState("");
-  const [messages, setMessages] = useState<Message[]>(MOCK_MESSAGES);
-  const { data: bookings = [] } = useBookings();
 
-  const bookingIds = [...new Set(messages.map(m => m.bookingId))];
-  const activeMessages = selectedBooking ? messages.filter(m => m.bookingId === selectedBooking) : [];
-  const booking = selectedBooking ? bookings.find(b => b.id === selectedBooking) : null;
+  const { data: activeMessages = [], isLoading: msgsLoading } = useQuery({
+    queryKey: ["messages", selectedBooking],
+    queryFn: () => messageService.getByBookingId(selectedBooking!),
+    enabled: !!selectedBooking,
+    refetchInterval: 15_000,
+  });
+
+  const sendMutation = useMutation({
+    mutationFn: ({ bookingId, text }: { bookingId: string; text: string }) =>
+      messageService.send(bookingId, text),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["messages", selectedBooking] });
+      setNewMsg("");
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Sõnumi saatmine ebaõnnestus");
+    },
+  });
+
+  const markReadMutation = useMutation({
+    mutationFn: (bookingId: string) =>
+      apiClient.post(`/messages/mark-read?bookingId=${bookingId}`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["messages"] });
+    },
+  });
+
+  const handleSelectBooking = (bid: string) => {
+    setSelectedBooking(bid);
+    markReadMutation.mutate(bid);
+  };
 
   const sendMessage = () => {
     if (!newMsg.trim() || !selectedBooking) return;
-    setMessages(prev => [...prev, {
-      id: `msg-${Date.now()}`, bookingId: selectedBooking, from: "customer", senderName: "Teie",
-      text: newMsg.trim(), createdAt: new Date().toISOString().slice(0, 16).replace("T", " "), read: true,
-    }]);
-    setNewMsg("");
+    sendMutation.mutate({ bookingId: selectedBooking, text: newMsg.trim() });
   };
+
+  const conversations = bookings.map(b => ({
+    bookingId: b.id,
+    listingTitle: b.listingTitle,
+    provider: b.provider,
+  }));
+
+  const booking = selectedBooking ? bookings.find(b => b.id === selectedBooking) : null;
 
   return (
     <div>
@@ -386,24 +418,16 @@ function AccountMessages() {
       <div className="mt-6 grid gap-4 lg:grid-cols-[280px_1fr]">
         {/* Conversation list */}
         <div className={`space-y-1 rounded-xl border border-border p-2 lg:block ${selectedBooking ? 'hidden' : 'block'}`}>
-          {bookingIds.length === 0 ? (
+          {conversations.length === 0 ? (
             <div className="flex flex-col items-center py-8 text-center"><MessageSquare className="h-8 w-8 text-muted-foreground/30" /><p className="mt-2 text-xs text-muted-foreground">Sõnumeid pole veel.</p></div>
-          ) : bookingIds.map(bid => {
-            const bk = bookings.find(b => b.id === bid);
-            const lastMsg = [...messages.filter(m => m.bookingId === bid)].pop();
-            const unread = messages.filter(m => m.bookingId === bid && !m.read && m.from !== "customer").length;
-            return (
-              <button key={bid} onClick={() => setSelectedBooking(bid)} className={`flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors ${selectedBooking === bid ? "bg-accent/10" : "hover:bg-secondary/50"}`}>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-medium truncate">{bk?.listingTitle || bid}</p>
-                    {unread > 0 && <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-accent-foreground">{unread}</span>}
-                  </div>
-                  {lastMsg && <p className="mt-0.5 text-[11px] text-muted-foreground truncate">{lastMsg.senderName}: {lastMsg.text}</p>}
-                </div>
-              </button>
-            );
-          })}
+          ) : conversations.map(c => (
+            <button key={c.bookingId} onClick={() => handleSelectBooking(c.bookingId)} className={`flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors ${selectedBooking === c.bookingId ? "bg-accent/10" : "hover:bg-secondary/50"}`}>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium truncate">{c.listingTitle}</p>
+                <p className="mt-0.5 text-[11px] text-muted-foreground truncate">{c.provider}</p>
+              </div>
+            </button>
+          ))}
         </div>
 
         {/* Chat area */}
@@ -412,20 +436,26 @@ function AccountMessages() {
             <div className="flex flex-col items-center justify-center py-12 sm:py-20"><MessageSquare className="h-10 w-10 text-muted-foreground/20" /><p className="mt-3 text-sm text-muted-foreground">Valige vestlus.</p></div>
           ) : (
             <div className="flex flex-col h-[calc(100vh-16rem)] lg:h-[500px]">
-              {selectedBooking && (
-                <button
-                  onClick={() => setSelectedBooking(null)}
-                  className="flex items-center gap-1.5 px-3 pt-3 text-xs text-muted-foreground hover:text-foreground lg:hidden"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" /> Tagasi vestlustesse
-                </button>
-              )}
+              <button
+                onClick={() => setSelectedBooking(null)}
+                className="flex items-center gap-1.5 px-3 pt-3 text-xs text-muted-foreground hover:text-foreground lg:hidden"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" /> Tagasi vestlustesse
+              </button>
               <div className="border-b border-border p-3">
                 <p className="text-sm font-semibold">{booking?.listingTitle}</p>
                 <p className="text-xs text-muted-foreground">{booking?.provider} · {booking?.id}</p>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {activeMessages.map(m => (
+                {msgsLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : activeMessages.length === 0 ? (
+                  <div className="flex flex-col items-center py-8 text-center">
+                    <p className="text-xs text-muted-foreground">Vestlus on tühi. Saatke esimene sõnum.</p>
+                  </div>
+                ) : activeMessages.map((m: any) => (
                   <div key={m.id} className={`flex ${m.from === "customer" ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[75%] rounded-xl px-3 py-2 ${m.from === "customer" ? "bg-accent text-accent-foreground" : m.from === "admin" ? "bg-primary/10 text-foreground" : "bg-secondary text-foreground"}`}>
                       <p className="text-[10px] font-medium opacity-70">{m.senderName}</p>
@@ -437,7 +467,9 @@ function AccountMessages() {
               </div>
               <div className="border-t border-border p-3 flex gap-2 overflow-hidden">
                 <input value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} placeholder="Kirjuta sõnum..." className="flex-1 min-w-0 rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-                <Button size="sm" onClick={sendMessage} disabled={!newMsg.trim()} className="bg-accent text-accent-foreground"><Send className="h-4 w-4" /></Button>
+                <Button size="sm" onClick={sendMessage} disabled={!newMsg.trim() || sendMutation.isPending} className="bg-accent text-accent-foreground">
+                  {sendMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </Button>
               </div>
             </div>
           )}
