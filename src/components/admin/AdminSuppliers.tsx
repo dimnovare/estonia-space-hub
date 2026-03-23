@@ -78,6 +78,11 @@ export default function AdminSuppliers() {
               <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${healthColor(s.integrationHealth)}`}>{healthLabel(s.integrationHealth)}</span>
               <span className="text-xs text-muted-foreground">{s.listingCount} kuulutust</span>
               <span className="text-xs font-medium">€{s.revenue.toLocaleString()}</span>
+              {(s as any).partnerDiscountRate > 0 && (
+                <span className="text-[10px] rounded-full bg-success/10 text-success px-2 py-0.5 font-medium">
+                  Marginaal: {Math.max(0, (s as any).partnerDiscountRate - ((s as any).clientDiscountRate || 0))}%
+                </span>
+              )}
             </div>
           </button>
         ))}
