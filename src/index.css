@@ -188,3 +188,11 @@
     to { opacity: 1; transform: translateY(0); }
   }
 }
+
+/* Google Sign-In button styling */
+.google-login-wrapper iframe {
+  border-radius: 8px !important;
+}
+.google-login-wrapper > div {
+  width: 100% !important;
+}
