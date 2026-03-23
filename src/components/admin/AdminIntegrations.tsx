@@ -1,16 +1,35 @@
 import { useState } from "react";
-import { Edit, Save, Link2 } from "lucide-react";
+import { Edit, Save, Link2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MOCK_INTEGRATION_SETTINGS } from "@/services/mockStore";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { integrationSettingsService } from "@/services";
 import type { PartnerIntegrationSettings, ApprovalMode, PostingMode } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { toast } from "sonner";
 
 export default function AdminIntegrations() {
   const { t } = useLanguage();
-  const [settings, setSettings] = useState(MOCK_INTEGRATION_SETTINGS);
+  const queryClient = useQueryClient();
+
+  const { data: settings = [], isLoading } = useQuery({
+    queryKey: ["integration-settings"],
+    queryFn: () => integrationSettingsService.getAll(),
+  });
+
   const [editOpen, setEditOpen] = useState(false);
   const [editItem, setEditItem] = useState<PartnerIntegrationSettings | null>(null);
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: any }) =>
+      integrationSettingsService.update(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["integration-settings"] });
+      toast.success("Integratsiooni seaded uuendatud");
+      setEditOpen(false);
+    },
+    onError: (err: any) => toast.error(err.message || "Uuendamine ebaõnnestus"),
+  });
 
   const approvalLabel = (m: ApprovalMode) => m === "auto" ? t("admin.approvalAuto") : m === "admin" ? t("admin.approvalAdmin") : t("admin.approvalProvider");
   const postingLabel = (m: PostingMode) => m === "api" ? "API" : m === "email" ? "Email" : "Manual";
@@ -19,9 +38,14 @@ export default function AdminIntegrations() {
   const openEdit = (item: PartnerIntegrationSettings) => { setEditItem({ ...item }); setEditOpen(true); };
   const handleSave = () => {
     if (!editItem) return;
-    setSettings(prev => prev.map(s => s.id === editItem.id ? editItem : s));
-    setEditOpen(false);
+    updateMutation.mutate({ id: editItem.id, updates: editItem });
   };
+
+  if (isLoading) return (
+    <div className="flex items-center justify-center py-20">
+      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    </div>
+  );
 
   return (
     <div>
@@ -32,7 +56,6 @@ export default function AdminIntegrations() {
         {settings.map(s => (
           <div key={s.id} className={`rounded-xl border p-4 transition-colors ${s.isActive ? "border-border" : "border-border bg-muted/30"}`}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              {/* Left: icon + info */}
               <div className="flex items-center gap-3 min-w-0">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary"><Link2 className="h-5 w-5 text-muted-foreground" /></div>
                 <div className="min-w-0">
@@ -48,7 +71,6 @@ export default function AdminIntegrations() {
                   <p className="mt-0.5 text-[10px] text-muted-foreground sm:hidden">Tagavaravalik: {postingLabel(s.fallbackPostingMode)}</p>
                 </div>
               </div>
-              {/* Right: test result + edit button */}
               <div className="flex items-center gap-2 sm:shrink-0">
                 {s.lastTestResult && (
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium shrink-0 ${s.lastTestResult === "success" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
@@ -123,7 +145,10 @@ export default function AdminIntegrations() {
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" onClick={() => setEditOpen(false)}>{t("admin.cancel")}</Button>
-                <Button onClick={handleSave} className="bg-accent text-accent-foreground hover:bg-accent/90"><Save className="mr-2 h-4 w-4" /> {t("admin.save")}</Button>
+                <Button onClick={handleSave} disabled={updateMutation.isPending} className="bg-accent text-accent-foreground hover:bg-accent/90">
+                  {updateMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                  {t("admin.save")}
+                </Button>
               </div>
             </div>
           )}

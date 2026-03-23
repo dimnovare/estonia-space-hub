@@ -1,30 +1,68 @@
 import { useState } from "react";
-import { Edit, Save, PlusCircle, Route } from "lucide-react";
+import { Edit, Save, PlusCircle, Route, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MOCK_ROUTING_RULES } from "@/services/mockStore";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { routingRuleService } from "@/services";
 import type { OrderRoutingRule } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { toast } from "sonner";
 
 export default function AdminRouting() {
   const { t } = useLanguage();
-  const [rules, setRules] = useState(MOCK_ROUTING_RULES);
+  const queryClient = useQueryClient();
+
+  const { data: rules = [], isLoading } = useQuery({
+    queryKey: ["routing-rules"],
+    queryFn: () => routingRuleService.getAll(),
+  });
+
   const [editOpen, setEditOpen] = useState(false);
   const [editItem, setEditItem] = useState<OrderRoutingRule | null>(null);
   const [isNew, setIsNew] = useState(false);
 
+  const createMutation = useMutation({
+    mutationFn: (rule: any) => routingRuleService.create(rule),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["routing-rules"] });
+      toast.success("Reegel lisatud");
+      setEditOpen(false);
+    },
+    onError: (err: any) => toast.error(err.message || "Lisamine ebaõnnestus"),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: any }) =>
+      routingRuleService.update(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["routing-rules"] });
+      toast.success("Reegel uuendatud");
+      setEditOpen(false);
+    },
+    onError: (err: any) => toast.error(err.message || "Uuendamine ebaõnnestus"),
+  });
+
+  const isMutating = createMutation.isPending || updateMutation.isPending;
+
   const openNew = () => {
-    setEditItem({ id: `rule-${Date.now()}`, name: "", requiresApproval: true, approverRole: "admin", postingChannel: "email", priority: rules.length + 1, isActive: true });
+    setEditItem({ id: "", name: "", requiresApproval: true, approverRole: "admin", postingChannel: "email", priority: rules.length + 1, isActive: true });
     setIsNew(true); setEditOpen(true);
   };
   const openEdit = (r: OrderRoutingRule) => { setEditItem({ ...r }); setIsNew(false); setEditOpen(true); };
   const handleSave = () => {
     if (!editItem) return;
-    if (isNew) setRules(prev => [...prev, editItem]);
-    else setRules(prev => prev.map(r => r.id === editItem.id ? editItem : r));
-    setEditOpen(false);
+    if (isNew) createMutation.mutate(editItem);
+    else updateMutation.mutate({ id: editItem.id, updates: editItem });
   };
-  const toggleActive = (id: string) => setRules(prev => prev.map(r => r.id === id ? { ...r, isActive: !r.isActive } : r));
+  const toggleActive = (id: string, current: boolean) => {
+    updateMutation.mutate({ id, updates: { isActive: !current } });
+  };
+
+  if (isLoading) return (
+    <div className="flex items-center justify-center py-20">
+      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    </div>
+  );
 
   return (
     <div>
@@ -55,7 +93,7 @@ export default function AdminRouting() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={() => toggleActive(r.id)} className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors ${r.isActive ? "bg-accent" : "bg-muted"}`}>
+                <button onClick={() => toggleActive(r.id, r.isActive)} className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors ${r.isActive ? "bg-accent" : "bg-muted"}`}>
                   <span className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${r.isActive ? "translate-x-[1rem]" : "translate-x-0.5"} mt-0.5`} />
                 </button>
                 <Button variant="ghost" size="sm" onClick={() => openEdit(r)}><Edit className="h-3.5 w-3.5" /></Button>
@@ -118,7 +156,10 @@ export default function AdminRouting() {
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" onClick={() => setEditOpen(false)}>{t("admin.cancel")}</Button>
-                <Button onClick={handleSave} className="bg-accent text-accent-foreground hover:bg-accent/90"><Save className="mr-2 h-4 w-4" /> {t("admin.save")}</Button>
+                <Button onClick={handleSave} disabled={isMutating} className="bg-accent text-accent-foreground hover:bg-accent/90">
+                  {isMutating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                  {t("admin.save")}
+                </Button>
               </div>
             </div>
           )}

@@ -2,17 +2,56 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { initialInquiries } from "./AdminDashboard";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/services/apiClient";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+
+interface Inquiry {
+  id: number;
+  customer: string;
+  email: string;
+  listing: string;
+  type: string;
+  date: string;
+  status: string;
+  notes: string;
+}
 
 export default function AdminInquiries() {
   const { t } = useLanguage();
-  const [inquiries, setInquiries] = useState(initialInquiries);
-  const [viewOpen, setViewOpen] = useState(false);
-  const [viewItem, setViewItem] = useState<typeof initialInquiries[0] | null>(null);
+  const queryClient = useQueryClient();
 
-  const openView = (inq: typeof initialInquiries[0]) => { setViewItem({ ...inq }); setViewOpen(true); };
-  const updateStatus = (id: number, status: string) => { setInquiries(prev => prev.map(i => i.id === id ? { ...i, status } : i)); if (viewItem?.id === id) setViewItem(prev => prev ? { ...prev, status } : prev); };
+  const { data: inquiries = [], isLoading } = useQuery({
+    queryKey: ["admin-inquiries"],
+    queryFn: () => apiClient.get<Inquiry[]>("/admin/inquiries"),
+  });
+
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewItem, setViewItem] = useState<Inquiry | null>(null);
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: number; updates: Partial<Inquiry> }) =>
+      apiClient.patch<Inquiry>(`/admin/inquiries/${id}`, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-inquiries"] });
+      toast.success("Päring uuendatud");
+    },
+    onError: (err: any) => toast.error(err.message || "Uuendamine ebaõnnestus"),
+  });
+
+  const openView = (inq: Inquiry) => { setViewItem({ ...inq }); setViewOpen(true); };
+  const updateStatus = (id: number, status: string) => {
+    updateMutation.mutate({ id, updates: { status } });
+    if (viewItem?.id === id) setViewItem(prev => prev ? { ...prev, status } : prev);
+  };
   const statusLabel = (s: string) => s === "new" ? t("admin.new") : s === "answered" ? t("admin.answered") : t("admin.closed");
+
+  if (isLoading) return (
+    <div className="flex items-center justify-center py-20">
+      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    </div>
+  );
 
   return (
     <div>

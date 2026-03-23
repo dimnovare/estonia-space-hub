@@ -1,29 +1,35 @@
-import { List, Package, Eye, DollarSign, TrendingUp, Inbox } from "lucide-react";
+import { List, Package, Eye, DollarSign, Inbox } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
+import { useBookings } from "@/hooks/useBookings";
 import { useLanguage } from "@/i18n/LanguageContext";
-
-const mockProviderBookings = [
-  { id: "PB-001", client: "Andres Tamm", listing: "Laobox Tallinn", date: "2026-04-01", duration: "3 kuud", total: 170, status: "confirmed" },
-  { id: "PB-002", client: "Kati Mets", listing: "Laobox Tallinn", date: "2026-03-25", duration: "1 kuu", total: 52, status: "pending" },
-  { id: "PB-003", client: "Jüri Kask", listing: "SecureStore Ülemiste", date: "2026-03-15", duration: "6 kuud", total: 450, status: "active" },
-];
-
-export { mockProviderBookings };
 
 export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () => void }) {
   const { t } = useLanguage();
   const { data: allOrders = [] } = useOrders();
+  const { data: bookings = [] } = useBookings();
   const pendingOrders = allOrders.filter(o => o.status === "sent" || o.status === "created");
+
+  const thisMonthStr = new Date().toISOString().slice(0, 7);
+
+  const bookingsThisMonth = bookings.filter(b =>
+    (b as any).createdAt?.startsWith(thisMonthStr)
+  ).length;
+
+  const revenueThisMonth = bookings
+    .filter(b =>
+      (b as any).createdAt?.startsWith(thisMonthStr) &&
+      (b.status === "confirmed" || b.status === "active" || b.status === "completed"))
+    .reduce((sum, b) => sum + ((b as any).total ?? 0), 0);
 
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">{t("provider.overview.title")}</h1>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: t("provider.overview.listings"), value: "2", icon: List, change: "" },
-          { label: t("provider.overview.bookingsMonth"), value: "8", icon: Package, change: "+33%" },
-          { label: t("provider.overview.viewsMonth"), value: "390", icon: Eye, change: "+12%" },
-          { label: t("provider.overview.revenueMonth"), value: "€1,240", icon: DollarSign, change: "+18%" },
+          { label: t("provider.overview.listings"), value: "—", icon: List },
+          { label: t("provider.overview.bookingsMonth"), value: bookingsThisMonth.toString(), icon: Package },
+          { label: t("provider.overview.viewsMonth"), value: "—", icon: Eye },
+          { label: t("provider.overview.revenueMonth"), value: `€${revenueThisMonth.toLocaleString()}`, icon: DollarSign },
         ].map((s, i) => {
           const Icon = s.icon;
           return (
@@ -33,7 +39,6 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
                 <Icon className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="mt-2 font-display text-2xl font-bold">{s.value}</div>
-              {s.change && <div className="mt-1 text-xs text-success flex items-center gap-1"><TrendingUp className="h-3 w-3" />{s.change}</div>}
             </div>
           );
         })}
@@ -67,17 +72,22 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
 
       <h2 className="mt-8 font-display text-lg font-semibold">{t("provider.overview.recentBookings")}</h2>
       <div className="mt-3 space-y-2">
-        {mockProviderBookings.slice(0, 3).map((b) => (
+        {bookings.length === 0 ? (
+          <div className="py-8 text-center text-sm text-muted-foreground">
+            <Package className="mx-auto h-8 w-8 text-muted-foreground/20 mb-3" />
+            Broneeringuid pole veel.
+          </div>
+        ) : bookings.slice(0, 3).map((b) => (
           <div key={b.id} className="flex items-center justify-between rounded-xl border border-border p-4">
             <div>
-              <div className="text-sm font-medium">{b.client}</div>
-              <div className="text-xs text-muted-foreground">{b.listing} · {b.date}</div>
+              <div className="text-sm font-medium">{b.provider}</div>
+              <div className="text-xs text-muted-foreground">{b.listingTitle} · {b.startDate}</div>
             </div>
             <div className="flex items-center gap-3">
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${b.status === "confirmed" ? "bg-success/10 text-success" : b.status === "pending" ? "bg-warning/10 text-warning" : "bg-accent/10 text-accent"}`}>
                 {b.status === "confirmed" ? t("provider.overview.confirmed") : b.status === "pending" ? t("provider.overview.pending") : t("provider.overview.active")}
               </span>
-              <span className="text-sm font-semibold">€{b.total}</span>
+              <span className="text-sm font-semibold">€{(b as any).total ?? (b as any).basePrice ?? 0}</span>
             </div>
           </div>
         ))}
