@@ -239,6 +239,47 @@ export default function ProviderListings() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!editDialogListing} onOpenChange={(o) => !o && setEditDialogListing(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Muuda kuulutust</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Pealkiri</label>
+              <input value={editForm.title} onChange={e => setEditForm(p => ({ ...p, title: e.target.value }))} className={inp} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Hind (€/kuu)</label>
+                <input type="number" value={editForm.price} onChange={e => setEditForm(p => ({ ...p, price: e.target.value }))} className={inp} />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Linn</label>
+                <input value={editForm.city} onChange={e => setEditForm(p => ({ ...p, city: e.target.value }))} className={inp} />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Staatus</label>
+              <select value={editForm.status} onChange={e => setEditForm(p => ({ ...p, status: e.target.value }))} className={inp}>
+                <option value="Aktiivne">Aktiivne</option>
+                <option value="Peatatud">Peatatud</option>
+              </select>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" size="sm" onClick={() => setEditDialogListing(null)}>Tühista</Button>
+              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => {
+                if (!editDialogListing) return;
+                setListings(prev => prev.map(l =>
+                  l.id === editDialogListing.id
+                    ? { ...l, title: editForm.title, price: parseInt(editForm.price) || l.price, city: editForm.city, status: editForm.status }
+                    : l
+                ));
+                setEditDialogListing(null);
+              }}>Salvesta</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
