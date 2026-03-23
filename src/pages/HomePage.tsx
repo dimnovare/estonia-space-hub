@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, Star, MapPin, ChevronDown, ChevronUp, Users, CheckCircle, TrendingUp, Building } from "lucide-react";
+import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, MapPin, ChevronDown, ChevronUp, CheckCircle, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFeaturedListings, useAllListings } from "@/hooks/queries";
 import ListingCard from "@/components/ListingCard";
@@ -20,6 +20,7 @@ export default function HomePage() {
   const { data: featured = [], isLoading: featuredLoading } = useFeaturedListings();
   const { data: allResult } = useAllListings();
   const allListings = allResult?.data || [];
+  const listingCount = allResult?.total ?? 0;
 
   const categories = [
     { key: "all", label: t("cat.all"), icon: Search },
@@ -32,13 +33,6 @@ export default function HomePage() {
     { icon: Search, title: t("how.step1"), desc: t("how.step1desc") },
     { icon: CheckCircle, title: t("how.step2"), desc: t("how.step2desc") },
     { icon: ArrowRight, title: t("how.step3"), desc: t("how.step3desc") },
-  ];
-
-  const stats = [
-    { value: "150+", label: t("stats.storage"), icon: Building },
-    { value: "50+", label: t("stats.providers"), icon: Users },
-    { value: "4.7", label: t("stats.rating"), icon: Star },
-    { value: "10k+", label: t("stats.clients"), icon: TrendingUp },
   ];
 
   const faqs = [
@@ -69,6 +63,22 @@ export default function HomePage() {
               <span className="text-gradient">{t("hero.titleHighlight")}</span>
             </h1>
             <p className="mt-4 text-lg text-primary-foreground/70 md:text-xl">{t("hero.subtitle")}</p>
+
+            {/* Social proof row */}
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-primary-foreground/60">
+              <span className="flex items-center gap-1.5">
+                <CheckCircle className="h-3.5 w-3.5 text-accent" />
+                Hinnad läbirääkitud
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5 text-accent" />
+                Kiire kinnitus
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Shield className="h-3.5 w-3.5 text-accent" />
+                Eesti firmad
+              </span>
+            </div>
 
             <div className="card-prominent mx-auto mt-8 max-w-2xl p-2">
               <div className="flex flex-wrap gap-1 border-b border-border pb-2 mb-2">
@@ -107,7 +117,21 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="mt-4">
+            {/* Contact info */}
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs text-primary-foreground/50">
+              <a href="tel:+3725551234" className="flex items-center gap-1 hover:text-primary-foreground transition-colors">
+                <Phone className="h-3 w-3" />
+                +372 555 1234
+              </a>
+              <span>·</span>
+              <a href="mailto:info@ruumly.eu" className="hover:text-primary-foreground transition-colors">
+                info@ruumly.eu
+              </a>
+              <span>·</span>
+              <span>E–R 9–18</span>
+            </div>
+
+            <div className="mt-3">
               <Link to="/provider" className="text-sm text-primary-foreground/60 underline decoration-primary-foreground/30 hover:text-primary-foreground/80 hover:decoration-primary-foreground/50 transition-colors">
                 {t("hero.listSpace")}
               </Link>
@@ -167,23 +191,30 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Stats */}
+      {/* Trust / Why Ruumly */}
       <section className="container-wide py-16 md:py-20">
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map((s, i) => {
-            const Icon = s.icon;
-            return (
-              <div key={i} className="flex items-center gap-4 rounded-xl border border-border p-5">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/5">
-                  <Icon className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <div className="font-display text-2xl font-bold">{s.value}</div>
-                  <div className="text-xs text-muted-foreground">{s.label}</div>
-                </div>
-              </div>
-            );
-          })}
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="text-xs font-semibold uppercase tracking-widest text-accent">Miks Ruumly?</p>
+          <h2 className="mt-2 font-display text-2xl font-bold md:text-3xl">{t("trust.title")}</h2>
+        </div>
+        <div className="mt-10 grid gap-6 sm:grid-cols-3">
+          <div className="rounded-xl border border-border p-6 text-center">
+            <div className="font-display text-3xl font-bold text-accent">
+              {listingCount > 0 ? `${listingCount}+` : "6+"}
+            </div>
+            <div className="mt-1 text-sm font-semibold">Kontrollitud partnerit</div>
+            <p className="mt-1 text-xs text-muted-foreground">Igaüks isiklikult läbi vaadatud</p>
+          </div>
+          <div className="rounded-xl border border-border p-6 text-center">
+            <div className="font-display text-3xl font-bold text-accent">10–20%</div>
+            <div className="mt-1 text-sm font-semibold">Säästad vs otse partnerilt</div>
+            <p className="mt-1 text-xs text-muted-foreground">Me läbirääkisime sinu eest</p>
+          </div>
+          <div className="rounded-xl border border-border p-6 text-center">
+            <div className="font-display text-3xl font-bold text-accent">&lt;4h</div>
+            <div className="mt-1 text-sm font-semibold">Kinnituse aeg</div>
+            <p className="mt-1 text-xs text-muted-foreground">Partner kinnitab tavaliselt sama päeva jooksul</p>
+          </div>
         </div>
       </section>
 

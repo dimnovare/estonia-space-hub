@@ -78,7 +78,7 @@ function AppContent() {
           <Route path="/warehouse/:id" element={<WarehouseDetail />} />
           <Route path="/moving/:id" element={<MovingDetail />} />
           <Route path="/trailer/:id" element={<TrailerDetail />} />
-          <Route path="/book" element={<ProtectedRoute><BookingPage /></ProtectedRoute>} />
+          <Route path="/book" element={<BookingPage />} />
           <Route path="/provider" element={<ProviderPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
