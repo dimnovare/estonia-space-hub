@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, ArrowLeft, Loader2, CheckCircle } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, Loader2, CheckCircle, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, registerSchema, type LoginForm, type RegisterForm } from "@/lib/schemas";
+import { authService } from "@/services";
 
 type AuthView = "login" | "register" | "forgot" | "forgot-sent" | "reset";
 
@@ -19,6 +20,10 @@ export default function LoginPage() {
   const [view, setView] = useState<AuthView>("login");
   const [loading, setLoading] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [resetToken, setResetToken] = useState("");
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
   const { t } = useLanguage();
   const { login, register: authRegister, loginWithGoogle, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -27,6 +32,17 @@ export default function LoginPage() {
 
   const loginForm = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
   const registerForm = useForm<RegisterForm>({ resolver: zodResolver(registerSchema) });
+
+  // Check for reset token in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    const viewParam = params.get("view");
+    if (token && viewParam === "reset") {
+      setResetToken(token);
+      setView("reset");
+    }
+  }, []);
 
   if (isAuthenticated) {
     navigate(from, { replace: true });
@@ -63,10 +79,71 @@ export default function LoginPage() {
     setLoading(false);
   };
 
-  const handleForgotPassword = (e: React.FormEvent) => {
+  const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setView("forgot-sent");
+    if (!forgotEmail.trim()) return;
+    setForgotLoading(true);
+    try {
+      await authService.forgotPassword(forgotEmail.trim());
+      setView("forgot-sent");
+    } catch {
+      // Still show sent view for security (don't reveal if email exists)
+      setView("forgot-sent");
+    } finally {
+      setForgotLoading(false);
+    }
   };
+
+  const handleReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetPassword || resetPassword.length < 8) {
+      toast.error("Parool peab olema vähemalt 8 tähemärki");
+      return;
+    }
+    setResetLoading(true);
+    try {
+      await authService.resetPassword(resetToken, resetPassword);
+      toast.success("Parool uuendatud! Logi sisse uue parooliga.");
+      setView("login");
+    } catch (err: any) {
+      toast.error(err.message || "Parooli vahetus ebaõnnestus. Proovi uuesti.");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  if (view === "reset") {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent/10">
+            <KeyRound className="h-8 w-8 text-accent" />
+          </div>
+          <h1 className="mt-4 text-center font-display text-2xl font-bold">Uus parool</h1>
+          <p className="mt-2 text-center text-sm text-muted-foreground">Vali uus parool oma kontole.</p>
+          <form onSubmit={handleReset} className="mt-6 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="reset-password">Uus parool</Label>
+              <Input
+                id="reset-password"
+                type="password"
+                placeholder="••••••••"
+                value={resetPassword}
+                onChange={e => setResetPassword(e.target.value)}
+                minLength={8}
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full bg-accent py-5 text-accent-foreground hover:bg-accent/90" disabled={resetLoading}>
+              {resetLoading
+                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvestame...</>
+                : "Salvesta uus parool"}
+            </Button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   if (view === "forgot-sent") {
     return (
@@ -100,7 +177,11 @@ export default function LoginPage() {
                 <Input id="forgot-email" type="email" placeholder={t("login.emailPlaceholder")} value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} className="pl-10" required />
               </div>
             </div>
-            <Button type="submit" className="w-full bg-accent py-5 text-accent-foreground hover:bg-accent/90">{t("login.sendReset")}</Button>
+            <Button type="submit" className="w-full bg-accent py-5 text-accent-foreground hover:bg-accent/90" disabled={forgotLoading}>
+              {forgotLoading
+                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saadame...</>
+                : t("login.sendReset")}
+            </Button>
           </form>
         </div>
       </div>
