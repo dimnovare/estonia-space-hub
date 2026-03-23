@@ -721,6 +721,94 @@ function AccountSecurity() {
   );
 }
 
+function generateInvoicePdf(inv: Invoice) {
+  const statusLabel =
+    inv.status === "paid" ? "Makstud" :
+    inv.status === "pending" ? "Ootel" : "Tähtaeg ületatud";
+  const badgeClass =
+    inv.status === "paid" ? "badge-paid" :
+    inv.status === "pending" ? "badge-pending" : "badge-overdue";
+
+  const html = `<!DOCTYPE html>
+<html lang="et">
+<head>
+  <meta charset="UTF-8" />
+  <title>Arve ${inv.id}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color: #111; background: #fff; padding: 48px; max-width: 700px; margin: 0 auto; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 48px; }
+    .logo { font-size: 26px; font-weight: 800; color: #0d9488; }
+    .invoice-meta { text-align: right; }
+    .invoice-meta h1 { font-size: 22px; font-weight: 700; color: #111; margin-bottom: 4px; }
+    .invoice-meta p { font-size: 13px; color: #666; }
+    .divider { border: none; border-top: 1px solid #e5e7eb; margin: 24px 0; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 40px; }
+    .info-block label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #999; margin-bottom: 6px; display: block; }
+    .info-block p { font-size: 14px; color: #111; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #999; padding: 10px 0; border-bottom: 2px solid #111; }
+    td { padding: 14px 0; font-size: 14px; border-bottom: 1px solid #f3f4f6; }
+    .total-row td { font-size: 16px; font-weight: 700; border-top: 2px solid #111; border-bottom: none; padding-top: 16px; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .badge-paid { background: #dcfce7; color: #166534; }
+    .badge-pending { background: #fef9c3; color: #854d0e; }
+    .badge-overdue { background: #fee2e2; color: #991b1b; }
+    .footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+    .footer p { font-size: 12px; color: #999; margin-bottom: 4px; }
+    @media print { body { padding: 24px; } @page { margin: 20mm; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">Ruumly</div>
+    <div class="invoice-meta">
+      <h1>ARVE</h1>
+      <p>${inv.id}</p>
+    </div>
+  </div>
+  <div class="info-grid">
+    <div class="info-block">
+      <label>Väljastaja</label>
+      <p>Ruumly OÜ</p>
+      <p>Tallinn, Eesti</p>
+      <p>info@ruumly.eu</p>
+    </div>
+    <div class="info-block">
+      <label>Arve kuupäev</label>
+      <p>${inv.issuedAt}</p>
+      ${inv.paidAt ? `<label style="margin-top:12px">Tasutud</label><p>${inv.paidAt}</p>` : ""}
+    </div>
+  </div>
+  <table>
+    <thead><tr><th>Kirjeldus</th><th>Summa</th><th>Staatus</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>${inv.description}</td>
+        <td>&euro;${inv.amount}</td>
+        <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
+      </tr>
+    </tbody>
+    <tr class="total-row"><td>Kokku</td><td>&euro;${inv.amount}</td><td></td></tr>
+  </table>
+  <div class="footer">
+    <p>Ruumly OÜ &middot; ruumly.eu &middot; info@ruumly.eu</p>
+    <p>Eesti suurim laopindade ja logistikateenuste platvorm</p>
+  </div>
+</body>
+</html>`;
+
+  const win = window.open("", "_blank");
+  if (!win) {
+    toast.error("Blokeeritud! Luba hüpikaknad selle saidi jaoks.");
+    return;
+  }
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); }, 500);
+}
+
 function AccountBilling() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   useEffect(() => { invoiceService.getAll().then(setInvoices); }, []);
@@ -755,20 +843,8 @@ function AccountBilling() {
                     <p className="font-display text-lg font-bold">€{inv.amount}</p>
                     <p className="text-xs text-muted-foreground">{inv.issuedAt}</p>
                   </div>
-                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => {
-                    const lines = [
-                      `ARVE ${inv.id}`, `Kuupäev: ${inv.issuedAt}`, `Kirjeldus: ${inv.description}`,
-                      `Summa: €${inv.amount}`,
-                      `Staatus: ${inv.status === "paid" ? "Makstud" : inv.status === "pending" ? "Ootel" : "Tähtaeg ületatud"}`,
-                      inv.paidAt ? `Makstud: ${inv.paidAt}` : "", ``, `Ruumly | ruumly.eu`,
-                    ].filter(Boolean).join("\n");
-                    const blob = new Blob([lines], { type: "text/plain;charset=utf-8" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url; a.download = `arve_${inv.id}.txt`; a.click();
-                    URL.revokeObjectURL(url);
-                  }}>
-                    <Download className="h-3.5 w-3.5" /> Lae alla
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => generateInvoicePdf(inv)}>
+                    <Download className="h-3.5 w-3.5" /> PDF
                   </Button>
                 </div>
               </div>
@@ -800,19 +876,9 @@ function AccountBilling() {
                     </td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">{inv.issuedAt}</td>
                     <td className="px-4 py-3">
-                      <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => {
-                        const lines = [
-                          `ARVE ${inv.id}`, `Kuupäev: ${inv.issuedAt}`, `Kirjeldus: ${inv.description}`,
-                          `Summa: €${inv.amount}`,
-                          `Staatus: ${inv.status === "paid" ? "Makstud" : inv.status === "pending" ? "Ootel" : "Tähtaeg ületatud"}`,
-                          inv.paidAt ? `Makstud: ${inv.paidAt}` : "", ``, `Ruumly OÜ | ruumly.eu | info@ruumly.eu`,
-                        ].filter(Boolean).join("\n");
-                        const blob = new Blob([lines], { type: "text/plain;charset=utf-8" });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement("a");
-                        a.href = url; a.download = `arve_${inv.id}.txt`; a.click();
-                        URL.revokeObjectURL(url);
-                      }}><Download className="h-3.5 w-3.5" /></Button>
+                      <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => generateInvoicePdf(inv)}>
+                        <Download className="h-3.5 w-3.5" />
+                      </Button>
                     </td>
                   </tr>
                 ))}
