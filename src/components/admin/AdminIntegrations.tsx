@@ -31,30 +31,36 @@ export default function AdminIntegrations() {
       <div className="mt-6 space-y-3">
         {settings.map(s => (
           <div key={s.id} className={`rounded-xl border p-4 transition-colors ${s.isActive ? "border-border" : "border-border bg-muted/30"}`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary"><Link2 className="h-5 w-5 text-muted-foreground" /></div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold">{s.supplierName}</span>
-                    {!s.isActive && <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-medium text-destructive">{t("admin.inactive")}</span>}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              {/* Left: icon + info */}
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary"><Link2 className="h-5 w-5 text-muted-foreground" /></div>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-semibold truncate">{s.supplierName}</span>
+                    {!s.isActive && <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-medium text-destructive shrink-0">{t("admin.inactive")}</span>}
                   </div>
-                  <div className="mt-0.5 flex items-center gap-3 text-xs text-muted-foreground">
+                  <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${approvalColor(s.approvalMode)}`}>{approvalLabel(s.approvalMode)}</span>
                     <span>→ {postingLabel(s.postingMode)}</span>
-                    <span className="text-muted-foreground/50">({t("admin.fallbackMode")}: {postingLabel(s.fallbackPostingMode)})</span>
+                    <span className="text-muted-foreground/50 hidden sm:inline">({t("admin.fallbackMode")}: {postingLabel(s.fallbackPostingMode)})</span>
                   </div>
+                  <p className="mt-0.5 text-[10px] text-muted-foreground sm:hidden">Tagavaravalik: {postingLabel(s.fallbackPostingMode)}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              {/* Right: test result + edit button */}
+              <div className="flex items-center gap-2 sm:shrink-0">
                 {s.lastTestResult && (
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${s.lastTestResult === "success" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium shrink-0 ${s.lastTestResult === "success" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
                     {s.lastTestResult === "success" ? "✓ OK" : "✗ Fail"}
                   </span>
                 )}
-                <Button variant="outline" size="sm" onClick={() => openEdit(s)}><Edit className="h-3.5 w-3.5 mr-1" /> {t("admin.edit")}</Button>
+                <Button variant="outline" size="sm" onClick={() => openEdit(s)} className="shrink-0"><Edit className="h-3.5 w-3.5 mr-1" /> {t("admin.edit")}</Button>
               </div>
             </div>
+            {s.lastTestedAt && (
+              <p className="mt-2 text-[10px] text-muted-foreground">Testitud: {s.lastTestedAt}</p>
+            )}
           </div>
         ))}
       </div>
