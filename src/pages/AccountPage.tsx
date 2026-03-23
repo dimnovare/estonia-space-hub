@@ -531,6 +531,7 @@ function AccountSearches() {
 function AccountNotifications() {
   const { data: notifications = [] } = useNotifications();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const markOne = useMutation({
     mutationFn: (id: string) => notificationService.markRead(id),
@@ -544,6 +545,7 @@ function AccountNotifications() {
     },
     onError: (_err, _id, ctx) => {
       queryClient.setQueryData(["notifications"], ctx?.previous);
+      toast.error("Teavituse märkimine ebaõnnestus");
     },
   });
 
@@ -559,11 +561,17 @@ function AccountNotifications() {
     },
     onError: (_err, _v, ctx) => {
       queryClient.setQueryData(["notifications"], ctx?.previous);
+      toast.error("Teavituste märkimine ebaõnnestus");
     },
   });
 
   const unread = notifications.filter((n: any) => !n.read);
   const hasUnread = unread.length > 0;
+
+  const handleNotificationClick = (n: any) => {
+    if (!n.read) markOne.mutate(n.id);
+    if (n.actionUrl) navigate(n.actionUrl);
+  };
 
   return (
     <div>
@@ -579,15 +587,21 @@ function AccountNotifications() {
         )}
       </div>
 
-      {!hasUnread ? (
+      {notifications.length === 0 ? (
         <div className="py-12 text-center text-sm text-muted-foreground">
           <Bell className="mx-auto h-8 w-8 text-muted-foreground/20 mb-3" />
-          Kõik teatised on loetud.
+          Teavitusi pole.
         </div>
       ) : (
         <div className="mt-4 space-y-2">
           {notifications.map((n: any) => (
-            <div key={n.id} className={`rounded-xl border border-border p-4 ${n.read ? "opacity-60" : ""}`}>
+            <div
+              key={n.id}
+              onClick={() => handleNotificationClick(n)}
+              className={`rounded-xl border border-border p-4 transition-colors
+                ${n.read ? "opacity-60" : ""}
+                ${n.actionUrl ? "cursor-pointer hover:bg-secondary/50 hover:border-accent/30" : ""}`}
+            >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-2 min-w-0">
                   {!n.read && (
@@ -601,7 +615,7 @@ function AccountNotifications() {
                 </div>
                 {!n.read && (
                   <button
-                    onClick={() => markOne.mutate(n.id)}
+                    onClick={(e) => { e.stopPropagation(); markOne.mutate(n.id); }}
                     className="shrink-0 rounded-lg border border-border px-2.5 py-1 text-[10px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors whitespace-nowrap"
                   >
                     Märgi loetuks
