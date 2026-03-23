@@ -235,7 +235,3 @@ export type {
   AuditLogEntry, OrderStatus, PartnerIntegrationSettings, OrderRoutingRule,
   Listing, ListingFilters, PaginatedResponse, CreateBookingInput,
 };
-  User, Supplier, Order, Booking, Notification, Invoice, Message,
-  AuditLogEntry, OrderStatus, PartnerIntegrationSettings, OrderRoutingRule,
-  Listing, ListingFilters, PaginatedResponse, CreateBookingInput,
-};
