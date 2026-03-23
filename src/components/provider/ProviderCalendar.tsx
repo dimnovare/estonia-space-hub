@@ -3,24 +3,21 @@ import { Calendar as CalendarIcon, X, Lock, Unlock, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
-import { mockProviderBookings } from "./ProviderOverview";
+import { useBookings } from "@/hooks/useBookings";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function ProviderCalendar() {
   const { t } = useLanguage();
+  const { data: bookings = [] } = useBookings();
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [blockedDates, setBlockedDates] = useState<Date[]>([
-    new Date(2026, 3, 5), new Date(2026, 3, 6), new Date(2026, 3, 7),
-  ]);
+  const [blockedDates, setBlockedDates] = useState<Date[]>([]);
 
-  const bookingDates = [
-    new Date(2026, 3, 1), new Date(2026, 3, 2), new Date(2026, 3, 3),
-    new Date(2026, 2, 25), new Date(2026, 2, 15), new Date(2026, 2, 10),
-    new Date(2026, 2, 11), new Date(2026, 2, 12),
-  ];
+  const bookedDates = bookings
+    .filter(b => b.status === "confirmed" || b.status === "active")
+    .map(b => new Date(b.startDate));
 
   const isBlocked = (d: Date) => blockedDates.some(bd => bd.toDateString() === d.toDateString());
-  const isBooked = (d: Date) => bookingDates.some(bd => bd.toDateString() === d.toDateString());
+  const isBooked = (d: Date) => bookedDates.some(bd => bd.toDateString() === d.toDateString());
 
   const toggleBlock = () => {
     if (!date) return;
@@ -32,9 +29,9 @@ export default function ProviderCalendar() {
     }
   };
 
-  const selectedBookings = mockProviderBookings.filter(b => {
+  const selectedBookings = bookings.filter(b => {
     if (!date) return false;
-    const bd = new Date(b.date);
+    const bd = new Date(b.startDate);
     return bd.toDateString() === date.toDateString();
   });
 
@@ -49,7 +46,7 @@ export default function ProviderCalendar() {
             selected={date}
             onSelect={setDate}
             className="pointer-events-auto"
-            modifiers={{ booked: bookingDates, blocked: blockedDates }}
+            modifiers={{ booked: bookedDates, blocked: blockedDates }}
             modifiersClassNames={{
               booked: "bg-accent/20 text-accent font-bold",
               blocked: "bg-destructive/15 text-destructive line-through",
@@ -91,14 +88,14 @@ export default function ProviderCalendar() {
               {selectedBookings.map(b => (
                 <div key={b.id} className="flex items-center justify-between rounded-xl border border-border p-4">
                   <div>
-                    <p className="text-sm font-medium">{b.client}</p>
-                    <p className="text-xs text-muted-foreground">{b.listing} · {b.duration}</p>
+                    <p className="text-sm font-medium">{b.provider}</p>
+                    <p className="text-xs text-muted-foreground">{b.listingTitle} · {(b as any).duration ?? ""}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${b.status === "confirmed" ? "bg-success/10 text-success" : b.status === "pending" ? "bg-warning/10 text-warning" : "bg-accent/10 text-accent"}`}>
                       {b.status === "confirmed" ? t("provider.bookings.confirmed") : b.status === "pending" ? t("provider.bookings.pending") : t("provider.bookings.active")}
                     </span>
-                    <span className="text-sm font-semibold">€{b.total}</span>
+                    <span className="text-sm font-semibold">€{(b as any).total ?? (b as any).basePrice ?? 0}</span>
                   </div>
                 </div>
               ))}
@@ -134,13 +131,15 @@ export default function ProviderCalendar() {
           <div className="mt-6">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">{t("provider.calendar.upcomingBookings")}</h4>
             <div className="space-y-2">
-              {mockProviderBookings.map(b => (
+              {bookings.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Broneeringuid pole.</p>
+              ) : bookings.map(b => (
                 <div key={b.id} className="flex items-center justify-between rounded-lg border border-border p-3 text-sm">
                   <div>
-                    <span className="font-medium">{b.client}</span>
-                    <span className="text-muted-foreground"> · {b.listing}</span>
+                    <span className="font-medium">{b.provider}</span>
+                    <span className="text-muted-foreground"> · {b.listingTitle}</span>
                   </div>
-                  <span className="text-muted-foreground">{b.date}</span>
+                  <span className="text-muted-foreground">{b.startDate}</span>
                 </div>
               ))}
             </div>
