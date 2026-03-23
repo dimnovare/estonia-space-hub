@@ -1,27 +1,22 @@
 import { useState, useEffect } from "react";
-import { Globe, CreditCard, ToggleLeft, Save, Loader2, Percent } from "lucide-react";
+import { Globe, ToggleLeft, Save, Loader2, Percent } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { apiClient } from "@/services/apiClient";
 import { toast } from "sonner";
 
 const DEFAULT_SETTINGS = {
-  siteName:            "Ruumly",
-  siteEmail:           "info@ruumly.eu",
-  sitePhone:           "+372 5555 1234",
-  defaultLanguage:     "et",
-  currency:            "EUR",
-  commissionRate:      "5",
-  warehouseMarginRate: "5",
-  movingMarginRate:    "5",
-  trailerMarginRate:   "5",
-  packingMargin:       "0",
-  loadingMargin:       "0",
-  insuranceMargin:     "0",
-  forkliftMargin:      "0",
-  emailNotifications:  "true",
-  maintenanceMode:     "false",
-  autoApproveListings: "false",
+  siteName:               "Ruumly",
+  siteEmail:              "info@ruumly.eu",
+  sitePhone:              "+372 5555 1234",
+  defaultLanguage:        "et",
+  currency:               "EUR",
+  defaultPartnerDiscount: "20",
+  defaultClientDiscount:  "10",
+  defaultVatRate:         "22",
+  emailNotifications:     "true",
+  maintenanceMode:        "false",
+  autoApproveListings:    "false",
 };
 
 export default function AdminSettings() {
@@ -72,6 +67,10 @@ export default function AdminSettings() {
     </div>
   );
 
+  const partnerD = parseFloat(settings.defaultPartnerDiscount || "20");
+  const clientD = parseFloat(settings.defaultClientDiscount || "10");
+  const margin = Math.max(0, partnerD - clientD);
+
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">{t("admin.settingsTitle")}</h1>
@@ -107,48 +106,92 @@ export default function AdminSettings() {
           </div>
         </div>
 
-        {/* Pricing & commission */}
+        {/* Pricing */}
         <div className="rounded-xl border border-border p-5">
           <h3 className="flex items-center gap-2 font-display text-base font-semibold">
-            <Percent className="h-4 w-4 text-accent" /> Hinnakujundus ja komisjonitasud
+            <Percent className="h-4 w-4 text-accent" />
+            Hinnakujundus — vaikimisi seaded
           </h3>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Komisjonitasu arvestatakse baashinnalt. Sääst kuvatakse kliendile broneerimislehel.
+          <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
+            Partneri allahindlus ja kliendi allahindlus seatakse iga partneri
+            juures eraldi. Siit saad seada <strong>vaikimisi</strong> väärtused
+            uutele partneritele.
           </p>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Komisjonitasu (%)</label>
-              <input type="number" className={inp} value={settings.commissionRate} onChange={e => set("commissionRate", e.target.value)} />
-              <p className="mt-0.5 text-[10px] text-muted-foreground">Platvorm võtab partnerilt</p>
+
+          {/* How it works visual */}
+          <div className="mt-4 rounded-lg bg-secondary p-4">
+            <p className="text-xs font-semibold text-foreground mb-3">
+              Kuidas hinnakujundus töötab
+            </p>
+            <div className="grid grid-cols-3 gap-3 text-center text-xs">
+              <div className="rounded-lg bg-card border border-border p-3">
+                <div className="text-base font-bold text-foreground">100€</div>
+                <div className="text-muted-foreground mt-0.5">Partneri avalik hind</div>
+              </div>
+              <div className="rounded-lg bg-card border border-border p-3">
+                <div className="text-base font-bold text-success">{100 - partnerD}€</div>
+                <div className="text-muted-foreground mt-0.5">
+                  Me maksame partnerile
+                  <br />({partnerD}% allahindlus)
+                </div>
+              </div>
+              <div className="rounded-lg bg-card border border-border p-3">
+                <div className="text-base font-bold text-accent">{100 - clientD}€</div>
+                <div className="text-muted-foreground mt-0.5">
+                  Klient maksab meile
+                  <br />({clientD}% allahindlus)
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Kliendi sääst — laopind (%)</label>
-              <input type="number" className={inp} value={settings.warehouseMarginRate} onChange={e => set("warehouseMarginRate", e.target.value)} />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Kliendi sääst — kolimine (%)</label>
-              <input type="number" className={inp} value={settings.movingMarginRate} onChange={e => set("movingMarginRate", e.target.value)} />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Kliendi sääst — haagis (%)</label>
-              <input type="number" className={inp} value={settings.trailerMarginRate} onChange={e => set("trailerMarginRate", e.target.value)} />
+            <div className="mt-3 text-center text-xs">
+              <span className="font-semibold text-success">
+                Meie marginaal: {margin}€ iga 100€ pealt ({margin}%)
+              </span>
             </div>
           </div>
-          <div className="mt-4">
-            <p className="text-xs font-medium text-muted-foreground mb-2">Lisateenuste marginaalid (%)</p>
-            <div className="grid gap-4 sm:grid-cols-4">
-              {([
-                { key: "packingMargin" as const, label: "Pakkimine" },
-                { key: "loadingMargin" as const, label: "Laadimine" },
-                { key: "insuranceMargin" as const, label: "Kindlustus" },
-                { key: "forkliftMargin" as const, label: "Tõstuk" },
-              ]).map(item => (
-                <div key={item.key}>
-                  <label className="text-[10px] font-medium text-muted-foreground">{item.label}</label>
-                  <input type="number" className={inp} value={settings[item.key]} onChange={e => set(item.key, e.target.value)} />
-                </div>
-              ))}
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">
+                Vaikimisi partneri allahindlus (%)
+              </label>
+              <input type="number" min="0" max="80" className={inp}
+                value={settings.defaultPartnerDiscount}
+                onChange={e => set("defaultPartnerDiscount", e.target.value)} />
+              <p className="mt-0.5 text-[10px] text-muted-foreground">% allahindlust uutelt partneritelt</p>
             </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">
+                Vaikimisi kliendi allahindlus (%)
+              </label>
+              <input type="number" min="0" max="80" className={inp}
+                value={settings.defaultClientDiscount}
+                onChange={e => set("defaultClientDiscount", e.target.value)} />
+              <p className="mt-0.5 text-[10px] text-muted-foreground">% allahindlust klientidele vs avalik hind</p>
+            </div>
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-border">
+            <p className="text-xs font-semibold text-muted-foreground mb-1">Käibemaks (KM)</p>
+            <p className="text-xs text-muted-foreground mb-3">
+              B2C klientidele (eraisikud) kuvatakse hinnad koos KM-iga.
+              B2B klientidele (ettevõtted) kuvatakse hinnad ilma KM-ita.
+            </p>
+            <div className="sm:w-1/2">
+              <label className="text-xs font-medium text-muted-foreground">Vaikimisi KM määr (%)</label>
+              <input type="number" min="0" max="30" className={inp}
+                value={settings.defaultVatRate}
+                onChange={e => set("defaultVatRate", e.target.value)} />
+              <p className="mt-0.5 text-[10px] text-muted-foreground">Eestis 22%. 0 = KM ei kohaldu</p>
+            </div>
+          </div>
+
+          <div className="mt-3 rounded-lg bg-accent/5 border border-accent/20 p-3">
+            <p className="text-xs text-accent">
+              💡 Iga partneri täpsemad allahindlused seadistatakse
+              <strong> Partnerid → Muuda</strong> all.
+              Sealsed väärtused alistavad siinsed vaikimisi seaded.
+            </p>
           </div>
         </div>
 

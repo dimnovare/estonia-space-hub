@@ -4,7 +4,7 @@ import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, Cr
 import { Button } from "@/components/ui/button";
 import { useListing, useCreateBooking, useSuppliers } from "@/hooks/queries";
 import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
-import { EXTRAS_PRICES, calculatePricing } from "@/lib/pricing";
+import { EXTRAS_PRICES } from "@/lib/pricing";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,16 +51,20 @@ export default function BookingPage() {
   const toggleExtra = (id: string) =>
     setSelectedExtras((prev) => (prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]));
 
-  const pricingResult = listing
-    ? calculatePricing(listing.priceFrom, selectedExtras)
-    : null;
+  // Use listing's effective client discount if available, otherwise default 5%
+  const clientDiscount = (listing as any)?.clientDiscountRateOverride
+    ?? (listing as any)?.clientDiscountRate
+    ?? 5;
 
-  const publicPrice = pricingResult?.publicPrice ?? 0;
-  const ourPrice    = pricingResult?.platformPrice ?? 0;
-  const savings     = pricingResult?.savings ?? 0;
-  const extrasTotal = pricingResult?.extrasTotal ?? 0;
-  const pricing     = pricingResult
-    ? { total: pricingResult.total, extrasTotal }
+  const publicPrice = listing ? listing.priceFrom : 0;
+  const ourPrice    = listing
+    ? Math.round(publicPrice * (1 - clientDiscount / 100))
+    : 0;
+  const savings     = publicPrice - ourPrice;
+  const extrasTotal = selectedExtras.reduce(
+    (s, id) => s + (EXTRAS_PRICES[id as keyof typeof EXTRAS_PRICES] || 0), 0);
+  const pricing     = listing
+    ? { total: ourPrice + extrasTotal, extrasTotal }
     : null;
 
   const handleNext = () => {

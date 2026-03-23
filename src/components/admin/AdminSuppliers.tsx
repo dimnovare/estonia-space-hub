@@ -78,6 +78,11 @@ export default function AdminSuppliers() {
               <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${healthColor(s.integrationHealth)}`}>{healthLabel(s.integrationHealth)}</span>
               <span className="text-xs text-muted-foreground">{s.listingCount} kuulutust</span>
               <span className="text-xs font-medium">€{s.revenue.toLocaleString()}</span>
+              {(s as any).partnerDiscountRate > 0 && (
+                <span className="text-[10px] rounded-full bg-success/10 text-success px-2 py-0.5 font-medium">
+                  Marginaal: {Math.max(0, (s as any).partnerDiscountRate - ((s as any).clientDiscountRate || 0))}%
+                </span>
+              )}
             </div>
           </button>
         ))}
@@ -109,7 +114,16 @@ export default function AdminSuppliers() {
                 <td className="px-4 py-3 text-muted-foreground">{s.listingCount}</td>
                 <td className="px-4 py-3 text-muted-foreground">{s.ordersTotal}</td>
                 <td className="px-4 py-3 font-medium">€{s.revenue.toLocaleString()}</td>
-                <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s.isActive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{s.isActive ? t("admin.active") : t("admin.inactive")}</span></td>
+                <td className="px-4 py-3">
+                  <div className="flex flex-wrap items-center gap-1">
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s.isActive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{s.isActive ? t("admin.active") : t("admin.inactive")}</span>
+                    {(s as any).partnerDiscountRate > 0 && (
+                      <span className="rounded-full bg-success/10 text-success px-2 py-0.5 text-[10px] font-medium">
+                        {Math.max(0, (s as any).partnerDiscountRate - ((s as any).clientDiscountRate || 0))}%
+                      </span>
+                    )}
+                  </div>
+                </td>
                 <td className="px-4 py-3"><Button variant="outline" size="sm" className="text-xs" onClick={() => { setSelected(s); setTestResult(null); }}>{t("admin.view")}</Button></td>
               </tr>
             ))}
@@ -150,6 +164,52 @@ export default function AdminSuppliers() {
                   </div>
                 )}
               </div>
+
+              {/* Discount fields */}
+              <div className="rounded-xl border border-border p-4">
+                <h3 className="text-sm font-semibold mb-3">Allahindlused</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Partneri allahindlus (%)</label>
+                    <input type="number" min="0" max="80"
+                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                      value={(selected as any).partnerDiscountRate ?? 0}
+                      onChange={e => setSelected({ ...selected, partnerDiscountRate: Number(e.target.value) } as any)}
+                    />
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">% mida partner meile annab tema avalikust hinnast</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Kliendi allahindlus (%)</label>
+                    <input type="number" min="0" max="80"
+                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                      value={(selected as any).clientDiscountRate ?? 0}
+                      onChange={e => setSelected({ ...selected, clientDiscountRate: Number(e.target.value) } as any)}
+                    />
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">% mida klient säästab vs avalik hind</p>
+                  </div>
+                </div>
+                {((selected as any).partnerDiscountRate > 0 || (selected as any).clientDiscountRate > 0) && (
+                  <div className="mt-3 rounded-lg bg-accent/5 border border-accent/20 p-3 text-xs">
+                    <p className="font-semibold text-accent mb-1">Marginaali eelvaade</p>
+                    <p className="text-muted-foreground">
+                      Partneri allahindlus: <strong>{(selected as any).partnerDiscountRate}%</strong>
+                      {" · "}
+                      Kliendi allahindlus: <strong>{(selected as any).clientDiscountRate}%</strong>
+                      {" · "}
+                      Ruumly marginaal: <strong className="text-success">
+                        {Math.max(0, ((selected as any).partnerDiscountRate || 0) - ((selected as any).clientDiscountRate || 0))}%
+                      </strong>
+                    </p>
+                    <p className="mt-1 text-muted-foreground">
+                      Näide: 100€ teenus → partner arvestab meile{" "}
+                      {100 - ((selected as any).partnerDiscountRate || 0)}€, klient maksab{" "}
+                      {100 - ((selected as any).clientDiscountRate || 0)}€, marginaal{" "}
+                      {Math.max(0, ((selected as any).partnerDiscountRate || 0) - ((selected as any).clientDiscountRate || 0))}€
+                    </p>
+                  </div>
+                )}
+              </div>
+
               <div className="grid grid-cols-3 gap-3">
                 <div className="rounded-lg bg-secondary/50 p-3 text-center"><p className="text-xs text-muted-foreground">{t("admin.listingsCount")}</p><p className="text-lg font-bold">{selected.listingCount}</p></div>
                 <div className="rounded-lg bg-secondary/50 p-3 text-center"><p className="text-xs text-muted-foreground">{t("admin.ordersCount")}</p><p className="text-lg font-bold">{selected.ordersTotal}</p></div>
