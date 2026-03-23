@@ -51,10 +51,17 @@ export default function BookingPage() {
   const toggleExtra = (id: string) =>
     setSelectedExtras((prev) => (prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]));
 
-  const publicPrice = listing ? Math.round(listing.priceFrom / 0.95) : 0;
-  const ourPrice = listing?.priceFrom || 0;
-  const savings = publicPrice - ourPrice;
-  const pricing = listing ? { total: ourPrice, extrasTotal: selectedExtras.length * 15 } : null;
+  const pricingResult = listing
+    ? calculatePricing(listing.priceFrom, selectedExtras)
+    : null;
+
+  const publicPrice = pricingResult?.publicPrice ?? 0;
+  const ourPrice    = pricingResult?.platformPrice ?? 0;
+  const savings     = pricingResult?.savings ?? 0;
+  const extrasTotal = pricingResult?.extrasTotal ?? 0;
+  const pricing     = pricingResult
+    ? { total: pricingResult.total, extrasTotal }
+    : null;
 
   const handleNext = () => {
     if (step === 0) {
