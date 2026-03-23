@@ -13,11 +13,16 @@ class ApiClient {
     const token = this.getToken();
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method,
-      headers,
-      body: body ? JSON.stringify(body) : undefined,
-    });
+    let response: Response;
+    try {
+      response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+      });
+    } catch {
+      throw new Error("Serveriga ei saada ühendust. Kontrolli internetiühendust.");
+    }
     if (response.status === 401) {
       if (token) {
         // Only redirect when a token was actually sent (expired/revoked session)

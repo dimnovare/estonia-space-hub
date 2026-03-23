@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, Loader2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";

@@ -1,4 +1,4 @@
-import { useState, useMemo, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
