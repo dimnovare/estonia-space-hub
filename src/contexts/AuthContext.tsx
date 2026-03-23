@@ -42,7 +42,7 @@ interface AuthContextType {
   role: UserRole;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
+  loginWithGoogle: (credential: string) => Promise<void>;
   logout: () => void;
   switchRole: (role: UserRole) => void;
   updateProfile: (updates: Partial<MockUser>) => void;
@@ -123,9 +123,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const loginWithGoogle = useCallback(async () => {
-    // Google auth not implemented in backend
-    throw new Error("Google login not available");
+  const loginWithGoogle = useCallback(async (credential: string) => {
+    try {
+      const res = await apiClient.post<AuthResponse>("/auth/google", { credential });
+      persist(normalizeUser(res.user), res.accessToken);
+    } catch (err: any) {
+      throw new Error(err.message || "Google sisselogimine ebaõnnestus");
+    }
   }, []);
 
   const logout = useCallback(() => {
