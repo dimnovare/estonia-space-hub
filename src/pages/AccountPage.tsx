@@ -98,6 +98,7 @@ function MobileAccountNav({ tab, setTab, sidebarLinks, unreadMessages, unreadNot
 }
 
 export default function AccountPage() {
+  useEffect(() => { document.title = "Minu konto — Ruumly"; }, []);
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get("tab") || "overview";
   const setTab = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("tab", id); return n; }, { replace: true });
