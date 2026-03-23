@@ -473,10 +473,13 @@ function AccountSearches() {
     <div>
       <h1 className="font-display text-2xl font-bold">{t("account.savedSearches")}</h1>
       <div className="py-16 text-center">
-        <Search className="mx-auto h-12 w-12 text-muted-foreground/20" />
-        <p className="mt-4 text-sm text-muted-foreground">{t("account.savedSearches.empty")}</p>
+        <Search className="mx-auto h-10 w-10 text-muted-foreground/20 mb-3" />
+        <p className="font-display text-base font-semibold">Salvestatud otsinguid pole</p>
+        <p className="mt-1 text-sm text-muted-foreground max-w-xs mx-auto">
+          Otsingute salvestamine on tulemas. Praegu saad kasutada otsingulehekülge otse.
+        </p>
         <Link to="/search">
-          <Button className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90">{t("account.savedSearches.cta")}</Button>
+          <Button variant="outline" className="mt-4">Mine otsingusse</Button>
         </Link>
       </div>
     </div>
