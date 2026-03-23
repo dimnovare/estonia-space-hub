@@ -826,7 +826,7 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.home": "Home",
     "nav.providerDashboard": "Provider dashboard",
     "provider.nav.overview": "Overview",
-    "provider.nav.orders": "Incoming orders",
+    "provider.nav.orders": "Orders",
     "provider.nav.listings": "My listings",
     "provider.nav.bookings": "Bookings",
     "provider.nav.calendar": "Calendar",
