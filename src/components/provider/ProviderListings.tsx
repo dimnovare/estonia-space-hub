@@ -12,8 +12,8 @@ const mockListings = [
 export default function ProviderListings() {
   const { t } = useLanguage();
   const [listings, setListings] = useState(mockListings.map(l => ({ ...l, images: ["/placeholder.svg"] })));
-  const [editId, setEditId] = useState<string | null>(null);
-  const [editDialogListing, setEditDialogListing] = useState<any>(null);
+  const [editDialogListing, setEditDialogListing] = useState<typeof listings[0] | null>(null);
+  
   const [editForm, setEditForm] = useState({ title: "", price: "", city: "", status: "" });
   const [createOpen, setCreateOpen] = useState(false);
   const [createStep, setCreateStep] = useState(0);
@@ -75,49 +75,28 @@ export default function ProviderListings() {
       <div className="mt-6 space-y-3">
         {listings.map((l) => (
           <div key={l.id} className="rounded-xl border border-border p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3 min-w-0">
                 <div className="h-14 w-14 rounded-lg bg-secondary overflow-hidden shrink-0">
                   <img src={l.images[0]} alt={l.title} className="h-full w-full object-cover" />
                 </div>
-                <div>
-                  <div className="text-sm font-medium">{l.title}</div>
+                <div className="min-w-0">
+                  <div className="text-sm font-medium truncate">{l.title}</div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <MapPin className="h-3 w-3" />{l.city} · {l.price}€/kuu · {t("provider.listings.occupancy")} {l.occupancy}%
+                    <MapPin className="h-3 w-3 shrink-0" /><span className="truncate">{l.city} · {l.price}€/kuu · {t("provider.listings.occupancy")} {l.occupancy}%</span>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <span className="rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">{l.status}</span>
-                <Button variant="outline" size="sm" onClick={() => setEditId(editId === l.id ? null : l.id)}>
-                  <Image className="h-3.5 w-3.5 mr-1" /> {t("provider.listings.images")}
-                </Button>
                 <Button variant="outline" size="sm" onClick={() => {
                   setEditDialogListing(l);
                   setEditForm({ title: l.title, price: String(l.price), city: l.city, status: l.status });
-                }}><Edit className="h-3.5 w-3.5" /></Button>
+                }}>
+                  <Edit className="h-3.5 w-3.5 mr-1.5" /> Muuda
+                </Button>
               </div>
             </div>
-            {editId === l.id && (
-              <div className="mt-4 border-t border-border pt-4">
-                <p className="text-xs font-semibold text-muted-foreground mb-2">{t("provider.listings.listingImages")}</p>
-                <div className="flex flex-wrap gap-3">
-                  {l.images.map((img, idx) => (
-                    <div key={idx} className="group relative h-20 w-28 rounded-lg overflow-hidden border border-border">
-                      <img src={img} alt="" className="h-full w-full object-cover" />
-                      <button onClick={() => removeImage(l.id, idx)} className="absolute top-1 right-1 rounded-full bg-destructive/90 p-0.5 text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                  <button onClick={() => handleImageUpload(l.id)} className="flex h-20 w-28 flex-col items-center justify-center rounded-lg border-2 border-dashed border-border text-muted-foreground hover:border-accent hover:text-accent transition-colors">
-                    <Upload className="h-5 w-5" />
-                    <span className="text-[10px] mt-1">{t("provider.listings.addImage")}</span>
-                  </button>
-                </div>
-                <p className="mt-2 text-[10px] text-muted-foreground">{t("provider.listings.imageNote")}</p>
-              </div>
-            )}
           </div>
         ))}
       </div>
