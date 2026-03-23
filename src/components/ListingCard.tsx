@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
-import { MapPin, Star, Warehouse, Truck, CarFront } from "lucide-react";
+import { MapPin, Star, Warehouse, Truck, CarFront, Heart } from "lucide-react";
 import type { Listing } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useFavorites } from "@/hooks/useFavorites";
 
 const badgeStyles: Record<string, string> = {
   cheapest: "badge-cheapest",
