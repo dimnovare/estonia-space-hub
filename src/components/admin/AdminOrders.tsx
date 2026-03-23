@@ -47,7 +47,7 @@ export default function AdminOrders() {
             <button key={o.id} onClick={() => setViewOrder(o)} className="w-full rounded-xl border border-border p-3 text-left hover:bg-secondary/50 transition-colors">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-mono text-muted-foreground">{o.id}</span>
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusConf.color}`}>{statusConf.label}</span>
+                <span className={`rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${statusConf.color}`}>{statusConf.label}</span>
               </div>
               <p className="mt-1 text-sm font-medium truncate">{o.listingTitle}</p>
               <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
@@ -90,7 +90,7 @@ export default function AdminOrders() {
                     <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${intConf.color}`}><IntIcon className="h-3 w-3" />{intConf.label}</span></td>
                     <td className="px-4 py-3 font-medium">€{o.total}</td>
                     <td className="px-4 py-3 text-success font-medium">€{o.margin}</td>
-                    <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusConf.color}`}>{statusConf.label}</span></td>
+                    <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${statusConf.color}`}>{statusConf.label}</span></td>
                     <td className="px-4 py-3"><Button variant="outline" size="sm" onClick={() => setViewOrder(o)}>{t("admin.view")}</Button></td>
                   </tr>
                 );
@@ -116,7 +116,7 @@ export default function AdminOrders() {
                 <div><span className="text-xs text-muted-foreground">{t("admin.period")}</span><p className="font-medium">{viewOrder.duration}</p></div>
               </div>
               <div className="rounded-xl border border-accent/30 bg-accent/5 p-4">
-                <h3 className="flex items-center gap-2 text-sm font-semibold"><Send className="h-4 w-4 text-accent" /> Fulfillment</h3>
+                <h3 className="flex items-center gap-2 text-sm font-semibold"><Send className="h-4 w-4 text-accent" /> {t("admin.fulfillment")}</h3>
                 <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                   <div><span className="text-xs text-muted-foreground">{t("admin.approvalMode")}</span><p className="font-medium">{viewOrder.integrationType === "api" ? t("admin.approvalAuto") : t("admin.approvalAdmin")}</p></div>
                   <div><span className="text-xs text-muted-foreground">{t("admin.postingChannel")}</span><p className="font-medium">{INTEGRATION_TYPE_CONFIG[viewOrder.integrationType].label}</p></div>

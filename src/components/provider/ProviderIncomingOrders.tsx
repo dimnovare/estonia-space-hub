@@ -137,7 +137,7 @@ export default function ProviderIncomingOrders() {
                   <div>
                     <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                       <span className="text-xs font-mono text-muted-foreground">{order.id}</span>
-                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusCfg.color}`}>{statusCfg.label}</span>
+                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ${statusCfg.color}`}>{statusCfg.label}</span>
                     </div>
                     <div className="mt-2 text-sm font-medium">{order.listingTitle}</div>
                     <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">

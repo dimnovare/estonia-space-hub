@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   LayoutDashboard, List, Package, Calendar as CalendarIcon, Star, Settings, Users, CreditCard,
@@ -55,6 +55,19 @@ export default function ProviderDashboardPage() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { data: allOrders = [] } = useOrders();
+  const bellRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!showNotifications) return;
+    const handler = (e: MouseEvent) => {
+      if (bellRef.current && !bellRef.current.contains(e.target as Node)) {
+        setShowNotifications(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showNotifications]);
 
   const markAllRead = async () => {
     try {
@@ -124,7 +137,7 @@ export default function ProviderDashboardPage() {
             <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setSoundEnabled(!soundEnabled)} title={soundEnabled ? t("provider.notifications.soundOn") : t("provider.notifications.soundOff")}>
               {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
             </Button>
-            <div className="relative">
+            <div className="relative" ref={bellRef}>
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0 relative" onClick={() => setShowNotifications(!showNotifications)}>
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 && (
@@ -143,9 +156,18 @@ export default function ProviderDashboardPage() {
                     {notifications.length === 0 ? (
                       <div className="p-4 text-center text-xs text-muted-foreground">Teavitusi pole</div>
                     ) : (
-                      notifications.map((n: any) => (
-                        <button key={n.id} onClick={() => { if (!n.read) markRead(n.id); if (n.type === "order") setTab("orders"); setShowNotifications(false); }}
-                          className={`flex w-full items-start gap-3 p-3 text-left transition-colors hover:bg-secondary/50 ${!n.read ? "bg-accent/5" : ""}`}>
+                       notifications.map((n: any) => (
+                         <button key={n.id} onClick={() => {
+                           if (!n.read) markRead(n.id);
+                           setShowNotifications(false);
+                           if ((n as any).actionUrl) {
+                             const url = (n as any).actionUrl as string;
+                             if (url.startsWith("/")) navigate(url);
+                           } else if (n.type === "order") {
+                             setTab("orders");
+                           }
+                         }}
+                           className={`flex w-full items-start gap-3 p-3 text-left transition-colors hover:bg-secondary/50 ${!n.read ? "bg-accent/5" : ""}`}>
                           <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${n.type === "order" ? "bg-warning/10 text-warning" : n.type === "review" ? "bg-accent/10 text-accent" : "bg-secondary text-muted-foreground"}`}>
                             {n.type === "order" ? <Package className="h-4 w-4" /> : n.type === "review" ? <Star className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
                           </div>
