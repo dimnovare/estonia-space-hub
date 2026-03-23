@@ -10,7 +10,7 @@ import {
   LayoutDashboard, Package, Heart, Search, Settings, Bell, Shield, CreditCard, 
   HelpCircle, ChevronRight, ChevronDown, Warehouse, Truck, CarFront, Clock, CheckCircle,
   XCircle, Play, Calendar, MapPin, LogOut, User, Send, MessageSquare, FileText,
-  Paperclip, Download, ArrowLeft
+  Paperclip, Download, ArrowLeft, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
