@@ -2,11 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { publicSettingsService } from "@/services";
 
 const FALLBACK = {
-  siteName:     "Ruumly",
-  siteEmail:    "info@ruumly.eu",
-  sitePhone:    "+372 5555 1234",
-  openHours:    "E–R 9–18",
-  openHoursSat: "",
+  siteName:           "Ruumly",
+  siteEmail:          "info@ruumly.eu",
+  sitePhone:          "+372 5555 1234",
+  openHours:          "E–R 9–18",
+  openHoursSat:       "",
+  inviteCodeRequired: false,
 };
 
 export function usePlatformSettings() {

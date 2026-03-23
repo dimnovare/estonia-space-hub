@@ -19,6 +19,8 @@ const DEFAULT_SETTINGS = {
   emailNotifications:     "true",
   maintenanceMode:        "false",
   autoApproveListings:    "false",
+  inviteCodeRequired:     "true",
+  inviteCode:             "RUUMLY2026",
 };
 
 export default function AdminSettings() {
@@ -217,6 +219,7 @@ export default function AdminSettings() {
               { key: "emailNotifications" as const, label: t("admin.emailNotifications"), desc: t("admin.emailNotificationsDesc") },
               { key: "maintenanceMode" as const, label: t("admin.maintenanceMode"), desc: t("admin.maintenanceModeDesc") },
               { key: "autoApproveListings" as const, label: t("admin.autoApprove"), desc: t("admin.autoApproveDesc") },
+              { key: "inviteCodeRequired" as const, label: "Beta kutsekood kohustuslik", desc: "Kui sees, saavad registreeruda ainult kutse koodiga kasutajad" },
             ]).map(toggle => (
               <div key={toggle.key} className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div>
@@ -236,6 +239,20 @@ export default function AdminSettings() {
             ))}
           </div>
         </div>
+
+        {settings.inviteCodeRequired === "true" && (
+          <div className="rounded-xl border border-border p-5">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">
+                Kutse kood
+              </label>
+              <input className={inp} value={settings.inviteCode} onChange={e => set("inviteCode", e.target.value)} placeholder="RUUMLY2026" />
+              <p className="mt-0.5 text-[10px] text-muted-foreground">
+                Jaga seda koodi ainult inimestega, keda soovid beeta testima kutsuda.
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="flex justify-end">
           <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleSave} disabled={saving}>

@@ -12,6 +12,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, registerSchema, type LoginForm, type RegisterForm } from "@/lib/schemas";
 import { authService } from "@/services";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 type AuthView = "login" | "register" | "forgot" | "forgot-sent" | "reset";
 
@@ -27,6 +28,7 @@ export default function LoginPage() {
   const [resetLoading, setResetLoading] = useState(false);
   const { t } = useLanguage();
   const { login, register: authRegister, loginWithGoogle, isAuthenticated } = useAuth();
+  const { inviteCodeRequired } = usePlatformSettings();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from || "/account";
@@ -63,7 +65,7 @@ export default function LoginPage() {
   const handleRegister = async (data: RegisterForm) => {
     setLoading(true);
     try {
-      await authRegister(data.name, data.email, data.password);
+      await authRegister(data.name, data.email, data.password, data.inviteCode);
       toast.success(t("login.successRegister"));
       navigate(from, { replace: true });
     } catch (err: any) { toast.error(err.message || t("login.registerError")); }
