@@ -26,6 +26,9 @@ import type { Booking, BookingStatus } from "@/services/types";
 import type { Invoice, Message } from "@/services/types";
 import { SkeletonList } from "@/components/SkeletonCard";
 import { invoiceService } from "@/services";
+import { useFavorites } from "@/hooks/useFavorites";
+import { useAllListings } from "@/hooks/queries";
+import ListingCard from "@/components/ListingCard";
 
 const statusConfig: Record<BookingStatus, { label: string; color: string; icon: typeof Clock }> = {
   pending: { label: "Ootel", color: "bg-warning/10 text-warning", icon: Clock },
