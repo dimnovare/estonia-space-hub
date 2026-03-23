@@ -665,14 +665,29 @@ function AccountProfile() {
 
 function AccountSecurity() {
   const [changingPw, setChangingPw] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const { user } = useAuth();
   const pwForm = useForm<PasswordForm>({
     resolver: zodResolver(passwordSchema),
   });
 
-  const onSubmit = () => {
-    toast.success("Demo: parool uuendatud");
-    setChangingPw(false);
-    pwForm.reset();
+  const onSubmit = async (data: PasswordForm) => {
+    setSubmitting(true);
+    try {
+      const { securityService } = await import("@/services");
+      await securityService.changePassword(
+        data.currentPassword,
+        data.newPassword,
+        data.confirmPassword
+      );
+      toast.success("Parool edukalt uuendatud.");
+      setChangingPw(false);
+      pwForm.reset();
+    } catch (err: any) {
+      toast.error(err.message || "Parooli vahetus ebaõnnestus.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -686,7 +701,6 @@ function AccountSecurity() {
             <Button variant="outline" size="sm" className="mt-3" onClick={() => setChangingPw(true)}>Muuda parooli</Button>
           ) : (
             <form onSubmit={pwForm.handleSubmit(onSubmit)} className="mt-3 space-y-3">
-              <p className="text-xs text-muted-foreground">Paroolivahetus on hetkel demonstratsioonrežiimis.</p>
               <div>
                 <input type="password" placeholder="Praegune parool" {...pwForm.register("currentPassword")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                 {pwForm.formState.errors.currentPassword && <p className="mt-1 text-xs text-destructive">{pwForm.formState.errors.currentPassword.message}</p>}
@@ -700,21 +714,45 @@ function AccountSecurity() {
                 {pwForm.formState.errors.confirmPassword && <p className="mt-1 text-xs text-destructive">{pwForm.formState.errors.confirmPassword.message}</p>}
               </div>
               <div className="flex gap-2">
-                <Button type="submit" size="sm" className="bg-accent text-accent-foreground">Salvesta</Button>
+                <Button type="submit" size="sm" className="bg-accent text-accent-foreground" disabled={submitting}>
+                  {submitting
+                    ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Salvestan...</>
+                    : "Salvesta"}
+                </Button>
                 <Button variant="outline" size="sm" type="button" onClick={() => { setChangingPw(false); pwForm.reset(); }}>Tühista</Button>
               </div>
             </form>
           )}
         </div>
         <div className="rounded-xl border border-border p-4">
-          <h3 className="text-sm font-semibold">Kaheastmeline autentimine</h3>
-          <p className="text-xs text-muted-foreground mt-1">Pole veel seadistatud</p>
-          <Button variant="outline" size="sm" className="mt-3">Seadista 2FA</Button>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold">Kaheastmeline autentimine</h3>
+              <p className="text-xs text-muted-foreground mt-1">Tulemas lähiajal</p>
+            </div>
+            <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground">Tulemas</span>
+          </div>
         </div>
         <div className="rounded-xl border border-border p-4">
           <h3 className="text-sm font-semibold">Ühendatud kontod</h3>
-          <p className="text-xs text-muted-foreground mt-1">Google: pole ühendatud</p>
-          <Button variant="outline" size="sm" className="mt-3">Ühenda Google</Button>
+          <div className="mt-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-xs font-bold text-muted-foreground">G</div>
+              <div>
+                <p className="text-sm font-medium">Google</p>
+                {user?.hasGoogleAccount ? (
+                  <p className="text-xs text-success">Ühendatud</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Pole ühendatud</p>
+                )}
+              </div>
+            </div>
+            {user?.hasGoogleAccount ? (
+              <span className="rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">✓ Aktiivne</span>
+            ) : (
+              <p className="text-xs text-muted-foreground">Logi sisse Google'iga et ühendada</p>
+            )}
+          </div>
         </div>
       </div>
     </div>

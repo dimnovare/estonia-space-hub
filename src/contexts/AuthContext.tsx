@@ -16,6 +16,7 @@ export interface MockUser {
   status?: "active" | "blocked";
   registeredAt?: string;
   bookingsCount?: number;
+  hasGoogleAccount?: boolean;
 }
 
 interface AuthResponse {
@@ -63,6 +64,7 @@ function normalizeUser(raw: AuthResponse["user"]): MockUser {
     createdAt: raw.registeredAt,
     registeredAt: raw.registeredAt,
     bookingsCount: raw.bookingsCount,
+    hasGoogleAccount: (raw as any).hasGoogleAccount ?? false,
   };
 }
 
@@ -95,20 +97,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     init();
   }, []);
 
-  const persist = (u: MockUser | null, token?: string) => {
+  const persist = (
+    u: MockUser | null,
+    token?: string,
+    refresh?: string
+  ) => {
     setUser(u);
     try {
       if (u) localStorage.setItem("ruumly-auth", JSON.stringify(u));
       else localStorage.removeItem("ruumly-auth");
       if (token) localStorage.setItem("ruumly-token", token);
-      if (!u) localStorage.removeItem("ruumly-token");
+      if (refresh) localStorage.setItem("ruumly-refresh", refresh);
+      if (!u) {
+        localStorage.removeItem("ruumly-token");
+        localStorage.removeItem("ruumly-refresh");
+      }
     } catch {}
   };
 
   const login = useCallback(async (email: string, password: string) => {
     try {
       const res = await apiClient.post<AuthResponse>("/auth/login", { email, password });
-      persist(normalizeUser(res.user), res.accessToken);
+      persist(normalizeUser(res.user), res.accessToken, res.refreshToken);
     } catch (err: any) {
       throw new Error(err.message || "Sisselogimine ebaõnnestus");
     }
@@ -117,7 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = useCallback(async (name: string, email: string, password: string) => {
     try {
       const res = await apiClient.post<AuthResponse>("/auth/register", { name, email, password, confirmPassword: password });
-      persist(normalizeUser(res.user), res.accessToken);
+      persist(normalizeUser(res.user), res.accessToken, res.refreshToken);
     } catch (err: any) {
       throw new Error(err.message || "Registreerimine ebaõnnestus");
     }
@@ -126,14 +136,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithGoogle = useCallback(async (credential: string) => {
     try {
       const res = await apiClient.post<AuthResponse>("/auth/google", { credential });
-      persist(normalizeUser(res.user), res.accessToken);
+      persist(normalizeUser(res.user), res.accessToken, res.refreshToken);
     } catch (err: any) {
       throw new Error(err.message || "Google sisselogimine ebaõnnestus");
     }
   }, []);
 
   const logout = useCallback(() => {
-    apiClient.post("/auth/logout", {}).catch(() => {});
+    const refresh = localStorage.getItem("ruumly-refresh") ?? "";
+    if (refresh) {
+      apiClient.post("/auth/logout", { refreshToken: refresh }).catch(() => {});
+    }
     persist(null);
   }, []);
 

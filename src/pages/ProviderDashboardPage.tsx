@@ -8,6 +8,9 @@ import {
 import { useOrders } from "@/hooks/useOrders";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { useNotifications } from "@/hooks/useNotifications";
+import { notificationService } from "@/services";
+import { useQueryClient } from "@tanstack/react-query";
 import ProviderOverview from "@/components/provider/ProviderOverview";
 import ProviderIncomingOrders from "@/components/provider/ProviderIncomingOrders";
 import ProviderListings from "@/components/provider/ProviderListings";
@@ -18,22 +21,6 @@ import ProviderAnalytics from "@/components/provider/ProviderAnalytics";
 import ProviderProfile from "@/components/provider/ProviderProfile";
 import ProviderTeam from "@/components/provider/ProviderTeam";
 import ProviderBilling from "@/components/provider/ProviderBilling";
-
-interface ProviderNotification {
-  id: number;
-  type: "order" | "review" | "system";
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-}
-
-const mockProviderNotifications: ProviderNotification[] = [
-  { id: 1, type: "order", title: "Uus tellimus!", message: "KoliExpress — Kati Mets soovib kolimisteenust", time: "2 min tagasi", read: false },
-  { id: 2, type: "order", title: "Uus tellimus!", message: "Laobox Tallinn — Maria Saar soovib laopinda", time: "15 min tagasi", read: false },
-  { id: 3, type: "review", title: "Uus hinnang", message: "Andres T. hindas Laobox Tallinn 5/5", time: "1 tund tagasi", read: true },
-  { id: 4, type: "system", title: "Väljamakse tehtud", message: "€1,054 kantud kontole EE38 2200...", time: "Eile", read: true },
-];
 
 function useSidebarLinks() {
   const { t } = useLanguage();
@@ -59,20 +46,29 @@ export default function ProviderDashboardPage() {
   const setTab = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("ptab", id); return n; }, { replace: true });
   const { user } = useAuth();
   const sidebarLinks = useSidebarLinks();
-  const [notifications, setNotifications] = useState([
-    { id: 1, type: "order" as const, title: t("provider.notifications.newOrder"), message: "KoliExpress — Kati Mets", time: "2 min", read: false },
-    { id: 2, type: "order" as const, title: t("provider.notifications.newOrder"), message: "Laobox Tallinn — Maria Saar", time: "15 min", read: false },
-    { id: 3, type: "review" as const, title: t("provider.notifications.newReview"), message: "Andres T. — Laobox Tallinn 5/5", time: "1h", read: true },
-    { id: 4, type: "system" as const, title: t("provider.notifications.payoutDone"), message: "€1,054 → EE38 2200...", time: "1d", read: true },
-  ]);
+  const queryClient = useQueryClient();
+
+  const { data: notifications = [] } = useNotifications();
+  const unreadCount = notifications.filter((n: any) => !n.read).length;
+
   const [showNotifications, setShowNotifications] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { data: allOrders = [] } = useOrders();
 
-  const unreadCount = notifications.filter(n => !n.read).length;
-  const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  const markRead = (id: number) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  const markAllRead = async () => {
+    try {
+      await notificationService.markAllRead();
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    } catch {}
+  };
+
+  const markRead = async (id: string) => {
+    try {
+      await notificationService.markRead(id);
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    } catch {}
+  };
 
   const currentTab = sidebarLinks.find(l => l.id === tab);
   const CurrentIcon = currentTab?.icon || LayoutDashboard;
@@ -132,30 +128,36 @@ export default function ProviderDashboardPage() {
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0 relative" onClick={() => setShowNotifications(!showNotifications)}>
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-accent-foreground animate-pulse">{unreadCount}</span>
+                  <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-accent-foreground animate-pulse">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
                 )}
               </Button>
               {showNotifications && (
                 <div className="absolute right-0 top-10 z-50 w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-card shadow-xl">
                   <div className="flex items-center justify-between border-b border-border p-3">
                     <span className="text-sm font-semibold">{t("provider.notifications.title")}</span>
-                    <button onClick={markAllRead} className="text-xs text-accent hover:underline">{t("provider.notifications.markRead")}</button>
+                    <button onClick={markAllRead} disabled={unreadCount === 0} className="text-xs text-accent hover:underline disabled:opacity-50">{t("provider.notifications.markRead")}</button>
                   </div>
                   <div className="max-h-80 overflow-y-auto">
-                    {notifications.map(n => (
-                      <button key={n.id} onClick={() => { markRead(n.id); if (n.type === "order") setTab("orders"); setShowNotifications(false); }}
-                        className={`flex w-full items-start gap-3 p-3 text-left transition-colors hover:bg-secondary/50 ${!n.read ? "bg-accent/5" : ""}`}>
-                        <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${n.type === "order" ? "bg-warning/10 text-warning" : n.type === "review" ? "bg-accent/10 text-accent" : "bg-secondary text-muted-foreground"}`}>
-                          {n.type === "order" ? <Package className="h-4 w-4" /> : n.type === "review" ? <Star className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className={`text-xs font-medium ${!n.read ? "text-foreground" : "text-muted-foreground"}`}>{n.title}</p>
-                          <p className="text-[11px] text-muted-foreground truncate">{n.message}</p>
-                          <p className="text-[10px] text-muted-foreground mt-0.5">{n.time}</p>
-                        </div>
-                        {!n.read && <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-accent" />}
-                      </button>
-                    ))}
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-xs text-muted-foreground">Teavitusi pole</div>
+                    ) : (
+                      notifications.map((n: any) => (
+                        <button key={n.id} onClick={() => { if (!n.read) markRead(n.id); if (n.type === "order") setTab("orders"); setShowNotifications(false); }}
+                          className={`flex w-full items-start gap-3 p-3 text-left transition-colors hover:bg-secondary/50 ${!n.read ? "bg-accent/5" : ""}`}>
+                          <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${n.type === "order" ? "bg-warning/10 text-warning" : n.type === "review" ? "bg-accent/10 text-accent" : "bg-secondary text-muted-foreground"}`}>
+                            {n.type === "order" ? <Package className="h-4 w-4" /> : n.type === "review" ? <Star className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className={`text-xs font-medium ${!n.read ? "text-foreground" : "text-muted-foreground"}`}>{n.title}</p>
+                            <p className="text-[11px] text-muted-foreground truncate">{n.desc || n.message}</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">{n.time || n.createdAt}</p>
+                          </div>
+                          {!n.read && <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-accent" />}
+                        </button>
+                      ))
+                    )}
                   </div>
                 </div>
               )}
