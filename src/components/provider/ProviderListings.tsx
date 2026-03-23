@@ -13,7 +13,7 @@ export default function ProviderListings() {
   const { t } = useLanguage();
   const [listings, setListings] = useState(mockListings.map(l => ({ ...l, images: ["/placeholder.svg"] })));
   const [editDialogListing, setEditDialogListing] = useState<typeof listings[0] | null>(null);
-  const [editDialogListing, setEditDialogListing] = useState<any>(null);
+  
   const [editForm, setEditForm] = useState({ title: "", price: "", city: "", status: "" });
   const [createOpen, setCreateOpen] = useState(false);
   const [createStep, setCreateStep] = useState(0);
