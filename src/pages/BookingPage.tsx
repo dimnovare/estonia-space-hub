@@ -375,8 +375,7 @@ export default function BookingPage() {
           <div>
             <div className="text-xs text-muted-foreground truncate max-w-[160px]">{listing?.title}</div>
             <div className="font-display text-base font-bold">
-              {pricing ? `${pricing.total + pricing.extrasTotal}€` : "—"}
-              {pricing && pricing.extrasTotal > 0 && <span className="text-xs font-normal text-muted-foreground ml-1">(+lisad)</span>}
+              {pricing ? `${pricing.total}€` : "—"}
             </div>
           </div>
           <div className="flex gap-2 shrink-0">
