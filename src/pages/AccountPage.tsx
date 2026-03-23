@@ -10,7 +10,7 @@ import {
   LayoutDashboard, Package, Heart, Search, Settings, Bell, Shield, CreditCard, 
   HelpCircle, ChevronRight, ChevronDown, Warehouse, Truck, CarFront, Clock, CheckCircle,
   XCircle, Play, Calendar, MapPin, LogOut, User, Send, MessageSquare, FileText,
-  Paperclip, Download
+  Paperclip, Download, ArrowLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -383,7 +383,7 @@ function AccountMessages() {
       <p className="mt-1 text-sm text-muted-foreground">Suhtlus broneeringute kohta partnerite ja toega.</p>
       <div className="mt-6 grid gap-4 lg:grid-cols-[280px_1fr]">
         {/* Conversation list */}
-        <div className="space-y-1 rounded-xl border border-border p-2">
+        <div className={`space-y-1 rounded-xl border border-border p-2 lg:block ${selectedBooking ? 'hidden' : 'block'}`}>
           {bookingIds.length === 0 ? (
             <div className="flex flex-col items-center py-8 text-center"><MessageSquare className="h-8 w-8 text-muted-foreground/30" /><p className="mt-2 text-xs text-muted-foreground">Sõnumeid pole veel.</p></div>
           ) : bookingIds.map(bid => {
@@ -405,11 +405,19 @@ function AccountMessages() {
         </div>
 
         {/* Chat area */}
-        <div className="rounded-xl border border-border">
+        <div className={`rounded-xl border border-border ${selectedBooking ? 'block' : 'hidden lg:block'}`}>
           {!selectedBooking ? (
             <div className="flex flex-col items-center justify-center py-12 sm:py-20"><MessageSquare className="h-10 w-10 text-muted-foreground/20" /><p className="mt-3 text-sm text-muted-foreground">Valige vestlus.</p></div>
           ) : (
-            <div className="flex h-[500px] flex-col">
+            <div className="flex flex-col h-[calc(100vh-16rem)] lg:h-[500px]">
+              {selectedBooking && (
+                <button
+                  onClick={() => setSelectedBooking(null)}
+                  className="flex items-center gap-1.5 px-3 pt-3 text-xs text-muted-foreground hover:text-foreground lg:hidden"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" /> Tagasi vestlustesse
+                </button>
+              )}
               <div className="border-b border-border p-3">
                 <p className="text-sm font-semibold">{booking?.listingTitle}</p>
                 <p className="text-xs text-muted-foreground">{booking?.provider} · {booking?.id}</p>
@@ -425,8 +433,8 @@ function AccountMessages() {
                   </div>
                 ))}
               </div>
-              <div className="border-t border-border p-3 flex gap-2">
-                <input value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} placeholder="Kirjuta sõnum..." className="flex-1 rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+              <div className="border-t border-border p-3 flex gap-2 overflow-hidden">
+                <input value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} placeholder="Kirjuta sõnum..." className="flex-1 min-w-0 rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                 <Button size="sm" onClick={sendMessage} disabled={!newMsg.trim()} className="bg-accent text-accent-foreground"><Send className="h-4 w-4" /></Button>
               </div>
             </div>
@@ -680,56 +688,90 @@ function AccountBilling() {
           <p className="mt-1 text-xs text-muted-foreground">Arved ilmuvad pärast esimest broneeringut.</p>
         </div>
       ) : (
-        <div className="mt-6 overflow-x-auto rounded-xl border border-border">
-          <table className="w-full text-sm">
-            <thead className="border-b border-border bg-secondary/50">
-              <tr>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Arve nr</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Kirjeldus</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Summa</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Staatus</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Kuupäev</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {invoices.map(inv => (
-                <tr key={inv.id} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3 font-mono text-xs">{inv.id}</td>
-                  <td className="px-4 py-3 text-muted-foreground text-xs">{inv.description}</td>
-                  <td className="px-4 py-3 font-medium">€{inv.amount}</td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inv.status === "paid" ? "bg-success/10 text-success" : inv.status === "pending" ? "bg-warning/10 text-warning" : "bg-destructive/10 text-destructive"}`}>
-                      {inv.status === "paid" ? "Makstud" : inv.status === "pending" ? "Ootel" : "Tähtaeg ületatud"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground text-xs">{inv.issuedAt}</td>
-                  <td className="px-4 py-3">
-                    <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => {
-                      const lines = [
-                        `ARVE ${inv.id}`,
-                        `Kuupäev: ${inv.issuedAt}`,
-                        `Kirjeldus: ${inv.description}`,
-                        `Summa: €${inv.amount}`,
-                        `Staatus: ${inv.status === "paid" ? "Makstud" : inv.status === "pending" ? "Ootel" : "Tähtaeg ületatud"}`,
-                        inv.paidAt ? `Makstud: ${inv.paidAt}` : "",
-                        ``,
-                        `Ruumly OÜ | ruumly.eu | info@ruumly.eu`,
-                      ].filter(Boolean).join("\n");
-                      const blob = new Blob([lines], { type: "text/plain;charset=utf-8" });
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement("a");
-                      a.href = url;
-                      a.download = `arve_${inv.id}.txt`;
-                      a.click();
-                      URL.revokeObjectURL(url);
-                    }}><Download className="h-3.5 w-3.5" /></Button>
-                  </td>
+        <>
+          {/* Mobile cards */}
+          <div className="mt-6 space-y-3 sm:hidden">
+            {invoices.map(inv => (
+              <div key={inv.id} className="rounded-xl border border-border p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-mono text-muted-foreground truncate">{inv.id}</p>
+                    <p className="mt-1 text-sm font-medium leading-snug">{inv.description}</p>
+                  </div>
+                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${inv.status === "paid" ? "bg-success/10 text-success" : inv.status === "pending" ? "bg-warning/10 text-warning" : "bg-destructive/10 text-destructive"}`}>
+                    {inv.status === "paid" ? "Makstud" : inv.status === "pending" ? "Ootel" : "Tähtaeg ületatud"}
+                  </span>
+                </div>
+                <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                  <div>
+                    <p className="font-display text-lg font-bold">€{inv.amount}</p>
+                    <p className="text-xs text-muted-foreground">{inv.issuedAt}</p>
+                  </div>
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => {
+                    const lines = [
+                      `ARVE ${inv.id}`, `Kuupäev: ${inv.issuedAt}`, `Kirjeldus: ${inv.description}`,
+                      `Summa: €${inv.amount}`,
+                      `Staatus: ${inv.status === "paid" ? "Makstud" : inv.status === "pending" ? "Ootel" : "Tähtaeg ületatud"}`,
+                      inv.paidAt ? `Makstud: ${inv.paidAt}` : "", ``, `Ruumly | ruumly.eu`,
+                    ].filter(Boolean).join("\n");
+                    const blob = new Blob([lines], { type: "text/plain;charset=utf-8" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url; a.download = `arve_${inv.id}.txt`; a.click();
+                    URL.revokeObjectURL(url);
+                  }}>
+                    <Download className="h-3.5 w-3.5" /> Lae alla
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Desktop table */}
+          <div className="mt-6 hidden sm:block overflow-x-auto rounded-xl border border-border">
+            <table className="w-full text-sm">
+              <thead className="border-b border-border bg-secondary/50">
+                <tr>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Arve nr</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Kirjeldus</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Summa</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Staatus</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Kuupäev</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground"></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {invoices.map(inv => (
+                  <tr key={inv.id} className="border-b border-border last:border-0">
+                    <td className="px-4 py-3 font-mono text-xs">{inv.id}</td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs">{inv.description}</td>
+                    <td className="px-4 py-3 font-medium">€{inv.amount}</td>
+                    <td className="px-4 py-3">
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inv.status === "paid" ? "bg-success/10 text-success" : inv.status === "pending" ? "bg-warning/10 text-warning" : "bg-destructive/10 text-destructive"}`}>
+                        {inv.status === "paid" ? "Makstud" : inv.status === "pending" ? "Ootel" : "Tähtaeg ületatud"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs">{inv.issuedAt}</td>
+                    <td className="px-4 py-3">
+                      <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => {
+                        const lines = [
+                          `ARVE ${inv.id}`, `Kuupäev: ${inv.issuedAt}`, `Kirjeldus: ${inv.description}`,
+                          `Summa: €${inv.amount}`,
+                          `Staatus: ${inv.status === "paid" ? "Makstud" : inv.status === "pending" ? "Ootel" : "Tähtaeg ületatud"}`,
+                          inv.paidAt ? `Makstud: ${inv.paidAt}` : "", ``, `Ruumly OÜ | ruumly.eu | info@ruumly.eu`,
+                        ].filter(Boolean).join("\n");
+                        const blob = new Blob([lines], { type: "text/plain;charset=utf-8" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url; a.download = `arve_${inv.id}.txt`; a.click();
+                        URL.revokeObjectURL(url);
+                      }}><Download className="h-3.5 w-3.5" /></Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );
