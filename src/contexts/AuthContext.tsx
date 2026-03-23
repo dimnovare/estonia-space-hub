@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { apiClient } from "@/services/apiClient";
 import type { UserRole } from "@/services/types";
 
 export type { UserRole };
@@ -17,6 +18,23 @@ export interface MockUser {
   bookingsCount?: number;
 }
 
+interface AuthResponse {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    status: string;
+    company?: string;
+    phone?: string;
+    avatar?: string;
+    registeredAt: string;
+    bookingsCount: number;
+  };
+  accessToken: string;
+  refreshToken: string;
+}
+
 interface AuthContextType {
   user: MockUser | null;
   isAuthenticated: boolean;
@@ -30,55 +48,79 @@ interface AuthContextType {
   updateProfile: (updates: Partial<MockUser>) => void;
 }
 
-const MOCK_USERS: Record<UserRole, MockUser> = {
-  guest: { id: "", name: "", email: "", role: "guest", createdAt: "", status: "active", registeredAt: "", bookingsCount: 0 },
-  customer: { id: "u1", name: "Andres Tamm", email: "andres@email.com", role: "customer", phone: "+372 5551 2345", createdAt: "2025-11-05", status: "active", registeredAt: "2025-11-05", bookingsCount: 3 },
-  provider: { id: "u4", name: "Maria Saar", email: "maria@laopind.ee", role: "provider", company: "Laobox OÜ", phone: "+372 5123 4567", createdAt: "2025-10-20", status: "active", registeredAt: "2025-10-20", bookingsCount: 0 },
-  admin: { id: "u5", name: "Peeter Kuusk", email: "peeter@ruumly.eu", role: "admin", phone: "+372 5555 1234", createdAt: "2025-09-01", status: "active", registeredAt: "2025-09-01", bookingsCount: 0 },
-};
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+function normalizeUser(raw: AuthResponse["user"]): MockUser {
+  return {
+    id: raw.id,
+    name: raw.name,
+    email: raw.email,
+    role: raw.role.toLowerCase() as UserRole,
+    status: (raw.status?.toLowerCase() ?? "active") as "active" | "blocked",
+    company: raw.company ?? undefined,
+    phone: raw.phone ?? undefined,
+    avatar: raw.avatar ?? undefined,
+    createdAt: raw.registeredAt,
+    registeredAt: raw.registeredAt,
+    bookingsCount: raw.bookingsCount,
+  };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<MockUser | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("ruumly-auth");
-      if (stored) setUser(JSON.parse(stored));
-    } catch {}
-    setIsInitializing(false);
+    const init = async () => {
+      const token = localStorage.getItem("ruumly-token");
+      if (!token) { setIsInitializing(false); return; }
+      try {
+        const raw = await apiClient.get<AuthResponse["user"]>("/auth/me");
+        const normalized = normalizeUser(raw);
+        setUser(normalized);
+        localStorage.setItem("ruumly-auth", JSON.stringify(normalized));
+      } catch {
+        localStorage.removeItem("ruumly-token");
+        localStorage.removeItem("ruumly-auth");
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+    init();
   }, []);
 
-  const persist = (u: MockUser | null) => {
+  const persist = (u: MockUser | null, token?: string) => {
     setUser(u);
     try {
       if (u) localStorage.setItem("ruumly-auth", JSON.stringify(u));
       else localStorage.removeItem("ruumly-auth");
+      if (token) localStorage.setItem("ruumly-token", token);
+      if (!u) localStorage.removeItem("ruumly-token");
     } catch {}
   };
 
-  const login = useCallback(async (_email: string, _password: string) => {
-    await new Promise((r) => setTimeout(r, 800));
-    persist(MOCK_USERS.customer);
+  const login = useCallback(async (email: string, password: string) => {
+    const res = await apiClient.post<AuthResponse>("/auth/login", { email, password });
+    persist(normalizeUser(res.user), res.accessToken);
   }, []);
 
-  const register = useCallback(async (_name: string, _email: string, _password: string) => {
-    await new Promise((r) => setTimeout(r, 800));
-    persist(MOCK_USERS.customer);
+  const register = useCallback(async (name: string, email: string, password: string) => {
+    const res = await apiClient.post<AuthResponse>("/auth/register", { name, email, password, confirmPassword: password });
+    persist(normalizeUser(res.user), res.accessToken);
   }, []);
 
   const loginWithGoogle = useCallback(async () => {
-    await new Promise((r) => setTimeout(r, 800));
-    persist(MOCK_USERS.customer);
+    // Google auth not implemented in backend
+    throw new Error("Google login not available");
   }, []);
 
-  const logout = useCallback(() => persist(null), []);
+  const logout = useCallback(() => {
+    apiClient.post("/auth/logout", {}).catch(() => {});
+    persist(null);
+  }, []);
 
-  const switchRole = useCallback((role: UserRole) => {
-    if (role === "guest") { persist(null); return; }
-    persist(MOCK_USERS[role]);
+  const switchRole = useCallback((_role: UserRole) => {
+    // Dev-only: not applicable with real auth
   }, []);
 
   const updateProfile = useCallback((updates: Partial<MockUser>) => {

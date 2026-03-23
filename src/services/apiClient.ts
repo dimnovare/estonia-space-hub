@@ -3,8 +3,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 class ApiClient {
   private getToken(): string | null {
     try {
-      const auth = localStorage.getItem("ruumly-auth");
-      if (auth) return JSON.parse(auth).token || null;
+      return localStorage.getItem("ruumly-token");
     } catch {}
     return null;
   }
