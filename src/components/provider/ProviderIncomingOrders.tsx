@@ -240,6 +240,16 @@ export default function ProviderIncomingOrders() {
                     <strong>{t("provider.orders.notes")}:</strong> {selectedOrder.notes}
                   </div>
                 )}
+                {(selectedOrder.status === "sent" || selectedOrder.status === "created") && (
+                  <div className="flex gap-2 pt-2 border-t border-border">
+                    <Button size="sm" className="bg-success text-success-foreground hover:bg-success/90 gap-1" onClick={() => { handleAccept(selectedOrder.id); }}>
+                      <Check className="h-3.5 w-3.5" /> {t("provider.orders.accept")}
+                    </Button>
+                    <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1" onClick={() => { handleReject(selectedOrder.id); }}>
+                      <X className="h-3.5 w-3.5" /> {t("provider.orders.reject")}
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </DialogContent>
