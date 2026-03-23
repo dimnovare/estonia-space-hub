@@ -12,12 +12,11 @@ export default function ProviderIncomingOrders() {
   const { t } = useLanguage();
   const { data: initialOrders = [] } = useOrders();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [initialized, setInitialized] = useState(false);
 
-  if (initialOrders.length > 0 && !initialized) {
-    setOrders(initialOrders);
-    setInitialized(true);
-  }
+  useEffect(() => {
+    if (initialOrders.length > 0) setOrders(initialOrders);
+  }, [initialOrders]);
+
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [filter, setFilter] = useState<string>("all");
   const [showEmail, setShowEmail] = useState(false);

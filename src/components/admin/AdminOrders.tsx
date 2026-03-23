@@ -11,16 +11,13 @@ export default function AdminOrders() {
   const { t } = useLanguage();
   const { data: initialOrders = [] } = useOrders();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [initialized, setInitialized] = useState(false);
   const [filter, setFilter] = useState<"all" | OrderStatus>("all");
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
   const [emailPreview, setEmailPreview] = useState(false);
 
-  // Sync from query data once
-  if (initialOrders.length > 0 && !initialized) {
-    setOrders(initialOrders);
-    setInitialized(true);
-  }
+  useEffect(() => {
+    if (initialOrders.length > 0) setOrders(initialOrders);
+  }, [initialOrders]);
 
   const filtered = filter === "all" ? orders : orders.filter((o) => o.status === filter);
 
