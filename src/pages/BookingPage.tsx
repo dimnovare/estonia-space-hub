@@ -315,7 +315,13 @@ export default function BookingPage() {
                   <div className="border-t border-border pt-3 space-y-1">
                     <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.publicPrice")}</span><span className="font-medium line-through text-muted-foreground">{publicPrice}€</span></div>
                     <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.ourPrice")}</span><span className="font-bold text-accent">{ourPrice}€</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.savings")}</span><span className="font-bold text-success">{savings}€</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.savings")}</span><span className="font-bold text-success">-{savings}€</span></div>
+                    {extrasTotal > 0 && (
+                      <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.extras")}</span><span className="font-medium">+{extrasTotal}€</span></div>
+                    )}
+                    {extrasTotal > 0 && (
+                      <div className="flex justify-between font-semibold border-t border-border pt-1 mt-1"><span>Kokku lisateenustega</span><span className="text-accent">{pricing?.total}€</span></div>
+                    )}
                   </div>
                 )}
               </div>
