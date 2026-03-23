@@ -4,6 +4,7 @@ import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, Cr
 import { Button } from "@/components/ui/button";
 import { useListing, useCreateBooking, useSuppliers } from "@/hooks/queries";
 import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
+import { EXTRAS_PRICES, calculatePricing } from "@/lib/pricing";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
