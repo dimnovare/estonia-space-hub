@@ -685,7 +685,25 @@ function AccountBilling() {
                   </td>
                   <td className="px-4 py-3 text-muted-foreground text-xs">{inv.issuedAt}</td>
                   <td className="px-4 py-3">
-                    <Button variant="ghost" size="sm" className="h-7 px-2"><Download className="h-3.5 w-3.5" /></Button>
+                    <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => {
+                      const lines = [
+                        `ARVE ${inv.id}`,
+                        `Kuupäev: ${inv.issuedAt}`,
+                        `Kirjeldus: ${inv.description}`,
+                        `Summa: €${inv.amount}`,
+                        `Staatus: ${inv.status === "paid" ? "Makstud" : inv.status === "pending" ? "Ootel" : "Tähtaeg ületatud"}`,
+                        inv.paidAt ? `Makstud: ${inv.paidAt}` : "",
+                        ``,
+                        `Ruumly OÜ | ruumly.eu | info@ruumly.eu`,
+                      ].filter(Boolean).join("\n");
+                      const blob = new Blob([lines], { type: "text/plain;charset=utf-8" });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `arve_${inv.id}.txt`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}><Download className="h-3.5 w-3.5" /></Button>
                   </td>
                 </tr>
               ))}

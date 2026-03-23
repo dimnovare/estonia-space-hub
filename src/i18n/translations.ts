@@ -1603,7 +1603,7 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.home": "Главная",
     "nav.providerDashboard": "Панель партнёра",
     "provider.nav.overview": "Обзор",
-    "provider.nav.orders": "Входящие заказы",
+    "provider.nav.orders": "Заказы",
     "provider.nav.listings": "Мои объявления",
     "provider.nav.bookings": "Бронирования",
     "provider.nav.calendar": "Календарь",

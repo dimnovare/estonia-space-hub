@@ -92,7 +92,10 @@ export default function ProviderListings() {
                 <Button variant="outline" size="sm" onClick={() => setEditId(editId === l.id ? null : l.id)}>
                   <Image className="h-3.5 w-3.5 mr-1" /> {t("provider.listings.images")}
                 </Button>
-                <Button variant="outline" size="sm"><Edit className="h-3.5 w-3.5" /></Button>
+                <Button variant="outline" size="sm" onClick={() => {
+                  setEditDialogListing(l);
+                  setEditForm({ title: l.title, price: String(l.price), city: l.city, status: l.status });
+                }}><Edit className="h-3.5 w-3.5" /></Button>
               </div>
             </div>
             {editId === l.id && (
