@@ -19,9 +19,12 @@ class ApiClient {
       body: body ? JSON.stringify(body) : undefined,
     });
     if (response.status === 401) {
-      localStorage.removeItem("ruumly-auth");
-      localStorage.removeItem("ruumly-token");
-      window.location.href = "/login";
+      if (token) {
+        // Only redirect when a token was actually sent (expired/revoked session)
+        localStorage.removeItem("ruumly-auth");
+        localStorage.removeItem("ruumly-token");
+        window.location.href = "/login";
+      }
       throw new Error("Unauthorized");
     }
     if (!response.ok) throw new Error(`API error: ${response.status}`);
