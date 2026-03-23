@@ -52,6 +52,7 @@ function useSidebarLinks() {
 }
 
 export default function ProviderDashboardPage() {
+  useEffect(() => { document.title = "Partneri paneel — Ruumly"; }, []);
   const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get("ptab") || "overview";

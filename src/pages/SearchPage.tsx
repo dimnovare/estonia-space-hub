@@ -10,6 +10,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
 export default function SearchPage() {
+  useEffect(() => { document.title = "Otsing — Ruumly"; }, []);
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
   const { t } = useLanguage();

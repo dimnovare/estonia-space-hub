@@ -10,6 +10,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
 export default function HomePage() {
+  useEffect(() => { document.title = "Ruumly — Laopinnad, kolimine ja haagised"; }, []);
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");

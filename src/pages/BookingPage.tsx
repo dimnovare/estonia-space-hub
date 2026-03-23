@@ -12,6 +12,7 @@ import { bookingDetailsSchema, bookingContactSchema, type BookingDetailsForm, ty
 type SubmitPhase = "submitting" | "sending" | "waiting" | "done";
 
 export default function BookingPage() {
+  useEffect(() => { document.title = "Broneeri — Ruumly"; }, []);
   const [params] = useSearchParams();
   const listingId = params.get("listing");
   const { data: listing } = useListing(listingId || "");

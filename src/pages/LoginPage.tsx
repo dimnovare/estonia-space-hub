@@ -14,6 +14,7 @@ import { loginSchema, registerSchema, type LoginForm, type RegisterForm } from "
 type AuthView = "login" | "register" | "forgot" | "forgot-sent" | "reset";
 
 export default function LoginPage() {
+  useEffect(() => { document.title = "Sisselogimine — Ruumly"; }, []);
   const [showPassword, setShowPassword] = useState(false);
   const [view, setView] = useState<AuthView>("login");
   const [loading, setLoading] = useState(false);
