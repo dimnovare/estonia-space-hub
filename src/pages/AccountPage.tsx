@@ -109,7 +109,7 @@ export default function AccountPage() {
   const sidebarLinks = useSidebarLinks();
 
   const handleLogout = () => { logout(); navigate("/"); };
-  const unreadMessages = MOCK_MESSAGES.filter(m => !m.read && m.from !== "customer").length;
+  const unreadMessages = 0;
   const { data: notifications = [] } = useNotifications();
   const unreadNotifications = notifications.filter((n: any) => !n.read).length;
 
