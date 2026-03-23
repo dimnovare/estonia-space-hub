@@ -114,7 +114,16 @@ export default function AdminSuppliers() {
                 <td className="px-4 py-3 text-muted-foreground">{s.listingCount}</td>
                 <td className="px-4 py-3 text-muted-foreground">{s.ordersTotal}</td>
                 <td className="px-4 py-3 font-medium">€{s.revenue.toLocaleString()}</td>
-                <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s.isActive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{s.isActive ? t("admin.active") : t("admin.inactive")}</span></td>
+                <td className="px-4 py-3">
+                  <div className="flex flex-wrap items-center gap-1">
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s.isActive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{s.isActive ? t("admin.active") : t("admin.inactive")}</span>
+                    {(s as any).partnerDiscountRate > 0 && (
+                      <span className="rounded-full bg-success/10 text-success px-2 py-0.5 text-[10px] font-medium">
+                        {Math.max(0, (s as any).partnerDiscountRate - ((s as any).clientDiscountRate || 0))}%
+                      </span>
+                    )}
+                  </div>
+                </td>
                 <td className="px-4 py-3"><Button variant="outline" size="sm" className="text-xs" onClick={() => { setSelected(s); setTestResult(null); }}>{t("admin.view")}</Button></td>
               </tr>
             ))}
