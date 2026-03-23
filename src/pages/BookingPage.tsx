@@ -4,6 +4,7 @@ import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, Cr
 import { Button } from "@/components/ui/button";
 import { useListing, useCreateBooking, useSuppliers } from "@/hooks/queries";
 import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
+import { EXTRAS_PRICES, calculatePricing } from "@/lib/pricing";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,10 +24,10 @@ export default function BookingPage() {
 
   const steps = [t("booking.details"), t("booking.extras"), t("booking.contact"), t("booking.payment"), t("booking.review")];
   const extras = [
-    { id: "packing", label: t("booking.extra.packing"), price: "15€" },
-    { id: "loading", label: t("booking.extra.loading"), price: "20€" },
-    { id: "insurance", label: t("booking.extra.insurance"), price: "10€/kuu" },
-    { id: "forklift", label: t("booking.extra.forklift"), price: "25€" },
+    { id: "packing", label: t("booking.extra.packing"), price: `${EXTRAS_PRICES.packing}€` },
+    { id: "loading", label: t("booking.extra.loading"), price: `${EXTRAS_PRICES.loading}€` },
+    { id: "insurance", label: t("booking.extra.insurance"), price: `${EXTRAS_PRICES.insurance}€/kuu` },
+    { id: "forklift", label: t("booking.extra.forklift"), price: `${EXTRAS_PRICES.forklift}€` },
   ];
 
   const [step, setStep] = useState(0);
@@ -50,10 +51,17 @@ export default function BookingPage() {
   const toggleExtra = (id: string) =>
     setSelectedExtras((prev) => (prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]));
 
-  const publicPrice = listing ? Math.round(listing.priceFrom / 0.95) : 0;
-  const ourPrice = listing?.priceFrom || 0;
-  const savings = publicPrice - ourPrice;
-  const pricing = listing ? { total: ourPrice, extrasTotal: selectedExtras.length * 15 } : null;
+  const pricingResult = listing
+    ? calculatePricing(listing.priceFrom, selectedExtras)
+    : null;
+
+  const publicPrice = pricingResult?.publicPrice ?? 0;
+  const ourPrice    = pricingResult?.platformPrice ?? 0;
+  const savings     = pricingResult?.savings ?? 0;
+  const extrasTotal = pricingResult?.extrasTotal ?? 0;
+  const pricing     = pricingResult
+    ? { total: pricingResult.total, extrasTotal }
+    : null;
 
   const handleNext = () => {
     if (step === 0) {
@@ -307,7 +315,13 @@ export default function BookingPage() {
                   <div className="border-t border-border pt-3 space-y-1">
                     <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.publicPrice")}</span><span className="font-medium line-through text-muted-foreground">{publicPrice}€</span></div>
                     <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.ourPrice")}</span><span className="font-bold text-accent">{ourPrice}€</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.savings")}</span><span className="font-bold text-success">{savings}€</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.savings")}</span><span className="font-bold text-success">-{savings}€</span></div>
+                    {extrasTotal > 0 && (
+                      <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.extras")}</span><span className="font-medium">+{extrasTotal}€</span></div>
+                    )}
+                    {extrasTotal > 0 && (
+                      <div className="flex justify-between font-semibold border-t border-border pt-1 mt-1"><span>Kokku lisateenustega</span><span className="text-accent">{pricing?.total}€</span></div>
+                    )}
                   </div>
                 )}
               </div>
@@ -361,8 +375,7 @@ export default function BookingPage() {
           <div>
             <div className="text-xs text-muted-foreground truncate max-w-[160px]">{listing?.title}</div>
             <div className="font-display text-base font-bold">
-              {pricing ? `${pricing.total + pricing.extrasTotal}€` : "—"}
-              {pricing && pricing.extrasTotal > 0 && <span className="text-xs font-normal text-muted-foreground ml-1">(+lisad)</span>}
+              {pricing ? `${pricing.total}€` : "—"}
             </div>
           </div>
           <div className="flex gap-2 shrink-0">

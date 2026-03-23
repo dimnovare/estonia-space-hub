@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Check, X, Mail, Download } from "lucide-react";
-import { useOrders, useApproveOrder, useRejectOrder } from "@/hooks/useOrders";
+import { useOrders, useApproveOrder, useRejectOrder, useConfirmOrder } from "@/hooks/useOrders";
 import { SkeletonList } from "@/components/SkeletonCard";
 import { ORDER_STATUS_CONFIG } from "@/lib/constants";
 import type { Order } from "@/services/types";
@@ -14,6 +14,7 @@ export default function ProviderIncomingOrders() {
   const { data: orders = [], isLoading } = useOrders();
   const approveOrder = useApproveOrder();
   const rejectOrder  = useRejectOrder();
+  const confirmOrder = useConfirmOrder();
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [filter, setFilter] = useState<string>("all");
@@ -62,7 +63,7 @@ export default function ProviderIncomingOrders() {
     URL.revokeObjectURL(url);
   };
 
-  const isMutating = approveOrder.isPending || rejectOrder.isPending;
+  const isMutating = approveOrder.isPending || rejectOrder.isPending || confirmOrder.isPending;
 
   return (
     <div>
@@ -156,15 +157,19 @@ export default function ProviderIncomingOrders() {
               </div>
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
+                {order.status === "sent" ? (
+                  <Button size="sm" className="bg-success text-success-foreground hover:bg-success/90 gap-1" disabled={isMutating} onClick={() => confirmOrder.mutate(order.id)}>
+                    <Check className="h-3.5 w-3.5" /> {confirmOrder.isPending ? "..." : "Kinnita kättesaamine"}
+                  </Button>
+                ) : (order.status === "created" || order.status === "sending") ? (
+                  <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 gap-1" disabled={isMutating} onClick={() => approveOrder.mutate(order.id)}>
+                    <Check className="h-3.5 w-3.5" /> {approveOrder.isPending ? "..." : t("provider.orders.accept")}
+                  </Button>
+                ) : null}
                 {isPending && (
-                  <>
-                    <Button size="sm" className="bg-success text-success-foreground hover:bg-success/90 gap-1" disabled={isMutating} onClick={() => approveOrder.mutate(order.id, { onSuccess: () => setSelectedOrder(null) })}>
-                      <Check className="h-3.5 w-3.5" /> {approveOrder.isPending ? "..." : t("provider.orders.accept")}
-                    </Button>
-                    <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1" disabled={isMutating} onClick={() => rejectOrder.mutate({ id: order.id, reason: "Partner lükkas tagasi" }, { onSuccess: () => setSelectedOrder(null) })}>
-                      <X className="h-3.5 w-3.5" /> {rejectOrder.isPending ? "..." : t("provider.orders.reject")}
-                    </Button>
-                  </>
+                  <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1" disabled={isMutating} onClick={() => rejectOrder.mutate({ id: order.id, reason: "Partner lükkas tagasi" })}>
+                    <X className="h-3.5 w-3.5" /> {rejectOrder.isPending ? "..." : t("provider.orders.reject")}
+                  </Button>
                 )}
                 <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setSelectedOrder(order); setShowEmail(false); }}>{t("provider.orders.viewDetails")}</Button>
                 {order.integrationType === "email" && (
@@ -220,17 +225,29 @@ export default function ProviderIncomingOrders() {
                     <strong>{t("provider.orders.notes")}:</strong> {selectedOrder.notes}
                   </div>
                 )}
-                {(selectedOrder.status === "sent" || selectedOrder.status === "created") && (
+                {(selectedOrder.status === "sent" || selectedOrder.status === "created" || selectedOrder.status === "sending") && (
                   <div className="flex gap-2 pt-2 border-t border-border">
-                    <Button
-                      size="sm"
-                      className="bg-success text-success-foreground hover:bg-success/90 gap-1"
-                      disabled={isMutating}
-                      onClick={() => approveOrder.mutate(selectedOrder.id, { onSuccess: () => setSelectedOrder(null) })}
-                    >
-                      <Check className="h-3.5 w-3.5" />
-                      {approveOrder.isPending ? "..." : t("provider.orders.accept")}
-                    </Button>
+                    {selectedOrder.status === "sent" ? (
+                      <Button
+                        size="sm"
+                        className="bg-success text-success-foreground hover:bg-success/90 gap-1"
+                        disabled={isMutating}
+                        onClick={() => confirmOrder.mutate(selectedOrder.id, { onSuccess: () => setSelectedOrder(null) })}
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                        {confirmOrder.isPending ? "..." : "Kinnita kättesaamine"}
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        className="bg-accent text-accent-foreground hover:bg-accent/90 gap-1"
+                        disabled={isMutating}
+                        onClick={() => approveOrder.mutate(selectedOrder.id, { onSuccess: () => setSelectedOrder(null) })}
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                        {approveOrder.isPending ? "..." : t("provider.orders.accept")}
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="outline"
