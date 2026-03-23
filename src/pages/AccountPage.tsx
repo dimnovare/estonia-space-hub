@@ -468,11 +468,56 @@ function AccountSearches() {
 
 function AccountNotifications() {
   const { data: notifications = [] } = useNotifications();
-  const allRead = notifications.length === 0 || notifications.every((n: any) => n.read);
+  const queryClient = useQueryClient();
+
+  const markOne = useMutation({
+    mutationFn: (id: string) => notificationService.markRead(id),
+    onMutate: async (id: string) => {
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      const previous = queryClient.getQueryData(["notifications"]);
+      queryClient.setQueryData(["notifications"], (old: any[]) =>
+        (old || []).map(n => n.id === id ? { ...n, read: true } : n)
+      );
+      return { previous };
+    },
+    onError: (_err, _id, ctx) => {
+      queryClient.setQueryData(["notifications"], ctx?.previous);
+    },
+  });
+
+  const markAll = useMutation({
+    mutationFn: () => notificationService.markAllRead(),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      const previous = queryClient.getQueryData(["notifications"]);
+      queryClient.setQueryData(["notifications"], (old: any[]) =>
+        (old || []).map(n => ({ ...n, read: true }))
+      );
+      return { previous };
+    },
+    onError: (_err, _v, ctx) => {
+      queryClient.setQueryData(["notifications"], ctx?.previous);
+    },
+  });
+
+  const unread = notifications.filter((n: any) => !n.read);
+  const hasUnread = unread.length > 0;
+
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Teavitused</h1>
-      {allRead ? (
+      <div className="flex items-center justify-between">
+        <h1 className="font-display text-2xl font-bold">Teavitused</h1>
+        {hasUnread && (
+          <button
+            onClick={() => markAll.mutate()}
+            className="text-xs text-accent hover:underline"
+          >
+            Märgi kõik loetuks
+          </button>
+        )}
+      </div>
+
+      {!hasUnread ? (
         <div className="py-12 text-center text-sm text-muted-foreground">
           <Bell className="mx-auto h-8 w-8 text-muted-foreground/20 mb-3" />
           Kõik teatised on loetud.
@@ -481,11 +526,26 @@ function AccountNotifications() {
         <div className="mt-4 space-y-2">
           {notifications.map((n: any) => (
             <div key={n.id} className={`rounded-xl border border-border p-4 ${n.read ? "opacity-60" : ""}`}>
-              <div className="flex items-start justify-between">
-                <div><p className="text-sm font-medium">{n.title}</p><p className="mt-0.5 text-xs text-muted-foreground">{n.desc}</p></div>
-                {!n.read && <div className="mt-1 h-2 w-2 rounded-full bg-accent shrink-0" />}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-2 min-w-0">
+                  {!n.read && (
+                    <div className="mt-1.5 h-2 w-2 rounded-full bg-accent shrink-0" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">{n.title}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{n.desc}</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">{n.time}</p>
+                  </div>
+                </div>
+                {!n.read && (
+                  <button
+                    onClick={() => markOne.mutate(n.id)}
+                    className="shrink-0 rounded-lg border border-border px-2.5 py-1 text-[10px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors whitespace-nowrap"
+                  >
+                    Märgi loetuks
+                  </button>
+                )}
               </div>
-              <p className="mt-2 text-[10px] text-muted-foreground">{n.time}</p>
             </div>
           ))}
         </div>
