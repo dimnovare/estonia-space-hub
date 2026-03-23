@@ -230,6 +230,21 @@ export const authService = {
   },
 };
 
+// ─── Security Service ──────────────────────────────────────────────────────────
+export const securityService = {
+  async changePassword(
+    currentPassword: string,
+    newPassword: string,
+    confirmPassword: string
+  ): Promise<void> {
+    await apiClient.post("/auth/change-password", {
+      currentPassword,
+      newPassword,
+      confirmPassword,
+    });
+  },
+};
+
 export type {
   User, Supplier, Order, Booking, Notification, Invoice, Message,
   AuditLogEntry, OrderStatus, PartnerIntegrationSettings, OrderRoutingRule,

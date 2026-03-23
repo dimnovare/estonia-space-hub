@@ -1,26 +1,55 @@
 import { useState } from "react";
-import { MapPin, Edit, Plus, Check, X, Image, Upload } from "lucide-react";
+import { MapPin, Edit, Plus, Check, X, Upload, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useLanguage } from "@/i18n/LanguageContext";
-
-const mockListings = [
-  { id: "w1", title: "Laobox Tallinn Kesklinn", type: "warehouse", status: "Aktiivne", views: 234, bookings: 18, price: 49, city: "Tallinn", occupancy: 85 },
-  { id: "w3", title: "SecureStore Ülemiste", type: "warehouse", status: "Aktiivne", views: 156, bookings: 12, price: 79, city: "Tallinn", occupancy: 92 },
-];
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/services/apiClient";
+import { toast } from "sonner";
 
 export default function ProviderListings() {
   const { t } = useLanguage();
-  const [listings, setListings] = useState(mockListings.map(l => ({ ...l, images: ["/placeholder.svg"] })));
-  const [editDialogListing, setEditDialogListing] = useState<typeof listings[0] | null>(null);
-  
+  const queryClient = useQueryClient();
+
+  const { data: listings = [], isLoading } = useQuery({
+    queryKey: ["provider-listings"],
+    queryFn: () => apiClient.get<any[]>("/admin/listings"),
+    staleTime: 30_000,
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      apiClient.patch(`/admin/listings/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["provider-listings"] });
+      queryClient.invalidateQueries({ queryKey: ["listings"] });
+      toast.success("Kuulutus uuendatud");
+      setEditDialogListing(null);
+    },
+    onError: (err: any) => toast.error(err.message || "Uuendamine ebaõnnestus"),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data: any) => apiClient.post("/admin/listings", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["provider-listings"] });
+      queryClient.invalidateQueries({ queryKey: ["listings"] });
+      toast.success("Kuulutus lisatud");
+      setCreateOpen(false);
+      setCreateStep(0);
+      setNewListing({ title: "", type: "warehouse", city: "Tallinn", address: "", description: "", price: "", size: "", features: [] as string[] });
+    },
+    onError: (err: any) => toast.error(err.message || "Lisamine ebaõnnestus"),
+  });
+
+  const [editDialogListing, setEditDialogListing] = useState<any | null>(null);
   const [editForm, setEditForm] = useState({ title: "", price: "", city: "", status: "" });
   const [createOpen, setCreateOpen] = useState(false);
   const [createStep, setCreateStep] = useState(0);
 
   const [newListing, setNewListing] = useState({
     title: "", type: "warehouse", city: "Tallinn", address: "", description: "",
-    price: "", size: "", features: [] as string[], images: [] as string[],
+    price: "", size: "", features: [] as string[],
   });
 
   const featureKeys = [
@@ -36,35 +65,27 @@ export default function ProviderListings() {
     }));
   };
 
-  const addImage = () => {
-    const fakeUrl = `https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=300&fit=crop&t=${Date.now()}`;
-    setNewListing(prev => ({ ...prev, images: [...prev.images, fakeUrl] }));
-  };
-
   const submitListing = () => {
-    const id = `w${Date.now()}`;
-    setListings(prev => [...prev, {
-      id, title: newListing.title || "Uus kuulutus", type: newListing.type,
-      status: "Aktiivne", views: 0, bookings: 0,
-      price: parseInt(newListing.price) || 0, city: newListing.city, occupancy: 0,
-      images: newListing.images.length > 0 ? newListing.images : ["/placeholder.svg"],
-    }]);
-    setCreateOpen(false);
-    setCreateStep(0);
-    setNewListing({ title: "", type: "warehouse", city: "Tallinn", address: "", description: "", price: "", size: "", features: [], images: [] });
+    createMutation.mutate({
+      title: newListing.title || "Uus kuulutus",
+      type: newListing.type,
+      city: newListing.city,
+      address: newListing.address,
+      description: newListing.description,
+      price: parseInt(newListing.price) || 0,
+      priceUnit: "€/kuu",
+      status: "active",
+    });
   };
 
-  const handleImageUpload = (listingId: string) => {
-    const fakeUrl = `https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=300&fit=crop&t=${Date.now()}`;
-    setListings(prev => prev.map(l => l.id === listingId ? { ...l, images: [...l.images, fakeUrl] } : l));
-  };
-
-  const removeImage = (listingId: string, idx: number) => {
-    setListings(prev => prev.map(l => l.id === listingId ? { ...l, images: l.images.filter((_, i) => i !== idx) } : l));
-  };
-
-  const steps = [t("provider.listings.stepBasic"), t("provider.listings.stepLocation"), t("provider.listings.stepPrice"), t("provider.listings.stepImages"), t("provider.listings.stepFeatures")];
+  const steps = [t("provider.listings.stepBasic"), t("provider.listings.stepLocation"), t("provider.listings.stepPrice"), t("provider.listings.stepFeatures")];
   const inp = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
+
+  if (isLoading) return (
+    <div className="flex items-center justify-center py-20">
+      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    </div>
+  );
 
   return (
     <div>
@@ -72,39 +93,52 @@ export default function ProviderListings() {
         <h1 className="font-display text-2xl font-bold">{t("provider.listings.title")}</h1>
         <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setCreateOpen(true)}><Plus className="mr-2 h-4 w-4" /> {t("provider.listings.add")}</Button>
       </div>
+
+      {listings.length === 0 && (
+        <div className="mt-12 flex flex-col items-center py-12 text-center">
+          <MapPin className="h-12 w-12 text-muted-foreground/20" />
+          <p className="mt-3 text-sm font-medium">Kuulutusi pole veel</p>
+          <p className="mt-1 text-xs text-muted-foreground">Lisage uus kuulutus ülaloleva nupuga</p>
+        </div>
+      )}
+
       <div className="mt-6 space-y-3">
-        {listings.map((l) => (
-          <div key={l.id} className="rounded-xl border border-border p-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="h-14 w-14 rounded-lg bg-secondary overflow-hidden shrink-0">
-                  <img src={l.images[0]} alt={l.title} className="h-full w-full object-cover" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-medium truncate">{l.title}</div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <MapPin className="h-3 w-3 shrink-0" /><span className="truncate">{l.city} · {l.price}€/kuu · {t("provider.listings.occupancy")} {l.occupancy}%</span>
+        {listings.map((l: any) => {
+          const statusLabel = l.status === "active" ? "Aktiivne" : "Peatatud";
+          const statusColor = l.status === "active" ? "bg-success/10 text-success" : "bg-warning/10 text-warning";
+          return (
+            <div key={l.id} className="rounded-xl border border-border p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-14 w-14 rounded-lg bg-secondary overflow-hidden shrink-0">
+                    <img src={l.images?.[0] || "/placeholder.svg"} alt={l.title} className="h-full w-full object-cover" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium truncate">{l.title}</div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <MapPin className="h-3 w-3 shrink-0" /><span className="truncate">{l.city} · {l.price ?? l.priceFrom}€/kuu</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">{l.status}</span>
-                <Button variant="outline" size="sm" onClick={() => {
-                  setEditDialogListing(l);
-                  setEditForm({ title: l.title, price: String(l.price), city: l.city, status: l.status });
-                }}>
-                  <Edit className="h-3.5 w-3.5 mr-1.5" /> Muuda
-                </Button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColor}`}>{statusLabel}</span>
+                  <Button variant="outline" size="sm" onClick={() => {
+                    setEditDialogListing(l);
+                    setEditForm({ title: l.title, price: String(l.price ?? l.priceFrom ?? ""), city: l.city, status: l.status });
+                  }}>
+                    <Edit className="h-3.5 w-3.5 mr-1.5" /> Muuda
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
+      {/* Create dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{t("provider.listings.createTitle")}</DialogTitle></DialogHeader>
-
           <div className="flex items-center gap-1 mb-4">
             {steps.map((s, i) => (
               <div key={i} className="flex items-center gap-1 flex-1">
@@ -171,26 +205,6 @@ export default function ProviderListings() {
 
           {createStep === 3 && (
             <div className="space-y-3">
-              <p className="text-xs text-muted-foreground">{t("provider.listings.imagesDesc")}</p>
-              <div className="flex flex-wrap gap-3">
-                {newListing.images.map((img, idx) => (
-                  <div key={idx} className="group relative h-24 w-32 rounded-lg overflow-hidden border border-border">
-                    <img src={img} alt="" className="h-full w-full object-cover" />
-                    <button onClick={() => setNewListing(p => ({ ...p, images: p.images.filter((_, i) => i !== idx) }))} className="absolute top-1 right-1 rounded-full bg-destructive/90 p-0.5 text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-                <button onClick={addImage} className="flex h-24 w-32 flex-col items-center justify-center rounded-lg border-2 border-dashed border-border text-muted-foreground hover:border-accent hover:text-accent transition-colors">
-                  <Upload className="h-6 w-6" />
-                  <span className="text-xs mt-1">{t("provider.listings.addImage")}</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {createStep === 4 && (
-            <div className="space-y-3">
               <p className="text-xs text-muted-foreground">{t("provider.listings.featuresDesc")}</p>
               <div className="grid grid-cols-2 gap-2">
                 {featureKeys.map(fKey => {
@@ -213,12 +227,15 @@ export default function ProviderListings() {
             {createStep < steps.length - 1 ? (
               <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setCreateStep(createStep + 1)}>{t("provider.listings.next")}</Button>
             ) : (
-              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={submitListing}>{t("provider.listings.create")}</Button>
+              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={createMutation.isPending} onClick={submitListing}>
+                {createMutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Loome...</> : t("provider.listings.create")}
+              </Button>
             )}
           </div>
         </DialogContent>
       </Dialog>
 
+      {/* Edit dialog */}
       <Dialog open={!!editDialogListing} onOpenChange={(o) => !o && setEditDialogListing(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>Muuda kuulutust</DialogTitle></DialogHeader>
@@ -240,21 +257,26 @@ export default function ProviderListings() {
             <div>
               <label className="text-xs font-medium text-muted-foreground">Staatus</label>
               <select value={editForm.status} onChange={e => setEditForm(p => ({ ...p, status: e.target.value }))} className={inp}>
-                <option value="Aktiivne">Aktiivne</option>
-                <option value="Peatatud">Peatatud</option>
+                <option value="active">Aktiivne</option>
+                <option value="paused">Peatatud</option>
               </select>
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" size="sm" onClick={() => setEditDialogListing(null)}>Tühista</Button>
-              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => {
+              <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={updateMutation.isPending} onClick={() => {
                 if (!editDialogListing) return;
-                setListings(prev => prev.map(l =>
-                  l.id === editDialogListing.id
-                    ? { ...l, title: editForm.title, price: parseInt(editForm.price) || l.price, city: editForm.city, status: editForm.status }
-                    : l
-                ));
-                setEditDialogListing(null);
-              }}>Salvesta</Button>
+                updateMutation.mutate({
+                  id: editDialogListing.id,
+                  data: {
+                    title: editForm.title || editDialogListing.title,
+                    price: editForm.price ? Number(editForm.price) : editDialogListing.price,
+                    city: editForm.city || editDialogListing.city,
+                    status: editForm.status || editDialogListing.status,
+                  },
+                });
+              }}>
+                {updateMutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />...</> : "Salvesta"}
+              </Button>
             </div>
           </div>
         </DialogContent>
