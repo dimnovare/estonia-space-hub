@@ -1,96 +1,181 @@
-import { Download } from "lucide-react";
+import { useState } from "react";
+import { Edit2, Save, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { bankService } from "@/services";
+import { toast } from "sonner";
 
 export default function ProviderBilling() {
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
+  const [editingBank, setEditingBank] = useState(false);
+  const [bankForm, setBankForm] = useState({
+    iban: "", bankAccountName: "", bankName: ""
+  });
 
-  const exportPayoutsCSV = () => {
-    const headers = [t("provider.billing.date"), t("provider.billing.amount"), t("provider.billing.status"), t("provider.billing.reference")];
-    const rows = [
-      ["01.03.2026", "€980", t("provider.billing.paid"), "PAY-2026-003"],
-      ["01.02.2026", "€1,120", t("provider.billing.paid"), "PAY-2026-002"],
-      ["01.01.2026", "€870", t("provider.billing.paid"), "PAY-2026-001"],
-    ];
-    const csv = [headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `valjamaksed_${new Date().toISOString().slice(0, 10)}.csv`; a.click();
-    URL.revokeObjectURL(url);
+  const { data: bankDetails, isLoading: bankLoading } = useQuery({
+    queryKey: ["bank-details"],
+    queryFn: bankService.getBankDetails,
+  });
+
+  const saveBankMutation = useMutation({
+    mutationFn: bankService.updateBankDetails,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bank-details"] });
+      toast.success("Pangaandmed salvestatud");
+      setEditingBank(false);
+    },
+    onError: (err: any) =>
+      toast.error(err.message || "Salvestamine ebaõnnestus"),
+  });
+
+  const startEdit = () => {
+    setBankForm({
+      iban: bankDetails?.iban ?? "",
+      bankAccountName: bankDetails?.bankAccountName ?? "",
+      bankName: bankDetails?.bankName ?? "",
+    });
+    setEditingBank(true);
   };
+
+  const formatIban = (iban?: string) => {
+    if (!iban) return "—";
+    return iban.replace(/\s/g, "").replace(/(.{4})/g, "$1 ").trim();
+  };
+
+  const inp = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">{t("provider.billing.title")}</h1>
-        <Button variant="outline" size="sm" className="gap-1" onClick={exportPayoutsCSV}>
-          <Download className="h-3.5 w-3.5" /> {t("provider.billing.exportCsv")}
-        </Button>
-      </div>
+      <h1 className="font-display text-2xl font-bold">{t("provider.billing.title")}</h1>
+
+      {/* Payout summary cards */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <div className="card-elevated p-5">
           <div className="text-sm text-muted-foreground">{t("provider.billing.nextPayout")}</div>
-          <div className="mt-1 font-display text-2xl font-bold">€1,054</div>
-          <div className="mt-1 text-xs text-muted-foreground">{t("provider.billing.paymentDate")} 01.04.2026</div>
+          <div className="mt-1 font-display text-2xl font-bold">—</div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            Andmed uuenevad pärast esimesi broneeringuid
+          </div>
         </div>
         <div className="card-elevated p-5">
           <div className="text-sm text-muted-foreground">{t("provider.billing.totalPayouts")}</div>
-          <div className="mt-1 font-display text-2xl font-bold">€8,420</div>
+          <div className="mt-1 font-display text-2xl font-bold">€0</div>
           <div className="mt-1 text-xs text-muted-foreground">{t("provider.billing.sinceJoined")}</div>
         </div>
       </div>
 
-      {/* Mobile cards */}
-      <div className="mt-6 space-y-2 sm:hidden">
-        {[
-          { date: "01.03.2026", amount: "€980", ref: "PAY-2026-003" },
-          { date: "01.02.2026", amount: "€1,120", ref: "PAY-2026-002" },
-          { date: "01.01.2026", amount: "€870", ref: "PAY-2026-001" },
-        ].map((p, i) => (
-          <div key={i} className="rounded-xl border border-border p-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">{p.amount}</span>
-              <span className="rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">{t("provider.billing.paid")}</span>
+      {/* Bank details - editable */}
+      <div className="mt-6 rounded-xl border border-border p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold">{t("provider.billing.bankDetails")}</h3>
+          {!editingBank && (
+            <Button variant="ghost" size="sm" className="gap-1 text-xs" onClick={startEdit}>
+              <Edit2 className="h-3 w-3" />
+              Muuda
+            </Button>
+          )}
+        </div>
+
+        {editingBank ? (
+          <div className="mt-3 space-y-3">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">
+                {t("provider.billing.iban")}
+              </label>
+              <input
+                className={inp}
+                placeholder="EE00 0000 0000 0000 0000"
+                value={bankForm.iban}
+                onChange={e => setBankForm(p => ({ ...p, iban: e.target.value }))}
+              />
+              <p className="mt-0.5 text-[10px] text-muted-foreground">
+                Sisestage IBAN tühikutega või ilma
+              </p>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">{p.date} · {p.ref}</p>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">
+                {t("provider.billing.recipient")}
+              </label>
+              <input
+                className={inp}
+                placeholder="Ettevõtte nimi"
+                value={bankForm.bankAccountName}
+                onChange={e => setBankForm(p => ({ ...p, bankAccountName: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">
+                {t("provider.billing.bank")}
+              </label>
+              <input
+                className={inp}
+                placeholder="Swedbank, SEB, LHV..."
+                value={bankForm.bankName}
+                onChange={e => setBankForm(p => ({ ...p, bankName: e.target.value }))}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                className="gap-1"
+                onClick={() => saveBankMutation.mutate(bankForm)}
+                disabled={saveBankMutation.isPending}
+              >
+                {saveBankMutation.isPending
+                  ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Salvestan...</>
+                  : <><Save className="h-3.5 w-3.5" /> Salvesta</>}
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1" onClick={() => setEditingBank(false)}>
+                <X className="h-3.5 w-3.5" />
+                Tühista
+              </Button>
+            </div>
           </div>
-        ))}
-      </div>
-      {/* Desktop table */}
-      <div className="mt-6 hidden sm:block overflow-x-auto rounded-xl border border-border">
-        <table className="w-full text-sm">
-          <thead className="border-b border-border bg-secondary/50">
-            <tr>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("provider.billing.date")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("provider.billing.amount")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("provider.billing.status")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("provider.billing.reference")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[
-              { date: "01.03.2026", amount: "€980", ref: "PAY-2026-003" },
-              { date: "01.02.2026", amount: "€1,120", ref: "PAY-2026-002" },
-              { date: "01.01.2026", amount: "€870", ref: "PAY-2026-001" },
-            ].map((p, i) => (
-              <tr key={i} className="border-b border-border last:border-0">
-                <td className="px-4 py-3">{p.date}</td>
-                <td className="px-4 py-3 font-medium">{p.amount}</td>
-                <td className="px-4 py-3"><span className="rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">{t("provider.billing.paid")}</span></td>
-                <td className="px-4 py-3 text-xs font-mono text-muted-foreground">{p.ref}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        ) : bankLoading ? (
+          <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Laadin...
+          </div>
+        ) : (
+          <div className="mt-3 grid gap-2 sm:grid-cols-2 text-sm">
+            <div>
+              <span className="text-xs text-muted-foreground">{t("provider.billing.iban")}</span>
+              <p className="font-mono">
+                {bankDetails?.iban
+                  ? formatIban(bankDetails.iban)
+                  : <span className="text-muted-foreground italic">Lisage IBAN</span>}
+              </p>
+            </div>
+            <div>
+              <span className="text-xs text-muted-foreground">{t("provider.billing.recipient")}</span>
+              <p>
+                {bankDetails?.bankAccountName ||
+                  <span className="text-muted-foreground italic">—</span>}
+              </p>
+            </div>
+            {bankDetails?.bankName && (
+              <div>
+                <span className="text-xs text-muted-foreground">{t("provider.billing.bank")}</span>
+                <p>{bankDetails.bankName}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {!editingBank && !bankDetails?.iban && !bankLoading && (
+          <div className="mt-3 rounded-lg bg-warning/10 border border-warning/20 p-3 text-xs text-warning">
+            ⚠️ Pangakonto andmed puuduvad. Lisage IBAN, et saada väljamakseid.
+          </div>
+        )}
       </div>
 
-      <div className="mt-6 rounded-xl border border-border p-4">
-        <h3 className="text-sm font-semibold">{t("provider.billing.bankDetails")}</h3>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2 text-sm">
-          <div><span className="text-xs text-muted-foreground">{t("provider.billing.iban")}</span><p className="font-mono">EE38 2200 2210 XXXX XXXX</p></div>
-          <div><span className="text-xs text-muted-foreground">{t("provider.billing.recipient")}</span><p>Laobox OÜ</p></div>
-        </div>
+      {/* Empty payouts state */}
+      <div className="mt-6 rounded-xl border border-border p-8 text-center">
+        <p className="text-sm text-muted-foreground">
+          Väljamaksete ajalugu ilmub siia pärast esimesi broneeringuid
+        </p>
       </div>
     </div>
   );
