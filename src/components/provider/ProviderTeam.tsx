@@ -35,20 +35,20 @@ export default function ProviderTeam() {
       <div className="mt-6 space-y-3">
         {members.map(m => (
           <div key={m.id} className="flex items-center justify-between rounded-xl border border-border p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-sm">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-sm">
                 {m.name.split(" ").map(n => n[0]).join("")}
               </div>
-              <div>
-                <p className="text-sm font-medium">{m.name}</p>
-                <p className="text-xs text-muted-foreground">{m.email}</p>
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">{m.name}</p>
+                <p className="text-xs text-muted-foreground truncate">{m.email}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col items-end gap-1.5 sm:flex-row sm:items-center sm:gap-3 shrink-0 ml-2">
               <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium">{m.role}</span>
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${m.status === t("provider.team.active") ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>{m.status}</span>
               {m.role !== t("provider.team.owner") && (
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10" onClick={() => removeMember(m.id)}>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10 shrink-0" onClick={() => removeMember(m.id)}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               )}
