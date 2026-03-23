@@ -28,6 +28,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
   const Icon = typeIcons[listing.type];
   const detailPath = `/${listing.type}/${listing.id}`;
   const { t } = useLanguage();
+  const { isFavorite, toggle } = useFavorites();
 
   return (
     <Link to={detailPath} className="card-elevated group block overflow-hidden">
