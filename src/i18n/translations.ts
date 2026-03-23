@@ -33,7 +33,8 @@ const translations: Record<Language, Record<string, string>> = {
     // Hero
     "hero.title": "Leia laopinda, kolimist ja logistikat",
     "hero.titleHighlight": "ühest kohast",
-    "hero.subtitle": "Laopinnast kolimiseni — kõik ühest kohast.",
+    "hero.subtitle": "Me läbirääkisime partneritega — sinu hind on 10–20% väiksem.",
+    "trust.title": "Parim hind ilma helistamiseta",
     "hero.search": "Otsi",
     "hero.searchPlaceholder": "Sisesta aadress või linn...",
     "hero.listSpace": "Lisa oma pind →",
@@ -838,7 +839,8 @@ const translations: Record<Language, Record<string, string>> = {
 
     "hero.title": "Find storage, moving, and logistics",
     "hero.titleHighlight": "in one place",
-    "hero.subtitle": "From storage to moving — all in one.",
+    "hero.subtitle": "We negotiated partner rates — your price is 10–20% lower.",
+    "trust.title": "Best price without the phone calls",
     "hero.search": "Search",
     "hero.searchPlaceholder": "Enter address or city...",
     "hero.listSpace": "List your space →",
@@ -1615,7 +1617,8 @@ const translations: Record<Language, Record<string, string>> = {
 
     "hero.title": "Найдите склад, переезд и логистику",
     "hero.titleHighlight": "в одном месте",
-    "hero.subtitle": "От склада до переезда — всё в одном месте.",
+    "hero.subtitle": "Мы договорились с партнёрами — ваша цена на 10–20% ниже.",
+    "trust.title": "Лучшая цена без звонков",
     "hero.search": "Поиск",
     "hero.searchPlaceholder": "Введите адрес или город...",
     "hero.listSpace": "Разместить объект →",

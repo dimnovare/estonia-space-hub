@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { MapPin, Star, Warehouse, Truck, CarFront, Heart } from "lucide-react";
+import { MapPin, Star, Warehouse, Truck, CarFront, Heart, ShieldCheck } from "lucide-react";
 import type { Listing } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -42,6 +42,12 @@ export default function ListingCard({ listing }: { listing: Listing }) {
         {listing.badge && (
           <span className={`absolute left-3 top-3 ${badgeStyles[listing.badge]}`}>
             {t(badgeKeys[listing.badge])}
+          </span>
+        )}
+        {listing.supplierId && (
+          <span className="absolute left-3 bottom-3 inline-flex items-center gap-1 rounded-full bg-card/90 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-success">
+            <ShieldCheck className="h-3 w-3" />
+            Kontrollitud
           </span>
         )}
         <button
