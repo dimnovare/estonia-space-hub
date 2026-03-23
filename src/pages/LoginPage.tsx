@@ -38,7 +38,7 @@ export default function LoginPage() {
       await login(data.email, data.password);
       toast.success(t("login.successLogin"));
       navigate(from, { replace: true });
-    } catch { toast.error("Login failed"); }
+    } catch (err: any) { toast.error(err.message || t("login.error")); }
     setLoading(false);
   };
 
@@ -48,7 +48,7 @@ export default function LoginPage() {
       await authRegister(data.name, data.email, data.password);
       toast.success(t("login.successRegister"));
       navigate(from, { replace: true });
-    } catch { toast.error("Registration failed"); }
+    } catch (err: any) { toast.error(err.message || t("login.registerError")); }
     setLoading(false);
   };
 

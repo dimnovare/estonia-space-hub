@@ -106,13 +106,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = useCallback(async (email: string, password: string) => {
-    const res = await apiClient.post<AuthResponse>("/auth/login", { email, password });
-    persist(normalizeUser(res.user), res.accessToken);
+    try {
+      const res = await apiClient.post<AuthResponse>("/auth/login", { email, password });
+      persist(normalizeUser(res.user), res.accessToken);
+    } catch (err: any) {
+      throw new Error(err.message || "Sisselogimine ebaõnnestus");
+    }
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string) => {
-    const res = await apiClient.post<AuthResponse>("/auth/register", { name, email, password, confirmPassword: password });
-    persist(normalizeUser(res.user), res.accessToken);
+    try {
+      const res = await apiClient.post<AuthResponse>("/auth/register", { name, email, password, confirmPassword: password });
+      persist(normalizeUser(res.user), res.accessToken);
+    } catch (err: any) {
+      throw new Error(err.message || "Registreerimine ebaõnnestus");
+    }
   }, []);
 
   const loginWithGoogle = useCallback(async () => {

@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { BrowserRouter, Route, Routes, useLocation, Outlet } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -31,7 +32,22 @@ import CookiePage from "@/pages/CookiePage";
 import NotFound from "@/pages/NotFound";
 import { useEffect } from "react";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: (failureCount, error: any) => {
+        if ([401, 403, 404].includes(error?.status)) return false;
+        return failureCount < 2;
+      },
+      staleTime: 30_000,
+    },
+    mutations: {
+      onError: (error: any) => {
+        toast.error(error?.message || "Midagi läks valesti");
+      },
+    },
+  },
+});
 
 function ScrollToTop() {
   const { pathname } = useLocation();
