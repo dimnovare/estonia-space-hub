@@ -220,7 +220,21 @@ export const routingRuleService = {
   },
 };
 
+// ─── Auth Service ───────────────────────────────────────────────────────────────
+export const authService = {
+  async forgotPassword(email: string): Promise<void> {
+    await apiClient.post("/auth/forgot-password", { email });
+  },
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    await apiClient.post("/auth/reset-password", { token, newPassword });
+  },
+};
+
 export type {
+  User, Supplier, Order, Booking, Notification, Invoice, Message,
+  AuditLogEntry, OrderStatus, PartnerIntegrationSettings, OrderRoutingRule,
+  Listing, ListingFilters, PaginatedResponse, CreateBookingInput,
+};
   User, Supplier, Order, Booking, Notification, Invoice, Message,
   AuditLogEntry, OrderStatus, PartnerIntegrationSettings, OrderRoutingRule,
   Listing, ListingFilters, PaginatedResponse, CreateBookingInput,
