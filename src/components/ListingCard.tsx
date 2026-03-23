@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
-import { MapPin, Star, Warehouse, Truck, CarFront } from "lucide-react";
+import { MapPin, Star, Warehouse, Truck, CarFront, Heart } from "lucide-react";
 import type { Listing } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useFavorites } from "@/hooks/useFavorites";
 
 const badgeStyles: Record<string, string> = {
   cheapest: "badge-cheapest",
@@ -27,6 +28,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
   const Icon = typeIcons[listing.type];
   const detailPath = `/${listing.type}/${listing.id}`;
   const { t } = useLanguage();
+  const { isFavorite, toggle } = useFavorites();
 
   return (
     <Link to={detailPath} className="card-elevated group block overflow-hidden">
@@ -42,6 +44,13 @@ export default function ListingCard({ listing }: { listing: Listing }) {
             {t(badgeKeys[listing.badge])}
           </span>
         )}
+        <button
+          onClick={e => { e.preventDefault(); e.stopPropagation(); toggle(listing.id); }}
+          className={`absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full transition-colors ${isFavorite(listing.id) ? "bg-white text-red-500" : "bg-card/80 text-muted-foreground hover:text-red-400"}`}
+          title={isFavorite(listing.id) ? "Eemalda lemmikutest" : "Lisa lemmikutesse"}
+        >
+          <Heart className={`h-4 w-4 ${isFavorite(listing.id) ? "fill-current" : ""}`} />
+        </button>
         <div className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-card/90 backdrop-blur-sm">
           <Icon className="h-4 w-4 text-foreground" />
         </div>

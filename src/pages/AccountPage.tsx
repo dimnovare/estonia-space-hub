@@ -26,6 +26,9 @@ import type { Booking, BookingStatus } from "@/services/types";
 import type { Invoice, Message } from "@/services/types";
 import { SkeletonList } from "@/components/SkeletonCard";
 import { invoiceService } from "@/services";
+import { useFavorites } from "@/hooks/useFavorites";
+import { useAllListings } from "@/hooks/queries";
+import ListingCard from "@/components/ListingCard";
 
 const statusConfig: Record<BookingStatus, { label: string; color: string; icon: typeof Clock }> = {
   pending: { label: "Ootel", color: "bg-warning/10 text-warning", icon: Clock },
@@ -436,16 +439,30 @@ function AccountMessages() {
 
 function AccountFavorites() {
   const { t } = useLanguage();
+  const { favorites, toggle } = useFavorites();
+  const { data: allResult } = useAllListings();
+  const allListings = allResult?.data || [];
+  const favListings = allListings.filter(l => favorites.includes(l.id));
+
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">{t("account.favorites.title")}</h1>
-      <div className="py-16 text-center">
-        <Heart className="mx-auto h-12 w-12 text-muted-foreground/20" />
-        <p className="mt-4 text-sm text-muted-foreground">{t("account.favorites.empty")}</p>
-        <Link to="/search">
-          <Button className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90">{t("account.favorites.cta")}</Button>
-        </Link>
-      </div>
+      {favListings.length === 0 ? (
+        <div className="py-16 text-center">
+          <Heart className="mx-auto h-12 w-12 text-muted-foreground/20" />
+          <p className="mt-4 text-sm font-medium">{t("account.favorites.empty")}</p>
+          <p className="mt-1 text-xs text-muted-foreground">Vajuta kuulutusel südameikooni, et lisada lemmikutesse.</p>
+          <Link to="/search">
+            <Button className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90">{t("account.favorites.cta")}</Button>
+          </Link>
+        </div>
+      ) : (
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {favListings.map(listing => (
+            <ListingCard key={listing.id} listing={listing} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
