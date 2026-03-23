@@ -30,6 +30,7 @@ import TermsPage from "@/pages/TermsPage";
 import PrivacyPage from "@/pages/PrivacyPage";
 import CookiePage from "@/pages/CookiePage";
 import NotFound from "@/pages/NotFound";
+import BookingRedirect from "@/pages/BookingRedirect";
 import { useEffect } from "react";
 
 const queryClient = new QueryClient({
@@ -79,6 +80,7 @@ function AppContent() {
           <Route path="/moving/:id" element={<MovingDetail />} />
           <Route path="/trailer/:id" element={<TrailerDetail />} />
           <Route path="/book" element={<BookingPage />} />
+          <Route path="/bookings/:id" element={<ProtectedRoute><BookingRedirect /></ProtectedRoute>} />
           <Route path="/provider" element={<ProviderPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />

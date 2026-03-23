@@ -13,7 +13,7 @@ const DEFAULT_SETTINGS = {
   currency:               "EUR",
   defaultPartnerDiscount: "20",
   defaultClientDiscount:  "10",
-  defaultVatRate:         "22",
+  defaultVatRate:         "24",
   emailNotifications:     "true",
   maintenanceMode:        "false",
   autoApproveListings:    "false",
@@ -182,7 +182,7 @@ export default function AdminSettings() {
               <input type="number" min="0" max="30" className={inp}
                 value={settings.defaultVatRate}
                 onChange={e => set("defaultVatRate", e.target.value)} />
-              <p className="mt-0.5 text-[10px] text-muted-foreground">Eestis 22%. 0 = KM ei kohaldu</p>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">Eestis 24% (alates 2024). 0 = KM ei kohaldu</p>
             </div>
           </div>
 

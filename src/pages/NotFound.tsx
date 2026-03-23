@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Home, ArrowLeft, Search } from "lucide-react";
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 

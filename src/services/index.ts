@@ -230,6 +230,22 @@ export const authService = {
   },
 };
 
+// ─── Bank Service ───────────────────────────────────────────────────────────────
+export interface BankDetails {
+  iban?: string;
+  bankAccountName?: string;
+  bankName?: string;
+}
+
+export const bankService = {
+  async getBankDetails(): Promise<BankDetails> {
+    return apiClient.get<BankDetails>("/admin/my-bank-details");
+  },
+  async updateBankDetails(data: BankDetails): Promise<void> {
+    await apiClient.patch("/admin/my-bank-details", data);
+  },
+};
+
 // ─── Security Service ──────────────────────────────────────────────────────────
 export const securityService = {
   async changePassword(
