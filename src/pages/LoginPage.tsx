@@ -270,6 +270,16 @@ export default function LoginPage() {
               </div>
               {registerForm.formState.errors.confirmPassword && <p className="text-xs text-destructive">{registerForm.formState.errors.confirmPassword.message}</p>}
             </div>
+            {inviteCodeRequired && (
+              <div className="space-y-2">
+                <Label htmlFor="reg-invite">{t("login.inviteCode")}</Label>
+                <div className="relative">
+                  <KeyRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input id="reg-invite" placeholder="RUUMLY2026" {...registerForm.register("inviteCode")} className="pl-10" />
+                </div>
+                <p className="text-xs text-muted-foreground">{t("login.inviteCodeHint")}</p>
+              </div>
+            )}
             <Button type="submit" className="w-full bg-accent py-5 text-accent-foreground hover:bg-accent/90" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {t("login.register")}
