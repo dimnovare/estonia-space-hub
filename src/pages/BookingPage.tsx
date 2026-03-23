@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListing, useCreateBooking, useSuppliers } from "@/hooks/queries";
@@ -18,9 +18,13 @@ export default function BookingPage() {
   const listingId = params.get("listing");
   const { data: listing } = useListing(listingId || "");
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const { data: suppliers = [] } = useSuppliers();
   const supplier = listing ? suppliers.find(s => s.id === listing.supplierId) : undefined;
   const createBooking = useCreateBooking();
+
+  // Auth check for deferred login
+  const isAuthenticated = !!localStorage.getItem("ruumly-token");
 
   const steps = [t("booking.details"), t("booking.extras"), t("booking.contact"), t("booking.payment"), t("booking.review")];
   const extras = [
@@ -75,6 +79,26 @@ export default function BookingPage() {
     } else if (step < steps.length - 1) {
       setStep(step + 1);
     } else {
+      // Require auth at final submission
+      if (!isAuthenticated) {
+        sessionStorage.setItem("pendingBooking", JSON.stringify({
+          listingId,
+          step,
+          date: detailsForm.getValues("date"),
+          duration: detailsForm.getValues("duration"),
+          extras: selectedExtras,
+          contact: {
+            name: contactForm.getValues("name"),
+            email: contactForm.getValues("email"),
+            phone: contactForm.getValues("phone"),
+            notes: contactForm.getValues("notes"),
+          },
+          paymentMethod,
+        }));
+        navigate("/login", { state: { from: `/book?listing=${listingId}` } });
+        return;
+      }
+
       // Submit booking via mutation
       createBooking.mutate({
         listingId: listingId!,
@@ -90,6 +114,28 @@ export default function BookingPage() {
       setSubmitted(true);
     }
   };
+
+  // Restore pending booking after login
+  useEffect(() => {
+    const pending = sessionStorage.getItem("pendingBooking");
+    if (pending && isAuthenticated) {
+      try {
+        const data = JSON.parse(pending);
+        if (data.listingId === listingId) {
+          detailsForm.setValue("date", data.date);
+          detailsForm.setValue("duration", data.duration);
+          setSelectedExtras(data.extras ?? []);
+          contactForm.setValue("name", data.contact?.name ?? "");
+          contactForm.setValue("email", data.contact?.email ?? "");
+          contactForm.setValue("phone", data.contact?.phone ?? "");
+          contactForm.setValue("notes", data.contact?.notes ?? "");
+          setPaymentMethod(data.paymentMethod ?? "bank");
+          setStep(4);
+          sessionStorage.removeItem("pendingBooking");
+        }
+      } catch {}
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (!submitted) return;
