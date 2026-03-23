@@ -383,7 +383,7 @@ function AccountMessages() {
       <p className="mt-1 text-sm text-muted-foreground">Suhtlus broneeringute kohta partnerite ja toega.</p>
       <div className="mt-6 grid gap-4 lg:grid-cols-[280px_1fr]">
         {/* Conversation list */}
-        <div className="space-y-1 rounded-xl border border-border p-2">
+        <div className={`space-y-1 rounded-xl border border-border p-2 lg:block ${selectedBooking ? 'hidden' : 'block'}`}>
           {bookingIds.length === 0 ? (
             <div className="flex flex-col items-center py-8 text-center"><MessageSquare className="h-8 w-8 text-muted-foreground/30" /><p className="mt-2 text-xs text-muted-foreground">Sõnumeid pole veel.</p></div>
           ) : bookingIds.map(bid => {
@@ -405,11 +405,19 @@ function AccountMessages() {
         </div>
 
         {/* Chat area */}
-        <div className="rounded-xl border border-border">
+        <div className={`rounded-xl border border-border ${selectedBooking ? 'block' : 'hidden lg:block'}`}>
           {!selectedBooking ? (
             <div className="flex flex-col items-center justify-center py-12 sm:py-20"><MessageSquare className="h-10 w-10 text-muted-foreground/20" /><p className="mt-3 text-sm text-muted-foreground">Valige vestlus.</p></div>
           ) : (
-            <div className="flex h-[500px] flex-col">
+            <div className="flex flex-col h-[calc(100vh-16rem)] lg:h-[500px]">
+              {selectedBooking && (
+                <button
+                  onClick={() => setSelectedBooking(null)}
+                  className="flex items-center gap-1.5 px-3 pt-3 text-xs text-muted-foreground hover:text-foreground lg:hidden"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" /> Tagasi vestlustesse
+                </button>
+              )}
               <div className="border-b border-border p-3">
                 <p className="text-sm font-semibold">{booking?.listingTitle}</p>
                 <p className="text-xs text-muted-foreground">{booking?.provider} · {booking?.id}</p>
@@ -425,8 +433,8 @@ function AccountMessages() {
                   </div>
                 ))}
               </div>
-              <div className="border-t border-border p-3 flex gap-2">
-                <input value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} placeholder="Kirjuta sõnum..." className="flex-1 rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+              <div className="border-t border-border p-3 flex gap-2 overflow-hidden">
+                <input value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} placeholder="Kirjuta sõnum..." className="flex-1 min-w-0 rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                 <Button size="sm" onClick={sendMessage} disabled={!newMsg.trim()} className="bg-accent text-accent-foreground"><Send className="h-4 w-4" /></Button>
               </div>
             </div>
