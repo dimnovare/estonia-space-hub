@@ -228,7 +228,7 @@ function AccountOverview({ onNavigate }: { onNavigate: (tab: string) => void }) 
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
         <button onClick={() => onNavigate("messages")} className="flex items-center justify-between rounded-xl border border-border p-4 hover:bg-secondary transition-colors">
           <span className="flex items-center gap-2 text-sm font-medium"><MessageSquare className="h-4 w-4 text-accent" /> {t("account.messages")}</span>
-          <span className="text-sm text-muted-foreground">{MOCK_MESSAGES.filter(m => !m.read && m.from !== "customer").length} {t("account.unread")}</span>
+          <span className="text-sm text-muted-foreground">0 {t("account.unread")}</span>
         </button>
         <button onClick={() => onNavigate("bookings")} className="flex items-center justify-between rounded-xl border border-border p-4 hover:bg-secondary transition-colors">
           <span className="flex items-center gap-2 text-sm font-medium"><Package className="h-4 w-4 text-accent" /> {t("account.bookings")}</span>
