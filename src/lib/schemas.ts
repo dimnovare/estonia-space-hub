@@ -10,6 +10,7 @@ export const registerSchema = z.object({
   email: z.string().email("Vigane e-posti aadress"),
   password: z.string().min(8, "Parool peab olema vähemalt 8 tähemärki"),
   confirmPassword: z.string(),
+  inviteCode: z.string().optional(),
 }).refine(d => d.password === d.confirmPassword, {
   message: "Paroolid ei kattu", path: ["confirmPassword"],
 });

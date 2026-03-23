@@ -42,7 +42,7 @@ interface AuthContextType {
   isInitializing: boolean;
   role: UserRole;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, inviteCode?: string) => Promise<void>;
   loginWithGoogle: (credential: string) => Promise<void>;
   logout: () => void;
   switchRole: (role: UserRole) => void;
@@ -124,9 +124,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const register = useCallback(async (name: string, email: string, password: string) => {
+  const register = useCallback(async (name: string, email: string, password: string, inviteCode?: string) => {
     try {
-      const res = await apiClient.post<AuthResponse>("/auth/register", { name, email, password, confirmPassword: password });
+      const res = await apiClient.post<AuthResponse>("/auth/register", { name, email, password, confirmPassword: password, inviteCode });
       persist(normalizeUser(res.user), res.accessToken, res.refreshToken);
     } catch (err: any) {
       throw new Error(err.message || "Registreerimine ebaõnnestus");

@@ -12,6 +12,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, registerSchema, type LoginForm, type RegisterForm } from "@/lib/schemas";
 import { authService } from "@/services";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 type AuthView = "login" | "register" | "forgot" | "forgot-sent" | "reset";
 
@@ -27,6 +28,7 @@ export default function LoginPage() {
   const [resetLoading, setResetLoading] = useState(false);
   const { t } = useLanguage();
   const { login, register: authRegister, loginWithGoogle, isAuthenticated } = useAuth();
+  const { inviteCodeRequired } = usePlatformSettings();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from || "/account";
@@ -63,7 +65,7 @@ export default function LoginPage() {
   const handleRegister = async (data: RegisterForm) => {
     setLoading(true);
     try {
-      await authRegister(data.name, data.email, data.password);
+      await authRegister(data.name, data.email, data.password, data.inviteCode);
       toast.success(t("login.successRegister"));
       navigate(from, { replace: true });
     } catch (err: any) { toast.error(err.message || t("login.registerError")); }
@@ -268,6 +270,16 @@ export default function LoginPage() {
               </div>
               {registerForm.formState.errors.confirmPassword && <p className="text-xs text-destructive">{registerForm.formState.errors.confirmPassword.message}</p>}
             </div>
+            {inviteCodeRequired && (
+              <div className="space-y-2">
+                <Label htmlFor="reg-invite">{t("login.inviteCode")}</Label>
+                <div className="relative">
+                  <KeyRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input id="reg-invite" placeholder="RUUMLY2026" {...registerForm.register("inviteCode")} className="pl-10" />
+                </div>
+                <p className="text-xs text-muted-foreground">{t("login.inviteCodeHint")}</p>
+              </div>
+            )}
             <Button type="submit" className="w-full bg-accent py-5 text-accent-foreground hover:bg-accent/90" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {t("login.register")}
