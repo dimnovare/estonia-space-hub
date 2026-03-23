@@ -51,16 +51,20 @@ export default function BookingPage() {
   const toggleExtra = (id: string) =>
     setSelectedExtras((prev) => (prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]));
 
-  const pricingResult = listing
-    ? calculatePricing(listing.priceFrom, selectedExtras)
-    : null;
+  // Use listing's effective client discount if available, otherwise default 5%
+  const clientDiscount = (listing as any)?.clientDiscountRateOverride
+    ?? (listing as any)?.clientDiscountRate
+    ?? 5;
 
-  const publicPrice = pricingResult?.publicPrice ?? 0;
-  const ourPrice    = pricingResult?.platformPrice ?? 0;
-  const savings     = pricingResult?.savings ?? 0;
-  const extrasTotal = pricingResult?.extrasTotal ?? 0;
-  const pricing     = pricingResult
-    ? { total: pricingResult.total, extrasTotal }
+  const publicPrice = listing ? listing.priceFrom : 0;
+  const ourPrice    = listing
+    ? Math.round(publicPrice * (1 - clientDiscount / 100))
+    : 0;
+  const savings     = publicPrice - ourPrice;
+  const extrasTotal = selectedExtras.reduce(
+    (s, id) => s + (EXTRAS_PRICES[id as keyof typeof EXTRAS_PRICES] || 0), 0);
+  const pricing     = listing
+    ? { total: ourPrice + extrasTotal, extrasTotal }
     : null;
 
   const handleNext = () => {

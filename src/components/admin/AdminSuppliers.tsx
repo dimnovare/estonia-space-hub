@@ -164,6 +164,52 @@ export default function AdminSuppliers() {
                   </div>
                 )}
               </div>
+
+              {/* Discount fields */}
+              <div className="rounded-xl border border-border p-4">
+                <h3 className="text-sm font-semibold mb-3">Allahindlused</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Partneri allahindlus (%)</label>
+                    <input type="number" min="0" max="80"
+                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                      value={(selected as any).partnerDiscountRate ?? 0}
+                      onChange={e => setSelected({ ...selected, partnerDiscountRate: Number(e.target.value) } as any)}
+                    />
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">% mida partner meile annab tema avalikust hinnast</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Kliendi allahindlus (%)</label>
+                    <input type="number" min="0" max="80"
+                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                      value={(selected as any).clientDiscountRate ?? 0}
+                      onChange={e => setSelected({ ...selected, clientDiscountRate: Number(e.target.value) } as any)}
+                    />
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">% mida klient säästab vs avalik hind</p>
+                  </div>
+                </div>
+                {((selected as any).partnerDiscountRate > 0 || (selected as any).clientDiscountRate > 0) && (
+                  <div className="mt-3 rounded-lg bg-accent/5 border border-accent/20 p-3 text-xs">
+                    <p className="font-semibold text-accent mb-1">Marginaali eelvaade</p>
+                    <p className="text-muted-foreground">
+                      Partneri allahindlus: <strong>{(selected as any).partnerDiscountRate}%</strong>
+                      {" · "}
+                      Kliendi allahindlus: <strong>{(selected as any).clientDiscountRate}%</strong>
+                      {" · "}
+                      Ruumly marginaal: <strong className="text-success">
+                        {Math.max(0, ((selected as any).partnerDiscountRate || 0) - ((selected as any).clientDiscountRate || 0))}%
+                      </strong>
+                    </p>
+                    <p className="mt-1 text-muted-foreground">
+                      Näide: 100€ teenus → partner arvestab meile{" "}
+                      {100 - ((selected as any).partnerDiscountRate || 0)}€, klient maksab{" "}
+                      {100 - ((selected as any).clientDiscountRate || 0)}€, marginaal{" "}
+                      {Math.max(0, ((selected as any).partnerDiscountRate || 0) - ((selected as any).clientDiscountRate || 0))}€
+                    </p>
+                  </div>
+                )}
+              </div>
+
               <div className="grid grid-cols-3 gap-3">
                 <div className="rounded-lg bg-secondary/50 p-3 text-center"><p className="text-xs text-muted-foreground">{t("admin.listingsCount")}</p><p className="text-lg font-bold">{selected.listingCount}</p></div>
                 <div className="rounded-lg bg-secondary/50 p-3 text-center"><p className="text-xs text-muted-foreground">{t("admin.ordersCount")}</p><p className="text-lg font-bold">{selected.ordersTotal}</p></div>
