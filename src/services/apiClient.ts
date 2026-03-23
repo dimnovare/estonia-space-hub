@@ -42,6 +42,17 @@ class ApiClient {
       (err as any).status = response.status;
       throw err;
     }
+    // 204 No Content or empty body — return undefined safely
+    const contentLength = response.headers.get("content-length");
+    const contentType   = response.headers.get("content-type") ?? "";
+
+    if (
+      response.status === 204 ||
+      contentLength === "0" ||
+      !contentType.includes("application/json")
+    ) {
+      return undefined as unknown as T;
+    }
     return response.json();
   }
 
