@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   LayoutDashboard, List, MessageSquare, Settings, Users, FileText,
@@ -18,6 +18,7 @@ import AdminAudit from "@/components/admin/AdminAudit";
 import AdminSettings from "@/components/admin/AdminSettings";
 
 export default function AdminPage() {
+  useEffect(() => { document.title = "Admin — Ruumly"; }, []);
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "dashboard";
   const setActiveTab = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("tab", id); return n; }, { replace: true });

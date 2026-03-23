@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
@@ -52,6 +52,7 @@ function useSidebarLinks() {
 }
 
 export default function ProviderDashboardPage() {
+  useEffect(() => { document.title = "Partneri paneel — Ruumly"; }, []);
   const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get("ptab") || "overview";

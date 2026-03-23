@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, Star, MapPin, ChevronDown, ChevronUp, Users, CheckCircle, TrendingUp, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
 export default function HomePage() {
+  useEffect(() => { document.title = "Ruumly — Laopinnad, kolimine ja haagised"; }, []);
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");

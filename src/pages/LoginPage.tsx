@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, Loader2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { loginSchema, registerSchema, type LoginForm, type RegisterForm } from "
 type AuthView = "login" | "register" | "forgot" | "forgot-sent" | "reset";
 
 export default function LoginPage() {
+  useEffect(() => { document.title = "Sisselogimine — Ruumly"; }, []);
   const [showPassword, setShowPassword] = useState(false);
   const [view, setView] = useState<AuthView>("login");
   const [loading, setLoading] = useState(false);
