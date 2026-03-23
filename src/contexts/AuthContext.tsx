@@ -75,7 +75,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const token = localStorage.getItem("ruumly-token");
       if (!token) { setIsInitializing(false); return; }
       try {
-        const raw = await apiClient.get<AuthResponse["user"]>("/auth/me");
+        // Use raw fetch so a 401 doesn't trigger the apiClient redirect loop
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL || ""}/auth/me`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (!res.ok) throw new Error("invalid token");
+        const raw: AuthResponse["user"] = await res.json();
         const normalized = normalizeUser(raw);
         setUser(normalized);
         localStorage.setItem("ruumly-auth", JSON.stringify(normalized));

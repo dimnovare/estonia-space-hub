@@ -20,6 +20,7 @@ class ApiClient {
     });
     if (response.status === 401) {
       localStorage.removeItem("ruumly-auth");
+      localStorage.removeItem("ruumly-token");
       window.location.href = "/login";
       throw new Error("Unauthorized");
     }
