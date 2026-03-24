@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { listingService, bookingService, orderService, supplierService, userService, notificationService, invoiceService, messageService, auditService, integrationSettingsService, routingRuleService } from "@/services";
 import type { ListingFilters, CreateBookingInput } from "@/services/types";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function useListings(filters?: ListingFilters) {
   return useQuery({ queryKey: ["listings", filters], queryFn: () => listingService.search(filters) });
@@ -20,7 +21,8 @@ export function useFeaturedListings() {
 }
 
 export function useBookings() {
-  return useQuery({ queryKey: ["bookings"], queryFn: () => bookingService.getAll() });
+  const { isAuthenticated } = useAuth();
+  return useQuery({ queryKey: ["bookings"], queryFn: () => bookingService.getAll(), enabled: isAuthenticated, staleTime: 30_000 });
 }
 
 export function useCreateBooking() {
@@ -38,37 +40,46 @@ export function useCreateBooking() {
 }
 
 export function useOrders() {
-  return useQuery({ queryKey: ["orders"], queryFn: () => orderService.getAll() });
+  const { isAuthenticated } = useAuth();
+  return useQuery({ queryKey: ["orders"], queryFn: () => orderService.getAll(), enabled: isAuthenticated, staleTime: 15_000 });
 }
 
 export function useSuppliers() {
-  return useQuery({ queryKey: ["suppliers"], queryFn: () => supplierService.getAll() });
+  const { isAuthenticated, role } = useAuth();
+  return useQuery({ queryKey: ["suppliers"], queryFn: () => supplierService.getAll(), enabled: isAuthenticated && (role === "admin" || role === "provider"), staleTime: 30_000 });
 }
 
 export function useUsers() {
-  return useQuery({ queryKey: ["users"], queryFn: () => userService.getAll() });
+  const { isAuthenticated, role } = useAuth();
+  return useQuery({ queryKey: ["users"], queryFn: () => userService.getAll(), enabled: isAuthenticated && role === "admin", staleTime: 30_000 });
 }
 
 export function useNotifications() {
-  return useQuery({ queryKey: ["notifications"], queryFn: () => notificationService.getAll() });
+  const { isAuthenticated } = useAuth();
+  return useQuery({ queryKey: ["notifications"], queryFn: () => notificationService.getAll(), enabled: isAuthenticated, staleTime: 30_000 });
 }
 
 export function useInvoices() {
-  return useQuery({ queryKey: ["invoices"], queryFn: () => invoiceService.getAll() });
+  const { isAuthenticated } = useAuth();
+  return useQuery({ queryKey: ["invoices"], queryFn: () => invoiceService.getAll(), enabled: isAuthenticated, staleTime: 30_000 });
 }
 
 export function useMessages(bookingId: string) {
-  return useQuery({ queryKey: ["messages", bookingId], queryFn: () => messageService.getByBookingId(bookingId), enabled: !!bookingId });
+  const { isAuthenticated } = useAuth();
+  return useQuery({ queryKey: ["messages", bookingId], queryFn: () => messageService.getByBookingId(bookingId), enabled: isAuthenticated && !!bookingId });
 }
 
 export function useAuditLog() {
-  return useQuery({ queryKey: ["audit-log"], queryFn: () => auditService.getAll() });
+  const { isAuthenticated, role } = useAuth();
+  return useQuery({ queryKey: ["audit-log"], queryFn: () => auditService.getAll(), enabled: isAuthenticated && role === "admin", staleTime: 30_000 });
 }
 
 export function useIntegrationSettings() {
-  return useQuery({ queryKey: ["integration-settings"], queryFn: () => integrationSettingsService.getAll() });
+  const { isAuthenticated, role } = useAuth();
+  return useQuery({ queryKey: ["integration-settings"], queryFn: () => integrationSettingsService.getAll(), enabled: isAuthenticated && role === "admin", staleTime: 30_000 });
 }
 
 export function useRoutingRules() {
-  return useQuery({ queryKey: ["routing-rules"], queryFn: () => routingRuleService.getAll() });
+  const { isAuthenticated, role } = useAuth();
+  return useQuery({ queryKey: ["routing-rules"], queryFn: () => routingRuleService.getAll(), enabled: isAuthenticated && role === "admin", staleTime: 30_000 });
 }

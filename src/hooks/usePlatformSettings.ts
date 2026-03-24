@@ -15,8 +15,8 @@ export function usePlatformSettings() {
   const { data } = useQuery({
     queryKey:  ["platform-settings-public"],
     queryFn:   publicSettingsService.getPublic,
-    staleTime: 5 * 60 * 1000,
-    gcTime:    10 * 60 * 1000,
+    staleTime: 10_000,
+    gcTime:    30_000,
   });
   return { ...FALLBACK, ...data };
 }
