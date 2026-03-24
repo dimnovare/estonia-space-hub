@@ -222,11 +222,14 @@ export const routingRuleService = {
 
 // ─── Auth Service ───────────────────────────────────────────────────────────────
 export const authService = {
-  async forgotPassword(email: string): Promise<void> {
-    await apiClient.post("/auth/forgot-password", { email });
+  async forgotPassword(email: string, language?: string): Promise<void> {
+    await apiClient.post("/auth/forgot-password", { email, language: language ?? "et" });
   },
   async resetPassword(token: string, newPassword: string): Promise<void> {
     await apiClient.post("/auth/reset-password", { token, newPassword });
+  },
+  async updateLanguage(language: string): Promise<void> {
+    await apiClient.patch("/auth/language", { language });
   },
 };
 

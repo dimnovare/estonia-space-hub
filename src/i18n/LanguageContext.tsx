@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 import translations, { type Language } from "./translations";
+import { authService } from "@/services";
 
 interface LanguageContextType {
   language: Language;
@@ -23,6 +24,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const setLanguage = useCallback((lang: Language) => {
     setLang(lang);
     try { localStorage.setItem("ruumly-lang", lang); } catch {}
+    // If user is logged in, persist preference on backend
+    const token = localStorage.getItem("ruumly-token");
+    if (token) {
+      authService.updateLanguage(lang).catch(() => {});
+    }
   }, []);
 
   const t = useCallback((key: string): string => {

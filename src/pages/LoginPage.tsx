@@ -79,7 +79,8 @@ export default function LoginPage() {
     if (!forgotEmail.trim()) return;
     setForgotLoading(true);
     try {
-      await authService.forgotPassword(forgotEmail.trim());
+      const currentLang = localStorage.getItem("ruumly-lang") ?? "et";
+      await authService.forgotPassword(forgotEmail.trim(), currentLang);
       setView("forgot-sent");
     } catch {
       // Still show sent view for security (don't reveal if email exists)
