@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { LANGUAGES } from "@/i18n/translations";
+import { FlagIcon } from "@/components/FlagIcon";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import ruumlyLogo from "/ruumly-logo.png";
@@ -65,15 +66,19 @@ export default function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value as "et" | "en" | "ru")}
-            className="appearance-none rounded-lg border border-border bg-card px-2 py-1.5 text-xs font-semibold tracking-wide text-foreground focus:outline-none focus:ring-2 focus:ring-accent cursor-pointer"
-          >
+          <div className="flex items-center gap-0.5 rounded-lg border border-border bg-card p-0.5">
             {LANGUAGES.map((lang) => (
-              <option key={lang.code} value={lang.code}>{lang.flag} — {lang.label}</option>
+              <button
+                key={lang.code}
+                onClick={() => setLanguage(lang.code as "et" | "en" | "ru")}
+                className={`flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium transition-colors ${language === lang.code ? "bg-accent/10 text-accent" : "text-muted-foreground hover:text-foreground"}`}
+                title={lang.label}
+              >
+                <FlagIcon lang={lang.code} />
+                <span className="hidden sm:inline uppercase">{lang.code}</span>
+              </button>
             ))}
-          </select>
+          </div>
 
           {isAuthenticated ? (
             <div className="relative">
@@ -162,10 +167,18 @@ export default function Navbar() {
               </Link>
             );
           })}
-          <div className="mt-2 px-3">
-            <select value={language} onChange={(e) => setLanguage(e.target.value as "et" | "en" | "ru")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold tracking-wide focus:outline-none focus:ring-2 focus:ring-accent">
-              {LANGUAGES.map((lang) => (<option key={lang.code} value={lang.code}>{lang.flag} — {lang.label}</option>))}
-            </select>
+          <div className="mt-2 flex items-center gap-1 px-3">
+            {LANGUAGES.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => { setLanguage(lang.code as "et" | "en" | "ru"); }}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${language === lang.code ? "bg-accent/10 text-accent" : "text-muted-foreground hover:text-foreground"}`}
+                title={lang.label}
+              >
+                <FlagIcon lang={lang.code} className="h-4 w-6 rounded-sm" />
+                {lang.code.toUpperCase()}
+              </button>
+            ))}
           </div>
           <div className="mt-2 flex flex-col gap-1.5">
             {isAuthenticated ? (
