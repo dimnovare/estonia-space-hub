@@ -38,7 +38,6 @@ export default function Navbar() {
   const handleLogout = () => {
     logout();
     setUserMenuOpen(false);
-    navigate("/");
   };
 
   const getLinkHref = (link: typeof navLinks[0]) => {
@@ -69,10 +68,10 @@ export default function Navbar() {
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value as "et" | "en" | "ru")}
-            className="appearance-none rounded-lg border border-border bg-card px-2 py-1.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-accent cursor-pointer"
+            className="appearance-none rounded-lg border border-border bg-card px-2 py-1.5 text-xs font-semibold tracking-wide text-foreground focus:outline-none focus:ring-2 focus:ring-accent cursor-pointer"
           >
             {LANGUAGES.map((lang) => (
-              <option key={lang.code} value={lang.code}>{lang.flag} {lang.label}</option>
+              <option key={lang.code} value={lang.code}>{lang.flag} — {lang.label}</option>
             ))}
           </select>
 
@@ -164,8 +163,8 @@ export default function Navbar() {
             );
           })}
           <div className="mt-2 px-3">
-            <select value={language} onChange={(e) => setLanguage(e.target.value as "et" | "en" | "ru")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-accent">
-              {LANGUAGES.map((lang) => (<option key={lang.code} value={lang.code}>{lang.flag} {lang.label}</option>))}
+            <select value={language} onChange={(e) => setLanguage(e.target.value as "et" | "en" | "ru")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold tracking-wide focus:outline-none focus:ring-2 focus:ring-accent">
+              {LANGUAGES.map((lang) => (<option key={lang.code} value={lang.code}>{lang.flag} — {lang.label}</option>))}
             </select>
           </div>
           <div className="mt-2 flex flex-col gap-1.5">

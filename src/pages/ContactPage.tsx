@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Mail, Phone, MapPin, Clock, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 export default function ContactPage() {
   const { t } = useLanguage();
+  const settings = usePlatformSettings();
   const [submitted, setSubmitted] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -34,10 +36,11 @@ export default function ContactPage() {
         <div className="mt-12 grid gap-10 md:grid-cols-3">
           <div className="space-y-6">
             {[
-              { icon: Mail, label: t("contact.email"), value: "info@ruumly.eu" },
-              { icon: Phone, label: t("contact.phone"), value: "+372 5XX XXXX" },
+              { icon: Mail, label: t("contact.email"), value: settings.siteEmail },
+              { icon: Phone, label: t("contact.phone"), value: settings.sitePhone },
               { icon: MapPin, label: t("contact.location"), value: "Tallinn, Eesti" },
-              { icon: Clock, label: t("contact.hours"), value: t("contact.hoursValue") },
+              { icon: Clock, label: t("contact.hours"), value: settings.openHours },
+              ...(settings.openHoursSat ? [{ icon: Clock, label: t("contact.hours") + " (L)", value: settings.openHoursSat }] : []),
             ].map((c, i) => {
               const Icon = c.icon;
               return (

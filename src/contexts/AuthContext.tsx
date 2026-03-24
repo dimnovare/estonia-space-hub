@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiClient } from "@/services/apiClient";
 import type { UserRole } from "@/services/types";
 
@@ -71,6 +72,7 @@ function normalizeUser(raw: AuthResponse["user"]): MockUser {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<MockUser | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const init = async () => {
@@ -148,7 +150,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       apiClient.post("/auth/logout", { refreshToken: refresh }).catch(() => {});
     }
     persist(null);
-  }, []);
+    navigate("/login");
+  }, [navigate]);
 
   const switchRole = useCallback((_role: UserRole) => {
     // Dev-only: not applicable with real auth
