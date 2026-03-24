@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Building, Users, MapPin, Shield, Target, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { SEO } from "@/components/SEO";
 
 export default function AboutPage() {
   const { t } = useLanguage();
@@ -20,6 +21,11 @@ export default function AboutPage() {
 
   return (
     <div>
+      <SEO
+        title="Meist — Ruumly"
+        description="Ruumly on Eesti suurim laopindade ja logistikateenuste platvorm. Meie missioon on muuta laopinna ja logistikateenuste leidmine lihtsamaks."
+        canonical="/about"
+      />
       <section className="hero-gradient py-16 md:py-24">
         <div className="container-wide text-center">
           <h1 className="font-display text-3xl font-bold text-primary-foreground md:text-5xl">{t("about.hero")}</h1>

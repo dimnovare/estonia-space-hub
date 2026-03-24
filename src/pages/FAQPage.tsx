@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { SEO } from "@/components/SEO";
 
 export default function FAQPage() {
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
@@ -43,6 +44,11 @@ export default function FAQPage() {
 
   return (
     <div className="container-wide py-12">
+      <SEO
+        title="KKK — Korduma kippuvad küsimused — Ruumly"
+        description="Vastused levinumatele küsimustele laopindade broneerimise, hindade ja partnerlusega liitumise kohta."
+        canonical="/faq"
+      />
       <h1 className="text-center font-display text-3xl font-bold md:text-4xl">{t("faq.title")}</h1>
       <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">{t("faq.subtitle")}</p>
 

@@ -3,6 +3,7 @@ import { Mail, Phone, MapPin, Clock, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { SEO } from "@/components/SEO";
 
 export default function ContactPage() {
   const { t } = useLanguage();
@@ -29,6 +30,24 @@ export default function ContactPage() {
 
   return (
     <div className="container-wide py-12">
+      <SEO
+        title="Kontakt — Ruumly"
+        description="Võtke meiega ühendust. E-post: info@ruumly.eu. Vastame 24 tunni jooksul."
+        canonical="/contact"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "ContactPage",
+          "name": "Ruumly kontakt",
+          "url": "https://ruumly.eu/contact",
+          "mainEntity": {
+            "@type": "Organization",
+            "name": "Ruumly",
+            "email": "info@ruumly.eu",
+            "url": "https://ruumly.eu",
+            "address": { "@type": "PostalAddress", "addressCountry": "EE", "addressLocality": "Tallinn" }
+          }
+        }}
+      />
       <div className="mx-auto max-w-4xl">
         <h1 className="text-center font-display text-3xl font-bold md:text-4xl">{t("contact.title")}</h1>
         <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">{t("contact.subtitle")}</p>

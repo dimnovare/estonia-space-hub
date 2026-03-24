@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Search, SlidersHorizontal, CheckCircle, MapPin, Shield, Clock, ArrowRight, BadgePercent } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { SEO } from "@/components/SEO";
 
 export default function HowItWorksPage() {
   const { t } = useLanguage();
@@ -21,6 +22,11 @@ export default function HowItWorksPage() {
 
   return (
     <div>
+      <SEO
+        title="Kuidas see töötab — Ruumly"
+        description="Neli lihtsat sammu laopinna, kolimisteenuse või haagise leidmiseks ja broneerimiseks Ruumly kaudu."
+        canonical="/how-it-works"
+      />
       <section className="hero-gradient py-16 md:py-24">
         <div className="container-wide text-center">
           <h1 className="font-display text-3xl font-bold text-primary-foreground md:text-5xl">{t("hiw.title")}</h1>

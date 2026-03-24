@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Check, Warehouse, Truck, CarFront, TrendingUp, Users, Shield, DollarSign, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { SEO } from "@/components/SEO";
 
 export default function ProviderPage() {
   const { t } = useLanguage();
@@ -21,6 +22,11 @@ export default function ProviderPage() {
 
   return (
     <div>
+      <SEO
+        title="Pakkujatele — Lisa oma teenus Ruumly platvormile"
+        description="Jõuage tuhandete klientideni. Lisa oma laopind, kolimisteenus või haagis Ruumly platvormile. Tasuta liitumine, komisjonitasu ainult edukatel broneeringutel."
+        canonical="/provider"
+      />
       {/* Hero */}
       <section className="hero-gradient py-16 md:py-24">
         <div className="container-wide text-center">

@@ -7,6 +7,7 @@ import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
 import { lazy, Suspense } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { Listing, WarehouseListing, MovingListing, TrailerListing } from "@/services/types";
+import { SEO } from "@/components/SEO";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
@@ -84,7 +85,26 @@ export function WarehouseDetail() {
 
   return (
     <div className="container-wide py-6 pb-24 lg:pb-6">
-      <nav className="mb-4 flex items-center gap-1.5 text-xs text-muted-foreground">
+      <SEO
+        title={`${wListing.title} — Laopind ${wListing.city} — Ruumly`}
+        description={`${wListing.title} ${wListing.city}. Hind alates ${wListing.priceFrom}€ ${wListing.priceUnit}. ${wListing.description?.slice(0, 120) || "Broneeri otse meie kaudu."}`}
+        canonical={`/warehouse/${wListing.id}`}
+        image={wListing.image || undefined}
+        type="product"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "LocalBusiness",
+          "name": wListing.title,
+          "description": wListing.description,
+          "url": `https://ruumly.eu/warehouse/${wListing.id}`,
+          "image": wListing.image,
+          "priceRange": `alates €${wListing.priceFrom}`,
+          "address": { "@type": "PostalAddress", "addressLocality": wListing.city, "addressCountry": "EE" },
+          ...(wListing.rating > 0 ? { "aggregateRating": { "@type": "AggregateRating", "ratingValue": wListing.rating, "reviewCount": wListing.reviewCount } } : {}),
+          "offers": { "@type": "Offer", "price": wListing.priceFrom, "priceCurrency": "EUR", "priceSpecification": { "@type": "UnitPriceSpecification", "price": wListing.priceFrom, "priceCurrency": "EUR", "unitText": wListing.priceUnit } },
+          "provider": { "@type": "Organization", "name": "Ruumly", "url": "https://ruumly.eu" }
+        }}
+      />
         <Link to="/" className="hover:text-foreground transition-colors">{t("nav.home")}</Link>
         <span className="opacity-40">/</span>
         <Link to="/search?type=warehouse" className="hover:text-foreground transition-colors">{t("nav.storage")}</Link>
@@ -217,10 +237,26 @@ export function MovingDetail() {
 
   return (
     <div className="container-wide py-6 pb-24 lg:pb-6">
-      <nav className="mb-4 flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Link to="/" className="hover:text-foreground transition-colors">{t("nav.home")}</Link>
-        <span className="opacity-40">/</span>
-        <Link to="/search?type=moving" className="hover:text-foreground transition-colors">{t("nav.moving")}</Link>
+      <SEO
+        title={`${mListing.title} — Kolimisteenus ${mListing.city} — Ruumly`}
+        description={`${mListing.title} ${mListing.city}. Hind alates ${mListing.priceFrom}€ ${mListing.priceUnit}. ${mListing.description?.slice(0, 120) || "Broneeri otse meie kaudu."}`}
+        canonical={`/moving/${mListing.id}`}
+        image={mListing.image || undefined}
+        type="product"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "Service",
+          "name": mListing.title,
+          "description": mListing.description,
+          "url": `https://ruumly.eu/moving/${mListing.id}`,
+          "image": mListing.image,
+          "priceRange": `alates €${mListing.priceFrom}`,
+          "address": { "@type": "PostalAddress", "addressLocality": mListing.city, "addressCountry": "EE" },
+          ...(mListing.rating > 0 ? { "aggregateRating": { "@type": "AggregateRating", "ratingValue": mListing.rating, "reviewCount": mListing.reviewCount } } : {}),
+          "offers": { "@type": "Offer", "price": mListing.priceFrom, "priceCurrency": "EUR" },
+          "provider": { "@type": "Organization", "name": "Ruumly", "url": "https://ruumly.eu" }
+        }}
+      />
         <span className="opacity-40">/</span>
         <span className="text-foreground font-medium truncate max-w-[180px] sm:max-w-[280px]">{mListing.title}</span>
       </nav>
@@ -306,10 +342,26 @@ export function TrailerDetail() {
 
   return (
     <div className="container-wide py-6 pb-24 lg:pb-6">
-      <nav className="mb-4 flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Link to="/" className="hover:text-foreground transition-colors">{t("nav.home")}</Link>
-        <span className="opacity-40">/</span>
-        <Link to="/search?type=trailer" className="hover:text-foreground transition-colors">{t("nav.trailer")}</Link>
+      <SEO
+        title={`${tListing.title} — Haagis ${tListing.city} — Ruumly`}
+        description={`${tListing.title} ${tListing.city}. Hind alates ${tListing.priceFrom}€ ${tListing.priceUnit}. ${tListing.description?.slice(0, 120) || "Broneeri otse meie kaudu."}`}
+        canonical={`/trailer/${tListing.id}`}
+        image={tListing.image || undefined}
+        type="product"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "Service",
+          "name": tListing.title,
+          "description": tListing.description,
+          "url": `https://ruumly.eu/trailer/${tListing.id}`,
+          "image": tListing.image,
+          "priceRange": `alates €${tListing.priceFrom}`,
+          "address": { "@type": "PostalAddress", "addressLocality": tListing.city, "addressCountry": "EE" },
+          ...(tListing.rating > 0 ? { "aggregateRating": { "@type": "AggregateRating", "ratingValue": tListing.rating, "reviewCount": tListing.reviewCount } } : {}),
+          "offers": { "@type": "Offer", "price": tListing.priceFrom, "priceCurrency": "EUR" },
+          "provider": { "@type": "Organization", "name": "Ruumly", "url": "https://ruumly.eu" }
+        }}
+      />
         <span className="opacity-40">/</span>
         <span className="text-foreground font-medium truncate max-w-[180px] sm:max-w-[280px]">{tListing.title}</span>
       </nav>

@@ -13,11 +13,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, registerSchema, type LoginForm, type RegisterForm } from "@/lib/schemas";
 import { authService } from "@/services";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { SEO } from "@/components/SEO";
 
 type AuthView = "login" | "register" | "forgot" | "forgot-sent" | "reset";
 
 export default function LoginPage() {
-  useEffect(() => { document.title = "Sisselogimine — Ruumly"; }, []);
   const [showPassword, setShowPassword] = useState(false);
   const [view, setView] = useState<AuthView>("login");
   const [loading, setLoading] = useState(false);
@@ -188,6 +188,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
+      <SEO title="Logi sisse — Ruumly" description="Logi sisse oma Ruumly kontole." canonical="/login" noindex={true} />
       <div className="w-full max-w-md">
         <div className="text-center">
           <h1 className="font-display text-3xl font-bold">
