@@ -192,7 +192,11 @@
 /* Google Sign-In button styling */
 .google-login-wrapper iframe {
   border-radius: 8px !important;
+  margin: 0 auto !important;
+  display: block !important;
 }
 .google-login-wrapper > div {
+  display: flex !important;
+  justify-content: center !important;
   width: 100% !important;
 }
