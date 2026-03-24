@@ -199,7 +199,7 @@ export default function LoginPage() {
 
         {googleEnabled && (
           <>
-            <div className="mt-8 google-login-wrapper">
+            <div className="mt-8 flex justify-center google-login-wrapper">
               <GoogleLogin
                 onSuccess={(credentialResponse) => {
                   if (!credentialResponse.credential) return;
@@ -237,7 +237,7 @@ export default function LoginPage() {
         {!googleEnabled && <div className="mt-8" />}
 
         {isRegister ? (
-          <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
+          <form key="register" onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="reg-name">{t("login.name")}</Label>
               <Input id="reg-name" placeholder={t("login.namePlaceholder")} {...registerForm.register("name")} />
@@ -286,7 +286,7 @@ export default function LoginPage() {
             </Button>
           </form>
         ) : (
-          <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+          <form key="login" onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="login-email">{t("login.email")}</Label>
               <div className="relative">
@@ -320,7 +320,7 @@ export default function LoginPage() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           {isRegister ? t("login.hasAccount") : t("login.noAccount")}{" "}
-          <button onClick={() => setView(isRegister ? "login" : "register")} className="font-medium text-accent hover:underline">
+          <button onClick={() => { setView(isRegister ? "login" : "register"); loginForm.reset(); registerForm.reset(); }} className="font-medium text-accent hover:underline">
             {isRegister ? t("login.title") : t("login.register")}
           </button>
         </p>
