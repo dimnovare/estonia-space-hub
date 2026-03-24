@@ -3,6 +3,7 @@ import { Home, ArrowLeft, Search } from "lucide-react";
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { SEO } from "@/components/SEO";
 
 const NotFound = () => {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ const NotFound = () => {
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center bg-background px-4 text-center">
+      <SEO title="Lehte ei leitud — Ruumly" description="" noindex={true} />
       <div className="relative mb-6">
         <Search className="h-16 w-16 text-muted-foreground/20" />
       </div>

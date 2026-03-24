@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   LayoutDashboard, List, MessageSquare, Settings, Users, FileText,
   Package, Activity, ChevronDown, Plug, Route
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { SEO } from "@/components/SEO";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminOrders from "@/components/admin/AdminOrders";
 import AdminSuppliers from "@/components/admin/AdminSuppliers";
@@ -18,7 +19,6 @@ import AdminAudit from "@/components/admin/AdminAudit";
 import AdminSettings from "@/components/admin/AdminSettings";
 
 export default function AdminPage() {
-  useEffect(() => { document.title = "Admin — Ruumly"; }, []);
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "dashboard";
   const setActiveTab = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("tab", id); return n; }, { replace: true });
@@ -44,6 +44,7 @@ export default function AdminPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">
+      <SEO title="Admin — Ruumly" description="" noindex={true} />
       <aside className="hidden w-56 shrink-0 border-r border-border bg-card lg:block">
         <div className="p-4">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("admin.title")}</h2>

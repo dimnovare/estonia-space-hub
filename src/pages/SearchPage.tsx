@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, lazy, Suspense } from "react";
+import { useState, useMemo, lazy, Suspense } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,11 +6,11 @@ import { useListings } from "@/hooks/queries";
 import type { Listing, ListingType, ListingFilters } from "@/services/types";
 import ListingCard from "@/components/ListingCard";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { SEO } from "@/components/SEO";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
 export default function SearchPage() {
-  useEffect(() => { document.title = "Otsing — Ruumly"; }, []);
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
   const { t } = useLanguage();
@@ -114,8 +114,27 @@ export default function SearchPage() {
     setSelectedListingId(listing.id);
   };
 
+  const titleMap: Record<string, string> = {
+    warehouse: "Laopinnad Eestis",
+    moving: "Kolimisteenused Eestis",
+    trailer: "Haagise rent Eestis",
+  };
+  const descMap: Record<string, string> = {
+    warehouse: "Otsi ja broneeri laopindu üle Eesti. Võrdle hindu ja asukohti.",
+    moving: "Leia parimad kolimisteenused Eestis. Võrdle hindu.",
+    trailer: "Haagise rent Tallinnas ja üle Eesti. Parimad hinnad.",
+  };
+
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-col lg:flex-row">
+      <SEO
+        title={query
+          ? `"${query}" — otsingutulemused — Ruumly`
+          : titleMap[activeType] || "Otsi laopindu ja logistikat — Ruumly"}
+        description={descMap[activeType] ||
+          "Otsi ja broneeri laopindu, kolimisteenuseid ja haagiseid üle Eesti. Kuni 10% soodsam."}
+        canonical="/search"
+      />
       <div className="hidden lg:sticky lg:top-16 lg:block lg:h-[calc(100vh-4rem)] lg:w-1/2 xl:w-[55%]">
         <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary text-muted-foreground">{t("map.loading")}</div>}>
           <InteractiveMap listings={filtered} className="rounded-none" height="h-full" selectedId={selectedListingId} onMarkerClick={handleMarkerClick} />

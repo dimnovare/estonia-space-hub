@@ -1,5 +1,16 @@
 {
   "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    {
+      "source": "/sitemap.xml",
+      "destination": "https://api.ruumly.eu/sitemap.xml"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "https://api.ruumly.eu/robots.txt"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
   ]
 }

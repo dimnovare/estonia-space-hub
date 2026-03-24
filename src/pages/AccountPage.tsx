@@ -30,6 +30,7 @@ import { invoiceService } from "@/services";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useAllListings } from "@/hooks/queries";
 import ListingCard from "@/components/ListingCard";
+import { SEO } from "@/components/SEO";
 
 const statusConfig: Record<BookingStatus, { label: string; color: string; icon: typeof Clock }> = {
   pending: { label: "Ootel", color: "bg-warning/10 text-warning", icon: Clock },
@@ -99,7 +100,6 @@ function MobileAccountNav({ tab, setTab, sidebarLinks, unreadMessages, unreadNot
 }
 
 export default function AccountPage() {
-  useEffect(() => { document.title = "Minu konto — Ruumly"; }, []);
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get("tab") || "overview";
   const setTab = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("tab", id); return n; }, { replace: true });
@@ -121,6 +121,7 @@ export default function AccountPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">
+      <SEO title="Minu konto — Ruumly" description="" noindex={true} />
       <aside className="hidden w-56 shrink-0 border-r border-border bg-card lg:block">
         <div className="p-4">
           <p className="text-sm font-semibold">{user?.name}</p>

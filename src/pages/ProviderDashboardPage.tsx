@@ -9,6 +9,7 @@ import { useOrders } from "@/hooks/useOrders";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/useNotifications";
+import { SEO } from "@/components/SEO";
 import { notificationService } from "@/services";
 import { useQueryClient } from "@tanstack/react-query";
 import ProviderOverview from "@/components/provider/ProviderOverview";
@@ -39,7 +40,6 @@ function useSidebarLinks() {
 }
 
 export default function ProviderDashboardPage() {
-  useEffect(() => { document.title = "Partneri paneel — Ruumly"; }, []);
   const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get("ptab") || "overview";
@@ -88,6 +88,7 @@ export default function ProviderDashboardPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">
+      <SEO title="Partneri paneel — Ruumly" description="" noindex={true} />
       <aside className="hidden w-56 shrink-0 border-r border-border bg-card lg:block">
         <div className="p-4">
           <p className="text-sm font-semibold">{user?.company || user?.name}</p>

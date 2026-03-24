@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, MapPin, ChevronDown, ChevronUp, CheckCircle, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,11 +7,11 @@ import ListingCard from "@/components/ListingCard";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { SEO } from "@/components/SEO";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
 export default function HomePage() {
-  useEffect(() => { document.title = "Ruumly — Laopinnad, kolimine ja haagised"; }, []);
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
@@ -53,7 +53,41 @@ export default function HomePage() {
 
   return (
     <div>
-      {/* Hero */}
+      <SEO
+        title="Ruumly — Laopinnad, kolimine ja haagised Eestis"
+        description="Leia ja broneeri laopindu, kolimisteenuseid ja haagiseid üle Eesti. Kuni 10% soodsam kui otse pakkujalt. Kiire kinnitus, kontrollitud partnerid."
+        canonical="/"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Ruumly",
+          "url": "https://ruumly.eu",
+          "description": "Eesti laopindade ja logistikateenuste platvorm",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://ruumly.eu/search?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "Ruumly",
+            "url": "https://ruumly.eu",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://ruumly.eu/ruumly-logo.png"
+            },
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "contactType": "customer support",
+              "email": "info@ruumly.eu",
+              "availableLanguage": ["Estonian", "English", "Russian"]
+            }
+          }
+        }}
+      />
       <section className="hero-gradient relative overflow-hidden py-20 md:py-28">
         <div className="absolute inset-0 opacity-10"
           style={{ backgroundImage: "radial-gradient(circle at 30% 50%, hsl(174 65% 47% / 0.3), transparent 60%)" }}
