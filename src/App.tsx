@@ -11,6 +11,8 @@ import Footer from "@/components/Footer";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import DevRoleSwitcher from "@/components/DevRoleSwitcher";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import MaintenancePage from "@/pages/MaintenancePage";
 import HomePage from "@/pages/HomePage";
 import SearchPage from "@/pages/SearchPage";
 import { WarehouseDetail, MovingDetail, TrailerDetail } from "@/pages/DetailPages";
@@ -60,6 +62,14 @@ const WithFooter = () => <><Outlet /><Footer /></>;
 const NoFooter = () => <Outlet />;
 
 function AppContent() {
+  const { maintenanceMode } = usePlatformSettings();
+  const { role, isInitializing } = useAuth();
+  const isLoginPage = window.location.pathname === "/login";
+
+  if (maintenanceMode && !isInitializing && role !== "admin" && !isLoginPage) {
+    return <MaintenancePage />;
+  }
+
   return (
     <>
       <ScrollToTop />
