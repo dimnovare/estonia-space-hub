@@ -1,11 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { bookingService } from "@/services";
 import { queryKeys } from "@/lib/queryKeys";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function useBookings() {
-  return useQuery({ queryKey: queryKeys.bookings.all, queryFn: bookingService.getAll, staleTime: 30_000 });
+  const { isAuthenticated } = useAuth();
+  return useQuery({ queryKey: queryKeys.bookings.all, queryFn: bookingService.getAll, enabled: isAuthenticated, staleTime: 30_000 });
 }
 
 export function useBooking(id: string) {
-  return useQuery({ queryKey: queryKeys.bookings.byId(id), queryFn: () => bookingService.getById(id), enabled: !!id });
+  const { isAuthenticated } = useAuth();
+  return useQuery({ queryKey: queryKeys.bookings.byId(id), queryFn: () => bookingService.getById(id), enabled: isAuthenticated && !!id });
 }

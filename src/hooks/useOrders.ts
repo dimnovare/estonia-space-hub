@@ -2,20 +2,24 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { orderService } from "@/services";
 import { queryKeys } from "@/lib/queryKeys";
 import type { OrderStatus } from "@/services/types";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function useOrders() {
+  const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: queryKeys.orders.all,
     queryFn: orderService.getAll,
+    enabled: isAuthenticated,
     staleTime: 15_000,
   });
 }
 
 export function useOrder(id: string) {
+  const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: queryKeys.orders.byId(id),
     queryFn: () => orderService.getById(id),
-    enabled: !!id,
+    enabled: isAuthenticated && !!id,
   });
 }
 
