@@ -258,6 +258,10 @@ export function MovingDetail() {
           "provider": { "@type": "Organization", "name": "Ruumly", "url": "https://ruumly.eu" }
         }}
       />
+      <nav className="mb-4 flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Link to="/" className="hover:text-foreground transition-colors">{t("nav.home")}</Link>
+        <span className="opacity-40">/</span>
+        <Link to="/search?type=moving" className="hover:text-foreground transition-colors">{t("nav.moving")}</Link>
         <span className="opacity-40">/</span>
         <span className="text-foreground font-medium truncate max-w-[180px] sm:max-w-[280px]">{mListing.title}</span>
       </nav>
@@ -363,6 +367,10 @@ export function TrailerDetail() {
           "provider": { "@type": "Organization", "name": "Ruumly", "url": "https://ruumly.eu" }
         }}
       />
+      <nav className="mb-4 flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Link to="/" className="hover:text-foreground transition-colors">{t("nav.home")}</Link>
+        <span className="opacity-40">/</span>
+        <Link to="/search?type=trailer" className="hover:text-foreground transition-colors">{t("nav.trailer")}</Link>
         <span className="opacity-40">/</span>
         <span className="text-foreground font-medium truncate max-w-[180px] sm:max-w-[280px]">{tListing.title}</span>
       </nav>
