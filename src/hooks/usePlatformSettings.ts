@@ -8,6 +8,7 @@ const FALLBACK = {
   openHours:          "E–R 9–18",
   openHoursSat:       "",
   inviteCodeRequired: false,
+  maintenanceMode:    false,
 };
 
 export function usePlatformSettings() {
