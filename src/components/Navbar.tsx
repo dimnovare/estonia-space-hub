@@ -38,7 +38,6 @@ export default function Navbar() {
   const handleLogout = () => {
     logout();
     setUserMenuOpen(false);
-    navigate("/");
   };
 
   const getLinkHref = (link: typeof navLinks[0]) => {
