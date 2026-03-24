@@ -128,7 +128,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(async (name: string, email: string, password: string, inviteCode?: string) => {
     try {
-      const res = await apiClient.post<AuthResponse>("/auth/register", { name, email, password, confirmPassword: password, inviteCode });
+      const currentLang = localStorage.getItem("ruumly-lang") ?? "et";
+      const res = await apiClient.post<AuthResponse>("/auth/register", { name, email, password, confirmPassword: password, inviteCode, language: currentLang });
       persist(normalizeUser(res.user), res.accessToken, res.refreshToken);
     } catch (err: any) {
       throw new Error(err.message || "Registreerimine ebaõnnestus");
