@@ -105,6 +105,7 @@ export function WarehouseDetail() {
           "provider": { "@type": "Organization", "name": "Ruumly", "url": "https://ruumly.eu" }
         }}
       />
+      <nav className="mb-4 flex items-center gap-1.5 text-xs text-muted-foreground">
         <Link to="/" className="hover:text-foreground transition-colors">{t("nav.home")}</Link>
         <span className="opacity-40">/</span>
         <Link to="/search?type=warehouse" className="hover:text-foreground transition-colors">{t("nav.storage")}</Link>
