@@ -70,15 +70,15 @@ export default function HomePage() {
             <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-primary-foreground/60">
               <span className="flex items-center gap-1.5">
                 <CheckCircle className="h-3.5 w-3.5 text-accent" />
-                Hinnad läbirääkitud
+                {t("trust.badge1")}
               </span>
               <span className="flex items-center gap-1.5">
                 <Clock className="h-3.5 w-3.5 text-accent" />
-                Kiire kinnitus
+                {t("trust.badge2")}
               </span>
               <span className="flex items-center gap-1.5">
                 <Shield className="h-3.5 w-3.5 text-accent" />
-                Eesti firmad
+                {t("trust.badge3")}
               </span>
             </div>
 
