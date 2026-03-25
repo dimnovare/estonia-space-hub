@@ -278,6 +278,51 @@ export default function SearchPage() {
               <p className="mb-4 text-sm text-muted-foreground">
                 {filtered.length} {t("search.results")}{query && ` ${t("search.forQuery")} "${query}"`}
               </p>
+
+              {/* Location cards */}
+              {locations.length > 0 && (
+                <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
+                  {locations.map((loc) => (
+                    <Link
+                      key={loc.id}
+                      to={`/location/${loc.id}`}
+                      className="card-elevated group block overflow-hidden"
+                    >
+                      <div className="relative aspect-[16/10] overflow-hidden">
+                        {loc.images?.[0] && (
+                          <img
+                            src={loc.images[0]}
+                            alt={loc.name}
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            loading="lazy"
+                          />
+                        )}
+                        <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-card/90 backdrop-blur-sm px-2.5 py-1 text-[11px] font-semibold text-foreground">
+                          <Layers className="h-3 w-3" />
+                          {loc.unitCount} {t("location.units")}
+                        </span>
+                      </div>
+                      <div className="p-4">
+                        <h3 className="truncate font-sans text-sm font-semibold text-foreground">{loc.name}</h3>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{loc.supplierName}</p>
+                        <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          {loc.address}, {loc.city}
+                        </p>
+                        <div className="mt-3 flex items-baseline gap-1 border-t border-border pt-3">
+                          {loc.priceFrom != null && (
+                            <>
+                              <span className="font-display text-lg font-bold text-foreground">{t("location.from")} €{loc.priceFrom}</span>
+                              <span className="text-xs text-muted-foreground">/ kuu</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
                 {filtered.map((l) => (
                   <div key={l.id} className={`cursor-pointer rounded-xl transition-all ${selectedListingId === l.id ? "ring-2 ring-accent" : ""}`} onMouseEnter={() => setSelectedListingId(l.id)} onMouseLeave={() => setSelectedListingId(null)} onClick={() => setSelectedListingId(l.id)}>
@@ -285,7 +330,7 @@ export default function SearchPage() {
                   </div>
                 ))}
               </div>
-              {filtered.length === 0 && (
+              {filtered.length === 0 && locations.length === 0 && (
                 <div className="py-20 text-center text-muted-foreground">
                   <p className="text-lg font-medium">{t("search.noResults")}</p>
                   <p className="mt-1 text-sm">{t("search.noResultsDesc")}</p>
