@@ -12,11 +12,47 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [
+    react(),
+    mode === "development" && componentTagger(),
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-    dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
+    dedupe: [
+      "react",
+      "react-dom",
+      "react/jsx-runtime",
+      "react/jsx-dev-runtime",
+    ],
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // React core — always needed
+          "vendor-react": ["react", "react-dom"],
+          // Router + Query — needed on every page
+          "vendor-routing": [
+            "react-router-dom",
+            "@tanstack/react-query",
+          ],
+          // Maps — only needed on search/home
+          "vendor-maps": ["leaflet", "react-leaflet"],
+          // Charts — only needed on provider dashboard
+          "vendor-charts": ["recharts"],
+          // UI components — large but stable
+          "vendor-ui": [
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-select",
+            "@radix-ui/react-tabs",
+            "@radix-ui/react-toast",
+          ],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
   },
 }));
