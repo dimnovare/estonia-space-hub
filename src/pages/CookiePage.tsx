@@ -1,5 +1,6 @@
 import { Cookie } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { SEO } from "@/components/SEO";
 
 export default function CookiePage() {
   const { t } = useLanguage();
@@ -13,6 +14,11 @@ export default function CookiePage() {
 
   return (
     <div className="container-wide py-12">
+      <SEO
+        title="Küpsiste poliitika — Ruumly"
+        description="Ruumly küpsiste kasutamise poliitika."
+        canonical="/cookies"
+      />
       <div className="mx-auto max-w-3xl">
         <div className="flex items-center gap-3 mb-6">
           <Cookie className="h-6 w-6 text-accent" />

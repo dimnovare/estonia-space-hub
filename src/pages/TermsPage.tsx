@@ -1,5 +1,6 @@
 import { ScrollText } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { SEO } from "@/components/SEO";
 
 export default function TermsPage() {
   const { t } = useLanguage();
@@ -7,6 +8,11 @@ export default function TermsPage() {
 
   return (
     <div className="container-wide py-12">
+      <SEO
+        title="Kasutustingimused — Ruumly"
+        description="Ruumly platvormi kasutustingimused. Kehtivad alates märts 2026."
+        canonical="/terms"
+      />
       <div className="mx-auto max-w-3xl">
         <div className="flex items-center gap-3 mb-6">
           <ScrollText className="h-6 w-6 text-accent" />

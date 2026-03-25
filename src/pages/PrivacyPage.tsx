@@ -1,11 +1,17 @@
 import { Shield } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { SEO } from "@/components/SEO";
 
 export default function PrivacyPage() {
   const { t } = useLanguage();
 
   return (
     <div className="container-wide py-12">
+      <SEO
+        title="Privaatsuspoliitika — Ruumly"
+        description="Ruumly privaatsuspoliitika. Kuidas me teie andmeid kogume ja kasutame."
+        canonical="/privacy"
+      />
       <div className="mx-auto max-w-3xl">
         <div className="flex items-center gap-3 mb-6">
           <Shield className="h-6 w-6 text-accent" />

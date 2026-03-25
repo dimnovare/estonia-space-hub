@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
-import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand } from "lucide-react";
+import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListing, useCreateBooking, useSuppliers } from "@/hooks/queries";
 import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
 import { EXTRAS_PRICES } from "@/lib/pricing";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { SEO } from "@/components/SEO";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { bookingDetailsSchema, bookingContactSchema, type BookingDetailsForm, type BookingContactForm } from "@/lib/schemas";
@@ -13,7 +15,7 @@ import { bookingDetailsSchema, bookingContactSchema, type BookingDetailsForm, ty
 type SubmitPhase = "submitting" | "sending" | "waiting" | "done";
 
 export default function BookingPage() {
-  useEffect(() => { document.title = "Broneeri — Ruumly"; }, []);
+  // SEO handled by <SEO /> component below
   const [params] = useSearchParams();
   const listingId = params.get("listing");
   const { data: listing } = useListing(listingId || "");
@@ -23,8 +25,9 @@ export default function BookingPage() {
   const supplier = listing ? suppliers.find(s => s.id === listing.supplierId) : undefined;
   const createBooking = useCreateBooking();
 
-  // Auth check for deferred login
-  const isAuthenticated = !!localStorage.getItem("ruumly-token");
+  const { isAuthenticated } = useAuth();
+  // Also check token for deferred login restore
+  const hasToken = !!localStorage.getItem("ruumly-token");
 
   const steps = [t("booking.details"), t("booking.extras"), t("booking.contact"), t("booking.payment"), t("booking.review")];
   const extras = [
@@ -200,6 +203,12 @@ export default function BookingPage() {
 
   return (
     <div className="container-wide py-8 pb-24 lg:pb-8">
+      <SEO
+        title="Broneeri — Ruumly"
+        description="Broneeri laopind, kolimisteenus või haagis Ruumly kaudu."
+        canonical="/book"
+        noindex={true}
+      />
       <Link to={listing ? `/${listing.type}/${listing.id}` : "/search"} className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> {t("booking.back")}
       </Link>
@@ -266,6 +275,12 @@ export default function BookingPage() {
                 </select>
                 {detailsForm.formState.errors.duration && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.duration.message}</p>}
               </div>
+              {!isAuthenticated && (
+                <div className="flex items-start gap-2 rounded-lg border border-accent/20 bg-accent/5 p-3">
+                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                  <span className="text-xs text-muted-foreground">{t("booking.loginHint")}</span>
+                </div>
+              )}
             </div>
           )}
 
