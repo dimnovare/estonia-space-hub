@@ -48,6 +48,11 @@ export default function SearchPage() {
   const { data: result, isLoading } = useListings(filters);
   const serverFiltered = result?.data || [];
 
+  const { data: locations = [] } = useLocations({
+    city: cityFilter || undefined,
+    type: activeType !== "all" ? activeType : undefined,
+  });
+
   // Client-side post-filters for feature-specific booleans
   const filtered = useMemo(() => {
     let results = serverFiltered;
@@ -137,7 +142,7 @@ export default function SearchPage() {
       />
       <div className="hidden lg:sticky lg:top-16 lg:block lg:h-[calc(100vh-4rem)] lg:w-1/2 xl:w-[55%]">
         <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary text-muted-foreground">{t("map.loading")}</div>}>
-          <InteractiveMap listings={filtered} className="rounded-none" height="h-full" selectedId={selectedListingId} onMarkerClick={handleMarkerClick} />
+          <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" selectedId={selectedListingId} onMarkerClick={handleMarkerClick} />
         </Suspense>
       </div>
 
@@ -153,7 +158,7 @@ export default function SearchPage() {
       {mobileView === "map" && (
         <div className="h-[calc(100vh-8rem)] lg:hidden relative">
           <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary">{t("map.loading")}</div>}>
-            <InteractiveMap listings={filtered} className="rounded-none" height="h-full" selectedId={selectedListingId} onMarkerClick={handleMarkerClick} />
+            <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" selectedId={selectedListingId} onMarkerClick={handleMarkerClick} />
           </Suspense>
           {selectedListingId && (() => {
             const selected = filtered.find(l => l.id === selectedListingId);
