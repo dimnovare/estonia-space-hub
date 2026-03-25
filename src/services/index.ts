@@ -290,8 +290,6 @@ export const locationService = {
   async getById(id: string): Promise<SupplierLocation> {
     return apiClient.get<SupplierLocation>(`/locations/${id}`);
   },
-    return apiClient.get<SupplierLocation>(`/locations/${id}`);
-  },
 };
 
 export type {
