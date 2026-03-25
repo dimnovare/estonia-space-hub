@@ -11,9 +11,6 @@ export default function ProviderBilling() {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [editingBank, setEditingBank] = useState(false);
-  const [bankForm, setBankForm] = useState({
-    iban: "", bankAccountName: "", bankName: ""
-  });
 
   const { data: supplierData } = useQuery({
     queryKey: ["my-supplier-profile"],
