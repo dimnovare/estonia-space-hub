@@ -2110,6 +2110,10 @@ const translations: Record<Language, Record<string, string>> = {
     "empty.providerOrders.desc": "Orders will appear here when customers book your services.",
     "empty.notifications.title": "No notifications",
     "empty.notifications.desc": "New notifications will appear here automatically.",
+    "listing.savings": "You save €{amount}",
+    "listing.publicPrice": "Regular price",
+    "listing.partnerPrice": "Ruumly price",
+    "listing.partnerPriceInfo": "Ruumly partner price is up to 10% cheaper than directly from the provider",
   },
 
   ru: {
@@ -3142,6 +3146,10 @@ const translations: Record<Language, Record<string, string>> = {
     "empty.providerOrders.desc": "Заказы появятся здесь, когда клиенты забронируют ваши услуги.",
     "empty.notifications.title": "Уведомлений нет",
     "empty.notifications.desc": "Новые уведомления появятся здесь автоматически.",
+    "listing.savings": "Экономия {amount}€",
+    "listing.publicPrice": "Обычная цена",
+    "listing.partnerPrice": "Цена Ruumly",
+    "listing.partnerPriceInfo": "Партнёрская цена Ruumly до 10% дешевле, чем напрямую у поставщика",
   },
 };
 
