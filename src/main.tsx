@@ -6,8 +6,12 @@ import "./index.css";
 import { initGA } from "./lib/analytics";
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";
-const gaId = import.meta.env.VITE_GA_ID;
-if (gaId) initGA(gaId);
+// GA4 is initialized only after cookie consent — see CookieConsent.tsx
+// If consent was already given in a previous session, init immediately
+if (localStorage.getItem("ruumly-cookie-consent") === "true") {
+  const gaId = import.meta.env.VITE_GA_ID;
+  if (gaId) initGA(gaId);
+}
 
 createRoot(document.getElementById("root")!).render(
   <HelmetProvider>
