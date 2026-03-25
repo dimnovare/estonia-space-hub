@@ -2,18 +2,21 @@ import { useState, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, MapPin, ChevronDown, ChevronUp, CheckCircle, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFeaturedListings, useAllListings } from "@/hooks/queries";
 import ListingCard from "@/components/ListingCard";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
+import { ESTONIAN_CITIES } from "@/lib/constants";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
 export default function HomePage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const { t } = useLanguage();
@@ -48,6 +51,7 @@ export default function HomePage() {
     const params = new URLSearchParams();
     if (searchQuery) params.set("q", searchQuery);
     if (activeCategory !== "all") params.set("type", activeCategory);
+    if (selectedCity && selectedCity !== "all") params.set("city", selectedCity);
     navigate(`/search?${params.toString()}`);
   };
 
@@ -146,6 +150,17 @@ export default function HomePage() {
                     className="w-full rounded-lg border-0 bg-secondary py-3 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"
                   />
                 </div>
+                <Select value={selectedCity} onValueChange={setSelectedCity}>
+                  <SelectTrigger className="w-[140px] shrink-0 border-0 bg-secondary text-sm">
+                    <SelectValue placeholder={t("search.allCities")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("search.allCities")}</SelectItem>
+                    {ESTONIAN_CITIES.map((city) => (
+                      <SelectItem key={city} value={city}>{city}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Button onClick={handleSearch} className="shrink-0 bg-accent px-6 text-accent-foreground hover:bg-accent/90">
                   <Search className="mr-2 h-4 w-4" />
                   {t("hero.search")}
