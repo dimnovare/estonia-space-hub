@@ -1,5 +1,10 @@
 import type { IntegrationType, OrderStatus, Order } from "@/services/types";
 
+export const ESTONIAN_CITIES = [
+  "Tallinn", "Tartu", "Pärnu", "Narva", "Viljandi",
+  "Rakvere", "Haapsalu", "Jõhvi", "Kuressaare",
+] as const;
+
 export const INTEGRATION_TYPE_CONFIG: Record<IntegrationType, { label: string; color: string; description: string }> = {
   api: { label: "API", color: "bg-success/10 text-success", description: "Automaatne API integratsioon" },
   email: { label: "E-post", color: "bg-info/10 text-info", description: "Tellimus saadetakse e-postiga" },

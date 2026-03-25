@@ -39,7 +39,7 @@ const translations: Record<Language, Record<string, string>> = {
     "trust.badge2": "Kiire kinnitus",
     "trust.badge3": "Eesti firmad",
     "hero.search": "Otsi",
-    "hero.searchPlaceholder": "Sisesta aadress või linn...",
+    "hero.searchPlaceholder": "Otsi aadressi, piirkonda või teenust...",
     "hero.listSpace": "Lisa oma pind →",
 
     // Categories
@@ -294,6 +294,8 @@ const translations: Record<Language, Record<string, string>> = {
     "search.fixedPrice": "Fikseeritud hind",
     "search.trailerFilters": "Haagise filtrid",
     "search.closedTrailer": "Kinnine haagis",
+    "search.allCities": "Kõik linnad",
+    "search.resultsFound": "{count} pakkumist leitud",
 
     // Login
     "login.title": "Logi sisse",
@@ -1113,7 +1115,7 @@ const translations: Record<Language, Record<string, string>> = {
     "trust.badge2": "Fast confirmation",
     "trust.badge3": "Estonian companies",
     "hero.search": "Search",
-    "hero.searchPlaceholder": "Enter address or city...",
+    "hero.searchPlaceholder": "Search address, area, or service...",
     "hero.listSpace": "List your space →",
 
     "cat.all": "All services",
@@ -1356,6 +1358,8 @@ const translations: Record<Language, Record<string, string>> = {
     "search.fixedPrice": "Fixed price",
     "search.trailerFilters": "Trailer filters",
     "search.closedTrailer": "Closed trailer",
+    "search.allCities": "All cities",
+    "search.resultsFound": "{count} listings found",
 
     "login.title": "Log in",
     "login.register": "Create account",
@@ -2152,7 +2156,7 @@ const translations: Record<Language, Record<string, string>> = {
     "trust.badge2": "Быстрое подтверждение",
     "trust.badge3": "Эстонские компании",
     "hero.search": "Поиск",
-    "hero.searchPlaceholder": "Введите адрес или город...",
+    "hero.searchPlaceholder": "Поиск по адресу, району или услуге...",
     "hero.listSpace": "Разместить объект →",
 
     "cat.all": "Все услуги",
@@ -2395,6 +2399,8 @@ const translations: Record<Language, Record<string, string>> = {
     "search.fixedPrice": "Фиксированная цена",
     "search.trailerFilters": "Фильтры прицепов",
     "search.closedTrailer": "Закрытый прицеп",
+    "search.allCities": "Все города",
+    "search.resultsFound": "{count} предложений найдено",
 
     "login.title": "Войти",
     "login.register": "Создать аккаунт",
