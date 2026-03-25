@@ -43,6 +43,7 @@ function useSidebarLinks() {
 
 export default function ProviderDashboardPage() {
   const { t } = useLanguage();
+  const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get("ptab") || "overview";
   const setTab = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("ptab", id); return n; }, { replace: true });

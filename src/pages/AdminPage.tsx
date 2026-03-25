@@ -27,18 +27,7 @@ export default function AdminPage() {
   const setActiveTab = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("tab", id); return n; }, { replace: true });
   const { t } = useLanguage();
   const isMobile = useIsMobile();
-
-  if (isMobile) {
-    return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-6">
-        <div className="mx-auto flex max-w-sm flex-col items-center rounded-2xl bg-secondary/30 px-6 py-16 text-center">
-          <Monitor className="h-12 w-12 text-muted-foreground/50" />
-          <p className="mt-4 font-display text-base font-semibold">{t("dashboard.desktopOnly")}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{t("dashboard.desktopOnlyDesc")}</p>
-        </div>
-      </div>
-    );
-  }
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const sidebarLinks = [
     { id: "dashboard", label: t("admin.dashboard"), icon: LayoutDashboard },
@@ -55,9 +44,20 @@ export default function AdminPage() {
     { id: "settings", label: t("admin.settings"), icon: Settings },
   ];
 
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const currentTab = sidebarLinks.find(l => l.id === activeTab);
   const CurrentIcon = currentTab?.icon || LayoutDashboard;
+
+  if (isMobile) {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-6">
+        <div className="mx-auto flex max-w-sm flex-col items-center rounded-2xl bg-secondary/30 px-6 py-16 text-center">
+          <Monitor className="h-12 w-12 text-muted-foreground/50" />
+          <p className="mt-4 font-display text-base font-semibold">{t("dashboard.desktopOnly")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("dashboard.desktopOnlyDesc")}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">
