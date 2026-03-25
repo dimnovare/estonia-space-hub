@@ -1053,6 +1053,15 @@ const translations: Record<Language, Record<string, string>> = {
     "search.notifySuccess": "Saatsime teile teate, kui midagi lisandub!",
     "booking.paymentRecommended": "Soovitatav",
     "booking.payLaterWarning": "Arve saadetakse e-postiga. Broneeringut kinnitatakse pärast makse laekumist.",
+    "error.forbidden.title": "Juurdepääs keelatud",
+    "error.forbidden.desc": "Teil pole õigust seda lehte vaadata.",
+    "error.forbidden.cta": "Mine avalehele",
+    "error.notFound.title": "Lehte ei leitud",
+    "error.notFound.desc": "See leht ei eksisteeri või on eemaldatud.",
+    "error.notFound.cta": "Otsi teenuseid",
+    "error.server.title": "Midagi läks valesti",
+    "error.server.desc": "Tehniline viga. Proovige mõne hetke pärast uuesti.",
+    "error.server.cta": "Mine avalehele",
   },
 
   en: {
@@ -2064,6 +2073,15 @@ const translations: Record<Language, Record<string, string>> = {
     "search.notifySuccess": "We'll let you know when something arrives!",
     "booking.paymentRecommended": "Recommended",
     "booking.payLaterWarning": "Invoice sent by email. Booking is confirmed after payment is received.",
+    "error.forbidden.title": "Access denied",
+    "error.forbidden.desc": "You don't have permission to view this page.",
+    "error.forbidden.cta": "Go to homepage",
+    "error.notFound.title": "Page not found",
+    "error.notFound.desc": "This page doesn't exist or has been removed.",
+    "error.notFound.cta": "Search services",
+    "error.server.title": "Something went wrong",
+    "error.server.desc": "A technical error occurred. Please try again.",
+    "error.server.cta": "Go to homepage",
   },
 
   ru: {
@@ -3075,6 +3093,15 @@ const translations: Record<Language, Record<string, string>> = {
     "search.notifySuccess": "Сообщим вам, как только появится!",
     "booking.paymentRecommended": "Рекомендуется",
     "booking.payLaterWarning": "Счёт отправляется по email. Бронирование подтверждается после получения оплаты.",
+    "error.forbidden.title": "Доступ запрещён",
+    "error.forbidden.desc": "У вас нет прав для просмотра этой страницы.",
+    "error.forbidden.cta": "На главную",
+    "error.notFound.title": "Страница не найдена",
+    "error.notFound.desc": "Эта страница не существует или удалена.",
+    "error.notFound.cta": "Найти услуги",
+    "error.server.title": "Что-то пошло не так",
+    "error.server.desc": "Техническая ошибка. Попробуйте ещё раз.",
+    "error.server.cta": "На главную",
   },
 };
 
