@@ -89,6 +89,18 @@ export default function ProviderDashboardPage() {
   const currentTab = sidebarLinks.find(l => l.id === tab);
   const CurrentIcon = currentTab?.icon || LayoutDashboard;
 
+  if (isMobile) {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-6">
+        <div className="mx-auto flex max-w-sm flex-col items-center rounded-2xl bg-secondary/30 px-6 py-16 text-center">
+          <Monitor className="h-12 w-12 text-muted-foreground/50" />
+          <p className="mt-4 font-display text-base font-semibold">{t("dashboard.desktopOnly")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("dashboard.desktopOnlyDesc")}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">
       <SEO title="Partneri paneel — Ruumly" description="" noindex={true} />
