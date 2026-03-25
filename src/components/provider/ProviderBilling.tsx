@@ -38,11 +38,11 @@ export default function ProviderBilling() {
     mutationFn: bankService.updateBankDetails,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bank-details"] });
-      toast.success("Pangaandmed salvestatud");
+      toast.success(t("toast.bankDetailsSaved"));
       setEditingBank(false);
     },
     onError: (err: any) =>
-      toast.error(err.message || "Salvestamine ebaõnnestus"),
+      toast.error(err.message || t("toast.saveFailed")),
   });
 
   const startEdit = () => {

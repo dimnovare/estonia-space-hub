@@ -35,20 +35,20 @@ export default function AdminListings() {
 
   const createMutation = useMutation({
     mutationFn: (data: any) => apiClient.post("/admin/listings", data),
-    onSuccess: () => { invalidate(); toast.success("Kuulutus lisatud"); setEditOpen(false); },
-    onError: (err: any) => toast.error(err.message || "Lisamine ebaõnnestus"),
+    onSuccess: () => { invalidate(); toast.success(t("toast.listingAdded")); setEditOpen(false); },
+    onError: (err: any) => toast.error(err.message || t("toast.addFailed")),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => apiClient.patch(`/admin/listings/${id}`, data),
-    onSuccess: () => { invalidate(); toast.success("Kuulutus uuendatud"); setEditOpen(false); },
-    onError: (err: any) => toast.error(err.message || "Uuendamine ebaõnnestus"),
+    onSuccess: () => { invalidate(); toast.success(t("toast.listingUpdated")); setEditOpen(false); },
+    onError: (err: any) => toast.error(err.message || t("toast.updateFailed")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiClient.delete(`/admin/listings/${id}`),
-    onSuccess: () => { invalidate(); toast.success("Kuulutus kustutatud"); },
-    onError: (err: any) => toast.error(err.message || "Kustutamine ebaõnnestus"),
+    onSuccess: () => { invalidate(); toast.success(t("toast.listingDeleted")); },
+    onError: (err: any) => toast.error(err.message || t("toast.deleteFailed")),
   });
 
   const openNew = () => {

@@ -48,12 +48,12 @@ export default function ProviderIncomingOrders() {
 
   const bulkReject = () => {
     const ids = Array.from(selectedIds);
-    Promise.all(ids.map(id => rejectOrder.mutateAsync({ id, reason: "Partner lükkas tagasi" })))
+    Promise.all(ids.map(id => rejectOrder.mutateAsync({ id, reason: t("provider.listings.confirmReject") })))
       .then(() => setSelectedIds(new Set()));
   };
 
   const exportCSV = () => {
-    const headers = ["Tellimus", "Klient", "Teenus", "Linn", "Algus", "Periood", "Partneri hind", "Staatus"];
+    const headers = t("provider.orders.csvHeaders").split(",");
     const rows = filtered.map(o => [o.id, o.customerName, o.listingTitle, o.city, o.startDate, o.duration, `€${o.supplierPrice}`, ORDER_STATUS_CONFIG[o.status].label]);
     const csv = [headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });

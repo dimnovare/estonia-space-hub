@@ -13,11 +13,10 @@ export default function ProviderReviews() {
           ))}
         </div>
         <p className="mt-4 text-sm font-medium text-muted-foreground">
-          Arvustused ilmuvad siia
+          {t("provider.reviews.empty")}
         </p>
         <p className="mt-1 max-w-xs text-xs text-muted-foreground">
-          Pärast esimeste broneeringute lõpetamist saavad kliendid arvustusi
-          jätta. Arvustused kuvatakse siin automaatselt.
+          {t("provider.reviews.emptyDesc")}
         </p>
       </div>
     </div>

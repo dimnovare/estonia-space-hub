@@ -43,7 +43,7 @@ export default function AdminSettings() {
         }
         setSettings(prev => ({ ...prev, ...flat }));
       })
-      .catch(() => toast.error("Seadete laadimine ebaõnnestus"))
+      .catch(() => toast.error(t("toast.settingsLoadFailed")))
       .finally(() => setLoading(false));
   }, []);
 
@@ -60,9 +60,9 @@ export default function AdminSettings() {
     setSaving(true);
     try {
       await apiClient.patch("/admin/settings", settings);
-      toast.success("Seaded salvestatud");
+      toast.success(t("admin.settingsSaved"));
     } catch (err: any) {
-      toast.error(err.message || "Salvestamine ebaõnnestus");
+      toast.error(err.message || t("toast.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -224,12 +224,12 @@ export default function AdminSettings() {
               { key: "emailNotifications" as const, label: t("admin.emailNotifications"), desc: t("admin.emailNotificationsDesc") },
               { key: "maintenanceMode" as const, label: t("admin.maintenanceMode"), desc: t("admin.maintenanceModeDesc") },
               { key: "autoApproveListings" as const, label: t("admin.autoApprove"), desc: t("admin.autoApproveDesc") },
-              { key: "inviteCodeRequired" as const, label: "Beta kutsekood kohustuslik", desc: "Kui sees, saavad registreeruda ainult kutse koodiga kasutajad" },
-              { key: "showFeaturedListings" as const, label: "Kuva populaarsed kuulutused", desc: "Avaleht: populaarsete kuulutuste sektsioon" },
-              { key: "showHowItWorks" as const, label: "Kuva 'Kuidas see töötab'", desc: "Avaleht: 3-sammuline selgitussektsioon" },
-              { key: "showProviderCta" as const, label: "Kuva partneri CTA", desc: "Avaleht: 'Oled teenusepakkuja?' sektsioon" },
-              { key: "showFaq" as const, label: "Kuva KKK avaleheküljel", desc: "Avaleht: korduma kippuvad küsimused" },
-              { key: "showMap" as const, label: "Kuva kaart avaleheküljel", desc: "Avaleht: interaktiivne kaart" },
+              { key: "inviteCodeRequired" as const, label: t("admin.inviteCodeRequired"), desc: t("admin.inviteCodeRequiredDesc") },
+              { key: "showFeaturedListings" as const, label: t("admin.showFeaturedListings"), desc: t("admin.showFeaturedListingsDesc") },
+              { key: "showHowItWorks" as const, label: t("admin.showHowItWorks"), desc: t("admin.showHowItWorksDesc") },
+              { key: "showProviderCta" as const, label: t("admin.showProviderCta"), desc: t("admin.showProviderCtaDesc") },
+              { key: "showFaq" as const, label: t("admin.showFaq"), desc: t("admin.showFaqDesc") },
+              { key: "showMap" as const, label: t("admin.showMap"), desc: t("admin.showMapDesc") },
             ]).map(toggle => (
               <div key={toggle.key} className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div>

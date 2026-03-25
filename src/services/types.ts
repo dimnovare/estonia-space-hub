@@ -230,13 +230,15 @@ export interface SupplierLocation {
   city: string;
   lat: number;
   lng: number;
+  notes?: string;
   images: string[];
   description: string;
   openingHours?: string;
   isActive: boolean;
   unitCount: number;
   priceFrom?: number;
-  units: Listing[];
+  createdAt?: string;
+  units?: Listing[];
 }
 
 export interface WarehouseListing extends ListingBase {

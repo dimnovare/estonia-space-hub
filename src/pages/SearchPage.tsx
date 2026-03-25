@@ -142,7 +142,7 @@ export default function SearchPage() {
       />
       <div className="hidden lg:sticky lg:top-16 lg:block lg:h-[calc(100vh-4rem)] lg:w-1/2 xl:w-[55%]">
         <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary text-muted-foreground">{t("map.loading")}</div>}>
-          <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" selectedId={selectedListingId} onMarkerClick={handleMarkerClick} />
+          <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" selectedId={selectedListingId} onMarkerClick={handleMarkerClick} tUnits={t("location.units")} tFrom={t("location.from")} tAllUnits={t("location.allUnits")} />
         </Suspense>
       </div>
 
@@ -158,7 +158,7 @@ export default function SearchPage() {
       {mobileView === "map" && (
         <div className="h-[calc(100vh-8rem)] lg:hidden relative">
           <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary">{t("map.loading")}</div>}>
-            <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" selectedId={selectedListingId} onMarkerClick={handleMarkerClick} />
+            <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" selectedId={selectedListingId} onMarkerClick={handleMarkerClick} tUnits={t("location.units")} tFrom={t("location.from")} tAllUnits={t("location.allUnits")} />
           </Suspense>
           {selectedListingId && (() => {
             const selected = filtered.find(l => l.id === selectedListingId);

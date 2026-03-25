@@ -25,10 +25,10 @@ export default function AdminIntegrations() {
       integrationSettingsService.update(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["integration-settings"] });
-      toast.success("Integratsiooni seaded uuendatud");
+      toast.success(t("toast.integrationUpdated"));
       setEditOpen(false);
     },
-    onError: (err: any) => toast.error(err.message || "Uuendamine ebaõnnestus"),
+    onError: (err: any) => toast.error(err.message || t("toast.updateFailed")),
   });
 
   const approvalLabel = (m: ApprovalMode) => m === "auto" ? t("admin.approvalAuto") : m === "admin" ? t("admin.approvalAdmin") : t("admin.approvalProvider");

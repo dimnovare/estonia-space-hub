@@ -24,7 +24,7 @@ export default function ProviderProfile() {
       phone: formData.phone,
       company: formData.company,
     });
-    toast.success("Profiil uuendatud");
+    toast.success(t("toast.profileSaved"));
   };
 
   return (
