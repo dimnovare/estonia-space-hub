@@ -295,6 +295,24 @@ export interface PaginatedResponse<T> {
   hasMore: boolean;
 }
 
+export interface Review {
+  id: string;
+  bookingId: string;
+  listingId: string;
+  userId: string;
+  userName: string;
+  rating: number;
+  comment?: string;
+  createdAt: string;
+}
+
+export interface CreateReviewInput {
+  bookingId: string;
+  listingId: string;
+  rating: number;
+  comment?: string;
+}
+
 export interface CreateBookingInput {
   listingId: string;
   startDate: string;

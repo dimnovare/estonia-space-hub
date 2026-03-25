@@ -1087,6 +1087,15 @@ const translations: Record<Language, Record<string, string>> = {
     "listing.publicPrice": "Tavahind",
     "listing.partnerPrice": "Ruumly hind",
     "listing.partnerPriceInfo": "Ruumly partnerihind on kuni 10% soodsam kui otse pakkujalt",
+    "reviews.title": "Hinnangud",
+    "reviews.empty": "Ühtegi hinnangut pole veel",
+    "reviews.leave": "Jäta hinnang",
+    "reviews.submit": "Saada",
+    "reviews.count": "{count} hinnangut",
+    "reviews.rating": "Hinnang",
+    "reviews.comment": "Kommentaar (valikuline)",
+    "reviews.success": "Hinnang saadetud!",
+    "reviews.commentPlaceholder": "Kirjeldage oma kogemust...",
   },
 
   en: {
@@ -2132,6 +2141,15 @@ const translations: Record<Language, Record<string, string>> = {
     "listing.publicPrice": "Regular price",
     "listing.partnerPrice": "Ruumly price",
     "listing.partnerPriceInfo": "Ruumly partner price is up to 10% cheaper than directly from the provider",
+    "reviews.title": "Reviews",
+    "reviews.empty": "No reviews yet",
+    "reviews.leave": "Leave a review",
+    "reviews.submit": "Submit",
+    "reviews.count": "{count} reviews",
+    "reviews.rating": "Rating",
+    "reviews.comment": "Comment (optional)",
+    "reviews.success": "Review submitted!",
+    "reviews.commentPlaceholder": "Describe your experience...",
   },
 
   ru: {
@@ -3177,6 +3195,15 @@ const translations: Record<Language, Record<string, string>> = {
     "listing.publicPrice": "Обычная цена",
     "listing.partnerPrice": "Цена Ruumly",
     "listing.partnerPriceInfo": "Партнёрская цена Ruumly до 10% дешевле, чем напрямую у поставщика",
+    "reviews.title": "Отзывы",
+    "reviews.empty": "Отзывов пока нет",
+    "reviews.leave": "Оставить отзыв",
+    "reviews.submit": "Отправить",
+    "reviews.count": "{count} отзывов",
+    "reviews.rating": "Оценка",
+    "reviews.comment": "Комментарий (необязательно)",
+    "reviews.success": "Отзыв отправлен!",
+    "reviews.commentPlaceholder": "Опишите ваш опыт...",
   },
 };
 

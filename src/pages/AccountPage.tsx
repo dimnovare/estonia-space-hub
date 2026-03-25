@@ -10,9 +10,10 @@ import {
   LayoutDashboard, Package, Heart, Search, Settings, Bell, Shield, CreditCard, 
   HelpCircle, ChevronRight, ChevronDown, Warehouse, Truck, CarFront, Clock, CheckCircle,
   XCircle, Play, Calendar, MapPin, LogOut, User, Send, MessageSquare, FileText,
-  Paperclip, Download, ArrowLeft, Loader2
+  Paperclip, Download, ArrowLeft, Loader2, Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import ReviewDialog from "@/components/ReviewDialog";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBookings } from "@/hooks/useBookings";
@@ -247,6 +248,7 @@ function BookingCard({ booking }: { booking: Booking }) {
   const { t } = useLanguage();
   const statusConfig = useStatusConfig();
   const [open, setOpen] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
   const Icon = typeIcons[booking.listingType];
   const status = statusConfig[booking.status];
   const StatusIcon = status.icon;
@@ -309,9 +311,27 @@ function BookingCard({ booking }: { booking: Booking }) {
                 ))}
               </div>
             </div>
+            {booking.status === "completed" && (
+              <div className="pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-1.5"
+                  onClick={(e) => { e.stopPropagation(); setReviewOpen(true); }}
+                >
+                  <Star className="h-3.5 w-3.5" /> {t("reviews.leave")}
+                </Button>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
+      <ReviewDialog
+        open={reviewOpen}
+        onOpenChange={setReviewOpen}
+        bookingId={booking.id}
+        listingId={booking.listingId}
+      />
     </>
   );
 }
