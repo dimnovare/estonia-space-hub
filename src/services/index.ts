@@ -290,6 +290,46 @@ export const locationService = {
   async getById(id: string): Promise<SupplierLocation> {
     return apiClient.get<SupplierLocation>(`/locations/${id}`);
   },
+  async create(data: {
+    supplierId: string;
+    name: string;
+    address: string;
+    city: string;
+    lat: number;
+    lng: number;
+    description?: string;
+    openingHours?: string;
+    images?: string[];
+    notes?: string;
+  }): Promise<SupplierLocation> {
+    return apiClient.post<SupplierLocation>("/locations", data);
+  },
+  async update(id: string, data: Partial<{
+    name: string;
+    address: string;
+    city: string;
+    lat: number;
+    lng: number;
+    description: string;
+    openingHours: string;
+    images: string[];
+    notes: string;
+  }>): Promise<SupplierLocation> {
+    return apiClient.patch<SupplierLocation>(`/locations/${id}`, data);
+  },
+  async addUnit(locationId: string, unit: {
+    title: string;
+    type: "Warehouse" | "Moving" | "Trailer";
+    priceFrom: number;
+    priceUnit: string;
+    sizeM2?: number;
+    quantityTotal?: number;
+    description?: string;
+    vatRate?: number;
+    pricesIncludeVat: boolean;
+  }): Promise<{ id: string }> {
+    return apiClient.post<{ id: string }>(`/locations/${locationId}/units`, unit);
+  },
 };
 
 // ─── Payment Service ────────────────────────────────────────────────────────
