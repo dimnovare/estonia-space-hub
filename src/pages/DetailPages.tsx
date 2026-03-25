@@ -137,7 +137,7 @@ export function WarehouseDetail() {
           "priceRange": `alates €${wListing.priceFrom}`,
           "address": { "@type": "PostalAddress", "addressLocality": wListing.city, "addressCountry": "EE" },
           ...(wListing.rating > 0 ? { "aggregateRating": { "@type": "AggregateRating", "ratingValue": wListing.rating, "reviewCount": wListing.reviewCount } } : {}),
-          "offers": { "@type": "Offer", "price": wListing.priceFrom, "priceCurrency": "EUR", "priceSpecification": { "@type": "UnitPriceSpecification", "price": wListing.priceFrom, "priceCurrency": "EUR", "unitText": wListing.priceUnit } },
+          "offers": { "@type": "Offer", "price": wListing.priceFrom, "priceCurrency": "EUR", "availability": wListing.availableNow ? "https://schema.org/InStock" : "https://schema.org/OutOfStock", "priceSpecification": { "@type": "UnitPriceSpecification", "price": wListing.priceFrom, "priceCurrency": "EUR", "unitText": wListing.priceUnit } },
           "provider": { "@type": "Organization", "name": "Ruumly", "url": "https://ruumly.eu" }
         }}
       />
@@ -300,7 +300,7 @@ export function MovingDetail() {
           "priceRange": `alates €${mListing.priceFrom}`,
           "address": { "@type": "PostalAddress", "addressLocality": mListing.city, "addressCountry": "EE" },
           ...(mListing.rating > 0 ? { "aggregateRating": { "@type": "AggregateRating", "ratingValue": mListing.rating, "reviewCount": mListing.reviewCount } } : {}),
-          "offers": { "@type": "Offer", "price": mListing.priceFrom, "priceCurrency": "EUR" },
+          "offers": { "@type": "Offer", "price": mListing.priceFrom, "priceCurrency": "EUR", "availability": mListing.availableNow ? "https://schema.org/InStock" : "https://schema.org/OutOfStock" },
           "provider": { "@type": "Organization", "name": "Ruumly", "url": "https://ruumly.eu" }
         }}
       />
@@ -419,7 +419,7 @@ export function TrailerDetail() {
           "priceRange": `alates €${tListing.priceFrom}`,
           "address": { "@type": "PostalAddress", "addressLocality": tListing.city, "addressCountry": "EE" },
           ...(tListing.rating > 0 ? { "aggregateRating": { "@type": "AggregateRating", "ratingValue": tListing.rating, "reviewCount": tListing.reviewCount } } : {}),
-          "offers": { "@type": "Offer", "price": tListing.priceFrom, "priceCurrency": "EUR" },
+          "offers": { "@type": "Offer", "price": tListing.priceFrom, "priceCurrency": "EUR", "availability": tListing.availableNow ? "https://schema.org/InStock" : "https://schema.org/OutOfStock" },
           "provider": { "@type": "Organization", "name": "Ruumly", "url": "https://ruumly.eu" }
         }}
       />
