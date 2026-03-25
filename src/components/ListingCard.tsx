@@ -3,7 +3,7 @@ import { MapPin, Star, Warehouse, Truck, CarFront, Heart, ShieldCheck, BadgePerc
 import type { Listing } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
-import { calculatePricing } from "@/lib/pricing";
+import { getSavingsDisplay } from "@/lib/savingsDisplay";
 
 const badgeStyles: Record<string, string> = {
   cheapest: "badge-cheapest",
@@ -30,7 +30,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
   const detailPath = `/${listing.type}/${listing.id}`;
   const { t } = useLanguage();
   const { isFavorite, toggle } = useFavorites();
-  const { publicPrice, savings } = calculatePricing(listing.priceFrom);
+  const savingsInfo = getSavingsDisplay(listing.priceFrom);
 
   return (
     <Link to={detailPath} className="card-elevated group block overflow-hidden">
@@ -89,12 +89,12 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           <span className="font-display text-lg font-bold text-foreground">al. {listing.priceFrom}€</span>
           <span className="text-xs text-muted-foreground">/ {listing.priceUnit.replace("€/", "")}</span>
         </div>
-        {savings > 0 && (
+        {savingsInfo && (
           <div className="mt-1.5 flex items-center gap-2">
-            <span className="text-xs text-muted-foreground line-through">{publicPrice}€/{listing.priceUnit.replace("€/", "")}</span>
+            <span className="text-xs text-muted-foreground line-through">{savingsInfo.publicPrice}€/{listing.priceUnit.replace("€/", "")}</span>
             <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success">
               <BadgePercent className="h-3 w-3" />
-              {t("listing.savings").replace("{amount}", String(savings))}
+              {t("listing.savings").replace("{amount}", savingsInfo.savings)}
             </span>
           </div>
         )}
