@@ -1074,6 +1074,10 @@ const translations: Record<Language, Record<string, string>> = {
     "empty.providerOrders.desc": "Tellimused ilmuvad siia, kui kliendid broneerivad teie teenuseid.",
     "empty.notifications.title": "Teavitusi pole",
     "empty.notifications.desc": "Uued teavitused ilmuvad siia automaatselt.",
+    "listing.savings": "Säästad {amount}€",
+    "listing.publicPrice": "Tavahind",
+    "listing.partnerPrice": "Ruumly hind",
+    "listing.partnerPriceInfo": "Ruumly partnerihind on kuni 10% soodsam kui otse pakkujalt",
   },
 
   en: {
