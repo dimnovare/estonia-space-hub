@@ -146,6 +146,15 @@ const translations: Record<Language, Record<string, string>> = {
     "onboard.success.pending": "⏳ Ülevaatamisel",
     "onboard.success.back": "Tagasi avalehele",
 
+    // Beta badge
+    "home.betaBadge": "Beta on käivitatud — liitu esimeste kasutajate hulka",
+
+    // Booking login hint
+    "booking.loginHint": "Broneerimise kinnitamiseks on vaja kontot — registreerimine võtab 30 sekundit",
+
+    // Maintenance
+    "maintenance.title": "Tuleme varsti tagasi",
+    "maintenance.desc": "Ruumly on hetkel hoolduses. Töötame platvormi parandamise kallal ja oleme peagi tagasi.",
 
     "faq.title": "Korduma kippuvad küsimused",
     "faq.subtitle": "Leidke vastused levinumatele küsimustele.",
