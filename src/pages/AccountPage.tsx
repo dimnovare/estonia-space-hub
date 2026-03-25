@@ -862,6 +862,8 @@ function useGenerateInvoicePdf() {
 }
 
 function AccountBilling() {
+  const { t } = useLanguage();
+  const generateInvoicePdf = useGenerateInvoicePdf();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   useEffect(() => { invoiceService.getAll().then(setInvoices); }, []);
 
