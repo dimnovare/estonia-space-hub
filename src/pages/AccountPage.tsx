@@ -32,7 +32,16 @@ import { useAllListings } from "@/hooks/queries";
 import ListingCard from "@/components/ListingCard";
 import { SEO } from "@/components/SEO";
 
-// statusConfig moved inside component to support translations
+function useStatusConfig() {
+  const { t } = useLanguage();
+  return {
+    pending: { label: t("status.pending"), color: "bg-warning/10 text-warning", icon: Clock },
+    confirmed: { label: t("status.confirmed"), color: "bg-success/10 text-success", icon: CheckCircle },
+    active: { label: t("status.active"), color: "bg-accent/10 text-accent", icon: Play },
+    completed: { label: t("status.completed"), color: "bg-muted text-muted-foreground", icon: CheckCircle },
+    cancelled: { label: t("status.cancelled"), color: "bg-destructive/10 text-destructive", icon: XCircle },
+  } as Record<BookingStatus, { label: string; color: string; icon: typeof Clock }>;
+}
 
 const typeIcons = { warehouse: Warehouse, moving: Truck, trailer: CarFront };
 
@@ -98,16 +107,6 @@ export default function AccountPage() {
   const tab = searchParams.get("tab") || "overview";
   const setTab = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("tab", id); return n; }, { replace: true });
   const { t } = useLanguage();
-
-  const statusConfig: Record<BookingStatus, { label: string; color: string; icon: typeof Clock }> = {
-    pending: { label: t("status.pending"), color: "bg-warning/10 text-warning", icon: Clock },
-    confirmed: { label: t("status.confirmed"), color: "bg-success/10 text-success", icon: CheckCircle },
-    active: { label: t("status.active"), color: "bg-accent/10 text-accent", icon: Play },
-    completed: { label: t("status.completed"), color: "bg-muted text-muted-foreground", icon: CheckCircle },
-    cancelled: { label: t("status.cancelled"), color: "bg-destructive/10 text-destructive", icon: XCircle },
-  };
-
-  const { user, logout, role } = useAuth();
   const { user, logout, role } = useAuth();
   const navigate = useNavigate();
   const sidebarLinks = useSidebarLinks();
@@ -246,6 +245,7 @@ function AccountOverview({ onNavigate }: { onNavigate: (tab: string) => void }) 
 
 function BookingCard({ booking }: { booking: Booking }) {
   const { t } = useLanguage();
+  const statusConfig = useStatusConfig();
   const [open, setOpen] = useState(false);
   const Icon = typeIcons[booking.listingType];
   const status = statusConfig[booking.status];
@@ -317,6 +317,8 @@ function BookingCard({ booking }: { booking: Booking }) {
 }
 
 function AccountBookings() {
+  const { t } = useLanguage();
+  const statusConfig = useStatusConfig();
   const [filter, setFilter] = useState<"all" | BookingStatus>("all");
   const { data: bookings = [], isLoading } = useBookings();
   const filtered = filter === "all" ? bookings : bookings.filter(b => b.status === filter);
@@ -366,6 +368,7 @@ function AccountBookings() {
 
 /* ─── Messages ─── */
 function AccountMessages() {
+  const { t } = useLanguage();
   const { data: bookings = [] } = useBookings();
   const queryClient = useQueryClient();
   const [selectedBooking, setSelectedBooking] = useState<string | null>(null);
@@ -534,6 +537,7 @@ function AccountSearches() {
 }
 
 function AccountNotifications() {
+  const { t } = useLanguage();
   const { data: notifications = [] } = useNotifications();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -636,6 +640,7 @@ function AccountNotifications() {
 }
 
 function AccountProfile() {
+  const { t } = useLanguage();
   const { user, updateProfile } = useAuth();
   const form = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
@@ -669,6 +674,7 @@ function AccountProfile() {
 }
 
 function AccountSecurity() {
+  const { t } = useLanguage();
   const [changingPw, setChangingPw] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { user } = useAuth();
@@ -764,7 +770,9 @@ function AccountSecurity() {
   );
 }
 
-function generateInvoicePdf(inv: Invoice) {
+function useGenerateInvoicePdf() {
+  const { t } = useLanguage();
+  return (inv: Invoice) => {
   const statusLabel =
     inv.status === "paid" ? "Makstud" :
     inv.status === "pending" ? "Ootel" : "Tähtaeg ületatud";
@@ -850,9 +858,12 @@ function generateInvoicePdf(inv: Invoice) {
   win.document.close();
   win.focus();
   setTimeout(() => { win.print(); }, 500);
+  };
 }
 
 function AccountBilling() {
+  const { t } = useLanguage();
+  const generateInvoicePdf = useGenerateInvoicePdf();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   useEffect(() => { invoiceService.getAll().then(setInvoices); }, []);
 
