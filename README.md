@@ -24,6 +24,7 @@ npm run dev
 |---|---|---|
 | VITE_API_URL | Yes | Backend URL e.g. http://localhost:3000/api |
 | VITE_GOOGLE_CLIENT_ID | Yes | From console.cloud.google.com |
+| VITE_GA_ID | No | Google Analytics 4 measurement ID (G-XXXXXXXXX) |
 
 ## Roles
 | Role | Access |

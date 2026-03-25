@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { MapPin, Star, Check, ArrowLeft, Calendar, Shield, BadgePercent, Zap, Mail, Hand, Building2, CheckCircle, Loader2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import type { Listing, WarehouseListing, MovingListing, TrailerListing } from "@/services/types";
 import { SEO } from "@/components/SEO";
 import ReviewsSection from "@/components/ReviewsSection";
+import { trackEvent } from "@/lib/analytics";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
@@ -54,6 +55,10 @@ export function WarehouseDetail() {
   const { t } = useLanguage();
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
   const { data: listing, isLoading } = useListing(id);
+
+  useEffect(() => {
+    if (listing) trackEvent("listing_view", { listing_id: listing.id, type: listing.type, city: listing.city || "" });
+  }, [listing]);
 
   if (isLoading) return <LoadingDetail />;
   if (!listing || listing.type !== "warehouse") return <NotFoundDetail />;
@@ -235,6 +240,10 @@ export function MovingDetail() {
   const { t } = useLanguage();
   const { data: listing, isLoading } = useListing(id);
 
+  useEffect(() => {
+    if (listing) trackEvent("listing_view", { listing_id: listing.id, type: listing.type, city: listing.city || "" });
+  }, [listing]);
+
   if (isLoading) return <LoadingDetail />;
   if (!listing || listing.type !== "moving") return <NotFoundDetail />;
   const mListing = listing as MovingListing;
@@ -347,6 +356,10 @@ export function TrailerDetail() {
   const { id } = useParams();
   const { t } = useLanguage();
   const { data: listing, isLoading } = useListing(id);
+
+  useEffect(() => {
+    if (listing) trackEvent("listing_view", { listing_id: listing.id, type: listing.type, city: listing.city || "" });
+  }, [listing]);
 
   if (isLoading) return <LoadingDetail />;
   if (!listing || listing.type !== "trailer") return <NotFoundDetail />;

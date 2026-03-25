@@ -12,6 +12,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
 import { ESTONIAN_CITIES } from "@/lib/constants";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { trackEvent } from "@/lib/analytics";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
@@ -58,6 +59,13 @@ export default function SearchPage() {
     setSearchInput(query);
     setDebouncedQ(query);
   }, [query]);
+
+  // Track search when debounced query changes
+  useEffect(() => {
+    if (debouncedQ) {
+      trackEvent("search", { query: debouncedQ, type: activeType, city: cityFilter || "all" });
+    }
+  }, [debouncedQ, activeType, cityFilter]);
 
   // Build filters for the service layer
   const filters: ListingFilters = useMemo(() => ({
