@@ -97,8 +97,9 @@ export default function SearchPage() {
   }, [serverFiltered, heated, access24, indoor, security, loadingDock, forkliftFilter, shortTerm, longTerm, withVan, packingHelp, loadingHelp, pricingFixed, trailerClosed]);
 
   // Local-only UI state
+  const isMobile = useIsMobile();
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [mobileView, setMobileView] = useState<"list" | "map">("list");
   const [notifyEmail, setNotifyEmail] = useState("");
   const [notifyLoading, setNotifyLoading] = useState(false);
