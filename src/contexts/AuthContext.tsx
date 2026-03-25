@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
-import { apiClient } from "@/services/apiClient";
+import { apiClient, tokenStore } from "@/services/apiClient";
 import type { UserRole } from "@/services/types";
 
 export type { UserRole };
@@ -51,6 +51,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+
 function normalizeUser(raw: AuthResponse["user"]): MockUser {
   return {
     id: raw.id,
@@ -71,29 +73,41 @@ function normalizeUser(raw: AuthResponse["user"]): MockUser {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<MockUser | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
+
   useEffect(() => {
-    const init = async () => {
-      const token = localStorage.getItem("ruumly-token");
-      if (!token) { setIsInitializing(false); return; }
-      try {
-        // Use raw fetch so a 401 doesn't trigger the apiClient redirect loop
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL || ""}/auth/me`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (!res.ok) throw new Error("invalid token");
-        const raw: AuthResponse["user"] = await res.json();
-        const normalized = normalizeUser(raw);
-        setUser(normalized);
-        localStorage.setItem("ruumly-auth", JSON.stringify(normalized));
-      } catch {
-        localStorage.removeItem("ruumly-token");
+    const refresh = tokenStore.getRefresh();
+    const stored = localStorage.getItem("ruumly-auth");
+
+    if (!refresh) {
+      // No refresh token — user is logged out
+      setIsInitializing(false);
+      return;
+    }
+
+    // Try to restore session via refresh token
+    fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken: refresh }),
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.accessToken) {
+          tokenStore.setAccess(data.accessToken);
+          if (data.refreshToken) tokenStore.setRefresh(data.refreshToken);
+          // Use stored profile for instant UI while we have a valid token
+          const profile = stored ? JSON.parse(stored) : null;
+          if (profile) setUser(profile);
+        } else {
+          tokenStore.clear();
+          localStorage.removeItem("ruumly-auth");
+        }
+      })
+      .catch(() => {
+        tokenStore.clear();
         localStorage.removeItem("ruumly-auth");
-      } finally {
-        setIsInitializing(false);
-      }
-    };
-    init();
+      })
+      .finally(() => setIsInitializing(false));
   }, []);
 
   const persist = (
@@ -105,13 +119,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       if (u) localStorage.setItem("ruumly-auth", JSON.stringify(u));
       else localStorage.removeItem("ruumly-auth");
-      if (token) localStorage.setItem("ruumly-token", token);
-      if (refresh) localStorage.setItem("ruumly-refresh", refresh);
-      if (!u) {
-        localStorage.removeItem("ruumly-token");
-        localStorage.removeItem("ruumly-refresh");
-      }
     } catch {}
+    tokenStore.setAccess(token ?? null);
+    tokenStore.setRefresh(refresh ?? null);
   };
 
   const login = useCallback(async (email: string, password: string) => {
@@ -143,7 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    const refresh = localStorage.getItem("ruumly-refresh") ?? "";
+    const refresh = tokenStore.getRefresh();
     if (refresh) {
       apiClient.post("/auth/logout", { refreshToken: refresh }).catch(() => {});
     }
