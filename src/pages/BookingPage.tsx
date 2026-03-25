@@ -134,25 +134,11 @@ export default function BookingPage() {
     });
   };
 
-  // Restore pending booking after login
+  // After inline auth success, auto-submit the booking
   useEffect(() => {
-    const pending = sessionStorage.getItem("pendingBooking");
-    if (pending && isAuthenticated) {
-      try {
-        const data = JSON.parse(pending);
-        if (data.listingId === listingId) {
-          detailsForm.setValue("date", data.date);
-          detailsForm.setValue("duration", data.duration);
-          setSelectedExtras(data.extras ?? []);
-          contactForm.setValue("name", data.contact?.name ?? "");
-          contactForm.setValue("email", data.contact?.email ?? "");
-          contactForm.setValue("phone", data.contact?.phone ?? "");
-          contactForm.setValue("notes", data.contact?.notes ?? "");
-          setPaymentMethod(data.paymentMethod ?? "bank");
-          setStep(4);
-          sessionStorage.removeItem("pendingBooking");
-        }
-      } catch {}
+    if (isAuthenticated && showInlineAuth) {
+      setShowInlineAuth(false);
+      submitBooking();
     }
   }, [isAuthenticated]);
 
@@ -298,12 +284,6 @@ export default function BookingPage() {
                 </select>
                 {detailsForm.formState.errors.duration && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.duration.message}</p>}
               </div>
-              {!isAuthenticated && (
-                <div className="flex items-start gap-2 rounded-lg border border-accent/20 bg-accent/5 p-3">
-                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                  <span className="text-xs text-muted-foreground">{t("booking.loginHint")}</span>
-                </div>
-              )}
             </div>
           )}
 
@@ -427,6 +407,10 @@ export default function BookingPage() {
                   </div>
                 )}
               </div>
+
+              {showInlineAuth && !isAuthenticated && (
+                <BookingInlineAuth onSuccess={() => {}} />
+              )}
             </div>
           )}
 
