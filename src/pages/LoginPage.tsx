@@ -14,6 +14,7 @@ import { loginSchema, registerSchema, type LoginForm, type RegisterForm } from "
 import { authService } from "@/services";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
+import { trackEvent } from "@/lib/analytics";
 
 type AuthView = "login" | "register" | "forgot" | "forgot-sent" | "reset";
 
@@ -56,6 +57,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(data.email, data.password);
+      trackEvent("login", { method: "email" });
       toast.success(t("login.successLogin"));
       navigate(from, { replace: true });
     } catch (err: any) { const msg = err.message || ""; toast.error(msg.startsWith("error.") ? t(msg) : msg || t("error.loginFailed")); }
@@ -66,6 +68,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await authRegister(data.name, data.email, data.password, data.inviteCode);
+      trackEvent("register", { method: "email" });
       toast.success(t("login.successRegister"));
       navigate(from, { replace: true });
     } catch (err: any) { const msg = err.message || ""; toast.error(msg.startsWith("error.") ? t(msg) : msg || t("error.registerFailed")); }
@@ -208,6 +211,7 @@ export default function LoginPage() {
                   setLoading(true);
                   loginWithGoogle(credentialResponse.credential)
                     .then(() => {
+                      trackEvent("login", { method: "google" });
                       toast.success(t("login.successLogin"));
                       navigate(from, { replace: true });
                     })

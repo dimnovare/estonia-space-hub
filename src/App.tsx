@@ -32,6 +32,7 @@ import ProviderPage from "@/pages/ProviderPage";
 import RequestDetailPage from "@/pages/RequestDetailPage";
 import { lazy, Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import { trackPageView } from "@/lib/analytics";
 
 // Lazy-loaded heavy pages
 const AdminPage = lazy(() => import("@/pages/AdminPage"));
@@ -59,7 +60,7 @@ const queryClient = new QueryClient({
 
 function ScrollToTop() {
   const { pathname } = useLocation();
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  useEffect(() => { window.scrollTo(0, 0); trackPageView(pathname); }, [pathname]);
   return null;
 }
 

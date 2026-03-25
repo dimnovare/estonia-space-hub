@@ -3,8 +3,11 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
+import { initGA } from "./lib/analytics";
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";
+const gaId = import.meta.env.VITE_GA_ID;
+if (gaId) initGA(gaId);
 
 createRoot(document.getElementById("root")!).render(
   <HelmetProvider>

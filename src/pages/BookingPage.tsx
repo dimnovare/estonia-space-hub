@@ -14,6 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { bookingDetailsSchema, bookingContactSchema, type BookingDetailsForm, type BookingContactForm } from "@/lib/schemas";
 import { tokenStore } from "@/services/apiClient";
 import BookingInlineAuth from "@/components/BookingInlineAuth";
+import { trackEvent } from "@/lib/analytics";
 
 type SubmitPhase = "submitting" | "sending" | "waiting" | "done";
 
@@ -98,6 +99,11 @@ export default function BookingPage() {
   };
 
   const submitBooking = () => {
+    trackEvent("booking_created", {
+      listing_type: listing?.type || "",
+      city: listing?.city || "",
+      total: pricing?.total || 0,
+    });
     createBooking.mutateAsync({
       listingId: listingId!,
       startDate: detailsForm.getValues("date"),
