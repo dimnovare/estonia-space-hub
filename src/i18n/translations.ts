@@ -33,9 +33,9 @@ const translations: Record<Language, Record<string, string>> = {
     // Hero
     "hero.title": "Leia laopinda, kolimist ja logistikat",
     "hero.titleHighlight": "ühest kohast",
-    "hero.subtitle": "Me läbirääkisime partneritega — sinu hind on 10–20% väiksem.",
+    "hero.subtitle": "Üks platvorm — laopinnad, kolimine ja haagised. Leia asukoht, vali sobiv ühik, broneeri.",
     "trust.title": "Parim hind ilma helistamiseta",
-    "trust.badge1": "Hinnad läbiräägitud",
+    "trust.badge1": "Asukoht + ühikud ühes",
     "trust.badge2": "Kiire kinnitus",
     "trust.badge3": "Eesti firmad",
     "hero.search": "Otsi",
@@ -54,9 +54,9 @@ const translations: Record<Language, Record<string, string>> = {
     "how.step1": "Otsi",
     "how.step1desc": "Sisesta asukoht või teenuse tüüp ja leia parimad pakkumised.",
     "how.step2": "Võrdle",
-    "how.step2desc": "Võrdle hindu, asukohti ja tingimusi ühest kohast.",
+    "how.step2desc": "Filtreerige tulemusi hinna, asukoha ja ühiku tüübi järgi. Iga asukoht näitab kõiki saadavaid ühikuid koos hindade ja kogustega.",
     "how.step3": "Broneeri",
-    "how.step3desc": "Broneeri otse meie kaudu ja säästa kuni 10%.",
+    "how.step3desc": "Valige sobiv asukoht ja ühik ning broneerige otse meie kaudu. Ruumly partnerhinnad on kuni 10% soodsamad kui otse pakkujalt.",
 
     // Featured
     "featured.title": "Populaarsed pakkumised",
@@ -72,7 +72,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Provider CTA
     "provider.title": "Oled teenusepakkuja?",
-    "provider.desc": "Lisa oma laopind, kolimisteenus või haagiserent Ruumly platvormile ja jõua tuhandete klientideni. Meie partnerid saavad rohkem broneeringuid.",
+    "provider.desc": "Lisa oma laopind, kolimine või haagiserent Ruumly platvormile. Üks asukoht — mitu ühikut, igaüks oma hinna ja saadavusega. Beeta perioodil tasuta.",
     "provider.cta": "Hakka partneriks",
 
     // Provider landing page
@@ -93,7 +93,7 @@ const translations: Record<Language, Record<string, string>> = {
     "provPage.cta.title": "Valmis liituma?",
     "provPage.cta.subtitle": "Täitke lühike registreerimisvorm ja meie meeskond võtab teiega ühendust 48 tunni jooksul.",
     "provPage.cta.button": "Alusta registreerumist",
-    "provPage.cta.note": "Tasuta · Ei nõua lepingut · Kinnitamine 48 tunniga",
+    "provPage.cta.note": "Tasuta beeta · Ei nõua lepingut · Kinnitamine 48 tunniga",
 
     // Provider onboarding page
     "onboard.title": "Liitu partnerina",
@@ -131,7 +131,7 @@ const translations: Record<Language, Record<string, string>> = {
     "onboard.step4.note": "PDF, JPG või PNG · Maks 10MB",
     "onboard.step5.title": "Tingimused",
     "onboard.step5.intro": "Liitudes Ruumly platvormiga nõustute järgmiste tingimustega:",
-    "onboard.step5.term1": "Platvormi komisjonitasu on kokkuleppeline, tavaliselt 10-15% broneeringu väärtusest.",
+    "onboard.step5.term1": "Beeta perioodil on komisjonitasu 8% edukalt broneeringutelt. Standard ja Premium plaanid (5% ja 3%) saadaval peagi.",
     "onboard.step5.term2": "Partner kohustub pakkuma Ruumly kaudu tehtud broneeringutele sama või paremat teenuse kvaliteeti.",
     "onboard.step5.term3": "Ruumly klientidele pakutav hind on tavaliselt kuni 10% soodsam kui partneri avalik hind.",
     "onboard.step5.term4": "Partner vastutab teenuse kvaliteedi, saadavuse ja klienditeeninduse eest.",
@@ -178,9 +178,9 @@ const translations: Record<Language, Record<string, string>> = {
     "faq.howFast": "Kui kiiresti broneering kinnitatakse?",
     "faq.howFastA": "Enamik broneeringuid kinnitatakse automaatselt. Mõnel juhul kinnitab partner broneeringu 1-2 tunni jooksul.",
     "faq.howToJoin": "Kuidas partneriks saada?",
-    "faq.howToJoinA": "Minge lehele 'Pakkujatele' ja täitke liitumisvorm. Meie meeskond võtab teiega ühendust 48 tunni jooksul.",
+    "faq.howToJoinA": "Minge lehele 'Pakkujatele', täitke liitumisvorm ja lisage oma asukoht. Saate lisada igale asukohale mitu ühikut — näiteks erinevad suurused või hinnaklassid. Meie meeskond võtab teiega ühendust 48 tunni jooksul.",
     "faq.joinCost": "Mis on partnerlusega liitumise hind?",
-    "faq.joinCostA": "Liitumine on tasuta. Meie teenustasu põhineb edukatel broneeringutel — komisjonitasu lepitakse kokku individuaalselt.",
+    "faq.joinCostA": "Liitumine on tasuta — beeta perioodil on kõik partnerid Starter plaanil. Platvormi kasvu käigus lisanduvad Standard (€29/kuu) ja Premium (€79/kuu) plaanid, mis vähendavad komisjonitasu ja võimaldavad rohkem asukohti. Komisjonitasu sõltub plaanist: 8% (Starter), 5% (Standard) või 3% (Premium).",
     "faq.canEditPrices": "Kas saan ise hindu hallata?",
     "faq.canEditPricesA": "Jah, partnerid saavad ise hallata oma hindu, saadavust ja teenuste kirjeldusi.",
     "faq.noAnswer": "Ei leidnud vastust?",
@@ -271,7 +271,7 @@ const translations: Record<Language, Record<string, string>> = {
     "search.sort.bestValue": "Parim pakkumine",
     "search.sort.newest": "Uusimad",
     "search.type.all": "Kõik",
-    "search.type.warehouse": "Laopinnad",
+    "search.type.warehouse": "Laopinnad ja ühikud",
     "search.type.moving": "Kolimine",
     "search.type.trailer": "Haagise rent",
     "search.availableNow": "Kohe saadaval",
@@ -676,7 +676,7 @@ const translations: Record<Language, Record<string, string>> = {
     "provider.listings.price": "Hind (€/kuu)",
     "provider.listings.size": "Suurus (m²)",
     "provider.listings.commission": "Ruumly komisjon:",
-    "provider.listings.commissionDesc": "Klient näeb hinda, mis on kuni 10% soodsam kui turutavahind.",
+    "provider.listings.commissionDesc": "Starter plaan: 8% komisjon. Standard: 5%. Premium: 3%. Klient näeb hinda, mis on kuni 10% soodsam kui turutavahind.",
     "provider.listings.imagesDesc": "Lisage kuulutusele pildid. Esimene pilt kuvatakse kaardil ja otsingutulemuste kaardil.",
     "provider.listings.featuresDesc": "Valige kuulutusele sobivad omadused:",
     "provider.listings.cancelBtn": "Tühista",
