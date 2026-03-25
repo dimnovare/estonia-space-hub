@@ -203,6 +203,12 @@ export default function BookingPage() {
 
   return (
     <div className="container-wide py-8 pb-24 lg:pb-8">
+      <SEO
+        title="Broneeri — Ruumly"
+        description="Broneeri laopind, kolimisteenus või haagis Ruumly kaudu."
+        canonical="/book"
+        noindex={true}
+      />
       <Link to={listing ? `/${listing.type}/${listing.id}` : "/search"} className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> {t("booking.back")}
       </Link>
@@ -269,6 +275,12 @@ export default function BookingPage() {
                 </select>
                 {detailsForm.formState.errors.duration && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.duration.message}</p>}
               </div>
+              {!isAuthenticated && (
+                <div className="flex items-start gap-2 rounded-lg border border-accent/20 bg-accent/5 p-3">
+                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                  <span className="text-xs text-muted-foreground">{t("booking.loginHint")}</span>
+                </div>
+              )}
             </div>
           )}
 

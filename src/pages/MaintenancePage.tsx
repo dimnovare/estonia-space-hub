@@ -1,21 +1,29 @@
 import { Wrench } from "lucide-react";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { SEO } from "@/components/SEO";
 
 export default function MaintenancePage() {
   const settings = usePlatformSettings();
+  const { t } = useLanguage();
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-center">
+      <SEO
+        title="Hooldus — Ruumly"
+        description="Ruumly on hetkel hoolduses. Tuleme varsti tagasi."
+        noindex={true}
+      />
       <div className="mb-6 rounded-full bg-accent/10 p-4">
         <Wrench className="h-10 w-10 text-accent" />
       </div>
 
       <h1 className="mb-3 text-3xl font-bold text-foreground">
-        Tuleme varsti tagasi
+        {t("maintenance.title")}
       </h1>
 
       <p className="mb-6 max-w-md text-muted-foreground">
-        Ruumly on hetkel hoolduses. Töötame platvormi parandamise kallal ja oleme peagi tagasi.
+        {t("maintenance.desc")}
       </p>
 
       <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
