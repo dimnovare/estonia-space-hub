@@ -348,16 +348,16 @@ function AccountBookings() {
       </select>
       <div className="mt-4 space-y-2">
         {filtered.length === 0 ? (
-          <div className="py-20 text-center">
-            <Package className="mx-auto h-10 w-10 text-muted-foreground/20" />
+          <div className="mx-auto flex max-w-sm flex-col items-center rounded-2xl bg-secondary/30 px-6 py-16 text-center">
+            <Package className="h-12 w-12 text-muted-foreground/50" />
             <p className="mt-4 font-display text-base font-semibold">
-              {filter === "all" ? "Broneeringuid ei leitud" : "Selle staatusega broneeringuid pole"}
+              {filter === "all" ? t("empty.bookings.title") : t("empty.bookings.filtered")}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              {filter === "all" ? "Broneeri esimene teenus ja see ilmub siia." : "Proovige teist filtrit."}
+              {filter === "all" ? t("empty.bookings.desc") : t("empty.bookings.filteredDesc")}
             </p>
             {filter === "all" && (
-              <Link to="/search"><Button className="mt-5 bg-accent text-accent-foreground">Otsi teenuseid</Button></Link>
+              <Link to="/search"><Button className="mt-5 bg-accent text-accent-foreground">{t("empty.bookings.cta")}</Button></Link>
             )}
           </div>
         ) : filtered.map(b => <BookingCard key={b.id} booking={b} />)}
@@ -597,9 +597,10 @@ function AccountNotifications() {
       </div>
 
       {notifications.length === 0 ? (
-        <div className="py-12 text-center text-sm text-muted-foreground">
-          <Bell className="mx-auto h-8 w-8 text-muted-foreground/20 mb-3" />
-          Teavitusi pole.
+        <div className="mx-auto flex max-w-sm flex-col items-center rounded-2xl bg-secondary/30 px-6 py-16 text-center">
+          <Bell className="h-12 w-12 text-muted-foreground/50" />
+          <p className="mt-4 font-display text-base font-semibold">{t("empty.notifications.title")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("empty.notifications.desc")}</p>
         </div>
       ) : (
         <div className="mt-4 space-y-2">
