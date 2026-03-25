@@ -13,6 +13,9 @@ interface InteractiveMapProps {
   onLocationClick?: (location: SupplierLocation) => void;
   center?: [number, number];
   zoom?: number;
+  tUnits?: string;
+  tFrom?: string;
+  tAllUnits?: string;
 }
 
 const typeColors: Record<string, string> = {
@@ -128,7 +131,7 @@ function createLocationMarkerIcon(location: SupplierLocation, isSelected: boolea
           box-shadow: 0 2px 8px rgba(0,0,0,0.15);
           white-space: nowrap;
           border: 1px solid ${color}20;
-        ">${location.unitCount} ühikut${location.priceFrom ? ` · €${location.priceFrom}` : ''}</div>
+        ">${location.unitCount} ${tUnits}${location.priceFrom ? ` · €${location.priceFrom}` : ''}</div>
       </div>
     `,
     iconSize: [size, size + 28],
@@ -146,6 +149,9 @@ export default function InteractiveMap({
   onLocationClick,
   center = [58.8, 25.5],
   zoom = 7,
+  tUnits = "units",
+  tFrom = "From",
+  tAllUnits = "All units",
 }: InteractiveMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
@@ -183,6 +189,8 @@ export default function InteractiveMap({
 
     markersRef.current.clearLayers();
     markerMap.current.clear();
+    // Update closure references for location marker labels
+    createLocationMarkerIconRef.current = (location: SupplierLocation, isSelected: boolean) => createLocationMarkerIcon(location, isSelected, tUnits);
 
     const bounds: L.LatLngExpression[] = [];
 
@@ -205,8 +213,8 @@ export default function InteractiveMap({
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
             ${loc.address}, ${loc.city}
           </div>
-          ${loc.priceFrom ? `<div style="font-weight: 700; font-size: 16px; color: #1E3A5F; margin-bottom: 4px;">al. €${loc.priceFrom}/kuu</div>` : ''}
-          <a href="/location/${loc.id}" style="font-size: 12px; color: #2EC4B6; text-decoration: none; font-weight: 600;">${loc.unitCount} ühikut →</a>
+          ${loc.priceFrom ? `<div style="font-weight: 700; font-size: 16px; color: #1E3A5F; margin-bottom: 4px;">${tFrom} €${loc.priceFrom}/kuu</div>` : ''}
+          <a href="/location/${loc.id}" style="font-size: 12px; color: #2EC4B6; text-decoration: none; font-weight: 600;">${tAllUnits} (${loc.unitCount}) →</a>
         </div>
       `;
 
@@ -241,7 +249,7 @@ export default function InteractiveMap({
             ${listing.address}, ${listing.city}
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: 700; font-size: 16px; color: #1E3A5F;">al. ${listing.priceFrom}€</span>
+            <span style="font-weight: 700; font-size: 16px; color: #1E3A5F;">${tFrom} ${listing.priceFrom}€</span>
             <span style="font-size: 11px; color: ${typeColor}; background: ${typeColor}10; padding: 2px 8px; border-radius: 10px; font-weight: 600;">${typeName}</span>
           </div>
           <div style="font-size: 11px; color: #888; margin-top: 4px;">⭐ ${listing.rating} (${listing.reviewCount} arvustust)</div>
