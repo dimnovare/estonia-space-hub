@@ -2,18 +2,21 @@ import { useState, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, MapPin, ChevronDown, ChevronUp, CheckCircle, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFeaturedListings, useAllListings } from "@/hooks/queries";
 import ListingCard from "@/components/ListingCard";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
+import { ESTONIAN_CITIES } from "@/lib/constants";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
 export default function HomePage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const { t } = useLanguage();
