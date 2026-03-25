@@ -4,27 +4,31 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function ProviderAnalytics() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
-  const viewsData = [
-    { month: "Okt", views: 120, bookings: 3 },
-    { month: "Nov", views: 180, bookings: 5 },
-    { month: "Dets", views: 210, bookings: 7 },
-    { month: "Jaan", views: 260, bookings: 6 },
-    { month: "Veebr", views: 310, bookings: 9 },
-    { month: "Märts", views: 390, bookings: 12 },
-  ];
-  const revenueData = [
-    { month: "Okt", revenue: 340 },
-    { month: "Nov", revenue: 580 },
-    { month: "Dets", revenue: 720 },
-    { month: "Jaan", revenue: 890 },
-    { month: "Veebr", revenue: 1050 },
-    { month: "Märts", revenue: 1240 },
-  ];
+  const locale = language === "et" ? "et-EE" : language === "ru" ? "ru-RU" : "en-GB";
+
+  const viewsData = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 5 + i);
+    return {
+      month: d.toLocaleString(locale, { month: "short" }),
+      views: 0,
+      bookings: 0,
+    };
+  });
+
+  const revenueData = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 5 + i);
+    return {
+      month: d.toLocaleString(locale, { month: "short" }),
+      revenue: 0,
+    };
+  });
 
   const exportRevenueCSV = () => {
-    const headers = ["Kuu", "Tulu (€)", "Vaatamised", "Broneeringud"];
+    const headers = t("provider.analytics.csvHeaders").split(",");
     const rows = viewsData.map((v, i) => [v.month, revenueData[i].revenue, v.views, v.bookings]);
     const csv = [headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });

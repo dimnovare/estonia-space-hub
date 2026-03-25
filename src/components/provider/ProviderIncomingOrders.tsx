@@ -48,12 +48,12 @@ export default function ProviderIncomingOrders() {
 
   const bulkReject = () => {
     const ids = Array.from(selectedIds);
-    Promise.all(ids.map(id => rejectOrder.mutateAsync({ id, reason: "Partner lükkas tagasi" })))
+    Promise.all(ids.map(id => rejectOrder.mutateAsync({ id, reason: t("provider.listings.confirmReject") })))
       .then(() => setSelectedIds(new Set()));
   };
 
   const exportCSV = () => {
-    const headers = ["Tellimus", "Klient", "Teenus", "Linn", "Algus", "Periood", "Partneri hind", "Staatus"];
+    const headers = t("provider.orders.csvHeaders").split(",");
     const rows = filtered.map(o => [o.id, o.customerName, o.listingTitle, o.city, o.startDate, o.duration, `€${o.supplierPrice}`, ORDER_STATUS_CONFIG[o.status].label]);
     const csv = [headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
@@ -159,7 +159,7 @@ export default function ProviderIncomingOrders() {
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {order.status === "sent" ? (
                   <Button size="sm" className="bg-success text-success-foreground hover:bg-success/90 gap-1" disabled={isMutating} onClick={() => confirmOrder.mutate(order.id)}>
-                    <Check className="h-3.5 w-3.5" /> {confirmOrder.isPending ? "..." : "Kinnita kättesaamine"}
+                    <Check className="h-3.5 w-3.5" /> {confirmOrder.isPending ? "..." : t("provider.analytics.confirmOrder")}
                   </Button>
                 ) : (order.status === "created" || order.status === "sending") ? (
                   <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 gap-1" disabled={isMutating} onClick={() => approveOrder.mutate(order.id)}>
@@ -167,7 +167,7 @@ export default function ProviderIncomingOrders() {
                   </Button>
                 ) : null}
                 {isPending && (
-                  <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1" disabled={isMutating} onClick={() => rejectOrder.mutate({ id: order.id, reason: "Partner lükkas tagasi" })}>
+                  <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1" disabled={isMutating} onClick={() => rejectOrder.mutate({ id: order.id, reason: t("provider.listings.confirmReject") })}>
                     <X className="h-3.5 w-3.5" /> {rejectOrder.isPending ? "..." : t("provider.orders.reject")}
                   </Button>
                 )}
@@ -235,7 +235,7 @@ export default function ProviderIncomingOrders() {
                         onClick={() => confirmOrder.mutate(selectedOrder.id, { onSuccess: () => setSelectedOrder(null) })}
                       >
                         <Check className="h-3.5 w-3.5" />
-                        {confirmOrder.isPending ? "..." : "Kinnita kättesaamine"}
+                        {confirmOrder.isPending ? "..." : t("provider.analytics.confirmOrder")}
                       </Button>
                     ) : (
                       <Button
@@ -254,7 +254,7 @@ export default function ProviderIncomingOrders() {
                       className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1"
                       disabled={isMutating}
                       onClick={() => rejectOrder.mutate(
-                        { id: selectedOrder.id, reason: "Partner lükkas tagasi" },
+                        { id: selectedOrder.id, reason: t("provider.listings.confirmReject") },
                         { onSuccess: () => setSelectedOrder(null) }
                       )}
                     >

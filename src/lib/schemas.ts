@@ -1,43 +1,43 @@
 import { z } from "zod";
 
 export const loginSchema = z.object({
-  email: z.string().email("Vigane e-posti aadress"),
-  password: z.string().min(8, "Parool peab olema vähemalt 8 tähemärki"),
+  email: z.string().email(),
+  password: z.string().min(8),
 });
 
 export const registerSchema = z.object({
-  name: z.string().min(2, "Nimi peab olema vähemalt 2 tähemärki"),
-  email: z.string().email("Vigane e-posti aadress"),
-  password: z.string().min(8, "Parool peab olema vähemalt 8 tähemärki"),
+  name: z.string().min(2),
+  email: z.string().email(),
+  password: z.string().min(8),
   confirmPassword: z.string(),
   inviteCode: z.string().optional(),
 }).refine(d => d.password === d.confirmPassword, {
-  message: "Paroolid ei kattu", path: ["confirmPassword"],
+  message: "PASSWORDS_DONT_MATCH", path: ["confirmPassword"],
 });
 
 export const bookingContactSchema = z.object({
-  name: z.string().min(2, "Nimi on kohustuslik"),
-  email: z.string().email("Vigane e-posti aadress"),
-  phone: z.string().min(7, "Telefon on kohustuslik"),
+  name: z.string().min(2),
+  email: z.string().email(),
+  phone: z.string().min(7),
   notes: z.string().max(500).optional(),
 });
 
 export const bookingDetailsSchema = z.object({
-  date: z.string().min(1, "Kuupäev on kohustuslik"),
-  duration: z.string().min(1, "Periood on kohustuslik"),
+  date: z.string().min(1),
+  duration: z.string().min(1),
 });
 
 export const profileSchema = z.object({
-  name: z.string().min(2, "Nimi on kohustuslik"),
+  name: z.string().min(2),
   phone: z.string().min(7).optional().or(z.literal("")),
 });
 
 export const passwordSchema = z.object({
-  currentPassword: z.string().min(1, "Praegune parool on kohustuslik"),
-  newPassword: z.string().min(8, "Uus parool peab olema vähemalt 8 tähemärki"),
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8),
   confirmPassword: z.string(),
 }).refine(d => d.newPassword === d.confirmPassword, {
-  message: "Paroolid ei kattu", path: ["confirmPassword"],
+  message: "PASSWORDS_DONT_MATCH", path: ["confirmPassword"],
 });
 
 export type LoginForm = z.infer<typeof loginSchema>;

@@ -1007,6 +1007,19 @@ const translations: Record<Language, Record<string, string>> = {
     // Admin settings
     "admin.inviteCodeRequired": "Beta kutsekood kohustuslik",
     "admin.inviteCodeRequiredDesc": "Kui sees, saavad registreeruda ainult kutse koodiga kasutajad",
+    "admin.showFeaturedListings": "Kuva populaarsed kuulutused",
+    "admin.showFeaturedListingsDesc": "Avaleht: populaarsete kuulutuste sektsioon",
+    "admin.showHowItWorks": "Kuva 'Kuidas see töötab'",
+    "admin.showHowItWorksDesc": "Avaleht: 3-sammuline selgitussektsioon",
+    "admin.showProviderCta": "Kuva partneri CTA",
+    "admin.showProviderCtaDesc": "Avaleht: 'Oled teenusepakkuja?' sektsioon",
+    "admin.showFaq": "Kuva KKK avaleheküljel",
+    "admin.showFaqDesc": "Avaleht: korduma kippuvad küsimused",
+    "admin.showMap": "Kuva kaart avaleheküljel",
+    "admin.showMapDesc": "Avaleht: interaktiivne kaart",
+    "admin.settingsSaved": "Seaded salvestatud",
+    "error.passwordsMustMatch": "Paroolid ei kattu",
+    "error.fieldRequired": "See väli on kohustuslik",
   },
 
   en: {
@@ -1973,6 +1986,19 @@ const translations: Record<Language, Record<string, string>> = {
 
     "admin.inviteCodeRequired": "Beta invite code required",
     "admin.inviteCodeRequiredDesc": "When on, only users with an invite code can register",
+    "admin.showFeaturedListings": "Show featured listings",
+    "admin.showFeaturedListingsDesc": "Homepage: popular listings section",
+    "admin.showHowItWorks": "Show 'How it works'",
+    "admin.showHowItWorksDesc": "Homepage: 3-step explainer section",
+    "admin.showProviderCta": "Show provider CTA",
+    "admin.showProviderCtaDesc": "Homepage: 'Are you a provider?' section",
+    "admin.showFaq": "Show FAQ on homepage",
+    "admin.showFaqDesc": "Homepage: frequently asked questions",
+    "admin.showMap": "Show map on homepage",
+    "admin.showMapDesc": "Homepage: interactive map",
+    "admin.settingsSaved": "Settings saved",
+    "error.passwordsMustMatch": "Passwords do not match",
+    "error.fieldRequired": "This field is required",
   },
 
   ru: {
@@ -2939,6 +2965,19 @@ const translations: Record<Language, Record<string, string>> = {
 
     "admin.inviteCodeRequired": "Требуется бета-код приглашения",
     "admin.inviteCodeRequiredDesc": "При включении регистрация только по коду приглашения",
+    "admin.showFeaturedListings": "Показать популярные объявления",
+    "admin.showFeaturedListingsDesc": "Главная: секция популярных объявлений",
+    "admin.showHowItWorks": "Показать 'Как это работает'",
+    "admin.showHowItWorksDesc": "Главная: 3-шаговое объяснение",
+    "admin.showProviderCta": "Показать CTA для партнёров",
+    "admin.showProviderCtaDesc": "Главная: секция 'Вы поставщик услуг?'",
+    "admin.showFaq": "Показать FAQ на главной",
+    "admin.showFaqDesc": "Главная: часто задаваемые вопросы",
+    "admin.showMap": "Показать карту на главной",
+    "admin.showMapDesc": "Главная: интерактивная карта",
+    "admin.settingsSaved": "Настройки сохранены",
+    "error.passwordsMustMatch": "Пароли не совпадают",
+    "error.fieldRequired": "Поле обязательно для заполнения",
   },
 };
 

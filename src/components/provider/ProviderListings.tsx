@@ -23,10 +23,10 @@ export default function ProviderListings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["provider-listings"] });
       queryClient.invalidateQueries({ queryKey: ["listings"] });
-      toast.success("Kuulutus uuendatud");
+      toast.success(t("toast.listingUpdated"));
       setEditDialogListing(null);
     },
-    onError: (err: any) => toast.error(err.message || "Uuendamine ebaõnnestus"),
+    onError: (err: any) => toast.error(err.message || t("toast.updateFailed")),
   });
 
   const createMutation = useMutation({
@@ -34,12 +34,12 @@ export default function ProviderListings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["provider-listings"] });
       queryClient.invalidateQueries({ queryKey: ["listings"] });
-      toast.success("Kuulutus lisatud");
+      toast.success(t("toast.listingAdded"));
       setCreateOpen(false);
       setCreateStep(0);
       setNewListing({ title: "", type: "warehouse", city: "Tallinn", address: "", description: "", price: "", size: "", features: [] as string[] });
     },
-    onError: (err: any) => toast.error(err.message || "Lisamine ebaõnnestus"),
+    onError: (err: any) => toast.error(err.message || t("toast.addFailed")),
   });
 
   const [editDialogListing, setEditDialogListing] = useState<any | null>(null);
@@ -48,7 +48,7 @@ export default function ProviderListings() {
   const [createStep, setCreateStep] = useState(0);
 
   const [newListing, setNewListing] = useState({
-    title: "", type: "warehouse", city: "Tallinn", address: "", description: "",
+    title: "", type: "warehouse", city: "", address: "", description: "",
     price: "", size: "", features: [] as string[],
   });
 
@@ -67,7 +67,7 @@ export default function ProviderListings() {
 
   const submitListing = () => {
     createMutation.mutate({
-      title: newListing.title || "Uus kuulutus",
+      title: newListing.title || t("provider.listings.defaultTitle"),
       type: newListing.type,
       city: newListing.city,
       address: newListing.address,
@@ -104,7 +104,7 @@ export default function ProviderListings() {
 
       <div className="mt-6 space-y-3">
         {listings.map((l: any) => {
-          const statusLabel = l.status === "active" ? "Aktiivne" : "Peatatud";
+          const statusLabel = l.status === "active" ? t("provider.listings.statusActive") : t("provider.listings.statusPaused");
           const statusColor = l.status === "active" ? "bg-success/10 text-success" : "bg-warning/10 text-warning";
           return (
             <div key={l.id} className="rounded-xl border border-border p-4">
