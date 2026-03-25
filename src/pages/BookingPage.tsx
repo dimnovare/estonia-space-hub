@@ -8,6 +8,8 @@ import { EXTRAS_PRICES } from "@/lib/pricing";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { SEO } from "@/components/SEO";
+import { paymentService } from "@/services";
+import { SEO } from "@/components/SEO";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { bookingDetailsSchema, bookingContactSchema, type BookingDetailsForm, type BookingContactForm } from "@/lib/schemas";
@@ -19,7 +21,7 @@ export default function BookingPage() {
   const [params] = useSearchParams();
   const listingId = params.get("listing");
   const { data: listing } = useListing(listingId || "");
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const { data: suppliers = [] } = useSuppliers();
   const supplier = listing ? suppliers.find(s => s.id === listing.supplierId) : undefined;
@@ -103,7 +105,7 @@ export default function BookingPage() {
       }
 
       // Submit booking via mutation
-      createBooking.mutate({
+      createBooking.mutateAsync({
         listingId: listingId!,
         startDate: detailsForm.getValues("date"),
         duration: detailsForm.getValues("duration"),
@@ -113,10 +115,30 @@ export default function BookingPage() {
         contactPhone: contactForm.getValues("phone"),
         paymentMethod: paymentMethod as "bank" | "card" | "later",
         notes: contactForm.getValues("notes"),
+      }).then(async (bookingResult: any) => {
+        const invoiceId = bookingResult?.invoiceId;
+
+        if (paymentMethod !== "later" && invoiceId) {
+          try {
+            const result = await paymentService.initiate({
+              invoiceId,
+              paymentMethod,
+              customerEmail: contactForm.getValues("email"),
+              locale: language,
+            });
+            if (result.paymentUrl) {
+              window.location.href = result.paymentUrl;
+              return;
+            }
+          } catch (err) {
+            console.error("Payment initiation failed", err);
+          }
+        }
+
+        setSubmitted(true);
+      }).catch(() => {
+        // Error already handled by mutation onError
       });
-      setSubmitted(true);
-    }
-  };
 
   // Restore pending booking after login
   useEffect(() => {
@@ -191,10 +213,17 @@ export default function BookingPage() {
           </div>
 
           {phase === "done" && (
-            <div className="mt-6 flex justify-center gap-3">
-              <Link to="/account?tab=bookings"><Button variant="outline">{t("booking.myBookings")}</Button></Link>
-              <Link to="/search"><Button className="bg-accent text-accent-foreground hover:bg-accent/90">{t("booking.searchMore")}</Button></Link>
-            </div>
+            <>
+              {paymentMethod === "later" && (
+                <p className="mt-4 rounded-lg bg-accent/5 border border-accent/20 p-3 text-xs text-muted-foreground">
+                  {t("booking.payLaterNote")}
+                </p>
+              )}
+              <div className="mt-6 flex justify-center gap-3">
+                <Link to="/account?tab=bookings"><Button variant="outline">{t("booking.myBookings")}</Button></Link>
+                <Link to="/search"><Button className="bg-accent text-accent-foreground hover:bg-accent/90">{t("booking.searchMore")}</Button></Link>
+              </div>
+            </>
           )}
         </div>
       </div>

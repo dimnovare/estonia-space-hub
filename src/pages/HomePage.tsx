@@ -193,13 +193,16 @@ export default function HomePage() {
       </section>
 
       {/* Map preview */}
+      {settings.showMap && (
       <section className="container-wide mt-0 sm:-mt-6 relative z-10">
         <Suspense fallback={<div className="h-[350px] rounded-xl bg-secondary flex items-center justify-center text-muted-foreground">{t("map.loading")}</div>}>
           <InteractiveMap listings={allListings} height="h-[280px] md:h-[350px]" />
         </Suspense>
       </section>
+      )}
 
       {/* How it works */}
+      {settings.showHowItWorks && (
       <section className="container-wide py-16 md:py-20">
         <h2 className="text-center font-display text-2xl font-bold md:text-3xl">{t("how.title")}</h2>
         <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">{t("how.subtitle")}</p>
@@ -218,8 +221,10 @@ export default function HomePage() {
           })}
         </div>
       </section>
+      )}
 
       {/* Featured listings */}
+      {settings.showFeaturedListings && (
       <section className="surface-sunken py-16 md:py-20">
         <div className="container-wide">
           <div className="flex items-end justify-between">
@@ -242,6 +247,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Beta badge */}
       <section className="container-wide py-10">
@@ -252,6 +258,7 @@ export default function HomePage() {
       </section>
 
       {/* Provider CTA */}
+      {settings.showProviderCta && (
       <section className="hero-gradient py-16 md:py-20">
         <div className="container-wide text-center">
           <h2 className="font-display text-2xl font-bold text-primary-foreground md:text-3xl">{t("provider.title")}</h2>
@@ -261,8 +268,10 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
+      )}
 
       {/* FAQ */}
+      {settings.showFaq && (
       <section className="container-wide py-16 md:py-20">
         <h2 className="text-center font-display text-2xl font-bold md:text-3xl">{t("faq.title")}</h2>
         <div className="mx-auto mt-8 max-w-2xl space-y-3">
@@ -279,6 +288,7 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+      )}
     </div>
   );
 }

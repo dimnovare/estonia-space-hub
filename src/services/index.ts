@@ -292,9 +292,20 @@ export const locationService = {
   },
 };
 
+// ─── Payment Service ────────────────────────────────────────────────────────
+export const paymentService = {
+  initiate: (data: {
+    invoiceId: string;
+    paymentMethod: string;
+    customerEmail: string;
+    locale: string;
+  }): Promise<PaymentResult> =>
+    apiClient.post("/payments/initiate", data),
+};
+
 export type {
   User, Supplier, Order, Booking, Notification, Invoice, Message,
   AuditLogEntry, OrderStatus, PartnerIntegrationSettings, OrderRoutingRule,
   Listing, ListingFilters, PaginatedResponse, CreateBookingInput,
-  SupplierLocation,
+  SupplierLocation, PaymentResult,
 };

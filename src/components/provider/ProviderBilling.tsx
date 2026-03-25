@@ -5,11 +5,29 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { bankService } from "@/services";
 import { toast } from "sonner";
+import { apiClient } from "@/services/apiClient";
 
 export default function ProviderBilling() {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [editingBank, setEditingBank] = useState(false);
+  const [bankForm, setBankForm] = useState({
+    iban: "", bankAccountName: "", bankName: ""
+  });
+
+  const { data: supplierData } = useQuery({
+    queryKey: ["my-supplier-profile"],
+    queryFn: () => apiClient.get<{
+      tier?: string;
+      commissionRate?: number;
+      monthlyFee?: number;
+      maxLocations?: number;
+      hasFullAnalytics?: boolean;
+      canHavePromotedBadge?: boolean;
+      subscriptionEndsAt?: string;
+    }>("/supplier/profile"),
+    staleTime: 60_000,
+  });
   const [bankForm, setBankForm] = useState({
     iban: "", bankAccountName: "", bankName: ""
   });
@@ -49,6 +67,42 @@ export default function ProviderBilling() {
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">{t("provider.billing.title")}</h1>
+
+      {/* Plan summary */}
+      <div className="mt-6 rounded-xl border border-border p-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">{t("provider.billing.currentPlan")}</p>
+            <p className="mt-0.5 font-display text-lg font-bold">{supplierData?.tier ?? "Starter"}</p>
+            {supplierData?.subscriptionEndsAt && (
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {t("provider.billing.validUntil")}{" "}
+                {new Date(supplierData.subscriptionEndsAt).toLocaleDateString("et-EE")}
+              </p>
+            )}
+          </div>
+          <div className="text-right">
+            <span className="font-display text-2xl font-bold">€{supplierData?.monthlyFee ?? 0}</span>
+            <span className="text-sm text-muted-foreground">/kuu</span>
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-3 gap-3 border-t border-border pt-4">
+          <div className="text-center">
+            <p className="font-display text-lg font-bold">{supplierData?.commissionRate ?? 8}%</p>
+            <p className="text-xs text-muted-foreground">{t("provider.billing.commission")}</p>
+          </div>
+          <div className="text-center">
+            <p className="font-display text-lg font-bold">
+              {supplierData?.maxLocations === 2147483647 ? "∞" : supplierData?.maxLocations ?? 1}
+            </p>
+            <p className="text-xs text-muted-foreground">{t("provider.billing.locations")}</p>
+          </div>
+          <div className="text-center">
+            <p className="font-display text-lg font-bold">{supplierData?.hasFullAnalytics ? "+" : "–"}</p>
+            <p className="text-xs text-muted-foreground">{t("provider.billing.analytics")}</p>
+          </div>
+        </div>
+      </div>
 
       {/* Payout summary cards */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
