@@ -190,21 +190,21 @@ export default function BookingPage() {
               </div>
             )}
             <h1 className="mt-4 font-display text-2xl font-bold">
-              {phase === "submitting" && "Tellimus luuakse..."}
-              {phase === "sending" && "Saadame partnerile..."}
-              {phase === "waiting" && "Ootame kinnitust..."}
+              {phase === "submitting" && t("booking.phase.creating")}
+              {phase === "sending" && t("booking.phase.sending")}
+              {phase === "waiting" && t("booking.phase.waiting")}
               {phase === "done" && t("booking.successTitle")}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              {phase === "done" ? t("booking.successDesc") : "Palun oodake..."}
+              {phase === "done" ? t("booking.successDesc") : t("booking.phase.pleaseWait")}
             </p>
           </div>
 
           <div className="mt-8 space-y-3">
             {[
-              { label: "Tellimus loodud", done: phase !== "submitting" },
-              { label: supplier?.integrationType === "api" ? "Saadetud API kaudu" : supplier?.integrationType === "email" ? "Saadetud e-postiga partnerile" : "Ootame operaatori tegevust", done: phase === "waiting" || phase === "done" },
-              { label: "Ootame partneri kinnitust", done: phase === "done" },
+              { label: t("booking.phase.orderCreated"), done: phase !== "submitting" },
+              { label: supplier?.integrationType === "api" ? t("booking.phase.sentApi") : supplier?.integrationType === "email" ? t("booking.phase.sentEmail") : t("booking.phase.awaitingOp"), done: phase === "waiting" || phase === "done" },
+              { label: t("booking.phase.awaitingConf"), done: phase === "done" },
             ].map((s, i) => (
               <div key={i} className={`flex items-center gap-3 rounded-lg border p-3 transition-all ${s.done ? "border-success/30 bg-success/5" : "border-border"}`}>
                 {s.done ? <CheckCircle className="h-5 w-5 text-success shrink-0" /> : <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30 shrink-0" />}

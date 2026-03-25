@@ -119,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiClient.post<AuthResponse>("/auth/login", { email, password });
       persist(normalizeUser(res.user), res.accessToken, res.refreshToken);
     } catch (err: any) {
-      throw new Error(err.message || "Sisselogimine ebaõnnestus");
+      throw new Error(err.message || "error.loginFailed");
     }
   }, []);
 
@@ -129,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiClient.post<AuthResponse>("/auth/register", { name, email, password, confirmPassword: password, inviteCode, language: currentLang });
       persist(normalizeUser(res.user), res.accessToken, res.refreshToken);
     } catch (err: any) {
-      throw new Error(err.message || "Registreerimine ebaõnnestus");
+      throw new Error(err.message || "error.registerFailed");
     }
   }, []);
 
@@ -138,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiClient.post<AuthResponse>("/auth/google", { credential });
       persist(normalizeUser(res.user), res.accessToken, res.refreshToken);
     } catch (err: any) {
-      throw new Error(err.message || "Google sisselogimine ebaõnnestus");
+      throw new Error(err.message || "error.googleFailed");
     }
   }, []);
 
