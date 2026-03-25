@@ -94,43 +94,44 @@ export default function BookingPage() {
       }
 
       submitBooking();
-
-      // Submit booking via mutation
-      createBooking.mutateAsync({
-        listingId: listingId!,
-        startDate: detailsForm.getValues("date"),
-        duration: detailsForm.getValues("duration"),
-        extras: selectedExtras,
-        contactName: contactForm.getValues("name"),
-        contactEmail: contactForm.getValues("email"),
-        contactPhone: contactForm.getValues("phone"),
-        paymentMethod: paymentMethod as "bank" | "card" | "later",
-        notes: contactForm.getValues("notes"),
-      }).then(async (bookingResult: any) => {
-        const invoiceId = bookingResult?.invoiceId;
-
-        if (paymentMethod !== "later" && invoiceId) {
-          try {
-            const result = await paymentService.initiate({
-              invoiceId,
-              paymentMethod,
-              customerEmail: contactForm.getValues("email"),
-              locale: language,
-            });
-            if (result.paymentUrl) {
-              window.location.href = result.paymentUrl;
-              return;
-            }
-          } catch (err) {
-            console.error("Payment initiation failed", err);
-          }
-        }
-
-        setSubmitted(true);
-      }).catch(() => {
-        // Error already handled by mutation onError
-      });
     }
+  };
+
+  const submitBooking = () => {
+    createBooking.mutateAsync({
+      listingId: listingId!,
+      startDate: detailsForm.getValues("date"),
+      duration: detailsForm.getValues("duration"),
+      extras: selectedExtras,
+      contactName: contactForm.getValues("name"),
+      contactEmail: contactForm.getValues("email"),
+      contactPhone: contactForm.getValues("phone"),
+      paymentMethod: paymentMethod as "bank" | "card" | "later",
+      notes: contactForm.getValues("notes"),
+    }).then(async (bookingResult: any) => {
+      const invoiceId = bookingResult?.invoiceId;
+
+      if (paymentMethod !== "later" && invoiceId) {
+        try {
+          const result = await paymentService.initiate({
+            invoiceId,
+            paymentMethod,
+            customerEmail: contactForm.getValues("email"),
+            locale: language,
+          });
+          if (result.paymentUrl) {
+            window.location.href = result.paymentUrl;
+            return;
+          }
+        } catch (err) {
+          console.error("Payment initiation failed", err);
+        }
+      }
+
+      setSubmitted(true);
+    }).catch(() => {
+      // Error already handled by mutation onError
+    });
   };
 
   // Restore pending booking after login
