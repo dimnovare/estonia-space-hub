@@ -100,6 +100,7 @@ export default function SearchPage() {
   const isMobile = useIsMobile();
   const [showFilters, setShowFilters] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<"list" | "map">("list");
   const [notifyEmail, setNotifyEmail] = useState("");
   const [notifyLoading, setNotifyLoading] = useState(false);
