@@ -21,6 +21,11 @@ const DEFAULT_SETTINGS = {
   autoApproveListings:    "false",
   inviteCodeRequired:     "true",
   inviteCode:             "RUUMLY2026",
+  showFeaturedListings:   "true",
+  showHowItWorks:         "true",
+  showProviderCta:        "true",
+  showFaq:                "true",
+  showMap:                "true",
 };
 
 export default function AdminSettings() {
@@ -220,6 +225,11 @@ export default function AdminSettings() {
               { key: "maintenanceMode" as const, label: t("admin.maintenanceMode"), desc: t("admin.maintenanceModeDesc") },
               { key: "autoApproveListings" as const, label: t("admin.autoApprove"), desc: t("admin.autoApproveDesc") },
               { key: "inviteCodeRequired" as const, label: "Beta kutsekood kohustuslik", desc: "Kui sees, saavad registreeruda ainult kutse koodiga kasutajad" },
+              { key: "showFeaturedListings" as const, label: "Kuva populaarsed kuulutused", desc: "Avaleht: populaarsete kuulutuste sektsioon" },
+              { key: "showHowItWorks" as const, label: "Kuva 'Kuidas see töötab'", desc: "Avaleht: 3-sammuline selgitussektsioon" },
+              { key: "showProviderCta" as const, label: "Kuva partneri CTA", desc: "Avaleht: 'Oled teenusepakkuja?' sektsioon" },
+              { key: "showFaq" as const, label: "Kuva KKK avaleheküljel", desc: "Avaleht: korduma kippuvad küsimused" },
+              { key: "showMap" as const, label: "Kuva kaart avaleheküljel", desc: "Avaleht: interaktiivne kaart" },
             ]).map(toggle => (
               <div key={toggle.key} className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div>

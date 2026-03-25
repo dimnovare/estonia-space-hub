@@ -24,6 +24,7 @@ import ProviderPage from "@/pages/ProviderPage";
 import ProviderDashboardPage from "@/pages/ProviderDashboardPage";
 import ProviderOnboardingPage from "@/pages/ProviderOnboardingPage";
 import LocationDetailPage from "@/pages/LocationDetailPage";
+import PaymentReturnPage from "@/pages/PaymentReturnPage";
 import AboutPage from "@/pages/AboutPage";
 import ContactPage from "@/pages/ContactPage";
 import HowItWorksPage from "@/pages/HowItWorksPage";
@@ -91,6 +92,7 @@ function AppContent() {
           <Route path="/moving/:id" element={<MovingDetail />} />
           <Route path="/trailer/:id" element={<TrailerDetail />} />
           <Route path="/location/:id" element={<LocationDetailPage />} />
+          <Route path="/payment/return" element={<PaymentReturnPage />} />
           <Route path="/book" element={<BookingPage />} />
           <Route path="/bookings/:id" element={<ProtectedRoute><BookingRedirect /></ProtectedRoute>} />
           <Route path="/provider" element={<ProviderPage />} />

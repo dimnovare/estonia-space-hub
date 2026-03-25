@@ -9,6 +9,10 @@ export type ApprovalMode = "auto" | "admin" | "provider";
 export type PostingMode = "api" | "email" | "manual";
 export type FulfillmentStatus = "awaiting_approval" | "approved" | "rejected" | "posting" | "posted" | "confirmed" | "failed" | "completed";
 
+export interface PaymentResult {
+  paymentUrl: string;
+}
+
 export interface User {
   id: string;
   name: string;
