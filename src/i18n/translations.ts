@@ -3126,6 +3126,18 @@ const translations: Record<Language, Record<string, string>> = {
     "error.server.title": "Что-то пошло не так",
     "error.server.desc": "Техническая ошибка. Попробуйте ещё раз.",
     "error.server.cta": "На главную",
+    "empty.search.title": "Ничего не найдено",
+    "empty.search.desc": "Попробуйте изменить параметры поиска или убрать фильтры.",
+    "empty.search.clearFilters": "Сбросить фильтры",
+    "empty.bookings.title": "У вас ещё нет бронирований",
+    "empty.bookings.desc": "Забронируйте первую услугу, и она появится здесь.",
+    "empty.bookings.filtered": "Нет бронирований с таким статусом",
+    "empty.bookings.filteredDesc": "Попробуйте другой фильтр.",
+    "empty.bookings.cta": "Найти склад →",
+    "empty.providerOrders.title": "Новых заказов нет",
+    "empty.providerOrders.desc": "Заказы появятся здесь, когда клиенты забронируют ваши услуги.",
+    "empty.notifications.title": "Уведомлений нет",
+    "empty.notifications.desc": "Новые уведомления появятся здесь автоматически.",
   },
 };
 
