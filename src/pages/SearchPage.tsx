@@ -1,8 +1,8 @@
 import { useState, useMemo, lazy, Suspense } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2 } from "lucide-react";
+import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useListings } from "@/hooks/queries";
+import { useListings, useLocations } from "@/hooks/queries";
 import type { Listing, ListingType, ListingFilters } from "@/services/types";
 import ListingCard from "@/components/ListingCard";
 import { useLanguage } from "@/i18n/LanguageContext";
