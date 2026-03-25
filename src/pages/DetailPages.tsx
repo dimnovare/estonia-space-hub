@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { MapPin, Star, Check, ArrowLeft, Calendar, Shield, BadgePercent, Zap, Mail, Hand, Building2, CheckCircle, Loader2 } from "lucide-react";
+import { MapPin, Star, Check, ArrowLeft, Calendar, Shield, BadgePercent, Zap, Mail, Hand, Building2, CheckCircle, Loader2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListing, useSuppliers } from "@/hooks/queries";
 import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
+import { calculatePricing } from "@/lib/pricing";
 import { lazy, Suspense } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { Listing, WarehouseListing, MovingListing, TrailerListing } from "@/services/types";
@@ -69,8 +70,7 @@ export function WarehouseDetail() {
 
   const bookingUrl = `/book?listing=${wListing.id}&type=warehouse${selectedExtras.length ? `&extras=${selectedExtras.join(",")}` : ""}`;
 
-  const publicPrice = Math.round(wListing.priceFrom / 0.95);
-  const savings = publicPrice - wListing.priceFrom;
+  const { publicPrice, savings } = calculatePricing(wListing.priceFrom);
 
   const extras = [
     { label: t("detail.heated"), value: wListing.heated },
@@ -164,9 +164,12 @@ export function WarehouseDetail() {
             <div className="mt-1 flex items-center gap-2">
               <span className="text-xs line-through text-muted-foreground">{publicPrice}€</span>
               <span className="flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success">
-                <BadgePercent className="h-3 w-3" /> {t("detail.save")} {savings}€
+                <BadgePercent className="h-3 w-3" /> {t("listing.savings").replace("{amount}", String(savings))}
               </span>
             </div>
+            <p className="mt-2 flex items-center gap-1 text-[11px] text-muted-foreground">
+              <Info className="h-3 w-3 shrink-0" /> {t("listing.partnerPriceInfo")}
+            </p>
             <p className="mt-1 text-xs text-muted-foreground">al. {wListing.size} {wListing.sizeUnit}</p>
 
             <div className="mt-4 space-y-2 text-sm">
@@ -233,8 +236,7 @@ export function MovingDetail() {
   if (!listing || listing.type !== "moving") return <NotFoundDetail />;
   const mListing = listing as MovingListing;
 
-  const publicPrice = Math.round(mListing.priceFrom / 0.95);
-  const savings = publicPrice - mListing.priceFrom;
+  const { publicPrice, savings } = calculatePricing(mListing.priceFrom);
 
   return (
     <div className="container-wide py-6 pb-24 lg:pb-6">
@@ -299,9 +301,12 @@ export function MovingDetail() {
             <div className="mt-1 flex items-center gap-2">
               <span className="text-xs line-through text-muted-foreground">{publicPrice}€</span>
               <span className="flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success">
-                <BadgePercent className="h-3 w-3" /> {t("detail.save")} {savings}€
+                <BadgePercent className="h-3 w-3" /> {t("listing.savings").replace("{amount}", String(savings))}
               </span>
             </div>
+            <p className="mt-2 flex items-center gap-1 text-[11px] text-muted-foreground">
+              <Info className="h-3 w-3 shrink-0" /> {t("listing.partnerPriceInfo")}
+            </p>
             <p className="mt-1 text-xs text-muted-foreground">{mListing.pricingModel === "hourly" ? t("detail.hourlyRate") : t("detail.fixedPrice")}</p>
             <Link to={`/book?listing=${mListing.id}&type=moving`}>
               <Button className="mt-6 w-full bg-accent text-accent-foreground hover:bg-accent/90">{t("detail.bookNow")}</Button>
@@ -342,8 +347,7 @@ export function TrailerDetail() {
   if (!listing || listing.type !== "trailer") return <NotFoundDetail />;
   const tListing = listing as TrailerListing;
 
-  const publicPrice = Math.round(tListing.priceFrom / 0.95);
-  const savings = publicPrice - tListing.priceFrom;
+  const { publicPrice, savings } = calculatePricing(tListing.priceFrom);
 
   return (
     <div className="container-wide py-6 pb-24 lg:pb-6">
@@ -407,9 +411,12 @@ export function TrailerDetail() {
             <div className="mt-1 flex items-center gap-2">
               <span className="text-xs line-through text-muted-foreground">{publicPrice}€</span>
               <span className="flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success">
-                <BadgePercent className="h-3 w-3" /> {t("detail.save")} {savings}€
+                <BadgePercent className="h-3 w-3" /> {t("listing.savings").replace("{amount}", String(savings))}
               </span>
             </div>
+            <p className="mt-2 flex items-center gap-1 text-[11px] text-muted-foreground">
+              <Info className="h-3 w-3 shrink-0" /> {t("listing.partnerPriceInfo")}
+            </p>
             <Link to={`/book?listing=${tListing.id}&type=trailer`}>
               <Button className="mt-6 w-full bg-accent text-accent-foreground hover:bg-accent/90">{t("detail.bookNow")}</Button>
             </Link>
