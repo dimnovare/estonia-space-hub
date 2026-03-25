@@ -240,6 +240,10 @@ export function MovingDetail() {
   const { t } = useLanguage();
   const { data: listing, isLoading } = useListing(id);
 
+  useEffect(() => {
+    if (listing) trackEvent("listing_view", { listing_id: listing.id, type: listing.type, city: listing.city || "" });
+  }, [listing]);
+
   if (isLoading) return <LoadingDetail />;
   if (!listing || listing.type !== "moving") return <NotFoundDetail />;
   const mListing = listing as MovingListing;
@@ -352,6 +356,10 @@ export function TrailerDetail() {
   const { id } = useParams();
   const { t } = useLanguage();
   const { data: listing, isLoading } = useListing(id);
+
+  useEffect(() => {
+    if (listing) trackEvent("listing_view", { listing_id: listing.id, type: listing.type, city: listing.city || "" });
+  }, [listing]);
 
   if (isLoading) return <LoadingDetail />;
   if (!listing || listing.type !== "trailer") return <NotFoundDetail />;
