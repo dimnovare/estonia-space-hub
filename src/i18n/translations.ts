@@ -1132,6 +1132,9 @@ const translations: Record<Language, Record<string, string>> = {
     "reviews.comment": "Kommentaar (valikuline)",
     "reviews.success": "Hinnang saadetud!",
     "reviews.commentPlaceholder": "Kirjeldage oma kogemust...",
+    "consent.text": "See veebileht kasutab küpsiseid parema kasutajakogemuse tagamiseks.",
+    "consent.accept": "Nõustun",
+    "consent.readMore": "Loe lähemalt",
   },
 
   en: {
@@ -2222,6 +2225,9 @@ const translations: Record<Language, Record<string, string>> = {
     "reviews.comment": "Comment (optional)",
     "reviews.success": "Review submitted!",
     "reviews.commentPlaceholder": "Describe your experience...",
+    "consent.text": "This website uses cookies to ensure a better user experience.",
+    "consent.accept": "Accept",
+    "consent.readMore": "Read more",
   },
 
   ru: {
@@ -3312,6 +3318,9 @@ const translations: Record<Language, Record<string, string>> = {
     "reviews.comment": "Комментарий (необязательно)",
     "reviews.success": "Отзыв отправлен!",
     "reviews.commentPlaceholder": "Опишите ваш опыт...",
+    "consent.text": "Этот сайт использует файлы cookie для улучшения пользовательского опыта.",
+    "consent.accept": "Принять",
+    "consent.readMore": "Подробнее",
   },
 };
 

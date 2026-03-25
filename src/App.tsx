@@ -11,6 +11,7 @@ import Footer from "@/components/Footer";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import DevRoleSwitcher from "@/components/DevRoleSwitcher";
+import CookieConsent from "@/components/CookieConsent";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import MaintenancePage from "@/pages/MaintenancePage";
 import HomePage from "@/pages/HomePage";
@@ -120,6 +121,7 @@ function AppContent() {
         </Routes>
       </Suspense>
       {import.meta.env.DEV && <DevRoleSwitcher />}
+      <CookieConsent />
     </>
   );
 }
