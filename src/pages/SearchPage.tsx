@@ -3,7 +3,7 @@ import { useSearchParams, Link } from "react-router-dom";
 import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListings, useLocations } from "@/hooks/queries";
-import type { ListingType, ListingFilters } from "@/services/types";
+import type { Listing, ListingType, ListingFilters } from "@/services/types";
 import { apiClient } from "@/services/apiClient";
 import ListingCard from "@/components/ListingCard";
 import { useLanguage } from "@/i18n/LanguageContext";
