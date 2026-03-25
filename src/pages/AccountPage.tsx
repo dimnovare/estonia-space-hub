@@ -32,13 +32,7 @@ import { useAllListings } from "@/hooks/queries";
 import ListingCard from "@/components/ListingCard";
 import { SEO } from "@/components/SEO";
 
-const statusConfig: Record<BookingStatus, { label: string; color: string; icon: typeof Clock }> = {
-  pending: { label: "Ootel", color: "bg-warning/10 text-warning", icon: Clock },
-  confirmed: { label: "Kinnitatud", color: "bg-success/10 text-success", icon: CheckCircle },
-  active: { label: "Aktiivne", color: "bg-accent/10 text-accent", icon: Play },
-  completed: { label: "Lõpetatud", color: "bg-muted text-muted-foreground", icon: CheckCircle },
-  cancelled: { label: "Tühistatud", color: "bg-destructive/10 text-destructive", icon: XCircle },
-};
+// statusConfig moved inside component to support translations
 
 const typeIcons = { warehouse: Warehouse, moving: Truck, trailer: CarFront };
 
@@ -104,6 +98,16 @@ export default function AccountPage() {
   const tab = searchParams.get("tab") || "overview";
   const setTab = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("tab", id); return n; }, { replace: true });
   const { t } = useLanguage();
+
+  const statusConfig: Record<BookingStatus, { label: string; color: string; icon: typeof Clock }> = {
+    pending: { label: t("status.pending"), color: "bg-warning/10 text-warning", icon: Clock },
+    confirmed: { label: t("status.confirmed"), color: "bg-success/10 text-success", icon: CheckCircle },
+    active: { label: t("status.active"), color: "bg-accent/10 text-accent", icon: Play },
+    completed: { label: t("status.completed"), color: "bg-muted text-muted-foreground", icon: CheckCircle },
+    cancelled: { label: t("status.cancelled"), color: "bg-destructive/10 text-destructive", icon: XCircle },
+  };
+
+  const { user, logout, role } = useAuth();
   const { user, logout, role } = useAuth();
   const navigate = useNavigate();
   const sidebarLinks = useSidebarLinks();
@@ -382,7 +386,7 @@ function AccountMessages() {
       setNewMsg("");
     },
     onError: (err: any) => {
-      toast.error(err.message || "Sõnumi saatmine ebaõnnestus");
+      toast.error(err.message || t("toast.messageFailed"));
     },
   });
 
@@ -546,7 +550,7 @@ function AccountNotifications() {
     },
     onError: (_err, _id, ctx) => {
       queryClient.setQueryData(["notifications"], ctx?.previous);
-      toast.error("Teavituse märkimine ebaõnnestus");
+      toast.error(t("toast.notifReadFailed"));
     },
   });
 
@@ -562,7 +566,7 @@ function AccountNotifications() {
     },
     onError: (_err, _v, ctx) => {
       queryClient.setQueryData(["notifications"], ctx?.previous);
-      toast.error("Teavituste märkimine ebaõnnestus");
+      toast.error(t("toast.notifsReadFailed"));
     },
   });
 
@@ -640,7 +644,7 @@ function AccountProfile() {
 
   const onSubmit = (data: ProfileForm) => {
     updateProfile({ name: data.name, phone: data.phone || "" });
-    toast.success("Profiil uuendatud");
+    toast.success(t("toast.profileSaved"));
   };
 
   return (
@@ -658,7 +662,7 @@ function AccountProfile() {
           <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" {...form.register("phone")} />
           {form.formState.errors.phone && <p className="mt-1 text-xs text-destructive">{form.formState.errors.phone.message}</p>}
         </div>
-        <Button type="submit" className="bg-accent text-accent-foreground hover:bg-accent/90">Salvesta muudatused</Button>
+        <Button type="submit" className="bg-accent text-accent-foreground hover:bg-accent/90">{t("form.save")}</Button>
       </form>
     </div>
   );
@@ -681,11 +685,11 @@ function AccountSecurity() {
         data.newPassword,
         data.confirmPassword
       );
-      toast.success("Parool edukalt uuendatud.");
+      toast.success(t("toast.passwordSaved"));
       setChangingPw(false);
       pwForm.reset();
     } catch (err: any) {
-      toast.error(err.message || "Parooli vahetus ebaõnnestus.");
+      toast.error(err.message || t("toast.updateFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -718,9 +722,9 @@ function AccountSecurity() {
                 <Button type="submit" size="sm" className="bg-accent text-accent-foreground" disabled={submitting}>
                   {submitting
                     ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Salvestan...</>
-                    : "Salvesta"}
+                    : t("form.save")}
                 </Button>
-                <Button variant="outline" size="sm" type="button" onClick={() => { setChangingPw(false); pwForm.reset(); }}>Tühista</Button>
+                <Button variant="outline" size="sm" type="button" onClick={() => { setChangingPw(false); pwForm.reset(); }}>{t("form.cancel")}</Button>
               </div>
             </form>
           )}
@@ -839,7 +843,7 @@ function generateInvoicePdf(inv: Invoice) {
 
   const win = window.open("", "_blank");
   if (!win) {
-    toast.error("Blokeeritud! Luba hüpikaknad selle saidi jaoks.");
+    toast.error(t("error.popupsBlocked"));
     return;
   }
   win.document.write(html);

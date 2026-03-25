@@ -58,7 +58,7 @@ export default function LoginPage() {
       await login(data.email, data.password);
       toast.success(t("login.successLogin"));
       navigate(from, { replace: true });
-    } catch (err: any) { toast.error(err.message || t("login.error")); }
+    } catch (err: any) { const msg = err.message || ""; toast.error(msg.startsWith("error.") ? t(msg) : msg || t("error.loginFailed")); }
     setLoading(false);
   };
 
@@ -68,7 +68,7 @@ export default function LoginPage() {
       await authRegister(data.name, data.email, data.password, data.inviteCode);
       toast.success(t("login.successRegister"));
       navigate(from, { replace: true });
-    } catch (err: any) { toast.error(err.message || t("login.registerError")); }
+    } catch (err: any) { const msg = err.message || ""; toast.error(msg.startsWith("error.") ? t(msg) : msg || t("error.registerFailed")); }
     setLoading(false);
   };
 
@@ -93,16 +93,16 @@ export default function LoginPage() {
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resetPassword || resetPassword.length < 8) {
-      toast.error("Parool peab olema vähemalt 8 tähemärki");
+      toast.error(t("error.passwordTooShort"));
       return;
     }
     setResetLoading(true);
     try {
       await authService.resetPassword(resetToken, resetPassword);
-      toast.success("Parool uuendatud! Logi sisse uue parooliga.");
+      toast.success(t("error.passwordChanged"));
       setView("login");
     } catch (err: any) {
-      toast.error(err.message || "Parooli vahetus ebaõnnestus. Proovi uuesti.");
+      toast.error(err.message || t("error.passwordChangeFailed"));
     } finally {
       setResetLoading(false);
     }
@@ -115,11 +115,11 @@ export default function LoginPage() {
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent/10">
             <KeyRound className="h-8 w-8 text-accent" />
           </div>
-          <h1 className="mt-4 text-center font-display text-2xl font-bold">Uus parool</h1>
+          <h1 className="mt-4 text-center font-display text-2xl font-bold">{t("form.newPassword")}</h1>
           <p className="mt-2 text-center text-sm text-muted-foreground">Vali uus parool oma kontole.</p>
           <form onSubmit={handleReset} className="mt-6 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="reset-password">Uus parool</Label>
+              <Label htmlFor="reset-password">{t("form.newPassword")}</Label>
               <Input
                 id="reset-password"
                 type="password"
@@ -133,7 +133,7 @@ export default function LoginPage() {
             <Button type="submit" className="w-full bg-accent py-5 text-accent-foreground hover:bg-accent/90" disabled={resetLoading}>
               {resetLoading
                 ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvestame...</>
-                : "Salvesta uus parool"}
+                : t("form.saveNewPassword")}
             </Button>
           </form>
         </div>
@@ -212,12 +212,14 @@ export default function LoginPage() {
                       navigate(from, { replace: true });
                     })
                     .catch((err: any) => {
-                      toast.error(err.message || "Google sisselogimine ebaõnnestus");
+                      const msg = err.message || "";
+                      const toastMsg = msg.startsWith("error.") ? t(msg) : msg || t("error.googleFailed");
+                      toast.error(toastMsg);
                     })
                     .finally(() => setLoading(false));
                 }}
                 onError={() => {
-                  toast.error("Google sisselogimine ebaõnnestus. Proovi uuesti.");
+                  toast.error(t("error.googleFailed2"));
                 }}
                 useOneTap={false}
                 width="400"
@@ -265,7 +267,7 @@ export default function LoginPage() {
               {registerForm.formState.errors.password && <p className="text-xs text-destructive">{registerForm.formState.errors.password.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="reg-confirm">{t("login.confirmPassword") || "Kinnita parool"}</Label>
+              <Label htmlFor="reg-confirm">{t("login.confirmPassword")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input id="reg-confirm" type={showPassword ? "text" : "password"} placeholder="••••••••" {...registerForm.register("confirmPassword")} className="pl-10" />
