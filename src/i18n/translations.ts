@@ -917,6 +917,19 @@ const translations: Record<Language, Record<string, string>> = {
     "location.noUnits": "Hetkel pole vabu ühikuid",
     "location.backToSearch": "Tagasi otsingusse",
     "location.unitTypes": "Saadaval olevad ühikud",
+
+    // Payment
+    "payment.returnTitle": "Makse töötlemisel",
+    "payment.returnDesc": "Teie makse on vastu võetud. Broneeringu kinnitus saadetakse e-postile mõne minuti jooksul.",
+    "payment.returnCta": "Vaata broneeringuid",
+    "booking.payLaterNote": "Saadame teile arve e-postiga. Makse tähtaeg on 7 päeva.",
+
+    // Provider billing plan
+    "provider.billing.currentPlan": "Praegune plaan",
+    "provider.billing.validUntil": "Kehtib kuni",
+    "provider.billing.commission": "komisjon",
+    "provider.billing.locations": "asukohta",
+    "provider.billing.analytics": "analüütika",
   },
 
   en: {
@@ -1799,6 +1812,19 @@ const translations: Record<Language, Record<string, string>> = {
     "location.noUnits": "No units available now",
     "location.backToSearch": "Back to search",
     "location.unitTypes": "Available unit types",
+
+    // Payment
+    "payment.returnTitle": "Payment processing",
+    "payment.returnDesc": "Your payment has been received. Booking confirmation will be sent to your email within a few minutes.",
+    "payment.returnCta": "View bookings",
+    "booking.payLaterNote": "We will send you an invoice by email. Payment is due within 7 days.",
+
+    // Provider billing plan
+    "provider.billing.currentPlan": "Current plan",
+    "provider.billing.validUntil": "Valid until",
+    "provider.billing.commission": "commission",
+    "provider.billing.locations": "locations",
+    "provider.billing.analytics": "analytics",
   },
 
   ru: {
@@ -2681,6 +2707,19 @@ const translations: Record<Language, Record<string, string>> = {
     "location.noUnits": "Нет доступных единиц",
     "location.backToSearch": "Назад к поиску",
     "location.unitTypes": "Доступные типы единиц",
+
+    // Payment
+    "payment.returnTitle": "Обработка платежа",
+    "payment.returnDesc": "Ваш платёж получен. Подтверждение бронирования будет отправлено на email в течение нескольких минут.",
+    "payment.returnCta": "Смотреть бронирования",
+    "booking.payLaterNote": "Мы отправим вам счёт по электронной почте. Оплата в течение 7 дней.",
+
+    // Provider billing plan
+    "provider.billing.currentPlan": "Текущий план",
+    "provider.billing.validUntil": "Действует до",
+    "provider.billing.commission": "комиссия",
+    "provider.billing.locations": "локации",
+    "provider.billing.analytics": "аналитика",
   },
 };
 
