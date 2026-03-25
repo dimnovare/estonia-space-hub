@@ -1040,8 +1040,17 @@ const translations: Record<Language, Record<string, string>> = {
     "onboard.success.pending": "⏳ Under review",
     "onboard.success.back": "Back to home",
 
+    // Beta badge
+    "home.betaBadge": "Beta is live — join the first users",
 
-    "faq.subtitle": "Find answers to the most common questions.",
+    // Booking login hint
+    "booking.loginHint": "An account is needed to confirm a booking — registration takes 30 seconds",
+
+    // Maintenance
+    "maintenance.title": "We'll be back soon",
+    "maintenance.desc": "Ruumly is currently under maintenance. We're working on improvements and will be back shortly.",
+
+
     "faq.general": "General",
     "faq.bookings": "Booking",
     "faq.providers": "For partners",
@@ -1902,6 +1911,15 @@ const translations: Record<Language, Record<string, string>> = {
     "onboard.success.pending": "⏳ На рассмотрении",
     "onboard.success.back": "На главную",
 
+    // Beta badge
+    "home.betaBadge": "Бета запущена — присоединяйтесь к первым пользователям",
+
+    // Booking login hint
+    "booking.loginHint": "Для подтверждения бронирования нужен аккаунт — регистрация займёт 30 секунд",
+
+    // Maintenance
+    "maintenance.title": "Скоро вернёмся",
+    "maintenance.desc": "Ruumly находится на техническом обслуживании. Мы работаем над улучшениями и скоро вернёмся.",
 
     "faq.subtitle": "Найдите ответы на самые частые вопросы.",
     "faq.general": "Общие вопросы",
