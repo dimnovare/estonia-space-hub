@@ -51,6 +51,7 @@ export default function HomePage() {
     const params = new URLSearchParams();
     if (searchQuery) params.set("q", searchQuery);
     if (activeCategory !== "all") params.set("type", activeCategory);
+    if (selectedCity) params.set("city", selectedCity);
     navigate(`/search?${params.toString()}`);
   };
 
@@ -149,6 +150,17 @@ export default function HomePage() {
                     className="w-full rounded-lg border-0 bg-secondary py-3 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"
                   />
                 </div>
+                <Select value={selectedCity} onValueChange={setSelectedCity}>
+                  <SelectTrigger className="w-[140px] shrink-0 border-0 bg-secondary text-sm">
+                    <SelectValue placeholder={t("search.allCities")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("search.allCities")}</SelectItem>
+                    {ESTONIAN_CITIES.map((city) => (
+                      <SelectItem key={city} value={city}>{city}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Button onClick={handleSearch} className="shrink-0 bg-accent px-6 text-accent-foreground hover:bg-accent/90">
                   <Search className="mr-2 h-4 w-4" />
                   {t("hero.search")}
