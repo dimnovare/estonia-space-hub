@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Check, Warehouse, Truck, CarFront, Building2, User, Upload, CheckCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { SEO } from "@/components/SEO";
 
 export default function ProviderOnboardingPage() {
   const [step, setStep] = useState(0);
@@ -69,6 +70,11 @@ export default function ProviderOnboardingPage() {
 
   return (
     <div className="container-wide py-8">
+      <SEO
+        title="Liitu partnerina — Ruumly"
+        description="Registreeri oma laopind, kolimisteenus või haagis Ruumly platvormile. Tasuta liitumine."
+        canonical="/provider/onboarding"
+      />
       <h1 className="font-display text-2xl font-bold">{t("onboard.title")}</h1>
       <p className="mt-1 text-sm text-muted-foreground">{t("onboard.subtitle")}</p>
 
