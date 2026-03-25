@@ -24,21 +24,33 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(event.request.url);
 
+  // NEVER cache API responses — they must always be fresh
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/api")) return;
+
+  // Don't cache OAuth redirects
   if (url.pathname.startsWith("/~oauth")) return;
+
+  // Don't cache Hangfire dashboard
   if (url.pathname.startsWith("/hangfire")) return;
+
+  // Don't cache health checks
   if (url.pathname === "/health") return;
+
+  // Only cache same-origin static assets (JS, CSS, images, fonts)
   if (url.origin !== self.location.origin) return;
 
+  // Use stale-while-revalidate for static assets
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      const fetched = fetch(event.request).then((response) => {
-        if (response && response.status === 200 && response.type === "basic") {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        }
-        return response;
-      }).catch(() => cached);
+      const fetched = fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200 && response.type === "basic") {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => cached); // Offline fallback: serve cache if network fails
       return cached || fetched;
     })
   );
