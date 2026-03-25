@@ -1,14 +1,16 @@
 import { useEffect, useRef, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import type { Listing } from "@/services/types";
+import type { Listing, SupplierLocation } from "@/services/types";
 
 interface InteractiveMapProps {
   listings?: Listing[];
+  locations?: SupplierLocation[];
   className?: string;
   height?: string;
   selectedId?: string | null;
   onMarkerClick?: (listing: Listing) => void;
+  onLocationClick?: (location: SupplierLocation) => void;
   center?: [number, number];
   zoom?: number;
 }
@@ -83,12 +85,65 @@ function createMarkerIcon(listing: Listing, isSelected: boolean) {
   });
 }
 
+function createLocationMarkerIcon(location: SupplierLocation, isSelected: boolean) {
+  const color = "#1E3A5F";
+  const size = isSelected ? 44 : 36;
+  const iconPath = typeIconPaths.warehouse;
+
+  return L.divIcon({
+    className: "custom-marker",
+    html: `
+      <div style="
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        filter: ${isSelected ? 'drop-shadow(0 0 8px rgba(46, 196, 182, 0.5))' : 'none'};
+      ">
+        <div style="
+          width: ${size}px;
+          height: ${size}px;
+          border-radius: 50% 50% 50% 0;
+          transform: rotate(-45deg);
+          background: ${color};
+          border: 3px solid ${isSelected ? '#2EC4B6' : 'white'};
+          box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+        ">
+          <div style="transform: rotate(45deg); display: flex; align-items: center; justify-content: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">${iconPath}</svg>
+          </div>
+        </div>
+        <div style="
+          margin-top: 6px;
+          background: white;
+          padding: 2px 8px;
+          border-radius: 12px;
+          font-size: 11px;
+          font-weight: 700;
+          color: ${color};
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          white-space: nowrap;
+          border: 1px solid ${color}20;
+        ">${location.unitCount} ühikut${location.priceFrom ? ` · €${location.priceFrom}` : ''}</div>
+      </div>
+    `,
+    iconSize: [size, size + 28],
+    iconAnchor: [size / 2, size],
+  });
+}
+
 export default function InteractiveMap({
   listings = [],
+  locations = [],
   className = "",
   height = "h-[400px]",
   selectedId = null,
   onMarkerClick,
+  onLocationClick,
   center = [58.8, 25.5],
   zoom = 7,
 }: InteractiveMapProps) {
