@@ -58,7 +58,7 @@ export default function LoginPage() {
       await login(data.email, data.password);
       toast.success(t("login.successLogin"));
       navigate(from, { replace: true });
-    } catch (err: any) { toast.error(err.message || t("login.error")); }
+    } catch (err: any) { const msg = err.message || ""; toast.error(msg.startsWith("error.") ? t(msg) : msg || t("error.loginFailed")); }
     setLoading(false);
   };
 
@@ -68,7 +68,7 @@ export default function LoginPage() {
       await authRegister(data.name, data.email, data.password, data.inviteCode);
       toast.success(t("login.successRegister"));
       navigate(from, { replace: true });
-    } catch (err: any) { toast.error(err.message || t("login.registerError")); }
+    } catch (err: any) { const msg = err.message || ""; toast.error(msg.startsWith("error.") ? t(msg) : msg || t("error.registerFailed")); }
     setLoading(false);
   };
 
