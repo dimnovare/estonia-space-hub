@@ -2,12 +2,14 @@ import { useState, useMemo, lazy, Suspense, useCallback, useRef, useEffect } fro
 import { useSearchParams, Link } from "react-router-dom";
 import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers, Warehouse } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useListings, useLocations } from "@/hooks/queries";
 import type { Listing, ListingType, ListingFilters } from "@/services/types";
 import { apiClient } from "@/services/apiClient";
 import ListingCard from "@/components/ListingCard";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
+import { ESTONIAN_CITIES } from "@/lib/constants";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
@@ -250,7 +252,17 @@ export default function SearchPage() {
           {showFilters && (
             <div className="mt-3 space-y-3 border-t border-border pt-3">
               <div className="flex flex-wrap gap-2">
-                <input type="text" placeholder={t("search.city")} value={cityFilter} onChange={(e) => updateFilters({ city: e.target.value })} className="w-28 rounded-full border border-border bg-card px-3 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-accent" />
+                <Select value={cityFilter || "all"} onValueChange={(v) => updateFilters({ city: v === "all" ? "" : v })}>
+                  <SelectTrigger className="w-[140px] shrink-0">
+                    <SelectValue placeholder={t("search.allCities")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("search.allCities")}</SelectItem>
+                    {ESTONIAN_CITIES.map((city) => (
+                      <SelectItem key={city} value={city}>{city}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <input type="number" placeholder={t("search.maxPrice")} value={priceMax} onChange={(e) => updateFilters({ priceMax: e.target.value })} className="w-28 rounded-full border border-border bg-card px-3 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-accent" />
                 <FilterToggle label={t("search.availableNow")} active={availableNow} onChange={(v) => updateFilters({ availableNow: v ? "true" : "" })} />
               </div>
@@ -312,7 +324,7 @@ export default function SearchPage() {
           ) : (
             <>
               <p className="mb-4 text-sm text-muted-foreground">
-                {filtered.length} {t("search.results")}{query && ` ${t("search.forQuery")} "${query}"`}
+                {t("search.resultsFound").replace("{count}", String(result?.total ?? filtered.length))}{query && ` ${t("search.forQuery")} "${query}"`}
               </p>
 
               {/* Location cards */}
