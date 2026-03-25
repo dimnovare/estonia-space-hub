@@ -407,6 +407,10 @@ const translations: Record<Language, Record<string, string>> = {
     "hiw.readyDesc": "Broneeri soodsamalt — vaata pakkumisi kohe.",
     "hiw.startSearch": "Alusta otsingut",
 
+    // Dashboard mobile gate
+    "dashboard.desktopOnly": "Paneel on saadaval ainult lauaarvutil",
+    "dashboard.desktopOnlyDesc": "Avage see leht arvutis, et kasutada kõiki funktsioone.",
+
     // Admin
     "admin.title": "Admin",
     "admin.dashboard": "Ülevaade",
@@ -1466,6 +1470,10 @@ const translations: Record<Language, Record<string, string>> = {
     "hiw.readyDesc": "Book at better prices — browse listings now.",
     "hiw.startSearch": "Start searching",
 
+    // Dashboard mobile gate
+    "dashboard.desktopOnly": "Dashboard is available only on desktop",
+    "dashboard.desktopOnlyDesc": "Open this page on a computer to use all features.",
+
     // Admin
     "admin.title": "Admin",
     "admin.dashboard": "Overview",
@@ -2506,6 +2514,10 @@ const translations: Record<Language, Record<string, string>> = {
     "hiw.readyCta": "Готовы начать?",
     "hiw.readyDesc": "Бронируйте по лучшим ценам — смотрите предложения сейчас.",
     "hiw.startSearch": "Начать поиск",
+
+    // Dashboard mobile gate
+    "dashboard.desktopOnly": "Панель доступна только на компьютере",
+    "dashboard.desktopOnlyDesc": "Откройте эту страницу на компьютере для использования всех функций.",
 
     // Admin
     "admin.title": "Админ",

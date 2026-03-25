@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Monitor } from "lucide-react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
@@ -41,6 +43,7 @@ function useSidebarLinks() {
 
 export default function ProviderDashboardPage() {
   const { t } = useLanguage();
+  const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get("ptab") || "overview";
   const setTab = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("ptab", id); return n; }, { replace: true });
@@ -85,6 +88,18 @@ export default function ProviderDashboardPage() {
 
   const currentTab = sidebarLinks.find(l => l.id === tab);
   const CurrentIcon = currentTab?.icon || LayoutDashboard;
+
+  if (isMobile) {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-6">
+        <div className="mx-auto flex max-w-sm flex-col items-center rounded-2xl bg-secondary/30 px-6 py-16 text-center">
+          <Monitor className="h-12 w-12 text-muted-foreground/50" />
+          <p className="mt-4 font-display text-base font-semibold">{t("dashboard.desktopOnly")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("dashboard.desktopOnlyDesc")}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">

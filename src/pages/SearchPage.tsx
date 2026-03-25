@@ -3,6 +3,7 @@ import { useSearchParams, Link } from "react-router-dom";
 import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers, Warehouse } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from "@/components/ui/drawer";
 import { useListings, useLocations } from "@/hooks/queries";
 import type { Listing, ListingType, ListingFilters } from "@/services/types";
 import { apiClient } from "@/services/apiClient";
@@ -10,6 +11,7 @@ import ListingCard from "@/components/ListingCard";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
 import { ESTONIAN_CITIES } from "@/lib/constants";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
@@ -95,7 +97,9 @@ export default function SearchPage() {
   }, [serverFiltered, heated, access24, indoor, security, loadingDock, forkliftFilter, shortTerm, longTerm, withVan, packingHelp, loadingHelp, pricingFixed, trailerClosed]);
 
   // Local-only UI state
+  const isMobile = useIsMobile();
   const [showFilters, setShowFilters] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<"list" | "map">("list");
   const [notifyEmail, setNotifyEmail] = useState("");
@@ -231,9 +235,9 @@ export default function SearchPage() {
               </button>
             ))}
             <div className="ml-auto flex items-center gap-2">
-              <button onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary">
+              <button onClick={() => isMobile ? setDrawerOpen(true) : setShowFilters(!showFilters)} className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary">
                 <SlidersHorizontal className="h-3.5 w-3.5" />
-                {t("search.filters")}
+                <span className="hidden sm:inline">{t("search.filters")}</span>
                 {activeFiltersCount > 0 && (
                   <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">{activeFiltersCount}</span>
                 )}
@@ -249,71 +253,43 @@ export default function SearchPage() {
             </div>
           </div>
 
-          {showFilters && (
+          {/* Desktop inline filters */}
+          {showFilters && !isMobile && (
             <div className="mt-3 space-y-3 border-t border-border pt-3">
-              <div className="flex flex-wrap gap-2">
-                <Select value={cityFilter || "all"} onValueChange={(v) => updateFilters({ city: v === "all" ? "" : v })}>
-                  <SelectTrigger className="w-[140px] shrink-0">
-                    <SelectValue placeholder={t("search.allCities")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t("search.allCities")}</SelectItem>
-                    {ESTONIAN_CITIES.map((city) => (
-                      <SelectItem key={city} value={city}>{city}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <input type="number" placeholder={t("search.maxPrice")} value={priceMax} onChange={(e) => updateFilters({ priceMax: e.target.value })} className="w-28 rounded-full border border-border bg-card px-3 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-accent" />
-                <FilterToggle label={t("search.availableNow")} active={availableNow} onChange={(v) => updateFilters({ availableNow: v ? "true" : "" })} />
-              </div>
-
-              {(activeType === "all" || activeType === "warehouse") && (
-                <div>
-                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("search.warehouseFilters")}</div>
-                  <div className="flex flex-wrap gap-2">
-                    <FilterToggle label={t("search.heated")} active={heated} onChange={(v) => updateFilters({ heated: v ? "true" : "" })} />
-                    <FilterToggle label={t("search.access24")} active={access24} onChange={(v) => updateFilters({ access24: v ? "true" : "" })} />
-                    <FilterToggle label={t("search.indoor")} active={indoor} onChange={(v) => updateFilters({ indoor: v ? "true" : "" })} />
-                    <FilterToggle label={t("search.secured")} active={security} onChange={(v) => updateFilters({ security: v ? "true" : "" })} />
-                    <FilterToggle label={t("search.loadingDock")} active={loadingDock} onChange={(v) => updateFilters({ loadingDock: v ? "true" : "" })} />
-                    <FilterToggle label={t("search.forklift")} active={forkliftFilter} onChange={(v) => updateFilters({ forklift: v ? "true" : "" })} />
-                    <FilterToggle label={t("search.shortTerm")} active={shortTerm} onChange={(v) => updateFilters({ shortTerm: v ? "true" : "" })} />
-                    <FilterToggle label={t("search.longTerm")} active={longTerm} onChange={(v) => updateFilters({ longTerm: v ? "true" : "" })} />
-                  </div>
-                </div>
-              )}
-
-              {(activeType === "all" || activeType === "moving") && (
-                <div>
-                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("search.movingFilters")}</div>
-                  <div className="flex flex-wrap gap-2">
-                    <FilterToggle label={t("search.withVan")} active={withVan} onChange={(v) => updateFilters({ withVan: v ? "true" : "" })} />
-                    <FilterToggle label={t("search.packingHelp")} active={packingHelp} onChange={(v) => updateFilters({ packingHelp: v ? "true" : "" })} />
-                    <FilterToggle label={t("search.loadingHelp")} active={loadingHelp} onChange={(v) => updateFilters({ loadingHelp: v ? "true" : "" })} />
-                    <FilterToggle label={t("search.fixedPrice")} active={pricingFixed} onChange={(v) => updateFilters({ pricingFixed: v ? "true" : "" })} />
-                  </div>
-                </div>
-              )}
-
-              {(activeType === "all" || activeType === "trailer") && (
-                <div>
-                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("search.trailerFilters")}</div>
-                  <div className="flex flex-wrap gap-2">
-                    <FilterToggle label={t("search.closedTrailer")} active={trailerClosed} onChange={(v) => updateFilters({ trailerClosed: v ? "true" : "" })} />
-                  </div>
-                </div>
-              )}
-
-              {activeFiltersCount > 0 && (
-                <Button variant="outline" size="sm" onClick={clearAll}
-                  className="mt-1 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive">
-                  <X className="h-3.5 w-3.5 mr-1.5" />
-                  {t("search.clearFilters")}
-                  <span className="ml-1 font-bold">({activeFiltersCount})</span>
-                </Button>
-              )}
+              <FilterContent
+                t={t} cityFilter={cityFilter} priceMax={priceMax} availableNow={availableNow}
+                activeType={activeType} heated={heated} access24={access24} indoor={indoor}
+                security={security} loadingDock={loadingDock} forkliftFilter={forkliftFilter}
+                shortTerm={shortTerm} longTerm={longTerm} withVan={withVan} packingHelp={packingHelp}
+                loadingHelp={loadingHelp} pricingFixed={pricingFixed} trailerClosed={trailerClosed}
+                activeFiltersCount={activeFiltersCount} updateFilters={updateFilters} clearAll={clearAll}
+              />
             </div>
           )}
+
+          {/* Mobile filter drawer */}
+          <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+            <DrawerContent className="max-h-[85vh]">
+              <DrawerHeader className="text-left">
+                <DrawerTitle>{t("search.filters")}</DrawerTitle>
+              </DrawerHeader>
+              <div className="overflow-y-auto px-4 pb-6 space-y-3">
+                <FilterContent
+                  t={t} cityFilter={cityFilter} priceMax={priceMax} availableNow={availableNow}
+                  activeType={activeType} heated={heated} access24={access24} indoor={indoor}
+                  security={security} loadingDock={loadingDock} forkliftFilter={forkliftFilter}
+                  shortTerm={shortTerm} longTerm={longTerm} withVan={withVan} packingHelp={packingHelp}
+                  loadingHelp={loadingHelp} pricingFixed={pricingFixed} trailerClosed={trailerClosed}
+                  activeFiltersCount={activeFiltersCount} updateFilters={updateFilters} clearAll={clearAll}
+                />
+                <DrawerClose asChild>
+                  <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                    {t("search.resultsFound").replace("{count}", String(result?.total ?? filtered.length))}
+                  </Button>
+                </DrawerClose>
+              </div>
+            </DrawerContent>
+          </Drawer>
         </div>
 
         <div className="p-4">
@@ -425,5 +401,90 @@ function FilterToggle({ label, active, onChange }: { label: string; active: bool
     <button onClick={() => onChange(!active)} className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${active ? "border-accent bg-accent/10 text-accent" : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"}`}>
       {label}
     </button>
+  );
+}
+
+interface FilterContentProps {
+  t: (key: string) => string;
+  cityFilter: string; priceMax: string; availableNow: boolean;
+  activeType: string; heated: boolean; access24: boolean; indoor: boolean;
+  security: boolean; loadingDock: boolean; forkliftFilter: boolean;
+  shortTerm: boolean; longTerm: boolean; withVan: boolean; packingHelp: boolean;
+  loadingHelp: boolean; pricingFixed: boolean; trailerClosed: boolean;
+  activeFiltersCount: number;
+  updateFilters: (u: Record<string, string>) => void;
+  clearAll: () => void;
+}
+
+function FilterContent({
+  t, cityFilter, priceMax, availableNow, activeType,
+  heated, access24, indoor, security, loadingDock, forkliftFilter,
+  shortTerm, longTerm, withVan, packingHelp, loadingHelp, pricingFixed,
+  trailerClosed, activeFiltersCount, updateFilters, clearAll,
+}: FilterContentProps) {
+  return (
+    <>
+      <div className="flex flex-wrap gap-2">
+        <Select value={cityFilter || "all"} onValueChange={(v) => updateFilters({ city: v === "all" ? "" : v })}>
+          <SelectTrigger className="w-[140px] shrink-0">
+            <SelectValue placeholder={t("search.allCities")} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t("search.allCities")}</SelectItem>
+            {ESTONIAN_CITIES.map((city) => (
+              <SelectItem key={city} value={city}>{city}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <input type="number" placeholder={t("search.maxPrice")} value={priceMax} onChange={(e) => updateFilters({ priceMax: e.target.value })} className="w-28 rounded-full border border-border bg-card px-3 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-accent" />
+        <FilterToggle label={t("search.availableNow")} active={availableNow} onChange={(v) => updateFilters({ availableNow: v ? "true" : "" })} />
+      </div>
+
+      {(activeType === "all" || activeType === "warehouse") && (
+        <div>
+          <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("search.warehouseFilters")}</div>
+          <div className="flex flex-wrap gap-2">
+            <FilterToggle label={t("search.heated")} active={heated} onChange={(v) => updateFilters({ heated: v ? "true" : "" })} />
+            <FilterToggle label={t("search.access24")} active={access24} onChange={(v) => updateFilters({ access24: v ? "true" : "" })} />
+            <FilterToggle label={t("search.indoor")} active={indoor} onChange={(v) => updateFilters({ indoor: v ? "true" : "" })} />
+            <FilterToggle label={t("search.secured")} active={security} onChange={(v) => updateFilters({ security: v ? "true" : "" })} />
+            <FilterToggle label={t("search.loadingDock")} active={loadingDock} onChange={(v) => updateFilters({ loadingDock: v ? "true" : "" })} />
+            <FilterToggle label={t("search.forklift")} active={forkliftFilter} onChange={(v) => updateFilters({ forklift: v ? "true" : "" })} />
+            <FilterToggle label={t("search.shortTerm")} active={shortTerm} onChange={(v) => updateFilters({ shortTerm: v ? "true" : "" })} />
+            <FilterToggle label={t("search.longTerm")} active={longTerm} onChange={(v) => updateFilters({ longTerm: v ? "true" : "" })} />
+          </div>
+        </div>
+      )}
+
+      {(activeType === "all" || activeType === "moving") && (
+        <div>
+          <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("search.movingFilters")}</div>
+          <div className="flex flex-wrap gap-2">
+            <FilterToggle label={t("search.withVan")} active={withVan} onChange={(v) => updateFilters({ withVan: v ? "true" : "" })} />
+            <FilterToggle label={t("search.packingHelp")} active={packingHelp} onChange={(v) => updateFilters({ packingHelp: v ? "true" : "" })} />
+            <FilterToggle label={t("search.loadingHelp")} active={loadingHelp} onChange={(v) => updateFilters({ loadingHelp: v ? "true" : "" })} />
+            <FilterToggle label={t("search.fixedPrice")} active={pricingFixed} onChange={(v) => updateFilters({ pricingFixed: v ? "true" : "" })} />
+          </div>
+        </div>
+      )}
+
+      {(activeType === "all" || activeType === "trailer") && (
+        <div>
+          <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("search.trailerFilters")}</div>
+          <div className="flex flex-wrap gap-2">
+            <FilterToggle label={t("search.closedTrailer")} active={trailerClosed} onChange={(v) => updateFilters({ trailerClosed: v ? "true" : "" })} />
+          </div>
+        </div>
+      )}
+
+      {activeFiltersCount > 0 && (
+        <Button variant="outline" size="sm" onClick={clearAll}
+          className="mt-1 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive">
+          <X className="h-3.5 w-3.5 mr-1.5" />
+          {t("search.clearFilters")}
+          <span className="ml-1 font-bold">({activeFiltersCount})</span>
+        </Button>
+      )}
+    </>
   );
 }
