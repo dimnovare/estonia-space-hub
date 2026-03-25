@@ -403,3 +403,88 @@ function FilterToggle({ label, active, onChange }: { label: string; active: bool
     </button>
   );
 }
+
+interface FilterContentProps {
+  t: (key: string) => string;
+  cityFilter: string; priceMax: string; availableNow: boolean;
+  activeType: string; heated: boolean; access24: boolean; indoor: boolean;
+  security: boolean; loadingDock: boolean; forkliftFilter: boolean;
+  shortTerm: boolean; longTerm: boolean; withVan: boolean; packingHelp: boolean;
+  loadingHelp: boolean; pricingFixed: boolean; trailerClosed: boolean;
+  activeFiltersCount: number;
+  updateFilters: (u: Record<string, string>) => void;
+  clearAll: () => void;
+}
+
+function FilterContent({
+  t, cityFilter, priceMax, availableNow, activeType,
+  heated, access24, indoor, security, loadingDock, forkliftFilter,
+  shortTerm, longTerm, withVan, packingHelp, loadingHelp, pricingFixed,
+  trailerClosed, activeFiltersCount, updateFilters, clearAll,
+}: FilterContentProps) {
+  return (
+    <>
+      <div className="flex flex-wrap gap-2">
+        <Select value={cityFilter || "all"} onValueChange={(v) => updateFilters({ city: v === "all" ? "" : v })}>
+          <SelectTrigger className="w-[140px] shrink-0">
+            <SelectValue placeholder={t("search.allCities")} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t("search.allCities")}</SelectItem>
+            {ESTONIAN_CITIES.map((city) => (
+              <SelectItem key={city} value={city}>{city}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <input type="number" placeholder={t("search.maxPrice")} value={priceMax} onChange={(e) => updateFilters({ priceMax: e.target.value })} className="w-28 rounded-full border border-border bg-card px-3 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-accent" />
+        <FilterToggle label={t("search.availableNow")} active={availableNow} onChange={(v) => updateFilters({ availableNow: v ? "true" : "" })} />
+      </div>
+
+      {(activeType === "all" || activeType === "warehouse") && (
+        <div>
+          <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("search.warehouseFilters")}</div>
+          <div className="flex flex-wrap gap-2">
+            <FilterToggle label={t("search.heated")} active={heated} onChange={(v) => updateFilters({ heated: v ? "true" : "" })} />
+            <FilterToggle label={t("search.access24")} active={access24} onChange={(v) => updateFilters({ access24: v ? "true" : "" })} />
+            <FilterToggle label={t("search.indoor")} active={indoor} onChange={(v) => updateFilters({ indoor: v ? "true" : "" })} />
+            <FilterToggle label={t("search.secured")} active={security} onChange={(v) => updateFilters({ security: v ? "true" : "" })} />
+            <FilterToggle label={t("search.loadingDock")} active={loadingDock} onChange={(v) => updateFilters({ loadingDock: v ? "true" : "" })} />
+            <FilterToggle label={t("search.forklift")} active={forkliftFilter} onChange={(v) => updateFilters({ forklift: v ? "true" : "" })} />
+            <FilterToggle label={t("search.shortTerm")} active={shortTerm} onChange={(v) => updateFilters({ shortTerm: v ? "true" : "" })} />
+            <FilterToggle label={t("search.longTerm")} active={longTerm} onChange={(v) => updateFilters({ longTerm: v ? "true" : "" })} />
+          </div>
+        </div>
+      )}
+
+      {(activeType === "all" || activeType === "moving") && (
+        <div>
+          <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("search.movingFilters")}</div>
+          <div className="flex flex-wrap gap-2">
+            <FilterToggle label={t("search.withVan")} active={withVan} onChange={(v) => updateFilters({ withVan: v ? "true" : "" })} />
+            <FilterToggle label={t("search.packingHelp")} active={packingHelp} onChange={(v) => updateFilters({ packingHelp: v ? "true" : "" })} />
+            <FilterToggle label={t("search.loadingHelp")} active={loadingHelp} onChange={(v) => updateFilters({ loadingHelp: v ? "true" : "" })} />
+            <FilterToggle label={t("search.fixedPrice")} active={pricingFixed} onChange={(v) => updateFilters({ pricingFixed: v ? "true" : "" })} />
+          </div>
+        </div>
+      )}
+
+      {(activeType === "all" || activeType === "trailer") && (
+        <div>
+          <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("search.trailerFilters")}</div>
+          <div className="flex flex-wrap gap-2">
+            <FilterToggle label={t("search.closedTrailer")} active={trailerClosed} onChange={(v) => updateFilters({ trailerClosed: v ? "true" : "" })} />
+          </div>
+        </div>
+      )}
+
+      {activeFiltersCount > 0 && (
+        <Button variant="outline" size="sm" onClick={clearAll}
+          className="mt-1 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive">
+          <X className="h-3.5 w-3.5 mr-1.5" />
+          {t("search.clearFilters")}
+          <span className="ml-1 font-bold">({activeFiltersCount})</span>
+        </Button>
+      )}
+    </>
+  );
+}
