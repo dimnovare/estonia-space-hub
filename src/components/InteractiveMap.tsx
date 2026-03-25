@@ -189,8 +189,6 @@ export default function InteractiveMap({
 
     markersRef.current.clearLayers();
     markerMap.current.clear();
-    // Update closure references for location marker labels
-    createLocationMarkerIconRef.current = (location: SupplierLocation, isSelected: boolean) => createLocationMarkerIcon(location, isSelected, tUnits);
 
     const bounds: L.LatLngExpression[] = [];
 
@@ -201,7 +199,7 @@ export default function InteractiveMap({
     locations.forEach((loc) => {
       loc.units?.forEach(u => coveredListingIds.add(u.id));
       
-      const icon = createLocationMarkerIcon(loc, loc.id === selectedId);
+      const icon = createLocationMarkerIcon(loc, loc.id === selectedId, tUnits);
       const marker = L.marker([loc.lat, loc.lng], { icon });
 
       const popupHtml = `
