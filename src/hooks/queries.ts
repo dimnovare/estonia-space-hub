@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { listingService, bookingService, orderService, supplierService, userService, notificationService, invoiceService, messageService, auditService, integrationSettingsService, routingRuleService, locationService } from "@/services";
-import type { ListingFilters, CreateBookingInput } from "@/services/types";
+import type { ListingFilters, CreateBookingInput, Review, CreateReviewInput } from "@/services/types";
 import { toast } from "sonner";
+import { apiClient } from "@/services/apiClient";
 import { useAuth } from "@/contexts/AuthContext";
 
 export function useListings(filters?: ListingFilters) {
@@ -106,5 +107,25 @@ export function useAdminLocations() {
     queryKey: ["admin-locations"],
     queryFn: () => locationService.getAll(),
     staleTime: 30_000,
+  });
+}
+
+export function useReviews(listingId: string | undefined) {
+  return useQuery<Review[]>({
+    queryKey: ["reviews", listingId],
+    queryFn: () => apiClient.get<Review[]>(`/reviews?listingId=${listingId}`),
+    enabled: !!listingId,
+    staleTime: 60_000,
+  });
+}
+
+export function useCreateReview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateReviewInput) => apiClient.post("/reviews", input),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ["reviews", variables.listingId] });
+      qc.invalidateQueries({ queryKey: ["bookings"] });
+    },
   });
 }
