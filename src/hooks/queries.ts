@@ -100,3 +100,11 @@ export function useLocation(id: string | undefined) {
     staleTime: 60_000,
   });
 }
+
+export function useAdminLocations() {
+  return useQuery({
+    queryKey: ["admin-locations"],
+    queryFn: () => locationService.getAll(),
+    staleTime: 30_000,
+  });
+}

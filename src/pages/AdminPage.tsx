@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   LayoutDashboard, List, MessageSquare, Settings, Users, FileText,
-  Package, Activity, ChevronDown, Plug, Route
+  Package, Activity, ChevronDown, Plug, Route, MapPin
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
@@ -13,6 +13,7 @@ import AdminIntegrations from "@/components/admin/AdminIntegrations";
 import AdminRouting from "@/components/admin/AdminRouting";
 import AdminUsers from "@/components/admin/AdminUsers";
 import AdminListings from "@/components/admin/AdminListings";
+import AdminLocations from "@/components/admin/AdminLocations";
 import AdminInquiries from "@/components/admin/AdminInquiries";
 import AdminContent from "@/components/admin/AdminContent";
 import AdminAudit from "@/components/admin/AdminAudit";
@@ -27,6 +28,7 @@ export default function AdminPage() {
   const sidebarLinks = [
     { id: "dashboard", label: t("admin.dashboard"), icon: LayoutDashboard },
     { id: "listings", label: t("admin.listings"), icon: List },
+    { id: "locations", label: t("admin.locations"), icon: MapPin },
     { id: "orders", label: t("admin.orders"), icon: Package },
     { id: "suppliers", label: t("admin.suppliers"), icon: Users },
     { id: "integrations", label: t("admin.integrations"), icon: Plug },
@@ -63,7 +65,6 @@ export default function AdminPage() {
         </nav>
       </aside>
       <main className="flex-1 overflow-x-hidden p-4 sm:p-6">
-        {/* Mobile: dropdown nav */}
         <div className="mb-4 lg:hidden relative">
           <button onClick={() => setMobileNavOpen(!mobileNavOpen)} className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium">
             <span className="flex items-center gap-2.5"><CurrentIcon className="h-4 w-4 text-muted-foreground" />{currentTab?.label}</span>
@@ -87,6 +88,7 @@ export default function AdminPage() {
         </div>
         {activeTab === "dashboard" && <AdminDashboard />}
         {activeTab === "listings" && <AdminListings />}
+        {activeTab === "locations" && <AdminLocations />}
         {activeTab === "orders" && <AdminOrders />}
         {activeTab === "suppliers" && <AdminSuppliers />}
         {activeTab === "integrations" && <AdminIntegrations />}
