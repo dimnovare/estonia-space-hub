@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruumly-v1";
+const CACHE_NAME = "ruumly-v2";
 const PRECACHE_URLS = ["/", "/index.html"];
 
 self.addEventListener("install", (event) => {
@@ -21,8 +21,14 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
-  // Skip OAuth redirects
-  if (new URL(event.request.url).pathname.startsWith("/~oauth")) return;
+
+  const url = new URL(event.request.url);
+
+  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/api")) return;
+  if (url.pathname.startsWith("/~oauth")) return;
+  if (url.pathname.startsWith("/hangfire")) return;
+  if (url.pathname === "/health") return;
+  if (url.origin !== self.location.origin) return;
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
@@ -32,7 +38,7 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
         return response;
-      });
+      }).catch(() => cached);
       return cached || fetched;
     })
   );
