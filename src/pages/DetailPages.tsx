@@ -9,6 +9,7 @@ import { lazy, Suspense } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { Listing, WarehouseListing, MovingListing, TrailerListing } from "@/services/types";
 import { SEO } from "@/components/SEO";
+import ReviewsSection from "@/components/ReviewsSection";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
@@ -153,6 +154,8 @@ export function WarehouseDetail() {
               <InteractiveMap listings={[wListing]} height="h-[200px]" zoom={14} center={[wListing.lat, wListing.lng]} />
             </Suspense>
           </div>
+
+          <ReviewsSection listingId={wListing.id} />
         </div>
 
         <div>
@@ -290,6 +293,8 @@ export function MovingDetail() {
               <span key={a} className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-foreground">{a}</span>
             ))}
           </div>
+
+          <ReviewsSection listingId={mListing.id} />
         </div>
 
         <div>
@@ -400,6 +405,8 @@ export function TrailerDetail() {
               <li key={r} className="flex items-center gap-2 text-sm"><Check className="h-4 w-4 text-accent" /> {r}</li>
             ))}
           </ul>
+
+          <ReviewsSection listingId={tListing.id} />
         </div>
 
         <div>
