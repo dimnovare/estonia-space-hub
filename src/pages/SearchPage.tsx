@@ -1,6 +1,6 @@
 import { useState, useMemo, lazy, Suspense, useCallback, useRef, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers } from "lucide-react";
+import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers, Warehouse } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListings, useLocations } from "@/hooks/queries";
 import type { Listing, ListingType, ListingFilters } from "@/services/types";
@@ -367,10 +367,14 @@ export default function SearchPage() {
                 ))}
               </div>
               {filtered.length === 0 && locations.length === 0 && (
-                <div className="flex flex-col items-center py-20 text-center">
-                  <p className="text-lg font-medium">{t("search.noResults")}</p>
-                  <p className="mt-1 max-w-md text-sm text-muted-foreground">{t("search.noResultsDesc")}</p>
-                  <div className="mt-6 flex items-center gap-2">
+                <div className="mx-auto flex max-w-md flex-col items-center rounded-2xl bg-secondary/30 px-6 py-16 text-center">
+                  <Warehouse className="h-12 w-12 text-muted-foreground/50" />
+                  <p className="mt-4 font-display text-lg font-semibold">{t("empty.search.title")}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{t("empty.search.desc")}</p>
+                  <Button variant="outline" size="sm" className="mt-5" onClick={clearAll}>
+                    {t("empty.search.clearFilters")}
+                  </Button>
+                  <div className="mt-6 flex w-full items-center gap-2">
                     <input
                       type="email"
                       placeholder={t("search.notifyEmail")}

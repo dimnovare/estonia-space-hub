@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Inbox } from "lucide-react";
 import { Check, X, Mail, Download } from "lucide-react";
 import { useOrders, useApproveOrder, useRejectOrder, useConfirmOrder } from "@/hooks/useOrders";
 import { SkeletonList } from "@/components/SkeletonCard";
@@ -119,7 +120,11 @@ export default function ProviderIncomingOrders() {
 
       <div className="mt-3 space-y-3">
         {filtered.length === 0 && !isLoading && (
-          <div className="py-12 text-center text-sm text-muted-foreground">{t("provider.orders.noOrders")}</div>
+          <div className="mx-auto flex max-w-sm flex-col items-center rounded-2xl bg-secondary/30 px-6 py-16 text-center">
+            <Inbox className="h-12 w-12 text-muted-foreground/50" />
+            <p className="mt-4 font-display text-base font-semibold">{t("empty.providerOrders.title")}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t("empty.providerOrders.desc")}</p>
+          </div>
         )}
         {filtered.map((order) => {
           const statusCfg = ORDER_STATUS_CONFIG[order.status];
