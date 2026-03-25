@@ -186,14 +186,52 @@ export default function InteractiveMap({
 
     const bounds: L.LatLngExpression[] = [];
 
+    // Track which listing IDs are covered by locations
+    const coveredListingIds = new Set<string>();
+    
+    // Render location markers
+    locations.forEach((loc) => {
+      loc.units?.forEach(u => coveredListingIds.add(u.id));
+      
+      const icon = createLocationMarkerIcon(loc, loc.id === selectedId);
+      const marker = L.marker([loc.lat, loc.lng], { icon });
+
+      const popupHtml = `
+        <div style="min-width: 200px; font-family: 'DM Sans', sans-serif;">
+          ${loc.images?.[0] ? `<img src="${loc.images[0]}" alt="" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />` : ''}
+          <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #1E3A5F;">${loc.name}</div>
+          <div style="font-size: 12px; color: #666; margin-bottom: 4px;">${loc.supplierName}</div>
+          <div style="font-size: 12px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            ${loc.address}, ${loc.city}
+          </div>
+          ${loc.priceFrom ? `<div style="font-weight: 700; font-size: 16px; color: #1E3A5F; margin-bottom: 4px;">al. €${loc.priceFrom}/kuu</div>` : ''}
+          <a href="/location/${loc.id}" style="font-size: 12px; color: #2EC4B6; text-decoration: none; font-weight: 600;">${loc.unitCount} ühikut →</a>
+        </div>
+      `;
+
+      marker.bindPopup(popupHtml, { maxWidth: 260 });
+
+      marker.on("click", () => {
+        marker.openPopup();
+        if (onLocationClick) onLocationClick(loc);
+      });
+
+      marker.addTo(markersRef.current!);
+      markerMap.current.set(loc.id, marker);
+      bounds.push([loc.lat, loc.lng]);
+    });
+
+    // Render individual listing markers (skip those covered by locations)
     listings.forEach((listing) => {
+      if (coveredListingIds.has(listing.id)) return;
+      
       const icon = createMarkerIcon(listing, listing.id === selectedId);
       const marker = L.marker([listing.lat, listing.lng], { icon });
 
       const typeName = typeLabels[listing.type] || listing.type;
       const typeColor = typeColors[listing.type];
 
-      // Build popup HTML
       const popupHtml = `
         <div style="min-width: 200px; font-family: 'DM Sans', sans-serif;">
           <img src="${listing.image}" alt="" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />
@@ -212,7 +250,6 @@ export default function InteractiveMap({
 
       marker.bindPopup(popupHtml, { maxWidth: 260 });
 
-      // Single click: open popup AND notify parent
       marker.on("click", () => {
         marker.openPopup();
         if (onMarkerClick) onMarkerClick(listing);
@@ -223,17 +260,17 @@ export default function InteractiveMap({
       bounds.push([listing.lat, listing.lng]);
     });
 
-    // Only fit bounds when the set of listings changes, not on selectedId change
-    const listingsKey = listings.map(l => l.id).sort().join(",");
-    if (listingsKey !== prevListingsKey.current) {
-      prevListingsKey.current = listingsKey;
+    // Only fit bounds when the set of items changes
+    const allKeys = [...listings.map(l => l.id), ...locations.map(l => l.id)].sort().join(",");
+    if (allKeys !== prevListingsKey.current) {
+      prevListingsKey.current = allKeys;
       if (bounds.length > 1) {
         mapInstance.current.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [40, 40] });
       } else if (bounds.length === 1) {
         mapInstance.current.setView(bounds[0] as L.LatLngExpression, 13);
       }
     }
-  }, [listings, selectedId, onMarkerClick]);
+  }, [listings, locations, selectedId, onMarkerClick, onLocationClick]);
 
   // When selectedId changes externally, open that marker's popup
   useEffect(() => {
