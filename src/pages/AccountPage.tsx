@@ -858,6 +858,7 @@ function useGenerateInvoicePdf() {
   win.document.close();
   win.focus();
   setTimeout(() => { win.print(); }, 500);
+  };
 }
 
 function AccountBilling() {
