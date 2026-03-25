@@ -149,8 +149,11 @@ const translations: Record<Language, Record<string, string>> = {
     // Beta badge
     "home.betaBadge": "Beta on käivitatud — liitu esimeste kasutajate hulka",
 
-    // Booking login hint
+    // Booking auth
     "booking.loginHint": "Broneerimise kinnitamiseks on vaja kontot — registreerimine võtab 30 sekundit",
+    "booking.authPrompt": "Broneeringu lõpetamiseks logi sisse või registreeru",
+    "booking.loginAndBook": "Logi sisse ja broneeri",
+    "booking.registerAndBook": "Registreeru ja broneeri",
 
     // Maintenance
     "maintenance.title": "Tuleme varsti tagasi",
@@ -1215,8 +1218,11 @@ const translations: Record<Language, Record<string, string>> = {
     // Beta badge
     "home.betaBadge": "Beta is live — join the first users",
 
-    // Booking login hint
+    // Booking auth
     "booking.loginHint": "An account is needed to confirm a booking — registration takes 30 seconds",
+    "booking.authPrompt": "Log in or register to complete your booking",
+    "booking.loginAndBook": "Log in and book",
+    "booking.registerAndBook": "Register and book",
 
     // Maintenance
     "maintenance.title": "We'll be back soon",
@@ -2251,8 +2257,11 @@ const translations: Record<Language, Record<string, string>> = {
     // Beta badge
     "home.betaBadge": "Бета запущена — присоединяйтесь к первым пользователям",
 
-    // Booking login hint
+    // Booking auth
     "booking.loginHint": "Для подтверждения бронирования нужен аккаунт — регистрация займёт 30 секунд",
+    "booking.authPrompt": "Войдите или зарегистрируйтесь для завершения бронирования",
+    "booking.loginAndBook": "Войти и забронировать",
+    "booking.registerAndBook": "Зарегистрироваться и забронировать",
 
     // Maintenance
     "maintenance.title": "Скоро вернёмся",

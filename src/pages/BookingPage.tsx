@@ -13,6 +13,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { bookingDetailsSchema, bookingContactSchema, type BookingDetailsForm, type BookingContactForm } from "@/lib/schemas";
 import { tokenStore } from "@/services/apiClient";
+import BookingInlineAuth from "@/components/BookingInlineAuth";
 
 type SubmitPhase = "submitting" | "sending" | "waiting" | "done";
 
@@ -30,6 +31,8 @@ export default function BookingPage() {
   const { isAuthenticated } = useAuth();
   // Also check token for deferred login restore
   const hasToken = !!tokenStore.getAccess() || !!tokenStore.getRefresh();
+
+  const [showInlineAuth, setShowInlineAuth] = useState(false);
 
   const steps = [t("booking.details"), t("booking.extras"), t("booking.contact"), t("booking.payment"), t("booking.review")];
   const extras = [
@@ -84,83 +87,58 @@ export default function BookingPage() {
     } else if (step < steps.length - 1) {
       setStep(step + 1);
     } else {
-      // Require auth at final submission
+      // Require auth at final submission — show inline auth instead of redirect
       if (!isAuthenticated) {
-        sessionStorage.setItem("pendingBooking", JSON.stringify({
-          listingId,
-          step,
-          date: detailsForm.getValues("date"),
-          duration: detailsForm.getValues("duration"),
-          extras: selectedExtras,
-          contact: {
-            name: contactForm.getValues("name"),
-            email: contactForm.getValues("email"),
-            phone: contactForm.getValues("phone"),
-            notes: contactForm.getValues("notes"),
-          },
-          paymentMethod,
-        }));
-        navigate("/login", { state: { from: `/book?listing=${listingId}` } });
+        setShowInlineAuth(true);
         return;
       }
 
-      // Submit booking via mutation
-      createBooking.mutateAsync({
-        listingId: listingId!,
-        startDate: detailsForm.getValues("date"),
-        duration: detailsForm.getValues("duration"),
-        extras: selectedExtras,
-        contactName: contactForm.getValues("name"),
-        contactEmail: contactForm.getValues("email"),
-        contactPhone: contactForm.getValues("phone"),
-        paymentMethod: paymentMethod as "bank" | "card" | "later",
-        notes: contactForm.getValues("notes"),
-      }).then(async (bookingResult: any) => {
-        const invoiceId = bookingResult?.invoiceId;
-
-        if (paymentMethod !== "later" && invoiceId) {
-          try {
-            const result = await paymentService.initiate({
-              invoiceId,
-              paymentMethod,
-              customerEmail: contactForm.getValues("email"),
-              locale: language,
-            });
-            if (result.paymentUrl) {
-              window.location.href = result.paymentUrl;
-              return;
-            }
-          } catch (err) {
-            console.error("Payment initiation failed", err);
-          }
-        }
-
-        setSubmitted(true);
-      }).catch(() => {
-        // Error already handled by mutation onError
-      });
+      submitBooking();
     }
   };
 
-  // Restore pending booking after login
-  useEffect(() => {
-    const pending = sessionStorage.getItem("pendingBooking");
-    if (pending && isAuthenticated) {
-      try {
-        const data = JSON.parse(pending);
-        if (data.listingId === listingId) {
-          detailsForm.setValue("date", data.date);
-          detailsForm.setValue("duration", data.duration);
-          setSelectedExtras(data.extras ?? []);
-          contactForm.setValue("name", data.contact?.name ?? "");
-          contactForm.setValue("email", data.contact?.email ?? "");
-          contactForm.setValue("phone", data.contact?.phone ?? "");
-          contactForm.setValue("notes", data.contact?.notes ?? "");
-          setPaymentMethod(data.paymentMethod ?? "bank");
-          setStep(4);
-          sessionStorage.removeItem("pendingBooking");
+  const submitBooking = () => {
+    createBooking.mutateAsync({
+      listingId: listingId!,
+      startDate: detailsForm.getValues("date"),
+      duration: detailsForm.getValues("duration"),
+      extras: selectedExtras,
+      contactName: contactForm.getValues("name"),
+      contactEmail: contactForm.getValues("email"),
+      contactPhone: contactForm.getValues("phone"),
+      paymentMethod: paymentMethod as "bank" | "card" | "later",
+      notes: contactForm.getValues("notes"),
+    }).then(async (bookingResult: any) => {
+      const invoiceId = bookingResult?.invoiceId;
+
+      if (paymentMethod !== "later" && invoiceId) {
+        try {
+          const result = await paymentService.initiate({
+            invoiceId,
+            paymentMethod,
+            customerEmail: contactForm.getValues("email"),
+            locale: language,
+          });
+          if (result.paymentUrl) {
+            window.location.href = result.paymentUrl;
+            return;
+          }
+        } catch (err) {
+          console.error("Payment initiation failed", err);
         }
-      } catch {}
+      }
+
+      setSubmitted(true);
+    }).catch(() => {
+      // Error already handled by mutation onError
+    });
+  };
+
+  // After inline auth success, auto-submit the booking
+  useEffect(() => {
+    if (isAuthenticated && showInlineAuth) {
+      setShowInlineAuth(false);
+      submitBooking();
     }
   }, [isAuthenticated]);
 
@@ -306,12 +284,6 @@ export default function BookingPage() {
                 </select>
                 {detailsForm.formState.errors.duration && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.duration.message}</p>}
               </div>
-              {!isAuthenticated && (
-                <div className="flex items-start gap-2 rounded-lg border border-accent/20 bg-accent/5 p-3">
-                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                  <span className="text-xs text-muted-foreground">{t("booking.loginHint")}</span>
-                </div>
-              )}
             </div>
           )}
 
@@ -435,6 +407,10 @@ export default function BookingPage() {
                   </div>
                 )}
               </div>
+
+              {showInlineAuth && !isAuthenticated && (
+                <BookingInlineAuth onSuccess={() => {}} />
+              )}
             </div>
           )}
 
