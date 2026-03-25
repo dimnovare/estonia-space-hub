@@ -139,6 +139,8 @@ export default function BookingPage() {
       }).catch(() => {
         // Error already handled by mutation onError
       });
+    }
+  };
 
   // Restore pending booking after login
   useEffect(() => {
