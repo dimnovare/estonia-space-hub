@@ -276,7 +276,7 @@ export default function InteractiveMap({
         mapInstance.current.setView(bounds[0] as L.LatLngExpression, 13);
       }
     }
-  }, [listings, locations, selectedId, onMarkerClick, onLocationClick]);
+  }, [listings, locations, selectedId, onMarkerClick, onLocationClick, tUnits, tFrom, tAllUnits]);
 
   // When selectedId changes externally, open that marker's popup
   useEffect(() => {
