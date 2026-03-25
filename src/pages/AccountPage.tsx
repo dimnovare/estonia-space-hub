@@ -253,9 +253,6 @@ function BookingCard({ booking }: { booking: Booking }) {
   const status = statusConfig[booking.status];
   const StatusIcon = status.icon;
   const { data: orders = [] } = useOrders();
-  const status = statusConfig[booking.status];
-  const StatusIcon = status.icon;
-  const { data: orders = [] } = useOrders();
   const order = orders.find(o => o.bookingId === booking.id);
 
   return (
