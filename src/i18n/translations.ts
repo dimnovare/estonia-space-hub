@@ -2107,6 +2107,8 @@ const translations: Record<Language, Record<string, string>> = {
     "empty.notifications.title": "No notifications",
     "empty.notifications.desc": "New notifications will appear here automatically.",
   },
+
+  ru: {
     "nav.storage": "Склады",
     "nav.moving": "Переезд",
     "nav.trailer": "Аренда прицепа",
