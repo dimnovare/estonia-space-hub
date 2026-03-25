@@ -5,6 +5,7 @@ import type {
   User, Supplier, Order, Booking, Notification, Invoice, Message,
   AuditLogEntry, OrderStatus, PartnerIntegrationSettings, OrderRoutingRule,
   Listing, ListingFilters, PaginatedResponse, CreateBookingInput,
+  SupplierLocation,
 } from "./types";
 
 // ─── Listing helpers ───────────────────────────────────────────────────────────
@@ -277,8 +278,23 @@ export const publicSettingsService = {
   },
 };
 
+// ─── Location Service ────────────────────────────────────────────────────────
+export const locationService = {
+  async getAll(params?: { city?: string; type?: string }): Promise<SupplierLocation[]> {
+    const qs = new URLSearchParams();
+    if (params?.city) qs.set("city", params.city);
+    if (params?.type) qs.set("type", params.type);
+    const query = qs.toString();
+    return apiClient.get<SupplierLocation[]>(`/locations${query ? `?${query}` : ""}`);
+  },
+  async getById(id: string): Promise<SupplierLocation> {
+    return apiClient.get<SupplierLocation>(`/locations/${id}`);
+  },
+};
+
 export type {
   User, Supplier, Order, Booking, Notification, Invoice, Message,
   AuditLogEntry, OrderStatus, PartnerIntegrationSettings, OrderRoutingRule,
   Listing, ListingFilters, PaginatedResponse, CreateBookingInput,
+  SupplierLocation,
 };

@@ -906,6 +906,17 @@ const translations: Record<Language, Record<string, string>> = {
     "cookie.s4.text": "Meie platvormil võivad küpsiseid paigaldada ka kolmandad osapooled nagu Google Analytics, Google Maps ja sotsiaalmeedia platvormid. Nende küpsiste kohta kehtivad vastavate teenusepakkujate privaatsuspoliitikad.",
     "cookie.s5.title": "5. Kontakt",
     "cookie.s5.text": "Küpsistega seotud küsimuste korral: info@ruumly.eu",
+
+    // Location
+    "location.units": "ühikut saadaval",
+    "location.from": "Alates",
+    "location.allUnits": "Kõik ühikud",
+    "location.openingHours": "Lahtiolekuajad",
+    "location.unitSize": "Suurus",
+    "location.quantity": "Kogus",
+    "location.noUnits": "Hetkel pole vabu ühikuid",
+    "location.backToSearch": "Tagasi otsingusse",
+    "location.unitTypes": "Saadaval olevad ühikud",
   },
 
   en: {
@@ -1777,6 +1788,17 @@ const translations: Record<Language, Record<string, string>> = {
     "cookie.s4.text": "Third parties such as Google Analytics, Google Maps, and social media platforms may also place cookies on our platform. Their cookies are governed by the respective providers' privacy policies.",
     "cookie.s5.title": "5. Contact",
     "cookie.s5.text": "For cookie-related questions: info@ruumly.eu",
+
+    // Location
+    "location.units": "units available",
+    "location.from": "From",
+    "location.allUnits": "All units",
+    "location.openingHours": "Opening hours",
+    "location.unitSize": "Size",
+    "location.quantity": "Quantity",
+    "location.noUnits": "No units available now",
+    "location.backToSearch": "Back to search",
+    "location.unitTypes": "Available unit types",
   },
 
   ru: {
@@ -2648,6 +2670,17 @@ const translations: Record<Language, Record<string, string>> = {
     "cookie.s4.text": "Третьи стороны, такие как Google Analytics, Google Maps и социальные сети, также могут размещать cookies на нашей платформе. Их cookies регулируются политиками конфиденциальности соответствующих провайдеров.",
     "cookie.s5.title": "5. Контакт",
     "cookie.s5.text": "По вопросам, связанным с cookies: info@ruumly.eu",
+
+    // Location
+    "location.units": "единиц доступно",
+    "location.from": "От",
+    "location.allUnits": "Все единицы",
+    "location.openingHours": "Часы работы",
+    "location.unitSize": "Размер",
+    "location.quantity": "Количество",
+    "location.noUnits": "Нет доступных единиц",
+    "location.backToSearch": "Назад к поиску",
+    "location.unitTypes": "Доступные типы единиц",
   },
 };
 

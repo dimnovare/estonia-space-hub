@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { listingService, bookingService, orderService, supplierService, userService, notificationService, invoiceService, messageService, auditService, integrationSettingsService, routingRuleService } from "@/services";
+import { listingService, bookingService, orderService, supplierService, userService, notificationService, invoiceService, messageService, auditService, integrationSettingsService, routingRuleService, locationService } from "@/services";
 import type { ListingFilters, CreateBookingInput } from "@/services/types";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -82,4 +82,21 @@ export function useIntegrationSettings() {
 export function useRoutingRules() {
   const { isAuthenticated, role } = useAuth();
   return useQuery({ queryKey: ["routing-rules"], queryFn: () => routingRuleService.getAll(), enabled: isAuthenticated && role === "admin", staleTime: 30_000 });
+}
+
+export function useLocations(params?: { city?: string; type?: string }) {
+  return useQuery({
+    queryKey: ["locations", params],
+    queryFn: () => locationService.getAll(params),
+    staleTime: 60_000,
+  });
+}
+
+export function useLocation(id: string | undefined) {
+  return useQuery({
+    queryKey: ["location", id],
+    queryFn: () => locationService.getById(id!),
+    enabled: !!id,
+    staleTime: 60_000,
+  });
 }

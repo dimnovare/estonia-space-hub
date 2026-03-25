@@ -212,6 +212,27 @@ export interface ListingBase {
   reviewCount: number;
   badge?: "cheapest" | "closest" | "best-value" | "promoted";
   description: string;
+  sizeM2?: number;
+  quantityTotal?: number;
+  locationId?: string;
+}
+
+export interface SupplierLocation {
+  id: string;
+  supplierId: string;
+  supplierName: string;
+  name: string;
+  address: string;
+  city: string;
+  lat: number;
+  lng: number;
+  images: string[];
+  description: string;
+  openingHours?: string;
+  isActive: boolean;
+  unitCount: number;
+  priceFrom?: number;
+  units: Listing[];
 }
 
 export interface WarehouseListing extends ListingBase {

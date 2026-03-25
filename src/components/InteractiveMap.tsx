@@ -1,14 +1,16 @@
 import { useEffect, useRef, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import type { Listing } from "@/services/types";
+import type { Listing, SupplierLocation } from "@/services/types";
 
 interface InteractiveMapProps {
   listings?: Listing[];
+  locations?: SupplierLocation[];
   className?: string;
   height?: string;
   selectedId?: string | null;
   onMarkerClick?: (listing: Listing) => void;
+  onLocationClick?: (location: SupplierLocation) => void;
   center?: [number, number];
   zoom?: number;
 }
@@ -83,12 +85,65 @@ function createMarkerIcon(listing: Listing, isSelected: boolean) {
   });
 }
 
+function createLocationMarkerIcon(location: SupplierLocation, isSelected: boolean) {
+  const color = "#1E3A5F";
+  const size = isSelected ? 44 : 36;
+  const iconPath = typeIconPaths.warehouse;
+
+  return L.divIcon({
+    className: "custom-marker",
+    html: `
+      <div style="
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        filter: ${isSelected ? 'drop-shadow(0 0 8px rgba(46, 196, 182, 0.5))' : 'none'};
+      ">
+        <div style="
+          width: ${size}px;
+          height: ${size}px;
+          border-radius: 50% 50% 50% 0;
+          transform: rotate(-45deg);
+          background: ${color};
+          border: 3px solid ${isSelected ? '#2EC4B6' : 'white'};
+          box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+        ">
+          <div style="transform: rotate(45deg); display: flex; align-items: center; justify-content: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">${iconPath}</svg>
+          </div>
+        </div>
+        <div style="
+          margin-top: 6px;
+          background: white;
+          padding: 2px 8px;
+          border-radius: 12px;
+          font-size: 11px;
+          font-weight: 700;
+          color: ${color};
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          white-space: nowrap;
+          border: 1px solid ${color}20;
+        ">${location.unitCount} ühikut${location.priceFrom ? ` · €${location.priceFrom}` : ''}</div>
+      </div>
+    `,
+    iconSize: [size, size + 28],
+    iconAnchor: [size / 2, size],
+  });
+}
+
 export default function InteractiveMap({
   listings = [],
+  locations = [],
   className = "",
   height = "h-[400px]",
   selectedId = null,
   onMarkerClick,
+  onLocationClick,
   center = [58.8, 25.5],
   zoom = 7,
 }: InteractiveMapProps) {
@@ -131,14 +186,52 @@ export default function InteractiveMap({
 
     const bounds: L.LatLngExpression[] = [];
 
+    // Track which listing IDs are covered by locations
+    const coveredListingIds = new Set<string>();
+    
+    // Render location markers
+    locations.forEach((loc) => {
+      loc.units?.forEach(u => coveredListingIds.add(u.id));
+      
+      const icon = createLocationMarkerIcon(loc, loc.id === selectedId);
+      const marker = L.marker([loc.lat, loc.lng], { icon });
+
+      const popupHtml = `
+        <div style="min-width: 200px; font-family: 'DM Sans', sans-serif;">
+          ${loc.images?.[0] ? `<img src="${loc.images[0]}" alt="" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />` : ''}
+          <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #1E3A5F;">${loc.name}</div>
+          <div style="font-size: 12px; color: #666; margin-bottom: 4px;">${loc.supplierName}</div>
+          <div style="font-size: 12px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            ${loc.address}, ${loc.city}
+          </div>
+          ${loc.priceFrom ? `<div style="font-weight: 700; font-size: 16px; color: #1E3A5F; margin-bottom: 4px;">al. €${loc.priceFrom}/kuu</div>` : ''}
+          <a href="/location/${loc.id}" style="font-size: 12px; color: #2EC4B6; text-decoration: none; font-weight: 600;">${loc.unitCount} ühikut →</a>
+        </div>
+      `;
+
+      marker.bindPopup(popupHtml, { maxWidth: 260 });
+
+      marker.on("click", () => {
+        marker.openPopup();
+        if (onLocationClick) onLocationClick(loc);
+      });
+
+      marker.addTo(markersRef.current!);
+      markerMap.current.set(loc.id, marker);
+      bounds.push([loc.lat, loc.lng]);
+    });
+
+    // Render individual listing markers (skip those covered by locations)
     listings.forEach((listing) => {
+      if (coveredListingIds.has(listing.id)) return;
+      
       const icon = createMarkerIcon(listing, listing.id === selectedId);
       const marker = L.marker([listing.lat, listing.lng], { icon });
 
       const typeName = typeLabels[listing.type] || listing.type;
       const typeColor = typeColors[listing.type];
 
-      // Build popup HTML
       const popupHtml = `
         <div style="min-width: 200px; font-family: 'DM Sans', sans-serif;">
           <img src="${listing.image}" alt="" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />
@@ -157,7 +250,6 @@ export default function InteractiveMap({
 
       marker.bindPopup(popupHtml, { maxWidth: 260 });
 
-      // Single click: open popup AND notify parent
       marker.on("click", () => {
         marker.openPopup();
         if (onMarkerClick) onMarkerClick(listing);
@@ -168,17 +260,17 @@ export default function InteractiveMap({
       bounds.push([listing.lat, listing.lng]);
     });
 
-    // Only fit bounds when the set of listings changes, not on selectedId change
-    const listingsKey = listings.map(l => l.id).sort().join(",");
-    if (listingsKey !== prevListingsKey.current) {
-      prevListingsKey.current = listingsKey;
+    // Only fit bounds when the set of items changes
+    const allKeys = [...listings.map(l => l.id), ...locations.map(l => l.id)].sort().join(",");
+    if (allKeys !== prevListingsKey.current) {
+      prevListingsKey.current = allKeys;
       if (bounds.length > 1) {
         mapInstance.current.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [40, 40] });
       } else if (bounds.length === 1) {
         mapInstance.current.setView(bounds[0] as L.LatLngExpression, 13);
       }
     }
-  }, [listings, selectedId, onMarkerClick]);
+  }, [listings, locations, selectedId, onMarkerClick, onLocationClick]);
 
   // When selectedId changes externally, open that marker's popup
   useEffect(() => {

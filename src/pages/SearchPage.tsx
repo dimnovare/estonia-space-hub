@@ -1,8 +1,8 @@
 import { useState, useMemo, lazy, Suspense } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2 } from "lucide-react";
+import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useListings } from "@/hooks/queries";
+import { useListings, useLocations } from "@/hooks/queries";
 import type { Listing, ListingType, ListingFilters } from "@/services/types";
 import ListingCard from "@/components/ListingCard";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -47,6 +47,11 @@ export default function SearchPage() {
 
   const { data: result, isLoading } = useListings(filters);
   const serverFiltered = result?.data || [];
+
+  const { data: locations = [] } = useLocations({
+    city: cityFilter || undefined,
+    type: activeType !== "all" ? activeType : undefined,
+  });
 
   // Client-side post-filters for feature-specific booleans
   const filtered = useMemo(() => {
@@ -137,7 +142,7 @@ export default function SearchPage() {
       />
       <div className="hidden lg:sticky lg:top-16 lg:block lg:h-[calc(100vh-4rem)] lg:w-1/2 xl:w-[55%]">
         <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary text-muted-foreground">{t("map.loading")}</div>}>
-          <InteractiveMap listings={filtered} className="rounded-none" height="h-full" selectedId={selectedListingId} onMarkerClick={handleMarkerClick} />
+          <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" selectedId={selectedListingId} onMarkerClick={handleMarkerClick} />
         </Suspense>
       </div>
 
@@ -153,7 +158,7 @@ export default function SearchPage() {
       {mobileView === "map" && (
         <div className="h-[calc(100vh-8rem)] lg:hidden relative">
           <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary">{t("map.loading")}</div>}>
-            <InteractiveMap listings={filtered} className="rounded-none" height="h-full" selectedId={selectedListingId} onMarkerClick={handleMarkerClick} />
+            <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" selectedId={selectedListingId} onMarkerClick={handleMarkerClick} />
           </Suspense>
           {selectedListingId && (() => {
             const selected = filtered.find(l => l.id === selectedListingId);
@@ -273,6 +278,51 @@ export default function SearchPage() {
               <p className="mb-4 text-sm text-muted-foreground">
                 {filtered.length} {t("search.results")}{query && ` ${t("search.forQuery")} "${query}"`}
               </p>
+
+              {/* Location cards */}
+              {locations.length > 0 && (
+                <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
+                  {locations.map((loc) => (
+                    <Link
+                      key={loc.id}
+                      to={`/location/${loc.id}`}
+                      className="card-elevated group block overflow-hidden"
+                    >
+                      <div className="relative aspect-[16/10] overflow-hidden">
+                        {loc.images?.[0] && (
+                          <img
+                            src={loc.images[0]}
+                            alt={loc.name}
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            loading="lazy"
+                          />
+                        )}
+                        <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-card/90 backdrop-blur-sm px-2.5 py-1 text-[11px] font-semibold text-foreground">
+                          <Layers className="h-3 w-3" />
+                          {loc.unitCount} {t("location.units")}
+                        </span>
+                      </div>
+                      <div className="p-4">
+                        <h3 className="truncate font-sans text-sm font-semibold text-foreground">{loc.name}</h3>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{loc.supplierName}</p>
+                        <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          {loc.address}, {loc.city}
+                        </p>
+                        <div className="mt-3 flex items-baseline gap-1 border-t border-border pt-3">
+                          {loc.priceFrom != null && (
+                            <>
+                              <span className="font-display text-lg font-bold text-foreground">{t("location.from")} €{loc.priceFrom}</span>
+                              <span className="text-xs text-muted-foreground">/ kuu</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
                 {filtered.map((l) => (
                   <div key={l.id} className={`cursor-pointer rounded-xl transition-all ${selectedListingId === l.id ? "ring-2 ring-accent" : ""}`} onMouseEnter={() => setSelectedListingId(l.id)} onMouseLeave={() => setSelectedListingId(null)} onClick={() => setSelectedListingId(l.id)}>
@@ -280,7 +330,7 @@ export default function SearchPage() {
                   </div>
                 ))}
               </div>
-              {filtered.length === 0 && (
+              {filtered.length === 0 && locations.length === 0 && (
                 <div className="py-20 text-center text-muted-foreground">
                   <p className="text-lg font-medium">{t("search.noResults")}</p>
                   <p className="mt-1 text-sm">{t("search.noResultsDesc")}</p>
