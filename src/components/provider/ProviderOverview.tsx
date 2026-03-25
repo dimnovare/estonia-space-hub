@@ -2,11 +2,13 @@ import { List, Package, Eye, DollarSign, Inbox } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
 import { useBookings } from "@/hooks/useBookings";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () => void }) {
   const { t } = useLanguage();
-  const { data: allOrders = [] } = useOrders();
-  const { data: bookings = [] } = useBookings();
+  const { data: allOrders = [], isLoading: ordersLoading } = useOrders();
+  const { data: bookings = [], isLoading: bookingsLoading } = useBookings();
+  const isLoading = ordersLoading || bookingsLoading;
   const pendingOrders = allOrders.filter(o => o.status === "sent" || o.status === "created");
 
   const thisMonthStr = new Date().toISOString().slice(0, 7);
@@ -20,6 +22,36 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
       (b as any).createdAt?.startsWith(thisMonthStr) &&
       (b.status === "confirmed" || b.status === "active" || b.status === "completed"))
     .reduce((sum, b) => sum + ((b as any).total ?? 0), 0);
+
+  if (isLoading) {
+    return (
+      <div>
+        <Skeleton className="h-8 w-48" />
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-border p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-4 rounded" />
+              </div>
+              <Skeleton className="h-8 w-16" />
+            </div>
+          ))}
+        </div>
+        <div className="mt-8 space-y-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between rounded-xl border border-border p-4">
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-48" />
+              </div>
+              <Skeleton className="h-6 w-16" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>

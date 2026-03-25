@@ -8,6 +8,7 @@ import { useListings, useLocations } from "@/hooks/queries";
 import type { Listing, ListingType, ListingFilters } from "@/services/types";
 import { apiClient } from "@/services/apiClient";
 import ListingCard from "@/components/ListingCard";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
 import { ESTONIAN_CITIES } from "@/lib/constants";
@@ -302,8 +303,19 @@ export default function SearchPage() {
 
         <div className="p-4">
           {isLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="rounded-xl border border-border p-4 space-y-3">
+                  <Skeleton className="h-[180px] w-full rounded-xl" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                    <Skeleton className="h-6 w-20 rounded-full" />
+                  </div>
+                  <Skeleton className="h-4 w-1/3" />
+                </div>
+              ))}
             </div>
           ) : (
             <>

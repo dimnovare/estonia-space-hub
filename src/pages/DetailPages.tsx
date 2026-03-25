@@ -11,6 +11,7 @@ import type { Listing, WarehouseListing, MovingListing, TrailerListing } from "@
 import { SEO } from "@/components/SEO";
 import ReviewsSection from "@/components/ReviewsSection";
 import { trackEvent } from "@/lib/analytics";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
@@ -43,8 +44,37 @@ function SupplierBadge({ supplierId }: { supplierId?: string }) {
 
 function LoadingDetail() {
   return (
-    <div className="container-wide flex items-center justify-center py-20">
-      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    <div className="container-wide py-6">
+      <div className="flex gap-1.5 mb-4">
+        <Skeleton className="h-3 w-12" />
+        <Skeleton className="h-3 w-20" />
+        <Skeleton className="h-3 w-32" />
+      </div>
+      <div className="grid gap-8 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-4">
+          <Skeleton className="aspect-[16/9] w-full rounded-xl" />
+          <Skeleton className="h-8 w-3/4" />
+          <div className="flex gap-3">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-6 w-40" />
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full rounded-lg" />
+            ))}
+          </div>
+        </div>
+        <div>
+          <div className="rounded-xl border border-border p-6 space-y-4">
+            <Skeleton className="h-9 w-32" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
