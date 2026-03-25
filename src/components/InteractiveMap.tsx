@@ -88,7 +88,7 @@ function createMarkerIcon(listing: Listing, isSelected: boolean) {
   });
 }
 
-function createLocationMarkerIcon(location: SupplierLocation, isSelected: boolean) {
+function createLocationMarkerIcon(location: SupplierLocation, isSelected: boolean, unitLabel = "units") {
   const color = "#1E3A5F";
   const size = isSelected ? 44 : 36;
   const iconPath = typeIconPaths.warehouse;
@@ -131,7 +131,7 @@ function createLocationMarkerIcon(location: SupplierLocation, isSelected: boolea
           box-shadow: 0 2px 8px rgba(0,0,0,0.15);
           white-space: nowrap;
           border: 1px solid ${color}20;
-        ">${location.unitCount} ${tUnits}${location.priceFrom ? ` · €${location.priceFrom}` : ''}</div>
+        ">${location.unitCount} ${unitLabel}${location.priceFrom ? ` · €${location.priceFrom}` : ''}</div>
       </div>
     `,
     iconSize: [size, size + 28],
