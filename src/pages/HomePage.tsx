@@ -51,7 +51,7 @@ export default function HomePage() {
     const params = new URLSearchParams();
     if (searchQuery) params.set("q", searchQuery);
     if (activeCategory !== "all") params.set("type", activeCategory);
-    if (selectedCity) params.set("city", selectedCity);
+    if (selectedCity && selectedCity !== "all") params.set("city", selectedCity);
     navigate(`/search?${params.toString()}`);
   };
 
