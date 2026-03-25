@@ -17,13 +17,7 @@ import HomePage from "@/pages/HomePage";
 import SearchPage from "@/pages/SearchPage";
 import { WarehouseDetail, MovingDetail, TrailerDetail } from "@/pages/DetailPages";
 import BookingPage from "@/pages/BookingPage";
-import AccountPage from "@/pages/AccountPage";
-import RequestDetailPage from "@/pages/RequestDetailPage";
-import AdminPage from "@/pages/AdminPage";
-import ProviderPage from "@/pages/ProviderPage";
-import ProviderDashboardPage from "@/pages/ProviderDashboardPage";
-import ProviderOnboardingPage from "@/pages/ProviderOnboardingPage";
-import LocationDetailPage from "@/pages/LocationDetailPage";
+import BookingRedirect from "@/pages/BookingRedirect";
 import PaymentReturnPage from "@/pages/PaymentReturnPage";
 import AboutPage from "@/pages/AboutPage";
 import ContactPage from "@/pages/ContactPage";
@@ -34,8 +28,17 @@ import TermsPage from "@/pages/TermsPage";
 import PrivacyPage from "@/pages/PrivacyPage";
 import CookiePage from "@/pages/CookiePage";
 import NotFound from "@/pages/NotFound";
-import BookingRedirect from "@/pages/BookingRedirect";
-import { useEffect } from "react";
+import ProviderPage from "@/pages/ProviderPage";
+import RequestDetailPage from "@/pages/RequestDetailPage";
+import { lazy, Suspense, useEffect } from "react";
+import { Loader2 } from "lucide-react";
+
+// Lazy-loaded heavy pages
+const AdminPage = lazy(() => import("@/pages/AdminPage"));
+const ProviderDashboardPage = lazy(() => import("@/pages/ProviderDashboardPage"));
+const LocationDetailPage = lazy(() => import("@/pages/LocationDetailPage"));
+const ProviderOnboardingPage = lazy(() => import("@/pages/ProviderOnboardingPage"));
+const AccountPage = lazy(() => import("@/pages/AccountPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,6 +66,12 @@ function ScrollToTop() {
 const WithFooter = () => <><Outlet /><Footer /></>;
 const NoFooter = () => <Outlet />;
 
+const PageLoader = () => (
+  <div className="flex min-h-screen items-center justify-center">
+    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+  </div>
+);
+
 function AppContent() {
   const { maintenanceMode } = usePlatformSettings();
   const { role, isInitializing } = useAuth();
@@ -76,37 +85,39 @@ function AppContent() {
     <>
       <ScrollToTop />
       <Navbar />
-      <Routes>
-        <Route element={<NoFooter />}>
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />
-          <Route path="/admin/*" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />
-          <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
-          <Route path="/account/request/:id" element={<ProtectedRoute><RequestDetailPage /></ProtectedRoute>} />
-          <Route path="/provider/dashboard" element={<ProtectedRoute allowedRoles={["provider", "admin"]}><ProviderDashboardPage /></ProtectedRoute>} />
-          <Route path="/provider/onboarding" element={<ProtectedRoute><ProviderOnboardingPage /></ProtectedRoute>} />
-        </Route>
-        <Route element={<WithFooter />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/warehouse/:id" element={<WarehouseDetail />} />
-          <Route path="/moving/:id" element={<MovingDetail />} />
-          <Route path="/trailer/:id" element={<TrailerDetail />} />
-          <Route path="/location/:id" element={<LocationDetailPage />} />
-          <Route path="/payment/return" element={<PaymentReturnPage />} />
-          <Route path="/book" element={<BookingPage />} />
-          <Route path="/bookings/:id" element={<ProtectedRoute><BookingRedirect /></ProtectedRoute>} />
-          <Route path="/provider" element={<ProviderPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/how-it-works" element={<HowItWorksPage />} />
-          <Route path="/faq" element={<FAQPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/terms" element={<TermsPage />} />
-          <Route path="/privacy" element={<PrivacyPage />} />
-          <Route path="/cookies" element={<CookiePage />} />
-          <Route path="*" element={<NotFound />} />
-        </Route>
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route element={<NoFooter />}>
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />
+            <Route path="/admin/*" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />
+            <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
+            <Route path="/account/request/:id" element={<ProtectedRoute><RequestDetailPage /></ProtectedRoute>} />
+            <Route path="/provider/dashboard" element={<ProtectedRoute allowedRoles={["provider", "admin"]}><ProviderDashboardPage /></ProtectedRoute>} />
+            <Route path="/provider/onboarding" element={<ProtectedRoute><ProviderOnboardingPage /></ProtectedRoute>} />
+          </Route>
+          <Route element={<WithFooter />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/warehouse/:id" element={<WarehouseDetail />} />
+            <Route path="/moving/:id" element={<MovingDetail />} />
+            <Route path="/trailer/:id" element={<TrailerDetail />} />
+            <Route path="/location/:id" element={<LocationDetailPage />} />
+            <Route path="/payment/return" element={<PaymentReturnPage />} />
+            <Route path="/book" element={<BookingPage />} />
+            <Route path="/bookings/:id" element={<ProtectedRoute><BookingRedirect /></ProtectedRoute>} />
+            <Route path="/provider" element={<ProviderPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/how-it-works" element={<HowItWorksPage />} />
+            <Route path="/faq" element={<FAQPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/cookies" element={<CookiePage />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+      </Suspense>
       {import.meta.env.DEV && <DevRoleSwitcher />}
     </>
   );
