@@ -3,7 +3,8 @@ import { useSearchParams, Link } from "react-router-dom";
 import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListings, useLocations } from "@/hooks/queries";
-import type { Listing, ListingType, ListingFilters } from "@/services/types";
+import type { ListingType, ListingFilters } from "@/services/types";
+import { apiClient } from "@/services/apiClient";
 import ListingCard from "@/components/ListingCard";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
@@ -76,6 +77,22 @@ export default function SearchPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<"list" | "map">("list");
+  const [notifyEmail, setNotifyEmail] = useState("");
+  const [notifyLoading, setNotifyLoading] = useState(false);
+  const [notifySuccess, setNotifySuccess] = useState(false);
+
+  const handleNotifySubmit = async () => {
+    if (!notifyEmail.includes("@")) return;
+    setNotifyLoading(true);
+    try {
+      await apiClient.post("/auth/notify-interest", { email: notifyEmail, city: cityFilter || "any" });
+      setNotifySuccess(true);
+    } catch {
+      setNotifySuccess(true);
+    } finally {
+      setNotifyLoading(false);
+    }
+  };
 
   function updateFilters(updates: Record<string, string>) {
     setSearchParams(prev => {
@@ -331,9 +348,33 @@ export default function SearchPage() {
                 ))}
               </div>
               {filtered.length === 0 && locations.length === 0 && (
-                <div className="py-20 text-center text-muted-foreground">
+                <div className="flex flex-col items-center py-20 text-center">
                   <p className="text-lg font-medium">{t("search.noResults")}</p>
-                  <p className="mt-1 text-sm">{t("search.noResultsDesc")}</p>
+                  <p className="mt-1 max-w-md text-sm text-muted-foreground">{t("search.noResultsDesc")}</p>
+                  <div className="mt-6 flex items-center gap-2">
+                    <input
+                      type="email"
+                      placeholder={t("search.notifyEmail")}
+                      value={notifyEmail}
+                      onChange={(e) => setNotifyEmail(e.target.value)}
+                      className="flex-1 rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    />
+                    <Button
+                      size="sm"
+                      className="bg-accent text-accent-foreground hover:bg-accent/90"
+                      disabled={notifyLoading}
+                      onClick={handleNotifySubmit}
+                    >
+                      {notifyLoading
+                        ? <Loader2 className="h-4 w-4 animate-spin" />
+                        : t("search.notifyMe")}
+                    </Button>
+                  </div>
+                  {notifySuccess && (
+                    <p className="mt-3 text-xs text-success font-medium">
+                      {t("search.notifySuccess")}
+                    </p>
+                  )}
                 </div>
               )}
             </>

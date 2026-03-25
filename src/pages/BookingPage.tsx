@@ -365,24 +365,38 @@ export default function BookingPage() {
               <h2 className="font-display text-xl font-semibold">{t("booking.paymentMethod")}</h2>
               <div className="space-y-3">
                 {[
-                  { id: "bank", icon: Building2, label: t("booking.bankTransfer"), desc: t("booking.bankTransferDesc") },
+                  { id: "bank", icon: Building2, label: t("booking.bankTransfer"), desc: t("booking.bankTransferDesc"), recommended: true },
                   { id: "card", icon: CreditCard, label: t("booking.creditCard"), desc: t("booking.creditCardDesc") },
                   { id: "later", icon: Clock, label: t("booking.payLater"), desc: t("booking.payLaterDesc") },
                 ].map((pm) => {
                   const Icon = pm.icon;
                   return (
-                    <button key={pm.id} onClick={() => setPaymentMethod(pm.id)} className={`flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-colors ${paymentMethod === pm.id ? "border-accent bg-accent/5" : "border-border hover:border-muted-foreground"}`}>
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${paymentMethod === pm.id ? "bg-accent/10" : "bg-secondary"}`}>
-                        <Icon className={`h-5 w-5 ${paymentMethod === pm.id ? "text-accent" : "text-muted-foreground"}`} />
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-sm font-semibold">{pm.label}</div>
-                        <div className="text-xs text-muted-foreground">{pm.desc}</div>
-                      </div>
-                      <div className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${paymentMethod === pm.id ? "border-accent" : "border-border"}`}>
-                        {paymentMethod === pm.id && <div className="h-2.5 w-2.5 rounded-full bg-accent" />}
-                      </div>
-                    </button>
+                    <div key={pm.id}>
+                      <button onClick={() => setPaymentMethod(pm.id)} className={`flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-colors ${paymentMethod === pm.id ? "border-accent bg-accent/5" : "border-border hover:border-muted-foreground"}`}>
+                        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${paymentMethod === pm.id ? "bg-accent/10" : "bg-secondary"}`}>
+                          <Icon className={`h-5 w-5 ${paymentMethod === pm.id ? "text-accent" : "text-muted-foreground"}`} />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold">{pm.label}</span>
+                            {(pm as any).recommended && (
+                              <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-semibold text-accent">
+                                {t("booking.paymentRecommended")}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground">{pm.desc}</div>
+                        </div>
+                        <div className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${paymentMethod === pm.id ? "border-accent" : "border-border"}`}>
+                          {paymentMethod === pm.id && <div className="h-2.5 w-2.5 rounded-full bg-accent" />}
+                        </div>
+                      </button>
+                      {pm.id === "later" && (
+                        <p className="mt-1.5 ml-14 text-[11px] text-muted-foreground">
+                          {t("booking.payLaterWarning")}
+                        </p>
+                      )}
+                    </div>
                   );
                 })}
               </div>
