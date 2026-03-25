@@ -930,6 +930,83 @@ const translations: Record<Language, Record<string, string>> = {
     "provider.billing.commission": "komisjon",
     "provider.billing.locations": "asukohta",
     "provider.billing.analytics": "analüütika",
+
+    // Booking phases
+    "booking.phase.creating": "Tellimus luuakse...",
+    "booking.phase.sending": "Saadame partnerile...",
+    "booking.phase.waiting": "Ootame kinnitust...",
+    "booking.phase.pleaseWait": "Palun oodake...",
+    "booking.phase.orderCreated": "Tellimus loodud",
+    "booking.phase.sentApi": "Saadetud API kaudu",
+    "booking.phase.sentEmail": "Saadetud e-postiga partnerile",
+    "booking.phase.awaitingOp": "Ootame operaatori tegevust",
+    "booking.phase.awaitingConf": "Ootame partneri kinnitust",
+
+    // Status labels
+    "status.pending": "Ootel",
+    "status.confirmed": "Kinnitatud",
+    "status.active": "Aktiivne",
+    "status.completed": "Lõpetatud",
+    "status.cancelled": "Tühistatud",
+    "status.all": "Kõik",
+    "account.noBookings": "Broneeringuid ei leitud",
+    "account.noBookingsFiltered": "Selle staatusega broneeringuid pole",
+    "account.invoiceStatus.paid": "Makstud",
+    "account.invoiceStatus.pending": "Ootel",
+    "account.invoiceStatus.overdue": "Tähtaeg ületatud",
+    "account.invoiceStatus.awaiting": "Makse töötlemisel",
+    "account.invoiceStatus.cancelled": "Tühistatud",
+
+    // Toast and error messages
+    "toast.profileSaved": "Profiil uuendatud",
+    "toast.passwordSaved": "Parool edukalt uuendatud",
+    "toast.bankDetailsSaved": "Pangaandmed salvestatud",
+    "toast.listingAdded": "Kuulutus lisatud",
+    "toast.listingUpdated": "Kuulutus uuendatud",
+    "toast.listingDeleted": "Kuulutus kustutatud",
+    "toast.ruleAdded": "Reegel lisatud",
+    "toast.ruleUpdated": "Reegel uuendatud",
+    "toast.integrationUpdated": "Integratsiooni seaded uuendatud",
+    "toast.settingsLoadFailed": "Seadete laadimine ebaõnnestus",
+    "toast.saveFailed": "Salvestamine ebaõnnestus",
+    "toast.addFailed": "Lisamine ebaõnnestus",
+    "toast.updateFailed": "Uuendamine ebaõnnestus",
+    "toast.deleteFailed": "Kustutamine ebaõnnestus",
+    "toast.messageFailed": "Sõnumi saatmine ebaõnnestus",
+    "toast.notifReadFailed": "Teavituse märkimine ebaõnnestus",
+    "toast.notifsReadFailed": "Teavituste märkimine ebaõnnestus",
+    "error.loginFailed": "Sisselogimine ebaõnnestus",
+    "error.registerFailed": "Registreerimine ebaõnnestus",
+    "error.googleFailed": "Google sisselogimine ebaõnnestus",
+    "error.googleFailed2": "Google sisselogimine ebaõnnestus. Proovi uuesti.",
+    "error.passwordTooShort": "Parool peab olema vähemalt 8 tähemärki",
+    "error.passwordChanged": "Parool uuendatud! Logi sisse uue parooliga.",
+    "error.passwordChangeFailed": "Parooli vahetus ebaõnnestus. Proovi uuesti.",
+    "error.popupsBlocked": "Blokeeritud! Luba hüpikaknad selle saidi jaoks.",
+    "form.newPassword": "Uus parool",
+    "form.saveNewPassword": "Salvesta uus parool",
+    "form.save": "Salvesta",
+    "form.cancel": "Tühista",
+
+    // Provider listings
+    "provider.listings.newUnit": "Uus ühik",
+    "provider.listings.defaultTitle": "Uus kuulutus",
+    "provider.listings.statusActive": "Aktiivne",
+    "provider.listings.statusPaused": "Peatatud",
+    "provider.listings.confirmReject": "Partner lükkas tagasi",
+
+    // Provider analytics
+    "provider.analytics.csvHeaders": "Kuu,Tulu (€),Vaatamised,Broneeringud",
+    "provider.analytics.confirmOrder": "Kinnita kättesaamine",
+    "provider.orders.csvHeaders": "Tellimus,Klient,Teenus,Linn,Algus,Periood,Partneri hind,Staatus",
+
+    // Provider reviews
+    "provider.reviews.empty": "Arvustused ilmuvad siia",
+    "provider.reviews.emptyDesc": "Pärast esimeste broneeringute lõpetamist saavad kliendid arvustusi jätta. Arvustused kuvatakse siin automaatselt.",
+
+    // Admin settings
+    "admin.inviteCodeRequired": "Beta kutsekood kohustuslik",
+    "admin.inviteCodeRequiredDesc": "Kui sees, saavad registreeruda ainult kutse koodiga kasutajad",
   },
 
   en: {
