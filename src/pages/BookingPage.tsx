@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
-import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand } from "lucide-react";
+import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListing, useCreateBooking, useSuppliers } from "@/hooks/queries";
 import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
 import { EXTRAS_PRICES } from "@/lib/pricing";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { SEO } from "@/components/SEO";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { bookingDetailsSchema, bookingContactSchema, type BookingDetailsForm, type BookingContactForm } from "@/lib/schemas";
@@ -13,7 +15,7 @@ import { bookingDetailsSchema, bookingContactSchema, type BookingDetailsForm, ty
 type SubmitPhase = "submitting" | "sending" | "waiting" | "done";
 
 export default function BookingPage() {
-  useEffect(() => { document.title = "Broneeri — Ruumly"; }, []);
+  // SEO handled by <SEO /> component below
   const [params] = useSearchParams();
   const listingId = params.get("listing");
   const { data: listing } = useListing(listingId || "");
@@ -23,8 +25,9 @@ export default function BookingPage() {
   const supplier = listing ? suppliers.find(s => s.id === listing.supplierId) : undefined;
   const createBooking = useCreateBooking();
 
-  // Auth check for deferred login
-  const isAuthenticated = !!localStorage.getItem("ruumly-token");
+  const { isAuthenticated } = useAuth();
+  // Also check token for deferred login restore
+  const hasToken = !!localStorage.getItem("ruumly-token");
 
   const steps = [t("booking.details"), t("booking.extras"), t("booking.contact"), t("booking.payment"), t("booking.review")];
   const extras = [

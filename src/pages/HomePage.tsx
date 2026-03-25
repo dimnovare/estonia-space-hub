@@ -243,30 +243,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Trust / Why Ruumly */}
-      <section className="container-wide py-16 md:py-20">
-        <div className="mx-auto max-w-3xl text-center">
-          <p className="text-xs font-semibold uppercase tracking-widest text-accent">Miks Ruumly?</p>
-          <h2 className="mt-2 font-display text-2xl font-bold md:text-3xl">{t("trust.title")}</h2>
-        </div>
-        <div className="mt-10 grid gap-6 sm:grid-cols-3">
-          <div className="rounded-xl border border-border p-6 text-center">
-            <div className="font-display text-3xl font-bold text-accent">
-              {listingCount > 0 ? `${listingCount}+` : "6+"}
-            </div>
-            <div className="mt-1 text-sm font-semibold">Kontrollitud partnerit</div>
-            <p className="mt-1 text-xs text-muted-foreground">Igaüks isiklikult läbi vaadatud</p>
-          </div>
-          <div className="rounded-xl border border-border p-6 text-center">
-            <div className="font-display text-3xl font-bold text-accent">10–20%</div>
-            <div className="mt-1 text-sm font-semibold">Säästad vs otse partnerilt</div>
-            <p className="mt-1 text-xs text-muted-foreground">Me läbirääkisime sinu eest</p>
-          </div>
-          <div className="rounded-xl border border-border p-6 text-center">
-            <div className="font-display text-3xl font-bold text-accent">&lt;4h</div>
-            <div className="mt-1 text-sm font-semibold">Kinnituse aeg</div>
-            <p className="mt-1 text-xs text-muted-foreground">Partner kinnitab tavaliselt sama päeva jooksul</p>
-          </div>
+      {/* Beta badge */}
+      <section className="container-wide py-10">
+        <div className="mx-auto flex max-w-md items-center justify-center gap-2 rounded-full border border-accent/20 bg-accent/5 px-5 py-3 text-sm font-medium text-accent">
+          <CheckCircle className="h-4 w-4 shrink-0" />
+          {t("home.betaBadge")}
         </div>
       </section>
 
