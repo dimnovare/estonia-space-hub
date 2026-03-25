@@ -13,6 +13,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { bookingDetailsSchema, bookingContactSchema, type BookingDetailsForm, type BookingContactForm } from "@/lib/schemas";
 import { tokenStore } from "@/services/apiClient";
+import BookingInlineAuth from "@/components/BookingInlineAuth";
 
 type SubmitPhase = "submitting" | "sending" | "waiting" | "done";
 
@@ -30,6 +31,8 @@ export default function BookingPage() {
   const { isAuthenticated } = useAuth();
   // Also check token for deferred login restore
   const hasToken = !!tokenStore.getAccess() || !!tokenStore.getRefresh();
+
+  const [showInlineAuth, setShowInlineAuth] = useState(false);
 
   const steps = [t("booking.details"), t("booking.extras"), t("booking.contact"), t("booking.payment"), t("booking.review")];
   const extras = [
@@ -84,25 +87,13 @@ export default function BookingPage() {
     } else if (step < steps.length - 1) {
       setStep(step + 1);
     } else {
-      // Require auth at final submission
+      // Require auth at final submission — show inline auth instead of redirect
       if (!isAuthenticated) {
-        sessionStorage.setItem("pendingBooking", JSON.stringify({
-          listingId,
-          step,
-          date: detailsForm.getValues("date"),
-          duration: detailsForm.getValues("duration"),
-          extras: selectedExtras,
-          contact: {
-            name: contactForm.getValues("name"),
-            email: contactForm.getValues("email"),
-            phone: contactForm.getValues("phone"),
-            notes: contactForm.getValues("notes"),
-          },
-          paymentMethod,
-        }));
-        navigate("/login", { state: { from: `/book?listing=${listingId}` } });
+        setShowInlineAuth(true);
         return;
       }
+
+      submitBooking();
 
       // Submit booking via mutation
       createBooking.mutateAsync({
