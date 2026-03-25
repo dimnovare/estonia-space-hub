@@ -1,4 +1,4 @@
-import { useState, useMemo, lazy, Suspense } from "react";
+import { useState, useMemo, lazy, Suspense, useCallback, useRef, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -36,15 +36,34 @@ export default function SearchPage() {
   const trailerClosed = searchParams.get("trailerClosed") === "true";
   const availableNow = searchParams.get("availableNow") === "true";
 
+  // Debounced search: separate input value from query used in API calls
+  const [searchInput, setSearchInput] = useState(query);
+  const [debouncedQ, setDebouncedQ] = useState(query);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleSearchInput = useCallback((val: string) => {
+    setSearchInput(val);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setDebouncedQ(val);
+    }, 350);
+  }, []);
+
+  // Sync from URL changes (e.g. navigating back)
+  useEffect(() => {
+    setSearchInput(query);
+    setDebouncedQ(query);
+  }, [query]);
+
   // Build filters for the service layer
   const filters: ListingFilters = useMemo(() => ({
     type: activeType !== "all" ? activeType as ListingType : undefined,
-    query: query || undefined,
+    query: debouncedQ || undefined,
     city: cityFilter || undefined,
     priceMax: priceMax ? parseInt(priceMax) : undefined,
     availableNow: availableNow || undefined,
     sort: sort as any,
-  }), [activeType, query, cityFilter, priceMax, availableNow, sort]);
+  }), [activeType, debouncedQ, cityFilter, priceMax, availableNow, sort]);
 
   const { data: result, isLoading } = useListings(filters);
   const serverFiltered = result?.data || [];
