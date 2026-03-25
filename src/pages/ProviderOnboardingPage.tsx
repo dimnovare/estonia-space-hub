@@ -1,19 +1,30 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Warehouse, Truck, CarFront, Building2, User, Upload, CheckCircle, ArrowLeft, ArrowRight } from "lucide-react";
+import { Check, Warehouse, Truck, CarFront, Building2, User, Upload, CheckCircle, ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
+import { useAuth } from "@/contexts/AuthContext";
+import { providerService } from "@/services";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export default function ProviderOnboardingPage() {
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [businessType, setBusinessType] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [registryCode, setRegistryCode] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [agreed, setAgreed] = useState(false);
+  const [notes, setNotes] = useState("");
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const steps = [
     t("onboard.step1"),
@@ -45,6 +56,32 @@ export default function ProviderOnboardingPage() {
     t("onboard.step4.doc3"),
   ];
 
+  const inputClass = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    try {
+      await providerService.apply({
+        companyName,
+        registryCode,
+        contactName: user?.name ?? "",
+        contactEmail: user?.email ?? "",
+        contactPhone,
+        businessType,
+        serviceTypes: selectedServices,
+        serviceAreas: selectedAreas,
+        notes: notes || undefined,
+      });
+      await queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+      setSubmitted(true);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : t("onboard.error");
+      toast.error(message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (submitted) {
     return (
       <div className="container-wide flex min-h-[60vh] items-center justify-center py-16">
@@ -53,9 +90,7 @@ export default function ProviderOnboardingPage() {
             <CheckCircle className="h-8 w-8 text-success" />
           </div>
           <h1 className="mt-4 font-display text-2xl font-bold">{t("onboard.success.title")}</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {t("onboard.success.desc")}
-          </p>
+          <p className="mt-2 text-sm text-muted-foreground">{t("onboard.success.desc")}</p>
           <div className="mt-4 rounded-xl border border-border bg-secondary/30 p-4">
             <p className="text-xs text-muted-foreground">{t("onboard.success.status")}</p>
             <p className="mt-1 text-sm font-medium text-warning">{t("onboard.success.pending")}</p>
@@ -67,6 +102,8 @@ export default function ProviderOnboardingPage() {
       </div>
     );
   }
+
+  const canProceedStep0 = businessType && companyName.trim() && registryCode.trim() && contactPhone.trim();
 
   return (
     <div className="container-wide py-8">
@@ -92,18 +129,32 @@ export default function ProviderOnboardingPage() {
 
       <div className="max-w-2xl">
         {step === 0 && (
-          <div>
-            <h2 className="font-display text-lg font-semibold">{t("onboard.step1.title")}</h2>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {businessTypes.map((bt) => {
-                const Icon = bt.icon;
-                return (
-                  <button key={bt.key} onClick={() => setBusinessType(bt.key)} className={`flex items-center gap-3 rounded-xl border-2 p-4 transition-colors ${businessType === bt.key ? "border-accent bg-accent/5" : "border-border hover:border-accent/50"}`}>
-                    <Icon className="h-6 w-6 text-accent" />
-                    <span className="text-sm font-medium">{bt.label}</span>
-                  </button>
-                );
-              })}
+          <div className="space-y-6">
+            <div>
+              <h2 className="font-display text-lg font-semibold">{t("onboard.step1.title")}</h2>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {businessTypes.map((bt) => {
+                  const Icon = bt.icon;
+                  return (
+                    <button key={bt.key} onClick={() => setBusinessType(bt.key)} className={`flex items-center gap-3 rounded-xl border-2 p-4 transition-colors ${businessType === bt.key ? "border-accent bg-accent/5" : "border-border hover:border-accent/50"}`}>
+                      <Icon className="h-6 w-6 text-accent" />
+                      <span className="text-sm font-medium">{bt.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.name")} *</label>
+              <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={inputClass} placeholder="OÜ Nimi" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.reg")} *</label>
+              <input value={registryCode} onChange={(e) => setRegistryCode(e.target.value)} className={inputClass} placeholder="12345678" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.phone")} *</label>
+              <input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} className={inputClass} placeholder="+372" />
             </div>
           </div>
         )}
@@ -113,31 +164,31 @@ export default function ProviderOnboardingPage() {
             <h2 className="font-display text-lg font-semibold">{t("onboard.step2.title")}</h2>
             <div>
               <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.name")} *</label>
-              <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" placeholder="OÜ Nimi" />
+              <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={inputClass} placeholder="OÜ Nimi" />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.reg")} *</label>
-                <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" placeholder="12345678" />
+                <input value={registryCode} onChange={(e) => setRegistryCode(e.target.value)} className={inputClass} placeholder="12345678" />
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.vat")}</label>
-                <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" placeholder="EE123456789" />
+                <input className={inputClass} placeholder="EE123456789" />
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.contact")} *</label>
-                <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                <input defaultValue={user?.name ?? ""} className={inputClass} />
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.email")} *</label>
-                <input type="email" className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                <input type="email" defaultValue={user?.email ?? ""} className={inputClass} />
               </div>
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.phone")} *</label>
-              <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" placeholder="+372" />
+              <input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} className={inputClass} placeholder="+372" />
             </div>
           </div>
         )}
@@ -205,6 +256,16 @@ export default function ProviderOnboardingPage() {
                 <li>{t("onboard.step5.term5")}</li>
               </ul>
             </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">{t("onboard.step5.notes")}</label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className={`${inputClass} min-h-[80px] resize-y`}
+                placeholder={t("onboard.step5.notesPlaceholder")}
+                maxLength={1000}
+              />
+            </div>
             <label className="flex items-start gap-2 cursor-pointer">
               <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-border text-accent focus:ring-accent" />
               <span className="text-sm">{t("onboard.step5.agree")}</span>
@@ -213,15 +274,20 @@ export default function ProviderOnboardingPage() {
         )}
 
         <div className="mt-8 flex justify-between">
-          <Button variant="outline" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0}>
+          <Button variant="outline" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0 || submitting}>
             <ArrowLeft className="mr-2 h-4 w-4" /> {t("onboard.back")}
           </Button>
           {step < steps.length - 1 ? (
-            <Button onClick={() => setStep((s) => s + 1)} className="bg-accent text-accent-foreground hover:bg-accent/90">
+            <Button
+              onClick={() => setStep((s) => s + 1)}
+              disabled={step === 0 && !canProceedStep0}
+              className="bg-accent text-accent-foreground hover:bg-accent/90"
+            >
               {t("onboard.next")} <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (
-            <Button onClick={() => setSubmitted(true)} disabled={!agreed} className="bg-accent text-accent-foreground hover:bg-accent/90">
+            <Button onClick={handleSubmit} disabled={!agreed || submitting} className="bg-accent text-accent-foreground hover:bg-accent/90">
+              {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               {t("onboard.submit")} <Check className="ml-2 h-4 w-4" />
             </Button>
           )}

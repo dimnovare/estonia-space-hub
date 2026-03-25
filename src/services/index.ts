@@ -5,7 +5,7 @@ import type {
   User, Supplier, Order, Booking, Notification, Invoice, Message,
   AuditLogEntry, OrderStatus, PartnerIntegrationSettings, OrderRoutingRule,
   Listing, ListingFilters, PaginatedResponse, CreateBookingInput,
-  SupplierLocation, PaymentResult,
+  SupplierLocation, PaymentResult, SupplierApplication,
 } from "./types";
 
 // ─── Listing helpers ───────────────────────────────────────────────────────────
@@ -343,9 +343,16 @@ export const paymentService = {
     apiClient.post("/payments/initiate", data),
 };
 
+// ─── Provider Service ────────────────────────────────────────────────────────
+export const providerService = {
+  async apply(data: SupplierApplication): Promise<void> {
+    await apiClient.post("/auth/apply-provider", data);
+  },
+};
+
 export type {
   User, Supplier, Order, Booking, Notification, Invoice, Message,
   AuditLogEntry, OrderStatus, PartnerIntegrationSettings, OrderRoutingRule,
   Listing, ListingFilters, PaginatedResponse, CreateBookingInput,
-  SupplierLocation, PaymentResult,
+  SupplierLocation, PaymentResult, SupplierApplication,
 };

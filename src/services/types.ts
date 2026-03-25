@@ -1,6 +1,18 @@
 // ─── Centralized Domain Types ───
 
 export type UserRole = "guest" | "customer" | "provider" | "admin";
+
+export interface SupplierApplication {
+  companyName: string;
+  registryCode: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  businessType: string;
+  serviceTypes: string[];
+  serviceAreas: string[];
+  notes?: string;
+}
 export type IntegrationType = "api" | "email" | "manual";
 export type OrderStatus = "created" | "sending" | "sent" | "confirmed" | "rejected" | "active" | "completed" | "cancelled";
 export type BookingStatus = "pending" | "confirmed" | "active" | "completed" | "cancelled";
