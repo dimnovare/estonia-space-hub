@@ -12,6 +12,7 @@ import { paymentService } from "@/services";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { bookingDetailsSchema, bookingContactSchema, type BookingDetailsForm, type BookingContactForm } from "@/lib/schemas";
+import { tokenStore } from "@/services/apiClient";
 
 type SubmitPhase = "submitting" | "sending" | "waiting" | "done";
 
@@ -28,7 +29,7 @@ export default function BookingPage() {
 
   const { isAuthenticated } = useAuth();
   // Also check token for deferred login restore
-  const hasToken = !!localStorage.getItem("ruumly-token");
+  const hasToken = !!tokenStore.getAccess() || !!tokenStore.getRefresh();
 
   const steps = [t("booking.details"), t("booking.extras"), t("booking.contact"), t("booking.payment"), t("booking.review")];
   const extras = [

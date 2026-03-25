@@ -1,11 +1,34 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
+// ── In-memory token store ──────────────────
+// Access token: in-memory only (not persisted).
+// Refresh token: sessionStorage (survives refresh,
+// cleared on tab close, not readable cross-origin).
+let _accessToken: string | null = null;
+
+export const tokenStore = {
+  getAccess: () => _accessToken,
+  setAccess: (t: string | null) => {
+    _accessToken = t;
+  },
+  getRefresh: () => {
+    try { return sessionStorage.getItem("ruumly-refresh"); } catch { return null; }
+  },
+  setRefresh: (t: string | null) => {
+    try {
+      if (t) sessionStorage.setItem("ruumly-refresh", t);
+      else sessionStorage.removeItem("ruumly-refresh");
+    } catch {}
+  },
+  clear: () => {
+    _accessToken = null;
+    try { sessionStorage.removeItem("ruumly-refresh"); } catch {}
+  },
+};
+
 class ApiClient {
   private getToken(): string | null {
-    try {
-      return localStorage.getItem("ruumly-token");
-    } catch {}
-    return null;
+    return tokenStore.getAccess();
   }
 
   async request<T>(endpoint: string, config: { method?: string; body?: unknown } = {}): Promise<T> {
@@ -25,7 +48,7 @@ class ApiClient {
     }
     if (response.status === 401) {
       if (token) {
-        const refresh = localStorage.getItem("ruumly-refresh");
+        const refresh = tokenStore.getRefresh();
         if (refresh) {
           try {
             const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
@@ -35,9 +58,9 @@ class ApiClient {
             });
             if (refreshRes.ok) {
               const data = await refreshRes.json();
-              localStorage.setItem("ruumly-token", data.accessToken);
+              tokenStore.setAccess(data.accessToken);
               if (data.refreshToken) {
-                localStorage.setItem("ruumly-refresh", data.refreshToken);
+                tokenStore.setRefresh(data.refreshToken);
               }
               const retryHeaders: Record<string, string> = {
                 "Content-Type": "application/json",
@@ -59,9 +82,8 @@ class ApiClient {
             }
           } catch {}
         }
+        tokenStore.clear();
         localStorage.removeItem("ruumly-auth");
-        localStorage.removeItem("ruumly-token");
-        localStorage.removeItem("ruumly-refresh");
         window.location.href = "/login";
       }
       throw new Error("Unauthorized");

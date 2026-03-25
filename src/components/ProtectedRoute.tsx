@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth, type UserRole } from "@/contexts/AuthContext";
+import { ErrorState } from "@/components/ErrorState";
 import { Loader2 } from "lucide-react";
 
 interface Props {
@@ -20,7 +21,7 @@ export default function ProtectedRoute({ children, allowedRoles }: Props) {
   }
 
   if (!isAuthenticated) return <Navigate to="/login" state={{ from: location.pathname }} replace />;
-  if (allowedRoles && !allowedRoles.includes(role)) return <Navigate to="/" replace />;
+  if (allowedRoles && !allowedRoles.includes(role)) return <ErrorState kind="forbidden" />;
 
   return <>{children}</>;
 }
