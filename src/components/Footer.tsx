@@ -61,7 +61,7 @@ export default function Footer() {
         </div>
         <div className="mt-10 border-t border-primary-foreground/10 pt-6 text-center text-xs opacity-50">
           <div>© {new Date().getFullYear()} Ruumly. {t("footer.rights")}</div>
-          <div className="mt-1">Ruumly OÜ · Registrikood: 12345678 · Näidis tn 1, Tallinn · info@ruumly.eu</div>
+          <div className="mt-1">Ruumly · info@ruumly.eu · Tallinn, Estonia</div>
         </div>
       </div>
     </footer>
