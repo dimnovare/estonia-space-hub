@@ -414,6 +414,11 @@ export default function BookingPage() {
                 )}
               </div>
 
+              <div className="rounded-xl border border-border bg-secondary/50 p-4">
+                <h3 className="text-sm font-semibold">{t("booking.cancellation.title")}</h3>
+                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{t("booking.cancellation.body")}</p>
+              </div>
+
               {showInlineAuth && !isAuthenticated && (
                 <BookingInlineAuth onSuccess={() => {}} />
               )}
