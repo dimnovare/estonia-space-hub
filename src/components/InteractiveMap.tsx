@@ -204,7 +204,7 @@ export default function InteractiveMap({
 
       const popupHtml = `
         <div style="min-width: 200px; font-family: 'DM Sans', sans-serif;">
-          ${loc.images?.[0] ? `<img src="${loc.images[0]}" alt="" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />` : ''}
+          ${loc.images?.[0] ? `<img src="${loc.images[0]}" alt="${loc.name} — ${loc.city || ''}" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />` : ''}
           <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #1E3A5F;">${loc.name}</div>
           <div style="font-size: 12px; color: #666; margin-bottom: 4px;">${loc.supplierName}</div>
           <div style="font-size: 12px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
@@ -240,7 +240,7 @@ export default function InteractiveMap({
 
       const popupHtml = `
         <div style="min-width: 200px; font-family: 'DM Sans', sans-serif;">
-          <img src="${listing.image}" alt="" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />
+          <img src="${listing.image}" alt="${listing.title} — ${listing.city || ''}" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />
           <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #1E3A5F;">${listing.title}</div>
           <div style="font-size: 12px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>

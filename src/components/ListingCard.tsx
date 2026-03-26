@@ -39,7 +39,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
       <div className="relative aspect-[16/10] overflow-hidden">
         <img
           src={listing.image}
-          alt={listing.title}
+          alt={`${listing.title} — ${listing.city}`}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           loading="lazy"
         />
