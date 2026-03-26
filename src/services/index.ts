@@ -4,8 +4,9 @@ import { apiClient } from "./apiClient";
 import type {
   User, Supplier, Order, Booking, Notification, Invoice, Message,
   AuditLogEntry, OrderStatus, PartnerIntegrationSettings, OrderRoutingRule,
-  Listing, ListingFilters, PaginatedResponse, CreateBookingInput,
+  Listing, ListingBase, ListingType, ListingFilters, PaginatedResponse, CreateBookingInput,
   SupplierLocation, PaymentResult, SupplierApplication,
+  WarehouseListing, MovingListing, TrailerListing,
 } from "./types";
 
 // ─── Listing helpers ───────────────────────────────────────────────────────────
