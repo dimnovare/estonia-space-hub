@@ -83,7 +83,7 @@ export default function ProviderPage() {
               </Button>
             </Link>
             <Link to="/contact">
-              <Button size="lg" variant="outline" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
+              <Button size="lg" variant="outline" className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10">
                 {t("provPage.hero.ctaSecondary")}
               </Button>
             </Link>
