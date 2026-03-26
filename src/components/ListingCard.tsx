@@ -32,6 +32,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
   const { isFavorite, toggle } = useFavorites();
   const discountRate = (listing as any).clientDiscountRate ?? 5;
   const savingsInfo = getSavingsDisplay(listing.priceFrom, discountRate);
+  const priceUnit = listing.priceUnit.replace("€/", "");
 
   return (
     <Link to={detailPath} className="card-elevated group block overflow-hidden">
