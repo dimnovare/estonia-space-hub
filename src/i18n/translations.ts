@@ -78,7 +78,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Provider landing page
     "provPage.hero.title": "Laienda oma kliendibaasi Ruumly kaudu",
     "provPage.hero.subtitle": "Liitu Eesti kiiremini kasvava laopindade ja logistika platvormiga. Tasuta alustamine, komisjonitasu alles siis kui klient broneerib.",
-    "provPage.hero.cta": "Alusta tasuta →",
+    "provPage.hero.cta": "Alusta tasuta",
     "provPage.hero.ctaSecondary": "Võta ühendust",
     "provPage.hero.note": "Ei nõua lepingut · Saad alustada 10 minutiga",
     "provPage.benefits.title": "Miks valida Ruumly?",
@@ -1201,7 +1201,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Provider landing page
     "provPage.hero.title": "Expand your customer base through Ruumly",
     "provPage.hero.subtitle": "Join Estonia's fastest-growing storage and logistics platform. Start for free — commission only when a client books.",
-    "provPage.hero.cta": "Start for free →",
+    "provPage.hero.cta": "Start for free",
     "provPage.hero.ctaSecondary": "Contact us",
     "provPage.hero.note": "No contract required · Get started in 10 minutes",
     "provPage.benefits.title": "Why choose Ruumly?",
@@ -2294,7 +2294,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Provider landing page
     "provPage.hero.title": "Расширьте клиентскую базу через Ruumly",
     "provPage.hero.subtitle": "Присоединяйтесь к самой быстрорастущей платформе складов и логистики в Эстонии. Бесплатный старт — комиссия только при бронировании.",
-    "provPage.hero.cta": "Начать бесплатно →",
+    "provPage.hero.cta": "Начать бесплатно",
     "provPage.hero.ctaSecondary": "Связаться с нами",
     "provPage.hero.note": "Без договора · Старт за 10 минут",
     "provPage.benefits.title": "Почему выбирают Ruumly?",
