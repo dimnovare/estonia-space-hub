@@ -63,11 +63,12 @@ export default function BookingPage() {
     ?? (listing as any)?.clientDiscountRate
     ?? 5;
 
-  const publicPrice = listing ? listing.priceFrom : 0;
-  const ourPrice    = listing
-    ? Math.round(publicPrice * (1 - clientDiscount / 100))
+  const publicPrice    = listing ? listing.priceFrom : 0;
+  const discountedBase = listing
+    ? publicPrice * (1 - clientDiscount / 100)
     : 0;
-  const savings     = publicPrice - ourPrice;
+  const ourPrice       = listing ? Math.round(discountedBase * 0.95) : 0;
+  const savings        = publicPrice - ourPrice;
   const extrasTotal = selectedExtras.reduce(
     (s, id) => s + (extrasPrices[id] || 0), 0);
   const pricing     = listing
