@@ -18,7 +18,6 @@ import { trackEvent } from "@/lib/analytics";
 type SubmitPhase = "submitting" | "sending" | "waiting" | "done";
 
 export default function BookingPage() {
-  // SEO handled by <SEO /> component below
   const [params] = useSearchParams();
   const listingId = params.get("listing");
   const { data: listing } = useListing(listingId || "");
@@ -30,12 +29,9 @@ export default function BookingPage() {
   const { data: extrasPrices = {} } = useExtrasConfig();
 
   const { isAuthenticated } = useAuth();
-  // Also check token for deferred login restore
   const hasToken = !!tokenStore.getAccess() || !!tokenStore.getRefresh();
 
-  const [showInlineAuth, setShowInlineAuth] = useState(false);
-
-  const steps = [t("booking.details"), t("booking.extras"), t("booking.contact"), t("booking.payment"), t("booking.review")];
+  const steps = [t("booking.detailsAndExtras"), t("booking.contactAndAuth"), t("booking.paymentAndReview")];
   const extras = [
     { id: "packing",   label: t("booking.extra.packing"),   price: extrasPrices.packing   != null ? `${extrasPrices.packing}€`        : "…" },
     { id: "loading",   label: t("booking.extra.loading"),   price: extrasPrices.loading   != null ? `${extrasPrices.loading}€`        : "…" },
@@ -44,7 +40,6 @@ export default function BookingPage() {
   ];
 
   const [step, setStep] = useState(0);
-  const [showMobileSummary, setShowMobileSummary] = useState(false);
   const initialExtras = params.get("extras")?.split(",").filter(Boolean) || [];
   const [selectedExtras, setSelectedExtras] = useState<string[]>(initialExtras);
   const [paymentMethod, setPaymentMethod] = useState("bank");
@@ -64,7 +59,6 @@ export default function BookingPage() {
   const toggleExtra = (id: string) =>
     setSelectedExtras((prev) => (prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]));
 
-  // Use listing's effective client discount if available, otherwise default 5%
   const clientDiscount = (listing as any)?.clientDiscountRateOverride
     ?? (listing as any)?.clientDiscountRate
     ?? 5;
@@ -82,18 +76,17 @@ export default function BookingPage() {
 
   const handleNext = () => {
     if (step === 0) {
+      // Validate details form (date + duration), then advance
       detailsForm.handleSubmit(() => setStep(1))();
+    } else if (step === 1) {
+      // Validate contact form, then advance
+      contactForm.handleSubmit(() => setStep(2))();
     } else if (step === 2) {
-      contactForm.handleSubmit(() => setStep(3))();
-    } else if (step < steps.length - 1) {
-      setStep(step + 1);
-    } else {
-      // Require auth at final submission — show inline auth instead of redirect
+      // Final step — require auth, then submit
       if (!isAuthenticated) {
-        setShowInlineAuth(true);
+        // Auth is inline on step 1, but if they skipped somehow
         return;
       }
-
       submitBooking();
     }
   };
@@ -139,14 +132,6 @@ export default function BookingPage() {
       // Error already handled by mutation onError
     });
   };
-
-  // After inline auth success, auto-submit the booking
-  useEffect(() => {
-    if (isAuthenticated && showInlineAuth) {
-      setShowInlineAuth(false);
-      submitBooking();
-    }
-  }, [isAuthenticated]);
 
   useEffect(() => {
     if (!submitted) return;
@@ -217,7 +202,7 @@ export default function BookingPage() {
   }
 
   return (
-    <div className="container-wide py-8 pb-24 lg:pb-8">
+    <div className="container-wide py-8 pb-40 lg:pb-8">
       <SEO
         title="Broneeri — Ruumly"
         description="Broneeri laopind, kolimisteenus või haagis Ruumly kaudu."
@@ -228,6 +213,7 @@ export default function BookingPage() {
         <ArrowLeft className="h-4 w-4" /> {t("booking.back")}
       </Link>
 
+      {/* Step indicators */}
       <div className="mb-8 flex items-center gap-2">
         {steps.map((s, i) => (
           <div key={s} className="flex items-center gap-2">
@@ -240,198 +226,192 @@ export default function BookingPage() {
         ))}
       </div>
 
-      {/* Mobile collapsible summary */}
-      <div className="lg:hidden mb-4">
-        <button onClick={() => setShowMobileSummary(!showMobileSummary)}
-          className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm">
-          <span className="font-medium truncate">{listing?.title}</span>
-          <span className="font-bold text-accent shrink-0 ml-2">{ourPrice}€</span>
-        </button>
-        {showMobileSummary && (
-          <div className="mt-1 rounded-xl border border-border bg-card p-4 text-sm space-y-2">
-            {listing && (
-              <div className="flex items-center gap-2">
-                <img src={listing.image} alt="" className="h-10 w-12 rounded object-cover" />
-                <div className="text-xs"><div className="font-medium">{listing.title}</div><div className="text-muted-foreground">{listing.city}</div></div>
-              </div>
-            )}
-            <div className="space-y-1 text-xs border-t border-border pt-2">
-              <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.publicPrice")}</span><span className="line-through text-muted-foreground">{publicPrice}€</span></div>
-              <div className="flex justify-between font-bold"><span>{t("booking.ourPrice")}</span><span className="text-accent">{ourPrice}€</span></div>
-              <div className="flex justify-between text-success font-medium"><span>{t("booking.savings")}</span><span>-{savings}€</span></div>
-            </div>
-          </div>
-        )}
-      </div>
-
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
+
+          {/* ── Step 0: Details + Extras ── */}
           {step === 0 && (
-            <div className="space-y-4">
-              <h2 className="font-display text-xl font-semibold">{t("booking.selectDetails")}</h2>
-              {listing && (
-                <div className="flex items-center gap-3 rounded-xl border border-border p-3">
-                  <img src={listing.image} alt="" className="h-16 w-20 rounded-lg object-cover" />
-                  <div>
-                    <div className="text-sm font-semibold">{listing.title}</div>
-                    <div className="text-xs text-muted-foreground">{listing.city} · al. {listing.priceFrom}€</div>
+            <div className="space-y-6">
+              {/* Details section */}
+              <div className="space-y-4">
+                <h2 className="font-display text-xl font-semibold">{t("booking.selectDetails")}</h2>
+                {listing && (
+                  <div className="flex items-center gap-3 rounded-xl border border-border p-3">
+                    <img src={listing.image} alt="" className="h-16 w-20 rounded-lg object-cover" />
+                    <div>
+                      <div className="text-sm font-semibold">{listing.title}</div>
+                      <div className="text-xs text-muted-foreground">{listing.city} · al. {listing.priceFrom}€</div>
+                    </div>
                   </div>
+                )}
+                <div>
+                  <label className="mb-1 block text-sm font-medium">{t("booking.date")}</label>
+                  <input type="date" {...detailsForm.register("date")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  {detailsForm.formState.errors.date && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.date.message}</p>}
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">{t("booking.period")}</label>
+                  <select {...detailsForm.register("duration")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent">
+                    <option>1 päev</option><option>1 nädal</option><option>1 kuu</option><option>3 kuud</option><option>6 kuud</option><option>12 kuud</option>
+                  </select>
+                  {detailsForm.formState.errors.duration && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.duration.message}</p>}
+                </div>
+              </div>
+
+              {/* Extras section */}
+              <div className="space-y-4 border-t border-border pt-6">
+                <h2 className="font-display text-xl font-semibold">{t("booking.extras")}</h2>
+                <p className="text-sm text-muted-foreground">{t("booking.selectExtras")}</p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {extras.map((e) => (
+                    <button key={e.id} onClick={() => toggleExtra(e.id)} className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-colors ${selectedExtras.includes(e.id) ? "border-accent bg-accent/5" : "border-border hover:border-muted-foreground"}`}>
+                      <div className={`flex h-5 w-5 items-center justify-center rounded border ${selectedExtras.includes(e.id) ? "border-accent bg-accent" : "border-border"}`}>
+                        {selectedExtras.includes(e.id) && <Check className="h-3 w-3 text-accent-foreground" />}
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-medium">{e.label}</div>
+                        <div className="text-xs text-muted-foreground">al. {e.price}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Step 1: Contact + Auth ── */}
+          {step === 1 && (
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <h2 className="font-display text-xl font-semibold">{t("booking.contact")}</h2>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">{t("booking.name")}</label>
+                  <input type="text" {...contactForm.register("name")} placeholder="Teie nimi" className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  {contactForm.formState.errors.name && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.name.message}</p>}
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">{t("booking.email")}</label>
+                  <input type="email" {...contactForm.register("email")} placeholder="teie@email.ee" className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  {contactForm.formState.errors.email && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.email.message}</p>}
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">{t("booking.phone")}</label>
+                  <input type="tel" {...contactForm.register("phone")} placeholder="+372 ..." className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  {contactForm.formState.errors.phone && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.phone.message}</p>}
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">{t("booking.notes")}</label>
+                  <textarea {...contactForm.register("notes")} rows={3} placeholder="Täiendav info..." className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  {contactForm.formState.errors.notes && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.notes.message}</p>}
+                </div>
+              </div>
+
+              {/* Inline auth if not logged in */}
+              {!isAuthenticated && !hasToken && (
+                <div className="border-t border-border pt-6">
+                  <BookingInlineAuth onSuccess={() => {}} />
                 </div>
               )}
-              <div>
-                <label className="mb-1 block text-sm font-medium">{t("booking.date")}</label>
-                <input type="date" {...detailsForm.register("date")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-                {detailsForm.formState.errors.date && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.date.message}</p>}
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium">{t("booking.period")}</label>
-                <select {...detailsForm.register("duration")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent">
-                  <option>1 päev</option><option>1 nädal</option><option>1 kuu</option><option>3 kuud</option><option>6 kuud</option><option>12 kuud</option>
-                </select>
-                {detailsForm.formState.errors.duration && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.duration.message}</p>}
-              </div>
             </div>
           )}
 
-          {step === 1 && (
-            <div className="space-y-4">
-              <h2 className="font-display text-xl font-semibold">{t("booking.extras")}</h2>
-              <p className="text-sm text-muted-foreground">{t("booking.selectExtras")}</p>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {extras.map((e) => (
-                  <button key={e.id} onClick={() => toggleExtra(e.id)} className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-colors ${selectedExtras.includes(e.id) ? "border-accent bg-accent/5" : "border-border hover:border-muted-foreground"}`}>
-                    <div className={`flex h-5 w-5 items-center justify-center rounded border ${selectedExtras.includes(e.id) ? "border-accent bg-accent" : "border-border"}`}>
-                      {selectedExtras.includes(e.id) && <Check className="h-3 w-3 text-accent-foreground" />}
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-sm font-medium">{e.label}</div>
-                      <div className="text-xs text-muted-foreground">al. {e.price}</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
+          {/* ── Step 2: Payment + Review ── */}
           {step === 2 && (
-            <div className="space-y-4">
-              <h2 className="font-display text-xl font-semibold">{t("booking.contact")}</h2>
-              <div>
-                <label className="mb-1 block text-sm font-medium">{t("booking.name")}</label>
-                <input type="text" {...contactForm.register("name")} placeholder="Teie nimi" className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-                {contactForm.formState.errors.name && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.name.message}</p>}
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium">{t("booking.email")}</label>
-                <input type="email" {...contactForm.register("email")} placeholder="teie@email.ee" className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-                {contactForm.formState.errors.email && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.email.message}</p>}
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium">{t("booking.phone")}</label>
-                <input type="tel" {...contactForm.register("phone")} placeholder="+372 ..." className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-                {contactForm.formState.errors.phone && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.phone.message}</p>}
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium">{t("booking.notes")}</label>
-                <textarea {...contactForm.register("notes")} rows={3} placeholder="Täiendav info..." className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-                {contactForm.formState.errors.notes && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.notes.message}</p>}
-              </div>
-            </div>
-          )}
+            <div className="space-y-6">
+              {/* Review summary */}
+              <div className="space-y-4">
+                <h2 className="font-display text-xl font-semibold">{t("booking.review")}</h2>
+                <div className="space-y-3 rounded-xl border border-border p-4 text-sm">
+                  {listing && <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.service")}</span><span className="font-medium">{listing.title}</span></div>}
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.date")}</span><span className="font-medium">{detailsForm.getValues("date") || "—"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.period")}</span><span className="font-medium">{detailsForm.getValues("duration")}</span></div>
+                  {selectedExtras.length > 0 && (
+                    <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.extras")}</span><span className="font-medium">{selectedExtras.map((e) => extras.find((x) => x.id === e)?.label).join(", ")}</span></div>
+                  )}
+                  <div className="border-t border-border pt-3">
+                    <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.name")}</span><span className="font-medium">{contactForm.getValues("name")}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.email")}</span><span className="font-medium">{contactForm.getValues("email")}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.phone")}</span><span className="font-medium">{contactForm.getValues("phone")}</span></div>
+                  </div>
 
-          {step === 3 && (
-            <div className="space-y-4">
-              <h2 className="font-display text-xl font-semibold">{t("booking.paymentMethod")}</h2>
-              <div className="space-y-3">
-                {[
-                  { id: "bank", icon: Building2, label: t("booking.bankTransfer"), desc: t("booking.bankTransferDesc"), recommended: true },
-                  { id: "card", icon: CreditCard, label: t("booking.creditCard"), desc: t("booking.creditCardDesc") },
-                  { id: "later", icon: Clock, label: t("booking.payLater"), desc: t("booking.payLaterDesc") },
-                ].map((pm) => {
-                  const Icon = pm.icon;
-                  return (
-                    <div key={pm.id}>
-                      <button onClick={() => setPaymentMethod(pm.id)} className={`flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-colors ${paymentMethod === pm.id ? "border-accent bg-accent/5" : "border-border hover:border-muted-foreground"}`}>
-                        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${paymentMethod === pm.id ? "bg-accent/10" : "bg-secondary"}`}>
-                          <Icon className={`h-5 w-5 ${paymentMethod === pm.id ? "text-accent" : "text-muted-foreground"}`} />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold">{pm.label}</span>
-                            {(pm as any).recommended && (
-                              <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-semibold text-accent">
-                                {t("booking.paymentRecommended")}
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-xs text-muted-foreground">{pm.desc}</div>
-                        </div>
-                        <div className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${paymentMethod === pm.id ? "border-accent" : "border-border"}`}>
-                          {paymentMethod === pm.id && <div className="h-2.5 w-2.5 rounded-full bg-accent" />}
-                        </div>
-                      </button>
-                      {pm.id === "later" && (
-                        <p className="mt-1.5 ml-14 text-[11px] text-muted-foreground">
-                          {t("booking.payLaterWarning")}
-                        </p>
+                  {listing && (
+                    <div className="border-t border-border pt-3 space-y-1">
+                      <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.publicPrice")}</span><span className="font-medium line-through text-muted-foreground">{publicPrice}€</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.ourPrice")}</span><span className="font-bold text-accent">{ourPrice}€</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.savings")}</span><span className="font-bold text-success">-{savings}€</span></div>
+                      {extrasTotal > 0 && (
+                        <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.extras")}</span><span className="font-medium">+{extrasTotal}€</span></div>
+                      )}
+                      {extrasTotal > 0 && (
+                        <div className="flex justify-between font-semibold border-t border-border pt-1 mt-1"><span>Kokku lisateenustega</span><span className="text-accent">{pricing?.total}€</span></div>
                       )}
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {step === 4 && (
-            <div className="space-y-4">
-              <h2 className="font-display text-xl font-semibold">{t("booking.review")}</h2>
-              <div className="space-y-3 rounded-xl border border-border p-4 text-sm">
-                {listing && <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.service")}</span><span className="font-medium">{listing.title}</span></div>}
-                <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.date")}</span><span className="font-medium">{detailsForm.getValues("date") || "—"}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.period")}</span><span className="font-medium">{detailsForm.getValues("duration")}</span></div>
-                {selectedExtras.length > 0 && (
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.extras")}</span><span className="font-medium">{selectedExtras.map((e) => extras.find((x) => x.id === e)?.label).join(", ")}</span></div>
-                )}
-                <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.paymentMethod")}</span><span className="font-medium">{paymentMethod === "bank" ? t("booking.bankTransfer") : paymentMethod === "card" ? t("booking.creditCard") : t("booking.payLater")}</span></div>
-                <div className="border-t border-border pt-3">
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.name")}</span><span className="font-medium">{contactForm.getValues("name")}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.email")}</span><span className="font-medium">{contactForm.getValues("email")}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.phone")}</span><span className="font-medium">{contactForm.getValues("phone")}</span></div>
+                  )}
                 </div>
-                
-                {listing && (
-                  <div className="border-t border-border pt-3 space-y-1">
-                    <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.publicPrice")}</span><span className="font-medium line-through text-muted-foreground">{publicPrice}€</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.ourPrice")}</span><span className="font-bold text-accent">{ourPrice}€</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.savings")}</span><span className="font-bold text-success">-{savings}€</span></div>
-                    {extrasTotal > 0 && (
-                      <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.extras")}</span><span className="font-medium">+{extrasTotal}€</span></div>
-                    )}
-                    {extrasTotal > 0 && (
-                      <div className="flex justify-between font-semibold border-t border-border pt-1 mt-1"><span>Kokku lisateenustega</span><span className="text-accent">{pricing?.total}€</span></div>
-                    )}
-                  </div>
-                )}
               </div>
 
+              {/* Payment method selection */}
+              <div className="space-y-4 border-t border-border pt-6">
+                <h2 className="font-display text-xl font-semibold">{t("booking.paymentMethod")}</h2>
+                <div className="space-y-3">
+                  {[
+                    { id: "bank", icon: Building2, label: t("booking.bankTransfer"), desc: t("booking.bankTransferDesc"), recommended: true },
+                    { id: "card", icon: CreditCard, label: t("booking.creditCard"), desc: t("booking.creditCardDesc") },
+                    { id: "later", icon: Clock, label: t("booking.payLater"), desc: t("booking.payLaterDesc") },
+                  ].map((pm) => {
+                    const Icon = pm.icon;
+                    return (
+                      <div key={pm.id}>
+                        <button onClick={() => setPaymentMethod(pm.id)} className={`flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-colors ${paymentMethod === pm.id ? "border-accent bg-accent/5" : "border-border hover:border-muted-foreground"}`}>
+                          <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${paymentMethod === pm.id ? "bg-accent/10" : "bg-secondary"}`}>
+                            <Icon className={`h-5 w-5 ${paymentMethod === pm.id ? "text-accent" : "text-muted-foreground"}`} />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold">{pm.label}</span>
+                              {(pm as any).recommended && (
+                                <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-semibold text-accent">
+                                  {t("booking.paymentRecommended")}
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-muted-foreground">{pm.desc}</div>
+                          </div>
+                          <div className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${paymentMethod === pm.id ? "border-accent" : "border-border"}`}>
+                            {paymentMethod === pm.id && <div className="h-2.5 w-2.5 rounded-full bg-accent" />}
+                          </div>
+                        </button>
+                        {pm.id === "later" && (
+                          <p className="mt-1.5 ml-14 text-[11px] text-muted-foreground">
+                            {t("booking.payLaterWarning")}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Cancellation policy */}
               <div className="rounded-xl border border-border bg-secondary/50 p-4">
                 <h3 className="text-sm font-semibold">{t("booking.cancellation.title")}</h3>
                 <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{t("booking.cancellation.body")}</p>
               </div>
-
-              {showInlineAuth && !isAuthenticated && (
-                <BookingInlineAuth onSuccess={() => {}} />
-              )}
             </div>
           )}
 
+          {/* Desktop navigation buttons */}
           <div className="mt-8 hidden lg:flex justify-between">
             {step > 0 ? (
               <Button variant="outline" onClick={() => setStep(step - 1)}>
                 <ArrowLeft className="mr-2 h-4 w-4" /> {t("booking.prev")}
               </Button>
             ) : <div />}
-            <Button onClick={handleNext} disabled={createBooking.isPending} className="bg-accent text-accent-foreground hover:bg-accent/90">
+            <Button
+              onClick={handleNext}
+              disabled={createBooking.isPending || (step === 2 && !isAuthenticated)}
+              className="bg-accent text-accent-foreground hover:bg-accent/90"
+            >
               {step < steps.length - 1 ? (
                 <>{t("booking.next")} <ArrowRight className="ml-2 h-4 w-4" /></>
               ) : (
@@ -441,6 +421,7 @@ export default function BookingPage() {
           </div>
         </div>
 
+        {/* Desktop sidebar summary */}
         <div className="hidden lg:block">
           <div className="card-prominent sticky top-20 p-5">
             <h3 className="text-sm font-semibold">{t("booking.yourBooking")}</h3>
@@ -460,14 +441,31 @@ export default function BookingPage() {
                 <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.publicPrice")}</span><span className="line-through text-muted-foreground">{publicPrice}€</span></div>
                 <div className="flex justify-between font-bold"><span>{t("booking.ourPrice")}</span><span className="text-accent">{ourPrice}€</span></div>
                 <div className="flex justify-between text-success font-medium"><span>{t("booking.savings")}</span><span>-{savings}€</span></div>
+                {extrasTotal > 0 && (
+                  <>
+                    <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.extras")}</span><span>+{extrasTotal}€</span></div>
+                    <div className="flex justify-between font-bold border-t border-border pt-1 mt-1"><span>{t("booking.total")}</span><span className="text-accent">{pricing?.total}€</span></div>
+                  </>
+                )}
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Mobile sticky price bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border bg-card p-3 lg:hidden">
+      {/* Mobile sticky pricing bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border bg-card px-3 pt-2 pb-3 lg:hidden">
+        {/* Pricing summary row */}
+        <div className="mb-2 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-3">
+            <span className="text-muted-foreground line-through">{publicPrice}€</span>
+            <span className="font-bold text-accent text-sm">{ourPrice}€</span>
+            {savings > 0 && <span className="text-success font-medium">-{savings}€</span>}
+          </div>
+          {extrasTotal > 0 && (
+            <span className="text-muted-foreground">+ {extrasTotal}€ {t("booking.extras").toLowerCase()}</span>
+          )}
+        </div>
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-xs text-muted-foreground truncate max-w-[160px]">{listing?.title}</div>
@@ -481,7 +479,11 @@ export default function BookingPage() {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             )}
-            <Button onClick={handleNext} disabled={createBooking.isPending} className="bg-accent text-accent-foreground hover:bg-accent/90 px-6">
+            <Button
+              onClick={handleNext}
+              disabled={createBooking.isPending || (step === 2 && !isAuthenticated)}
+              className="bg-accent text-accent-foreground hover:bg-accent/90 px-6"
+            >
               {step < steps.length - 1 ? t("booking.next") : t("booking.confirm")}
             </Button>
           </div>
