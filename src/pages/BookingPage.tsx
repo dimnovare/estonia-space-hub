@@ -295,22 +295,22 @@ export default function BookingPage() {
                 <h2 className="font-display text-xl font-semibold">{t("booking.contact")}</h2>
                 <div>
                   <label className="mb-1 block text-sm font-medium">{t("booking.name")}</label>
-                  <input type="text" {...contactForm.register("name")} placeholder="Teie nimi" className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  <input type="text" {...contactForm.register("name")} placeholder={t("booking.placeholder.name")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                   {contactForm.formState.errors.name && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.name.message}</p>}
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium">{t("booking.email")}</label>
-                  <input type="email" {...contactForm.register("email")} placeholder="teie@email.ee" className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  <input type="email" {...contactForm.register("email")} placeholder={t("booking.placeholder.email")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                   {contactForm.formState.errors.email && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.email.message}</p>}
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium">{t("booking.phone")}</label>
-                  <input type="tel" {...contactForm.register("phone")} placeholder="+372 ..." className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  <input type="tel" {...contactForm.register("phone")} placeholder={t("booking.placeholder.phone")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                   {contactForm.formState.errors.phone && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.phone.message}</p>}
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium">{t("booking.notes")}</label>
-                  <textarea {...contactForm.register("notes")} rows={3} placeholder="Täiendav info..." className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  <textarea {...contactForm.register("notes")} rows={3} placeholder={t("booking.placeholder.notes")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                   {contactForm.formState.errors.notes && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.notes.message}</p>}
                 </div>
               </div>
@@ -352,7 +352,7 @@ export default function BookingPage() {
                         <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.extras")}</span><span className="font-medium">+{extrasTotal}€</span></div>
                       )}
                       {extrasTotal > 0 && (
-                        <div className="flex justify-between font-semibold border-t border-border pt-1 mt-1"><span>Kokku lisateenustega</span><span className="text-accent">{pricing?.total}€</span></div>
+                        <div className="flex justify-between font-semibold border-t border-border pt-1 mt-1"><span>{t("booking.totalWithExtras")}</span><span className="text-accent">{pricing?.total}€</span></div>
                       )}
                     </div>
                   )}
