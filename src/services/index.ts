@@ -4,8 +4,9 @@ import { apiClient } from "./apiClient";
 import type {
   User, Supplier, Order, Booking, Notification, Invoice, Message,
   AuditLogEntry, OrderStatus, PartnerIntegrationSettings, OrderRoutingRule,
-  Listing, ListingFilters, PaginatedResponse, CreateBookingInput,
+  Listing, ListingBase, ListingType, ListingFilters, PaginatedResponse, CreateBookingInput,
   SupplierLocation, PaymentResult, SupplierApplication,
+  WarehouseListing, MovingListing, TrailerListing,
 } from "./types";
 
 // ─── Listing helpers ───────────────────────────────────────────────────────────
@@ -31,15 +32,72 @@ interface ApiListing {
 }
 
 function mapListing(api: ApiListing): Listing {
-  const { supplierName, images, features, ...rest } = api;
+  const base: Omit<Listing, keyof (WarehouseListing | MovingListing | TrailerListing)> & Record<string, unknown> = {
+    id: api.id,
+    type: (api.type?.toLowerCase() || "warehouse") as ListingType,
+    supplierId: (api as unknown as Record<string, unknown>).supplierId as string || "",
+    title: api.title || "",
+    provider: api.supplierName || "",
+    address: api.address || "",
+    city: api.city || "",
+    lat: api.lat ?? 0,
+    lng: api.lng ?? 0,
+    priceFrom: api.priceFrom ?? 0,
+    priceUnit: api.priceUnit || "€/kuu",
+    image: api.images?.[0] || "",
+    images: api.images || [],
+    availableNow: api.availableNow ?? false,
+    rating: api.rating ?? 0,
+    reviewCount: api.reviewCount ?? 0,
+    badge: api.badge as ListingBase["badge"],
+    description: api.description || "",
+    sizeM2: (api.features?.sizeM2 as number) ?? undefined,
+    quantityTotal: (api.features?.quantityTotal as number) ?? undefined,
+    locationId: (api as unknown as Record<string, unknown>).locationId as string | undefined,
+  };
+
+  const f = api.features ?? {};
+  const t = base.type as ListingType;
+
+  if (t === "warehouse") {
+    return {
+      ...base,
+      type: "warehouse",
+      size: (f.size as number) ?? (f.sizeM2 as number) ?? 0,
+      sizeUnit: (f.sizeUnit as string) ?? "m²",
+      heated: (f.heated as boolean) ?? false,
+      indoor: (f.indoor as boolean) ?? false,
+      access24_7: (f.access24_7 as boolean) ?? false,
+      security: (f.security as boolean) ?? false,
+      loadingDock: (f.loadingDock as boolean) ?? false,
+      forklift: (f.forklift as boolean) ?? false,
+      shortTerm: (f.shortTerm as boolean) ?? false,
+      longTerm: (f.longTerm as boolean) ?? false,
+      features: (f.features as string[]) ?? [],
+    } as WarehouseListing;
+  }
+
+  if (t === "moving") {
+    return {
+      ...base,
+      type: "moving",
+      serviceArea: (f.serviceArea as string[]) ?? [],
+      withVan: (f.withVan as boolean) ?? false,
+      packingHelp: (f.packingHelp as boolean) ?? false,
+      loadingHelp: (f.loadingHelp as boolean) ?? false,
+      pricingModel: (f.pricingModel as "fixed" | "hourly") ?? "fixed",
+      services: (f.services as string[]) ?? [],
+    } as MovingListing;
+  }
+
+  // trailer
   return {
-    ...rest,
-    provider: supplierName,
-    supplierId: "",
-    image: images[0] || "",
-    images,
-    ...(features ?? {}),
-  } as unknown as Listing;
+    ...base,
+    type: "trailer",
+    trailerType: (f.trailerType as string) ?? "",
+    weightClass: (f.weightClass as string) ?? "",
+    requirements: (f.requirements as string[]) ?? [],
+  } as TrailerListing;
 }
 
 // ─── Status normalisation ──────────────────────────────────────────────────────
