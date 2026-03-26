@@ -18,8 +18,8 @@ export default function TrustBar() {
   const stats = [
     { icon: Building2, value: listingCount, label: t("trustBar.listings") },
     { icon: MapPin, value: cityCount, label: t("trustBar.cities") },
-    { icon: CalendarCheck, value: bookingStats?.totalBookings ?? 0, label: t("trustBar.bookings") },
-    { icon: Star, value: bookingStats?.averageRating?.toFixed(1) ?? "—", label: t("trustBar.rating") },
+    ...((bookingStats?.totalBookings ?? 0) > 0 ? [{ icon: CalendarCheck, value: bookingStats!.totalBookings, label: t("trustBar.bookings") }] : []),
+    ...((bookingStats?.averageRating ?? 0) > 0 ? [{ icon: Star, value: bookingStats!.averageRating!.toFixed(1), label: t("trustBar.rating") }] : []),
   ];
 
   const testimonials = [
