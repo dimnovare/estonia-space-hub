@@ -102,7 +102,7 @@ export default function HomePage() {
               {t("hero.title")}{" "}
               <span className="text-gradient">{t("hero.titleHighlight")}</span>
             </h1>
-            <p className="mt-4 text-lg text-primary-foreground/70 md:text-xl">{t("hero.subtitle")}</p>
+            <p className="mt-4 text-lg text-primary-foreground/70 md:text-xl">{settings.heroSubtitle || t("hero.subtitle")}</p>
 
             {/* Social proof row */}
             <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-primary-foreground/60">

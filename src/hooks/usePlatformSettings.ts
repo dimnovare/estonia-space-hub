@@ -14,6 +14,8 @@ const FALLBACK = {
   showProviderCta:       true,
   showFaq:               true,
   showMap:               true,
+  heroSubtitle:          "",
+  heroDiscount:          "10",
 };
 
 export function usePlatformSettings() {
