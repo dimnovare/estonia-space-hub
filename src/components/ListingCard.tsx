@@ -30,7 +30,9 @@ export default function ListingCard({ listing }: { listing: Listing }) {
   const detailPath = `/${listing.type}/${listing.id}`;
   const { t } = useLanguage();
   const { isFavorite, toggle } = useFavorites();
-  const savingsInfo = getSavingsDisplay(listing.priceFrom);
+  const discountRate = (listing as any).clientDiscountRate ?? 5;
+  const savingsInfo = getSavingsDisplay(listing.priceFrom, discountRate);
+  const priceUnit = listing.priceUnit.replace("€/", "");
 
   return (
     <Link to={detailPath} className="card-elevated group block overflow-hidden">
@@ -91,13 +93,18 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           </p>
         )}
 
-        <div className="mt-3 flex items-baseline gap-1 border-t border-border pt-3">
-          <span className="font-display text-lg font-bold text-foreground">al. {listing.priceFrom}€</span>
-          <span className="text-xs text-muted-foreground">/ {listing.priceUnit.replace("€/", "")}</span>
+        <div className="mt-3 flex items-baseline gap-2 border-t border-border pt-3">
+          {savingsInfo ? (
+            <>
+              <span className="text-sm text-muted-foreground line-through">€{savingsInfo.directPrice}/{priceUnit}</span>
+              <span className="font-display text-lg font-bold text-accent">€{savingsInfo.ruumlyPrice}/{priceUnit}</span>
+            </>
+          ) : (
+            <span className="font-display text-lg font-bold text-foreground">al. {listing.priceFrom}€/{priceUnit}</span>
+          )}
         </div>
         {savingsInfo && (
-          <div className="mt-1.5 flex items-center gap-2">
-            <span className="text-xs text-muted-foreground line-through">{savingsInfo.publicPrice}€/{listing.priceUnit.replace("€/", "")}</span>
+          <div className="mt-1.5">
             <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success">
               <BadgePercent className="h-3 w-3" />
               {t("listing.savings").replace("{amount}", savingsInfo.savings)}
