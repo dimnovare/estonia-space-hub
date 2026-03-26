@@ -2503,10 +2503,12 @@ const translations: Record<Language, Record<string, string>> = {
     "onboard.back": "Назад",
     "onboard.next": "Далее",
     "onboard.submit": "Отправить заявку",
+    "onboard.review.title": "Проверьте данные",
     "onboard.success.title": "Заявка отправлена!",
     "onboard.success.desc": "Спасибо за регистрацию! Наша команда рассмотрит заявку и свяжется с вами в течение 48 часов.",
     "onboard.success.status": "Статус заявки",
     "onboard.success.pending": "⏳ На рассмотрении",
+    "onboard.success.docsNote": "Мы можем запросить документы в процессе верификации.",
     "onboard.success.back": "На главную",
 
     // Beta badge
