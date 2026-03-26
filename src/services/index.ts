@@ -35,7 +35,7 @@ function mapListing(api: ApiListing): Listing {
   const base: Omit<Listing, keyof (WarehouseListing | MovingListing | TrailerListing)> & Record<string, unknown> = {
     id: api.id,
     type: (api.type?.toLowerCase() || "warehouse") as ListingType,
-    supplierId: (api as Record<string, unknown>).supplierId as string || "",
+    supplierId: (api as unknown as Record<string, unknown>).supplierId as string || "",
     title: api.title || "",
     provider: api.supplierName || "",
     address: api.address || "",
@@ -53,7 +53,7 @@ function mapListing(api: ApiListing): Listing {
     description: api.description || "",
     sizeM2: (api.features?.sizeM2 as number) ?? undefined,
     quantityTotal: (api.features?.quantityTotal as number) ?? undefined,
-    locationId: (api as Record<string, unknown>).locationId as string | undefined,
+    locationId: (api as unknown as Record<string, unknown>).locationId as string | undefined,
   };
 
   const f = api.features ?? {};
