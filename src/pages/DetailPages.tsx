@@ -161,7 +161,6 @@ export function WarehouseDetail() {
             {wListing.reviewCount > 0 && (
               <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" /> {wListing.rating} ({wListing.reviewCount} {t("detail.reviews")})</span>
             )}
-            )}
           </div>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{wListing.description}</p>
 
@@ -324,7 +323,6 @@ export function MovingDetail() {
             {mListing.reviewCount > 0 && (
               <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" /> {mListing.rating} ({mListing.reviewCount})</span>
             )}
-            )}
           </div>
           <p className="mt-4 text-sm text-muted-foreground">{mListing.description}</p>
 
@@ -446,7 +444,6 @@ export function TrailerDetail() {
             <span className="flex items-center gap-1"><MapPin className="h-4 w-4" /> {tListing.address}, {tListing.city}</span>
             {tListing.reviewCount > 0 && (
               <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" /> {tListing.rating} ({tListing.reviewCount})</span>
-            )}
             )}
           </div>
           <p className="mt-4 text-sm text-muted-foreground">{tListing.description}</p>
