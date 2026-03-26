@@ -136,3 +136,38 @@ export function useCreateReview() {
     },
   });
 }
+
+export function useSupplierTeam() {
+  const { isAuthenticated, role } = useAuth();
+  return useQuery<TeamMember[]>({
+    queryKey: ["supplier-team"],
+    queryFn: async () => {
+      const res = await apiClient.get("/supplier/team");
+      return unwrapArray<TeamMember>(res);
+    },
+    enabled: isAuthenticated && (role === "provider" || role === "admin"),
+    staleTime: 30_000,
+  });
+}
+
+export function useInviteTeamMember() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { email: string; name: string }) =>
+      apiClient.post("/supplier/team/invite", data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["supplier-team"] });
+    },
+  });
+}
+
+export function useRemoveTeamMember() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) =>
+      apiClient.delete(`/supplier/team/${userId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["supplier-team"] });
+    },
+  });
+}
