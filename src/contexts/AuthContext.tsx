@@ -4,7 +4,7 @@ import type { UserRole } from "@/services/types";
 
 export type { UserRole };
 
-export interface MockUser {
+export interface AppUser {
   id: string;
   name: string;
   email: string;
@@ -37,7 +37,7 @@ interface AuthResponse {
 }
 
 interface AuthContextType {
-  user: MockUser | null;
+  user: AppUser | null;
   isAuthenticated: boolean;
   isInitializing: boolean;
   role: UserRole;
@@ -46,14 +46,14 @@ interface AuthContextType {
   loginWithGoogle: (credential: string) => Promise<void>;
   logout: () => void;
   switchRole: (role: UserRole) => void;
-  updateProfile: (updates: Partial<MockUser>) => void;
+  updateProfile: (updates: Partial<AppUser>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
-function normalizeUser(raw: AuthResponse["user"]): MockUser {
+function normalizeUser(raw: AuthResponse["user"]): AppUser {
   return {
     id: raw.id,
     name: raw.name,
@@ -71,7 +71,7 @@ function normalizeUser(raw: AuthResponse["user"]): MockUser {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<MockUser | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
@@ -111,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const persist = (
-    u: MockUser | null,
+    u: AppUser | null,
     token?: string,
     refresh?: string
   ) => {
@@ -165,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Dev-only: not applicable with real auth
   }, []);
 
-  const updateProfile = useCallback((updates: Partial<MockUser>) => {
+  const updateProfile = useCallback((updates: Partial<AppUser>) => {
     setUser((prev) => {
       if (!prev) return prev;
       const updated = { ...prev, ...updates };
