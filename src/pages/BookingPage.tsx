@@ -252,7 +252,7 @@ export default function BookingPage() {
                 <div>
                   <label className="mb-1 block text-sm font-medium">{t("booking.period")}</label>
                   <select {...detailsForm.register("duration")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent">
-                    <option>1 päev</option><option>1 nädal</option><option>1 kuu</option><option>3 kuud</option><option>6 kuud</option><option>12 kuud</option>
+                    <option value="1 päev">{t("booking.dur.1day")}</option><option value="1 nädal">{t("booking.dur.1week")}</option><option value="1 kuu">{t("booking.dur.1month")}</option><option value="3 kuud">{t("booking.dur.3months")}</option><option value="6 kuud">{t("booking.dur.6months")}</option><option value="12 kuud">{t("booking.dur.12months")}</option>
                   </select>
                   {detailsForm.formState.errors.duration && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.duration.message}</p>}
                 </div>
