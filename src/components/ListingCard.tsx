@@ -72,11 +72,17 @@ export default function ListingCard({ listing }: { listing: Listing }) {
               {listing.address}, {listing.city}
             </p>
           </div>
-          <div className="flex shrink-0 items-center gap-1 text-xs">
-            <Star className="h-3 w-3 fill-accent text-accent" />
-            <span className="font-semibold text-foreground">{listing.rating}</span>
-            <span className="text-muted-foreground">({listing.reviewCount})</span>
-          </div>
+          {listing.reviewCount > 0 ? (
+            <div className="flex shrink-0 items-center gap-1 text-xs">
+              <Star className="h-3 w-3 fill-accent text-accent" />
+              <span className="font-semibold text-foreground">{listing.rating}</span>
+              <span className="text-muted-foreground">({listing.reviewCount})</span>
+            </div>
+          ) : (
+            <span className="inline-flex items-center rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
+              {t("listing.badge.new")}
+            </span>
+          )}
         </div>
 
         {"size" in listing && (
