@@ -16,13 +16,14 @@ import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
 import { trackEvent } from "@/lib/analytics";
 
-type AuthView = "login" | "register" | "forgot" | "forgot-sent" | "reset";
+type AuthView = "login" | "register" | "forgot" | "forgot-sent" | "reset" | "verify-sent";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [view, setView] = useState<AuthView>("login");
   const [loading, setLoading] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
+  const [registeredEmail, setRegisteredEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
   const [resetToken, setResetToken] = useState("");
   const [resetPassword, setResetPassword] = useState("");
@@ -67,10 +68,10 @@ export default function LoginPage() {
   const handleRegister = async (data: RegisterForm) => {
     setLoading(true);
     try {
-      await authRegister(data.name, data.email, data.password, data.inviteCode);
+      const email = await authRegister(data.name, data.email, data.password, data.inviteCode);
       trackEvent("register", { method: "email" });
-      toast.success(t("login.successRegister"));
-      navigate(from, { replace: true });
+      setRegisteredEmail(email);
+      setView("verify-sent");
     } catch (err: any) { const msg = err.message || ""; toast.error(msg.startsWith("error.") ? t(msg) : msg || t("error.registerFailed")); }
     setLoading(false);
   };
@@ -139,6 +140,23 @@ export default function LoginPage() {
                 : t("form.saveNewPassword")}
             </Button>
           </form>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === "verify-sent") {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          <div className="rounded-xl border border-accent/20 bg-accent/5 p-4 text-center">
+            <Mail className="mx-auto h-8 w-8 text-accent" />
+            <h3 className="mt-2 font-semibold">{t("auth.verifyTitle")}</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t("auth.verifyDesc").replace("{email}", registeredEmail)}
+            </p>
+          </div>
+          <Button variant="outline" className="mt-6 w-full" onClick={() => setView("login")}>{t("login.backToLogin")}</Button>
         </div>
       </div>
     );
