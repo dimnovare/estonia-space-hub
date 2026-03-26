@@ -158,7 +158,11 @@ export function WarehouseDetail() {
           <h1 className="mt-6 font-display text-2xl font-bold md:text-3xl">{wListing.title}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
             <span className="flex items-center gap-1"><MapPin className="h-4 w-4" /> {wListing.address}, {wListing.city}</span>
-            <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" /> {wListing.rating} ({wListing.reviewCount} {t("detail.reviews")})</span>
+            {wListing.reviewCount > 0 ? (
+              <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" /> {wListing.rating} ({wListing.reviewCount} {t("detail.reviews")})</span>
+            ) : (
+              <span className="inline-flex items-center rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">{t("listing.badge.new")}</span>
+            )}
           </div>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{wListing.description}</p>
 
@@ -318,7 +322,11 @@ export function MovingDetail() {
           <h1 className="mt-6 font-display text-2xl font-bold md:text-3xl">{mListing.title}</h1>
           <div className="mt-2 flex items-center gap-3 text-sm text-muted-foreground">
             <span className="flex items-center gap-1"><MapPin className="h-4 w-4" /> {mListing.city}</span>
-            <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" /> {mListing.rating} ({mListing.reviewCount})</span>
+            {mListing.reviewCount > 0 ? (
+              <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" /> {mListing.rating} ({mListing.reviewCount})</span>
+            ) : (
+              <span className="inline-flex items-center rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">{t("listing.badge.new")}</span>
+            )}
           </div>
           <p className="mt-4 text-sm text-muted-foreground">{mListing.description}</p>
 
@@ -438,7 +446,11 @@ export function TrailerDetail() {
           <h1 className="mt-6 font-display text-2xl font-bold md:text-3xl">{tListing.title}</h1>
           <div className="mt-2 flex items-center gap-3 text-sm text-muted-foreground">
             <span className="flex items-center gap-1"><MapPin className="h-4 w-4" /> {tListing.address}, {tListing.city}</span>
-            <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" /> {tListing.rating} ({tListing.reviewCount})</span>
+            {tListing.reviewCount > 0 ? (
+              <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" /> {tListing.rating} ({tListing.reviewCount})</span>
+            ) : (
+              <span className="inline-flex items-center rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">{t("listing.badge.new")}</span>
+            )}
           </div>
           <p className="mt-4 text-sm text-muted-foreground">{tListing.description}</p>
 
