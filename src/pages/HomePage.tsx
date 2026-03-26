@@ -10,6 +10,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
 import { ESTONIAN_CITIES } from "@/lib/constants";
+import TrustBar from "@/components/TrustBar";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
@@ -206,6 +207,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Trust bar with stats + testimonials */}
+      <TrustBar />
 
       {/* Map preview */}
       {settings.showMap && (
