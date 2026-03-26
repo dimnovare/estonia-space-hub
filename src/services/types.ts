@@ -325,6 +325,17 @@ export interface CreateReviewInput {
   comment?: string;
 }
 
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: string;
+  isOwner: boolean;
+  lastLoginAt?: string;
+  registeredAt: string;
+}
+
 export interface CreateBookingInput {
   listingId: string;
   startDate: string;

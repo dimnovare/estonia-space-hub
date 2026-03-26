@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { listingService, bookingService, orderService, supplierService, userService, notificationService, invoiceService, messageService, auditService, integrationSettingsService, routingRuleService, locationService } from "@/services";
-import type { ListingFilters, CreateBookingInput, Review, CreateReviewInput, Booking, Order, Supplier, User, Notification, Invoice, Message, AuditLogEntry, PartnerIntegrationSettings, OrderRoutingRule, SupplierLocation, Listing } from "@/services/types";
+import type { ListingFilters, CreateBookingInput, Review, CreateReviewInput, Booking, Order, Supplier, User, Notification, Invoice, Message, AuditLogEntry, PartnerIntegrationSettings, OrderRoutingRule, SupplierLocation, Listing, TeamMember } from "@/services/types";
 import { toast } from "sonner";
 import { apiClient } from "@/services/apiClient";
 import { useAuth } from "@/contexts/AuthContext";
@@ -133,6 +133,41 @@ export function useCreateReview() {
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ["reviews", variables.listingId] });
       qc.invalidateQueries({ queryKey: ["bookings"] });
+    },
+  });
+}
+
+export function useSupplierTeam() {
+  const { isAuthenticated, role } = useAuth();
+  return useQuery<TeamMember[]>({
+    queryKey: ["supplier-team"],
+    queryFn: async () => {
+      const res = await apiClient.get("/supplier/team");
+      return unwrapArray<TeamMember>(res);
+    },
+    enabled: isAuthenticated && (role === "provider" || role === "admin"),
+    staleTime: 30_000,
+  });
+}
+
+export function useInviteTeamMember() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { email: string; name: string }) =>
+      apiClient.post("/supplier/team/invite", data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["supplier-team"] });
+    },
+  });
+}
+
+export function useRemoveTeamMember() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) =>
+      apiClient.delete(`/supplier/team/${userId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["supplier-team"] });
     },
   });
 }
