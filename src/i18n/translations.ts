@@ -194,6 +194,9 @@ const translations: Record<Language, Record<string, string>> = {
     // Maintenance
     "maintenance.title": "Tuleme varsti tagasi",
     "maintenance.desc": "Ruumly on hetkel hoolduses. Töötame platvormi parandamise kallal ja oleme peagi tagasi.",
+    "maintenance.unreachable.title": "Teenus ajutiselt kättesaamatu",
+    "maintenance.unreachable.desc": "Proovige mõne minuti pärast uuesti.",
+    "maintenance.unreachable.retry": "Proovi uuesti",
 
     "faq.title": "Korduma kippuvad küsimused",
     "faq.subtitle": "Leidke vastused levinumatele küsimustele.",
@@ -1321,6 +1324,9 @@ const translations: Record<Language, Record<string, string>> = {
     // Maintenance
     "maintenance.title": "We'll be back soon",
     "maintenance.desc": "Ruumly is currently under maintenance. We're working on improvements and will be back shortly.",
+    "maintenance.unreachable.title": "Service temporarily unavailable",
+    "maintenance.unreachable.desc": "Please try again in a few minutes.",
+    "maintenance.unreachable.retry": "Try again",
 
 
     "faq.general": "General",
@@ -2418,6 +2424,9 @@ const translations: Record<Language, Record<string, string>> = {
     // Maintenance
     "maintenance.title": "Скоро вернёмся",
     "maintenance.desc": "Ruumly находится на техническом обслуживании. Мы работаем над улучшениями и скоро вернёмся.",
+    "maintenance.unreachable.title": "Сервис временно недоступен",
+    "maintenance.unreachable.desc": "Попробуйте снова через несколько минут.",
+    "maintenance.unreachable.retry": "Попробовать снова",
 
     "faq.subtitle": "Найдите ответы на самые частые вопросы.",
     "faq.general": "Общие вопросы",

@@ -1,30 +1,52 @@
-import { Wrench } from "lucide-react";
+import { Wrench, WifiOff, RefreshCw } from "lucide-react";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
+import { Button } from "@/components/ui/button";
 
-export default function MaintenancePage() {
+interface Props {
+  apiUnreachable?: boolean;
+}
+
+export default function MaintenancePage({ apiUnreachable }: Props) {
   const settings = usePlatformSettings();
   const { t } = useLanguage();
+
+  const isUnreachable = apiUnreachable && !settings.maintenanceMode;
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-center">
       <SEO
-        title="Hooldus — Ruumly"
-        description="Ruumly on hetkel hoolduses. Tuleme varsti tagasi."
+        title={isUnreachable ? "Teenus kättesaamatu — Ruumly" : "Hooldus — Ruumly"}
+        description={isUnreachable ? "Ruumly teenus on ajutiselt kättesaamatu." : "Ruumly on hetkel hoolduses. Tuleme varsti tagasi."}
         noindex={true}
       />
       <div className="mb-6 rounded-full bg-accent/10 p-4">
-        <Wrench className="h-10 w-10 text-accent" />
+        {isUnreachable ? (
+          <WifiOff className="h-10 w-10 text-accent" />
+        ) : (
+          <Wrench className="h-10 w-10 text-accent" />
+        )}
       </div>
 
       <h1 className="mb-3 text-3xl font-bold text-foreground">
-        {t("maintenance.title")}
+        {isUnreachable ? t("maintenance.unreachable.title") : t("maintenance.title")}
       </h1>
 
       <p className="mb-6 max-w-md text-muted-foreground">
-        {t("maintenance.desc")}
+        {isUnreachable ? t("maintenance.unreachable.desc") : t("maintenance.desc")}
       </p>
+
+      {isUnreachable && (
+        <Button
+          variant="outline"
+          className="mb-6"
+          onClick={() => window.location.reload()}
+        >
+          <RefreshCw className="mr-2 h-4 w-4" />
+          {t("maintenance.unreachable.retry")}
+        </Button>
+      )}
 
       <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
         {settings.siteEmail && (

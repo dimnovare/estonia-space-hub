@@ -75,12 +75,12 @@ const PageLoader = () => (
 );
 
 function AppContent() {
-  const { maintenanceMode } = usePlatformSettings();
+  const { maintenanceMode, apiUnreachable } = usePlatformSettings();
   const { role, isInitializing } = useAuth();
   const isLoginPage = window.location.pathname === "/login";
 
-  if (maintenanceMode && !isInitializing && role !== "admin" && !isLoginPage) {
-    return <MaintenancePage />;
+  if ((maintenanceMode || apiUnreachable) && !isInitializing && role !== "admin" && !isLoginPage) {
+    return <MaintenancePage apiUnreachable={apiUnreachable} />;
   }
 
   return (
