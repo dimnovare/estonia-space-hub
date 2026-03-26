@@ -203,7 +203,14 @@ function UnitDialog({
       {
         locationId,
         unit: {
-          ...data,
+          title: data.title,
+          type: data.type,
+          priceFrom: data.priceFrom,
+          priceUnit: data.priceUnit,
+          sizeM2: data.sizeM2,
+          quantityTotal: data.quantityTotal,
+          description: data.description,
+          vatRate: data.vatRate,
           pricesIncludeVat: false,
         },
       },
