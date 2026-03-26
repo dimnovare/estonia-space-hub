@@ -97,7 +97,7 @@ export default function AboutPage() {
           <h2 className="font-display text-2xl font-bold text-primary-foreground md:text-3xl">{t("about.cta")}</h2>
           <div className="mt-6 flex justify-center gap-3">
             <Link to="/search"><Button className="bg-accent text-accent-foreground hover:bg-accent/90">{t("about.ctaSearch")}</Button></Link>
-            <Link to="/provider"><Button variant="outline" className="border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10">{t("about.ctaProvider")}</Button></Link>
+            <Link to="/provider"><Button variant="outline" className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10">{t("about.ctaProvider")}</Button></Link>
           </div>
         </div>
       </section>
