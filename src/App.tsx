@@ -80,8 +80,8 @@ function AppContent() {
   const { role, isInitializing } = useAuth();
   const isLoginPage = window.location.pathname === "/login";
 
-  if ((maintenanceMode || apiUnreachable) && !isInitializing && role !== "admin" && !isLoginPage) {
-    return <MaintenancePage apiUnreachable={apiUnreachable} />;
+  if (maintenanceMode && !isInitializing && role !== "admin" && !isLoginPage) {
+    return <MaintenancePage apiUnreachable={false} />;
   }
 
   return (
