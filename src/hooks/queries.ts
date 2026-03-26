@@ -182,3 +182,20 @@ export function useExtrasConfig() {
     staleTime: Infinity,
   });
 }
+
+export interface BookingStats {
+  totalBookings: number;
+  averageRating: number;
+}
+
+export function useBookingStats() {
+  return useQuery<BookingStats>({
+    queryKey: ["bookings", "stats"],
+    queryFn: async () => {
+      const res = await apiClient.get("/bookings/stats");
+      return res as BookingStats;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
