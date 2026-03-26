@@ -80,15 +80,9 @@ function LocationDialog({
   const isPending = createLoc.isPending || updateLoc.isPending;
 
   const onSubmit = (data: LocationForm) => {
-    const payload = {
-      ...data,
-      lat: data.lat ?? 0,
-      lng: data.lng ?? 0,
-    };
-
     if (isEdit) {
       updateLoc.mutate(
-        { id: locationId!, data: payload },
+        { id: locationId!, data: { name: data.name, address: data.address, city: data.city, lat: data.lat ?? 0, lng: data.lng ?? 0, description: data.description, openingHours: data.openingHours } },
         {
           onSuccess: () => {
             toast.success(t("toast.locationUpdated"));
@@ -99,7 +93,7 @@ function LocationDialog({
       );
     } else {
       createLoc.mutate(
-        { ...payload, supplierId: "" },
+        { supplierId: "", name: data.name, address: data.address, city: data.city, lat: data.lat ?? 0, lng: data.lng ?? 0, description: data.description, openingHours: data.openingHours },
         {
           onSuccess: () => {
             toast.success(t("toast.locationCreated"));
