@@ -31,6 +31,7 @@ import CookiePage from "@/pages/CookiePage";
 import NotFound from "@/pages/NotFound";
 import ProviderPage from "@/pages/ProviderPage";
 import RequestDetailPage from "@/pages/RequestDetailPage";
+import VerifyEmailPage from "@/pages/VerifyEmailPage";
 import { lazy, Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { trackPageView } from "@/lib/analytics";
@@ -113,6 +114,7 @@ function AppContent() {
             <Route path="/how-it-works" element={<HowItWorksPage />} />
             <Route path="/faq" element={<FAQPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/verify" element={<VerifyEmailPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/cookies" element={<CookiePage />} />
