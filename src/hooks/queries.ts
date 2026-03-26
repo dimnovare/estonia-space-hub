@@ -109,6 +109,42 @@ export function useLocation(id: string | undefined) {
   });
 }
 
+export function useCreateLocation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof locationService.create>[0]) =>
+      locationService.create(data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["locations"] });
+      qc.invalidateQueries({ queryKey: ["admin-locations"] });
+    },
+  });
+}
+
+export function useUpdateLocation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof locationService.update>[1] }) =>
+      locationService.update(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["locations"] });
+      qc.invalidateQueries({ queryKey: ["admin-locations"] });
+    },
+  });
+}
+
+export function useAddUnit() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ locationId, unit }: { locationId: string; unit: Parameters<typeof locationService.addUnit>[1] }) =>
+      locationService.addUnit(locationId, unit),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["locations"] });
+      qc.invalidateQueries({ queryKey: ["admin-locations"] });
+    },
+  });
+}
+
 export function useAdminLocations() {
   return useQuery({
     queryKey: ["admin-locations"],
