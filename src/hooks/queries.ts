@@ -171,3 +171,14 @@ export function useRemoveTeamMember() {
     },
   });
 }
+
+export function useExtrasConfig() {
+  return useQuery<Record<string, number>>({
+    queryKey: ["extras-config"],
+    queryFn: async () => {
+      const res = await apiClient.get("/bookings/extras-config");
+      return res as Record<string, number>;
+    },
+    staleTime: Infinity,
+  });
+}

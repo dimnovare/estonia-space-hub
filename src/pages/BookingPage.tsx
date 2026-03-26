@@ -2,9 +2,8 @@ import { useState, useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useListing, useCreateBooking, useSuppliers } from "@/hooks/queries";
+import { useListing, useCreateBooking, useSuppliers, useExtrasConfig } from "@/hooks/queries";
 import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
-import { EXTRAS_PRICES } from "@/lib/pricing";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { SEO } from "@/components/SEO";
@@ -28,6 +27,7 @@ export default function BookingPage() {
   const { data: suppliers = [] } = useSuppliers();
   const supplier = listing ? suppliers.find(s => s.id === listing.supplierId) : undefined;
   const createBooking = useCreateBooking();
+  const { data: extrasPrices = {} } = useExtrasConfig();
 
   const { isAuthenticated } = useAuth();
   // Also check token for deferred login restore
@@ -37,10 +37,10 @@ export default function BookingPage() {
 
   const steps = [t("booking.details"), t("booking.extras"), t("booking.contact"), t("booking.payment"), t("booking.review")];
   const extras = [
-    { id: "packing", label: t("booking.extra.packing"), price: `${EXTRAS_PRICES.packing}€` },
-    { id: "loading", label: t("booking.extra.loading"), price: `${EXTRAS_PRICES.loading}€` },
-    { id: "insurance", label: t("booking.extra.insurance"), price: `${EXTRAS_PRICES.insurance}€/kuu` },
-    { id: "forklift", label: t("booking.extra.forklift"), price: `${EXTRAS_PRICES.forklift}€` },
+    { id: "packing",   label: t("booking.extra.packing"),   price: extrasPrices.packing   != null ? `${extrasPrices.packing}€`        : "…" },
+    { id: "loading",   label: t("booking.extra.loading"),   price: extrasPrices.loading   != null ? `${extrasPrices.loading}€`        : "…" },
+    { id: "insurance", label: t("booking.extra.insurance"), price: extrasPrices.insurance != null ? `${extrasPrices.insurance}€/kuu`  : "…" },
+    { id: "forklift",  label: t("booking.extra.forklift"),  price: extrasPrices.forklift  != null ? `${extrasPrices.forklift}€`       : "…" },
   ];
 
   const [step, setStep] = useState(0);
@@ -75,7 +75,7 @@ export default function BookingPage() {
     : 0;
   const savings     = publicPrice - ourPrice;
   const extrasTotal = selectedExtras.reduce(
-    (s, id) => s + (EXTRAS_PRICES[id as keyof typeof EXTRAS_PRICES] || 0), 0);
+    (s, id) => s + (extrasPrices[id] || 0), 0);
   const pricing     = listing
     ? { total: ourPrice + extrasTotal, extrasTotal }
     : null;
