@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Warehouse, Truck, CarFront, Building2, User, Upload, CheckCircle, ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
+import { Check, Warehouse, Truck, CarFront, Building2, User, CheckCircle, ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
@@ -16,6 +16,8 @@ export default function ProviderOnboardingPage() {
   const [businessType, setBusinessType] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [registryCode, setRegistryCode] = useState("");
+  const [contactName, setContactName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
@@ -26,12 +28,14 @@ export default function ProviderOnboardingPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  // Pre-fill from user if available
+  const effectiveContactName = contactName || user?.name || "";
+  const effectiveContactEmail = contactEmail || user?.email || "";
+
   const steps = [
     t("onboard.step1"),
     t("onboard.step2"),
     t("onboard.step3"),
-    t("onboard.step4"),
-    t("onboard.step5"),
   ];
 
   const businessTypes = [
@@ -50,12 +54,6 @@ export default function ProviderOnboardingPage() {
   const toggleService = (key: string) => setSelectedServices((p) => p.includes(key) ? p.filter((s) => s !== key) : [...p, key]);
   const toggleArea = (key: string) => setSelectedAreas((p) => p.includes(key) ? p.filter((a) => a !== key) : [...p, key]);
 
-  const docs = [
-    t("onboard.step4.doc1"),
-    t("onboard.step4.doc2"),
-    t("onboard.step4.doc3"),
-  ];
-
   const inputClass = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
 
   const handleSubmit = async () => {
@@ -64,8 +62,8 @@ export default function ProviderOnboardingPage() {
       await providerService.apply({
         companyName,
         registryCode,
-        contactName: user?.name ?? "",
-        contactEmail: user?.email ?? "",
+        contactName: effectiveContactName,
+        contactEmail: effectiveContactEmail,
         contactPhone,
         businessType,
         serviceTypes: selectedServices,
@@ -95,6 +93,7 @@ export default function ProviderOnboardingPage() {
             <p className="text-xs text-muted-foreground">{t("onboard.success.status")}</p>
             <p className="mt-1 text-sm font-medium text-warning">{t("onboard.success.pending")}</p>
           </div>
+          <p className="mt-3 text-xs text-muted-foreground">{t("onboard.success.docsNote")}</p>
           <div className="mt-6 flex justify-center">
             <Button variant="outline" onClick={() => navigate("/")}>{t("onboard.success.back")}</Button>
           </div>
@@ -104,6 +103,7 @@ export default function ProviderOnboardingPage() {
   }
 
   const canProceedStep0 = businessType && companyName.trim() && registryCode.trim() && contactPhone.trim();
+  const canProceedStep1 = selectedServices.length > 0 && selectedAreas.length > 0;
 
   return (
     <div className="container-wide py-8">
@@ -115,6 +115,7 @@ export default function ProviderOnboardingPage() {
       <h1 className="font-display text-2xl font-bold">{t("onboard.title")}</h1>
       <p className="mt-1 text-sm text-muted-foreground">{t("onboard.subtitle")}</p>
 
+      {/* Stepper */}
       <div className="mt-6 mb-8 flex items-center gap-2">
         {steps.map((s, i) => (
           <div key={s} className="flex items-center gap-2">
@@ -128,6 +129,7 @@ export default function ProviderOnboardingPage() {
       </div>
 
       <div className="max-w-2xl">
+        {/* Step 0: Business Info (merged) */}
         {step === 0 && (
           <div className="space-y-6">
             <div>
@@ -148,24 +150,6 @@ export default function ProviderOnboardingPage() {
               <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.name")} *</label>
               <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={inputClass} placeholder="OÜ Nimi" />
             </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.reg")} *</label>
-              <input value={registryCode} onChange={(e) => setRegistryCode(e.target.value)} className={inputClass} placeholder="12345678" />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.phone")} *</label>
-              <input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} className={inputClass} placeholder="+372" />
-            </div>
-          </div>
-        )}
-
-        {step === 1 && (
-          <div className="space-y-4">
-            <h2 className="font-display text-lg font-semibold">{t("onboard.step2.title")}</h2>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.name")} *</label>
-              <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={inputClass} placeholder="OÜ Nimi" />
-            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.reg")} *</label>
@@ -179,11 +163,11 @@ export default function ProviderOnboardingPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.contact")} *</label>
-                <input defaultValue={user?.name ?? ""} className={inputClass} />
+                <input value={effectiveContactName} onChange={(e) => setContactName(e.target.value)} className={inputClass} />
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.email")} *</label>
-                <input type="email" defaultValue={user?.email ?? ""} className={inputClass} />
+                <input type="email" value={effectiveContactEmail} onChange={(e) => setContactEmail(e.target.value)} className={inputClass} />
               </div>
             </div>
             <div>
@@ -193,7 +177,8 @@ export default function ProviderOnboardingPage() {
           </div>
         )}
 
-        {step === 2 && (
+        {/* Step 1: Services */}
+        {step === 1 && (
           <div className="space-y-6">
             <div>
               <h2 className="font-display text-lg font-semibold">{t("onboard.step3.types")}</h2>
@@ -228,24 +213,47 @@ export default function ProviderOnboardingPage() {
           </div>
         )}
 
-        {step === 3 && (
-          <div className="space-y-4">
-            <h2 className="font-display text-lg font-semibold">{t("onboard.step4.title")}</h2>
-            <p className="text-xs text-muted-foreground">{t("onboard.step4.desc")}</p>
-            <div className="space-y-3">
-              {docs.map((doc) => (
-                <div key={doc} className="flex items-center justify-between rounded-xl border border-dashed border-border p-4">
-                  <span className="text-sm">{doc}</span>
-                  <Button variant="outline" size="sm"><Upload className="mr-2 h-3.5 w-3.5" /> {t("onboard.step4.upload")}</Button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Step 2: Review + Submit */}
+        {step === 2 && (
+          <div className="space-y-5">
+            <h2 className="font-display text-lg font-semibold">{t("onboard.review.title")}</h2>
 
-        {step === 4 && (
-          <div className="space-y-4">
-            <h2 className="font-display text-lg font-semibold">{t("onboard.step5.title")}</h2>
+            {/* Summary */}
+            <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">{t("onboard.step2.name")}</span>
+                <span className="font-medium">{companyName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">{t("onboard.step2.reg")}</span>
+                <span className="font-medium">{registryCode}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">{t("onboard.step2.contact")}</span>
+                <span className="font-medium">{effectiveContactName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">{t("onboard.step2.email")}</span>
+                <span className="font-medium">{effectiveContactEmail}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">{t("onboard.step2.phone")}</span>
+                <span className="font-medium">{contactPhone}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">{t("onboard.step3.types")}</span>
+                <span className="font-medium">{selectedServices.map((s) => {
+                  const st = serviceTypes.find((x) => x.key === s);
+                  return st?.label ?? s;
+                }).join(", ")}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">{t("onboard.step3.areas")}</span>
+                <span className="font-medium">{selectedAreas.join(", ")}</span>
+              </div>
+            </div>
+
+            {/* Terms */}
             <div className="rounded-xl border border-border bg-secondary/30 p-4 text-sm text-muted-foreground max-h-48 overflow-y-auto">
               <p>{t("onboard.step5.intro")}</p>
               <ul className="mt-2 list-disc list-inside space-y-1">
@@ -256,6 +264,8 @@ export default function ProviderOnboardingPage() {
                 <li>{t("onboard.step5.term5")}</li>
               </ul>
             </div>
+
+            {/* Notes */}
             <div>
               <label className="text-xs font-medium text-muted-foreground">{t("onboard.step5.notes")}</label>
               <textarea
@@ -266,6 +276,8 @@ export default function ProviderOnboardingPage() {
                 maxLength={1000}
               />
             </div>
+
+            {/* Agree */}
             <label className="flex items-start gap-2 cursor-pointer">
               <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-border text-accent focus:ring-accent" />
               <span className="text-sm">{t("onboard.step5.agree")}</span>
@@ -273,6 +285,7 @@ export default function ProviderOnboardingPage() {
           </div>
         )}
 
+        {/* Navigation */}
         <div className="mt-8 flex justify-between">
           <Button variant="outline" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0 || submitting}>
             <ArrowLeft className="mr-2 h-4 w-4" /> {t("onboard.back")}
@@ -280,7 +293,7 @@ export default function ProviderOnboardingPage() {
           {step < steps.length - 1 ? (
             <Button
               onClick={() => setStep((s) => s + 1)}
-              disabled={step === 0 && !canProceedStep0}
+              disabled={(step === 0 && !canProceedStep0) || (step === 1 && !canProceedStep1)}
               className="bg-accent text-accent-foreground hover:bg-accent/90"
             >
               {t("onboard.next")} <ArrowRight className="ml-2 h-4 w-4" />
