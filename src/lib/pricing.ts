@@ -7,9 +7,9 @@ export const EXTRAS_LABELS: Record<string, string> = {
   forklift: "Tõstukiteenus",
 };
 
-export function calculatePricing(pricePerUnit: number) {
+export function calculatePricing(pricePerUnit: number, commissionRate: number = 8) {
   const platformPrice = Math.round(pricePerUnit * (1 - PLATFORM_FEE_PERCENT / 100));
-  const supplierPrice = Math.round(pricePerUnit * 0.85);
+  const supplierPrice = Math.round(pricePerUnit * (1 - commissionRate / 100));
   const publicPrice = Math.round(pricePerUnit / (1 - PLATFORM_FEE_PERCENT / 100));
   const savings = publicPrice - platformPrice;
   const margin = platformPrice - supplierPrice;
