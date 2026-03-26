@@ -252,7 +252,16 @@ export default function BookingPage() {
                 <div>
                   <label className="mb-1 block text-sm font-medium">{t("booking.period")}</label>
                   <select {...detailsForm.register("duration")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent">
-                    <option value="1 päev">{t("booking.dur.1day")}</option><option value="1 nädal">{t("booking.dur.1week")}</option><option value="1 kuu">{t("booking.dur.1month")}</option><option value="3 kuud">{t("booking.dur.3months")}</option><option value="6 kuud">{t("booking.dur.6months")}</option><option value="12 kuud">{t("booking.dur.12months")}</option>
+                    {[
+                      { value: "1 päev", label: t("booking.dur.1day") },
+                      { value: "1 nädal", label: t("booking.dur.1week") },
+                      { value: "1 kuu", label: t("booking.dur.1month") },
+                      { value: "3 kuud", label: t("booking.dur.3months") },
+                      { value: "6 kuud", label: t("booking.dur.6months") },
+                      { value: "12 kuud", label: t("booking.dur.12months") },
+                    ].map((d) => (
+                      <option key={d.value} value={d.value}>{d.label}</option>
+                    ))}
                   </select>
                   {detailsForm.formState.errors.duration && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.duration.message}</p>}
                 </div>
