@@ -136,14 +136,3 @@ export function useCreateReview() {
     },
   });
 }
-
-export function useCreateReview() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (input: CreateReviewInput) => apiClient.post("/reviews", input),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: ["reviews", variables.listingId] });
-      qc.invalidateQueries({ queryKey: ["bookings"] });
-    },
-  });
-}
