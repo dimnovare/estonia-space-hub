@@ -25,15 +25,6 @@ export default function ProviderTeam() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
 
-  const isOwner = members?.some((m) => m.isOwner && m.email === useAuthEmail()) ?? false;
-
-  function useAuthEmail() {
-    // We check ownership by seeing if any owner entry exists for the current user
-    // For simplicity, we derive from the auth context
-    return "";
-  }
-
-  // Determine if current user is owner from the members list
   const { user } = useAuth();
   const currentIsOwner = members?.some((m) => m.isOwner && m.id === user?.id) ?? false;
 
