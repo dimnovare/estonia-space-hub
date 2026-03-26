@@ -117,7 +117,8 @@ function normalizeUser(u: User): User {
 // ─── User Service ───────────────────────────────────────────────────────────────
 export const userService = {
   async getAll(): Promise<User[]> {
-    const users = await apiClient.get<User[]>("/admin/users");
+    const res = await apiClient.get<any>("/admin/users");
+    const users = Array.isArray(res) ? res : res?.data ?? [];
     return users.map(normalizeUser);
   },
   async getById(id: string): Promise<User | undefined> {
@@ -134,7 +135,8 @@ export const userService = {
 // ─── Supplier Service ───────────────────────────────────────────────────────────
 export const supplierService = {
   async getAll(): Promise<Supplier[]> {
-    return apiClient.get<Supplier[]>("/admin/suppliers");
+    const res = await apiClient.get<any>("/admin/suppliers");
+    return Array.isArray(res) ? res : res?.data ?? [];
   },
   async getById(id: string): Promise<Supplier | undefined> {
     return apiClient.get<Supplier>(`/admin/suppliers/${id}`);
