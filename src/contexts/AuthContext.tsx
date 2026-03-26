@@ -42,7 +42,7 @@ interface AuthContextType {
   isInitializing: boolean;
   role: UserRole;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, inviteCode?: string) => Promise<void>;
+  register: (name: string, email: string, password: string, inviteCode?: string) => Promise<string>;
   loginWithGoogle: (credential: string) => Promise<void>;
   logout: () => void;
   switchRole: (role: UserRole) => void;
@@ -133,11 +133,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const register = useCallback(async (name: string, email: string, password: string, inviteCode?: string) => {
+  const register = useCallback(async (name: string, email: string, password: string, inviteCode?: string): Promise<string> => {
     try {
       const currentLang = localStorage.getItem("ruumly-lang") ?? "et";
-      const res = await apiClient.post<AuthResponse>("/auth/register", { name, email, password, confirmPassword: password, inviteCode, language: currentLang });
-      persist(normalizeUser(res.user), res.accessToken, res.refreshToken);
+      await apiClient.post("/auth/register", { name, email, password, confirmPassword: password, inviteCode, language: currentLang });
+      // Don't persist session — user must verify email first
+      return email;
     } catch (err: any) {
       throw new Error(err.message || "error.registerFailed");
     }
