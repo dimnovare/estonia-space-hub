@@ -21,7 +21,10 @@ const FALLBACK = {
 export function usePlatformSettings() {
   const { data, isError } = useQuery({
     queryKey:  ["platform-settings-public"],
-    queryFn:   publicSettingsService.getPublic,
+    queryFn:   async () => {
+      const res = await publicSettingsService.getPublic();
+      return res ?? FALLBACK;
+    },
     staleTime: 10_000,
     gcTime:    30_000,
     retry:     2,
