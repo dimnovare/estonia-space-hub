@@ -19,7 +19,7 @@ const TIERS = [
     key: "starter",
     nameKey: "provPage.tier.starter",
     commission: "8%",
-    locations: 2,
+    locations: 1,
     highlight: true,
     features: ["provPage.tier.feat.dashboard", "provPage.tier.feat.email", "provPage.tier.feat.listings"],
   },
