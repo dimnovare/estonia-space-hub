@@ -17,11 +17,12 @@ const FALLBACK = {
 };
 
 export function usePlatformSettings() {
-  const { data } = useQuery({
+  const { data, isError } = useQuery({
     queryKey:  ["platform-settings-public"],
     queryFn:   publicSettingsService.getPublic,
     staleTime: 10_000,
     gcTime:    30_000,
+    retry:     2,
   });
-  return { ...FALLBACK, ...data };
+  return { ...FALLBACK, ...data, apiUnreachable: isError };
 }
