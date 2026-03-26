@@ -290,6 +290,9 @@ export const authService = {
   async updateLanguage(language: string): Promise<void> {
     await apiClient.patch("/auth/language", { language });
   },
+  async verifyEmail(token: string): Promise<void> {
+    await apiClient.post("/auth/verify-email", { token });
+  },
 };
 
 // ─── Bank Service ───────────────────────────────────────────────────────────────

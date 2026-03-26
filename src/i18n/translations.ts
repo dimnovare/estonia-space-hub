@@ -1190,6 +1190,13 @@ const translations: Record<Language, Record<string, string>> = {
     "consent.text": "See veebileht kasutab küpsiseid parema kasutajakogemuse tagamiseks.",
     "consent.accept": "Nõustun",
     "consent.readMore": "Loe lähemalt",
+    "verify.seoTitle": "Kinnita e-post — Ruumly",
+    "verify.loading": "E-posti kinnitamine...",
+    "verify.noToken": "Kinnituslinki ei leitud",
+    "verify.success": "E-post kinnitatud!",
+    "verify.successSub": "Nüüd saad Ruumlys teenuseid broneerida",
+    "verify.error": "Kinnituslink on kehtetu või aegunud",
+    "verify.errorSub": "Logi sisse, et saata uus kinnitusmeil",
   },
 
   en: {
@@ -2338,6 +2345,13 @@ const translations: Record<Language, Record<string, string>> = {
     "consent.text": "This website uses cookies to ensure a better user experience.",
     "consent.accept": "Accept",
     "consent.readMore": "Read more",
+    "verify.seoTitle": "Verify Email — Ruumly",
+    "verify.loading": "Verifying your email...",
+    "verify.noToken": "No verification token provided",
+    "verify.success": "Email verified successfully!",
+    "verify.successSub": "You can now book services on Ruumly",
+    "verify.error": "Verification link is invalid or expired",
+    "verify.errorSub": "Log in to resend verification email",
   },
 
   ru: {
@@ -3486,6 +3500,13 @@ const translations: Record<Language, Record<string, string>> = {
     "consent.text": "Этот сайт использует файлы cookie для улучшения пользовательского опыта.",
     "consent.accept": "Принять",
     "consent.readMore": "Подробнее",
+    "verify.seoTitle": "Подтверждение e-mail — Ruumly",
+    "verify.loading": "Подтверждение вашей электронной почты...",
+    "verify.noToken": "Токен подтверждения не найден",
+    "verify.success": "Электронная почта подтверждена!",
+    "verify.successSub": "Теперь вы можете бронировать услуги на Ruumly",
+    "verify.error": "Ссылка для подтверждения недействительна или истекла",
+    "verify.errorSub": "Войдите, чтобы отправить письмо повторно",
   },
 };
 
