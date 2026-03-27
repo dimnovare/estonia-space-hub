@@ -15,16 +15,11 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   currency:               "EUR",
   ruumlyMinMarginRate:    "8",
   defaultPartnerDiscount: "20",
-  defaultClientDiscount:  "10",
   defaultVatRate:         "24",
-  extrasMarginRate:       "15",
-  "tier.starter.customerDiscount":  "5",
   "tier.starter.monthlyFee":        "0",
   "tier.starter.maxLocations":      "1",
-  "tier.standard.customerDiscount": "8",
   "tier.standard.monthlyFee":       "49",
   "tier.standard.maxLocations":     "5",
-  "tier.premium.customerDiscount":  "12",
   "tier.premium.monthlyFee":        "99",
   "tier.premium.maxLocations":      "999",
   emailNotifications:     "true",
@@ -91,16 +86,6 @@ export default function AdminSettings() {
   const partnerD = parseFloat(settings.defaultPartnerDiscount || "20");
   const customerD = Math.max(0, partnerD - ruumlyMargin);
 
-  // Tier values
-  const tierStarterDiscount = parseFloat(settings["tier.starter.customerDiscount"] || "5");
-  const tierStandardDiscount = parseFloat(settings["tier.standard.customerDiscount"] || "8");
-  const tierPremiumDiscount = parseFloat(settings["tier.premium.customerDiscount"] || "12");
-  const highestTierDiscount = Math.max(tierStarterDiscount, tierStandardDiscount, tierPremiumDiscount);
-
-  // Extras margin
-  const extrasMargin = parseFloat(settings.extrasMarginRate || "15");
-  const extrasExample = Math.round(10 * (1 + extrasMargin / 100) * 100) / 100;
-
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">{t("admin.settingsTitle")}</h1>
@@ -153,24 +138,12 @@ export default function AdminSettings() {
             Hinnakujundus — vaikimisi seaded
           </h3>
           <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
-            Partneri allahindlus ja kliendi allahindlus seatakse iga partneri
-            juures eraldi. Siit saad seada <strong>vaikimisi</strong> väärtused
-            uutele partneritele.
+            Partneri allahindlus seatakse iga partneri juures eraldi.
+            Kliendi soodustus arvutatakse automaatselt: partneri allahindlus − Ruumly marginaal.
+            Siit saad seada <strong>vaikimisi</strong> väärtused uutele partneritele.
           </p>
 
-          {/* Margin warning */}
-          {partnerD <= highestTierDiscount && (
-            <div className="mt-4 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
-              <p className="text-xs text-destructive">
-                ⚠️ Premium kliendi allahindlus ({highestTierDiscount}%) peab olema väiksem
-                kui partneri allahindlus (praegu {partnerD}%). Vastasel juhul
-                tekib Premium broneeringutel negatiivne marginaal.
-              </p>
-            </div>
-          )}
-
-          {/* How it works visual — updated model */}
+          {/* How it works visual */}
           <div className="mt-4 rounded-lg bg-secondary p-4">
             <p className="text-xs font-semibold text-foreground mb-3">
               Kuidas hinnakujundus töötab (näide 100€ pealt)
@@ -226,12 +199,12 @@ export default function AdminSettings() {
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground">
-                Vaikimisi kliendi allahindlus (%)
+                Vaikimisi KM määr (%)
               </label>
-              <input type="number" min="0" max="80" className={inp}
-                value={settings.defaultClientDiscount}
-                onChange={e => set("defaultClientDiscount", e.target.value)} />
-              <p className="mt-0.5 text-[10px] text-muted-foreground">% allahindlust klientidele vs avalik hind</p>
+              <input type="number" min="0" max="30" className={inp}
+                value={settings.defaultVatRate}
+                onChange={e => set("defaultVatRate", e.target.value)} />
+              <p className="mt-0.5 text-[10px] text-muted-foreground">Eestis 24% (alates 2024). 0 = KM ei kohaldu</p>
             </div>
           </div>
 
@@ -239,19 +212,13 @@ export default function AdminSettings() {
           <div className="mt-6 pt-5 border-t border-border">
             <p className="text-xs font-semibold text-foreground mb-1">Pakettide seadistus</p>
             <p className="text-xs text-muted-foreground mb-4">
-              Iga pakett määrab, kui suure allahindluse kliendid näevad, igakuise tasu ja asukohapiirangu.
+              Paketid määravad funktsionaalsuse ja igakuise tasu. Kliendi soodustus ei sõltu paketist — see tuleneb partneri lepingust.
             </p>
             <div className="grid grid-cols-3 gap-4">
               {(["starter", "standard", "premium"] as const).map(tier => (
                 <div key={tier} className={`rounded-lg border p-4 ${tier === "starter" ? "border-accent/30 bg-accent/5" : "border-border bg-card"}`}>
                   <p className="text-sm font-semibold text-foreground capitalize mb-3">{tier === "starter" ? "Starter (tasuta)" : tier === "standard" ? "Standard" : "Premium"}</p>
                   <div className="space-y-3">
-                    <div>
-                      <label className="text-[10px] font-medium text-muted-foreground">Kliendi allahindlus (%)</label>
-                      <input type="number" min="0" max="50" className={inp}
-                        value={settings[`tier.${tier}.customerDiscount`]}
-                        onChange={e => set(`tier.${tier}.customerDiscount`, e.target.value)} />
-                    </div>
                     <div>
                       <label className="text-[10px] font-medium text-muted-foreground">Kuutasu (€)</label>
                       <input type="number" min="0" className={inp}
@@ -273,40 +240,25 @@ export default function AdminSettings() {
             </div>
           </div>
 
-          {/* ── Extras Margin ── */}
+          {/* ── Extras Pricing ── */}
           <div className="mt-6 pt-5 border-t border-border">
-            <p className="text-xs font-semibold text-foreground mb-1">Lisateenuste marginaal</p>
+            <p className="text-xs font-semibold text-foreground mb-1">Lisateenuste hinnakujundus</p>
             <p className="text-xs text-muted-foreground mb-3">
-              Kui partner seab lisateenuse hinnaks 10€ ja marginaal on {extrasMargin}%,
-              näeb klient {extrasExample}€. Ruumly saab {(extrasExample - 10).toFixed(2)}€.
+              Lisateenuste hinnakujundus toimib samamoodi nagu põhihind:
+              partner määrab avaliku hinna, Ruumly rakendab partneri allahindluse
+              ja minimaalmaarginaali. Nt: avalik hind 20€, partneri allahindlus
+              15%, marginaal 8% → klient maksab 18.60€, partner saab 17€,
+              Ruumly saab 1.60€.
             </p>
-            <div className="sm:w-1/2">
-              <label className="text-[10px] font-medium text-muted-foreground">Platvormi marginaal lisateenustel (%)</label>
-              <input type="number" min="0" max="100" className={inp}
-                value={settings.extrasMarginRate}
-                onChange={e => set("extrasMarginRate", e.target.value)} />
-            </div>
-            <div className="mt-3 rounded-lg bg-secondary p-3 text-xs">
-              <span className="text-muted-foreground">Partner seab </span>
-              <span className="font-semibold text-foreground">10€</span>
-              <span className="text-muted-foreground"> → Klient näeb </span>
-              <span className="font-semibold text-accent">{extrasExample}€</span>
-            </div>
-          </div>
-
-          {/* VAT */}
-          <div className="mt-6 pt-5 border-t border-border">
-            <p className="text-xs font-semibold text-muted-foreground mb-1">Käibemaks (KM)</p>
-            <p className="text-xs text-muted-foreground mb-3">
-              B2C klientidele (eraisikud) kuvatakse hinnad koos KM-iga.
-              B2B klientidele (ettevõtted) kuvatakse hinnad ilma KM-ita.
-            </p>
-            <div className="sm:w-1/2">
-              <label className="text-xs font-medium text-muted-foreground">Vaikimisi KM määr (%)</label>
-              <input type="number" min="0" max="30" className={inp}
-                value={settings.defaultVatRate}
-                onChange={e => set("defaultVatRate", e.target.value)} />
-              <p className="mt-0.5 text-[10px] text-muted-foreground">Eestis 24% (alates 2024). 0 = KM ei kohaldu</p>
+            <div className="rounded-lg bg-secondary p-3 text-xs">
+              <span className="text-muted-foreground">Avalik hind </span>
+              <span className="font-semibold text-foreground">20€</span>
+              <span className="text-muted-foreground"> → Partner saab </span>
+              <span className="font-semibold text-foreground">17€</span>
+              <span className="text-muted-foreground"> → Klient maksab </span>
+              <span className="font-semibold text-accent">18.60€</span>
+              <span className="text-muted-foreground"> → Ruumly saab </span>
+              <span className="font-semibold text-success">1.60€</span>
             </div>
           </div>
 
