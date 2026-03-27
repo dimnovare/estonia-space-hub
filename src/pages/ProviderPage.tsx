@@ -24,6 +24,7 @@ const PREMIUM_FEATURES = [...STANDARD_FEATURES, "provPage.tier.feat.manager", "p
 export default function ProviderPage() {
   const { t } = useLanguage();
   const { data: config, isLoading: configLoading } = usePricingConfig();
+  const fp = (text: string) => fillPricing(text, config);
 
   const tiers = config ? [
     {
@@ -115,7 +116,7 @@ export default function ProviderPage() {
                   <Icon className="h-7 w-7 text-accent" />
                 </div>
                 <h3 className="mt-4 font-display text-base font-semibold">{t(b.titleKey)}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t(b.descKey)}</p>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{fp(t(b.descKey))}</p>
               </div>
             );
           })}
