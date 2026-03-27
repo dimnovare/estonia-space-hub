@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { Globe, ToggleLeft, Save, Loader2, Percent } from "lucide-react";
+import { Globe, ToggleLeft, Save, Loader2, Percent, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { apiClient } from "@/services/apiClient";
 import { toast } from "sonner";
 
-const DEFAULT_SETTINGS = {
+const DEFAULT_SETTINGS: Record<string, string> = {
   siteName:               "Ruumly",
   siteEmail:              "info@ruumly.eu",
   sitePhone:              "+372 5555 1234",
@@ -16,6 +16,16 @@ const DEFAULT_SETTINGS = {
   defaultPartnerDiscount: "20",
   defaultClientDiscount:  "10",
   defaultVatRate:         "24",
+  extrasMarginRate:       "15",
+  "tier.starter.customerDiscount":  "5",
+  "tier.starter.monthlyFee":        "0",
+  "tier.starter.maxLocations":      "1",
+  "tier.standard.customerDiscount": "8",
+  "tier.standard.monthlyFee":       "49",
+  "tier.standard.maxLocations":     "10",
+  "tier.premium.customerDiscount":  "12",
+  "tier.premium.monthlyFee":        "99",
+  "tier.premium.maxLocations":      "999",
   emailNotifications:     "true",
   maintenanceMode:        "false",
   autoApproveListings:    "false",
@@ -47,10 +57,10 @@ export default function AdminSettings() {
       .finally(() => setLoading(false));
   }, []);
 
-  const set = (key: keyof typeof DEFAULT_SETTINGS, value: string) =>
+  const set = (key: string, value: string) =>
     setSettings(prev => ({ ...prev, [key]: value }));
 
-  const setBool = (key: keyof typeof DEFAULT_SETTINGS) =>
+  const setBool = (key: string) =>
     setSettings(prev => ({
       ...prev,
       [key]: prev[key] === "true" ? "false" : "true",
@@ -79,6 +89,16 @@ export default function AdminSettings() {
   const partnerD = parseFloat(settings.defaultPartnerDiscount || "20");
   const clientD = parseFloat(settings.defaultClientDiscount || "10");
   const margin = Math.max(0, partnerD - clientD);
+
+  // Tier values
+  const tierStarterDiscount = parseFloat(settings["tier.starter.customerDiscount"] || "5");
+  const tierStandardDiscount = parseFloat(settings["tier.standard.customerDiscount"] || "8");
+  const tierPremiumDiscount = parseFloat(settings["tier.premium.customerDiscount"] || "12");
+  const highestTierDiscount = Math.max(tierStarterDiscount, tierStandardDiscount, tierPremiumDiscount);
+
+  // Extras margin
+  const extrasMargin = parseFloat(settings.extrasMarginRate || "15");
+  const extrasExample = Math.round(10 * (1 + extrasMargin / 100) * 100) / 100;
 
   return (
     <div>
@@ -137,10 +157,22 @@ export default function AdminSettings() {
             uutele partneritele.
           </p>
 
-          {/* How it works visual */}
+          {/* Margin warning */}
+          {partnerD <= highestTierDiscount && (
+            <div className="mt-4 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+              <p className="text-xs text-destructive">
+                ⚠️ Premium kliendi allahindlus ({highestTierDiscount}%) peab olema väiksem
+                kui partneri allahindlus (praegu {partnerD}%). Vastasel juhul
+                tekib Premium broneeringutel negatiivne marginaal.
+              </p>
+            </div>
+          )}
+
+          {/* How it works visual — updated model */}
           <div className="mt-4 rounded-lg bg-secondary p-4">
             <p className="text-xs font-semibold text-foreground mb-3">
-              Kuidas hinnakujundus töötab
+              Kuidas hinnakujundus töötab (näide 100€ pealt)
             </p>
             <div className="grid grid-cols-3 gap-3 text-center text-xs">
               <div className="rounded-lg bg-card border border-border p-3">
@@ -150,21 +182,22 @@ export default function AdminSettings() {
               <div className="rounded-lg bg-card border border-border p-3">
                 <div className="text-base font-bold text-success">{100 - partnerD}€</div>
                 <div className="text-muted-foreground mt-0.5">
-                  Me maksame partnerile
-                  <br />({partnerD}% allahindlus)
+                  Partner saab
+                  <br />(partneri allahindlus: {partnerD}%)
                 </div>
               </div>
               <div className="rounded-lg bg-card border border-border p-3">
-                <div className="text-base font-bold text-accent">{100 - clientD}€</div>
+                <div className="text-base font-bold text-accent">{100 - tierPremiumDiscount}€</div>
                 <div className="text-muted-foreground mt-0.5">
-                  Klient maksab meile
-                  <br />({clientD}% allahindlus)
+                  Klient maksab (Premium)
+                  <br />(säästab: {tierPremiumDiscount}%)
                 </div>
               </div>
             </div>
             <div className="mt-3 text-center text-xs">
               <span className="font-semibold text-success">
-                Meie marginaal: {margin}€ iga 100€ pealt ({margin}%)
+                Ruumly marginaal: {Math.max(0, partnerD - tierPremiumDiscount)}€ iga 100€ pealt
+                (Starter: {Math.max(0, partnerD - tierStarterDiscount)}€ · Standard: {Math.max(0, partnerD - tierStandardDiscount)}€ · Premium: {Math.max(0, partnerD - tierPremiumDiscount)}€)
               </span>
             </div>
           </div>
@@ -190,7 +223,67 @@ export default function AdminSettings() {
             </div>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-border">
+          {/* ── Tier Configuration ── */}
+          <div className="mt-6 pt-5 border-t border-border">
+            <p className="text-xs font-semibold text-foreground mb-1">Pakettide seadistus</p>
+            <p className="text-xs text-muted-foreground mb-4">
+              Iga pakett määrab, kui suure allahindluse kliendid näevad, igakuise tasu ja asukohapiirangu.
+            </p>
+            <div className="grid grid-cols-3 gap-4">
+              {(["starter", "standard", "premium"] as const).map(tier => (
+                <div key={tier} className={`rounded-lg border p-4 ${tier === "starter" ? "border-accent/30 bg-accent/5" : "border-border bg-card"}`}>
+                  <p className="text-sm font-semibold text-foreground capitalize mb-3">{tier === "starter" ? "Starter (tasuta)" : tier === "standard" ? "Standard" : "Premium"}</p>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-[10px] font-medium text-muted-foreground">Kliendi allahindlus (%)</label>
+                      <input type="number" min="0" max="50" className={inp}
+                        value={settings[`tier.${tier}.customerDiscount`]}
+                        onChange={e => set(`tier.${tier}.customerDiscount`, e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-medium text-muted-foreground">Kuutasu (€)</label>
+                      <input type="number" min="0" className={inp}
+                        value={settings[`tier.${tier}.monthlyFee`]}
+                        onChange={e => set(`tier.${tier}.monthlyFee`, e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-medium text-muted-foreground">Max asukohti</label>
+                      <input type="number" min="1" className={inp}
+                        value={settings[`tier.${tier}.maxLocations`]}
+                        onChange={e => set(`tier.${tier}.maxLocations`, e.target.value)} />
+                      {tier === "premium" && (
+                        <p className="mt-0.5 text-[10px] text-muted-foreground">999 = piiramatu</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Extras Margin ── */}
+          <div className="mt-6 pt-5 border-t border-border">
+            <p className="text-xs font-semibold text-foreground mb-1">Lisateenuste marginaal</p>
+            <p className="text-xs text-muted-foreground mb-3">
+              Kui partner seab lisateenuse hinnaks 10€ ja marginaal on {extrasMargin}%,
+              näeb klient {extrasExample}€. Ruumly saab {(extrasExample - 10).toFixed(2)}€.
+            </p>
+            <div className="sm:w-1/2">
+              <label className="text-[10px] font-medium text-muted-foreground">Platvormi marginaal lisateenustel (%)</label>
+              <input type="number" min="0" max="100" className={inp}
+                value={settings.extrasMarginRate}
+                onChange={e => set("extrasMarginRate", e.target.value)} />
+            </div>
+            <div className="mt-3 rounded-lg bg-secondary p-3 text-xs">
+              <span className="text-muted-foreground">Partner seab </span>
+              <span className="font-semibold text-foreground">10€</span>
+              <span className="text-muted-foreground"> → Klient näeb </span>
+              <span className="font-semibold text-accent">{extrasExample}€</span>
+            </div>
+          </div>
+
+          {/* VAT */}
+          <div className="mt-6 pt-5 border-t border-border">
             <p className="text-xs font-semibold text-muted-foreground mb-1">Käibemaks (KM)</p>
             <p className="text-xs text-muted-foreground mb-3">
               B2C klientidele (eraisikud) kuvatakse hinnad koos KM-iga.
@@ -221,15 +314,15 @@ export default function AdminSettings() {
           </h3>
           <div className="mt-4 space-y-3">
             {([
-              { key: "emailNotifications" as const, label: t("admin.emailNotifications"), desc: t("admin.emailNotificationsDesc") },
-              { key: "maintenanceMode" as const, label: t("admin.maintenanceMode"), desc: t("admin.maintenanceModeDesc") },
-              { key: "autoApproveListings" as const, label: t("admin.autoApprove"), desc: t("admin.autoApproveDesc") },
-              { key: "inviteCodeRequired" as const, label: t("admin.inviteCodeRequired"), desc: t("admin.inviteCodeRequiredDesc") },
-              { key: "showFeaturedListings" as const, label: t("admin.showFeaturedListings"), desc: t("admin.showFeaturedListingsDesc") },
-              { key: "showHowItWorks" as const, label: t("admin.showHowItWorks"), desc: t("admin.showHowItWorksDesc") },
-              { key: "showProviderCta" as const, label: t("admin.showProviderCta"), desc: t("admin.showProviderCtaDesc") },
-              { key: "showFaq" as const, label: t("admin.showFaq"), desc: t("admin.showFaqDesc") },
-              { key: "showMap" as const, label: t("admin.showMap"), desc: t("admin.showMapDesc") },
+              { key: "emailNotifications", label: t("admin.emailNotifications"), desc: t("admin.emailNotificationsDesc") },
+              { key: "maintenanceMode", label: t("admin.maintenanceMode"), desc: t("admin.maintenanceModeDesc") },
+              { key: "autoApproveListings", label: t("admin.autoApprove"), desc: t("admin.autoApproveDesc") },
+              { key: "inviteCodeRequired", label: t("admin.inviteCodeRequired"), desc: t("admin.inviteCodeRequiredDesc") },
+              { key: "showFeaturedListings", label: t("admin.showFeaturedListings"), desc: t("admin.showFeaturedListingsDesc") },
+              { key: "showHowItWorks", label: t("admin.showHowItWorks"), desc: t("admin.showHowItWorksDesc") },
+              { key: "showProviderCta", label: t("admin.showProviderCta"), desc: t("admin.showProviderCtaDesc") },
+              { key: "showFaq", label: t("admin.showFaq"), desc: t("admin.showFaqDesc") },
+              { key: "showMap", label: t("admin.showMap"), desc: t("admin.showMapDesc") },
             ]).map(toggle => (
               <div key={toggle.key} className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div>
