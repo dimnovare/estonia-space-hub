@@ -285,7 +285,15 @@ export default function BookingPage() {
                         {extra.description && (
                           <div className="text-xs text-muted-foreground">{extra.description}</div>
                         )}
-                        <div className="text-xs text-muted-foreground mt-0.5">+{extra.price}€</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          {extra.savings > 0 && (
+                            <span className="line-through mr-1">{extra.publicPrice}€</span>
+                          )}
+                          <span className="font-medium">+{extra.price}€</span>
+                          {extra.savings > 0 && (
+                            <span className="text-success ml-1">(-{extra.savings}€)</span>
+                          )}
+                        </div>
                       </div>
                     </button>
                   ))}
@@ -342,7 +350,27 @@ export default function BookingPage() {
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.date")}</span><span className="font-medium">{detailsForm.getValues("date") || "—"}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.period")}</span><span className="font-medium">{detailsForm.getValues("duration")}</span></div>
                   {selectedExtras.length > 0 && (
-                    <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.extras")}</span><span className="font-medium">{selectedExtras.map((key) => listingExtras.find((x) => x.key === key)?.label).filter(Boolean).join(", ")}</span></div>
+                    <div className="space-y-1">
+                      <span className="text-muted-foreground">{t("booking.extras")}</span>
+                      {selectedExtras.map((key) => {
+                        const ex = listingExtras.find((x) => x.key === key);
+                        if (!ex) return null;
+                        return (
+                          <div key={key} className="flex justify-between pl-2">
+                            <span className="text-sm">{ex.label}</span>
+                            <span className="text-sm font-medium">
+                              {ex.savings > 0 && (
+                                <span className="line-through text-muted-foreground mr-1">{ex.publicPrice}€</span>
+                              )}
+                              +{ex.price}€
+                              {ex.savings > 0 && (
+                                <span className="text-success ml-1">(-{ex.savings}€)</span>
+                              )}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                   <div className="border-t border-border pt-3">
                     <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.name")}</span><span className="font-medium">{contactForm.getValues("name")}</span></div>
