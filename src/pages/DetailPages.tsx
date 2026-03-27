@@ -109,7 +109,8 @@ export function WarehouseDetail() {
 
   const bookingUrl = `/book?listing=${wListing.id}&type=warehouse${selectedExtras.length ? `&extras=${selectedExtras.join(",")}` : ""}`;
 
-  const savingsInfo = getSavingsDisplay(wListing.priceFrom);
+  const discountRate = (wListing as any).clientDiscountRate;
+  const savingsInfo = getSavingsDisplay(wListing.priceFrom, discountRate);
 
   const extras = [
     { label: t("detail.heated"), value: wListing.heated },
@@ -288,7 +289,8 @@ export function MovingDetail() {
   if (!listing || listing.type !== "moving") return <NotFoundDetail />;
   const mListing = listing as MovingListing;
 
-  const savingsInfo = getSavingsDisplay(mListing.priceFrom);
+  const discountRate = (mListing as any).clientDiscountRate;
+  const savingsInfo = getSavingsDisplay(mListing.priceFrom, discountRate);
 
   return (
     <div className="container-wide py-6 pb-24 lg:pb-6">
@@ -412,7 +414,8 @@ export function TrailerDetail() {
   if (!listing || listing.type !== "trailer") return <NotFoundDetail />;
   const tListing = listing as TrailerListing;
 
-  const savingsInfo = getSavingsDisplay(tListing.priceFrom);
+  const discountRate = (tListing as any).clientDiscountRate;
+  const savingsInfo = getSavingsDisplay(tListing.priceFrom, discountRate);
 
   return (
     <div className="container-wide py-6 pb-24 lg:pb-6">
