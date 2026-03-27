@@ -29,6 +29,8 @@ export default function ProviderOnboardingPage() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { data: pricingConfig } = usePricingConfig();
+  const fp = (text: string) => fillPricing(text, pricingConfig);
 
   // Pre-fill from user if available
   const effectiveContactName = contactName || user?.name || "";
