@@ -54,21 +54,21 @@ export default function BookingPage() {
   const toggleExtra = (id: string) =>
     setSelectedExtras((prev) => (prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]));
 
-  const tierKey = (listing as any)?.supplierTier ?? "starter";
-  const customerDiscount = pricingConfig
-    ? pricingConfig.tiers[tierKey as keyof typeof pricingConfig.tiers]?.customerDiscountRate ?? 5
-    : 5;
-  const clientDiscount = (listing as any)?.clientDiscountRateOverride ?? customerDiscount;
+  const clientDiscount = (listing as any)?.clientDiscountRateOverride
+    ?? (listing as any)?.clientDiscountRate
+    ?? (pricingConfig
+        ? Math.max(0, (pricingConfig as any).defaultPartnerDiscount
+            - (pricingConfig as any).ruumlyMinMarginRate)
+        : 5);
 
-  const publicPrice    = listing ? listing.priceFrom : 0;
-  const discountedBase = listing
-    ? publicPrice * (1 - clientDiscount / 100)
+  const publicPrice = listing ? listing.priceFrom : 0;
+  const ourPrice = listing
+    ? Math.round(publicPrice * (1 - clientDiscount / 100))
     : 0;
-  const ourPrice       = listing ? Math.round(discountedBase * 0.95) : 0;
-  const savings        = publicPrice - ourPrice;
+  const savings = publicPrice - ourPrice;
   const extrasTotal = selectedExtras.reduce(
     (s, id) => s + (listingExtras.find(e => e.key === id)?.price || 0), 0);
-  const pricing     = listing
+  const pricing = listing
     ? { total: ourPrice + extrasTotal, extrasTotal }
     : null;
 
