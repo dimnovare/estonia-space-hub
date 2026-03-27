@@ -1,17 +1,18 @@
-const PLATFORM_FEE_PERCENT = 5;
-
-export const EXTRAS_LABELS: Record<string, string> = {
-  packing: "Pakkimisabi",
-  loading: "Laadimisabi",
-  insurance: "Kindlustus",
-  forklift: "Tõstukiteenus",
-};
-
-export function calculatePricing(pricePerUnit: number, commissionRate: number = 8) {
-  const platformPrice = Math.round(pricePerUnit * (1 - PLATFORM_FEE_PERCENT / 100));
-  const supplierPrice = Math.round(pricePerUnit * (1 - commissionRate / 100));
-  const publicPrice = Math.round(pricePerUnit / (1 - PLATFORM_FEE_PERCENT / 100));
-  const savings = publicPrice - platformPrice;
+export function calculatePricing(
+  publicPrice: number,
+  partnerDiscountRate: number = 15,
+  customerDiscountRate: number = 5
+) {
+  const supplierPrice = Math.round(publicPrice * (1 - partnerDiscountRate / 100));
+  const platformPrice = Math.round(publicPrice * (1 - customerDiscountRate / 100));
   const margin = platformPrice - supplierPrice;
-  return { basePrice: pricePerUnit, platformPrice, supplierPrice, savings, publicPrice, margin };
+  const savings = publicPrice - platformPrice;
+  return { publicPrice, platformPrice, supplierPrice, margin, savings };
+}
+
+export function calculateExtraCustomerPrice(
+  supplierPrice: number,
+  extrasMarginRate: number = 20
+): number {
+  return Math.round(supplierPrice * (1 + extrasMarginRate / 100) * 100) / 100;
 }
