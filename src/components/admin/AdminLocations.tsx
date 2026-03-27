@@ -252,7 +252,7 @@ export default function AdminLocations() {
                 <label className="text-xs font-medium text-muted-foreground">{t("admin.title_field")}</label>
                 <input className={inp} value={editLoc.name} onChange={(e) => setEditLoc({ ...editLoc, name: e.target.value })} />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">{t("admin.address")}</label>
                   <input className={inp} value={editLoc.address} onChange={(e) => setEditLoc({ ...editLoc, address: e.target.value })} />
@@ -274,7 +274,7 @@ export default function AdminLocations() {
                 <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.imageUrls")}</label>
                 <textarea className={inp + " min-h-[60px]"} value={editLoc.images} onChange={(e) => setEditLoc({ ...editLoc, images: e.target.value })} />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.latLng")}</label>
                   <div className="flex gap-2 mt-1">
@@ -373,7 +373,7 @@ export default function AdminLocations() {
               <label className="text-xs font-medium text-muted-foreground">{t("admin.title_field")}</label>
               <input className={inp} value={newLoc.name} onChange={(e) => setNewLoc({ ...newLoc, name: e.target.value })} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label className="text-xs font-medium text-muted-foreground">{t("admin.address")}</label>
                 <input className={inp} value={newLoc.address} onChange={(e) => setNewLoc({ ...newLoc, address: e.target.value })} />
@@ -430,7 +430,7 @@ export default function AdminLocations() {
                 <option value="Trailer">{t("admin.trailerType")}</option>
               </select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label className="text-xs font-medium text-muted-foreground">{t("admin.price")} (€)</label>
                 <input type="number" className={inp} value={newUnit.priceFrom} onChange={(e) => setNewUnit({ ...newUnit, priceFrom: e.target.value })} />
@@ -440,7 +440,7 @@ export default function AdminLocations() {
                 <input className={inp} placeholder="/kuu" value={newUnit.priceUnit} onChange={(e) => setNewUnit({ ...newUnit, priceUnit: e.target.value })} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.sizeM2")}</label>
                 <input type="number" className={inp} value={newUnit.sizeM2} onChange={(e) => setNewUnit({ ...newUnit, sizeM2: e.target.value })} />
@@ -454,7 +454,7 @@ export default function AdminLocations() {
               <label className="text-xs font-medium text-muted-foreground">{t("admin.description")}</label>
               <textarea className={inp + " min-h-[60px]"} value={newUnit.description} onChange={(e) => setNewUnit({ ...newUnit, description: e.target.value })} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.vatRate")}</label>
                 <input type="number" className={inp} placeholder="0" value={newUnit.vatRate} onChange={(e) => setNewUnit({ ...newUnit, vatRate: e.target.value })} />

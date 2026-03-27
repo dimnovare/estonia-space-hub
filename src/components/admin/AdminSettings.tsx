@@ -148,7 +148,7 @@ export default function AdminSettings() {
             <p className="text-xs font-semibold text-foreground mb-3">
               Kuidas hinnakujundus töötab (näide 100€ pealt)
             </p>
-            <div className="grid grid-cols-3 gap-3 text-center text-xs">
+            <div className="grid gap-3 text-center text-xs sm:grid-cols-3">
               <div className="rounded-lg bg-card border border-border p-3">
                 <div className="text-base font-bold text-foreground">100€</div>
                 <div className="text-muted-foreground mt-0.5">Partneri avalik hind</div>
@@ -214,7 +214,7 @@ export default function AdminSettings() {
             <p className="text-xs text-muted-foreground mb-4">
               Paketid määravad funktsionaalsuse ja igakuise tasu. Kliendi soodustus ei sõltu paketist — see tuleneb partneri lepingust.
             </p>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid gap-4 sm:grid-cols-3">
               {(["starter", "standard", "premium"] as const).map(tier => (
                 <div key={tier} className={`rounded-lg border p-4 ${tier === "starter" ? "border-accent/30 bg-accent/5" : "border-border bg-card"}`}>
                   <p className="text-sm font-semibold text-foreground capitalize mb-3">{tier === "starter" ? "Starter (tasuta)" : tier === "standard" ? "Standard" : "Premium"}</p>

@@ -190,13 +190,20 @@
 }
 
 /* Google Sign-In button styling */
+.google-login-wrapper {
+  max-width: 100%;
+  overflow: hidden;
+}
 .google-login-wrapper iframe {
   border-radius: 8px !important;
   margin: 0 auto !important;
   display: block !important;
+  max-width: 100% !important;
 }
 .google-login-wrapper > div {
   display: flex !important;
   justify-content: center !important;
   width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
 }
