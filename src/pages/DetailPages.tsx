@@ -400,6 +400,8 @@ export function MovingDetail() {
 export function TrailerDetail() {
   const { id } = useParams();
   const { t } = useLanguage();
+  const { data: pricingConfig } = usePricingConfig();
+  const fp = (text: string) => fillPricing(text, pricingConfig);
   const { data: listing, isLoading } = useListing(id);
 
   useEffect(() => {
