@@ -49,6 +49,7 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
           label,
           description: newDesc.trim() || undefined,
           publicPrice: price,
+          ...(newNoDiscount ? { partnerDiscountRate: 0 } : {}),
         },
       },
       {
@@ -57,6 +58,7 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
           setNewLabel("");
           setNewDesc("");
           setNewPrice("");
+          setNewNoDiscount(false);
         },
         onError: () => toast.error(t("provider.extras.addError")),
       }
