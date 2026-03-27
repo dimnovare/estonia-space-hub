@@ -13,6 +13,7 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   openHoursSat:           "",
   defaultLanguage:        "et",
   currency:               "EUR",
+  ruumlyMinMarginRate:    "8",
   defaultPartnerDiscount: "20",
   defaultClientDiscount:  "10",
   defaultVatRate:         "24",
@@ -22,7 +23,7 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   "tier.starter.maxLocations":      "1",
   "tier.standard.customerDiscount": "8",
   "tier.standard.monthlyFee":       "49",
-  "tier.standard.maxLocations":     "10",
+  "tier.standard.maxLocations":     "5",
   "tier.premium.customerDiscount":  "12",
   "tier.premium.monthlyFee":        "99",
   "tier.premium.maxLocations":      "999",
@@ -86,9 +87,9 @@ export default function AdminSettings() {
     </div>
   );
 
+  const ruumlyMargin = parseFloat(settings.ruumlyMinMarginRate || "8");
   const partnerD = parseFloat(settings.defaultPartnerDiscount || "20");
-  const clientD = parseFloat(settings.defaultClientDiscount || "10");
-  const margin = Math.max(0, partnerD - clientD);
+  const customerD = Math.max(0, partnerD - ruumlyMargin);
 
   // Tier values
   const tierStarterDiscount = parseFloat(settings["tier.starter.customerDiscount"] || "5");
@@ -187,22 +188,33 @@ export default function AdminSettings() {
                 </div>
               </div>
               <div className="rounded-lg bg-card border border-border p-3">
-                <div className="text-base font-bold text-accent">{100 - tierPremiumDiscount}€</div>
+                <div className="text-base font-bold text-accent">{100 - customerD}€</div>
                 <div className="text-muted-foreground mt-0.5">
-                  Klient maksab (Premium)
-                  <br />(säästab: {tierPremiumDiscount}%)
+                  Klient maksab
+                  <br />({customerD}% soodustus)
                 </div>
               </div>
             </div>
             <div className="mt-3 text-center text-xs">
               <span className="font-semibold text-success">
-                Ruumly marginaal: {Math.max(0, partnerD - tierPremiumDiscount)}€ iga 100€ pealt
-                (Starter: {Math.max(0, partnerD - tierStarterDiscount)}€ · Standard: {Math.max(0, partnerD - tierStandardDiscount)}€ · Premium: {Math.max(0, partnerD - tierPremiumDiscount)}€)
+                Meie marginaal: {ruumlyMargin}€ iga 100€ pealt ({ruumlyMargin}%)
               </span>
             </div>
           </div>
 
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">
+                Ruumly minimaalne marginaal (%)
+              </label>
+              <input type="number" min="1" max="50" className={inp}
+                value={settings.ruumlyMinMarginRate}
+                onChange={e => set("ruumlyMinMarginRate", e.target.value)} />
+              <p className="mt-0.5 text-[10px] text-muted-foreground">
+                Kliendi soodustus = partneri allahindlus - see väärtus.
+                Nt: 15% partner - 8% marginaal = 7% kliendi soodustus.
+              </p>
+            </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground">
                 Vaikimisi partneri allahindlus (%)
