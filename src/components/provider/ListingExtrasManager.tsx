@@ -33,6 +33,7 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
   const [newLabel, setNewLabel] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [newPrice, setNewPrice] = useState("");
+  const [newNoDiscount, setNewNoDiscount] = useState(false);
 
   const handleAdd = () => {
     const label = newLabel.trim();
