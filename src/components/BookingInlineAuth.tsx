@@ -105,7 +105,7 @@ export default function BookingInlineAuth({ onSuccess }: BookingInlineAuthProps)
                 }}
                 onError={() => toast.error(t("error.googleFailed2"))}
                 useOneTap={false}
-                width="360"
+                width={320}
                 text="continue_with"
                 shape="rectangular"
                 theme="outline"

@@ -99,14 +99,14 @@ export default function ProviderTeam() {
         </div>
       ) : (
         <Card>
-          <CardContent className="p-0">
+          <CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t("provider.team.inviteName")}</TableHead>
                   <TableHead>{t("provider.team.inviteEmail")}</TableHead>
                   <TableHead>{t("provider.team.role")}</TableHead>
-                  <TableHead>{t("provider.team.lastLogin")}</TableHead>
+                  <TableHead className="hidden sm:table-cell">{t("provider.team.lastLogin")}</TableHead>
                   {currentIsOwner && <TableHead className="w-[100px]" />}
                 </TableRow>
               </TableHeader>
@@ -122,7 +122,7 @@ export default function ProviderTeam() {
                         <Badge variant="secondary">{t("provider.team.member")}</Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="hidden sm:table-cell text-muted-foreground">
                       {m.lastLoginAt ? format(new Date(m.lastLoginAt), "dd.MM.yyyy HH:mm") : t("provider.team.noLogin")}
                     </TableCell>
                     {currentIsOwner && (
