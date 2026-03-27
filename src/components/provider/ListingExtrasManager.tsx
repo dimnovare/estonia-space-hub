@@ -198,7 +198,7 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
               value={newPrice}
               onChange={(e) => setNewPrice(e.target.value)}
             />
-            {showCustomerPreview && (
+            {showCustomerPreview && !newNoDiscount && (
               <p className="mt-1 text-[11px] text-muted-foreground">
                 {t("provider.extras.customerWillSee")}: €{calcCustomerPrice(parsedNewPrice)}
                 {customerDiscount > 0 && (
@@ -208,6 +208,28 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
                 )}
               </p>
             )}
+            {showCustomerPreview && newNoDiscount && (
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {t("provider.extras.customerWillSee")}: €{parsedNewPrice} (allahindlust ei rakendata)
+              </p>
+            )}
+          </div>
+          <div className="flex-1">
+            <label className="flex items-start gap-2 cursor-pointer">
+              <Checkbox
+                checked={newNoDiscount}
+                onCheckedChange={(v) => setNewNoDiscount(v === true)}
+                className="mt-0.5"
+              />
+              <div>
+                <span className="text-xs font-medium">Sellel teenusel ei ole partnerihinda</span>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {newNoDiscount
+                    ? "Allahindlust ei rakendata. Klient maksab teie täishinna. Saate kogu summa."
+                    : "Ruumly rakendab teie partneri allahindlust. Klient näeb soodsamat hinda."}
+                </p>
+              </div>
+            </label>
           </div>
           <Button
             size="sm"
