@@ -30,7 +30,9 @@ export default function ListingCard({ listing }: { listing: Listing }) {
   const detailPath = `/${listing.type}/${listing.id}`;
   const { t } = useLanguage();
   const { isFavorite, toggle } = useFavorites();
-  const discountRate = (listing as any).clientDiscountRate ?? 5;
+  const discountRate = (listing as any).clientDiscountRateOverride
+    ?? (listing as any).clientDiscountRate
+    ?? 5;
   const savingsInfo = getSavingsDisplay(listing.priceFrom, discountRate);
   const priceUnit = listing.priceUnit.replace("€/", "");
 
