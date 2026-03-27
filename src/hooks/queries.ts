@@ -238,6 +238,8 @@ export interface ListingExtra {
   label: string;
   description?: string;
   price: number;
+  publicPrice: number;
+  savings: number;
 }
 
 export function useListingExtras(listingId: string) {
