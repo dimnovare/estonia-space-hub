@@ -84,6 +84,8 @@ function LoadingDetail() {
 export function WarehouseDetail() {
   const { id } = useParams();
   const { t } = useLanguage();
+  const { data: pricingConfig } = usePricingConfig();
+  const fp = (text: string) => fillPricing(text, pricingConfig);
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
   const { data: listing, isLoading } = useListing(id);
 
@@ -231,7 +233,7 @@ export function WarehouseDetail() {
                 {t("detail.bookNow")}
               </Button>
             </Link>
-            <p className="mt-2 text-center text-xs text-muted-foreground">{t("detail.savingsNote")}</p>
+            <p className="mt-2 text-center text-xs text-muted-foreground">{fp(t("detail.savingsNote"))}</p>
             <p className="mt-1 flex items-center justify-center gap-1 text-[11px] text-success"><Shield className="h-3 w-3" /> {t("booking.cancellation.short")}</p>
 
             <div className="mt-6 border-t border-border pt-4">
