@@ -80,6 +80,29 @@ function AppContent() {
   const { role, isInitializing } = useAuth();
   const isLoginPage = window.location.pathname === "/login";
 
+  // Auto-reload once on chunk load failure (stale deployment cache)
+  useEffect(() => {
+    const handler = (event: PromiseRejectionEvent) => {
+      if (
+        event.reason?.message?.includes("dynamically imported module") ||
+        event.reason?.message?.includes("Failed to fetch")
+      ) {
+        const reloaded = sessionStorage.getItem("chunk-reload");
+        if (!reloaded) {
+          sessionStorage.setItem("chunk-reload", "1");
+          window.location.reload();
+        }
+      }
+    };
+    window.addEventListener("unhandledrejection", handler);
+    return () => window.removeEventListener("unhandledrejection", handler);
+  }, []);
+
+  // Clear the flag on successful load
+  useEffect(() => {
+    sessionStorage.removeItem("chunk-reload");
+  }, []);
+
   if (maintenanceMode && !isInitializing && role !== "admin" && !isLoginPage) {
     return <MaintenancePage apiUnreachable={false} />;
   }
