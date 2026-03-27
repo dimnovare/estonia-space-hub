@@ -3,21 +3,25 @@ import { Search, SlidersHorizontal, CheckCircle, MapPin, Shield, Clock, ArrowRig
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
+import { usePricingConfig } from "@/hooks/queries";
+import { fillPricing } from "@/lib/pricingPlaceholders";
 
 export default function HowItWorksPage() {
   const { t } = useLanguage();
+  const { data: pricingConfig } = usePricingConfig();
+  const fp = (text: string) => fillPricing(text, pricingConfig);
 
   const steps = [
     { icon: Search, title: t("hiw.step1"), desc: t("hiw.step1desc") },
     { icon: SlidersHorizontal, title: t("hiw.step2"), desc: t("hiw.step2desc") },
-    { icon: BadgePercent, title: t("hiw.step3"), desc: t("hiw.step3desc") },
+    { icon: BadgePercent, title: t("hiw.step3"), desc: fp(t("hiw.step3desc")) },
     { icon: CheckCircle, title: t("hiw.step4"), desc: t("hiw.step4desc") },
   ];
 
   const features = [
     { icon: MapPin, title: t("hiw.feat1"), desc: t("hiw.feat1desc") },
     { icon: Shield, title: t("hiw.feat2"), desc: t("hiw.feat2desc") },
-    { icon: Clock, title: t("hiw.feat3"), desc: t("hiw.feat3desc") },
+    { icon: Clock, title: t("hiw.feat3"), desc: fp(t("hiw.feat3desc")) },
   ];
 
   return (

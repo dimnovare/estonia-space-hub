@@ -4,10 +4,14 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
+import { usePricingConfig } from "@/hooks/queries";
+import { fillPricing } from "@/lib/pricingPlaceholders";
 
 export default function FAQPage() {
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
   const { t } = useLanguage();
+  const { data: pricingConfig } = usePricingConfig();
+  const fp = (text: string) => fillPricing(text, pricingConfig);
 
   const toggleItem = (key: string) => {
     setOpenItems((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -17,8 +21,8 @@ export default function FAQPage() {
     {
       title: t("faq.general"),
       items: [
-        { q: t("faq.whatIsRuumly"), a: t("faq.whatIsRuumlyA") },
-        { q: t("faq.isFree"), a: t("faq.isFreeA") },
+        { q: t("faq.whatIsRuumly"), a: fp(t("faq.whatIsRuumlyA")) },
+        { q: t("faq.isFree"), a: fp(t("faq.isFreeA")) },
         { q: t("faq.howWorks"), a: t("faq.howWorksA") },
         { q: t("faq.whichCities"), a: t("faq.whichCitiesA") },
       ],
@@ -36,7 +40,7 @@ export default function FAQPage() {
       title: t("faq.providers"),
       items: [
         { q: t("faq.howToJoin"), a: t("faq.howToJoinA") },
-        { q: t("faq.joinCost"), a: t("faq.joinCostA") },
+        { q: t("faq.joinCost"), a: fp(t("faq.joinCostA")) },
         { q: t("faq.canEditPrices"), a: t("faq.canEditPricesA") },
       ],
     },

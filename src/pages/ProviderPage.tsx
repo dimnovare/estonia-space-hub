@@ -14,6 +14,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { usePricingConfig } from "@/hooks/queries";
+import { fillPricing } from "@/lib/pricingPlaceholders";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const STARTER_FEATURES = ["provPage.tier.feat.dashboard", "provPage.tier.feat.email", "provPage.tier.feat.listings"];
