@@ -404,13 +404,13 @@ export const listingExtrasService = {
   },
   async create(listingId: string, data: {
     key: string; label: string; description?: string;
-    supplierPrice: number; sortOrder?: number;
+    publicPrice: number; sortOrder?: number;
   }): Promise<SupplierListingExtra> {
     return apiClient.post<SupplierListingExtra>(`/listings/${listingId}/extras`, data);
   },
   async update(extraId: string, data: Partial<{
     label: string; description: string;
-    supplierPrice: number; isActive: boolean; sortOrder: number;
+    publicPrice: number; isActive: boolean; sortOrder: number;
   }>): Promise<SupplierListingExtra> {
     return apiClient.patch<SupplierListingExtra>(`/listings/extras/${extraId}`, data);
   },
