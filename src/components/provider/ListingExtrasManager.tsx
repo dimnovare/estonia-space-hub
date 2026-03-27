@@ -5,6 +5,7 @@ import { Loader2, Plus, Trash2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 function labelToKey(label: string): string {
@@ -32,6 +33,7 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
   const [newLabel, setNewLabel] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [newPrice, setNewPrice] = useState("");
+  const [newNoDiscount, setNewNoDiscount] = useState(false);
 
   const handleAdd = () => {
     const label = newLabel.trim();
@@ -47,6 +49,7 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
           label,
           description: newDesc.trim() || undefined,
           publicPrice: price,
+          ...(newNoDiscount ? { partnerDiscountRate: 0 } : {}),
         },
       },
       {
@@ -55,6 +58,7 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
           setNewLabel("");
           setNewDesc("");
           setNewPrice("");
+          setNewNoDiscount(false);
         },
         onError: () => toast.error(t("provider.extras.addError")),
       }
@@ -101,42 +105,61 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
                 <th className="pb-2 pr-3 font-medium">{t("provider.extras.label")}</th>
                 <th className="pb-2 pr-3 font-medium">{t("provider.extras.yourPrice")}</th>
                 <th className="pb-2 pr-3 font-medium">{t("provider.extras.customerSees")}</th>
+                <th className="pb-2 pr-3 font-medium">Allahindlus</th>
                 <th className="pb-2 pr-3 font-medium">{t("provider.extras.active")}</th>
                 <th className="pb-2 font-medium" />
               </tr>
             </thead>
             <tbody>
-              {extras.map((extra) => (
-                <tr key={extra.id} className="border-b border-border/50 last:border-0">
-                  <td className="py-2 pr-3">
-                    <div className="font-medium">{extra.label}</div>
-                    {extra.description && (
-                      <div className="text-muted-foreground">{extra.description}</div>
-                    )}
-                  </td>
-                  <td className="py-2 pr-3">€{extra.publicPrice}</td>
-                  <td className="py-2 pr-3 text-muted-foreground">
-                    €{extra.price ?? calcCustomerPrice(extra.publicPrice)}
-                  </td>
-                  <td className="py-2 pr-3">
-                    <Switch
-                      checked={extra.isActive}
-                      onCheckedChange={(v) => handleToggle(extra.id, v)}
-                      disabled={updateExtra.isPending}
-                    />
-                  </td>
-                  <td className="py-2">
-                    <button
-                      type="button"
-                      onClick={() => handleRemove(extra.id)}
-                      disabled={removeExtra.isPending}
-                      className="rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {extras.map((extra) => {
+                const noDiscount = extra.partnerDiscountRate === 0;
+                return (
+                  <tr key={extra.id} className="border-b border-border/50 last:border-0">
+                    <td className="py-2 pr-3">
+                      <div className="font-medium">{extra.label}</div>
+                      {extra.description && (
+                        <div className="text-muted-foreground">{extra.description}</div>
+                      )}
+                    </td>
+                    <td className="py-2 pr-3">€{extra.publicPrice}</td>
+                    <td className="py-2 pr-3 text-muted-foreground">
+                      €{noDiscount ? extra.publicPrice : (extra.price ?? calcCustomerPrice(extra.publicPrice))}
+                    </td>
+                    <td className="py-2 pr-3">
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <Checkbox
+                          checked={noDiscount}
+                          onCheckedChange={(checked) => {
+                            updateExtra.mutate(
+                              { extraId: extra.id, data: { partnerDiscountRate: checked ? 0 : null } },
+                              { onError: () => toast.error(t("provider.extras.updateError")) }
+                            );
+                          }}
+                          disabled={updateExtra.isPending}
+                        />
+                        <span className="text-[11px] text-muted-foreground">Ei allahindlust</span>
+                      </label>
+                    </td>
+                    <td className="py-2 pr-3">
+                      <Switch
+                        checked={extra.isActive}
+                        onCheckedChange={(v) => handleToggle(extra.id, v)}
+                        disabled={updateExtra.isPending}
+                      />
+                    </td>
+                    <td className="py-2">
+                      <button
+                        type="button"
+                        onClick={() => handleRemove(extra.id)}
+                        disabled={removeExtra.isPending}
+                        className="rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -175,7 +198,7 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
               value={newPrice}
               onChange={(e) => setNewPrice(e.target.value)}
             />
-            {showCustomerPreview && (
+            {showCustomerPreview && !newNoDiscount && (
               <p className="mt-1 text-[11px] text-muted-foreground">
                 {t("provider.extras.customerWillSee")}: €{calcCustomerPrice(parsedNewPrice)}
                 {customerDiscount > 0 && (
@@ -185,6 +208,28 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
                 )}
               </p>
             )}
+            {showCustomerPreview && newNoDiscount && (
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {t("provider.extras.customerWillSee")}: €{parsedNewPrice} (allahindlust ei rakendata)
+              </p>
+            )}
+          </div>
+          <div className="flex-1">
+            <label className="flex items-start gap-2 cursor-pointer">
+              <Checkbox
+                checked={newNoDiscount}
+                onCheckedChange={(v) => setNewNoDiscount(v === true)}
+                className="mt-0.5"
+              />
+              <div>
+                <span className="text-xs font-medium">Sellel teenusel ei ole partnerihinda</span>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {newNoDiscount
+                    ? "Allahindlust ei rakendata. Klient maksab teie täishinna. Saate kogu summa."
+                    : "Ruumly rakendab teie partneri allahindlust. Klient näeb soodsamat hinda."}
+                </p>
+              </div>
+            </label>
           </div>
           <Button
             size="sm"

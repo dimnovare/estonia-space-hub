@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { supplierService } from "@/services";
 import { toast } from "sonner";
+import AdminExtrasOverrides from "./AdminExtrasOverrides";
 
 const typeIcons: Record<string, typeof Warehouse> = { warehouse: Warehouse, moving: Truck, trailer: CarFront };
 const inp = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
@@ -240,6 +241,11 @@ export default function AdminListings() {
                   </div>
                 </div>
               </div>
+
+              {/* Admin extras overrides */}
+              {!isNew && editItem.id && (
+                <AdminExtrasOverrides listingId={editItem.id} />
+              )}
 
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" onClick={() => setEditOpen(false)}>{t("admin.cancel")}</Button>
