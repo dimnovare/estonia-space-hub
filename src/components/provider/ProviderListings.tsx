@@ -304,6 +304,7 @@ export default function ProviderListings() {
   const [locDialogOpen, setLocDialogOpen] = useState(false);
   const [editLoc, setEditLoc] = useState<SupplierLocation | null>(null);
   const [unitDialogLocId, setUnitDialogLocId] = useState<string | null>(null);
+  const [expandedUnit, setExpandedUnit] = useState<string | null>(null);
 
   if (isLoading) return (
     <div className="flex items-center justify-center py-20">
