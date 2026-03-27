@@ -233,6 +233,18 @@ export interface ListingBase {
   locationId?: string;
 }
 
+export interface SupplierListingExtra {
+  id: string;
+  listingId: string;
+  key: string;
+  label: string;
+  description?: string;
+  supplierPrice: number;
+  price: number; // customer-facing price (with margin)
+  isActive: boolean;
+  sortOrder: number;
+}
+
 export interface SupplierLocation {
   id: string;
   supplierId: string;

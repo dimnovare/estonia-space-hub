@@ -395,7 +395,30 @@ export const locationService = {
   },
 };
 
-// ─── Payment Service ────────────────────────────────────────────────────────
+// ─── Listing Extras Service ─────────────────────────────────────────────────
+import type { SupplierListingExtra } from "./types";
+
+export const listingExtrasService = {
+  async getForListing(listingId: string): Promise<SupplierListingExtra[]> {
+    return apiClient.get<SupplierListingExtra[]>(`/listings/${listingId}/extras`);
+  },
+  async create(listingId: string, data: {
+    key: string; label: string; description?: string;
+    supplierPrice: number; sortOrder?: number;
+  }): Promise<SupplierListingExtra> {
+    return apiClient.post<SupplierListingExtra>(`/listings/${listingId}/extras`, data);
+  },
+  async update(extraId: string, data: Partial<{
+    label: string; description: string;
+    supplierPrice: number; isActive: boolean; sortOrder: number;
+  }>): Promise<SupplierListingExtra> {
+    return apiClient.patch<SupplierListingExtra>(`/listings/extras/${extraId}`, data);
+  },
+  async remove(extraId: string): Promise<void> {
+    return apiClient.delete(`/listings/extras/${extraId}`);
+  },
+};
+
 export const paymentService = {
   initiate: (data: {
     invoiceId: string;

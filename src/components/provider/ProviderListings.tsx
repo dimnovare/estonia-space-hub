@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useLocations, useCreateLocation, useUpdateLocation, useAddUnit } from "@/hooks/queries";
 import { ESTONIAN_CITIES } from "@/lib/constants";
-import { Loader2, MapPin, Warehouse, Truck, CarFront, Plus, Pencil } from "lucide-react";
+import { Loader2, MapPin, Warehouse, Truck, CarFront, Plus, Pencil, ChevronDown, ChevronUp } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import ListingExtrasManager from "./ListingExtrasManager";
 import type { SupplierLocation } from "@/services/types";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
@@ -303,6 +304,7 @@ export default function ProviderListings() {
   const [locDialogOpen, setLocDialogOpen] = useState(false);
   const [editLoc, setEditLoc] = useState<SupplierLocation | null>(null);
   const [unitDialogLocId, setUnitDialogLocId] = useState<string | null>(null);
+  const [expandedUnit, setExpandedUnit] = useState<string | null>(null);
 
   if (isLoading) return (
     <div className="flex items-center justify-center py-20">
@@ -363,12 +365,14 @@ export default function ProviderListings() {
                         <th className="pb-2 pr-4 font-medium">{t("provider.listings.unitTitle")}</th>
                         <th className="pb-2 pr-4 font-medium">{t("admin.locations.sizeM2")}</th>
                         <th className="pb-2 pr-4 font-medium">{t("admin.locations.quantity")}</th>
-                        <th className="pb-2 font-medium">{t("listing.price")}</th>
+                        <th className="pb-2 pr-4 font-medium">{t("listing.price")}</th>
+                        <th className="pb-2 font-medium" />
                       </tr>
                     </thead>
                     <tbody>
                       {loc.units.map((unit) => {
                         const UIcon = TYPE_ICON[unit.type] || Warehouse;
+                        const isExpanded = expandedUnit === unit.id;
                         return (
                           <tr key={unit.id} className="border-b border-border/50 last:border-0">
                             <td className="py-2 pr-4">
@@ -383,17 +387,33 @@ export default function ProviderListings() {
                             <td className="py-2 pr-4 text-muted-foreground">
                               {unit.quantityTotal ?? 1}
                             </td>
-                            <td className="py-2">
+                            <td className="py-2 pr-4">
                               €{unit.priceFrom}
                               <span className="text-muted-foreground">
                                 /{unit.priceUnit?.replace("€/", "") || "kuu"}
                               </span>
+                            </td>
+                            <td className="py-2">
+                              <button
+                                type="button"
+                                onClick={() => setExpandedUnit(isExpanded ? null : unit.id)}
+                                className="rounded p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                                title={t("provider.extras.title")}
+                              >
+                                {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                              </button>
                             </td>
                           </tr>
                         );
                       })}
                     </tbody>
                   </table>
+                  {/* Expanded extras panel */}
+                  {expandedUnit && loc.units.some(u => u.id === expandedUnit) && (
+                    <div className="mt-3 rounded-lg border border-border/50 bg-secondary/30 p-4">
+                      <ListingExtrasManager listingId={expandedUnit} />
+                    </div>
+                  )}
                 </div>
               ) : (
                 <p className="mt-3 text-xs text-muted-foreground">

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { listingService, bookingService, orderService, supplierService, userService, notificationService, invoiceService, messageService, auditService, integrationSettingsService, routingRuleService, locationService } from "@/services";
-import type { ListingFilters, CreateBookingInput, Review, CreateReviewInput, Booking, Order, Supplier, User, Notification, Invoice, Message, AuditLogEntry, PartnerIntegrationSettings, OrderRoutingRule, SupplierLocation, Listing, TeamMember } from "@/services/types";
+import { listingService, bookingService, orderService, supplierService, userService, notificationService, invoiceService, messageService, auditService, integrationSettingsService, routingRuleService, locationService, listingExtrasService } from "@/services";
+import type { ListingFilters, CreateBookingInput, Review, CreateReviewInput, Booking, Order, Supplier, User, Notification, Invoice, Message, AuditLogEntry, PartnerIntegrationSettings, OrderRoutingRule, SupplierLocation, Listing, TeamMember, SupplierListingExtra } from "@/services/types";
 import { toast } from "sonner";
 import { apiClient } from "@/services/apiClient";
 import { useAuth } from "@/contexts/AuthContext";
@@ -261,6 +261,50 @@ export function useBookingStats() {
       return res as BookingStats;
     },
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useSupplierListingExtras(listingId: string) {
+  const { isAuthenticated, role } = useAuth();
+  return useQuery<SupplierListingExtra[]>({
+    queryKey: ["supplier-listing-extras", listingId],
+    queryFn: () => listingExtrasService.getForListing(listingId),
+    enabled: !!listingId && isAuthenticated && (role === "provider" || role === "admin"),
+  });
+}
+
+export function useCreateListingExtra() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ listingId, data }: { listingId: string; data: Parameters<typeof listingExtrasService.create>[1] }) =>
+      listingExtrasService.create(listingId, data),
+    onSuccess: (_res, vars) => {
+      qc.invalidateQueries({ queryKey: ["supplier-listing-extras", vars.listingId] });
+      qc.invalidateQueries({ queryKey: ["listing-extras", vars.listingId] });
+    },
+  });
+}
+
+export function useUpdateListingExtra() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ extraId, data }: { extraId: string; data: Parameters<typeof listingExtrasService.update>[1] }) =>
+      listingExtrasService.update(extraId, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["supplier-listing-extras"] });
+      qc.invalidateQueries({ queryKey: ["listing-extras"] });
+    },
+  });
+}
+
+export function useRemoveListingExtra() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (extraId: string) => listingExtrasService.remove(extraId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["supplier-listing-extras"] });
+      qc.invalidateQueries({ queryKey: ["listing-extras"] });
+    },
   });
 }
 
