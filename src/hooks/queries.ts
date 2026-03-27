@@ -208,14 +208,43 @@ export function useRemoveTeamMember() {
   });
 }
 
-export function useExtrasConfig() {
-  return useQuery<Record<string, number>>({
-    queryKey: ["extras-config"],
-    queryFn: async () => {
-      const res = await apiClient.get("/bookings/extras-config");
-      return res as Record<string, number>;
-    },
-    staleTime: Infinity,
+export interface TierPricing {
+  customerDiscountRate: number;
+  monthlyFee: number;
+  maxLocations: number;
+}
+
+export interface PlatformPricingConfig {
+  defaultPartnerDiscount: number;
+  extrasMarginRate: number;
+  defaultVatRate: number;
+  tiers: {
+    starter: TierPricing;
+    standard: TierPricing;
+    premium: TierPricing;
+  };
+}
+
+export function usePricingConfig() {
+  return useQuery<PlatformPricingConfig>({
+    queryKey: ["pricing-config"],
+    queryFn: () => apiClient.get("/settings/pricing") as Promise<PlatformPricingConfig>,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export interface ListingExtra {
+  key: string;
+  label: string;
+  description?: string;
+  price: number;
+}
+
+export function useListingExtras(listingId: string) {
+  return useQuery<ListingExtra[]>({
+    queryKey: ["listing-extras", listingId],
+    queryFn: () => apiClient.get(`/listings/${listingId}/extras`) as Promise<ListingExtra[]>,
+    enabled: !!listingId,
   });
 }
 
