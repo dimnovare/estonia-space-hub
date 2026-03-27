@@ -1005,6 +1005,7 @@ const translations: Record<Language, Record<string, string>> = {
     "provider.billing.currentPlan": "Praegune plaan",
     "provider.billing.validUntil": "Kehtib kuni",
     "provider.billing.commission": "komisjon",
+    "provider.billing.partnerDiscount": "Partneri allahindlus",
     "provider.billing.locations": "asukohta",
     "provider.billing.analytics": "analüütika",
 
@@ -2190,6 +2191,7 @@ const translations: Record<Language, Record<string, string>> = {
     "provider.billing.currentPlan": "Current plan",
     "provider.billing.validUntil": "Valid until",
     "provider.billing.commission": "commission",
+    "provider.billing.partnerDiscount": "Partner discount",
     "provider.billing.locations": "locations",
     "provider.billing.analytics": "analytics",
 
@@ -3368,6 +3370,7 @@ const translations: Record<Language, Record<string, string>> = {
     "provider.billing.currentPlan": "Текущий план",
     "provider.billing.validUntil": "Действует до",
     "provider.billing.commission": "комиссия",
+    "provider.billing.partnerDiscount": "Партнёрская скидка",
     "provider.billing.locations": "локации",
     "provider.billing.analytics": "аналитика",
 

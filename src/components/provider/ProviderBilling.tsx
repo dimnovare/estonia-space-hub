@@ -16,7 +16,7 @@ export default function ProviderBilling() {
     queryKey: ["my-supplier-profile"],
     queryFn: () => apiClient.get<{
       tier?: string;
-      commissionRate?: number;
+      partnerDiscountRate?: number;
       monthlyFee?: number;
       maxLocations?: number;
       hasFullAnalytics?: boolean;
@@ -85,12 +85,12 @@ export default function ProviderBilling() {
         </div>
         <div className="mt-4 grid grid-cols-3 gap-3 border-t border-border pt-4">
           <div className="text-center">
-            <p className="font-display text-lg font-bold">{supplierData?.commissionRate ?? 8}%</p>
-            <p className="text-xs text-muted-foreground">{t("provider.billing.commission")}</p>
+            <p className="font-display text-lg font-bold">{supplierData?.partnerDiscountRate ?? 0}%</p>
+            <p className="text-xs text-muted-foreground">{t("provider.billing.partnerDiscount")}</p>
           </div>
           <div className="text-center">
             <p className="font-display text-lg font-bold">
-              {supplierData?.maxLocations === 2147483647 ? "∞" : supplierData?.maxLocations ?? 1}
+              {supplierData?.maxLocations != null && supplierData.maxLocations >= 999 ? "∞" : supplierData?.maxLocations ?? 1}
             </p>
             <p className="text-xs text-muted-foreground">{t("provider.billing.locations")}</p>
           </div>
