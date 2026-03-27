@@ -9,8 +9,7 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   siteName:               "Ruumly",
   siteEmail:              "info@ruumly.eu",
   sitePhone:              "+372 5555 1234",
-  openHours:              "E–R 9–18",
-  openHoursSat:           "",
+  openHours:              "E–R 10–17",
   defaultLanguage:        "et",
   currency:               "EUR",
   ruumlyMinMarginRate:    "8",
@@ -111,14 +110,9 @@ export default function AdminSettings() {
               <input className={inp} value={settings.sitePhone} onChange={e => set("sitePhone", e.target.value)} />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("admin.openHours")}</label>
-              <input className={inp} value={settings.openHours} onChange={e => set("openHours", e.target.value)} placeholder="E–R 9–18" />
-              <p className="mt-0.5 text-[10px] text-muted-foreground">Kuvatakse esilehel kontaktinfo kõrval</p>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("admin.openHoursSat")}</label>
-              <input className={inp} value={settings.openHoursSat} onChange={e => set("openHoursSat", e.target.value)} placeholder="L 10–14 (tühi = peidus)" />
-              <p className="mt-0.5 text-[10px] text-muted-foreground">Laupäeva lahtiolekuajad (jäta tühjaks kui suletud)</p>
+              <label className="text-xs font-medium text-muted-foreground">{t("admin.supportAvailability")}</label>
+              <input className={inp} value={settings.openHours} onChange={e => set("openHours", e.target.value)} placeholder="E–R 10–17" />
+              <p className="mt-0.5 text-[10px] text-muted-foreground">Nt: E-R 10-17 | info@ruumly.eu alati kättesaadav</p>
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground">{t("admin.defaultLanguage")}</label>
