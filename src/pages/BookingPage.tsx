@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useListing, useCreateBooking, useSuppliers, useExtrasConfig } from "@/hooks/queries";
+import { useListing, useCreateBooking, useSuppliers, useListingExtras } from "@/hooks/queries";
 import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,18 +26,17 @@ export default function BookingPage() {
   const { data: suppliers = [] } = useSuppliers();
   const supplier = listing ? suppliers.find(s => s.id === listing.supplierId) : undefined;
   const createBooking = useCreateBooking();
-  const { data: extrasPrices = {} } = useExtrasConfig();
+  const { data: listingExtras = [] } = useListingExtras(listingId || "");
 
   const { isAuthenticated } = useAuth();
   const hasToken = !!tokenStore.getAccess() || !!tokenStore.getRefresh();
 
   const steps = [t("booking.detailsAndExtras"), t("booking.contactAndAuth"), t("booking.paymentAndReview")];
-  const extras = [
-    { id: "packing",   label: t("booking.extra.packing"),   price: extrasPrices.packing   != null ? `${extrasPrices.packing}€`        : "…" },
-    { id: "loading",   label: t("booking.extra.loading"),   price: extrasPrices.loading   != null ? `${extrasPrices.loading}€`        : "…" },
-    { id: "insurance", label: t("booking.extra.insurance"), price: extrasPrices.insurance != null ? `${extrasPrices.insurance}€/kuu`  : "…" },
-    { id: "forklift",  label: t("booking.extra.forklift"),  price: extrasPrices.forklift  != null ? `${extrasPrices.forklift}€`       : "…" },
-  ];
+  const extras = listingExtras.map(e => ({
+    id: e.key,
+    label: e.label,
+    price: `${e.price}€`,
+  }));
 
   const [step, setStep] = useState(0);
   const initialExtras = params.get("extras")?.split(",").filter(Boolean) || [];
@@ -70,7 +69,7 @@ export default function BookingPage() {
   const ourPrice       = listing ? Math.round(discountedBase * 0.95) : 0;
   const savings        = publicPrice - ourPrice;
   const extrasTotal = selectedExtras.reduce(
-    (s, id) => s + (extrasPrices[id] || 0), 0);
+    (s, id) => s + (listingExtras.find(e => e.key === id)?.price || 0), 0);
   const pricing     = listing
     ? { total: ourPrice + extrasTotal, extrasTotal }
     : null;
