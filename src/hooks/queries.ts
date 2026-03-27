@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { listingService, bookingService, orderService, supplierService, userService, notificationService, invoiceService, messageService, auditService, integrationSettingsService, routingRuleService, locationService } from "@/services";
+import { listingService, bookingService, orderService, supplierService, userService, notificationService, invoiceService, messageService, auditService, integrationSettingsService, routingRuleService, locationService, listingExtrasService } from "@/services";
 import type { ListingFilters, CreateBookingInput, Review, CreateReviewInput, Booking, Order, Supplier, User, Notification, Invoice, Message, AuditLogEntry, PartnerIntegrationSettings, OrderRoutingRule, SupplierLocation, Listing, TeamMember } from "@/services/types";
 import { toast } from "sonner";
 import { apiClient } from "@/services/apiClient";
