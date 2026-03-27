@@ -17,9 +17,24 @@ import { usePricingConfig } from "@/hooks/queries";
 import { fillPricing } from "@/lib/pricingPlaceholders";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const STARTER_FEATURES = ["provPage.tier.feat.dashboard", "provPage.tier.feat.email", "provPage.tier.feat.listings"];
-const STANDARD_FEATURES = [...STARTER_FEATURES, "provPage.tier.feat.analytics", "provPage.tier.feat.priority"];
-const PREMIUM_FEATURES = [...STANDARD_FEATURES, "provPage.tier.feat.manager", "provPage.tier.feat.api"];
+const STARTER_FEATURES = [
+  "1 asukoht",
+  "Põhianalüütika",
+  "E-posti teavitused",
+];
+const STANDARD_FEATURES = [
+  "Kuni 5 asukohta",
+  "Täisanalüütika",
+  "Eelistatud otsingukoht",
+  "Prioriteetne tugi",
+];
+const PREMIUM_FEATURES = [
+  "Piiramatu arv asukohti",
+  "Täisanalüütika + eksport",
+  "Esimene otsingukoht + märge",
+  "API integratsioon",
+  "Personaalne haldur",
+];
 
 export default function ProviderPage() {
   const { t } = useLanguage();
@@ -30,27 +45,24 @@ export default function ProviderPage() {
     {
       key: "starter",
       name: t("provPage.tier.starter"),
-      discount: `${config.tiers.starter.customerDiscountRate}%`,
+      badge: "Tasuta",
       fee: config.tiers.starter.monthlyFee,
-      locations: config.tiers.starter.maxLocations,
       highlight: true,
       features: STARTER_FEATURES,
     },
     {
       key: "standard",
       name: t("provPage.tier.standard"),
-      discount: `${config.tiers.standard.customerDiscountRate}%`,
+      badge: `€${config.tiers.standard.monthlyFee}/kuu`,
       fee: config.tiers.standard.monthlyFee,
-      locations: config.tiers.standard.maxLocations,
       highlight: false,
       features: STANDARD_FEATURES,
     },
     {
       key: "premium",
       name: t("provPage.tier.premium"),
-      discount: `${config.tiers.premium.customerDiscountRate}%`,
+      badge: `€${config.tiers.premium.monthlyFee}/kuu`,
       fee: config.tiers.premium.monthlyFee,
-      locations: config.tiers.premium.maxLocations >= 999 ? -1 : config.tiers.premium.maxLocations,
       highlight: false,
       features: PREMIUM_FEATURES,
     },
@@ -176,31 +188,21 @@ export default function ProviderPage() {
                   : "border-border bg-card"
               }`}
             >
-              {tier.highlight && (
-                <div className="absolute -right-8 top-4 rotate-45 bg-accent px-10 py-1 text-xs font-semibold text-accent-foreground">
-                  {t("provPage.tier.free")}
-                </div>
-              )}
-              <h3 className="font-display text-lg font-bold">{tier.name}</h3>
-              <div className="mt-3">
-                <span className="font-display text-4xl font-extrabold text-foreground">{tier.discount}</span>
-                <span className="ml-1 text-sm text-muted-foreground">{t("provPage.tier.customerDiscount")}</span>
+              <div className="flex items-center justify-between">
+                <h3 className="font-display text-lg font-bold">{tier.name}</h3>
+                <span className={`rounded-full px-3 py-0.5 text-xs font-semibold ${
+                  tier.highlight
+                    ? "bg-accent text-accent-foreground"
+                    : "bg-secondary text-secondary-foreground"
+                }`}>
+                  {tier.badge}
+                </span>
               </div>
-              {tier.fee > 0 && (
-                <p className="mt-1 text-sm font-semibold text-foreground">
-                  €{tier.fee}/{t("provPage.tier.perMonth")}
-                </p>
-              )}
-              <p className="mt-1 text-xs text-muted-foreground">
-                {tier.locations === -1
-                  ? t("provPage.tier.unlimitedLocations")
-                  : t("provPage.tier.maxLocations").replace("{n}", String(tier.locations))}
-              </p>
               <ul className="mt-5 space-y-2">
-                {tier.features.map((fKey) => (
-                  <li key={fKey} className="flex items-start gap-2 text-sm">
+                {tier.features.map((feat) => (
+                  <li key={feat} className="flex items-start gap-2 text-sm">
                     <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-                    <span>{t(fKey)}</span>
+                    <span>{feat}</span>
                   </li>
                 ))}
               </ul>
@@ -218,6 +220,10 @@ export default function ProviderPage() {
             </div>
           ))}
         </div>
+        <p className="mx-auto mt-6 max-w-lg text-center text-sm text-muted-foreground">
+          Kliendi soodustus sõltub teie partnerlepingust.
+          Mida parem lepinguhind, seda atraktiivsem teie kuulutus klientidele.
+        </p>
       </section>
 
       {/* ── FAQ ── */}
