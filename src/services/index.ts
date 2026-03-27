@@ -405,6 +405,7 @@ export const listingExtrasService = {
   async create(listingId: string, data: {
     key: string; label: string; description?: string;
     publicPrice: number; sortOrder?: number;
+    partnerDiscountRate?: number | null;
   }): Promise<SupplierListingExtra> {
     return apiClient.post<SupplierListingExtra>(`/listings/${listingId}/extras`, data);
   },
