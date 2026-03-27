@@ -23,14 +23,15 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
   const updateExtra = useUpdateListingExtra();
   const removeExtra = useRemoveListingExtra();
 
-  const marginRate = pricingConfig?.extrasMarginRate ?? 15;
+  const partnerDiscount = (pricingConfig as any)?.defaultPartnerDiscount ?? 15;
+  const minMargin = (pricingConfig as any)?.ruumlyMinMarginRate ?? 8;
+  const customerDiscount = Math.max(0, partnerDiscount - minMargin);
+  const calcCustomerPrice = (publicPrice: number) =>
+    Math.round(publicPrice * (1 - customerDiscount / 100) * 100) / 100;
 
   const [newLabel, setNewLabel] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [newPrice, setNewPrice] = useState("");
-
-  const customerPrice = (supplierPrice: number) =>
-    Math.round(supplierPrice * (1 + marginRate / 100) * 100) / 100;
 
   const handleAdd = () => {
     const label = newLabel.trim();
@@ -45,7 +46,7 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
           key: labelToKey(label),
           label,
           description: newDesc.trim() || undefined,
-          supplierPrice: price,
+          publicPrice: price,
         },
       },
       {
@@ -113,9 +114,9 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
                       <div className="text-muted-foreground">{extra.description}</div>
                     )}
                   </td>
-                  <td className="py-2 pr-3">€{extra.supplierPrice}</td>
+                  <td className="py-2 pr-3">€{extra.publicPrice}</td>
                   <td className="py-2 pr-3 text-muted-foreground">
-                    €{extra.price ?? customerPrice(extra.supplierPrice)}
+                    €{extra.price ?? calcCustomerPrice(extra.publicPrice)}
                   </td>
                   <td className="py-2 pr-3">
                     <Switch
@@ -163,6 +164,9 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
         </div>
         <div className="flex items-end gap-2">
           <div className="flex-1">
+            <label className="mb-1 block text-[11px] text-muted-foreground">
+              Teie tavahind (otse klientidele)
+            </label>
             <Input
               type="number"
               step="0.01"
@@ -173,7 +177,12 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
             />
             {showCustomerPreview && (
               <p className="mt-1 text-[11px] text-muted-foreground">
-                {t("provider.extras.customerWillSee")}: €{customerPrice(parsedNewPrice)}
+                {t("provider.extras.customerWillSee")}: €{calcCustomerPrice(parsedNewPrice)}
+                {customerDiscount > 0 && (
+                  <span className="ml-1 text-primary">
+                    ({customerDiscount}% soodustus vs teie hind)
+                  </span>
+                )}
               </p>
             )}
           </div>

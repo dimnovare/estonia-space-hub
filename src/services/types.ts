@@ -239,8 +239,9 @@ export interface SupplierListingExtra {
   key: string;
   label: string;
   description?: string;
-  supplierPrice: number;
-  price: number; // customer-facing price (with margin)
+  publicPrice: number;
+  price: number; // customer-facing price (with discount)
+  savings?: number;
   isActive: boolean;
   sortOrder: number;
 }
