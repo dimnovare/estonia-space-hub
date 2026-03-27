@@ -195,12 +195,6 @@ export default function HomePage() {
               {settings.openHours && (
                 <span>{settings.openHours}</span>
               )}
-              {settings.openHoursSat && (
-                <>
-                  <span>·</span>
-                  <span>{settings.openHoursSat}</span>
-                </>
-              )}
             </div>
 
             <div className="mt-3">

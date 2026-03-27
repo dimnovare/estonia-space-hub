@@ -58,8 +58,7 @@ export default function ContactPage() {
               { icon: Mail, label: t("contact.email"), value: settings.siteEmail },
               { icon: Phone, label: t("contact.phone"), value: settings.sitePhone },
               { icon: MapPin, label: t("contact.location"), value: "Tallinn, Eesti" },
-              { icon: Clock, label: t("contact.hours"), value: settings.openHours },
-              ...(settings.openHoursSat ? [{ icon: Clock, label: t("contact.hours") + " (L)", value: settings.openHoursSat }] : []),
+              { icon: Clock, label: t("contact.support"), value: settings.openHours },
             ].map((c, i) => {
               const Icon = c.icon;
               return (
