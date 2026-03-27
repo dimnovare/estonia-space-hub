@@ -105,42 +105,61 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
                 <th className="pb-2 pr-3 font-medium">{t("provider.extras.label")}</th>
                 <th className="pb-2 pr-3 font-medium">{t("provider.extras.yourPrice")}</th>
                 <th className="pb-2 pr-3 font-medium">{t("provider.extras.customerSees")}</th>
+                <th className="pb-2 pr-3 font-medium">Allahindlus</th>
                 <th className="pb-2 pr-3 font-medium">{t("provider.extras.active")}</th>
                 <th className="pb-2 font-medium" />
               </tr>
             </thead>
             <tbody>
-              {extras.map((extra) => (
-                <tr key={extra.id} className="border-b border-border/50 last:border-0">
-                  <td className="py-2 pr-3">
-                    <div className="font-medium">{extra.label}</div>
-                    {extra.description && (
-                      <div className="text-muted-foreground">{extra.description}</div>
-                    )}
-                  </td>
-                  <td className="py-2 pr-3">€{extra.publicPrice}</td>
-                  <td className="py-2 pr-3 text-muted-foreground">
-                    €{extra.price ?? calcCustomerPrice(extra.publicPrice)}
-                  </td>
-                  <td className="py-2 pr-3">
-                    <Switch
-                      checked={extra.isActive}
-                      onCheckedChange={(v) => handleToggle(extra.id, v)}
-                      disabled={updateExtra.isPending}
-                    />
-                  </td>
-                  <td className="py-2">
-                    <button
-                      type="button"
-                      onClick={() => handleRemove(extra.id)}
-                      disabled={removeExtra.isPending}
-                      className="rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {extras.map((extra) => {
+                const noDiscount = extra.partnerDiscountRate === 0;
+                return (
+                  <tr key={extra.id} className="border-b border-border/50 last:border-0">
+                    <td className="py-2 pr-3">
+                      <div className="font-medium">{extra.label}</div>
+                      {extra.description && (
+                        <div className="text-muted-foreground">{extra.description}</div>
+                      )}
+                    </td>
+                    <td className="py-2 pr-3">€{extra.publicPrice}</td>
+                    <td className="py-2 pr-3 text-muted-foreground">
+                      €{noDiscount ? extra.publicPrice : (extra.price ?? calcCustomerPrice(extra.publicPrice))}
+                    </td>
+                    <td className="py-2 pr-3">
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <Checkbox
+                          checked={noDiscount}
+                          onCheckedChange={(checked) => {
+                            updateExtra.mutate(
+                              { extraId: extra.id, data: { partnerDiscountRate: checked ? 0 : null } },
+                              { onError: () => toast.error(t("provider.extras.updateError")) }
+                            );
+                          }}
+                          disabled={updateExtra.isPending}
+                        />
+                        <span className="text-[11px] text-muted-foreground">Ei allahindlust</span>
+                      </label>
+                    </td>
+                    <td className="py-2 pr-3">
+                      <Switch
+                        checked={extra.isActive}
+                        onCheckedChange={(v) => handleToggle(extra.id, v)}
+                        disabled={updateExtra.isPending}
+                      />
+                    </td>
+                    <td className="py-2">
+                      <button
+                        type="button"
+                        onClick={() => handleRemove(extra.id)}
+                        disabled={removeExtra.isPending}
+                        className="rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
