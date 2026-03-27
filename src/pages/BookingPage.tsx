@@ -26,18 +26,17 @@ export default function BookingPage() {
   const { data: suppliers = [] } = useSuppliers();
   const supplier = listing ? suppliers.find(s => s.id === listing.supplierId) : undefined;
   const createBooking = useCreateBooking();
-  const { data: extrasPrices = {} } = useExtrasConfig();
+  const { data: listingExtras = [] } = useListingExtras(listingId || "");
 
   const { isAuthenticated } = useAuth();
   const hasToken = !!tokenStore.getAccess() || !!tokenStore.getRefresh();
 
   const steps = [t("booking.detailsAndExtras"), t("booking.contactAndAuth"), t("booking.paymentAndReview")];
-  const extras = [
-    { id: "packing",   label: t("booking.extra.packing"),   price: extrasPrices.packing   != null ? `${extrasPrices.packing}€`        : "…" },
-    { id: "loading",   label: t("booking.extra.loading"),   price: extrasPrices.loading   != null ? `${extrasPrices.loading}€`        : "…" },
-    { id: "insurance", label: t("booking.extra.insurance"), price: extrasPrices.insurance != null ? `${extrasPrices.insurance}€/kuu`  : "…" },
-    { id: "forklift",  label: t("booking.extra.forklift"),  price: extrasPrices.forklift  != null ? `${extrasPrices.forklift}€`       : "…" },
-  ];
+  const extras = listingExtras.map(e => ({
+    id: e.key,
+    label: e.label,
+    price: `${e.price}€`,
+  }));
 
   const [step, setStep] = useState(0);
   const initialExtras = params.get("extras")?.split(",").filter(Boolean) || [];
