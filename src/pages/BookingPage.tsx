@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useListing, useCreateBooking, useSuppliers, useListingExtras } from "@/hooks/queries";
+import { useListing, useCreateBooking, useSuppliers, usePricingConfig, useListingExtras } from "@/hooks/queries";
 import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,17 +26,8 @@ export default function BookingPage() {
   const { data: suppliers = [] } = useSuppliers();
   const supplier = listing ? suppliers.find(s => s.id === listing.supplierId) : undefined;
   const createBooking = useCreateBooking();
+  const { data: pricingConfig } = usePricingConfig();
   const { data: listingExtras = [] } = useListingExtras(listingId || "");
-
-  const { isAuthenticated } = useAuth();
-  const hasToken = !!tokenStore.getAccess() || !!tokenStore.getRefresh();
-
-  const steps = [t("booking.detailsAndExtras"), t("booking.contactAndAuth"), t("booking.paymentAndReview")];
-  const extras = listingExtras.map(e => ({
-    id: e.key,
-    label: e.label,
-    price: `${e.price}€`,
-  }));
 
   const [step, setStep] = useState(0);
   const initialExtras = params.get("extras")?.split(",").filter(Boolean) || [];
@@ -58,9 +49,11 @@ export default function BookingPage() {
   const toggleExtra = (id: string) =>
     setSelectedExtras((prev) => (prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]));
 
-  const clientDiscount = (listing as any)?.clientDiscountRateOverride
-    ?? (listing as any)?.clientDiscountRate
-    ?? 5;
+  const tierKey = (listing as any)?.supplierTier ?? "starter";
+  const customerDiscount = pricingConfig
+    ? pricingConfig.tiers[tierKey as keyof typeof pricingConfig.tiers]?.customerDiscountRate ?? 5
+    : 5;
+  const clientDiscount = (listing as any)?.clientDiscountRateOverride ?? customerDiscount;
 
   const publicPrice    = listing ? listing.priceFrom : 0;
   const discountedBase = listing
@@ -267,24 +260,33 @@ export default function BookingPage() {
                 </div>
               </div>
 
-              {/* Extras section */}
+              {/* Extras section — only shown if listing has extras */}
+              {listingExtras.length > 0 && (
               <div className="space-y-4 border-t border-border pt-6">
                 <h2 className="font-display text-xl font-semibold">{t("booking.extras")}</h2>
                 <p className="text-sm text-muted-foreground">{t("booking.selectExtras")}</p>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {extras.map((e) => (
-                    <button key={e.id} onClick={() => toggleExtra(e.id)} className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-colors ${selectedExtras.includes(e.id) ? "border-accent bg-accent/5" : "border-border hover:border-muted-foreground"}`}>
-                      <div className={`flex h-5 w-5 items-center justify-center rounded border ${selectedExtras.includes(e.id) ? "border-accent bg-accent" : "border-border"}`}>
-                        {selectedExtras.includes(e.id) && <Check className="h-3 w-3 text-accent-foreground" />}
+                  {listingExtras.map((extra) => (
+                    <button
+                      key={extra.key}
+                      onClick={() => toggleExtra(extra.key)}
+                      className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-colors ${selectedExtras.includes(extra.key) ? "border-accent bg-accent/5" : "border-border hover:border-muted-foreground"}`}
+                    >
+                      <div className={`flex h-5 w-5 items-center justify-center rounded border ${selectedExtras.includes(extra.key) ? "border-accent bg-accent" : "border-border"}`}>
+                        {selectedExtras.includes(extra.key) && <Check className="h-3 w-3 text-accent-foreground" />}
                       </div>
                       <div className="flex-1">
-                        <div className="text-sm font-medium">{e.label}</div>
-                        <div className="text-xs text-muted-foreground">al. {e.price}</div>
+                        <div className="text-sm font-medium">{extra.label}</div>
+                        {extra.description && (
+                          <div className="text-xs text-muted-foreground">{extra.description}</div>
+                        )}
+                        <div className="text-xs text-muted-foreground mt-0.5">+{extra.price}€</div>
                       </div>
                     </button>
                   ))}
                 </div>
               </div>
+              )}
             </div>
           )}
 
@@ -335,7 +337,7 @@ export default function BookingPage() {
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.date")}</span><span className="font-medium">{detailsForm.getValues("date") || "—"}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.period")}</span><span className="font-medium">{detailsForm.getValues("duration")}</span></div>
                   {selectedExtras.length > 0 && (
-                    <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.extras")}</span><span className="font-medium">{selectedExtras.map((e) => extras.find((x) => x.id === e)?.label).join(", ")}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.extras")}</span><span className="font-medium">{selectedExtras.map((key) => listingExtras.find((x) => x.key === key)?.label).filter(Boolean).join(", ")}</span></div>
                   )}
                   <div className="border-t border-border pt-3">
                     <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.name")}</span><span className="font-medium">{contactForm.getValues("name")}</span></div>
