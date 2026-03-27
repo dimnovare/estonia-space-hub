@@ -244,6 +244,8 @@ export interface SupplierListingExtra {
   savings?: number;
   isActive: boolean;
   sortOrder: number;
+  partnerDiscountRate?: number | null; // null = use supplier base rate; 0 = no discount
+  customerPriceOverride?: number | null; // null = auto-calculate
 }
 
 export interface SupplierLocation {

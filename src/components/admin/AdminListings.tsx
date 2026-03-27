@@ -241,6 +241,11 @@ export default function AdminListings() {
                 </div>
               </div>
 
+              {/* Admin extras overrides */}
+              {!isNew && editItem.id && (
+                <AdminExtrasOverrides listingId={editItem.id} />
+              )}
+
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" onClick={() => setEditOpen(false)}>{t("admin.cancel")}</Button>
                 <Button onClick={handleSave} disabled={isMutating} className="bg-accent text-accent-foreground hover:bg-accent/90">

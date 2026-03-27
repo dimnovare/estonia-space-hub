@@ -411,6 +411,8 @@ export const listingExtrasService = {
   async update(extraId: string, data: Partial<{
     label: string; description: string;
     publicPrice: number; isActive: boolean; sortOrder: number;
+    partnerDiscountRate: number | null;
+    customerPriceOverride: number | null;
   }>): Promise<SupplierListingExtra> {
     return apiClient.patch<SupplierListingExtra>(`/listings/extras/${extraId}`, data);
   },
