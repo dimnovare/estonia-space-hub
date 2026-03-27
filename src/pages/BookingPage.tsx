@@ -29,6 +29,11 @@ export default function BookingPage() {
   const { data: pricingConfig } = usePricingConfig();
   const { data: listingExtras = [] } = useListingExtras(listingId || "");
 
+  const { isAuthenticated } = useAuth();
+  const hasToken = !!tokenStore.getAccess() || !!tokenStore.getRefresh();
+
+  const steps = [t("booking.detailsAndExtras"), t("booking.contactAndAuth"), t("booking.paymentAndReview")];
+
   const [step, setStep] = useState(0);
   const initialExtras = params.get("extras")?.split(",").filter(Boolean) || [];
   const [selectedExtras, setSelectedExtras] = useState<string[]>(initialExtras);
