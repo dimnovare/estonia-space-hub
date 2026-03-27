@@ -276,6 +276,8 @@ export function WarehouseDetail() {
 export function MovingDetail() {
   const { id } = useParams();
   const { t } = useLanguage();
+  const { data: pricingConfig } = usePricingConfig();
+  const fp = (text: string) => fillPricing(text, pricingConfig);
   const { data: listing, isLoading } = useListing(id);
 
   useEffect(() => {
@@ -367,7 +369,7 @@ export function MovingDetail() {
             <Link to={`/book?listing=${mListing.id}&type=moving`}>
               <Button className="mt-6 w-full bg-accent text-accent-foreground hover:bg-accent/90">{t("detail.bookNow")}</Button>
             </Link>
-            <p className="mt-2 text-center text-xs text-muted-foreground">{t("detail.savingsNote")}</p>
+            <p className="mt-2 text-center text-xs text-muted-foreground">{fp(t("detail.savingsNote"))}</p>
             <p className="mt-1 flex items-center justify-center gap-1 text-[11px] text-success"><Shield className="h-3 w-3" /> {t("booking.cancellation.short")}</p>
             <div className="mt-4 rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
               {t("detail.provider")}: <strong className="text-foreground">{mListing.provider}</strong>
@@ -487,7 +489,7 @@ export function TrailerDetail() {
             <Link to={`/book?listing=${tListing.id}&type=trailer`}>
               <Button className="mt-6 w-full bg-accent text-accent-foreground hover:bg-accent/90">{t("detail.bookNow")}</Button>
             </Link>
-            <p className="mt-2 text-center text-xs text-muted-foreground">{t("detail.savingsNote")}</p>
+            <p className="mt-2 text-center text-xs text-muted-foreground">{fp(t("detail.savingsNote"))}</p>
             <p className="mt-1 flex items-center justify-center gap-1 text-[11px] text-success"><Shield className="h-3 w-3" /> {t("booking.cancellation.short")}</p>
             <div className="mt-4 rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
               {t("detail.provider")}: <strong className="text-foreground">{tListing.provider}</strong>
