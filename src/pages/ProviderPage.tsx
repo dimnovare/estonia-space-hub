@@ -13,36 +13,46 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { usePricingConfig } from "@/hooks/queries";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const TIERS = [
-  {
-    key: "starter",
-    nameKey: "provPage.tier.starter",
-    commission: "8%",
-    locations: 1,
-    highlight: true,
-    features: ["provPage.tier.feat.dashboard", "provPage.tier.feat.email", "provPage.tier.feat.listings"],
-  },
-  {
-    key: "standard",
-    nameKey: "provPage.tier.standard",
-    commission: "5%",
-    locations: 10,
-    highlight: false,
-    features: ["provPage.tier.feat.dashboard", "provPage.tier.feat.email", "provPage.tier.feat.listings", "provPage.tier.feat.analytics", "provPage.tier.feat.priority"],
-  },
-  {
-    key: "premium",
-    nameKey: "provPage.tier.premium",
-    commission: "3%",
-    locations: -1, // unlimited
-    highlight: false,
-    features: ["provPage.tier.feat.dashboard", "provPage.tier.feat.email", "provPage.tier.feat.listings", "provPage.tier.feat.analytics", "provPage.tier.feat.priority", "provPage.tier.feat.manager", "provPage.tier.feat.api"],
-  },
-];
+const STARTER_FEATURES = ["provPage.tier.feat.dashboard", "provPage.tier.feat.email", "provPage.tier.feat.listings"];
+const STANDARD_FEATURES = [...STARTER_FEATURES, "provPage.tier.feat.analytics", "provPage.tier.feat.priority"];
+const PREMIUM_FEATURES = [...STANDARD_FEATURES, "provPage.tier.feat.manager", "provPage.tier.feat.api"];
 
 export default function ProviderPage() {
   const { t } = useLanguage();
+  const { data: config, isLoading: configLoading } = usePricingConfig();
+
+  const tiers = config ? [
+    {
+      key: "starter",
+      name: t("provPage.tier.starter"),
+      discount: `${config.tiers.starter.customerDiscountRate}%`,
+      fee: config.tiers.starter.monthlyFee,
+      locations: config.tiers.starter.maxLocations,
+      highlight: true,
+      features: STARTER_FEATURES,
+    },
+    {
+      key: "standard",
+      name: t("provPage.tier.standard"),
+      discount: `${config.tiers.standard.customerDiscountRate}%`,
+      fee: config.tiers.standard.monthlyFee,
+      locations: config.tiers.standard.maxLocations,
+      highlight: false,
+      features: STANDARD_FEATURES,
+    },
+    {
+      key: "premium",
+      name: t("provPage.tier.premium"),
+      discount: `${config.tiers.premium.customerDiscountRate}%`,
+      fee: config.tiers.premium.monthlyFee,
+      locations: config.tiers.premium.maxLocations >= 999 ? -1 : config.tiers.premium.maxLocations,
+      highlight: false,
+      features: PREMIUM_FEATURES,
+    },
+  ] : [];
 
   const benefits = [
     { icon: Users, titleKey: "provPage.benefit1.title", descKey: "provPage.benefit1.desc" },
@@ -151,7 +161,11 @@ export default function ProviderPage() {
           {t("provPage.pricing.subtitle")}
         </p>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {TIERS.map((tier) => (
+          {configLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-80 rounded-2xl" />
+            ))
+          ) : tiers.map((tier) => (
             <div
               key={tier.key}
               className={`relative overflow-hidden rounded-2xl border p-6 ${
@@ -165,11 +179,16 @@ export default function ProviderPage() {
                   {t("provPage.tier.free")}
                 </div>
               )}
-              <h3 className="font-display text-lg font-bold">{t(tier.nameKey)}</h3>
+              <h3 className="font-display text-lg font-bold">{tier.name}</h3>
               <div className="mt-3">
-                <span className="font-display text-4xl font-extrabold text-foreground">{tier.commission}</span>
-                <span className="ml-1 text-sm text-muted-foreground">{t("provPage.tier.commission")}</span>
+                <span className="font-display text-4xl font-extrabold text-foreground">{tier.discount}</span>
+                <span className="ml-1 text-sm text-muted-foreground">{t("provPage.tier.customerDiscount")}</span>
               </div>
+              {tier.fee > 0 && (
+                <p className="mt-1 text-sm font-semibold text-foreground">
+                  €{tier.fee}/{t("provPage.tier.perMonth")}
+                </p>
+              )}
               <p className="mt-1 text-xs text-muted-foreground">
                 {tier.locations === -1
                   ? t("provPage.tier.unlimitedLocations")
