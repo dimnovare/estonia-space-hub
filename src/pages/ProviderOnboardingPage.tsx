@@ -4,6 +4,8 @@ import { Check, Warehouse, Truck, CarFront, Building2, User, CheckCircle, ArrowL
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
+import { usePricingConfig } from "@/hooks/queries";
+import { fillPricing } from "@/lib/pricingPlaceholders";
 import { useAuth } from "@/contexts/AuthContext";
 import { providerService } from "@/services";
 import { useQueryClient } from "@tanstack/react-query";
@@ -27,6 +29,8 @@ export default function ProviderOnboardingPage() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { data: pricingConfig } = usePricingConfig();
+  const fp = (text: string) => fillPricing(text, pricingConfig);
 
   // Pre-fill from user if available
   const effectiveContactName = contactName || user?.name || "";
@@ -257,9 +261,9 @@ export default function ProviderOnboardingPage() {
             <div className="rounded-xl border border-border bg-secondary/30 p-4 text-sm text-muted-foreground max-h-48 overflow-y-auto">
               <p>{t("onboard.step5.intro")}</p>
               <ul className="mt-2 list-disc list-inside space-y-1">
-                <li>{t("onboard.step5.term1")}</li>
+                <li>{fp(t("onboard.step5.term1"))}</li>
                 <li>{t("onboard.step5.term2")}</li>
-                <li>{t("onboard.step5.term3")}</li>
+                <li>{fp(t("onboard.step5.term3"))}</li>
                 <li>{t("onboard.step5.term4")}</li>
                 <li>{t("onboard.step5.term5")}</li>
               </ul>

@@ -3,7 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, MapPin, ChevronDown, ChevronUp, CheckCircle, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useFeaturedListings, useAllListings } from "@/hooks/queries";
+import { useFeaturedListings, useAllListings, usePricingConfig } from "@/hooks/queries";
+import { fillPricing } from "@/lib/pricingPlaceholders";
 import ListingCard from "@/components/ListingCard";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -35,15 +36,18 @@ export default function HomePage() {
     { key: "trailer", label: t("cat.trailer"), icon: CarFront },
   ];
 
+  const { data: pricingConfig } = usePricingConfig();
+  const fp = (text: string) => fillPricing(text, pricingConfig);
+
   const howItWorks = [
     { icon: Search, title: t("how.step1"), desc: t("how.step1desc") },
     { icon: CheckCircle, title: t("how.step2"), desc: t("how.step2desc") },
-    { icon: ArrowRight, title: t("how.step3"), desc: t("how.step3desc") },
+    { icon: ArrowRight, title: t("how.step3"), desc: fp(t("how.step3desc")) },
   ];
 
   const faqs = [
     { q: t("homeFaq.q1"), a: t("homeFaq.a1") },
-    { q: t("homeFaq.q2"), a: t("homeFaq.a2") },
+    { q: t("homeFaq.q2"), a: fp(t("homeFaq.a2")) },
     { q: t("homeFaq.q3"), a: t("homeFaq.a3") },
     { q: t("homeFaq.q4"), a: t("homeFaq.a4") },
   ];
@@ -60,7 +64,7 @@ export default function HomePage() {
     <div>
       <SEO
         title="Ruumly — Laopinnad, kolimine ja haagised Eestis"
-        description="Leia ja broneeri laopindu, kolimisteenuseid ja haagiseid üle Eesti. Kuni 10% soodsam kui otse pakkujalt. Kiire kinnitus, kontrollitud partnerid."
+        description={fp("Leia ja broneeri laopindu, kolimisteenuseid ja haagiseid üle Eesti. Kuni {discount}% soodsam kui otse pakkujalt. Kiire kinnitus, kontrollitud partnerid.")}
         canonical="/"
         structuredData={{
           "@context": "https://schema.org",

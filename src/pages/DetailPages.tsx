@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { MapPin, Star, Check, ArrowLeft, Calendar, Shield, BadgePercent, Zap, Mail, Hand, Building2, CheckCircle, Loader2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useListing, useSuppliers } from "@/hooks/queries";
+import { useListing, useSuppliers, usePricingConfig } from "@/hooks/queries";
+import { fillPricing } from "@/lib/pricingPlaceholders";
 import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
 import { getSavingsDisplay } from "@/lib/savingsDisplay";
 import { lazy, Suspense } from "react";
@@ -83,6 +84,8 @@ function LoadingDetail() {
 export function WarehouseDetail() {
   const { id } = useParams();
   const { t } = useLanguage();
+  const { data: pricingConfig } = usePricingConfig();
+  const fp = (text: string) => fillPricing(text, pricingConfig);
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
   const { data: listing, isLoading } = useListing(id);
 
@@ -230,7 +233,7 @@ export function WarehouseDetail() {
                 {t("detail.bookNow")}
               </Button>
             </Link>
-            <p className="mt-2 text-center text-xs text-muted-foreground">{t("detail.savingsNote")}</p>
+            <p className="mt-2 text-center text-xs text-muted-foreground">{fp(t("detail.savingsNote"))}</p>
             <p className="mt-1 flex items-center justify-center gap-1 text-[11px] text-success"><Shield className="h-3 w-3" /> {t("booking.cancellation.short")}</p>
 
             <div className="mt-6 border-t border-border pt-4">
@@ -273,6 +276,8 @@ export function WarehouseDetail() {
 export function MovingDetail() {
   const { id } = useParams();
   const { t } = useLanguage();
+  const { data: pricingConfig } = usePricingConfig();
+  const fp = (text: string) => fillPricing(text, pricingConfig);
   const { data: listing, isLoading } = useListing(id);
 
   useEffect(() => {
@@ -364,7 +369,7 @@ export function MovingDetail() {
             <Link to={`/book?listing=${mListing.id}&type=moving`}>
               <Button className="mt-6 w-full bg-accent text-accent-foreground hover:bg-accent/90">{t("detail.bookNow")}</Button>
             </Link>
-            <p className="mt-2 text-center text-xs text-muted-foreground">{t("detail.savingsNote")}</p>
+            <p className="mt-2 text-center text-xs text-muted-foreground">{fp(t("detail.savingsNote"))}</p>
             <p className="mt-1 flex items-center justify-center gap-1 text-[11px] text-success"><Shield className="h-3 w-3" /> {t("booking.cancellation.short")}</p>
             <div className="mt-4 rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
               {t("detail.provider")}: <strong className="text-foreground">{mListing.provider}</strong>
@@ -395,6 +400,8 @@ export function MovingDetail() {
 export function TrailerDetail() {
   const { id } = useParams();
   const { t } = useLanguage();
+  const { data: pricingConfig } = usePricingConfig();
+  const fp = (text: string) => fillPricing(text, pricingConfig);
   const { data: listing, isLoading } = useListing(id);
 
   useEffect(() => {
@@ -484,7 +491,7 @@ export function TrailerDetail() {
             <Link to={`/book?listing=${tListing.id}&type=trailer`}>
               <Button className="mt-6 w-full bg-accent text-accent-foreground hover:bg-accent/90">{t("detail.bookNow")}</Button>
             </Link>
-            <p className="mt-2 text-center text-xs text-muted-foreground">{t("detail.savingsNote")}</p>
+            <p className="mt-2 text-center text-xs text-muted-foreground">{fp(t("detail.savingsNote"))}</p>
             <p className="mt-1 flex items-center justify-center gap-1 text-[11px] text-success"><Shield className="h-3 w-3" /> {t("booking.cancellation.short")}</p>
             <div className="mt-4 rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
               {t("detail.provider")}: <strong className="text-foreground">{tListing.provider}</strong>
