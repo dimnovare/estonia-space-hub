@@ -329,7 +329,13 @@ export function MovingDetail() {
       </nav>
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <img src={mListing.image} alt={mListing.title} className="h-[300px] w-full rounded-xl object-cover md:h-[400px]" />
+          {mListing.image ? (
+            <img src={mListing.image} alt={mListing.title} className="h-[300px] w-full rounded-xl object-cover md:h-[400px]" />
+          ) : (
+            <div className="flex h-[300px] w-full items-center justify-center rounded-xl bg-secondary md:h-[400px]">
+              <MapPin className="h-12 w-12 text-muted-foreground/30" />
+            </div>
+          )}
           <h1 className="mt-6 font-display text-2xl font-bold md:text-3xl">{mListing.title}</h1>
           <div className="mt-2 flex items-center gap-3 text-sm text-muted-foreground">
             <span className="flex items-center gap-1"><MapPin className="h-4 w-4" /> {mListing.city}</span>
@@ -454,7 +460,13 @@ export function TrailerDetail() {
       </nav>
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <img src={tListing.image} alt={tListing.title} className="h-[300px] w-full rounded-xl object-cover md:h-[400px]" />
+          {tListing.image ? (
+            <img src={tListing.image} alt={tListing.title} className="h-[300px] w-full rounded-xl object-cover md:h-[400px]" />
+          ) : (
+            <div className="flex h-[300px] w-full items-center justify-center rounded-xl bg-secondary md:h-[400px]">
+              <MapPin className="h-12 w-12 text-muted-foreground/30" />
+            </div>
+          )}
           <h1 className="mt-6 font-display text-2xl font-bold md:text-3xl">{tListing.title}</h1>
           <div className="mt-2 flex items-center gap-3 text-sm text-muted-foreground">
             <span className="flex items-center gap-1"><MapPin className="h-4 w-4" /> {tListing.address}, {tListing.city}</span>
