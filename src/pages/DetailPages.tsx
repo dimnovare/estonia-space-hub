@@ -156,7 +156,13 @@ export function WarehouseDetail() {
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <div className="overflow-hidden rounded-xl">
-            <img src={wListing.image} alt={wListing.title} className="h-[300px] w-full object-cover md:h-[400px]" />
+            {wListing.image ? (
+              <img src={wListing.image} alt={wListing.title} className="h-[300px] w-full object-cover md:h-[400px]" />
+            ) : (
+              <div className="flex h-[300px] w-full items-center justify-center bg-secondary md:h-[400px]">
+                <MapPin className="h-12 w-12 text-muted-foreground/30" />
+              </div>
+            )}
           </div>
 
           <h1 className="mt-6 font-display text-2xl font-bold md:text-3xl">{wListing.title}</h1>
