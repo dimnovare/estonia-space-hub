@@ -150,6 +150,12 @@ export const supplierService = {
     );
     return { success: res.success, latency: res.latencyMs };
   },
+  async create(data: Record<string, unknown>): Promise<Supplier> {
+    return apiClient.post<Supplier>("/admin/suppliers", data);
+  },
+  async update(id: string, data: Record<string, unknown>): Promise<Supplier> {
+    return apiClient.patch<Supplier>(`/admin/suppliers/${id}`, data);
+  },
 };
 
 // ─── Listing Service ────────────────────────────────────────────────────────────

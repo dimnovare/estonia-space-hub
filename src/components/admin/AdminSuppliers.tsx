@@ -1,30 +1,78 @@
-import { useState, useEffect } from "react";
-import { Mail, Zap, Hand, RefreshCw, Server, Link2 } from "lucide-react";
+import { useState } from "react";
+import { Mail, Zap, Hand, RefreshCw, Server, PlusCircle, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supplierService } from "@/services";
 import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
 import type { Supplier } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
+import { toast } from "sonner";
+
+const inp = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
 
 export default function AdminSuppliers() {
   const { t } = useLanguage();
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [loading, setLoading] = useState(true);
+  const qc = useQueryClient();
+
+  const { data: suppliers = [], isLoading } = useQuery({
+    queryKey: queryKeys.suppliers.all,
+    queryFn: supplierService.getAll,
+    staleTime: 30_000,
+  });
+
   const [selected, setSelected] = useState<Supplier | null>(null);
   const [testingId, setTestingId] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<{ success: boolean; latency: number } | null>(null);
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    supplierService.getAll().then((data) => { setSuppliers(data); setLoading(false); });
-  }, []);
+  // ── Create form state ──
+  const emptyCreate = {
+    name: "", registryCode: "", contactName: "", contactEmail: "", contactPhone: "",
+    integrationType: "manual" as "manual" | "email" | "api",
+    recipientEmail: "", partnerDiscountRate: "", notes: "",
+    iban: "", bankAccountName: "", bankName: "", tier: "starter",
+  };
+  const [createForm, setCreateForm] = useState(emptyCreate);
+
+  const invalidate = () => qc.invalidateQueries({ queryKey: queryKeys.suppliers.all });
+
+  const createMutation = useMutation({
+    mutationFn: (data: Record<string, unknown>) => supplierService.create(data),
+    onSuccess: () => {
+      invalidate();
+      toast.success("Partner lisatud!");
+      setCreateOpen(false);
+      setCreateForm(emptyCreate);
+    },
+    onError: (err: any) => toast.error(err.message || "Viga partneri loomisel"),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) => supplierService.update(id, data),
+    onSuccess: (updated) => {
+      invalidate();
+      toast.success("Muudatused salvestatud!");
+      setSelected(prev => prev ? { ...prev, ...updated } : prev);
+    },
+    onError: (err: any) => toast.error(err.message || "Salvestamine ebaõnnestus"),
+  });
 
   const filtered = filter === "all" ? suppliers : filter === "active" ? suppliers.filter(s => s.isActive) : suppliers.filter(s => !s.isActive);
 
-  const toggleStatus = (id: string) => {
-    setSuppliers(prev => prev.map(s => s.id === id ? { ...s, isActive: !s.isActive, integrationHealth: !s.isActive ? "healthy" : "offline" } : s));
-    if (selected?.id === id) setSelected(prev => prev ? { ...prev, isActive: !prev.isActive } : prev);
+  const toggleStatus = async (id: string) => {
+    const sup = suppliers.find(s => s.id === id);
+    if (!sup) return;
+    try {
+      await supplierService.updateStatus(id, !sup.isActive);
+      invalidate();
+      if (selected?.id === id) setSelected(prev => prev ? { ...prev, isActive: !prev.isActive } : prev);
+    } catch (err: any) {
+      toast.error(err.message || "Staatuse muutmine ebaõnnestus");
+    }
   };
 
   const testIntegration = async (id: string) => {
@@ -35,11 +83,46 @@ export default function AdminSuppliers() {
     setTestingId(null);
   };
 
+  const handleSaveSelected = () => {
+    if (!selected) return;
+    const data: Record<string, unknown> = {
+      contactName: selected.contactName,
+      contactEmail: selected.contactEmail,
+      contactPhone: selected.contactPhone,
+      notes: selected.notes,
+      partnerDiscountRate: (selected as any).partnerDiscountRate,
+      clientDiscountRate: (selected as any).clientDiscountRate,
+      tier: (selected as any).tier,
+    };
+    updateMutation.mutate({ id: selected.id, data });
+  };
+
+  const handleCreate = () => {
+    const data: Record<string, unknown> = {
+      name: createForm.name,
+      registryCode: createForm.registryCode,
+      contactName: createForm.contactName,
+      contactEmail: createForm.contactEmail,
+      contactPhone: createForm.contactPhone,
+      integrationType: createForm.integrationType,
+      notes: createForm.notes || undefined,
+      iban: createForm.iban || undefined,
+      bankAccountName: createForm.bankAccountName || undefined,
+      bankName: createForm.bankName || undefined,
+      tier: createForm.tier,
+      partnerDiscountRate: createForm.partnerDiscountRate ? Number(createForm.partnerDiscountRate) : undefined,
+    };
+    if (createForm.integrationType === "email" && createForm.recipientEmail) {
+      data.recipientEmail = createForm.recipientEmail;
+    }
+    createMutation.mutate(data);
+  };
+
   const healthColor = (h: string) => h === "healthy" ? "bg-success/10 text-success" : h === "degraded" ? "bg-warning/10 text-warning" : "bg-destructive/10 text-destructive";
   const healthLabel = (h: string) => h === "healthy" ? t("admin.healthy") : h === "degraded" ? t("admin.degraded") : t("admin.offline");
   const intIcon = (tp: string) => tp === "api" ? <Zap className="h-3.5 w-3.5" /> : tp === "email" ? <Mail className="h-3.5 w-3.5" /> : <Hand className="h-3.5 w-3.5" />;
 
-  if (loading) return <div className="flex items-center justify-center py-20"><RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
+  if (isLoading) return <div className="flex items-center justify-center py-20"><RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
 
   return (
     <div>
@@ -48,6 +131,9 @@ export default function AdminSuppliers() {
           <h1 className="font-display text-2xl font-bold">{t("admin.suppliers")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{t("admin.integrationDesc")}</p>
         </div>
+        <Button onClick={() => { setCreateForm(emptyCreate); setCreateOpen(true); }} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
+          <PlusCircle className="mr-1 h-3.5 w-3.5" /> Lisa partner
+        </Button>
       </div>
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="card-elevated p-4"><div className="text-sm text-muted-foreground">{t("admin.totalPartners")}</div><div className="mt-1 font-display text-2xl font-bold">{suppliers.length}</div></div>
@@ -132,20 +218,44 @@ export default function AdminSuppliers() {
         </div>
       </div>
 
+      {/* ── Supplier Detail Dialog ── */}
       <Dialog open={!!selected} onOpenChange={(o) => { if (!o) { setSelected(null); setTestResult(null); } }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{selected?.name}</DialogTitle></DialogHeader>
           {selected && (
             <div className="space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">{t("admin.contactPerson")}</p><p className="text-sm font-medium">{selected.contactName}</p></div>
-                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">{t("admin.email")}</p><p className="text-sm font-medium">{selected.contactEmail}</p></div>
-                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">{t("admin.phone")}</p><p className="text-sm font-medium">{selected.contactPhone}</p></div>
-                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">{t("admin.registryCode")}</p><p className="text-sm font-medium font-mono">{selected.registryCode}</p></div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg bg-secondary/50 p-3">
+                  <p className="text-xs text-muted-foreground">{t("admin.contactPerson")}</p>
+                  <input className={inp} value={selected.contactName} onChange={(e) => setSelected({ ...selected, contactName: e.target.value })} />
+                </div>
+                <div className="rounded-lg bg-secondary/50 p-3">
+                  <p className="text-xs text-muted-foreground">{t("admin.email")}</p>
+                  <input className={inp} value={selected.contactEmail} onChange={(e) => setSelected({ ...selected, contactEmail: e.target.value })} />
+                </div>
+                <div className="rounded-lg bg-secondary/50 p-3">
+                  <p className="text-xs text-muted-foreground">{t("admin.phone")}</p>
+                  <input className={inp} value={selected.contactPhone} onChange={(e) => setSelected({ ...selected, contactPhone: e.target.value })} />
+                </div>
+                <div className="rounded-lg bg-secondary/50 p-3">
+                  <p className="text-xs text-muted-foreground">{t("admin.registryCode")}</p>
+                  <p className="text-sm font-medium font-mono mt-1">{selected.registryCode}</p>
+                </div>
               </div>
+
+              {/* Tier selector */}
+              <div className="rounded-xl border border-border p-4">
+                <h3 className="text-sm font-semibold mb-3">Pakett</h3>
+                <select className={inp} value={(selected as any).tier ?? "starter"} onChange={(e) => setSelected({ ...selected, tier: e.target.value } as any)}>
+                  <option value="starter">Starter (tasuta)</option>
+                  <option value="standard">Standard (€49/kuu)</option>
+                  <option value="premium">Premium (€99/kuu)</option>
+                </select>
+              </div>
+
               <div className="rounded-xl border border-border p-4">
                 <h3 className="flex items-center gap-2 text-sm font-semibold"><Server className="h-4 w-4 text-accent" /> {t("admin.integrationSettings")}</h3>
-                <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                <div className="mt-3 grid gap-3 sm:grid-cols-2 text-sm">
                   <div><p className="text-xs text-muted-foreground">{t("admin.type")}</p><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${INTEGRATION_TYPE_CONFIG[selected.integrationType].color}`}>{intIcon(selected.integrationType)} {INTEGRATION_TYPE_CONFIG[selected.integrationType].label}</span></div>
                   <div><p className="text-xs text-muted-foreground">{t("admin.health")}</p><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${healthColor(selected.integrationHealth)}`}>{healthLabel(selected.integrationHealth)}</span></div>
                   {selected.apiEndpoint && (<div className="col-span-2"><p className="text-xs text-muted-foreground">{t("admin.apiEndpoint")}</p><p className="font-mono text-xs mt-0.5 rounded-md bg-secondary px-2 py-1">{selected.apiEndpoint}</p></div>)}
@@ -168,11 +278,10 @@ export default function AdminSuppliers() {
               {/* Discount fields */}
               <div className="rounded-xl border border-border p-4">
                 <h3 className="text-sm font-semibold mb-3">Allahindlused</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">Partneri allahindlus (%)</label>
-                    <input type="number" min="0" max="80"
-                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    <input type="number" min="0" max="80" className={inp}
                       value={(selected as any).partnerDiscountRate ?? 0}
                       onChange={e => setSelected({ ...selected, partnerDiscountRate: Number(e.target.value) } as any)}
                     />
@@ -180,8 +289,7 @@ export default function AdminSuppliers() {
                   </div>
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">Kliendi allahindlus (%)</label>
-                    <input type="number" min="0" max="80"
-                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    <input type="number" min="0" max="80" className={inp}
                       value={(selected as any).clientDiscountRate ?? 0}
                       onChange={e => setSelected({ ...selected, clientDiscountRate: Number(e.target.value) } as any)}
                     />
@@ -210,21 +318,118 @@ export default function AdminSuppliers() {
                 )}
               </div>
 
+              {/* Notes */}
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.notes")}</label>
+                <textarea className={inp + " min-h-[60px]"} value={selected.notes || ""} onChange={(e) => setSelected({ ...selected, notes: e.target.value })} />
+              </div>
+
               <div className="grid grid-cols-3 gap-3">
                 <div className="rounded-lg bg-secondary/50 p-3 text-center"><p className="text-xs text-muted-foreground">{t("admin.listingsCount")}</p><p className="text-lg font-bold">{selected.listingCount}</p></div>
                 <div className="rounded-lg bg-secondary/50 p-3 text-center"><p className="text-xs text-muted-foreground">{t("admin.ordersCount")}</p><p className="text-lg font-bold">{selected.ordersTotal}</p></div>
                 <div className="rounded-lg bg-secondary/50 p-3 text-center"><p className="text-xs text-muted-foreground">{t("admin.stats.revenue")}</p><p className="text-lg font-bold text-accent">€{selected.revenue.toLocaleString()}</p></div>
               </div>
               {selected.lastOrderAt && <p className="text-xs text-muted-foreground">{t("admin.lastOrder")}: {selected.lastOrderAt}</p>}
-              {selected.notes && (
-                <div className="rounded-lg border border-warning/30 bg-warning/5 p-3"><p className="text-xs font-medium text-warning">{t("admin.notes")}</p><p className="text-xs text-muted-foreground mt-1">{selected.notes}</p></div>
-              )}
               <div className="flex gap-2 pt-2">
+                <Button onClick={handleSaveSelected} disabled={updateMutation.isPending} className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90">
+                  {updateMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                  Salvesta
+                </Button>
                 <Button variant="outline" size="sm" className="flex-1" onClick={() => toggleStatus(selected.id)}>{selected.isActive ? t("admin.block") : t("admin.activate")}</Button>
-                <Button variant="outline" size="sm" className="flex-1" onClick={() => setSelected(null)}>{t("admin.close")}</Button>
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => setSelected(null)}>Sulge</Button>
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Create Partner Dialog ── */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Lisa partner</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Nimi *</label>
+              <input className={inp} value={createForm.name} onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Registrikood</label>
+              <input className={inp} value={createForm.registryCode} onChange={(e) => setCreateForm({ ...createForm, registryCode: e.target.value })} />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Kontaktisik</label>
+                <input className={inp} value={createForm.contactName} onChange={(e) => setCreateForm({ ...createForm, contactName: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">E-post</label>
+                <input type="email" className={inp} value={createForm.contactEmail} onChange={(e) => setCreateForm({ ...createForm, contactEmail: e.target.value })} />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Telefon</label>
+              <input className={inp} value={createForm.contactPhone} onChange={(e) => setCreateForm({ ...createForm, contactPhone: e.target.value })} />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Integratsiooni tüüp</label>
+                <select className={inp} value={createForm.integrationType} onChange={(e) => setCreateForm({ ...createForm, integrationType: e.target.value as any })}>
+                  <option value="manual">Manuaalne</option>
+                  <option value="email">E-post</option>
+                  <option value="api">API</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Pakett</label>
+                <select className={inp} value={createForm.tier} onChange={(e) => setCreateForm({ ...createForm, tier: e.target.value })}>
+                  <option value="starter">Starter (tasuta)</option>
+                  <option value="standard">Standard (€49/kuu)</option>
+                  <option value="premium">Premium (€99/kuu)</option>
+                </select>
+              </div>
+            </div>
+            {createForm.integrationType === "email" && (
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Saaja e-post</label>
+                <input type="email" className={inp} value={createForm.recipientEmail} onChange={(e) => setCreateForm({ ...createForm, recipientEmail: e.target.value })} />
+              </div>
+            )}
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Partneri allahindlus (%)</label>
+              <input type="number" min="0" max="80" className={inp} value={createForm.partnerDiscountRate} onChange={(e) => setCreateForm({ ...createForm, partnerDiscountRate: e.target.value })} />
+            </div>
+
+            <div className="rounded-xl border border-border p-3 space-y-3">
+              <h4 className="text-xs font-semibold text-muted-foreground">Pangaandmed</h4>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">IBAN</label>
+                <input className={inp} placeholder="EE..." value={createForm.iban} onChange={(e) => setCreateForm({ ...createForm, iban: e.target.value })} />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Konto nimi</label>
+                  <input className={inp} value={createForm.bankAccountName} onChange={(e) => setCreateForm({ ...createForm, bankAccountName: e.target.value })} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Pank</label>
+                  <input className={inp} value={createForm.bankName} onChange={(e) => setCreateForm({ ...createForm, bankName: e.target.value })} />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Märkmed</label>
+              <textarea className={inp + " min-h-[60px]"} value={createForm.notes} onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })} />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setCreateOpen(false)}>Tühista</Button>
+              <Button onClick={handleCreate} disabled={createMutation.isPending || !createForm.name} className="bg-accent text-accent-foreground hover:bg-accent/90">
+                {createMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                Lisa partner
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
