@@ -334,6 +334,26 @@ export const securityService = {
   },
 };
 
+// ─── Rebate Service ─────────────────────────────────────────────────────────
+export const rebateService = {
+  async getInvoices(period?: string): Promise<any[]> {
+    const qs = period ? `?period=${period}` : "";
+    return apiClient.get<any[]>(`/admin/rebate-invoices${qs}`);
+  },
+  async generate(period: string): Promise<{ count: number; totalAmount: number }> {
+    return apiClient.post<{ count: number; totalAmount: number }>("/admin/rebate-invoices/generate", { period });
+  },
+  async markSent(id: string): Promise<void> {
+    await apiClient.patch(`/admin/rebate-invoices/${id}/sent`, {});
+  },
+  async markPaid(id: string, reference: string): Promise<void> {
+    await apiClient.patch(`/admin/rebate-invoices/${id}/paid`, { reference });
+  },
+  async getForSupplier(): Promise<any[]> {
+    return apiClient.get<any[]>("/supplier/rebate-invoices");
+  },
+};
+
 // ─── Public Settings Service ────────────────────────────────────────────────
 export const publicSettingsService = {
   async getPublic(): Promise<{

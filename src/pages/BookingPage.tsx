@@ -25,6 +25,7 @@ export default function BookingPage() {
   const navigate = useNavigate();
   const { data: suppliers = [] } = useSuppliers();
   const supplier = listing ? suppliers.find(s => s.id === listing.supplierId) : undefined;
+  const isRebateModel = (supplier as any)?.billingModel === "rebate" || (listing as any)?.billingModel === "rebate";
   const createBooking = useCreateBooking();
   const { data: pricingConfig } = usePricingConfig();
   const { data: listingExtras = [] } = useListingExtras(listingId || "");
@@ -103,12 +104,12 @@ export default function BookingPage() {
       contactName: contactForm.getValues("name"),
       contactEmail: contactForm.getValues("email"),
       contactPhone: contactForm.getValues("phone"),
-      paymentMethod: paymentMethod as "bank" | "card" | "later",
+      paymentMethod: isRebateModel ? "later" : paymentMethod as "bank" | "card" | "later",
       notes: contactForm.getValues("notes"),
     }).then(async (bookingResult: any) => {
       const invoiceId = bookingResult?.invoiceId;
 
-      if (paymentMethod !== "later" && invoiceId) {
+      if (!isRebateModel && paymentMethod !== "later" && invoiceId) {
         try {
           const result = await paymentService.initiate({
             invoiceId,
@@ -395,6 +396,20 @@ export default function BookingPage() {
               </div>
 
               {/* Payment method selection */}
+              {isRebateModel ? (
+                <div className="space-y-4 border-t border-border pt-6">
+                  <div className="rounded-xl border border-accent/30 bg-accent/5 p-5 text-center">
+                    <CheckCircle className="mx-auto h-8 w-8 text-accent" />
+                    <h3 className="mt-3 font-display text-lg font-semibold">Broneering kinnitatud!</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Teenusepakkuja võtab teiega ühendust makseinfo osas.
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Makse toimub otse teenusepakkujale — Ruumly vahendab broneeringut.
+                    </p>
+                  </div>
+                </div>
+              ) : (
               <div className="space-y-4 border-t border-border pt-6">
                 <h2 className="font-display text-xl font-semibold">{t("booking.paymentMethod")}</h2>
                 <div className="space-y-3">
@@ -435,6 +450,7 @@ export default function BookingPage() {
                   })}
                 </div>
               </div>
+              )}
 
               {/* Cancellation policy */}
               <div className="rounded-xl border border-border bg-secondary/50 p-4">
