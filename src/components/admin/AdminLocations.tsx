@@ -497,6 +497,71 @@ export default function AdminLocations() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ── Edit Unit Dialog ── */}
+      <Dialog open={editUnitOpen} onOpenChange={setEditUnitOpen}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Muuda üksust</DialogTitle></DialogHeader>
+          {editingUnit && (
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.title_field")}</label>
+                <input className={inp} value={editingUnit.title} onChange={e => setEditingUnit({ ...editingUnit, title: e.target.value })} />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.price")} (€)</label>
+                  <input type="number" className={inp} value={editingUnit.priceFrom ?? ""} onChange={e => setEditingUnit({ ...editingUnit, priceFrom: Number(e.target.value) })} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.sizeM2")}</label>
+                  <input type="number" className={inp} value={editingUnit.sizeM2 ?? ""} onChange={e => setEditingUnit({ ...editingUnit, sizeM2: e.target.value ? Number(e.target.value) : null })} />
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.quantity")}</label>
+                  <input type="number" className={inp} value={editingUnit.quantityTotal ?? ""} onChange={e => setEditingUnit({ ...editingUnit, quantityTotal: Number(e.target.value) })} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.priceUnit")}</label>
+                  <select className={inp} value={editingUnit.priceUnit ?? "/kuu"} onChange={e => setEditingUnit({ ...editingUnit, priceUnit: e.target.value })}>
+                    <option value="/kuu">/kuu</option>
+                    <option value="/päev">/päev</option>
+                    <option value="/tund">/tund</option>
+                    <option value="/kord">/kord</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setEditUnitOpen(false)}>{t("admin.cancel")}</Button>
+                <Button
+                  onClick={async () => {
+                    try {
+                      await apiClient.patch(`/admin/listings/${editingUnit.id}`, {
+                        title: editingUnit.title,
+                        priceFrom: editingUnit.priceFrom,
+                        sizeM2: editingUnit.sizeM2,
+                        quantityTotal: editingUnit.quantityTotal,
+                        priceUnit: editingUnit.priceUnit,
+                      });
+                      invalidate();
+                      toast.success("Üksus uuendatud");
+                      setEditUnitOpen(false);
+                    } catch (err: any) {
+                      toast.error(err.message || "Uuendamine ebaõnnestus");
+                    }
+                  }}
+                  className="bg-accent text-accent-foreground hover:bg-accent/90"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  Salvesta
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
