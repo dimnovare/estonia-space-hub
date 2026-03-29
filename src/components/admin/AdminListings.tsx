@@ -66,12 +66,46 @@ export default function AdminListings() {
     setEditOpen(true);
   };
 
-  const openEdit = (l: any) => { setEditItem({ ...l }); setIsNew(false); setEditOpen(true); };
+  const openEdit = (l: any) => {
+    setEditItem({
+      ...l,
+      price: l.priceFrom ?? l.price ?? 0,
+      status: l.isActive !== false ? "active" : "paused",
+    });
+    setIsNew(false);
+    setEditOpen(true);
+  };
 
   const handleSave = () => {
     if (!editItem) return;
-    if (isNew) createMutation.mutate(editItem);
-    else updateMutation.mutate({ id: editItem.id, data: editItem });
+
+    const payload: Record<string, unknown> = {
+      type: editItem.type,
+      title: editItem.title,
+      supplierId: editItem.supplierId || undefined,
+      address: editItem.address || "",
+      city: editItem.city || "",
+      lat: editItem.lat ? Number(editItem.lat) : 0,
+      lng: editItem.lng ? Number(editItem.lng) : 0,
+      priceFrom: Number(editItem.price ?? editItem.priceFrom ?? 0),
+      priceUnit: editItem.priceUnit || "€/kuu",
+      availableNow: editItem.status === "active",
+      description: editItem.description || "",
+      partnerDiscountRateOverride: editItem.partnerDiscountRateOverride ?? null,
+      clientDiscountRateOverride: editItem.clientDiscountRateOverride ?? null,
+      vatRate: editItem.vatRate ?? null,
+      pricesIncludeVat: editItem.pricesIncludeVat ?? false,
+    };
+
+    if (isNew) {
+      createMutation.mutate(payload);
+    } else {
+      const updatePayload = {
+        ...payload,
+        isActive: editItem.status === "active",
+      };
+      updateMutation.mutate({ id: editItem.id, data: updatePayload });
+    }
   };
 
   const handleDelete = (id: string) => {
