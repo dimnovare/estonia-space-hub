@@ -35,6 +35,7 @@ export default function AdminSuppliers() {
     integrationType: "manual" as "manual" | "email" | "api",
     recipientEmail: "", partnerDiscountRate: "", notes: "",
     iban: "", bankAccountName: "", bankName: "", tier: "starter",
+    billingModel: "marketplace" as "marketplace" | "rebate",
   };
   const [createForm, setCreateForm] = useState(emptyCreate);
 
@@ -93,6 +94,7 @@ export default function AdminSuppliers() {
       partnerDiscountRate: (selected as any).partnerDiscountRate,
       clientDiscountRate: (selected as any).clientDiscountRate,
       tier: (selected as any).tier,
+      billingModel: (selected as any).billingModel,
     };
     updateMutation.mutate({ id: selected.id, data });
   };
@@ -110,6 +112,7 @@ export default function AdminSuppliers() {
       bankAccountName: createForm.bankAccountName || undefined,
       bankName: createForm.bankName || undefined,
       tier: createForm.tier,
+      billingModel: createForm.billingModel,
       partnerDiscountRate: createForm.partnerDiscountRate ? Number(createForm.partnerDiscountRate) : undefined,
     };
     if (createForm.integrationType === "email" && createForm.recipientEmail) {
@@ -221,7 +224,14 @@ export default function AdminSuppliers() {
       {/* ── Supplier Detail Dialog ── */}
       <Dialog open={!!selected} onOpenChange={(o) => { if (!o) { setSelected(null); setTestResult(null); } }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>{selected?.name}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {selected?.name}
+              {(selected as any)?.billingModel === "rebate"
+                ? <span className="rounded-full bg-amber-100 text-amber-700 px-2 py-0.5 text-[10px] font-medium">Tagasimakse</span>
+                : <span className="rounded-full bg-teal-100 text-teal-700 px-2 py-0.5 text-[10px] font-medium">Marketplace</span>}
+            </DialogTitle>
+          </DialogHeader>
           {selected && (
             <div className="space-y-5">
               <div className="grid gap-3 sm:grid-cols-2">
@@ -243,14 +253,31 @@ export default function AdminSuppliers() {
                 </div>
               </div>
 
-              {/* Tier selector */}
-              <div className="rounded-xl border border-border p-4">
-                <h3 className="text-sm font-semibold mb-3">Pakett</h3>
-                <select className={inp} value={(selected as any).tier ?? "starter"} onChange={(e) => setSelected({ ...selected, tier: e.target.value } as any)}>
-                  <option value="starter">Starter (tasuta)</option>
-                  <option value="standard">Standard (€49/kuu)</option>
-                  <option value="premium">Premium (€99/kuu)</option>
-                </select>
+              {/* Tier + Billing model */}
+              <div className="rounded-xl border border-border p-4 space-y-3">
+                <h3 className="text-sm font-semibold mb-3">Pakett ja arveldus</h3>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Pakett</label>
+                    <select className={inp} value={(selected as any).tier ?? "starter"} onChange={(e) => setSelected({ ...selected, tier: e.target.value } as any)}>
+                      <option value="starter">Starter (tasuta)</option>
+                      <option value="standard">Standard (€49/kuu)</option>
+                      <option value="premium">Premium (€99/kuu)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Arveldamise mudel</label>
+                    <select className={inp} value={(selected as any).billingModel ?? "marketplace"} onChange={(e) => setSelected({ ...selected, billingModel: e.target.value } as any)}>
+                      <option value="marketplace">Marketplace</option>
+                      <option value="rebate">Tagasimakse</option>
+                    </select>
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">
+                      {(selected as any).billingModel === "rebate"
+                        ? "Klient maksab otse partnerile, Ruumly esitab igakuise arve."
+                        : "Klient maksab Montonio kaudu, Ruumly peab marginaali kinni."}
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div className="rounded-xl border border-border p-4">
@@ -397,6 +424,17 @@ export default function AdminSuppliers() {
             <div>
               <label className="text-xs font-medium text-muted-foreground">Partneri allahindlus (%)</label>
               <input type="number" min="0" max="80" className={inp} value={createForm.partnerDiscountRate} onChange={(e) => setCreateForm({ ...createForm, partnerDiscountRate: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Arveldamise mudel</label>
+              <select className={inp} value={createForm.billingModel} onChange={(e) => setCreateForm({ ...createForm, billingModel: e.target.value as any })}>
+                <option value="marketplace">Marketplace (klient maksab Ruumly kaudu)</option>
+                <option value="rebate">Tagasimakse (klient maksab otse partnerile)</option>
+              </select>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">
+                Marketplace: klient maksab Montonio kaudu, Ruumly peab marginaali kinni.
+                Tagasimakse: klient maksab otse partnerile, Ruumly esitab igakuise arve.
+              </p>
             </div>
 
             <div className="rounded-xl border border-border p-3 space-y-3">
