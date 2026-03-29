@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PlusCircle, MapPin, Save, Loader2, Edit, X, Warehouse, Truck, CarFront, Trash2 } from "lucide-react";
+import ImageUploader from "./ImageUploader";
 import GeocodeLookup from "./AdminLocationsGeocode";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -45,7 +46,7 @@ export default function AdminLocations() {
     lng: "",
     description: "",
     openingHours: "",
-    images: "",
+    images: [] as string[],
     notes: "",
   };
   const [newLoc, setNewLoc] = useState(emptyLoc);
