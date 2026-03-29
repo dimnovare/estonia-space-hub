@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { locationService, supplierService } from "@/services";
+import { apiClient } from "@/services/apiClient";
 import type { SupplierLocation } from "@/services/types";
 import { toast } from "sonner";
 
