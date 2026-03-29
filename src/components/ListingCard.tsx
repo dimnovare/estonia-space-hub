@@ -39,12 +39,18 @@ export default function ListingCard({ listing }: { listing: Listing }) {
   return (
     <Link to={detailPath} className="card-elevated group block overflow-hidden">
       <div className="relative aspect-[16/10] overflow-hidden">
-        <img
-          src={listing.image}
-          alt={`${listing.title} — ${listing.city}`}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          loading="lazy"
-        />
+        {listing.image ? (
+          <img
+            src={listing.image}
+            alt={`${listing.title} — ${listing.city}`}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-secondary">
+            <Warehouse className="h-10 w-10 text-muted-foreground/30" />
+          </div>
+        )}
         {listing.badge && (
           <span className={`absolute left-3 top-3 ${badgeStyles[listing.badge]}`}>
             {t(badgeKeys[listing.badge])}

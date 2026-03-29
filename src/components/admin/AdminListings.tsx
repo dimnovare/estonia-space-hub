@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ImageUploader from "./ImageUploader";
 import { Warehouse, Truck, CarFront, Edit, Trash2, PlusCircle, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -61,6 +62,7 @@ export default function AdminListings() {
       partnerDiscountRateOverride: null,
       clientDiscountRateOverride: null,
       vatRate: null, pricesIncludeVat: false,
+      images: [],
     });
     setIsNew(true);
     setEditOpen(true);
@@ -71,6 +73,7 @@ export default function AdminListings() {
       ...l,
       price: l.priceFrom ?? l.price ?? 0,
       status: l.isActive !== false ? "active" : "paused",
+      images: l.images || [],
     });
     setIsNew(false);
     setEditOpen(true);
@@ -95,6 +98,7 @@ export default function AdminListings() {
       clientDiscountRateOverride: editItem.clientDiscountRateOverride ?? null,
       vatRate: editItem.vatRate ?? null,
       pricesIncludeVat: editItem.pricesIncludeVat ?? false,
+      images: editItem.images || [],
     };
 
     if (isNew) {
@@ -232,6 +236,14 @@ export default function AdminListings() {
               <div>
                 <label className="text-xs font-medium text-muted-foreground">Kirjeldus</label>
                 <textarea className={inp + " min-h-[60px]"} value={editItem.description ?? ""} onChange={e => setEditItem({ ...editItem, description: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Pildid</label>
+                <ImageUploader
+                  images={editItem.images || []}
+                  onChange={imgs => setEditItem({ ...editItem, images: imgs })}
+                  maxImages={10}
+                />
               </div>
 
               {/* Supplier */}

@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { PlusCircle, MapPin, Save, Loader2, Edit, X, Warehouse, Truck, CarFront, Trash2 } from "lucide-react";
+import ImageUploader from "./ImageUploader";
 import GeocodeLookup from "./AdminLocationsGeocode";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { locationService, supplierService } from "@/services";
+import { apiClient } from "@/services/apiClient";
 import type { SupplierLocation } from "@/services/types";
 import { toast } from "sonner";
 
@@ -30,6 +32,8 @@ export default function AdminLocations() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addLocOpen, setAddLocOpen] = useState(false);
   const [addUnitOpen, setAddUnitOpen] = useState(false);
+  const [editUnitOpen, setEditUnitOpen] = useState(false);
+  const [editingUnit, setEditingUnit] = useState<any>(null);
   const [editing, setEditing] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -45,7 +49,7 @@ export default function AdminLocations() {
     lng: "",
     description: "",
     openingHours: "",
-    images: "",
+    images: [] as string[],
     notes: "",
   };
   const [newLoc, setNewLoc] = useState(emptyLoc);
@@ -116,7 +120,7 @@ export default function AdminLocations() {
       lng: Number(newLoc.lng) || 0,
       description: newLoc.description || undefined,
       openingHours: newLoc.openingHours || undefined,
-      images: newLoc.images ? newLoc.images.split("\n").map((s) => s.trim()).filter(Boolean) : undefined,
+      images: newLoc.images.length > 0 ? newLoc.images : undefined,
       notes: newLoc.notes || undefined,
     });
   };
@@ -133,7 +137,7 @@ export default function AdminLocations() {
         lng: Number(editLoc.lng) || 0,
         description: editLoc.description,
         openingHours: editLoc.openingHours,
-        images: editLoc.images ? editLoc.images.split("\n").map((s) => s.trim()).filter(Boolean) : [],
+        images: editLoc.images,
         notes: editLoc.notes,
       },
     });
@@ -168,7 +172,7 @@ export default function AdminLocations() {
       lng: String(selected.lng),
       description: selected.description || "",
       openingHours: selected.openingHours || "",
-      images: (selected.images || []).join("\n"),
+      images: selected.images || [],
       notes: selected.notes || "",
     });
     setEditing(true);
@@ -273,7 +277,7 @@ export default function AdminLocations() {
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.imageUrls")}</label>
-                <textarea className={inp + " min-h-[60px]"} value={editLoc.images} onChange={(e) => setEditLoc({ ...editLoc, images: e.target.value })} />
+                <ImageUploader images={editLoc.images} onChange={imgs => setEditLoc({ ...editLoc, images: imgs })} />
               </div>
               <GeocodeLookup
                 address={editLoc.address}
@@ -330,6 +334,7 @@ export default function AdminLocations() {
                           <th className="px-4 py-2 text-left font-medium text-muted-foreground">{t("admin.locations.sizeM2")}</th>
                           <th className="px-4 py-2 text-left font-medium text-muted-foreground">{t("admin.locations.quantity")}</th>
                           <th className="px-4 py-2 text-left font-medium text-muted-foreground">{t("admin.price")}</th>
+                          <th className="px-4 py-2 text-left font-medium text-muted-foreground">{t("admin.actions")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -342,6 +347,25 @@ export default function AdminLocations() {
                               <td className="px-4 py-2 text-muted-foreground">{u.sizeM2 ?? "—"}</td>
                               <td className="px-4 py-2 text-muted-foreground">{u.quantityTotal ?? "—"}</td>
                               <td className="px-4 py-2 text-muted-foreground">€{u.priceFrom} {u.priceUnit}</td>
+                              <td className="px-4 py-2">
+                                <div className="flex items-center gap-1">
+                                  <button onClick={() => { setEditingUnit({ ...u }); setEditUnitOpen(true); }} className="rounded p-1 hover:bg-secondary">
+                                    <Edit className="h-3.5 w-3.5 text-muted-foreground" />
+                                  </button>
+                                  <button onClick={async () => {
+                                    if (!confirm("Kustuta üksus?")) return;
+                                    try {
+                                      await apiClient.delete(`/locations/${selected.id}/units/${u.id}`);
+                                      invalidate();
+                                      toast.success("Üksus kustutatud");
+                                    } catch (err: any) {
+                                      toast.error(err.message || "Kustutamine ebaõnnestus");
+                                    }
+                                  }} className="rounded p-1 hover:bg-secondary">
+                                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                  </button>
+                                </div>
+                              </td>
                             </tr>
                           );
                         })}
@@ -391,7 +415,7 @@ export default function AdminLocations() {
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.imageUrls")}</label>
-              <textarea className={inp + " min-h-[60px]"} value={newLoc.images} onChange={(e) => setNewLoc({ ...newLoc, images: e.target.value })} />
+              <ImageUploader images={newLoc.images} onChange={imgs => setNewLoc({ ...newLoc, images: imgs })} />
             </div>
             <GeocodeLookup
               address={newLoc.address}
@@ -471,6 +495,71 @@ export default function AdminLocations() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Edit Unit Dialog ── */}
+      <Dialog open={editUnitOpen} onOpenChange={setEditUnitOpen}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Muuda üksust</DialogTitle></DialogHeader>
+          {editingUnit && (
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.title_field")}</label>
+                <input className={inp} value={editingUnit.title} onChange={e => setEditingUnit({ ...editingUnit, title: e.target.value })} />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.price")} (€)</label>
+                  <input type="number" className={inp} value={editingUnit.priceFrom ?? ""} onChange={e => setEditingUnit({ ...editingUnit, priceFrom: Number(e.target.value) })} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.sizeM2")}</label>
+                  <input type="number" className={inp} value={editingUnit.sizeM2 ?? ""} onChange={e => setEditingUnit({ ...editingUnit, sizeM2: e.target.value ? Number(e.target.value) : null })} />
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.quantity")}</label>
+                  <input type="number" className={inp} value={editingUnit.quantityTotal ?? ""} onChange={e => setEditingUnit({ ...editingUnit, quantityTotal: Number(e.target.value) })} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.priceUnit")}</label>
+                  <select className={inp} value={editingUnit.priceUnit ?? "/kuu"} onChange={e => setEditingUnit({ ...editingUnit, priceUnit: e.target.value })}>
+                    <option value="/kuu">/kuu</option>
+                    <option value="/päev">/päev</option>
+                    <option value="/tund">/tund</option>
+                    <option value="/kord">/kord</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setEditUnitOpen(false)}>{t("admin.cancel")}</Button>
+                <Button
+                  onClick={async () => {
+                    try {
+                      await apiClient.patch(`/admin/listings/${editingUnit.id}`, {
+                        title: editingUnit.title,
+                        priceFrom: editingUnit.priceFrom,
+                        sizeM2: editingUnit.sizeM2,
+                        quantityTotal: editingUnit.quantityTotal,
+                        priceUnit: editingUnit.priceUnit,
+                      });
+                      invalidate();
+                      toast.success("Üksus uuendatud");
+                      setEditUnitOpen(false);
+                    } catch (err: any) {
+                      toast.error(err.message || "Uuendamine ebaõnnestus");
+                    }
+                  }}
+                  className="bg-accent text-accent-foreground hover:bg-accent/90"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  Salvesta
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
