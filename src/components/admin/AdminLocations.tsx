@@ -274,7 +274,7 @@ export default function AdminLocations() {
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.imageUrls")}</label>
-                <textarea className={inp + " min-h-[60px]"} value={editLoc.images} onChange={(e) => setEditLoc({ ...editLoc, images: e.target.value })} />
+                <ImageUploader images={editLoc.images} onChange={imgs => setEditLoc({ ...editLoc, images: imgs })} />
               </div>
               <GeocodeLookup
                 address={editLoc.address}
@@ -392,7 +392,7 @@ export default function AdminLocations() {
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.imageUrls")}</label>
-              <textarea className={inp + " min-h-[60px]"} value={newLoc.images} onChange={(e) => setNewLoc({ ...newLoc, images: e.target.value })} />
+              <ImageUploader images={newLoc.images} onChange={imgs => setNewLoc({ ...newLoc, images: imgs })} />
             </div>
             <GeocodeLookup
               address={newLoc.address}
