@@ -31,6 +31,8 @@ export default function AdminLocations() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addLocOpen, setAddLocOpen] = useState(false);
   const [addUnitOpen, setAddUnitOpen] = useState(false);
+  const [editUnitOpen, setEditUnitOpen] = useState(false);
+  const [editingUnit, setEditingUnit] = useState<any>(null);
   const [editing, setEditing] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -331,6 +333,7 @@ export default function AdminLocations() {
                           <th className="px-4 py-2 text-left font-medium text-muted-foreground">{t("admin.locations.sizeM2")}</th>
                           <th className="px-4 py-2 text-left font-medium text-muted-foreground">{t("admin.locations.quantity")}</th>
                           <th className="px-4 py-2 text-left font-medium text-muted-foreground">{t("admin.price")}</th>
+                          <th className="px-4 py-2 text-left font-medium text-muted-foreground">{t("admin.actions")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -343,6 +346,25 @@ export default function AdminLocations() {
                               <td className="px-4 py-2 text-muted-foreground">{u.sizeM2 ?? "—"}</td>
                               <td className="px-4 py-2 text-muted-foreground">{u.quantityTotal ?? "—"}</td>
                               <td className="px-4 py-2 text-muted-foreground">€{u.priceFrom} {u.priceUnit}</td>
+                              <td className="px-4 py-2">
+                                <div className="flex items-center gap-1">
+                                  <button onClick={() => { setEditingUnit({ ...u }); setEditUnitOpen(true); }} className="rounded p-1 hover:bg-secondary">
+                                    <Edit className="h-3.5 w-3.5 text-muted-foreground" />
+                                  </button>
+                                  <button onClick={async () => {
+                                    if (!confirm("Kustuta üksus?")) return;
+                                    try {
+                                      await apiClient.delete(`/locations/${selected.id}/units/${u.id}`);
+                                      invalidate();
+                                      toast.success("Üksus kustutatud");
+                                    } catch (err: any) {
+                                      toast.error(err.message || "Kustutamine ebaõnnestus");
+                                    }
+                                  }} className="rounded p-1 hover:bg-secondary">
+                                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                  </button>
+                                </div>
+                              </td>
                             </tr>
                           );
                         })}
