@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PlusCircle, MapPin, Save, Loader2, Edit, X, Warehouse, Truck, CarFront, Trash2 } from "lucide-react";
+import GeocodeLookup from "./AdminLocationsGeocode";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -274,15 +275,12 @@ export default function AdminLocations() {
                 <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.imageUrls")}</label>
                 <textarea className={inp + " min-h-[60px]"} value={editLoc.images} onChange={(e) => setEditLoc({ ...editLoc, images: e.target.value })} />
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.latLng")}</label>
-                  <div className="flex gap-2 mt-1">
-                    <input className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" placeholder="Lat" value={editLoc.lat} onChange={(e) => setEditLoc({ ...editLoc, lat: e.target.value })} />
-                    <input className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" placeholder="Lng" value={editLoc.lng} onChange={(e) => setEditLoc({ ...editLoc, lng: e.target.value })} />
-                  </div>
-                </div>
-              </div>
+              <GeocodeLookup
+                address={editLoc.address}
+                lat={editLoc.lat}
+                lng={editLoc.lng}
+                onCoordsChange={(lat, lng) => setEditLoc({ ...editLoc, lat, lng })}
+              />
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" onClick={() => setEditing(false)}>{t("admin.cancel")}</Button>
                 <Button onClick={handleUpdateLoc} disabled={updateLocMutation.isPending} className="bg-accent text-accent-foreground hover:bg-accent/90">
@@ -395,13 +393,12 @@ export default function AdminLocations() {
               <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.imageUrls")}</label>
               <textarea className={inp + " min-h-[60px]"} value={newLoc.images} onChange={(e) => setNewLoc({ ...newLoc, images: e.target.value })} />
             </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.latLng")}</label>
-              <div className="flex gap-2 mt-1">
-                <input className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" placeholder="Lat" value={newLoc.lat} onChange={(e) => setNewLoc({ ...newLoc, lat: e.target.value })} />
-                <input className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" placeholder="Lng" value={newLoc.lng} onChange={(e) => setNewLoc({ ...newLoc, lng: e.target.value })} />
-              </div>
-            </div>
+            <GeocodeLookup
+              address={newLoc.address}
+              lat={newLoc.lat}
+              lng={newLoc.lng}
+              onCoordsChange={(lat, lng) => setNewLoc({ ...newLoc, lat, lng })}
+            />
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => setAddLocOpen(false)}>{t("admin.cancel")}</Button>
               <Button onClick={handleCreateLoc} disabled={createLocMutation.isPending || !newLoc.supplierId || !newLoc.name} className="bg-accent text-accent-foreground hover:bg-accent/90">
