@@ -117,7 +117,7 @@ export default function AdminLocations() {
       lng: Number(newLoc.lng) || 0,
       description: newLoc.description || undefined,
       openingHours: newLoc.openingHours || undefined,
-      images: newLoc.images ? newLoc.images.split("\n").map((s) => s.trim()).filter(Boolean) : undefined,
+      images: newLoc.images.length > 0 ? newLoc.images : undefined,
       notes: newLoc.notes || undefined,
     });
   };
@@ -134,7 +134,7 @@ export default function AdminLocations() {
         lng: Number(editLoc.lng) || 0,
         description: editLoc.description,
         openingHours: editLoc.openingHours,
-        images: editLoc.images ? editLoc.images.split("\n").map((s) => s.trim()).filter(Boolean) : [],
+        images: editLoc.images,
         notes: editLoc.notes,
       },
     });
@@ -169,7 +169,7 @@ export default function AdminLocations() {
       lng: String(selected.lng),
       description: selected.description || "",
       openingHours: selected.openingHours || "",
-      images: (selected.images || []).join("\n"),
+      images: selected.images || [],
       notes: selected.notes || "",
     });
     setEditing(true);
