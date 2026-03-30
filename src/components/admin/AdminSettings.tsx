@@ -192,9 +192,14 @@ export default function AdminSettings() {
               <label className="text-xs font-medium text-muted-foreground">
                 {t("admin.defaultVatRate")}
               </label>
-              <input type="number" min="0" max="30" className={inp}
+              <select className={inp}
                 value={settings.defaultVatRate}
-                onChange={e => set("defaultVatRate", e.target.value)} />
+                onChange={e => set("defaultVatRate", e.target.value)}>
+                <option value="24">24% ({t("provider.listings.vatStandard")})</option>
+                <option value="13">13% ({t("provider.listings.vatReduced")})</option>
+                <option value="9">9% ({t("provider.listings.vatReduced")})</option>
+                <option value="0">0% ({t("provider.listings.vatExempt")})</option>
+              </select>
               <p className="mt-0.5 text-[10px] text-muted-foreground">{t("admin.defaultVatRateDesc")}</p>
             </div>
           </div>
