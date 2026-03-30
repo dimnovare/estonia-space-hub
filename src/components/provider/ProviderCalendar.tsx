@@ -137,7 +137,7 @@ export default function ProviderCalendar() {
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">{t("provider.calendar.upcomingBookings")}</h4>
             <div className="space-y-2">
               {bookings.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Broneeringuid pole.</p>
+                <p className="text-sm text-muted-foreground">{t("provider.calendar.noBookingsYet")}</p>
               ) : bookings.map(b => (
                 <div key={b.id} className="flex items-center justify-between rounded-lg border border-border p-3 text-sm">
                   <div>
