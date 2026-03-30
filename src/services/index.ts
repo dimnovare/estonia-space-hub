@@ -156,6 +156,9 @@ export const supplierService = {
   async update(id: string, data: Record<string, unknown>): Promise<Supplier> {
     return apiClient.patch<Supplier>(`/admin/suppliers/${id}`, data);
   },
+  async delete(id: string): Promise<void> {
+    return apiClient.delete(`/admin/suppliers/${id}`);
+  },
 };
 
 // ─── Listing Service ────────────────────────────────────────────────────────────

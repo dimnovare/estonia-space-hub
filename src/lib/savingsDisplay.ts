@@ -10,7 +10,8 @@ export function getSavingsDisplay(
 ) {
   if (!priceFrom || priceFrom <= 0) return null;
 
-  const discount = customerDiscountRate ?? 5;
+  const discount = customerDiscountRate ?? 0;
+  if (!discount || discount <= 0) return null;
   const ruumlyPrice = Math.round(priceFrom * (1 - discount / 100));
   const savings = priceFrom - ruumlyPrice;
 

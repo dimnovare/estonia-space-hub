@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, Zap, Hand, RefreshCw, Server, PlusCircle, Save, Loader2 } from "lucide-react";
+import { Mail, Zap, Hand, RefreshCw, Server, PlusCircle, Save, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supplierService } from "@/services";
@@ -363,6 +363,19 @@ export default function AdminSuppliers() {
                   Salvesta
                 </Button>
                 <Button variant="outline" size="sm" className="flex-1" onClick={() => toggleStatus(selected.id)}>{selected.isActive ? t("admin.block") : t("admin.activate")}</Button>
+                <Button variant="outline" size="sm" className="flex-1 text-destructive hover:bg-destructive/10" onClick={async () => {
+                  if (!confirm("Kustuta partner? Seda ei saa tagasi võtta.")) return;
+                  try {
+                    await supplierService.delete(selected.id);
+                    invalidate();
+                    setSelected(null);
+                    toast.success("Partner kustutatud");
+                  } catch (err: any) {
+                    toast.error(err?.message || "Kustutamine ebaõnnestus");
+                  }
+                }}>
+                  <Trash2 className="mr-1 h-3.5 w-3.5" /> Kustuta
+                </Button>
                 <Button variant="outline" size="sm" className="flex-1" onClick={() => setSelected(null)}>Sulge</Button>
               </div>
             </div>
