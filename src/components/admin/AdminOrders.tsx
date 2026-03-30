@@ -28,7 +28,7 @@ export default function AdminOrders() {
       <div className="mt-4 flex gap-2 overflow-x-auto">
         {(["all", "created", "sending", "sent", "confirmed", "rejected", "active", "completed"] as const).map((f) => (
           <button key={f} onClick={() => setFilter(f)} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
-            {f === "all" ? `${t("admin.all")} (${orders.length})` : `${ORDER_STATUS_CONFIG[f].label} (${orders.filter((o) => o.status === f).length})`}
+            {f === "all" ? `${t("admin.all")} (${orders.length})` : `${t(ORDER_STATUS_CONFIG[f].labelKey) || ORDER_STATUS_CONFIG[f].label} (${orders.filter((o) => o.status === f).length})`}
           </button>
         ))}
       </div>
@@ -47,7 +47,7 @@ export default function AdminOrders() {
             <button key={o.id} onClick={() => setViewOrder(o)} className="w-full rounded-xl border border-border p-3 text-left hover:bg-secondary/50 transition-colors">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-mono text-muted-foreground">{o.id}</span>
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${statusConf.color}`}>{statusConf.label}</span>
+                <span className={`rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${statusConf.color}`}>{t(statusConf.labelKey) || statusConf.label}</span>
               </div>
               <p className="mt-1 text-sm font-medium truncate">{o.listingTitle}</p>
               <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
@@ -90,7 +90,7 @@ export default function AdminOrders() {
                     <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${intConf.color}`}><IntIcon className="h-3 w-3" />{intConf.label}</span></td>
                     <td className="px-4 py-3 font-medium">€{o.total}</td>
                     <td className="px-4 py-3 text-success font-medium">€{o.margin}</td>
-                    <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${statusConf.color}`}>{statusConf.label}</span></td>
+                    <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${statusConf.color}`}>{t(statusConf.labelKey) || statusConf.label}</span></td>
                     <td className="px-4 py-3"><Button variant="outline" size="sm" onClick={() => setViewOrder(o)}>{t("admin.view")}</Button></td>
                   </tr>
                 );
