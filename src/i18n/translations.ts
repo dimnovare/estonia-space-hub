@@ -985,6 +985,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Location
     "location.units": "ühikut saadaval",
     "location.from": "Alates",
+    "location.perMonth": "/kuu",
     "location.allUnits": "Kõik ühikud",
     "location.openingHours": "Lahtiolekuajad",
     "location.unitSize": "Suurus",
@@ -2398,6 +2399,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Location
     "location.units": "units available",
     "location.from": "From",
+    "location.perMonth": "/mo",
     "location.allUnits": "All units",
     "location.openingHours": "Opening hours",
     "location.unitSize": "Size",
@@ -3804,6 +3806,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Location
     "location.units": "единиц доступно",
     "location.from": "От",
+    "location.perMonth": "/мес",
     "location.allUnits": "Все единицы",
     "location.openingHours": "Часы работы",
     "location.unitSize": "Размер",
