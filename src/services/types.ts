@@ -230,7 +230,13 @@ export interface ListingBase {
   description: string;
   sizeM2?: number;
   quantityTotal?: number;
-  locationId?: string;
+  locationId?: string | null;
+  clientDiscountRateOverride?: number | null;
+  clientDiscountRate?: number | null;
+  partnerDiscountRateOverride?: number | null;
+  vatRate?: number | null;
+  pricesIncludeVat?: boolean;
+  isVerified?: boolean;
 }
 
 export interface SupplierListingExtra {
