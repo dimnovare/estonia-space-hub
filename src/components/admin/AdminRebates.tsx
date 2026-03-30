@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, FileText, CheckCircle, Send } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 function getPrevMonth(): string {
   const d = new Date();
@@ -13,14 +14,15 @@ function getPrevMonth(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
-const statusMap: Record<string, { label: string; className: string }> = {
-  draft: { label: "Mustand", className: "bg-secondary text-muted-foreground" },
-  sent: { label: "Saadetud", className: "bg-blue-100 text-blue-700" },
-  paid: { label: "Makstud", className: "bg-success/10 text-success" },
-  overdue: { label: "Tähtaja ületanud", className: "bg-destructive/10 text-destructive" },
+const statusMap: Record<string, { labelKey: string; label: string; className: string }> = {
+  draft: { labelKey: "rebate.draft", label: "Draft", className: "bg-secondary text-muted-foreground" },
+  sent: { labelKey: "rebate.sent", label: "Sent", className: "bg-blue-100 text-blue-700" },
+  paid: { labelKey: "rebate.paid", label: "Paid", className: "bg-success/10 text-success" },
+  overdue: { labelKey: "rebate.overdue", label: "Overdue", className: "bg-destructive/10 text-destructive" },
 };
 
 export default function AdminRebates() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const [period, setPeriod] = useState(getPrevMonth);
 
@@ -34,27 +36,27 @@ export default function AdminRebates() {
     mutationFn: () => apiClient.post("/admin/rebate-invoices/generate", { period }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["rebate-invoices"] });
-      toast.success("Arved genereeritud");
+      toast.success(t("admin.rebates.generated"));
     },
-    onError: (err: any) => toast.error(err?.message || "Genereerimine ebaõnnestus"),
+    onError: (err: any) => toast.error(err?.message || t("admin.rebates.generateFailed")),
   });
 
   const markSentMut = useMutation({
     mutationFn: (id: string) => apiClient.patch(`/admin/rebate-invoices/${id}/mark-sent`, {}),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["rebate-invoices"] });
-      toast.success("Märgitud saadetud");
+      toast.success(t("admin.rebates.markedSent"));
     },
-    onError: (err: any) => toast.error(err?.message || "Viga"),
+    onError: (err: any) => toast.error(err?.message || t("admin.rebates.error")),
   });
 
   const markPaidMut = useMutation({
     mutationFn: (id: string) => apiClient.patch(`/admin/rebate-invoices/${id}/mark-paid`, { reference: "" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["rebate-invoices"] });
-      toast.success("Märgitud makstud");
+      toast.success(t("admin.rebates.markedPaid"));
     },
-    onError: (err: any) => toast.error(err?.message || "Viga"),
+    onError: (err: any) => toast.error(err?.message || t("admin.rebates.error")),
   });
 
   const invoices: any[] = Array.isArray(data) ? data : (data as any)?.data ?? (data as any)?.items ?? [];
@@ -71,17 +73,17 @@ export default function AdminRebates() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Tagasimakse arved</h1>
+      <h1 className="font-display text-2xl font-bold">{t("admin.rebates.title")}</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Igakuised arved rebate-mudeliga partneritele
+        {t("admin.rebates.desc")}
       </p>
 
       {/* Generate section */}
       <div className="mt-6 rounded-xl border border-border p-4">
-        <h3 className="text-sm font-semibold">Genereeri igakuised arved</h3>
+        <h3 className="text-sm font-semibold">{t("admin.rebates.generateTitle")}</h3>
         <div className="mt-3 flex flex-wrap items-end gap-3">
           <div>
-            <label className="text-xs font-medium text-muted-foreground">Periood</label>
+            <label className="text-xs font-medium text-muted-foreground">{t("admin.rebates.period")}</label>
             <input type="month" className={inp} value={period} onChange={e => setPeriod(e.target.value)} />
           </div>
           <Button
@@ -90,7 +92,7 @@ export default function AdminRebates() {
             className="bg-accent text-accent-foreground hover:bg-accent/90"
           >
             {generateMut.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
-            Genereeri arved
+            {t("admin.rebates.generateBtn")}
           </Button>
         </div>
       </div>
@@ -99,19 +101,19 @@ export default function AdminRebates() {
       <div className="mt-6 rounded-xl border border-border overflow-x-auto">
         {invoices.length === 0 ? (
           <div className="p-8 text-center text-sm text-muted-foreground">
-            Sellel perioodil tagasimakse arveid ei ole.
+            {t("admin.rebates.noInvoices")}
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Partner</TableHead>
-                <TableHead>Periood</TableHead>
-                <TableHead className="hidden sm:table-cell">Broneeringuid</TableHead>
-                <TableHead className="hidden sm:table-cell">Kogusumma</TableHead>
-                <TableHead>Tagasimakse</TableHead>
-                <TableHead>Staatus</TableHead>
-                <TableHead>Tegevused</TableHead>
+                <TableHead>{t("admin.rebates.partner")}</TableHead>
+                <TableHead>{t("admin.rebates.period")}</TableHead>
+                <TableHead className="hidden sm:table-cell">{t("admin.rebates.bookingsCount")}</TableHead>
+                <TableHead className="hidden sm:table-cell">{t("admin.rebates.totalAmount")}</TableHead>
+                <TableHead>{t("admin.rebates.rebateAmount")}</TableHead>
+                <TableHead>{t("admin.rebates.status")}</TableHead>
+                <TableHead>{t("admin.rebates.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -125,20 +127,20 @@ export default function AdminRebates() {
                     <TableCell className="hidden sm:table-cell">€{inv.totalBookingValue ?? inv.totalValue}</TableCell>
                     <TableCell className="font-semibold">€{inv.rebateAmount}</TableCell>
                     <TableCell>
-                      <Badge className={sc.className}>{sc.label}</Badge>
+                      <Badge className={sc.className}>{t(sc.labelKey) || sc.label}</Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
                         {inv.status === "draft" && (
                           <Button variant="outline" size="sm" className="text-xs gap-1"
                             onClick={() => markSentMut.mutate(inv.id)} disabled={markSentMut.isPending}>
-                            <Send className="h-3 w-3" /> Saada
+                            <Send className="h-3 w-3" /> {t("admin.rebates.send")}
                           </Button>
                         )}
                         {inv.status === "sent" && (
                           <Button variant="outline" size="sm" className="text-xs gap-1"
                             onClick={() => markPaidMut.mutate(inv.id)} disabled={markPaidMut.isPending}>
-                            <CheckCircle className="h-3 w-3" /> Makstud
+                            <CheckCircle className="h-3 w-3" /> {t("admin.rebates.markPaid")}
                           </Button>
                         )}
                       </div>
