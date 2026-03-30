@@ -491,10 +491,16 @@ export default function AdminLocations() {
               <textarea className={inp + " min-h-[60px]"} value={newUnit.description} onChange={(e) => setNewUnit({ ...newUnit, description: e.target.value })} />
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.vatRate")}</label>
-                <input type="number" className={inp} placeholder="0" value={newUnit.vatRate} onChange={(e) => setNewUnit({ ...newUnit, vatRate: e.target.value })} />
-              </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.vatRate")}</label>
+              <select className={inp} value={newUnit.vatRate} onChange={(e) => setNewUnit({ ...newUnit, vatRate: e.target.value })}>
+                <option value="">Vaikimisi (24%)</option>
+                <option value="24">24% (Eesti standard)</option>
+                <option value="13">13% (vähendatud)</option>
+                <option value="9">9% (vähendatud)</option>
+                <option value="0">0% (KM-vaba)</option>
+              </select>
+            </div>
               <div className="flex items-end gap-2 pb-1">
                 <input type="checkbox" id="unit-vat-incl" className="rounded border-border"
                   checked={newUnit.pricesIncludeVat}

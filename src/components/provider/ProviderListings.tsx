@@ -2,12 +2,14 @@ import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useLocations, useCreateLocation, useUpdateLocation, useAddUnit } from "@/hooks/queries";
 import { ESTONIAN_CITIES } from "@/lib/constants";
-import { Loader2, MapPin, Warehouse, Truck, CarFront, Plus, Pencil, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, MapPin, Warehouse, Truck, CarFront, Plus, Pencil, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import ListingExtrasManager from "./ListingExtrasManager";
 import type { SupplierLocation } from "@/services/types";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
+import { useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/services/apiClient";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -143,16 +145,41 @@ function LocationDialog({
               )}
             />
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.locationLat")}</label>
-              <Input type="number" step="any" {...form.register("lat")} />
+          <div className="flex items-end gap-2">
+            <div className="flex-1">
+              <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.locationAddress")}</label>
+              <Input {...form.register("address")} />
             </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.locationLng")}</label>
-              <Input type="number" step="any" {...form.register("lng")} />
-            </div>
+            <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={async () => {
+              const addr = form.getValues("address");
+              const city = form.getValues("city");
+              if (!addr) { toast.error("Sisestage aadress"); return; }
+              try {
+                const q = encodeURIComponent(`${addr}, ${city || "Estonia"}`);
+                const res = await fetch(
+                  `https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1&countrycodes=ee`,
+                  { headers: { "User-Agent": "Ruumly/1.0 (info@ruumly.eu)" } }
+                );
+                const data = await res.json();
+                if (data.length > 0) {
+                  form.setValue("lat", parseFloat(data[0].lat));
+                  form.setValue("lng", parseFloat(data[0].lon));
+                  toast.success("Koordinaadid leitud!");
+                } else {
+                  toast.error("Aadressi ei leitud");
+                }
+              } catch {
+                toast.error("Geokoodeerimine ebaõnnestus");
+              }
+            }}>
+              <MapPin className="mr-1 h-3.5 w-3.5" /> Leia
+            </Button>
           </div>
+          {(form.watch("lat") || form.watch("lng")) && (
+            <p className="text-xs text-muted-foreground">
+              Koordinaadid: {form.watch("lat")}, {form.watch("lng")}
+            </p>
+          )}
           <div>
             <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.locationHours")}</label>
             <Input {...form.register("openingHours")} />
@@ -276,7 +303,21 @@ function UnitDialog({
           </div>
           <div>
             <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitVatRate")}</label>
-            <Input type="number" step="0.1" {...form.register("vatRate")} />
+            <Controller
+              control={form.control}
+              name="vatRate"
+              render={({ field }) => (
+                <Select value={String(field.value ?? "")} onValueChange={(v) => field.onChange(v ? Number(v) : undefined)}>
+                  <SelectTrigger><SelectValue placeholder="Vali KM määr" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="24">24% (Eesti standard)</SelectItem>
+                    <SelectItem value="13">13% (vähendatud)</SelectItem>
+                    <SelectItem value="9">9% (vähendatud)</SelectItem>
+                    <SelectItem value="0">0% (KM-vaba)</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </div>
           <div>
             <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitDesc")}</label>
@@ -299,6 +340,7 @@ function UnitDialog({
 
 export default function ProviderListings() {
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
   const { data: locations = [], isLoading } = useLocations();
 
   const [locDialogOpen, setLocDialogOpen] = useState(false);
@@ -351,6 +393,23 @@ export default function ProviderListings() {
                   title={t("provider.listings.editLocation")}
                 >
                   <Pencil className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!confirm("Kustuta asukoht? Kõik seotud üksused kustutatakse samuti.")) return;
+                    try {
+                      await apiClient.delete(`/locations/${loc.id}`);
+                      queryClient.invalidateQueries({ queryKey: ["locations"] });
+                      toast.success("Asukoht kustutatud");
+                    } catch (err: any) {
+                      toast.error(err?.message || "Kustutamine ebaõnnestus");
+                    }
+                  }}
+                  className="shrink-0 rounded-md p-1.5 text-destructive transition-colors hover:bg-destructive/10"
+                  title="Kustuta"
+                >
+                  <Trash2 className="h-4 w-4" />
                 </button>
                 <span className="shrink-0 rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
                   {loc.unitCount} {t("location.units")}

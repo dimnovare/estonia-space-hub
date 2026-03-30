@@ -94,7 +94,14 @@ class ApiClient {
       let message = `API error: ${response.status}`;
       try {
         const errorBody = await response.json();
-        if (errorBody.message) message = errorBody.message;
+        if (errorBody.message) {
+          message = errorBody.message;
+        } else if (errorBody.errors) {
+          const msgs = Object.values(errorBody.errors).flat().filter(Boolean);
+          if (msgs.length > 0) message = (msgs as string[]).join(". ");
+        } else if (errorBody.title) {
+          message = errorBody.title;
+        }
       } catch {}
       const err = new Error(message);
       (err as any).status = response.status;

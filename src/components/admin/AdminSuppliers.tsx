@@ -259,7 +259,7 @@ export default function AdminSuppliers() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">Pakett</label>
-                    <select className={inp} value={(selected as any).tier ?? "starter"} onChange={(e) => setSelected({ ...selected, tier: e.target.value } as any)}>
+                    <select className={inp} value={((selected as any).tier ?? "starter").toLowerCase()} onChange={(e) => setSelected({ ...selected, tier: e.target.value } as any)}>
                       <option value="starter">Starter (tasuta)</option>
                       <option value="standard">Standard (€49/kuu)</option>
                       <option value="premium">Premium (€99/kuu)</option>
