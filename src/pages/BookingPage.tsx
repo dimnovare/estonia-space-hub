@@ -415,12 +415,12 @@ export default function BookingPage() {
                 <div className="space-y-4 border-t border-border pt-6">
                   <div className="rounded-xl border border-accent/30 bg-accent/5 p-5 text-center">
                     <CheckCircle className="mx-auto h-8 w-8 text-accent" />
-                    <h3 className="mt-3 font-display text-lg font-semibold">Broneering kinnitatud!</h3>
+                    <h3 className="mt-3 font-display text-lg font-semibold">{t("booking.rebate.confirmed")}</h3>
                     <p className="mt-2 text-sm text-muted-foreground">
-                      Teenusepakkuja võtab teiega ühendust makseinfo osas.
+                      {t("booking.rebate.providerContact")}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Makse toimub otse teenusepakkujale — Ruumly vahendab broneeringut.
+                      {t("booking.rebate.directPayment")}
                     </p>
                   </div>
                 </div>
