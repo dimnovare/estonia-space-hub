@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   LayoutDashboard, List, MessageSquare, Settings, Users, FileText,
-  Package, Activity, ChevronDown, Plug, Route, MapPin, Banknote, ReceiptText
+  Package, Activity, ChevronDown, Plug, Route, MapPin, Banknote
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
@@ -19,7 +19,7 @@ import AdminContent from "@/components/admin/AdminContent";
 import AdminAudit from "@/components/admin/AdminAudit";
 import AdminSettings from "@/components/admin/AdminSettings";
 import AdminPayouts from "@/components/admin/AdminPayouts";
-import AdminRebates from "@/components/admin/AdminRebates";
+
 
 export default function AdminPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -34,7 +34,7 @@ export default function AdminPage() {
     { id: "locations", label: t("admin.locations"), icon: MapPin },
     { id: "orders", label: t("admin.orders"), icon: Package },
     { id: "payouts", label: "Väljamaksed", icon: Banknote },
-    { id: "rebates", label: "Tagasimaksed", icon: ReceiptText },
+    
     { id: "suppliers", label: t("admin.suppliers"), icon: Users },
     { id: "integrations", label: t("admin.integrations"), icon: Plug },
     { id: "routing", label: t("admin.routing"), icon: Route },
@@ -102,7 +102,7 @@ export default function AdminPage() {
         {activeTab === "content" && <AdminContent />}
         {activeTab === "audit" && <AdminAudit />}
         {activeTab === "payouts" && <AdminPayouts />}
-        {activeTab === "rebates" && <AdminRebates />}
+        
         {activeTab === "settings" && <AdminSettings />}
       </main>
     </div>

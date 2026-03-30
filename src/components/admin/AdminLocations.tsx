@@ -303,9 +303,24 @@ export default function AdminLocations() {
                     <p className="text-sm text-muted-foreground">{selected.address}, {selected.city}</p>
                     {selected.supplierName && <p className="text-xs text-muted-foreground mt-1">{t("admin.locations.supplier")}: {selected.supplierName}</p>}
                   </div>
-                  <Button variant="outline" size="sm" onClick={startEdit}>
-                    <Edit className="mr-1 h-3.5 w-3.5" /> {t("admin.edit")}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={startEdit}>
+                      <Edit className="mr-1 h-3.5 w-3.5" /> {t("admin.edit")}
+                    </Button>
+                    <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10" onClick={async () => {
+                      if (!confirm("Kustuta asukoht? Kõik seotud üksused kustutatakse samuti.")) return;
+                      try {
+                        await apiClient.delete(`/locations/${selected.id}`);
+                        invalidate();
+                        toast.success("Asukoht kustutatud");
+                        setSelectedId(null);
+                      } catch (err: any) {
+                        toast.error(err.message || "Kustutamine ebaõnnestus");
+                      }
+                    }}>
+                      <Trash2 className="mr-1 h-3.5 w-3.5" /> Kustuta
+                    </Button>
+                  </div>
                 </div>
                 {selected.description && <p className="mt-3 text-sm text-muted-foreground">{selected.description}</p>}
                 <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
