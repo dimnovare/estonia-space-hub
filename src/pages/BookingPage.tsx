@@ -42,6 +42,8 @@ export default function BookingPage() {
   const [paymentMethod, setPaymentMethod] = useState("bank");
   const [submitted, setSubmitted] = useState(false);
   const [phase, setPhase] = useState<SubmitPhase>("submitting");
+  const [showVerifyBanner, setShowVerifyBanner] = useState(false);
+  const [resendSent, setResendSent] = useState(false);
 
   const detailsForm = useForm<BookingDetailsForm>({
     resolver: zodResolver(bookingDetailsSchema),
