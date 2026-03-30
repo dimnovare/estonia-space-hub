@@ -56,7 +56,7 @@ export default function AdminListings() {
   const openNew = () => {
     setEditItem({
       title: "", type: "warehouse", city: "", address: "",
-      price: 0, priceUnit: "€/kuu", status: "active",
+      price: 0, priceUnit: "€/month", status: "active",
       description: "", supplierId: suppliers[0]?.id ?? "",
       lat: null, lng: null,
       partnerDiscountRateOverride: null,
@@ -91,7 +91,7 @@ export default function AdminListings() {
       lat: editItem.lat ? Number(editItem.lat) : 0,
       lng: editItem.lng ? Number(editItem.lng) : 0,
       priceFrom: Number(editItem.price ?? editItem.priceFrom ?? 0),
-      priceUnit: editItem.priceUnit || "€/kuu",
+      priceUnit: editItem.priceUnit || "€/month",
       availableNow: editItem.status === "active",
       description: editItem.description || "",
       partnerDiscountRateOverride: editItem.partnerDiscountRateOverride ?? null,

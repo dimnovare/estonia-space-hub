@@ -219,7 +219,7 @@ function UnitDialog({
       title: "",
       type: "Warehouse",
       priceFrom: 0,
-      priceUnit: "€/kuu",
+      priceUnit: "€/month",
       description: "",
     },
   });
