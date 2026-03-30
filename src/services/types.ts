@@ -56,6 +56,10 @@ export interface Supplier {
   integrationHealth: "healthy" | "degraded" | "offline";
   createdAt: string;
   notes?: string;
+  partnerDiscountRate: number;
+  clientDiscountRate: number;
+  tier: "starter" | "standard" | "premium";
+  billingModel: "marketplace" | "rebate";
 }
 
 export interface PartnerIntegrationSettings {
