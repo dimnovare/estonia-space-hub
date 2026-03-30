@@ -48,7 +48,7 @@ export default function AdminSettings() {
         }
         setSettings(prev => ({ ...prev, ...flat }));
       })
-      .catch(() => toast.error(t("toast.settingsLoadFailed")))
+      .catch((err: any) => toast.error(err?.message || t("toast.settingsLoadFailed")))
       .finally(() => setLoading(false));
   }, []);
 

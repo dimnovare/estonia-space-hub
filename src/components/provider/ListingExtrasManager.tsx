@@ -60,7 +60,7 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
           setNewPrice("");
           setNewNoDiscount(false);
         },
-        onError: () => toast.error(t("provider.extras.addError")),
+        onError: (err: any) => toast.error(err?.message || t("provider.extras.addError")),
       }
     );
   };
@@ -68,14 +68,14 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
   const handleToggle = (extraId: string, isActive: boolean) => {
     updateExtra.mutate(
       { extraId, data: { isActive } },
-      { onError: () => toast.error(t("provider.extras.updateError")) }
+      { onError: (err: any) => toast.error(err?.message || t("provider.extras.updateError")) }
     );
   };
 
   const handleRemove = (extraId: string) => {
     removeExtra.mutate(extraId, {
       onSuccess: () => toast.success(t("provider.extras.removed")),
-      onError: () => toast.error(t("provider.extras.removeError")),
+      onError: (err: any) => toast.error(err?.message || t("provider.extras.removeError")),
     });
   };
 
@@ -132,7 +132,7 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
                           onCheckedChange={(checked) => {
                             updateExtra.mutate(
                               { extraId: extra.id, data: { partnerDiscountRate: checked ? 0 : null } },
-                              { onError: () => toast.error(t("provider.extras.updateError")) }
+                              { onError: (err: any) => toast.error(err?.message || t("provider.extras.updateError")) }
                             );
                           }}
                           disabled={updateExtra.isPending}
