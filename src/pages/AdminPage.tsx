@@ -34,7 +34,8 @@ export default function AdminPage() {
     { id: "locations", label: t("admin.locations"), icon: MapPin },
     { id: "orders", label: t("admin.orders"), icon: Package },
     { id: "payouts", label: "Väljamaksed", icon: Banknote },
-    
+    { id: "rebates", label: "Tagasimaksed", icon: Receipt },
+
     { id: "suppliers", label: t("admin.suppliers"), icon: Users },
     { id: "integrations", label: t("admin.integrations"), icon: Plug },
     { id: "routing", label: t("admin.routing"), icon: Route },
