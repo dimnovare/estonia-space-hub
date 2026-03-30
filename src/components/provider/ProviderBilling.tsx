@@ -75,11 +75,11 @@ export default function ProviderBilling() {
   const inp = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
 
   const rebateStatusConfig: Record<string, { label: string; className: string }> = {
-    draft: { label: "Arve koostamisel", className: "bg-muted text-muted-foreground" },
-    sent: { label: "Arve saadetud", className: "bg-blue-100 text-blue-700" },
-    paid: { label: "Makstud", className: "bg-success/10 text-success" },
-    overdue: { label: "Tähtaja ületanud", className: "bg-destructive/10 text-destructive" },
-    disputed: { label: "Vaidlustatud", className: "bg-amber-100 text-amber-700" },
+    draft: { label: t("provider.billing.statusDraft"), className: "bg-muted text-muted-foreground" },
+    sent: { label: t("provider.billing.statusSent"), className: "bg-blue-100 text-blue-700" },
+    paid: { label: t("provider.billing.statusPaid"), className: "bg-success/10 text-success" },
+    overdue: { label: t("provider.billing.statusOverdue"), className: "bg-destructive/10 text-destructive" },
+    disputed: { label: t("provider.billing.statusDisputed"), className: "bg-amber-100 text-amber-700" },
   };
 
   return (
@@ -94,7 +94,7 @@ export default function ProviderBilling() {
             <div className="mt-0.5 flex items-center gap-2">
               <p className="font-display text-lg font-bold">{supplierData?.tier ?? "Starter"}</p>
               {isRebate && (
-                <span className="rounded-full bg-amber-100 text-amber-700 px-2 py-0.5 text-[10px] font-medium">Tagasimakse</span>
+                <span className="rounded-full bg-amber-100 text-amber-700 px-2 py-0.5 text-[10px] font-medium">{t("provider.billing.rebate")}</span>
               )}
             </div>
             {supplierData?.subscriptionEndsAt && (
@@ -106,14 +106,14 @@ export default function ProviderBilling() {
           </div>
           <div className="text-right">
             <span className="font-display text-2xl font-bold">€{supplierData?.monthlyFee ?? 0}</span>
-            <span className="text-sm text-muted-foreground">/kuu</span>
+            <span className="text-sm text-muted-foreground">/{t("provider.billing.month")}</span>
           </div>
         </div>
         <div className="mt-4 grid grid-cols-3 gap-3 border-t border-border pt-4">
           <div className="text-center">
             <p className="font-display text-lg font-bold">{supplierData?.partnerDiscountRate ?? 0}%</p>
             <p className="text-xs text-muted-foreground">
-              {isRebate ? "Tagasimakse määr" : t("provider.billing.partnerDiscount")}
+              {isRebate ? t("provider.billing.rebateRate") : t("provider.billing.partnerDiscount")}
             </p>
           </div>
           <div className="text-center">
@@ -133,8 +133,7 @@ export default function ProviderBilling() {
       {isRebate ? (
         <div className="mt-6 rounded-xl border border-border p-4">
           <p className="text-xs text-muted-foreground">
-            Teie arveldus toimub tagasimakse mudelil — klient maksab otse teile,
-            Ruumly esitab igakuise arve kokkulepitud tagasimakse eest.
+            {t("provider.billing.rebateDesc")}
           </p>
         </div>
       ) : (
@@ -143,7 +142,7 @@ export default function ProviderBilling() {
             <div className="text-sm text-muted-foreground">{t("provider.billing.nextPayout")}</div>
             <div className="mt-1 font-display text-2xl font-bold">—</div>
             <div className="mt-1 text-xs text-muted-foreground">
-              Andmed uuenevad pärast esimesi broneeringuid
+              {t("provider.billing.dataNote")}
             </div>
           </div>
           <div className="card-elevated p-5">
@@ -161,7 +160,7 @@ export default function ProviderBilling() {
           {!editingBank && (
             <Button variant="ghost" size="sm" className="gap-1 text-xs" onClick={startEdit}>
               <Edit2 className="h-3 w-3" />
-              Muuda
+              {t("provider.billing.edit")}
             </Button>
           )}
         </div>
@@ -179,7 +178,7 @@ export default function ProviderBilling() {
                 onChange={e => setBankForm(p => ({ ...p, iban: e.target.value }))}
               />
               <p className="mt-0.5 text-[10px] text-muted-foreground">
-                Sisestage IBAN tühikutega või ilma
+                {t("provider.billing.ibanHint")}
               </p>
             </div>
             <div>
@@ -212,19 +211,19 @@ export default function ProviderBilling() {
                 disabled={saveBankMutation.isPending}
               >
                 {saveBankMutation.isPending
-                  ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Salvestan...</>
-                  : <><Save className="h-3.5 w-3.5" /> Salvesta</>}
+                  ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("provider.billing.saving")}</>
+                  : <><Save className="h-3.5 w-3.5" /> {t("provider.billing.save")}</>}
               </Button>
               <Button variant="outline" size="sm" className="gap-1" onClick={() => setEditingBank(false)}>
                 <X className="h-3.5 w-3.5" />
-                Tühista
+                {t("provider.billing.cancel")}
               </Button>
             </div>
           </div>
         ) : bankLoading ? (
           <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Laadin...
+            {t("provider.billing.loading")}
           </div>
         ) : (
           <div className="mt-3 grid gap-2 sm:grid-cols-2 text-sm">
@@ -233,7 +232,7 @@ export default function ProviderBilling() {
               <p className="font-mono">
                 {bankDetails?.iban
                   ? formatIban(bankDetails.iban)
-                  : <span className="text-muted-foreground italic">Lisage IBAN</span>}
+                  : <span className="text-muted-foreground italic">{t("provider.billing.addIban")}</span>}
               </p>
             </div>
             <div>
@@ -254,7 +253,7 @@ export default function ProviderBilling() {
 
         {!editingBank && !bankDetails?.iban && !bankLoading && (
           <div className="mt-3 rounded-lg bg-warning/10 border border-warning/20 p-3 text-xs text-warning">
-            ⚠️ Pangakonto andmed puuduvad. Lisage IBAN, et saada väljamakseid.
+            ⚠️ {t("provider.billing.noBankData")}
           </div>
         )}
       </div>
@@ -262,11 +261,11 @@ export default function ProviderBilling() {
       {/* Rebate invoices OR empty payouts state */}
       {isRebate ? (
         <div className="mt-6">
-          <h3 className="text-sm font-semibold mb-3">Tagasimakse arved</h3>
+          <h3 className="text-sm font-semibold mb-3">{t("provider.billing.rebateInvoices")}</h3>
           {rebateInvoices.length === 0 ? (
             <div className="rounded-xl border border-border p-8 text-center">
               <p className="text-sm text-muted-foreground">
-                Tagasimakse arveid pole veel genereeritud
+                {t("provider.billing.noRebateInvoices")}
               </p>
             </div>
           ) : (
@@ -274,11 +273,11 @@ export default function ProviderBilling() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Periood</TableHead>
-                    <TableHead className="hidden sm:table-cell">Broneeringud</TableHead>
-                    <TableHead className="hidden sm:table-cell">Koguväärtus</TableHead>
-                    <TableHead>Arve summa</TableHead>
-                    <TableHead>Staatus</TableHead>
+                    <TableHead>{t("provider.billing.period")}</TableHead>
+                    <TableHead className="hidden sm:table-cell">{t("provider.billing.bookings")}</TableHead>
+                    <TableHead className="hidden sm:table-cell">{t("provider.billing.totalValue")}</TableHead>
+                    <TableHead>{t("provider.billing.invoiceAmount")}</TableHead>
+                    <TableHead>{t("provider.billing.status")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -293,7 +292,7 @@ export default function ProviderBilling() {
                         <TableCell>
                           <Badge className={sc.className}>{sc.label}</Badge>
                           {inv.status === "sent" && (
-                            <p className="mt-1 text-[10px] text-muted-foreground">Palun tasuge 14 päeva jooksul</p>
+                            <p className="mt-1 text-[10px] text-muted-foreground">{t("provider.billing.payWithin14")}</p>
                           )}
                           {inv.status === "paid" && inv.paidAt && (
                             <p className="mt-1 text-[10px] text-muted-foreground">
@@ -312,7 +311,7 @@ export default function ProviderBilling() {
       ) : (
         <div className="mt-6 rounded-xl border border-border p-8 text-center">
           <p className="text-sm text-muted-foreground">
-            Väljamaksete ajalugu ilmub siia pärast esimesi broneeringuid
+            {t("provider.billing.historyNote")}
           </p>
         </div>
       )}
