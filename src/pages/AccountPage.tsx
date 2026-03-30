@@ -359,12 +359,12 @@ function AccountBookings() {
         value={filter}
         onChange={(e) => setFilter(e.target.value as BookingStatus | "all")}
         className="mt-4 w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent sm:hidden">
-        <option value="all">Kõik ({bookings.length})</option>
-        <option value="pending">Ootel ({bookings.filter(b => b.status === "pending").length})</option>
-        <option value="confirmed">Kinnitatud ({bookings.filter(b => b.status === "confirmed").length})</option>
-        <option value="active">Aktiivne ({bookings.filter(b => b.status === "active").length})</option>
-        <option value="completed">Lõpetatud ({bookings.filter(b => b.status === "completed").length})</option>
-        <option value="cancelled">Tühistatud ({bookings.filter(b => b.status === "cancelled").length})</option>
+        <option value="all">{t("account.all")} ({bookings.length})</option>
+        <option value="pending">{statusConfig.pending.label} ({bookings.filter(b => b.status === "pending").length})</option>
+        <option value="confirmed">{statusConfig.confirmed.label} ({bookings.filter(b => b.status === "confirmed").length})</option>
+        <option value="active">{statusConfig.active.label} ({bookings.filter(b => b.status === "active").length})</option>
+        <option value="completed">{statusConfig.completed.label} ({bookings.filter(b => b.status === "completed").length})</option>
+        <option value="cancelled">{statusConfig.cancelled.label} ({bookings.filter(b => b.status === "cancelled").length})</option>
       </select>
       <div className="mt-4 space-y-2">
         {filtered.length === 0 ? (
@@ -441,13 +441,13 @@ function AccountMessages() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Sõnumid</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Suhtlus broneeringute kohta partnerite ja toega.</p>
+      <h1 className="font-display text-2xl font-bold">{t("account.messages")}</h1>
+      <p className="mt-1 text-sm text-muted-foreground">{t("account.messagesDesc")}</p>
       <div className="mt-6 grid gap-4 lg:grid-cols-[280px_1fr]">
         {/* Conversation list */}
         <div className={`space-y-1 rounded-xl border border-border p-2 lg:block ${selectedBooking ? 'hidden' : 'block'}`}>
           {conversations.length === 0 ? (
-            <div className="flex flex-col items-center py-8 text-center"><MessageSquare className="h-8 w-8 text-muted-foreground/30" /><p className="mt-2 text-xs text-muted-foreground">Sõnumeid pole veel.</p></div>
+            <div className="flex flex-col items-center py-8 text-center"><MessageSquare className="h-8 w-8 text-muted-foreground/30" /><p className="mt-2 text-xs text-muted-foreground">{t("account.noMessages")}</p></div>
           ) : conversations.map(c => (
             <button key={c.bookingId} onClick={() => handleSelectBooking(c.bookingId)} className={`flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors ${selectedBooking === c.bookingId ? "bg-accent/10" : "hover:bg-secondary/50"}`}>
               <div className="flex-1 min-w-0">
@@ -461,7 +461,7 @@ function AccountMessages() {
         {/* Chat area */}
         <div className={`rounded-xl border border-border ${selectedBooking ? 'block' : 'hidden lg:block'}`}>
           {!selectedBooking ? (
-            <div className="flex flex-col items-center justify-center py-12 sm:py-20"><MessageSquare className="h-10 w-10 text-muted-foreground/20" /><p className="mt-3 text-sm text-muted-foreground">Valige vestlus.</p></div>
+            <div className="flex flex-col items-center justify-center py-12 sm:py-20"><MessageSquare className="h-10 w-10 text-muted-foreground/20" /><p className="mt-3 text-sm text-muted-foreground">{t("account.selectConversation")}</p></div>
           ) : (
             <div className="flex flex-col h-[calc(100vh-16rem)] lg:h-[500px]">
               <button
@@ -521,7 +521,7 @@ function AccountFavorites() {
         <div className="py-16 text-center">
           <Heart className="mx-auto h-12 w-12 text-muted-foreground/20" />
           <p className="mt-4 text-sm font-medium">{t("account.favorites.empty")}</p>
-          <p className="mt-1 text-xs text-muted-foreground">Vajuta kuulutusel südameikooni, et lisada lemmikutesse.</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t("account.favoritesHint")}</p>
           <Link to="/search">
             <Button className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90">{t("account.favorites.cta")}</Button>
           </Link>
@@ -546,11 +546,11 @@ function AccountSearches() {
         <Search className="mx-auto h-10 w-10 text-muted-foreground/20 mb-3" />
         <p className="font-display text-base font-semibold">{t("account.noSavedSearches")}</p>
         <p className="mt-1 text-sm text-muted-foreground max-w-xs mx-auto">
-          Otsingute salvestamine on tulemas. Praegu saad kasutada otsingulehekülge otse.
-        </p>
-        <Link to="/search">
-          <Button variant="outline" className="mt-4">Mine otsingusse</Button>
-        </Link>
+           {t("account.savedSearchesNote")}
+         </p>
+         <Link to="/search">
+           <Button variant="outline" className="mt-4">{t("account.goToSearch")}</Button>
+         </Link>
       </div>
     </div>
   );
@@ -605,13 +605,13 @@ function AccountNotifications() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">Teavitused</h1>
+        <h1 className="font-display text-2xl font-bold">{t("account.notifications")}</h1>
         {hasUnread && (
           <button
             onClick={() => markAll.mutate()}
             className="text-xs text-accent hover:underline"
           >
-            Märgi kõik loetuks
+            {t("account.markAllRead")}
           </button>
         )}
       </div>
@@ -675,16 +675,16 @@ function AccountProfile() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Profiili seaded</h1>
+      <h1 className="font-display text-2xl font-bold">{t("account.profileSettings")}</h1>
       <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 max-w-lg space-y-4">
         <div>
-          <label className="text-xs font-medium text-muted-foreground">Nimi</label>
+          <label className="text-xs font-medium text-muted-foreground">{t("account.name")}</label>
           <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" {...form.register("name")} />
           {form.formState.errors.name && <p className="mt-1 text-xs text-destructive">{form.formState.errors.name.message}</p>}
         </div>
-        <div><label className="text-xs font-medium text-muted-foreground">E-post</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-muted-foreground" value={user?.email || ""} disabled /></div>
+        <div><label className="text-xs font-medium text-muted-foreground">{t("account.emailLabel")}</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-muted-foreground" value={user?.email || ""} disabled /></div>
         <div>
-          <label className="text-xs font-medium text-muted-foreground">Telefon</label>
+          <label className="text-xs font-medium text-muted-foreground">{t("account.phoneLabel")}</label>
           <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" {...form.register("phone")} />
           {form.formState.errors.phone && <p className="mt-1 text-xs text-destructive">{form.formState.errors.phone.message}</p>}
         </div>
@@ -724,13 +724,13 @@ function AccountSecurity() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Turvalisus</h1>
+       <h1 className="font-display text-2xl font-bold">{t("account.security")}</h1>
       <div className="mt-6 max-w-lg space-y-4">
         <div className="rounded-xl border border-border p-4">
-          <h3 className="text-sm font-semibold">Parool</h3>
-          <p className="text-xs text-muted-foreground mt-1">Viimati muudetud: kunagi</p>
+          <h3 className="text-sm font-semibold">{t("account.password")}</h3>
+          <p className="text-xs text-muted-foreground mt-1">{t("account.lastChanged")}</p>
           {!changingPw ? (
-            <Button variant="outline" size="sm" className="mt-3" onClick={() => setChangingPw(true)}>Muuda parooli</Button>
+            <Button variant="outline" size="sm" className="mt-3" onClick={() => setChangingPw(true)}>{t("account.changePassword")}</Button>
           ) : (
             <form onSubmit={pwForm.handleSubmit(onSubmit)} className="mt-3 space-y-3">
               <div>
@@ -748,7 +748,7 @@ function AccountSecurity() {
               <div className="flex gap-2">
                 <Button type="submit" size="sm" className="bg-accent text-accent-foreground" disabled={submitting}>
                   {submitting
-                    ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Salvestan...</>
+                    ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t("account.saving")}</>
                     : t("form.save")}
                 </Button>
                 <Button variant="outline" size="sm" type="button" onClick={() => { setChangingPw(false); pwForm.reset(); }}>{t("form.cancel")}</Button>
@@ -759,30 +759,30 @@ function AccountSecurity() {
         <div className="rounded-xl border border-border p-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-semibold">Kaheastmeline autentimine</h3>
-              <p className="text-xs text-muted-foreground mt-1">Tulemas lähiajal</p>
-            </div>
-            <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground">Tulemas</span>
+               <h3 className="text-sm font-semibold">{t("account.twoFactor")}</h3>
+               <p className="text-xs text-muted-foreground mt-1">{t("account.comingSoonLong")}</p>
+             </div>
+             <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground">{t("account.comingSoon")}</span>
           </div>
         </div>
         <div className="rounded-xl border border-border p-4">
-          <h3 className="text-sm font-semibold">Ühendatud kontod</h3>
+           <h3 className="text-sm font-semibold">{t("account.connectedAccounts")}</h3>
           <div className="mt-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-xs font-bold text-muted-foreground">G</div>
               <div>
                 <p className="text-sm font-medium">Google</p>
                 {user?.hasGoogleAccount ? (
-                  <p className="text-xs text-success">Ühendatud</p>
+                  <p className="text-xs text-success">{t("account.connected")}</p>
                 ) : (
-                  <p className="text-xs text-muted-foreground">Pole ühendatud</p>
+                  <p className="text-xs text-muted-foreground">{t("account.notConnected")}</p>
                 )}
               </div>
             </div>
             {user?.hasGoogleAccount ? (
-              <span className="rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">✓ Aktiivne</span>
+              <span className="rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">✓ {t("account.activeStatus")}</span>
             ) : (
-              <p className="text-xs text-muted-foreground">Logi sisse Google'iga et ühendada</p>
+              <p className="text-xs text-muted-foreground">{t("account.loginWithGoogle")}</p>
             )}
           </div>
         </div>
@@ -890,13 +890,13 @@ function AccountBilling() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Arveldus</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Arved ja makseajalugu.</p>
+       <h1 className="font-display text-2xl font-bold">{t("account.billing")}</h1>
+      <p className="mt-2 text-sm text-muted-foreground">{t("account.billingDesc")}</p>
       {invoices.length === 0 ? (
         <div className="mt-6 flex flex-col items-center py-12 text-center">
           <CreditCard className="h-12 w-12 text-muted-foreground/30" />
-          <p className="mt-3 text-sm font-medium">Arveldusinfo puudub</p>
-          <p className="mt-1 text-xs text-muted-foreground">Arved ilmuvad pärast esimest broneeringut.</p>
+          <p className="mt-3 text-sm font-medium">{t("account.noBillingInfo")}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t("account.invoicesAfterBooking")}</p>
         </div>
       ) : (
         <>
