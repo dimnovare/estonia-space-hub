@@ -103,7 +103,7 @@ export default function AdminPage() {
         {activeTab === "content" && <AdminContent />}
         {activeTab === "audit" && <AdminAudit />}
         {activeTab === "payouts" && <AdminPayouts />}
-        
+        {activeTab === "rebates" && <AdminRebates />}
         {activeTab === "settings" && <AdminSettings />}
       </main>
     </div>
