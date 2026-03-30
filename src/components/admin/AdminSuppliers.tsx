@@ -402,78 +402,77 @@ export default function AdminSuppliers() {
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Kontaktisik</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.contactPerson")}</label>
                 <input className={inp} value={createForm.contactName} onChange={(e) => setCreateForm({ ...createForm, contactName: e.target.value })} />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">E-post</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.email")}</label>
                 <input type="email" className={inp} value={createForm.contactEmail} onChange={(e) => setCreateForm({ ...createForm, contactEmail: e.target.value })} />
               </div>
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Telefon</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("admin.phone")}</label>
               <input className={inp} value={createForm.contactPhone} onChange={(e) => setCreateForm({ ...createForm, contactPhone: e.target.value })} />
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Integratsiooni tüüp</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.integrationType")}</label>
                 <select className={inp} value={createForm.integrationType} onChange={(e) => setCreateForm({ ...createForm, integrationType: e.target.value as any })}>
-                  <option value="manual">Manuaalne</option>
-                  <option value="email">E-post</option>
-                  <option value="api">API</option>
+                  <option value="manual">{t("admin.integrationManual")}</option>
+                  <option value="email">{t("admin.integrationEmail")}</option>
+                  <option value="api">{t("admin.integrationApi")}</option>
                 </select>
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Pakett</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.tier")}</label>
                 <select className={inp} value={createForm.tier} onChange={(e) => setCreateForm({ ...createForm, tier: e.target.value })}>
-                  <option value="starter">Starter (tasuta)</option>
-                  <option value="standard">Standard (€49/kuu)</option>
-                  <option value="premium">Premium (€99/kuu)</option>
+                  <option value="starter">{t("admin.tierStarter")}</option>
+                  <option value="standard">{t("admin.tierStandard")}</option>
+                  <option value="premium">{t("admin.tierPremium")}</option>
                 </select>
               </div>
             </div>
             {createForm.integrationType === "email" && (
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Saaja e-post</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.recipientEmail")}</label>
                 <input type="email" className={inp} value={createForm.recipientEmail} onChange={(e) => setCreateForm({ ...createForm, recipientEmail: e.target.value })} />
               </div>
             )}
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Partneri allahindlus (%)</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("admin.partnerDiscountRate")}</label>
               <input type="number" min="0" max="80" className={inp} value={createForm.partnerDiscountRate} onChange={(e) => setCreateForm({ ...createForm, partnerDiscountRate: e.target.value })} />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Arveldamise mudel</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("admin.billingModel")}</label>
               <select className={inp} value={createForm.billingModel} onChange={(e) => setCreateForm({ ...createForm, billingModel: e.target.value as any })}>
-                <option value="marketplace">Marketplace (klient maksab Ruumly kaudu)</option>
-                <option value="rebate">Tagasimakse (klient maksab otse partnerile)</option>
+                <option value="marketplace">{t("admin.billingMarketplaceFull")}</option>
+                <option value="rebate">{t("admin.billingRebateFull")}</option>
               </select>
               <p className="mt-0.5 text-[10px] text-muted-foreground">
-                Marketplace: klient maksab Montonio kaudu, Ruumly peab marginaali kinni.
-                Tagasimakse: klient maksab otse partnerile, Ruumly esitab igakuise arve.
+                {t("admin.billingMarketplaceDesc")} {t("admin.billingRebateDesc")}
               </p>
             </div>
 
             <div className="rounded-xl border border-border p-3 space-y-3">
-              <h4 className="text-xs font-semibold text-muted-foreground">Pangaandmed</h4>
+              <h4 className="text-xs font-semibold text-muted-foreground">{t("admin.bankDetails")}</h4>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">IBAN</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.iban")}</label>
                 <input className={inp} placeholder="EE..." value={createForm.iban} onChange={(e) => setCreateForm({ ...createForm, iban: e.target.value })} />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground">Konto nimi</label>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.accountName")}</label>
                   <input className={inp} value={createForm.bankAccountName} onChange={(e) => setCreateForm({ ...createForm, bankAccountName: e.target.value })} />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground">Pank</label>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.bankName")}</label>
                   <input className={inp} value={createForm.bankName} onChange={(e) => setCreateForm({ ...createForm, bankName: e.target.value })} />
                 </div>
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Märkmed</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("admin.notes")}</label>
               <textarea className={inp + " min-h-[60px]"} value={createForm.notes} onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })} />
             </div>
 
