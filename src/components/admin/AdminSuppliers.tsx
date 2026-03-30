@@ -95,10 +95,10 @@ export default function AdminSuppliers() {
       contactEmail: selected.contactEmail,
       contactPhone: selected.contactPhone,
       notes: selected.notes,
-      partnerDiscountRate: (selected as any).partnerDiscountRate,
-      clientDiscountRate: (selected as any).clientDiscountRate,
-      tier: (selected as any).tier,
-      billingModel: (selected as any).billingModel,
+      partnerDiscountRate: selected.partnerDiscountRate,
+      clientDiscountRate: selected.clientDiscountRate,
+      tier: selected.tier,
+      billingModel: selected.billingModel,
     };
     updateMutation.mutate({ id: selected.id, data });
   };
@@ -171,9 +171,9 @@ export default function AdminSuppliers() {
               <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${healthColor(s.integrationHealth)}`}>{healthLabel(s.integrationHealth)}</span>
               <span className="text-xs text-muted-foreground">{s.listingCount} kuulutust</span>
               <span className="text-xs font-medium">€{s.revenue.toLocaleString()}</span>
-              {(s as any).partnerDiscountRate > 0 && (
+              {s.partnerDiscountRate > 0 && (
                 <span className="text-[10px] rounded-full bg-success/10 text-success px-2 py-0.5 font-medium">
-                  Marginaal: {Math.max(0, (s as any).partnerDiscountRate - ((s as any).clientDiscountRate || 0))}%
+                  Marginaal: {Math.max(0, s.partnerDiscountRate - (s.clientDiscountRate || 0))}%
                 </span>
               )}
             </div>
@@ -210,9 +210,9 @@ export default function AdminSuppliers() {
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap items-center gap-1">
                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s.isActive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{s.isActive ? t("admin.active") : t("admin.inactive")}</span>
-                    {(s as any).partnerDiscountRate > 0 && (
+                    {s.partnerDiscountRate > 0 && (
                       <span className="rounded-full bg-success/10 text-success px-2 py-0.5 text-[10px] font-medium">
-                        {Math.max(0, (s as any).partnerDiscountRate - ((s as any).clientDiscountRate || 0))}%
+                        {Math.max(0, s.partnerDiscountRate - (s.clientDiscountRate || 0))}%
                       </span>
                     )}
                   </div>
@@ -231,7 +231,7 @@ export default function AdminSuppliers() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {selected?.name}
-              {(selected as any)?.billingModel === "rebate"
+              {selected?.billingModel === "rebate"
                 ? <span className="rounded-full bg-amber-100 text-amber-700 px-2 py-0.5 text-[10px] font-medium">Tagasimakse</span>
                 : <span className="rounded-full bg-teal-100 text-teal-700 px-2 py-0.5 text-[10px] font-medium">Marketplace</span>}
             </DialogTitle>
@@ -263,7 +263,7 @@ export default function AdminSuppliers() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">Pakett</label>
-                    <select className={inp} value={((selected as any).tier ?? "starter").toLowerCase()} onChange={(e) => setSelected({ ...selected, tier: e.target.value } as any)}>
+                    <select className={inp} value={(selected.tier ?? "starter").toLowerCase()} onChange={(e) => setSelected({ ...selected, tier: e.target.value as "starter" | "standard" | "premium" })}>
                       <option value="starter">Starter (tasuta)</option>
                       <option value="standard">Standard (€49/kuu)</option>
                       <option value="premium">Premium (€99/kuu)</option>
@@ -271,12 +271,12 @@ export default function AdminSuppliers() {
                   </div>
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">Arveldamise mudel</label>
-                    <select className={inp} value={(selected as any).billingModel ?? "marketplace"} onChange={(e) => setSelected({ ...selected, billingModel: e.target.value } as any)}>
+                    <select className={inp} value={selected.billingModel ?? "marketplace"} onChange={(e) => setSelected({ ...selected, billingModel: e.target.value as "marketplace" | "rebate" })}>
                       <option value="marketplace">Marketplace</option>
                       <option value="rebate">Tagasimakse</option>
                     </select>
                     <p className="mt-0.5 text-[10px] text-muted-foreground">
-                      {(selected as any).billingModel === "rebate"
+                      {selected.billingModel === "rebate"
                         ? "Klient maksab otse partnerile, Ruumly esitab igakuise arve."
                         : "Klient maksab Montonio kaudu, Ruumly peab marginaali kinni."}
                     </p>
@@ -313,37 +313,37 @@ export default function AdminSuppliers() {
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">Partneri allahindlus (%)</label>
                     <input type="number" min="0" max="80" className={inp}
-                      value={(selected as any).partnerDiscountRate ?? 0}
-                      onChange={e => setSelected({ ...selected, partnerDiscountRate: Number(e.target.value) } as any)}
+                      value={selected.partnerDiscountRate ?? 0}
+                      onChange={e => setSelected({ ...selected, partnerDiscountRate: Number(e.target.value) })}
                     />
                     <p className="mt-0.5 text-[10px] text-muted-foreground">% mida partner meile annab tema avalikust hinnast</p>
                   </div>
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">Kliendi allahindlus (%)</label>
                     <input type="number" min="0" max="80" className={inp}
-                      value={(selected as any).clientDiscountRate ?? 0}
-                      onChange={e => setSelected({ ...selected, clientDiscountRate: Number(e.target.value) } as any)}
+                      value={selected.clientDiscountRate ?? 0}
+                      onChange={e => setSelected({ ...selected, clientDiscountRate: Number(e.target.value) })}
                     />
                     <p className="mt-0.5 text-[10px] text-muted-foreground">% mida klient säästab vs avalik hind</p>
                   </div>
                 </div>
-                {((selected as any).partnerDiscountRate > 0 || (selected as any).clientDiscountRate > 0) && (
+                {(selected.partnerDiscountRate > 0 || selected.clientDiscountRate > 0) && (
                   <div className="mt-3 rounded-lg bg-accent/5 border border-accent/20 p-3 text-xs">
                     <p className="font-semibold text-accent mb-1">Marginaali eelvaade</p>
                     <p className="text-muted-foreground">
-                      Partneri allahindlus: <strong>{(selected as any).partnerDiscountRate}%</strong>
+                      Partneri allahindlus: <strong>{selected.partnerDiscountRate}%</strong>
                       {" · "}
-                      Kliendi allahindlus: <strong>{(selected as any).clientDiscountRate}%</strong>
+                      Kliendi allahindlus: <strong>{selected.clientDiscountRate}%</strong>
                       {" · "}
                       Ruumly marginaal: <strong className="text-success">
-                        {Math.max(0, ((selected as any).partnerDiscountRate || 0) - ((selected as any).clientDiscountRate || 0))}%
+                        {Math.max(0, (selected.partnerDiscountRate || 0) - (selected.clientDiscountRate || 0))}%
                       </strong>
                     </p>
                     <p className="mt-1 text-muted-foreground">
                       Näide: 100€ teenus → partner arvestab meile{" "}
-                      {100 - ((selected as any).partnerDiscountRate || 0)}€, klient maksab{" "}
-                      {100 - ((selected as any).clientDiscountRate || 0)}€, marginaal{" "}
-                      {Math.max(0, ((selected as any).partnerDiscountRate || 0) - ((selected as any).clientDiscountRate || 0))}€
+                      {100 - (selected.partnerDiscountRate || 0)}€, klient maksab{" "}
+                      {100 - (selected.clientDiscountRate || 0)}€, marginaal{" "}
+                      {Math.max(0, (selected.partnerDiscountRate || 0) - (selected.clientDiscountRate || 0))}€
                     </p>
                   </div>
                 )}
