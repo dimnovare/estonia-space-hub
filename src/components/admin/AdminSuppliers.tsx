@@ -139,7 +139,7 @@ export default function AdminSuppliers() {
           <p className="mt-1 text-sm text-muted-foreground">{t("admin.integrationDesc")}</p>
         </div>
         <Button onClick={() => { setCreateForm(emptyCreate); setCreateOpen(true); }} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
-          <PlusCircle className="mr-1 h-3.5 w-3.5" /> Lisa partner
+          <PlusCircle className="mr-1 h-3.5 w-3.5" /> {t("admin.addPartner")}
         </Button>
       </div>
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -481,7 +481,7 @@ export default function AdminSuppliers() {
               <Button variant="outline" onClick={() => setCreateOpen(false)}>Tühista</Button>
               <Button onClick={handleCreate} disabled={createMutation.isPending || !createForm.name} className="bg-accent text-accent-foreground hover:bg-accent/90">
                 {createMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                Lisa partner
+                {t("admin.addPartner")}
               </Button>
             </div>
           </div>
