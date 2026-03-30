@@ -70,11 +70,11 @@ export default function ProviderCalendar() {
       <div className="mt-4">
         <label className="text-xs font-medium text-muted-foreground mb-1 block">
           <MapPin className="inline h-3.5 w-3.5 mr-1" />
-          {t("provider.calendar.selectLocation") || "Select location"}
+          {t("provider.calendar.selectLocation")}
         </label>
         <Select value={selectedLocationId} onValueChange={setSelectedLocationId}>
           <SelectTrigger className="w-full max-w-xs">
-            <SelectValue placeholder={t("provider.calendar.allLocations") || "All locations"} />
+            <SelectValue placeholder={t("provider.calendar.allLocations")} />
           </SelectTrigger>
           <SelectContent>
             {(locations as any[]).map((loc: any) => (
@@ -115,7 +115,7 @@ export default function ProviderCalendar() {
             <div className="mt-3 flex items-center gap-2">
               {!selectedLocationId ? (
                 <Badge variant="secondary" className="gap-1 text-muted-foreground">
-                  {t("provider.calendar.selectLocationFirst") || "Select a location to block/unblock dates"}
+                  {t("provider.calendar.selectLocationFirst")}
                 </Badge>
               ) : isBlocked(date) ? (
                 <Button size="sm" variant="outline" className="gap-1" onClick={toggleBlock}>
@@ -163,7 +163,7 @@ export default function ProviderCalendar() {
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">{t("provider.calendar.blockedDates")}</h4>
             {blockedDates.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                {!selectedLocationId ? (t("provider.calendar.selectLocationFirst") || "Select a location to manage blocked dates") : t("provider.calendar.noBlocked")}
+                {!selectedLocationId ? t("provider.calendar.selectLocationFirst") : t("provider.calendar.noBlocked")}
               </p>
             ) : (
               <div className="flex flex-wrap gap-2">
