@@ -12,7 +12,7 @@ import AdminSuppliers from "@/components/admin/AdminSuppliers";
 import AdminIntegrations from "@/components/admin/AdminIntegrations";
 import AdminRouting from "@/components/admin/AdminRouting";
 import AdminUsers from "@/components/admin/AdminUsers";
-import AdminListings from "@/components/admin/AdminListings";
+
 import AdminLocations from "@/components/admin/AdminLocations";
 import AdminInquiries from "@/components/admin/AdminInquiries";
 import AdminContent from "@/components/admin/AdminContent";
@@ -30,7 +30,7 @@ export default function AdminPage() {
 
   const sidebarLinks = [
     { id: "dashboard", label: t("admin.dashboard"), icon: LayoutDashboard },
-    { id: "listings", label: t("admin.listings"), icon: List },
+    
     { id: "locations", label: t("admin.locations"), icon: MapPin },
     { id: "orders", label: t("admin.orders"), icon: Package },
     { id: "payouts", label: "Väljamaksed", icon: Banknote },
@@ -92,7 +92,7 @@ export default function AdminPage() {
           )}
         </div>
         {activeTab === "dashboard" && <AdminDashboard />}
-        {activeTab === "listings" && <AdminListings />}
+        
         {activeTab === "locations" && <AdminLocations />}
         {activeTab === "orders" && <AdminOrders />}
         {activeTab === "suppliers" && <AdminSuppliers />}
