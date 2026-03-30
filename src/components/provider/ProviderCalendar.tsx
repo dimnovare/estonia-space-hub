@@ -1,35 +1,62 @@
 import { useState } from "react";
-import { Calendar as CalendarIcon, X, Lock, Unlock, Ban } from "lucide-react";
+import { Calendar as CalendarIcon, X, Lock, Unlock, Ban, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useBookings } from "@/hooks/useBookings";
+import { useLocations } from "@/hooks/queries";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/services/apiClient";
+import { toast } from "sonner";
 
 export default function ProviderCalendar() {
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
   const { data: bookings = [] } = useBookings();
+  const { data: locations = [] } = useLocations();
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [blockedDates, setBlockedDates] = useState<Date[]>([]);
+  const [selectedLocationId, setSelectedLocationId] = useState<string>("");
 
-  const bookedDates = bookings
+  const { data: blockedDatesRaw = [] } = useQuery({
+    queryKey: ["blocked-dates", selectedLocationId],
+    queryFn: () => apiClient.get<any[]>(`/locations/${selectedLocationId}/blocked-dates`),
+    enabled: !!selectedLocationId,
+  });
+  const blockedDates = blockedDatesRaw.map((b: any) => new Date(b.date));
+
+  const filteredBookings = selectedLocationId
+    ? bookings.filter(b => (b as any).locationId === selectedLocationId)
+    : bookings;
+
+  const bookedDates = filteredBookings
     .filter(b => b.status === "confirmed" || b.status === "active")
     .map(b => new Date(b.startDate));
 
   const isBlocked = (d: Date) => blockedDates.some(bd => bd.toDateString() === d.toDateString());
   const isBooked = (d: Date) => bookedDates.some(bd => bd.toDateString() === d.toDateString());
 
-  const toggleBlock = () => {
-    if (!date) return;
+  const toggleBlock = async () => {
+    if (!date || !selectedLocationId) return;
     if (isBooked(date)) return;
-    if (isBlocked(date)) {
-      setBlockedDates(prev => prev.filter(bd => bd.toDateString() !== date.toDateString()));
-    } else {
-      setBlockedDates(prev => [...prev, new Date(date)]);
+    const dateStr = date.toISOString().split("T")[0];
+    try {
+      if (isBlocked(date)) {
+        const existing = blockedDatesRaw.find((b: any) => b.date === dateStr);
+        if (existing) {
+          await apiClient.delete(`/locations/${selectedLocationId}/blocked-dates/${existing.id}`);
+        }
+      } else {
+        await apiClient.post(`/locations/${selectedLocationId}/blocked-dates`, { date: dateStr });
+      }
+      queryClient.invalidateQueries({ queryKey: ["blocked-dates", selectedLocationId] });
+    } catch (err: any) {
+      toast.error(err?.message || t("provider.listings.deleteFailed"));
     }
   };
 
-  const selectedBookings = bookings.filter(b => {
+  const selectedBookings = filteredBookings.filter(b => {
     if (!date) return false;
     const bd = new Date(b.startDate);
     return bd.toDateString() === date.toDateString();
@@ -39,11 +66,24 @@ export default function ProviderCalendar() {
     <div>
       <h1 className="font-display text-2xl font-bold">{t("provider.calendar.title")}</h1>
       <p className="mt-1 text-sm text-muted-foreground">{t("provider.calendar.desc")}</p>
-      <div className="mt-3 rounded-lg border border-border bg-secondary/50 p-3">
-        <p className="text-xs text-muted-foreground">
-          <strong>NB:</strong> {t("provider.calendar.locationCalendarSoon")}
-        </p>
+
+      <div className="mt-4">
+        <label className="text-xs font-medium text-muted-foreground mb-1 block">
+          <MapPin className="inline h-3.5 w-3.5 mr-1" />
+          {t("provider.calendar.selectLocation") || "Select location"}
+        </label>
+        <Select value={selectedLocationId} onValueChange={setSelectedLocationId}>
+          <SelectTrigger className="w-full max-w-xs">
+            <SelectValue placeholder={t("provider.calendar.allLocations") || "All locations"} />
+          </SelectTrigger>
+          <SelectContent>
+            {(locations as any[]).map((loc: any) => (
+              <SelectItem key={loc.id} value={loc.id}>{loc.name} · {loc.city}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
+
       <div className="mt-6 grid gap-6 lg:grid-cols-[auto_1fr]">
         <div className="card-elevated p-4">
           <Calendar
@@ -73,7 +113,11 @@ export default function ProviderCalendar() {
 
           {date && (
             <div className="mt-3 flex items-center gap-2">
-              {isBlocked(date) ? (
+              {!selectedLocationId ? (
+                <Badge variant="secondary" className="gap-1 text-muted-foreground">
+                  {t("provider.calendar.selectLocationFirst") || "Select a location to block/unblock dates"}
+                </Badge>
+              ) : isBlocked(date) ? (
                 <Button size="sm" variant="outline" className="gap-1" onClick={toggleBlock}>
                   <Unlock className="h-3.5 w-3.5" /> {t("provider.calendar.openDate")}
                 </Button>
@@ -118,13 +162,26 @@ export default function ProviderCalendar() {
           <div className="mt-6">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">{t("provider.calendar.blockedDates")}</h4>
             {blockedDates.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("provider.calendar.noBlocked")}</p>
+              <p className="text-sm text-muted-foreground">
+                {!selectedLocationId ? (t("provider.calendar.selectLocationFirst") || "Select a location to manage blocked dates") : t("provider.calendar.noBlocked")}
+              </p>
             ) : (
               <div className="flex flex-wrap gap-2">
-                {blockedDates.sort((a, b) => a.getTime() - b.getTime()).map((bd, i) => (
+                {[...blockedDates].sort((a, b) => a.getTime() - b.getTime()).map((bd, i) => (
                   <span key={i} className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2.5 py-1 text-xs text-destructive">
                     {bd.toLocaleDateString("et-EE", { day: "numeric", month: "short" })}
-                    <button onClick={() => setBlockedDates(prev => prev.filter(d => d.toDateString() !== bd.toDateString()))} className="hover:text-destructive/80">
+                    <button onClick={async () => {
+                      const dateStr = bd.toISOString().split("T")[0];
+                      const existing = blockedDatesRaw.find((b: any) => b.date === dateStr);
+                      if (existing) {
+                        try {
+                          await apiClient.delete(`/locations/${selectedLocationId}/blocked-dates/${existing.id}`);
+                          queryClient.invalidateQueries({ queryKey: ["blocked-dates", selectedLocationId] });
+                        } catch (err: any) {
+                          toast.error(err?.message || t("provider.listings.deleteFailed"));
+                        }
+                      }
+                    }} className="hover:text-destructive/80">
                       <X className="h-3 w-3" />
                     </button>
                   </span>
@@ -136,9 +193,9 @@ export default function ProviderCalendar() {
           <div className="mt-6">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">{t("provider.calendar.upcomingBookings")}</h4>
             <div className="space-y-2">
-              {bookings.length === 0 ? (
+              {filteredBookings.length === 0 ? (
                 <p className="text-sm text-muted-foreground">{t("provider.calendar.noBookingsYet")}</p>
-              ) : bookings.map(b => (
+              ) : filteredBookings.map(b => (
                 <div key={b.id} className="flex items-center justify-between rounded-lg border border-border p-3 text-sm">
                   <div>
                     <span className="font-medium">{b.provider}</span>
