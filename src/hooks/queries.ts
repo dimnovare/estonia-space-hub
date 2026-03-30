@@ -42,6 +42,8 @@ export function useCreateBooking() {
       // Toast handled by BookingPage success state
     },
     onError: (err: any) => {
+      const msg = err?.message?.toLowerCase() || "";
+      if (err?.status === 403 && msg.includes("email") && msg.includes("verif")) return;
       toast.error(err?.message || "Something went wrong. Please try again.");
     },
   });

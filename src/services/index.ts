@@ -304,6 +304,9 @@ export const authService = {
   async verifyEmail(token: string): Promise<void> {
     await apiClient.post("/auth/verify-email", { token });
   },
+  async resendVerificationEmail(): Promise<void> {
+    await apiClient.post("/auth/resend-verification", {});
+  },
 };
 
 // ─── Bank Service ───────────────────────────────────────────────────────────────

@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { authService } from "@/services";
+import { toast } from "sonner";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,6 +43,8 @@ export default function BookingPage() {
   const [paymentMethod, setPaymentMethod] = useState("bank");
   const [submitted, setSubmitted] = useState(false);
   const [phase, setPhase] = useState<SubmitPhase>("submitting");
+  const [showVerifyBanner, setShowVerifyBanner] = useState(false);
+  const [resendSent, setResendSent] = useState(false);
 
   const detailsForm = useForm<BookingDetailsForm>({
     resolver: zodResolver(bookingDetailsSchema),
@@ -142,8 +146,11 @@ export default function BookingPage() {
       }
 
       setSubmitted(true);
-    }).catch(() => {
-      // Error already handled by mutation onError
+    }).catch((err: any) => {
+      const msg = err?.message?.toLowerCase() || "";
+      if (err?.status === 403 || (msg.includes("email") && msg.includes("verif"))) {
+        setShowVerifyBanner(true);
+      }
     });
   };
 
@@ -226,6 +233,39 @@ export default function BookingPage() {
       <Link to={listing ? `/${listing.type}/${listing.id}` : "/search"} className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> {t("booking.back")}
       </Link>
+
+      {/* Email verification banner */}
+      {showVerifyBanner && (
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm">
+          <p className="font-semibold text-amber-800">
+            Kinnita oma e-posti aadress
+          </p>
+          <p className="mt-1 text-amber-700">
+            Broneerimiseks pead oma e-posti aadressi kinnitama.
+            Kontrolli oma postkasti ja rämpsposti kausta.
+          </p>
+          {!resendSent ? (
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await authService.resendVerificationEmail();
+                  setResendSent(true);
+                } catch {
+                  toast.error("Saatmine ebaõnnestus. Proovi uuesti.");
+                }
+              }}
+              className="mt-3 text-sm font-medium text-amber-800 underline hover:text-amber-900"
+            >
+              Saada kinnitusmeil uuesti
+            </button>
+          ) : (
+            <p className="mt-3 text-sm font-medium text-amber-800">
+              Meil on saadetud! Kontrolli oma postkasti.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Step indicators */}
       <div className="mb-8 flex items-center gap-2">
