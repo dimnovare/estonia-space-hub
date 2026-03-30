@@ -6,20 +6,20 @@ export const ESTONIAN_CITIES = [
 ] as const;
 
 export const INTEGRATION_TYPE_CONFIG: Record<IntegrationType, { label: string; color: string; description: string }> = {
-  api: { label: "API", color: "bg-success/10 text-success", description: "Automaatne API integratsioon" },
-  email: { label: "E-post", color: "bg-info/10 text-info", description: "Tellimus saadetakse e-postiga" },
-  manual: { label: "Manuaalne", color: "bg-warning/10 text-warning", description: "Operaator edastab käsitsi" },
+  api: { label: "API", color: "bg-success/10 text-success", description: "Automatic API integration" },
+  email: { label: "Email", color: "bg-info/10 text-info", description: "Order sent via email" },
+  manual: { label: "Manual", color: "bg-warning/10 text-warning", description: "Operator forwards manually" },
 };
 
-export const ORDER_STATUS_CONFIG: Record<OrderStatus, { label: string; color: string }> = {
-  created: { label: "Loodud", color: "bg-secondary text-muted-foreground" },
-  sending: { label: "Saatmisel", color: "bg-warning/10 text-warning" },
-  sent: { label: "Saadetud", color: "bg-info/10 text-info" },
-  confirmed: { label: "Kinnitatud", color: "bg-success/10 text-success" },
-  rejected: { label: "Tagasi lükatud", color: "bg-destructive/10 text-destructive" },
-  active: { label: "Aktiivne", color: "bg-accent/10 text-accent" },
-  completed: { label: "Lõpetatud", color: "bg-muted text-muted-foreground" },
-  cancelled: { label: "Tühistatud", color: "bg-destructive/10 text-destructive" },
+export const ORDER_STATUS_CONFIG: Record<OrderStatus, { labelKey: string; label: string; color: string }> = {
+  created: { labelKey: "status.created", label: "Created", color: "bg-secondary text-muted-foreground" },
+  sending: { labelKey: "status.sending", label: "Sending", color: "bg-warning/10 text-warning" },
+  sent: { labelKey: "status.sent", label: "Sent", color: "bg-info/10 text-info" },
+  confirmed: { labelKey: "status.confirmed", label: "Confirmed", color: "bg-success/10 text-success" },
+  rejected: { labelKey: "status.rejected", label: "Rejected", color: "bg-destructive/10 text-destructive" },
+  active: { labelKey: "status.active", label: "Active", color: "bg-accent/10 text-accent" },
+  completed: { labelKey: "status.completed", label: "Completed", color: "bg-muted text-muted-foreground" },
+  cancelled: { labelKey: "status.cancelled", label: "Cancelled", color: "bg-destructive/10 text-destructive" },
 };
 
 export function generateOrderEmailPreview(order: Order): string {

@@ -55,7 +55,7 @@ export default function ProviderIncomingOrders() {
 
   const exportCSV = () => {
     const headers = t("provider.orders.csvHeaders").split(",");
-    const rows = filtered.map(o => [o.id, o.customerName, o.listingTitle, o.city, o.startDate, o.duration, `€${o.supplierPrice}`, ORDER_STATUS_CONFIG[o.status].label]);
+    const rows = filtered.map(o => [o.id, o.customerName, o.listingTitle, o.city, o.startDate, o.duration, `€${o.supplierPrice}`, t(ORDER_STATUS_CONFIG[o.status].labelKey) || ORDER_STATUS_CONFIG[o.status].label]);
     const csv = [headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -142,7 +142,7 @@ export default function ProviderIncomingOrders() {
                   <div>
                     <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                       <span className="text-xs font-mono text-muted-foreground">{order.id}</span>
-                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ${statusCfg.color}`}>{statusCfg.label}</span>
+                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ${statusCfg.color}`}>{t(statusCfg.labelKey) || statusCfg.label}</span>
                     </div>
                     <div className="mt-2 text-sm font-medium">{order.listingTitle}</div>
                     <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
