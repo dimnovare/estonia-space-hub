@@ -59,7 +59,7 @@ export default function AdminSuppliers() {
       toast.success("Muudatused salvestatud!");
       setSelected(prev => prev ? { ...prev, ...updated } : prev);
     },
-    onError: (err: any) => toast.error(err.message || "Salvestamine ebaõnnestus"),
+    onError: (err: any) => toast.error(err.message || t("admin.deleteFailed")),
   });
 
   const filtered = filter === "all" ? suppliers : filter === "active" ? suppliers.filter(s => s.isActive) : suppliers.filter(s => !s.isActive);
@@ -72,7 +72,7 @@ export default function AdminSuppliers() {
       invalidate();
       if (selected?.id === id) setSelected(prev => prev ? { ...prev, isActive: !prev.isActive } : prev);
     } catch (err: any) {
-      toast.error(err.message || "Staatuse muutmine ebaõnnestus");
+      toast.error(err.message || t("admin.deleteFailed"));
     }
   };
 
@@ -360,23 +360,23 @@ export default function AdminSuppliers() {
               <div className="flex gap-2 pt-2">
                 <Button onClick={handleSaveSelected} disabled={updateMutation.isPending} className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90">
                   {updateMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                  Salvesta
+                  {t("admin.save")}
                 </Button>
                 <Button variant="outline" size="sm" className="flex-1" onClick={() => toggleStatus(selected.id)}>{selected.isActive ? t("admin.block") : t("admin.activate")}</Button>
                 <Button variant="outline" size="sm" className="flex-1 text-destructive hover:bg-destructive/10" onClick={async () => {
-                  if (!confirm("Kustuta partner? Seda ei saa tagasi võtta.")) return;
+                  if (!confirm(t("admin.deletePartnerConfirm"))) return;
                   try {
                     await supplierService.delete(selected.id);
                     invalidate();
                     setSelected(null);
-                    toast.success("Partner kustutatud");
+                    toast.success(t("admin.partnerDeleted"));
                   } catch (err: any) {
-                    toast.error(err?.message || "Kustutamine ebaõnnestus");
+                    toast.error(err?.message || t("admin.deleteFailed"));
                   }
                 }}>
-                  <Trash2 className="mr-1 h-3.5 w-3.5" /> Kustuta
+                  <Trash2 className="mr-1 h-3.5 w-3.5" /> {t("admin.delete")}
                 </Button>
-                <Button variant="outline" size="sm" className="flex-1" onClick={() => setSelected(null)}>Sulge</Button>
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => setSelected(null)}>{t("admin.close")}</Button>
               </div>
             </div>
           )}
@@ -386,14 +386,14 @@ export default function AdminSuppliers() {
       {/* ── Create Partner Dialog ── */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Lisa partner</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("admin.addPartner")}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Nimi *</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("admin.partnerName")} *</label>
               <input className={inp} value={createForm.name} onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })} />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Registrikood</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("admin.registryCode")}</label>
               <input className={inp} value={createForm.registryCode} onChange={(e) => setCreateForm({ ...createForm, registryCode: e.target.value })} />
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
