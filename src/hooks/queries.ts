@@ -41,8 +41,8 @@ export function useCreateBooking() {
       qc.invalidateQueries({ queryKey: ["bookings"] });
       toast.success("Broneering loodud!");
     },
-    onError: () => {
-      toast.error("Midagi läks valesti. Palun proovige uuesti.");
+    onError: (err: any) => {
+      toast.error(err?.message || "Midagi läks valesti. Palun proovige uuesti.");
     },
   });
 }
