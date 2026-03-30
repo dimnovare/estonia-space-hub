@@ -38,7 +38,7 @@ export default function AdminPayouts() {
         const arr = Array.isArray(data) ? data : (data as any).data ?? [];
         setPayouts(arr);
       })
-      .catch((err: any) => toast.error(err?.message || "Väljamaksete laadimine ebaõnnestus"))
+      .catch((err: any) => toast.error(err?.message || t("admin.payouts.loadFailed")))
       .finally(() => setLoading(false));
   };
 
@@ -64,19 +64,14 @@ export default function AdminPayouts() {
       await apiClient.patch(`/admin/payouts/${id}/mark-paid`, {
         reference: references[id] || "",
       });
-      toast.success("Väljamakse märgitud makstuks");
+      toast.success(t("admin.payouts.markedPaid"));
       fetchPayouts();
     } catch (err: any) {
-      toast.error(err?.message || "Staatuse muutmine ebaõnnestus");
+      toast.error(err?.message || t("admin.payouts.statusFailed"));
     } finally {
       setMarkingId(null);
     }
   };
-
-  const suppliers = useMemo(() =>
-    [...new Set(payouts.map(p => p.supplierName))].sort(),
-    [payouts]
-  );
 
   const inp = "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
 
@@ -88,23 +83,23 @@ export default function AdminPayouts() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Väljamaksed</h1>
+      <h1 className="font-display text-2xl font-bold">{t("admin.payouts.title")}</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Partneritele maksmata ja makstud väljamaksed.
+        {t("admin.payouts.desc")}
       </p>
 
       {/* Summary cards */}
       <div className="mt-6 grid grid-cols-3 gap-4">
         <div className="rounded-xl border border-border p-4">
-          <p className="text-xs font-medium text-muted-foreground">Maksmata</p>
+          <p className="text-xs font-medium text-muted-foreground">{t("admin.payouts.unpaid")}</p>
           <p className="mt-1 text-2xl font-bold text-foreground">{summary.totalPending.toFixed(2)}€</p>
         </div>
         <div className="rounded-xl border border-border p-4">
-          <p className="text-xs font-medium text-muted-foreground">Makstud</p>
+          <p className="text-xs font-medium text-muted-foreground">{t("admin.payouts.paid")}</p>
           <p className="mt-1 text-2xl font-bold text-success">{summary.totalPaid.toFixed(2)}€</p>
         </div>
         <div className="rounded-xl border border-border p-4">
-          <p className="text-xs font-medium text-muted-foreground">Marginaal kokku</p>
+          <p className="text-xs font-medium text-muted-foreground">{t("admin.payouts.totalMargin")}</p>
           <p className="mt-1 text-2xl font-bold text-accent">{summary.totalMargin.toFixed(2)}€</p>
         </div>
       </div>
@@ -117,16 +112,16 @@ export default function AdminPayouts() {
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value as any)}
           >
-            <option value="all">Kõik staatused</option>
-            <option value="pending">Maksmata</option>
-            <option value="paid">Makstud</option>
+            <option value="all">{t("admin.payouts.allStatuses")}</option>
+            <option value="pending">{t("admin.payouts.unpaid")}</option>
+            <option value="paid">{t("admin.payouts.paid")}</option>
           </select>
         </div>
         <div className="relative flex-1 min-w-[200px] max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             className={inp + " pl-9"}
-            placeholder="Otsi partnerit..."
+            placeholder={t("admin.payouts.searchPartner")}
             value={supplierFilter}
             onChange={e => setSupplierFilter(e.target.value)}
           />
@@ -138,20 +133,20 @@ export default function AdminPayouts() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-secondary/50">
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Partner</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Tellimus</th>
-              <th className="px-4 py-3 text-right font-medium text-muted-foreground">Partneri summa</th>
-              <th className="px-4 py-3 text-right font-medium text-muted-foreground">Marginaal</th>
-              <th className="px-4 py-3 text-center font-medium text-muted-foreground">Staatus</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Makstud</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Tegevus</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.payouts.partner")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.payouts.order")}</th>
+              <th className="px-4 py-3 text-right font-medium text-muted-foreground">{t("admin.payouts.partnerAmount")}</th>
+              <th className="px-4 py-3 text-right font-medium text-muted-foreground">{t("admin.payouts.margin")}</th>
+              <th className="px-4 py-3 text-center font-medium text-muted-foreground">{t("admin.payouts.status")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.payouts.paidDate")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.payouts.action")}</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
-                  Väljamakseid ei leitud.
+                  {t("admin.payouts.notFound")}
                 </td>
               </tr>
             ) : (
@@ -167,7 +162,7 @@ export default function AdminPayouts() {
                         ? "bg-success/10 text-success"
                         : "bg-warning/10 text-warning"
                     }`}>
-                      {p.status === "paid" ? "Makstud" : "Maksmata"}
+                      {p.status === "paid" ? t("admin.payouts.paid") : t("admin.payouts.unpaid")}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
@@ -178,7 +173,7 @@ export default function AdminPayouts() {
                       <div className="flex items-center gap-2">
                         <input
                           className="rounded border border-border bg-card px-2 py-1 text-xs w-28 focus:outline-none focus:ring-1 focus:ring-accent"
-                          placeholder="Viitenumber"
+                          placeholder={t("admin.payouts.reference")}
                           value={references[p.id] || ""}
                           onChange={e => setReferences(prev => ({ ...prev, [p.id]: e.target.value }))}
                         />
@@ -192,7 +187,7 @@ export default function AdminPayouts() {
                           {markingId === p.id
                             ? <Loader2 className="h-3 w-3 animate-spin" />
                             : <Check className="h-3 w-3" />}
-                          Märgi makstuks
+                          {t("admin.payouts.markPaid")}
                         </Button>
                       </div>
                     ) : (
