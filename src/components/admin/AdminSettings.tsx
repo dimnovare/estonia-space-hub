@@ -243,13 +243,13 @@ export default function AdminSettings() {
               {t("admin.extrasPricingDesc")}
             </p>
             <div className="rounded-lg bg-secondary p-3 text-xs">
-              <span className="text-muted-foreground">Avalik hind </span>
+              <span className="text-muted-foreground">{t("admin.settings.publicPrice")} </span>
               <span className="font-semibold text-foreground">20€</span>
-              <span className="text-muted-foreground"> → Partner saab </span>
+              <span className="text-muted-foreground"> → {t("admin.settings.partnerGets")} </span>
               <span className="font-semibold text-foreground">17€</span>
-              <span className="text-muted-foreground"> → Klient maksab </span>
+              <span className="text-muted-foreground"> → {t("admin.settings.clientPays")} </span>
               <span className="font-semibold text-accent">18.60€</span>
-              <span className="text-muted-foreground"> → Ruumly saab </span>
+              <span className="text-muted-foreground"> → {t("admin.settings.ruumlyGets")} </span>
               <span className="font-semibold text-success">1.60€</span>
             </div>
           </div>
