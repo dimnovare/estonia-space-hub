@@ -19,7 +19,7 @@ import AdminContent from "@/components/admin/AdminContent";
 import AdminAudit from "@/components/admin/AdminAudit";
 import AdminSettings from "@/components/admin/AdminSettings";
 import AdminPayouts from "@/components/admin/AdminPayouts";
-
+import AdminRebates from "@/components/admin/AdminRebates";
 
 export default function AdminPage() {
   const [searchParams, setSearchParams] = useSearchParams();
