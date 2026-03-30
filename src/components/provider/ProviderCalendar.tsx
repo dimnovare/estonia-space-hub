@@ -11,8 +11,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { toast } from "sonner";
 
+const localeMap: Record<string, string> = { et: "et-EE", en: "en-GB", ru: "ru-RU" };
+
 export default function ProviderCalendar() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const locale = localeMap[language] || "en-GB";
   const queryClient = useQueryClient();
   const { data: bookings = [] } = useBookings();
   const { data: locations = [] } = useLocations();
@@ -108,7 +111,7 @@ export default function ProviderCalendar() {
         </div>
         <div>
           <h3 className="text-sm font-semibold">
-            {date ? date.toLocaleDateString("et-EE", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : t("provider.calendar.selectDate")}
+            {date ? date.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : t("provider.calendar.selectDate")}
           </h3>
 
           {date && (
@@ -169,7 +172,7 @@ export default function ProviderCalendar() {
               <div className="flex flex-wrap gap-2">
                 {[...blockedDates].sort((a, b) => a.getTime() - b.getTime()).map((bd, i) => (
                   <span key={i} className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2.5 py-1 text-xs text-destructive">
-                    {bd.toLocaleDateString("et-EE", { day: "numeric", month: "short" })}
+                    {bd.toLocaleDateString(locale, { day: "numeric", month: "short" })}
                     <button onClick={async () => {
                       const dateStr = bd.toISOString().split("T")[0];
                       const existing = blockedDatesRaw.find((b: any) => b.date === dateStr);

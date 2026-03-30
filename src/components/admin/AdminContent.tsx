@@ -8,12 +8,12 @@ export default function AdminContent() {
   const { t } = useLanguage();
   const [editOpen, setEditOpen] = useState(false);
   const [editSection, setEditSection] = useState("");
-  const [contentValues, setContentValues] = useState<Record<string, string>>({
-    "Homepage hero": "Leia laopinda, kolimist ja logistikat ühest kohast",
-    "FAQ": "Kuidas Ruumly töötab?\nKas broneerimine on tasuta?\nKuidas ma saan pakkujaks?",
-    "Categories": "Laopinnad, Kolimine, Haagise rent",
-    "Footer": "© 2026 Ruumly. Kõik õigused kaitstud.",
-  });
+  const [contentValues, setContentValues] = useState<Record<string, string>>(() => ({
+    "Homepage hero": t("admin.content.heroDefault"),
+    "FAQ": t("admin.content.faqDefault"),
+    "Categories": t("admin.content.categoriesDefault"),
+    "Footer": t("admin.content.footerDefault"),
+  }));
 
   return (
     <div>
