@@ -102,7 +102,7 @@ export default function LocationDetailPage() {
       <p className="mt-1 text-sm text-muted-foreground">
         {location.unitCount} {t("location.units")}
         {location.priceFrom != null && (
-          <> · {t("location.from")} €{location.priceFrom}/kuu</>
+          <> · {t("location.from")} €{location.priceFrom}{t("location.perMonth")}</>
         )}
       </p>
 

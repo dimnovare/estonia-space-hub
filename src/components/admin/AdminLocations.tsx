@@ -62,7 +62,7 @@ export default function AdminLocations() {
     title: "",
     type: "Warehouse" as "Warehouse" | "Moving" | "Trailer",
     priceFrom: "",
-    priceUnit: "/kuu",
+    priceUnit: "/month",
     sizeM2: "",
     quantityTotal: "1",
     description: "",
@@ -456,7 +456,7 @@ export default function AdminLocations() {
           <div className="space-y-3">
             <div>
               <label className="text-xs font-medium text-muted-foreground">{t("admin.title_field")}</label>
-              <input className={inp} placeholder="2m² laokast" value={newUnit.title} onChange={(e) => setNewUnit({ ...newUnit, title: e.target.value })} />
+              <input className={inp} placeholder={t("admin.locations.unitPlaceholder")} value={newUnit.title} onChange={(e) => setNewUnit({ ...newUnit, title: e.target.value })} />
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground">{t("admin.type")}</label>
@@ -473,7 +473,12 @@ export default function AdminLocations() {
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.priceUnit")}</label>
-                <input className={inp} placeholder="/kuu" value={newUnit.priceUnit} onChange={(e) => setNewUnit({ ...newUnit, priceUnit: e.target.value })} />
+                <select className={inp} value={newUnit.priceUnit} onChange={(e) => setNewUnit({ ...newUnit, priceUnit: e.target.value })}>
+                  <option value="/month">{t("admin.locations.perMonth")}</option>
+                  <option value="/day">{t("admin.locations.perDay")}</option>
+                  <option value="/hour">{t("admin.locations.perHour")}</option>
+                  <option value="/time">{t("admin.locations.perTime")}</option>
+                </select>
               </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -494,11 +499,11 @@ export default function AdminLocations() {
             <div>
               <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.vatRate")}</label>
               <select className={inp} value={newUnit.vatRate} onChange={(e) => setNewUnit({ ...newUnit, vatRate: e.target.value })}>
-                <option value="">Vaikimisi (24%)</option>
-                <option value="24">24% (Eesti standard)</option>
-                <option value="13">13% (vähendatud)</option>
-                <option value="9">9% (vähendatud)</option>
-                <option value="0">0% (KM-vaba)</option>
+                <option value="">{t("admin.locations.vatDefault")}</option>
+                <option value="24">{t("admin.locations.vatStandard")}</option>
+                <option value="13">{t("admin.locations.vatReduced13")}</option>
+                <option value="9">{t("admin.locations.vatReduced9")}</option>
+                <option value="0">{t("admin.locations.vatExempt")}</option>
               </select>
             </div>
               <div className="flex items-end gap-2 pb-1">
@@ -522,7 +527,7 @@ export default function AdminLocations() {
       {/* ── Edit Unit Dialog ── */}
       <Dialog open={editUnitOpen} onOpenChange={setEditUnitOpen}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Muuda üksust</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("admin.locations.editUnit")}</DialogTitle></DialogHeader>
           {editingUnit && (
             <div className="space-y-3">
               <div>
@@ -546,11 +551,11 @@ export default function AdminLocations() {
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.priceUnit")}</label>
-                  <select className={inp} value={editingUnit.priceUnit ?? "/kuu"} onChange={e => setEditingUnit({ ...editingUnit, priceUnit: e.target.value })}>
-                    <option value="/kuu">/kuu</option>
-                    <option value="/päev">/päev</option>
-                    <option value="/tund">/tund</option>
-                    <option value="/kord">/kord</option>
+                  <select className={inp} value={editingUnit.priceUnit ?? "/month"} onChange={e => setEditingUnit({ ...editingUnit, priceUnit: e.target.value })}>
+                    <option value="/month">{t("admin.locations.perMonth")}</option>
+                    <option value="/day">{t("admin.locations.perDay")}</option>
+                    <option value="/hour">{t("admin.locations.perHour")}</option>
+                    <option value="/time">{t("admin.locations.perTime")}</option>
                   </select>
                 </div>
               </div>

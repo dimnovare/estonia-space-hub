@@ -5,6 +5,8 @@ import { apiClient } from "@/services/apiClient";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 
+const localeMap: Record<string, string> = { et: "et-EE", en: "en-GB", ru: "ru-RU" };
+
 interface Payout {
   id: string;
   supplierName: string;
@@ -23,7 +25,8 @@ interface PayoutSummary {
 }
 
 export default function AdminPayouts() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const locale = localeMap[language] || "en-GB";
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "paid">("all");
@@ -166,7 +169,7 @@ export default function AdminPayouts() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
-                    {p.paidDate ? new Date(p.paidDate).toLocaleDateString("et-EE") : "—"}
+                    {p.paidDate ? new Date(p.paidDate).toLocaleDateString(locale) : "—"}
                   </td>
                   <td className="px-4 py-3">
                     {p.status === "pending" ? (

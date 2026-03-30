@@ -213,7 +213,7 @@ export default function HomePage() {
       {settings.showMap && (
       <section className="container-wide mt-0 sm:-mt-6 relative z-10">
         <Suspense fallback={<div className="h-[350px] rounded-xl bg-secondary flex items-center justify-center text-muted-foreground">{t("map.loading")}</div>}>
-          <InteractiveMap listings={allListings} height="h-[280px] md:h-[350px]" tUnits={t("location.units")} tFrom={t("location.from")} tAllUnits={t("location.allUnits")} />
+          <InteractiveMap listings={allListings} height="h-[280px] md:h-[350px]" tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} />
         </Suspense>
       </section>
       )}

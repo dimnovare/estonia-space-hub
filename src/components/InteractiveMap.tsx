@@ -15,6 +15,7 @@ interface InteractiveMapProps {
   zoom?: number;
   tUnits?: string;
   tFrom?: string;
+  tPerMonth?: string;
   tAllUnits?: string;
 }
 
@@ -151,6 +152,7 @@ export default function InteractiveMap({
   zoom = 7,
   tUnits = "units",
   tFrom = "From",
+  tPerMonth = "/mo",
   tAllUnits = "All units",
 }: InteractiveMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -211,7 +213,7 @@ export default function InteractiveMap({
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
             ${loc.address}, ${loc.city}
           </div>
-          ${loc.priceFrom ? `<div style="font-weight: 700; font-size: 16px; color: #1E3A5F; margin-bottom: 4px;">${tFrom} €${loc.priceFrom}/kuu</div>` : ''}
+          ${loc.priceFrom ? `<div style="font-weight: 700; font-size: 16px; color: #1E3A5F; margin-bottom: 4px;">${tFrom} €${loc.priceFrom}${tPerMonth}</div>` : ''}
           <a href="/location/${loc.id}" style="font-size: 12px; color: #2EC4B6; text-decoration: none; font-weight: 600;">${tAllUnits} (${loc.unitCount}) →</a>
         </div>
       `;
@@ -276,7 +278,7 @@ export default function InteractiveMap({
         mapInstance.current.setView(bounds[0] as L.LatLngExpression, 13);
       }
     }
-  }, [listings, locations, selectedId, onMarkerClick, onLocationClick, tUnits, tFrom, tAllUnits]);
+  }, [listings, locations, selectedId, onMarkerClick, onLocationClick, tUnits, tFrom, tPerMonth, tAllUnits]);
 
   // When selectedId changes externally, open that marker's popup
   useEffect(() => {

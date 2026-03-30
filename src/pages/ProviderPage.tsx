@@ -53,7 +53,7 @@ export default function ProviderPage() {
     {
       key: "standard",
       name: t("provPage.tier.standard"),
-      badge: `€${config.tiers.standard.monthlyFee}/kuu`,
+      badge: `€${config.tiers.standard.monthlyFee}/${t("provPage.tier.perMonth")}`,
       fee: config.tiers.standard.monthlyFee,
       highlight: false,
       features: STANDARD_FEATURES,
@@ -61,7 +61,7 @@ export default function ProviderPage() {
     {
       key: "premium",
       name: t("provPage.tier.premium"),
-      badge: `€${config.tiers.premium.monthlyFee}/kuu`,
+      badge: `€${config.tiers.premium.monthlyFee}/${t("provPage.tier.perMonth")}`,
       fee: config.tiers.premium.monthlyFee,
       highlight: false,
       features: PREMIUM_FEATURES,
