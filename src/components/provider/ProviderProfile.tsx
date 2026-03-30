@@ -9,8 +9,8 @@ export default function ProviderProfile() {
   const { t } = useLanguage();
   const [formData, setFormData] = useState({
     company: user?.company || "",
-    regCode: "12345678",
-    vatNumber: "EE123456789",
+    regCode: "",
+    vatNumber: "",
     email: user?.email || "",
     name: user?.name || "",
     phone: user?.phone || "",
