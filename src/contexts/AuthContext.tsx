@@ -17,6 +17,7 @@ export interface AppUser {
   registeredAt?: string;
   bookingsCount?: number;
   hasGoogleAccount?: boolean;
+  supplierId?: string;
 }
 
 interface AuthResponse {
@@ -31,6 +32,7 @@ interface AuthResponse {
     avatar?: string;
     registeredAt: string;
     bookingsCount: number;
+    supplierId?: string;
   };
   accessToken: string;
   refreshToken: string;
@@ -67,6 +69,7 @@ function normalizeUser(raw: AuthResponse["user"]): AppUser {
     registeredAt: raw.registeredAt,
     bookingsCount: raw.bookingsCount,
     hasGoogleAccount: (raw as any).hasGoogleAccount ?? false,
+    supplierId: (raw as any).supplierId || undefined,
   };
 }
 
