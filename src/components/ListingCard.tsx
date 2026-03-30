@@ -32,7 +32,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
   const { isFavorite, toggle } = useFavorites();
   const discountRate = (listing as any).clientDiscountRateOverride
     ?? (listing as any).clientDiscountRate
-    ?? 5;
+    ?? 0;
   const savingsInfo = getSavingsDisplay(listing.priceFrom, discountRate);
   const priceUnit = listing.priceUnit.replace("€/", "");
 
@@ -91,9 +91,9 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           )}
         </div>
 
-        {"size" in listing && (
+        {listing.size && listing.size > 0 && (
           <p className="mt-2 text-xs text-muted-foreground">
-            al. {listing.size} {listing.sizeUnit}
+            {listing.size} {listing.sizeUnit || "m²"}
           </p>
         )}
 
@@ -104,7 +104,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
               <span className="font-display text-lg font-bold text-accent">€{savingsInfo.ruumlyPrice}/{priceUnit}</span>
             </>
           ) : (
-            <span className="font-display text-lg font-bold text-foreground">al. {listing.priceFrom}€/{priceUnit}</span>
+            <span className="font-display text-lg font-bold text-foreground">{listing.priceFrom}€/{priceUnit}</span>
           )}
         </div>
         {savingsInfo && (

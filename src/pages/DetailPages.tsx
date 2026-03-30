@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { MapPin, Star, Check, ArrowLeft, Calendar, Shield, BadgePercent, Zap, Mail, Hand, Building2, CheckCircle, Loader2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useListing, useSuppliers, usePricingConfig } from "@/hooks/queries";
+import { useListing, useSuppliers, usePricingConfig, useListingExtras } from "@/hooks/queries";
 import { fillPricing } from "@/lib/pricingPlaceholders";
 import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
 import { getSavingsDisplay } from "@/lib/savingsDisplay";
@@ -97,19 +97,23 @@ export function WarehouseDetail() {
   if (!listing || listing.type !== "warehouse") return <NotFoundDetail />;
   const wListing = listing as WarehouseListing;
 
-  const extraOptions = [
-    { id: "packing", label: t("detail.packingHelp") },
-    { id: "loading", label: t("detail.loadingHelp") },
-    { id: "insurance", label: t("detail.insurance") },
-    { id: "forklift", label: t("detail.forkliftService") },
-  ];
+  const { data: apiExtras = [] } = useListingExtras(wListing.id);
+  const extraOptions = apiExtras.map((e: any) => ({
+    id: e.key,
+    label: e.label,
+    price: e.price,
+    publicPrice: e.publicPrice,
+    savings: e.savings,
+  }));
 
   const toggleExtra = (eId: string) =>
     setSelectedExtras((prev) => prev.includes(eId) ? prev.filter((e) => e !== eId) : [...prev, eId]);
 
   const bookingUrl = `/book?listing=${wListing.id}&type=warehouse${selectedExtras.length ? `&extras=${selectedExtras.join(",")}` : ""}`;
 
-  const discountRate = (wListing as any).clientDiscountRate;
+  const discountRate = (wListing as any).clientDiscountRateOverride
+    ?? (wListing as any).clientDiscountRate
+    ?? 0;
   const savingsInfo = getSavingsDisplay(wListing.priceFrom, discountRate);
 
   const extras = [
@@ -244,14 +248,27 @@ export function WarehouseDetail() {
             <p className="mt-1 flex items-center justify-center gap-1 text-[11px] text-success"><Shield className="h-3 w-3" /> {t("booking.cancellation.short")}</p>
 
             <div className="mt-6 border-t border-border pt-4">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("detail.addServices")}</h4>
-              <div className="mt-2 space-y-1.5">
-                {extraOptions.map((opt) => (
-                  <label key={opt.id} className="flex items-center gap-2 text-sm cursor-pointer">
-                    <input type="checkbox" className="rounded border-border" checked={selectedExtras.includes(opt.id)} onChange={() => toggleExtra(opt.id)} /> {opt.label}
-                  </label>
-                ))}
-              </div>
+              {extraOptions.length > 0 && (
+                <>
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("detail.addServices")}</h4>
+                  <div className="mt-2 space-y-1.5">
+                    {extraOptions.map((opt: any) => (
+                      <label key={opt.id} className="flex items-center justify-between gap-2 text-sm cursor-pointer">
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" className="rounded border-border" checked={selectedExtras.includes(opt.id)} onChange={() => toggleExtra(opt.id)} />
+                          {opt.label}
+                        </div>
+                        <span className="flex items-center gap-1 text-xs">
+                          {opt.savings > 0 && (
+                            <span className="line-through text-muted-foreground">{opt.publicPrice}€</span>
+                          )}
+                          <span className="font-medium">+{opt.price}€</span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="mt-4 rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
