@@ -112,7 +112,7 @@ export default function AdminSettings() {
             <div>
               <label className="text-xs font-medium text-muted-foreground">{t("admin.supportAvailability")}</label>
               <input className={inp} value={settings.openHours} onChange={e => set("openHours", e.target.value)} placeholder="E–R 10–17" />
-              <p className="mt-0.5 text-[10px] text-muted-foreground">Nt: E-R 10-17 | info@ruumly.eu alati kättesaadav</p>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">{t("admin.supportHoursExample")}</p>
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground">{t("admin.defaultLanguage")}</label>
@@ -129,42 +129,40 @@ export default function AdminSettings() {
         <div className="rounded-xl border border-border p-5">
           <h3 className="flex items-center gap-2 font-display text-base font-semibold">
             <Percent className="h-4 w-4 text-accent" />
-            Hinnakujundus — vaikimisi seaded
+            {t("admin.pricingTitle")}
           </h3>
           <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
-            Partneri allahindlus seatakse iga partneri juures eraldi.
-            Kliendi soodustus arvutatakse automaatselt: partneri allahindlus − Ruumly marginaal.
-            Siit saad seada <strong>vaikimisi</strong> väärtused uutele partneritele.
+            {t("admin.pricingDesc")}
           </p>
 
           {/* How it works visual */}
           <div className="mt-4 rounded-lg bg-secondary p-4">
             <p className="text-xs font-semibold text-foreground mb-3">
-              Kuidas hinnakujundus töötab (näide 100€ pealt)
+              {t("admin.pricingHowTitle")}
             </p>
             <div className="grid gap-3 text-center text-xs sm:grid-cols-3">
               <div className="rounded-lg bg-card border border-border p-3">
                 <div className="text-base font-bold text-foreground">100€</div>
-                <div className="text-muted-foreground mt-0.5">Partneri avalik hind</div>
+                <div className="text-muted-foreground mt-0.5">{t("admin.pricingPublicPrice")}</div>
               </div>
               <div className="rounded-lg bg-card border border-border p-3">
                 <div className="text-base font-bold text-success">{100 - partnerD}€</div>
                 <div className="text-muted-foreground mt-0.5">
-                  Partner saab
-                  <br />(partneri allahindlus: {partnerD}%)
+                  {t("admin.pricingPartnerGets")}
+                  <br />({t("admin.pricingPartnerDiscount")}: {partnerD}%)
                 </div>
               </div>
               <div className="rounded-lg bg-card border border-border p-3">
                 <div className="text-base font-bold text-accent">{100 - customerD}€</div>
                 <div className="text-muted-foreground mt-0.5">
-                  Klient maksab
-                  <br />({customerD}% soodustus)
+                  {t("admin.pricingClientPays")}
+                  <br />({customerD}% {t("admin.pricingClientDiscount")})
                 </div>
               </div>
             </div>
             <div className="mt-3 text-center text-xs">
               <span className="font-semibold text-success">
-                Meie marginaal: {ruumlyMargin}€ iga 100€ pealt ({ruumlyMargin}%)
+                {t("admin.pricingOurMargin")}: {ruumlyMargin}€ {t("admin.pricingPerHundred")} ({ruumlyMargin}%)
               </span>
             </div>
           </div>
@@ -172,60 +170,59 @@ export default function AdminSettings() {
           <div className="mt-4 grid gap-4 sm:grid-cols-3">
             <div>
               <label className="text-xs font-medium text-muted-foreground">
-                Ruumly minimaalne marginaal (%)
+                {t("admin.ruumlyMinMargin")}
               </label>
               <input type="number" min="1" max="50" className={inp}
                 value={settings.ruumlyMinMarginRate}
                 onChange={e => set("ruumlyMinMarginRate", e.target.value)} />
               <p className="mt-0.5 text-[10px] text-muted-foreground">
-                Kliendi soodustus = partneri allahindlus - see väärtus.
-                Nt: 15% partner - 8% marginaal = 7% kliendi soodustus.
+                {t("admin.ruumlyMinMarginDesc")}
               </p>
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground">
-                Vaikimisi partneri allahindlus (%)
+                {t("admin.defaultPartnerDiscount")}
               </label>
               <input type="number" min="0" max="80" className={inp}
                 value={settings.defaultPartnerDiscount}
                 onChange={e => set("defaultPartnerDiscount", e.target.value)} />
-              <p className="mt-0.5 text-[10px] text-muted-foreground">% allahindlust uutelt partneritelt</p>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">{t("admin.defaultPartnerDiscountDesc")}</p>
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground">
-                Vaikimisi KM määr (%)
+                {t("admin.defaultVatRate")}
               </label>
               <input type="number" min="0" max="30" className={inp}
                 value={settings.defaultVatRate}
                 onChange={e => set("defaultVatRate", e.target.value)} />
-              <p className="mt-0.5 text-[10px] text-muted-foreground">Eestis 24% (alates 2024). 0 = KM ei kohaldu</p>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">{t("admin.defaultVatRateDesc")}</p>
             </div>
           </div>
 
           {/* ── Tier Configuration ── */}
           <div className="mt-6 pt-5 border-t border-border">
-            <p className="text-xs font-semibold text-foreground mb-1">Pakettide seadistus</p>
+            <p className="text-xs font-semibold text-foreground mb-1">{t("admin.tierConfig")}</p>
             <p className="text-xs text-muted-foreground mb-4">
-              Paketid määravad funktsionaalsuse ja igakuise tasu. Kliendi soodustus ei sõltu paketist — see tuleneb partneri lepingust.
+              {t("admin.tierConfigDesc")}
             </p>
             <div className="grid gap-4 sm:grid-cols-3">
               {(["starter", "standard", "premium"] as const).map(tier => (
                 <div key={tier} className={`rounded-lg border p-4 ${tier === "starter" ? "border-accent/30 bg-accent/5" : "border-border bg-card"}`}>
-                  <p className="text-sm font-semibold text-foreground capitalize mb-3">{tier === "starter" ? "Starter (tasuta)" : tier === "standard" ? "Standard" : "Premium"}</p>
+                  <p className="text-sm font-semibold text-foreground capitalize mb-3">{tier === "starter" ? t("admin.tierStarterFree") : tier === "standard" ? "Standard" : "Premium"}</p>
                   <div className="space-y-3">
                     <div>
-                      <label className="text-[10px] font-medium text-muted-foreground">Kuutasu (€)</label>
+                      <label className="text-[10px] font-medium text-muted-foreground">{t("admin.tierMonthlyFee")}</label>
                       <input type="number" min="0" className={inp}
                         value={settings[`tier.${tier}.monthlyFee`]}
                         onChange={e => set(`tier.${tier}.monthlyFee`, e.target.value)} />
                     </div>
                     <div>
-                      <label className="text-[10px] font-medium text-muted-foreground">Max asukohti</label>
+                      <label className="text-[10px] font-medium text-muted-foreground">{t("admin.tierMaxLocations")}</label>
                       <input type="number" min="1" className={inp}
                         value={settings[`tier.${tier}.maxLocations`]}
                         onChange={e => set(`tier.${tier}.maxLocations`, e.target.value)} />
                       {tier === "premium" && (
-                        <p className="mt-0.5 text-[10px] text-muted-foreground">999 = piiramatu</p>
+                        <p className="mt-0.5 text-[10px] text-muted-foreground">{t("admin.tierUnlimited")}</p>
                       )}
                     </div>
                   </div>
@@ -236,13 +233,9 @@ export default function AdminSettings() {
 
           {/* ── Extras Pricing ── */}
           <div className="mt-6 pt-5 border-t border-border">
-            <p className="text-xs font-semibold text-foreground mb-1">Lisateenuste hinnakujundus</p>
+            <p className="text-xs font-semibold text-foreground mb-1">{t("admin.extrasPricingTitle")}</p>
             <p className="text-xs text-muted-foreground mb-3">
-              Lisateenuste hinnakujundus toimib samamoodi nagu põhihind:
-              partner määrab avaliku hinna, Ruumly rakendab partneri allahindluse
-              ja minimaalmaarginaali. Nt: avalik hind 20€, partneri allahindlus
-              15%, marginaal 8% → klient maksab 18.60€, partner saab 17€,
-              Ruumly saab 1.60€.
+              {t("admin.extrasPricingDesc")}
             </p>
             <div className="rounded-lg bg-secondary p-3 text-xs">
               <span className="text-muted-foreground">Avalik hind </span>
@@ -258,9 +251,7 @@ export default function AdminSettings() {
 
           <div className="mt-3 rounded-lg bg-accent/5 border border-accent/20 p-3">
             <p className="text-xs text-accent">
-              💡 Iga partneri täpsemad allahindlused seadistatakse
-              <strong> Partnerid → Muuda</strong> all.
-              Sealsed väärtused alistavad siinsed vaikimisi seaded.
+              💡 {t("admin.pricingOverrideHint")}
             </p>
           </div>
         </div>
@@ -305,11 +296,11 @@ export default function AdminSettings() {
           <div className="rounded-xl border border-border p-5">
             <div>
               <label className="text-xs font-medium text-muted-foreground">
-                Kutse kood
+                {t("admin.inviteCode")}
               </label>
               <input className={inp} value={settings.inviteCode} onChange={e => set("inviteCode", e.target.value)} placeholder="RUUMLY2026" />
               <p className="mt-0.5 text-[10px] text-muted-foreground">
-                Jaga seda koodi ainult inimestega, keda soovid beeta testima kutsuda.
+                {t("admin.inviteCodeDesc")}
               </p>
             </div>
           </div>
@@ -318,7 +309,7 @@ export default function AdminSettings() {
         <div className="flex justify-end">
           <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleSave} disabled={saving}>
             {saving
-              ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvestamine...</>
+              ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t("admin.saving")}</>
               : <><Save className="mr-2 h-4 w-4" /> {t("admin.saveSettings")}</>}
           </Button>
         </div>
