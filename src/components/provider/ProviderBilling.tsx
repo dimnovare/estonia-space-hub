@@ -10,7 +10,8 @@ import { toast } from "sonner";
 import { apiClient } from "@/services/apiClient";
 
 export default function ProviderBilling() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const locale = language === "et" ? "et-EE" : language === "ru" ? "ru-RU" : "en-GB";
   const queryClient = useQueryClient();
   const [editingBank, setEditingBank] = useState(false);
 
@@ -100,7 +101,7 @@ export default function ProviderBilling() {
             {supplierData?.subscriptionEndsAt && (
               <p className="mt-0.5 text-xs text-muted-foreground">
                 {t("provider.billing.validUntil")}{" "}
-                {new Date(supplierData.subscriptionEndsAt).toLocaleDateString("et-EE")}
+                {new Date(supplierData.subscriptionEndsAt).toLocaleDateString(locale)}
               </p>
             )}
           </div>
@@ -296,7 +297,7 @@ export default function ProviderBilling() {
                           )}
                           {inv.status === "paid" && inv.paidAt && (
                             <p className="mt-1 text-[10px] text-muted-foreground">
-                              {new Date(inv.paidAt).toLocaleDateString("et-EE")}
+                              {new Date(inv.paidAt).toLocaleDateString(locale)}
                             </p>
                           )}
                         </TableCell>

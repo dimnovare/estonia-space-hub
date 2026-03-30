@@ -17,7 +17,9 @@ function StarRating({ rating, size = 4 }: { rating: number; size?: number }) {
 }
 
 function ReviewCard({ review }: { review: Review }) {
-  const date = new Date(review.createdAt).toLocaleDateString("et-EE", {
+  const { language } = useLanguage();
+  const locale = language === "et" ? "et-EE" : language === "ru" ? "ru-RU" : "en-GB";
+  const date = new Date(review.createdAt).toLocaleDateString(locale, {
     year: "numeric",
     month: "short",
     day: "numeric",
