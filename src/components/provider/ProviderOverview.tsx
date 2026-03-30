@@ -1,4 +1,5 @@
 import { List, Package, Eye, DollarSign, Inbox } from "lucide-react";
+import { useLocations } from "@/hooks/queries";
 import { useOrders } from "@/hooks/useOrders";
 import { useBookings } from "@/hooks/useBookings";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -8,18 +9,20 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
   const { t } = useLanguage();
   const { data: allOrders = [], isLoading: ordersLoading } = useOrders();
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings();
+  const { data: locations = [] } = useLocations();
+  const listingCount = locations.reduce((sum, loc) => sum + (loc.units?.length ?? 0), 0);
   const isLoading = ordersLoading || bookingsLoading;
   const pendingOrders = allOrders.filter(o => o.status === "sent" || o.status === "created");
 
   const thisMonthStr = new Date().toISOString().slice(0, 7);
 
   const bookingsThisMonth = bookings.filter(b =>
-    (b as any).createdAt?.startsWith(thisMonthStr)
+    b.createdAt?.startsWith(thisMonthStr)
   ).length;
 
   const revenueThisMonth = bookings
     .filter(b =>
-      (b as any).createdAt?.startsWith(thisMonthStr) &&
+      b.createdAt?.startsWith(thisMonthStr) &&
       (b.status === "confirmed" || b.status === "active" || b.status === "completed"))
     .reduce((sum, b) => sum + ((b as any).total ?? 0), 0);
 
@@ -58,7 +61,7 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
       <h1 className="font-display text-2xl font-bold">{t("provider.overview.title")}</h1>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: t("provider.overview.listings"), value: "—", icon: List },
+          { label: t("provider.overview.listings"), value: listingCount.toString(), icon: List },
           { label: t("provider.overview.bookingsMonth"), value: bookingsThisMonth.toString(), icon: Package },
           { label: t("provider.overview.viewsMonth"), value: "—", icon: Eye },
           { label: t("provider.overview.revenueMonth"), value: `€${revenueThisMonth.toLocaleString()}`, icon: DollarSign },
