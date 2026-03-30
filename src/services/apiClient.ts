@@ -36,6 +36,8 @@ class ApiClient {
     const token = this.getToken();
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (token) headers["Authorization"] = `Bearer ${token}`;
+    const lang = localStorage.getItem("ruumly-lang") || "et";
+    headers["Accept-Language"] = lang;
     let response: Response;
     try {
       response = await fetch(`${API_BASE_URL}${endpoint}`, {

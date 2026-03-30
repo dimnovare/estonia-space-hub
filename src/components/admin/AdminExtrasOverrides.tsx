@@ -11,7 +11,7 @@ export default function AdminExtrasOverrides({ listingId }: { listingId: string 
     const numVal = value === "" ? null : Number(value);
     updateExtra.mutate(
       { extraId, data: { [field]: numVal } as any },
-      { onError: () => toast.error("Salvestamine ebaõnnestus") }
+      { onError: (err: any) => toast.error(err?.message || "Salvestamine ebaõnnestus") }
     );
   };
 

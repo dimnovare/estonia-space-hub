@@ -89,7 +89,7 @@ function LocationDialog({
             toast.success(t("toast.locationUpdated"));
             onOpenChange(false);
           },
-          onError: () => toast.error(t("toast.locationEditError")),
+          onError: (err: any) => toast.error(err?.message || t("toast.locationEditError")),
         }
       );
     } else {
@@ -100,7 +100,7 @@ function LocationDialog({
             toast.success(t("toast.locationCreated"));
             onOpenChange(false);
           },
-          onError: () => toast.error(t("toast.locationCreateError")),
+          onError: (err: any) => toast.error(err?.message || t("toast.locationCreateError")),
         }
       );
     }
@@ -220,7 +220,7 @@ function UnitDialog({
           toast.success(t("toast.unitAdded"));
           onOpenChange(false);
         },
-        onError: () => toast.error(t("toast.unitAddError")),
+        onError: (err: any) => toast.error(err?.message || t("toast.unitAddError")),
       }
     );
   };

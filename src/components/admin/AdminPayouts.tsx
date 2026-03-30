@@ -38,7 +38,7 @@ export default function AdminPayouts() {
         const arr = Array.isArray(data) ? data : (data as any).data ?? [];
         setPayouts(arr);
       })
-      .catch(() => toast.error("Väljamaksete laadimine ebaõnnestus"))
+      .catch((err: any) => toast.error(err?.message || "Väljamaksete laadimine ebaõnnestus"))
       .finally(() => setLoading(false));
   };
 
@@ -66,8 +66,8 @@ export default function AdminPayouts() {
       });
       toast.success("Väljamakse märgitud makstuks");
       fetchPayouts();
-    } catch {
-      toast.error("Staatuse muutmine ebaõnnestus");
+    } catch (err: any) {
+      toast.error(err?.message || "Staatuse muutmine ebaõnnestus");
     } finally {
       setMarkingId(null);
     }
