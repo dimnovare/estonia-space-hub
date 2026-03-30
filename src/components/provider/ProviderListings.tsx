@@ -67,6 +67,7 @@ function LocationDialog({
   const { t } = useLanguage();
   const createLoc = useCreateLocation();
   const updateLoc = useUpdateLocation();
+  const { user } = useAuth();
   const isEdit = !!locationId;
 
   const form = useForm<LocationForm>({
@@ -97,7 +98,7 @@ function LocationDialog({
       );
     } else {
       createLoc.mutate(
-        { supplierId: "", name: data.name, address: data.address, city: data.city, lat: data.lat ?? 0, lng: data.lng ?? 0, description: data.description, openingHours: data.openingHours },
+        { supplierId: user?.supplierId || "", name: data.name, address: data.address, city: data.city, lat: data.lat ?? 0, lng: data.lng ?? 0, description: data.description, openingHours: data.openingHours },
         {
           onSuccess: () => {
             toast.success(t("toast.locationCreated"));
