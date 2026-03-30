@@ -2,33 +2,50 @@ import { Download } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/services/apiClient";
 
 export default function ProviderAnalytics() {
   const { t, language } = useLanguage();
 
   const locale = language === "et" ? "et-EE" : language === "ru" ? "ru-RU" : "en-GB";
 
+  const { data: analyticsData } = useQuery({
+    queryKey: ["supplier-analytics"],
+    queryFn: () => apiClient.get<{
+      monthly: { year: number; month: number; bookings: number; revenue: number }[];
+      totalViews: number;
+    }>("/supplier/analytics"),
+    staleTime: 5 * 60_000,
+  });
+
   const viewsData = Array.from({ length: 6 }, (_, i) => {
     const d = new Date();
     d.setMonth(d.getMonth() - 5 + i);
+    const match = analyticsData?.monthly.find(
+      m => m.year === d.getFullYear() && m.month === d.getMonth() + 1
+    );
     return {
       month: d.toLocaleString(locale, { month: "short" }),
       views: 0,
-      bookings: 0,
+      bookings: match?.bookings ?? 0,
     };
   });
 
   const revenueData = Array.from({ length: 6 }, (_, i) => {
     const d = new Date();
     d.setMonth(d.getMonth() - 5 + i);
+    const match = analyticsData?.monthly.find(
+      m => m.year === d.getFullYear() && m.month === d.getMonth() + 1
+    );
     return {
       month: d.toLocaleString(locale, { month: "short" }),
-      revenue: 0,
+      revenue: match?.revenue ?? 0,
     };
   });
 
-  const hasData = viewsData.some(d => d.views > 0 || d.bookings > 0)
-    || revenueData.some(d => d.revenue > 0);
+  const hasData = (analyticsData?.monthly ?? []).some(m => m.bookings > 0 || m.revenue > 0)
+    || (analyticsData?.totalViews ?? 0) > 0;
 
   const exportRevenueCSV = () => {
     const headers = t("provider.analytics.csvHeaders").split(",");
@@ -57,8 +74,9 @@ export default function ProviderAnalytics() {
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
             <div className="card-elevated p-5">
               <div className="text-sm text-muted-foreground">{t("provider.analytics.viewsMonth")}</div>
-              <div className="mt-1 font-display text-2xl font-bold">390</div>
-              <div className="mt-1 text-xs text-success">+12% {t("provider.analytics.fromLastMonth")}</div>
+              <div className="mt-1 font-display text-2xl font-bold">
+                {analyticsData?.totalViews ?? 0}
+              </div>
             </div>
             <div className="card-elevated p-5">
               <div className="text-sm text-muted-foreground">{t("provider.analytics.conversionRate")}</div>
