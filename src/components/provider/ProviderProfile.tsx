@@ -48,9 +48,7 @@ export default function ProviderProfile() {
           <input className={inp} value={formData.email} onChange={e => setFormData(p => ({ ...p, email: e.target.value }))} />
         </div>
         <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleSave}>{t("provider.profile.save")}</Button>
-        <p className="text-xs text-muted-foreground mt-2">
-          Muudatused salvestatakse kohalikult. Peale backend ühendamist sünkroniseeritakse serveriga.
-        </p>
+        {/* TODO: Remove this note once backend sync is implemented */}
       </div>
     </div>
   );

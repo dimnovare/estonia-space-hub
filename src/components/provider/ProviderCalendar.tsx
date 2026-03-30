@@ -41,7 +41,7 @@ export default function ProviderCalendar() {
       <p className="mt-1 text-sm text-muted-foreground">{t("provider.calendar.desc")}</p>
       <div className="mt-3 rounded-lg border border-border bg-secondary/50 p-3">
         <p className="text-xs text-muted-foreground">
-          <strong>NB:</strong> Kalender näitab kõiki teie broneeringuid. Kuupäevade blokeerimine on hetkel kõigi asukohtade jaoks. Asukoha-põhine kalender tuleb peagi.
+          <strong>NB:</strong> {t("provider.calendar.locationCalendarSoon")}
         </p>
       </div>
       <div className="mt-6 grid gap-6 lg:grid-cols-[auto_1fr]">
@@ -137,7 +137,7 @@ export default function ProviderCalendar() {
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">{t("provider.calendar.upcomingBookings")}</h4>
             <div className="space-y-2">
               {bookings.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Broneeringuid pole.</p>
+                <p className="text-sm text-muted-foreground">{t("provider.calendar.noBookingsYet")}</p>
               ) : bookings.map(b => (
                 <div key={b.id} className="flex items-center justify-between rounded-lg border border-border p-3 text-sm">
                   <div>

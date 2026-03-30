@@ -39,8 +39,8 @@ export default function ProviderBookings() {
       <h1 className="font-display text-2xl font-bold">{t("provider.bookings.title")}</h1>
       <div className="py-12 text-center text-sm text-muted-foreground">
         <Package className="mx-auto h-8 w-8 text-muted-foreground/20 mb-3" />
-        <p className="font-medium">Broneeringuid pole veel</p>
-        <p className="mt-1 text-xs">Broneeringud ilmuvad siia, kui kliendid teie teenuseid broneerivad.</p>
+        <p className="font-medium">{t("provider.bookings.noBookingsTitle")}</p>
+        <p className="mt-1 text-xs">{t("provider.bookings.noBookingsDesc")}</p>
       </div>
     </div>
   );
