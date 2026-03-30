@@ -1,4 +1,4 @@
-import { Building2, MapPin, CalendarCheck, Star, Quote } from "lucide-react";
+import { Building2, MapPin, CalendarCheck, Star } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAllListings, useBookingStats } from "@/hooks/queries";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,12 +20,6 @@ export default function TrustBar() {
     { icon: MapPin, value: cityCount, label: t("trustBar.cities") },
     ...((bookingStats?.totalBookings ?? 0) > 0 ? [{ icon: CalendarCheck, value: bookingStats!.totalBookings, label: t("trustBar.bookings") }] : []),
     ...((bookingStats?.averageRating ?? 0) > 0 ? [{ icon: Star, value: bookingStats!.averageRating!.toFixed(1), label: t("trustBar.rating") }] : []),
-  ];
-
-  const testimonials = [
-    { name: t("trustBar.testimonial1.name"), company: t("trustBar.testimonial1.company"), quote: t("trustBar.testimonial1.quote") },
-    { name: t("trustBar.testimonial2.name"), company: t("trustBar.testimonial2.company"), quote: t("trustBar.testimonial2.quote") },
-    { name: t("trustBar.testimonial3.name"), company: t("trustBar.testimonial3.company"), quote: t("trustBar.testimonial3.quote") },
   ];
 
   return (
@@ -56,20 +50,10 @@ export default function TrustBar() {
         })}
       </div>
 
-      {/* Testimonials */}
-      <div className="mt-10 grid gap-5 md:grid-cols-3">
-        {testimonials.map((t, i) => (
-          <div key={i} className="rounded-xl border border-border bg-card p-5">
-            <Quote className="h-5 w-5 text-accent/40" />
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground italic">
-              "{t.quote}"
-            </p>
-            <div className="mt-4 border-t border-border pt-3">
-              <div className="text-sm font-semibold">{t.name}</div>
-              <div className="text-xs text-muted-foreground">{t.company}</div>
-            </div>
-          </div>
-        ))}
+      <div className="mt-8 text-center">
+        <p className="text-xs text-muted-foreground">
+          Usalduslikud ladustamis- ja transporditeenuse pakkujad üle Eesti
+        </p>
       </div>
     </section>
   );
