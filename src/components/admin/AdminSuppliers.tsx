@@ -62,7 +62,11 @@ export default function AdminSuppliers() {
     onError: (err: any) => toast.error(err.message || t("admin.deleteFailed")),
   });
 
-  const filtered = filter === "all" ? suppliers : filter === "active" ? suppliers.filter(s => s.isActive) : suppliers.filter(s => !s.isActive);
+  const filteredRaw = filter === "all" ? suppliers : filter === "active" ? suppliers.filter(s => s.isActive) : suppliers.filter(s => !s.isActive);
+  const filtered = [...filteredRaw].sort((a, b) => {
+    if (a.isActive === b.isActive) return 0;
+    return a.isActive ? -1 : 1;
+  });
 
   const toggleStatus = async (id: string) => {
     const sup = suppliers.find(s => s.id === id);
@@ -196,7 +200,7 @@ export default function AdminSuppliers() {
           <tbody>
             {filtered.map(s => (
               <tr key={s.id} className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors">
-                <td className="px-4 py-3"><div className="font-medium">{s.name}</div><div className="text-[10px] text-muted-foreground font-mono">{s.registryCode}</div></td>
+                <td className="px-4 py-3"><div className="font-medium">{s.name}{!s.isActive && <span className="ml-2 rounded-full bg-destructive/10 px-2 py-0.5 text-xs text-destructive">{t("admin.deactivated") || "Deactivated"}</span>}</div><div className="text-[10px] text-muted-foreground font-mono">{s.registryCode}</div></td>
                 <td className="px-4 py-3"><div className="text-xs">{s.contactName}</div><div className="text-[10px] text-muted-foreground">{s.contactEmail}</div></td>
                 <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${INTEGRATION_TYPE_CONFIG[s.integrationType].color}`}>{intIcon(s.integrationType)} {INTEGRATION_TYPE_CONFIG[s.integrationType].label}</span></td>
                 <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${healthColor(s.integrationHealth)}`}>{healthLabel(s.integrationHealth)}</span></td>
