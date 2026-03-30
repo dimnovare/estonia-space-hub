@@ -42,7 +42,7 @@ export function useCreateBooking() {
       // Toast handled by BookingPage success state
     },
     onError: (err: any) => {
-      toast.error(err?.message || "Midagi läks valesti. Palun proovige uuesti.");
+      toast.error(err?.message || "Something went wrong. Please try again.");
     },
   });
 }
