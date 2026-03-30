@@ -151,7 +151,7 @@ function LocationDialog({
             <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={async () => {
               const addr = form.getValues("address");
               const city = form.getValues("city");
-              if (!addr) { toast.error("Sisestage aadress"); return; }
+              if (!addr) { toast.error(t("provider.listings.enterAddress")); return; }
               try {
                 const q = encodeURIComponent(`${addr}, ${city || "Estonia"}`);
                 const res = await fetch(
@@ -162,20 +162,20 @@ function LocationDialog({
                 if (data.length > 0) {
                   form.setValue("lat", parseFloat(data[0].lat));
                   form.setValue("lng", parseFloat(data[0].lon));
-                  toast.success("Koordinaadid leitud!");
+                  toast.success(t("provider.listings.coordsFound"));
                 } else {
-                  toast.error("Aadressi ei leitud");
+                  toast.error(t("provider.listings.addressNotFound"));
                 }
               } catch {
-                toast.error("Geokoodeerimine ebaõnnestus");
+                toast.error(t("provider.listings.geocodeFailed"));
               }
             }}>
-              <MapPin className="mr-1 h-3.5 w-3.5" /> Leia
+              <MapPin className="mr-1 h-3.5 w-3.5" /> {t("provider.listings.findCoords")}
             </Button>
           </div>
           {(form.watch("lat") || form.watch("lng")) && (
             <p className="text-xs text-muted-foreground">
-              Koordinaadid: {form.watch("lat")}, {form.watch("lng")}
+              {t("provider.listings.coordinates")}: {form.watch("lat")}, {form.watch("lng")}
             </p>
           )}
           <div>
@@ -306,12 +306,12 @@ function UnitDialog({
               name="vatRate"
               render={({ field }) => (
                 <Select value={String(field.value ?? "")} onValueChange={(v) => field.onChange(v ? Number(v) : undefined)}>
-                  <SelectTrigger><SelectValue placeholder="Vali KM määr" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("provider.listings.selectVatRate")} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="24">24% (Eesti standard)</SelectItem>
-                    <SelectItem value="13">13% (vähendatud)</SelectItem>
-                    <SelectItem value="9">9% (vähendatud)</SelectItem>
-                    <SelectItem value="0">0% (KM-vaba)</SelectItem>
+                    <SelectItem value="24">24% ({t("provider.listings.vatStandard")})</SelectItem>
+                    <SelectItem value="13">13% ({t("provider.listings.vatReduced")})</SelectItem>
+                    <SelectItem value="9">9% ({t("provider.listings.vatReduced")})</SelectItem>
+                    <SelectItem value="0">0% ({t("provider.listings.vatExempt")})</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -395,13 +395,13 @@ export default function ProviderListings() {
                 <button
                   type="button"
                   onClick={async () => {
-                    if (!confirm("Kustuta asukoht? Kõik seotud üksused kustutatakse samuti.")) return;
+                    if (!confirm(t("provider.listings.deleteLocationConfirm"))) return;
                     try {
                       await apiClient.delete(`/locations/${loc.id}`);
                       queryClient.invalidateQueries({ queryKey: ["locations"] });
-                      toast.success("Asukoht kustutatud");
+                      toast.success(t("provider.listings.locationDeleted"));
                     } catch (err: any) {
-                      toast.error(err?.message || "Kustutamine ebaõnnestus");
+                      toast.error(err?.message || t("provider.listings.deleteFailed"));
                     }
                   }}
                   className="shrink-0 rounded-md p-1.5 text-destructive transition-colors hover:bg-destructive/10"
