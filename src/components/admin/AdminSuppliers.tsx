@@ -478,7 +478,7 @@ export default function AdminSuppliers() {
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setCreateOpen(false)}>{t("common.cancel")}</Button>
+              <Button variant="outline" onClick={() => setCreateOpen(false)}>{t("admin.cancel")}</Button>
               <Button onClick={handleCreate} disabled={createMutation.isPending || !createForm.name} className="bg-accent text-accent-foreground hover:bg-accent/90">
                 {createMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                 {t("admin.addPartner")}
