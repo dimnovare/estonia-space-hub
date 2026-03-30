@@ -91,9 +91,9 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           )}
         </div>
 
-        {listing.size && listing.size > 0 && (
+        {(listing as any).size && (listing as any).size > 0 && (
           <p className="mt-2 text-xs text-muted-foreground">
-            {listing.size} {listing.sizeUnit || "m²"}
+            {(listing as any).size} {(listing as any).sizeUnit || "m²"}
           </p>
         )}
 
