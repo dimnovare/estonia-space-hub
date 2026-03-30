@@ -305,7 +305,7 @@ export const authService = {
     await apiClient.post("/auth/verify-email", { token });
   },
   async resendVerificationEmail(): Promise<void> {
-    await apiClient.post("/auth/resend-verification");
+    await apiClient.post("/auth/resend-verification", {});
   },
 };
 
