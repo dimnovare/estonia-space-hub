@@ -45,18 +45,18 @@ export default function AdminSuppliers() {
     mutationFn: (data: Record<string, unknown>) => supplierService.create(data),
     onSuccess: () => {
       invalidate();
-      toast.success("Partner lisatud!");
+      toast.success(t("admin.partnerAdded"));
       setCreateOpen(false);
       setCreateForm(emptyCreate);
     },
-    onError: (err: any) => toast.error(err.message || "Viga partneri loomisel"),
+    onError: (err: any) => toast.error(err.message || t("admin.partnerCreateError")),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) => supplierService.update(id, data),
     onSuccess: (updated) => {
       invalidate();
-      toast.success("Muudatused salvestatud!");
+      toast.success(t("admin.changesSaved"));
       setSelected(prev => prev ? { ...prev, ...updated } : prev);
     },
     onError: (err: any) => toast.error(err.message || t("admin.deleteFailed")),
@@ -169,11 +169,11 @@ export default function AdminSuppliers() {
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${INTEGRATION_TYPE_CONFIG[s.integrationType].color}`}>{intIcon(s.integrationType)} {INTEGRATION_TYPE_CONFIG[s.integrationType].label}</span>
               <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${healthColor(s.integrationHealth)}`}>{healthLabel(s.integrationHealth)}</span>
-              <span className="text-xs text-muted-foreground">{s.listingCount} kuulutust</span>
+              <span className="text-xs text-muted-foreground">{s.listingCount} {t("admin.listingsLabel")}</span>
               <span className="text-xs font-medium">€{s.revenue.toLocaleString()}</span>
               {s.partnerDiscountRate > 0 && (
-                <span className="text-[10px] rounded-full bg-success/10 text-success px-2 py-0.5 font-medium">
-                  Marginaal: {Math.max(0, s.partnerDiscountRate - (s.clientDiscountRate || 0))}%
+                 <span className="text-[10px] rounded-full bg-success/10 text-success px-2 py-0.5 font-medium">
+                   {t("admin.marginLabel")}: {Math.max(0, s.partnerDiscountRate - (s.clientDiscountRate || 0))}%
                 </span>
               )}
             </div>
@@ -232,8 +232,8 @@ export default function AdminSuppliers() {
             <DialogTitle className="flex items-center gap-2">
               {selected?.name}
               {selected?.billingModel === "rebate"
-                ? <span className="rounded-full bg-amber-100 text-amber-700 px-2 py-0.5 text-[10px] font-medium">Tagasimakse</span>
-                : <span className="rounded-full bg-teal-100 text-teal-700 px-2 py-0.5 text-[10px] font-medium">Marketplace</span>}
+                ? <span className="rounded-full bg-amber-100 text-amber-700 px-2 py-0.5 text-[10px] font-medium">{t("admin.billingRebate")}</span>
+                : <span className="rounded-full bg-teal-100 text-teal-700 px-2 py-0.5 text-[10px] font-medium">{t("admin.billingMarketplace")}</span>}
             </DialogTitle>
           </DialogHeader>
           {selected && (
@@ -259,26 +259,26 @@ export default function AdminSuppliers() {
 
               {/* Tier + Billing model */}
               <div className="rounded-xl border border-border p-4 space-y-3">
-                <h3 className="text-sm font-semibold mb-3">Pakett ja arveldus</h3>
+                <h3 className="text-sm font-semibold mb-3">{t("admin.tierAndBilling")}</h3>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground">Pakett</label>
+                    <label className="text-xs font-medium text-muted-foreground">{t("admin.tier")}</label>
                     <select className={inp} value={(selected.tier ?? "starter").toLowerCase()} onChange={(e) => setSelected({ ...selected, tier: e.target.value as "starter" | "standard" | "premium" })}>
-                      <option value="starter">Starter (tasuta)</option>
-                      <option value="standard">Standard (€49/kuu)</option>
-                      <option value="premium">Premium (€99/kuu)</option>
+                      <option value="starter">{t("admin.tierStarter")}</option>
+                      <option value="standard">{t("admin.tierStandard")}</option>
+                      <option value="premium">{t("admin.tierPremium")}</option>
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground">Arveldamise mudel</label>
+                    <label className="text-xs font-medium text-muted-foreground">{t("admin.billingModel")}</label>
                     <select className={inp} value={selected.billingModel ?? "marketplace"} onChange={(e) => setSelected({ ...selected, billingModel: e.target.value as "marketplace" | "rebate" })}>
-                      <option value="marketplace">Marketplace</option>
-                      <option value="rebate">Tagasimakse</option>
+                      <option value="marketplace">{t("admin.billingMarketplace")}</option>
+                      <option value="rebate">{t("admin.billingRebate")}</option>
                     </select>
                     <p className="mt-0.5 text-[10px] text-muted-foreground">
                       {selected.billingModel === "rebate"
-                        ? "Klient maksab otse partnerile, Ruumly esitab igakuise arve."
-                        : "Klient maksab Montonio kaudu, Ruumly peab marginaali kinni."}
+                        ? t("admin.billingRebateDesc")
+                        : t("admin.billingMarketplaceDesc")}
                     </p>
                   </div>
                 </div>
@@ -308,42 +308,42 @@ export default function AdminSuppliers() {
 
               {/* Discount fields */}
               <div className="rounded-xl border border-border p-4">
-                <h3 className="text-sm font-semibold mb-3">Allahindlused</h3>
+                <h3 className="text-sm font-semibold mb-3">{t("admin.discounts")}</h3>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground">Partneri allahindlus (%)</label>
+                    <label className="text-xs font-medium text-muted-foreground">{t("admin.partnerDiscountRate")}</label>
                     <input type="number" min="0" max="80" className={inp}
                       value={selected.partnerDiscountRate ?? 0}
                       onChange={e => setSelected({ ...selected, partnerDiscountRate: Number(e.target.value) })}
                     />
-                    <p className="mt-0.5 text-[10px] text-muted-foreground">% mida partner meile annab tema avalikust hinnast</p>
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">{t("admin.partnerDiscountDesc")}</p>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground">Kliendi allahindlus (%)</label>
+                    <label className="text-xs font-medium text-muted-foreground">{t("admin.clientDiscountRate")}</label>
                     <input type="number" min="0" max="80" className={inp}
                       value={selected.clientDiscountRate ?? 0}
                       onChange={e => setSelected({ ...selected, clientDiscountRate: Number(e.target.value) })}
                     />
-                    <p className="mt-0.5 text-[10px] text-muted-foreground">% mida klient säästab vs avalik hind</p>
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">{t("admin.clientDiscountDesc")}</p>
                   </div>
                 </div>
                 {(selected.partnerDiscountRate > 0 || selected.clientDiscountRate > 0) && (
                   <div className="mt-3 rounded-lg bg-accent/5 border border-accent/20 p-3 text-xs">
-                    <p className="font-semibold text-accent mb-1">Marginaali eelvaade</p>
+                    <p className="font-semibold text-accent mb-1">{t("admin.marginPreview")}</p>
                     <p className="text-muted-foreground">
-                      Partneri allahindlus: <strong>{selected.partnerDiscountRate}%</strong>
+                      {t("admin.partnerDiscountLabel")}: <strong>{selected.partnerDiscountRate}%</strong>
                       {" · "}
-                      Kliendi allahindlus: <strong>{selected.clientDiscountRate}%</strong>
+                      {t("admin.clientDiscountLabel")}: <strong>{selected.clientDiscountRate}%</strong>
                       {" · "}
-                      Ruumly marginaal: <strong className="text-success">
+                      {t("admin.ruumlyMargin")}: <strong className="text-success">
                         {Math.max(0, (selected.partnerDiscountRate || 0) - (selected.clientDiscountRate || 0))}%
                       </strong>
                     </p>
                     <p className="mt-1 text-muted-foreground">
-                      Näide: 100€ teenus → partner arvestab meile{" "}
-                      {100 - (selected.partnerDiscountRate || 0)}€, klient maksab{" "}
-                      {100 - (selected.clientDiscountRate || 0)}€, marginaal{" "}
-                      {Math.max(0, (selected.partnerDiscountRate || 0) - (selected.clientDiscountRate || 0))}€
+                      {t("admin.marginExample")
+                        .replace("{partnerNet}", String(100 - (selected.partnerDiscountRate || 0)))
+                        .replace("{clientPays}", String(100 - (selected.clientDiscountRate || 0)))
+                        .replace("{margin}", String(Math.max(0, (selected.partnerDiscountRate || 0) - (selected.clientDiscountRate || 0))))}
                     </p>
                   </div>
                 )}
@@ -402,78 +402,77 @@ export default function AdminSuppliers() {
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Kontaktisik</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.contactPerson")}</label>
                 <input className={inp} value={createForm.contactName} onChange={(e) => setCreateForm({ ...createForm, contactName: e.target.value })} />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">E-post</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.email")}</label>
                 <input type="email" className={inp} value={createForm.contactEmail} onChange={(e) => setCreateForm({ ...createForm, contactEmail: e.target.value })} />
               </div>
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Telefon</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("admin.phone")}</label>
               <input className={inp} value={createForm.contactPhone} onChange={(e) => setCreateForm({ ...createForm, contactPhone: e.target.value })} />
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Integratsiooni tüüp</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.integrationType")}</label>
                 <select className={inp} value={createForm.integrationType} onChange={(e) => setCreateForm({ ...createForm, integrationType: e.target.value as any })}>
-                  <option value="manual">Manuaalne</option>
-                  <option value="email">E-post</option>
-                  <option value="api">API</option>
+                  <option value="manual">{t("admin.integrationManual")}</option>
+                  <option value="email">{t("admin.integrationEmail")}</option>
+                  <option value="api">{t("admin.integrationApi")}</option>
                 </select>
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Pakett</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.tier")}</label>
                 <select className={inp} value={createForm.tier} onChange={(e) => setCreateForm({ ...createForm, tier: e.target.value })}>
-                  <option value="starter">Starter (tasuta)</option>
-                  <option value="standard">Standard (€49/kuu)</option>
-                  <option value="premium">Premium (€99/kuu)</option>
+                  <option value="starter">{t("admin.tierStarter")}</option>
+                  <option value="standard">{t("admin.tierStandard")}</option>
+                  <option value="premium">{t("admin.tierPremium")}</option>
                 </select>
               </div>
             </div>
             {createForm.integrationType === "email" && (
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Saaja e-post</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.recipientEmail")}</label>
                 <input type="email" className={inp} value={createForm.recipientEmail} onChange={(e) => setCreateForm({ ...createForm, recipientEmail: e.target.value })} />
               </div>
             )}
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Partneri allahindlus (%)</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("admin.partnerDiscountRate")}</label>
               <input type="number" min="0" max="80" className={inp} value={createForm.partnerDiscountRate} onChange={(e) => setCreateForm({ ...createForm, partnerDiscountRate: e.target.value })} />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Arveldamise mudel</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("admin.billingModel")}</label>
               <select className={inp} value={createForm.billingModel} onChange={(e) => setCreateForm({ ...createForm, billingModel: e.target.value as any })}>
-                <option value="marketplace">Marketplace (klient maksab Ruumly kaudu)</option>
-                <option value="rebate">Tagasimakse (klient maksab otse partnerile)</option>
+                <option value="marketplace">{t("admin.billingMarketplaceFull")}</option>
+                <option value="rebate">{t("admin.billingRebateFull")}</option>
               </select>
               <p className="mt-0.5 text-[10px] text-muted-foreground">
-                Marketplace: klient maksab Montonio kaudu, Ruumly peab marginaali kinni.
-                Tagasimakse: klient maksab otse partnerile, Ruumly esitab igakuise arve.
+                {t("admin.billingMarketplaceDesc")} {t("admin.billingRebateDesc")}
               </p>
             </div>
 
             <div className="rounded-xl border border-border p-3 space-y-3">
-              <h4 className="text-xs font-semibold text-muted-foreground">Pangaandmed</h4>
+              <h4 className="text-xs font-semibold text-muted-foreground">{t("admin.bankDetails")}</h4>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">IBAN</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.iban")}</label>
                 <input className={inp} placeholder="EE..." value={createForm.iban} onChange={(e) => setCreateForm({ ...createForm, iban: e.target.value })} />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground">Konto nimi</label>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.accountName")}</label>
                   <input className={inp} value={createForm.bankAccountName} onChange={(e) => setCreateForm({ ...createForm, bankAccountName: e.target.value })} />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground">Pank</label>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.bankName")}</label>
                   <input className={inp} value={createForm.bankName} onChange={(e) => setCreateForm({ ...createForm, bankName: e.target.value })} />
                 </div>
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Märkmed</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("admin.notes")}</label>
               <textarea className={inp + " min-h-[60px]"} value={createForm.notes} onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })} />
             </div>
 
