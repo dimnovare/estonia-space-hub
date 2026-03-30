@@ -39,7 +39,7 @@ export function useCreateBooking() {
     mutationFn: (input: CreateBookingInput) => bookingService.create(input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["bookings"] });
-      toast.success("Broneering loodud!");
+      // Toast handled by BookingPage success state
     },
     onError: (err: any) => {
       toast.error(err?.message || "Midagi läks valesti. Palun proovige uuesti.");

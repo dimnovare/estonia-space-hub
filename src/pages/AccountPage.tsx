@@ -347,7 +347,7 @@ function AccountBookings() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">Broneeringud</h1>
+      <h1 className="font-display text-2xl font-bold">{t("account.bookings")}</h1>
       <div className="mt-4 hidden sm:flex gap-2 overflow-x-auto">
         {(["all", "pending", "confirmed", "active", "completed", "cancelled"] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
@@ -544,7 +544,7 @@ function AccountSearches() {
       <h1 className="font-display text-2xl font-bold">{t("account.savedSearches")}</h1>
       <div className="py-16 text-center">
         <Search className="mx-auto h-10 w-10 text-muted-foreground/20 mb-3" />
-        <p className="font-display text-base font-semibold">Salvestatud otsinguid pole</p>
+        <p className="font-display text-base font-semibold">{t("account.noSavedSearches")}</p>
         <p className="mt-1 text-sm text-muted-foreground max-w-xs mx-auto">
           Otsingute salvestamine on tulemas. Praegu saad kasutada otsingulehekülge otse.
         </p>

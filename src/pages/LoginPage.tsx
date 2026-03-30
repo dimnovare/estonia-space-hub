@@ -136,7 +136,7 @@ export default function LoginPage() {
             </div>
             <Button type="submit" className="w-full bg-accent py-5 text-accent-foreground hover:bg-accent/90" disabled={resetLoading}>
               {resetLoading
-                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvestame...</>
+                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t("login.saving")}</>
                 : t("form.saveNewPassword")}
             </Button>
           </form>

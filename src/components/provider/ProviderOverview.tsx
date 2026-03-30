@@ -107,7 +107,7 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
         {bookings.length === 0 ? (
           <div className="py-8 text-center text-sm text-muted-foreground">
             <Package className="mx-auto h-8 w-8 text-muted-foreground/20 mb-3" />
-            Broneeringuid pole veel.
+            {t("provider.bookings.noBookingsTitle")}
           </div>
         ) : bookings.slice(0, 3).map((b) => (
           <div key={b.id} className="flex items-center justify-between rounded-xl border border-border p-4">

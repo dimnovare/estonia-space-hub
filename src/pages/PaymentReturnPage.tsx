@@ -12,7 +12,7 @@ export default function PaymentReturnPage() {
   return (
     <div className="container-wide flex min-h-[60vh] items-center justify-center py-16">
       <SEO
-        title="Makse — Ruumly"
+        title={`${t("payment.seoTitle")} — Ruumly`}
         description=""
         noindex={true}
       />

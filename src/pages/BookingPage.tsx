@@ -218,8 +218,8 @@ export default function BookingPage() {
   return (
     <div className="container-wide py-8 pb-40 lg:pb-8">
       <SEO
-        title="Broneeri — Ruumly"
-        description="Broneeri laopind, kolimisteenus või haagis Ruumly kaudu."
+        title={`${t("booking.seoTitle")} — Ruumly`}
+        description={t("booking.seoDesc")}
         canonical="/book"
         noindex={true}
       />
