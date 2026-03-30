@@ -308,17 +308,17 @@ export default function AdminLocations() {
                       <Edit className="mr-1 h-3.5 w-3.5" /> {t("admin.edit")}
                     </Button>
                     <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10" onClick={async () => {
-                      if (!confirm("Kustuta asukoht? Kõik seotud üksused kustutatakse samuti.")) return;
+                      if (!confirm(t("provider.listings.deleteLocationConfirm"))) return;
                       try {
                         await apiClient.delete(`/locations/${selected.id}`);
                         invalidate();
                         toast.success("Asukoht kustutatud");
                         setSelectedId(null);
                       } catch (err: any) {
-                        toast.error(err.message || "Kustutamine ebaõnnestus");
+                        toast.error(err.message || t("provider.listings.deleteFailed"));
                       }
                     }}>
-                      <Trash2 className="mr-1 h-3.5 w-3.5" /> Kustuta
+                      <Trash2 className="mr-1 h-3.5 w-3.5" /> {t("admin.delete")}
                     </Button>
                   </div>
                 </div>
@@ -368,13 +368,13 @@ export default function AdminLocations() {
                                     <Edit className="h-3.5 w-3.5 text-muted-foreground" />
                                   </button>
                                   <button onClick={async () => {
-                                    if (!confirm("Kustuta üksus?")) return;
+                                    if (!confirm(t("admin.deletePartnerConfirm"))) return;
                                     try {
                                       await apiClient.delete(`/locations/${selected.id}/units/${u.id}`);
                                       invalidate();
                                       toast.success("Üksus kustutatud");
                                     } catch (err: any) {
-                                      toast.error(err.message || "Kustutamine ebaõnnestus");
+                                      toast.error(err.message || t("provider.listings.deleteFailed"));
                                     }
                                   }} className="rounded p-1 hover:bg-secondary">
                                     <Trash2 className="h-3.5 w-3.5 text-destructive" />
@@ -570,13 +570,13 @@ export default function AdminLocations() {
                       toast.success("Üksus uuendatud");
                       setEditUnitOpen(false);
                     } catch (err: any) {
-                      toast.error(err.message || "Uuendamine ebaõnnestus");
+                      toast.error(err.message || t("admin.deleteFailed"));
                     }
                   }}
                   className="bg-accent text-accent-foreground hover:bg-accent/90"
                 >
                   <Save className="mr-2 h-4 w-4" />
-                  Salvesta
+                  {t("admin.save")}
                 </Button>
               </div>
             </div>

@@ -113,7 +113,7 @@ export default function AdminListings() {
   };
 
   const handleDelete = (id: string) => {
-    if (!confirm("Kustuta kuulutus?")) return;
+    if (!confirm(t("admin.deletePartnerConfirm"))) return;
     deleteMutation.mutate(id);
   };
 
@@ -257,7 +257,7 @@ export default function AdminListings() {
 
               {/* Pricing overrides */}
               <div className="rounded-lg border border-border p-3 space-y-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Hinnakujundus</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("admin.pricing")}</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">Partneri allahindlus (% override)</label>
