@@ -131,7 +131,6 @@ export default function BookingPage() {
       contactPhone: contactForm.getValues("phone"),
       paymentMethod: isRebateModel ? "later" : paymentMethod as "bank" | "card" | "later",
       notes: contactForm.getValues("notes"),
-      idempotencyKey,
     }).then(async (bookingResult: any) => {
       const invoiceId = bookingResult?.invoiceId;
 
