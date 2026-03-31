@@ -110,7 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const persist = (
     u: AppUser | null,
     token?: string,
-    refresh?: string,
+    _refresh?: string,
     csrf?: string
   ) => {
     setUser(u);
@@ -120,8 +120,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {}
     tokenStore.setAccess(token ?? null);
     tokenStore.setCsrf(csrf ?? null);
-    // Keep writing sessionStorage during migration window
-    tokenStore.setRefresh(refresh ?? null);
   };
 
   const login = useCallback(async (email: string, password: string) => {
