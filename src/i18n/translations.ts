@@ -1501,7 +1501,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     "hero.title": "Find and book storage",
     "hero.titleHighlight": "in Tallinn",
-    "hero.subtitle": "Compare prices, book in minutes. Moving and transport services available as extras.",
+    "hero.subtitle": "Compare prices, book in minutes. Moving and transport extras available.",
     "trust.title": "Best price without the phone calls",
     "trust.badge1": "Location + units in one",
     "trust.badge2": "Fast confirmation",
