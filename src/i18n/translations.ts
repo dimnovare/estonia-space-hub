@@ -3123,6 +3123,7 @@ const translations: Record<Language, Record<string, string>> = {
     "maintenance.unreachable.desc": "Попробуйте снова через несколько минут.",
     "maintenance.unreachable.retry": "Попробовать снова",
 
+    "faq.title": "Часто задаваемые вопросы",
     "faq.subtitle": "Найдите ответы на самые частые вопросы.",
     "faq.general": "Общие вопросы",
     "faq.bookings": "Бронирование",
