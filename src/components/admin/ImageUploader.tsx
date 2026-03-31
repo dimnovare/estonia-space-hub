@@ -50,7 +50,7 @@ export default function ImageUploader({ images, onChange, maxImages = 10 }: Imag
       onChange([...images, ...newUrls].slice(0, maxImages));
       toast.success(`${newUrls.length} pilt(i) üles laetud`);
     } catch {
-      toast.error("Piltide üleslaadimine ebaõnnestus");
+      toast.error(t("toast.uploadFailed"));
     } finally {
       setUploading(false);
     }

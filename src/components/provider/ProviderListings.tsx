@@ -405,7 +405,7 @@ export default function ProviderListings() {
                     }
                   }}
                   className="shrink-0 rounded-md p-1.5 text-destructive transition-colors hover:bg-destructive/10"
-                  title="Kustuta"
+                  title={t("admin.delete")}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

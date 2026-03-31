@@ -37,7 +37,7 @@ export default function GeocodeLookup({ address, lat, lng, onCoordsChange }: Pro
         toast.error(t("geocode.notFound"));
       }
     } catch {
-      toast.error("Geokoodeerimine ebaõnnestus.");
+      toast.error(t("geocode.failed"));
     } finally {
       setLoading(false);
     }

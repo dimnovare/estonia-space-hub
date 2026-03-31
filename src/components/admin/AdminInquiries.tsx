@@ -37,7 +37,7 @@ export default function AdminInquiries() {
       queryClient.invalidateQueries({ queryKey: ["admin-inquiries"] });
       toast.success("Päring uuendatud");
     },
-    onError: (err: any) => toast.error(err.message || "Uuendamine ebaõnnestus"),
+    onError: (err: any) => toast.error(err.message || t("toast.updateFailed")),
   });
 
   const openView = (inq: Inquiry) => { setViewItem({ ...inq }); setViewOpen(true); };
