@@ -2,6 +2,7 @@ import { useSupplierListingExtras, useUpdateListingExtra } from "@/hooks/queries
 import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function AdminExtrasOverrides({ listingId }: { listingId: string }) {
   const { data: extras = [], isLoading } = useSupplierListingExtras(listingId);
