@@ -20,6 +20,7 @@ import { trackEvent } from "@/lib/analytics";
 type SubmitPhase = "submitting" | "sending" | "waiting" | "done";
 
 export default function BookingPage() {
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
   const [params] = useSearchParams();
   const listingId = params.get("listing");
   const { data: listing } = useListing(listingId || "");
@@ -115,6 +116,7 @@ export default function BookingPage() {
       total: pricing?.total || 0,
     });
     createBooking.mutateAsync({
+      idempotencyKey,
       listingId: listingId!,
       startDate: detailsForm.getValues("date"),
       endDate: computeEndDate(detailsForm.getValues("date"), detailsForm.getValues("duration")),
