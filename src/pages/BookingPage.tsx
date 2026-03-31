@@ -39,6 +39,11 @@ export default function BookingPage() {
   const steps = [t("booking.detailsAndExtras"), t("booking.contactAndAuth"), t("booking.paymentAndReview")];
 
   const [step, setStep] = useState(0);
+  const [idempotencyKey] = useState<string>(() =>
+    typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`
+  );
   const initialExtras = params.get("extras")?.split(",").filter(Boolean) || [];
   const [selectedExtras, setSelectedExtras] = useState<string[]>(initialExtras);
   const [paymentMethod, setPaymentMethod] = useState("bank");
@@ -127,6 +132,7 @@ export default function BookingPage() {
       contactPhone: contactForm.getValues("phone"),
       paymentMethod: isRebateModel ? "later" : paymentMethod as "bank" | "card" | "later",
       notes: contactForm.getValues("notes"),
+      idempotencyKey,
     }).then(async (bookingResult: any) => {
       const invoiceId = bookingResult?.invoiceId;
 
