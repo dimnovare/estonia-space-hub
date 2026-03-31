@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Upload, X, Loader2 } from "lucide-react";
 import { tokenStore } from "@/services/apiClient";
 import { toast } from "sonner";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface ImageUploaderProps {
   images: string[];
