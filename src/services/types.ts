@@ -362,6 +362,7 @@ export interface TeamMember {
 }
 
 export interface CreateBookingInput {
+  idempotencyKey?: string;
   listingId: string;
   startDate: string;
   endDate?: string;

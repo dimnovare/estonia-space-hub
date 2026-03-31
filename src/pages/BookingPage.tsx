@@ -116,6 +116,7 @@ export default function BookingPage() {
       total: pricing?.total || 0,
     });
     createBooking.mutateAsync({
+      idempotencyKey,
       listingId: listingId!,
       startDate: detailsForm.getValues("date"),
       endDate: computeEndDate(detailsForm.getValues("date"), detailsForm.getValues("duration")),
