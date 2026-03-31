@@ -3043,6 +3043,8 @@ const translations: Record<Language, Record<string, string>> = {
     "trustBar.support": "Поддержка клиентов",
     "trustBar.trustLine": "Надёжные поставщики складов и транспорта по всей Эстонии",
     "listing.new": "Новое",
+    "listing.price": "Цена",
+    "common.cancel": "Отмена",
     "listing.verified": "Проверено",
     "listing.favRemove": "Убрать из избранного",
     "listing.favAdd": "Добавить в избранное",
