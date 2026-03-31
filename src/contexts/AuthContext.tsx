@@ -79,23 +79,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    const stored      = localStorage.getItem("ruumly-auth");
-    const legacyToken = tokenStore.getRefresh();  // backward-compat: pre-cookie sessions
+    const stored = localStorage.getItem("ruumly-auth");
 
-    // New flow: attempt cookie-based refresh (credentials: "include" sends the HttpOnly cookie).
-    // Backward-compat: also send legacy sessionStorage token in the body if present.
+    // Cookie-based refresh: credentials: "include" sends the HttpOnly cookie.
     fetch(`${API_BASE_URL}/auth/refresh`, {
       method:      "POST",
       credentials: "include",
       headers:     { "Content-Type": "application/json" },
-      body: legacyToken ? JSON.stringify({ refreshToken: legacyToken }) : undefined,
     })
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data?.accessToken) {
           tokenStore.setAccess(data.accessToken);
-          if (data.csrfToken)   tokenStore.setCsrf(data.csrfToken);
-          if (data.refreshToken) tokenStore.setRefresh(data.refreshToken);
+          if (data.csrfToken) tokenStore.setCsrf(data.csrfToken);
           // Use stored profile for instant UI while token is valid
           const profile = stored ? JSON.parse(stored) : null;
           if (profile) setUser(profile);
