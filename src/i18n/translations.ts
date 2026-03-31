@@ -1689,6 +1689,8 @@ const translations: Record<Language, Record<string, string>> = {
     "maintenance.unreachable.retry": "Try again",
 
 
+    "faq.title": "Frequently Asked Questions",
+    "faq.subtitle": "Find answers to the most common questions.",
     "faq.general": "General",
     "faq.bookings": "Booking",
     "faq.providers": "For partners",
@@ -3121,6 +3123,7 @@ const translations: Record<Language, Record<string, string>> = {
     "maintenance.unreachable.desc": "Попробуйте снова через несколько минут.",
     "maintenance.unreachable.retry": "Попробовать снова",
 
+    "faq.title": "Часто задаваемые вопросы",
     "faq.subtitle": "Найдите ответы на самые частые вопросы.",
     "faq.general": "Общие вопросы",
     "faq.bookings": "Бронирование",
