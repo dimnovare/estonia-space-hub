@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { notificationService } from "@/services";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -786,8 +786,100 @@ function AccountSecurity() {
             )}
           </div>
         </div>
+
+        {/* Data & Privacy */}
+        <DataPrivacySection />
       </div>
     </div>
+  );
+}
+
+function DataPrivacySection() {
+  const { t } = useLanguage();
+  const navigate = useNavigate();
+  const [exporting, setExporting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleExport = useCallback(async () => {
+    setExporting(true);
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL || "";
+      const token = (apiClient as any).accessToken;
+      const res = await fetch(`${baseUrl}/auth/account/export`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "ruumly-data-export.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      toast.error(err?.message || t("toast.updateFailed"));
+    } finally {
+      setExporting(false);
+    }
+  }, [t]);
+
+  const handleDelete = useCallback(async () => {
+    setDeleting(true);
+    try {
+      await apiClient.delete("/auth/account");
+      toast.success(t("account.accountDeleted"));
+      localStorage.clear();
+      sessionStorage.clear();
+      navigate("/");
+    } catch (err: any) {
+      toast.error(err?.message || t("toast.updateFailed"));
+    } finally {
+      setDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  }, [t, navigate]);
+
+  return (
+    <>
+      <div className="rounded-xl border border-border p-4 space-y-4">
+        <h3 className="text-sm font-semibold">{t("account.dataPrivacy")}</h3>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm">{t("account.downloadData")}</p>
+          </div>
+          <Button variant="outline" size="sm" className="gap-1" onClick={handleExport} disabled={exporting}>
+            {exporting ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("account.downloadingData")}</> : <><Download className="h-3.5 w-3.5" /> {t("account.downloadData")}</>}
+          </Button>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-destructive font-medium">{t("account.deleteAccount")}</p>
+          </div>
+          <Button variant="destructive" size="sm" onClick={() => setShowDeleteDialog(true)}>
+            {t("account.deleteAccount")}
+          </Button>
+        </div>
+      </div>
+
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("account.deleteAccount")}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">{t("account.deleteConfirm")}</p>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" size="sm" onClick={() => setShowDeleteDialog(false)}>{t("form.cancel")}</Button>
+            <Button variant="destructive" size="sm" onClick={handleDelete} disabled={deleting}>
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+              {t("account.deleteConfirmButton")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
