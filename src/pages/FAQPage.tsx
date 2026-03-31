@@ -49,8 +49,8 @@ export default function FAQPage() {
   return (
     <div className="container-wide py-12">
       <SEO
-        title="KKK — Korduma kippuvad küsimused — Ruumly"
-        description="Vastused levinumatele küsimustele laopindade broneerimise, hindade ja partnerlusega liitumise kohta."
+        title={`${t("seo.faq")} — Ruumly`}
+        description={t("seo.faqDesc")}
         canonical="/faq"
       />
       <h1 className="text-center font-display text-3xl font-bold md:text-4xl">{t("faq.title")}</h1>

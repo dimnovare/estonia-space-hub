@@ -17,23 +17,23 @@ import { usePricingConfig } from "@/hooks/queries";
 import { fillPricing } from "@/lib/pricingPlaceholders";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const STARTER_FEATURES = [
-  "1 asukoht",
-  "Põhianalüütika",
-  "E-posti teavitused",
+const getStarterFeatures = (t: (k: string) => string) => [
+  t("provPage.starter.f1"),
+  t("provPage.starter.f2"),
+  t("provPage.starter.f3"),
 ];
-const STANDARD_FEATURES = [
-  "Kuni 5 asukohta",
-  "Täisanalüütika",
-  "Eelistatud otsingukoht",
-  "Prioriteetne tugi",
+const getStandardFeatures = (t: (k: string) => string) => [
+  t("provPage.standard.f1"),
+  t("provPage.standard.f2"),
+  t("provPage.standard.f3"),
+  t("provPage.standard.f4"),
 ];
-const PREMIUM_FEATURES = [
-  "Piiramatu arv asukohti",
-  "Täisanalüütika + eksport",
-  "Esimene otsingukoht + märge",
-  "API integratsioon",
-  "Personaalne haldur",
+const getPremiumFeatures = (t: (k: string) => string) => [
+  t("provPage.premium.f1"),
+  t("provPage.premium.f2"),
+  t("provPage.premium.f3"),
+  t("provPage.premium.f4"),
+  t("provPage.premium.f5"),
 ];
 
 export default function ProviderPage() {
@@ -48,7 +48,7 @@ export default function ProviderPage() {
       badge: "Tasuta",
       fee: config.tiers.starter.monthlyFee,
       highlight: true,
-      features: STARTER_FEATURES,
+      features: getStarterFeatures(t),
     },
     {
       key: "standard",
@@ -56,7 +56,7 @@ export default function ProviderPage() {
       badge: `€${config.tiers.standard.monthlyFee}/${t("provPage.tier.perMonth")}`,
       fee: config.tiers.standard.monthlyFee,
       highlight: false,
-      features: STANDARD_FEATURES,
+      features: getStandardFeatures(t),
     },
     {
       key: "premium",
@@ -64,7 +64,7 @@ export default function ProviderPage() {
       badge: `€${config.tiers.premium.monthlyFee}/${t("provPage.tier.perMonth")}`,
       fee: config.tiers.premium.monthlyFee,
       highlight: false,
-      features: PREMIUM_FEATURES,
+      features: getPremiumFeatures(t),
     },
   ] : [];
 
@@ -86,8 +86,8 @@ export default function ProviderPage() {
   return (
     <div>
       <SEO
-        title="Partneriprogramm — Laopind ja logistika — Ruumly"
-        description="Liitu Eesti kiiremini kasvava laopindade ja logistika platvormiga. Tasuta alustamine, komisjonitasu alles siis kui klient broneerib."
+        title={`${t("seo.providerProgram")} — Ruumly`}
+        description={t("seo.providerProgramDesc")}
         canonical="/provider"
       />
 

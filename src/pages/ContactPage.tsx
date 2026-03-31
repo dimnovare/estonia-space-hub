@@ -31,8 +31,8 @@ export default function ContactPage() {
   return (
     <div className="container-wide py-12">
       <SEO
-        title="Kontakt — Ruumly"
-        description="Võtke meiega ühendust. E-post: info@ruumly.eu. Vastame 24 tunni jooksul."
+        title={`${t("seo.contact")} — Ruumly`}
+        description={t("seo.contactDesc")}
         canonical="/contact"
         structuredData={{
           "@context": "https://schema.org",

@@ -9,8 +9,8 @@ export default function TermsPage() {
   return (
     <div className="container-wide py-12">
       <SEO
-        title="Kasutustingimused — Ruumly"
-        description="Ruumly platvormi kasutustingimused. Kehtivad alates märts 2026."
+        title={`${t("seo.terms")} — Ruumly`}
+        description={t("seo.termsDesc")}
         canonical="/terms"
       />
       <div className="mx-auto max-w-3xl">

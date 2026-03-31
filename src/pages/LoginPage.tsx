@@ -209,7 +209,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
-      <SEO title="Logi sisse — Ruumly" description="Logi sisse oma Ruumly kontole." canonical="/login" noindex={true} />
+      <SEO title={`${t("seo.login")} — Ruumly`} description={t("seo.loginDesc")} canonical="/login" noindex={true} />
       <div className="w-full max-w-md">
         <div className="text-center">
           <h1 className="font-display text-3xl font-bold">

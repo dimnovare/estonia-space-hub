@@ -131,7 +131,7 @@ export function WarehouseDetail() {
     <div className="container-wide py-6 pb-24 lg:pb-6">
       <SEO
         title={`${wListing.title} — Laopind ${wListing.city} — Ruumly`}
-        description={`${wListing.title} ${wListing.city}. Hind alates ${wListing.priceFrom}€ ${wListing.priceUnit}. ${wListing.description?.slice(0, 120) || "Broneeri otse meie kaudu."}`}
+        description={`${wListing.title} ${wListing.city}. Hind alates ${wListing.priceFrom}€ ${wListing.priceUnit}. ${wListing.description?.slice(0, 120) || t("seo.listingFallbackDesc")}`}
         canonical={`/warehouse/${wListing.id}`}
         image={wListing.image || undefined}
         type="product"
@@ -319,7 +319,7 @@ export function MovingDetail() {
     <div className="container-wide py-6 pb-24 lg:pb-6">
       <SEO
         title={`${mListing.title} — Kolimisteenus ${mListing.city} — Ruumly`}
-        description={`${mListing.title} ${mListing.city}. Hind alates ${mListing.priceFrom}€ ${mListing.priceUnit}. ${mListing.description?.slice(0, 120) || "Broneeri otse meie kaudu."}`}
+        description={`${mListing.title} ${mListing.city}. Hind alates ${mListing.priceFrom}€ ${mListing.priceUnit}. ${mListing.description?.slice(0, 120) || t("seo.listingFallbackDesc")}`}
         canonical={`/moving/${mListing.id}`}
         image={mListing.image || undefined}
         type="product"
@@ -450,7 +450,7 @@ export function TrailerDetail() {
     <div className="container-wide py-6 pb-24 lg:pb-6">
       <SEO
         title={`${tListing.title} — Haagis ${tListing.city} — Ruumly`}
-        description={`${tListing.title} ${tListing.city}. Hind alates ${tListing.priceFrom}€ ${tListing.priceUnit}. ${tListing.description?.slice(0, 120) || "Broneeri otse meie kaudu."}`}
+        description={`${tListing.title} ${tListing.city}. Hind alates ${tListing.priceFrom}€ ${tListing.priceUnit}. ${tListing.description?.slice(0, 120) || t("seo.listingFallbackDesc")}`}
         canonical={`/trailer/${tListing.id}`}
         image={tListing.image || undefined}
         type="product"
