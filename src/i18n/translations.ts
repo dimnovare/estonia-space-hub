@@ -2018,6 +2018,7 @@ const translations: Record<Language, Record<string, string>> = {
     "admin.date": "Date",
     "admin.status": "Status",
     "admin.partner": "Partner",
+    "admin.partnerName": "Partner name",
     "admin.integration": "Integration",
     "admin.amount": "Amount",
     "admin.margin": "Margin",
