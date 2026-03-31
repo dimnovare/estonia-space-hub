@@ -48,6 +48,8 @@ const translations: Record<Language, Record<string, string>> = {
     "trustBar.support": "Klienditugi",
     "trustBar.trustLine": "Usalduslikud ladustamis- ja transporditeenuse pakkujad üle Eesti",
     "listing.new": "Uus",
+    "listing.price": "Hind",
+    "common.cancel": "Tühista",
     "listing.verified": "Kontrollitud",
     "listing.favRemove": "Eemalda lemmikutest",
     "listing.favAdd": "Lisa lemmikutesse",
