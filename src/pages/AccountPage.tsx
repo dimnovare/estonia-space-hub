@@ -910,7 +910,7 @@ function AccountBilling() {
                     <p className="mt-1 text-sm font-medium leading-snug">{inv.description}</p>
                   </div>
                   <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${inv.status === "paid" ? "bg-success/10 text-success" : inv.status === "pending" ? "bg-warning/10 text-warning" : "bg-destructive/10 text-destructive"}`}>
-                    {inv.status === "paid" ? "Makstud" : inv.status === "pending" ? "Ootel" : "Tähtaeg ületatud"}
+                    {inv.status === "paid" ? t("account.invoiceStatus.paid") : inv.status === "pending" ? t("account.invoiceStatus.pending") : t("account.invoiceStatus.overdue")}
                   </span>
                 </div>
                 <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
