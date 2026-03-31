@@ -517,6 +517,7 @@ const translations: Record<Language, Record<string, string>> = {
     "admin.date": "Kuupäev",
     "admin.status": "Staatus",
     "admin.partner": "Partner",
+    "admin.partnerName": "Partneri nimi",
     "admin.integration": "Integratsioon",
     "admin.amount": "Summa",
     "admin.margin": "Marginaal",
