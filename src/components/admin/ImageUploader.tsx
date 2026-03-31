@@ -11,6 +11,7 @@ interface ImageUploaderProps {
 }
 
 export default function ImageUploader({ images, onChange, maxImages = 10 }: ImageUploaderProps) {
+  const { t } = useLanguage();
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
