@@ -34,8 +34,9 @@ interface AuthResponse {
     bookingsCount: number;
     supplierId?: string;
   };
-  accessToken: string;
+  accessToken:  string;
   refreshToken: string;
+  csrfToken?:   string;   // present from backend v2 — store in-memory for X-CSRF-Token header
 }
 
 interface AuthContextType {
@@ -78,27 +79,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    const refresh = tokenStore.getRefresh();
-    const stored = localStorage.getItem("ruumly-auth");
+    const stored      = localStorage.getItem("ruumly-auth");
+    const legacyToken = tokenStore.getRefresh();  // backward-compat: pre-cookie sessions
 
-    if (!refresh) {
-      // No refresh token — user is logged out
-      setIsInitializing(false);
-      return;
-    }
-
-    // Try to restore session via refresh token
+    // New flow: attempt cookie-based refresh (credentials: "include" sends the HttpOnly cookie).
+    // Backward-compat: also send legacy sessionStorage token in the body if present.
     fetch(`${API_BASE_URL}/auth/refresh`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken: refresh }),
+      method:      "POST",
+      credentials: "include",
+      headers:     { "Content-Type": "application/json" },
+      body: legacyToken ? JSON.stringify({ refreshToken: legacyToken }) : undefined,
     })
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data?.accessToken) {
           tokenStore.setAccess(data.accessToken);
+          if (data.csrfToken)   tokenStore.setCsrf(data.csrfToken);
           if (data.refreshToken) tokenStore.setRefresh(data.refreshToken);
-          // Use stored profile for instant UI while we have a valid token
+          // Use stored profile for instant UI while token is valid
           const profile = stored ? JSON.parse(stored) : null;
           if (profile) setUser(profile);
         } else {
@@ -116,7 +114,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const persist = (
     u: AppUser | null,
     token?: string,
-    refresh?: string
+    refresh?: string,
+    csrf?: string
   ) => {
     setUser(u);
     try {
@@ -124,13 +123,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       else localStorage.removeItem("ruumly-auth");
     } catch {}
     tokenStore.setAccess(token ?? null);
+    tokenStore.setCsrf(csrf ?? null);
+    // Keep writing sessionStorage during migration window
     tokenStore.setRefresh(refresh ?? null);
   };
 
   const login = useCallback(async (email: string, password: string) => {
     try {
       const res = await apiClient.post<AuthResponse>("/auth/login", { email, password });
-      persist(normalizeUser(res.user), res.accessToken, res.refreshToken);
+      persist(normalizeUser(res.user), res.accessToken, res.refreshToken, res.csrfToken);
     } catch (err: any) {
       throw new Error(err.message || "error.loginFailed");
     }
@@ -150,17 +151,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithGoogle = useCallback(async (credential: string) => {
     try {
       const res = await apiClient.post<AuthResponse>("/auth/google", { credential });
-      persist(normalizeUser(res.user), res.accessToken, res.refreshToken);
+      persist(normalizeUser(res.user), res.accessToken, res.refreshToken, res.csrfToken);
     } catch (err: any) {
       throw new Error(err.message || "error.googleFailed");
     }
   }, []);
 
   const logout = useCallback(() => {
-    const refresh = tokenStore.getRefresh();
-    if (refresh) {
-      apiClient.post("/auth/logout", { refreshToken: refresh }).catch(() => {});
-    }
+    const legacyRefresh = tokenStore.getRefresh();
+    // Send cookie + legacy body token so the server revokes whichever it finds
+    fetch(`${API_BASE_URL}/auth/logout`, {
+      method:      "POST",
+      credentials: "include",
+      headers:     { "Content-Type": "application/json", Authorization: `Bearer ${tokenStore.getAccess() ?? ""}` },
+      body: legacyRefresh ? JSON.stringify({ refreshToken: legacyRefresh }) : undefined,
+    }).catch(() => {});
     persist(null);
     window.location.href = "/login";
   }, []);

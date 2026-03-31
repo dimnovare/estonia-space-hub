@@ -2,15 +2,20 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
 // ── In-memory token store ──────────────────
 // Access token: in-memory only (not persisted).
-// Refresh token: sessionStorage (survives refresh,
-// cleared on tab close, not readable cross-origin).
+// Refresh token: HttpOnly cookie set by backend (XSS-safe).
+//   During the 2-week migration window, sessionStorage is still read as a fallback
+//   for existing sessions. After the window, getRefresh/setRefresh can be removed.
+// CSRF token: in-memory only; sent as X-CSRF-Token header on /auth/refresh.
 let _accessToken: string | null = null;
+let _csrfToken:   string | null = null;
 
 export const tokenStore = {
-  getAccess: () => _accessToken,
-  setAccess: (t: string | null) => {
-    _accessToken = t;
-  },
+  getAccess:  () => _accessToken,
+  setAccess:  (t: string | null) => { _accessToken = t; },
+  getCsrf:    () => _csrfToken,
+  setCsrf:    (t: string | null) => { _csrfToken = t; },
+
+  // ── Backward-compat: sessionStorage refresh token (remove after 2-week window) ──
   getRefresh: () => {
     try { return sessionStorage.getItem("ruumly-refresh"); } catch { return null; }
   },
@@ -20,8 +25,10 @@ export const tokenStore = {
       else sessionStorage.removeItem("ruumly-refresh");
     } catch {}
   },
+
   clear: () => {
     _accessToken = null;
+    _csrfToken   = null;
     try { sessionStorage.removeItem("ruumly-refresh"); } catch {}
   },
 };
@@ -54,40 +61,45 @@ class ApiClient {
     }
     if (response.status === 401) {
       if (token) {
-        const refresh = tokenStore.getRefresh();
-        if (refresh) {
-          try {
-            const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ refreshToken: refresh }),
+        // New flow: cookie carries the refresh token; CSRF token sent as header.
+        // Backward-compat: also send body refreshToken for sessions predating the cookie migration.
+        const legacyRefresh = tokenStore.getRefresh();
+        const csrf          = tokenStore.getCsrf();
+        try {
+          const refreshHeaders: Record<string, string> = { "Content-Type": "application/json" };
+          if (csrf) refreshHeaders["X-CSRF-Token"] = csrf;
+          const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
+            method:      "POST",
+            credentials: "include",   // send ruumly-refresh cookie
+            headers:     refreshHeaders,
+            // Body only needed for legacy sessions still using sessionStorage
+            body: legacyRefresh ? JSON.stringify({ refreshToken: legacyRefresh }) : undefined,
+          });
+          if (refreshRes.ok) {
+            const data = await refreshRes.json();
+            tokenStore.setAccess(data.accessToken);
+            if (data.csrfToken) tokenStore.setCsrf(data.csrfToken);
+            // Keep writing sessionStorage during migration window so old code path still works
+            if (data.refreshToken) tokenStore.setRefresh(data.refreshToken);
+            const retryHeaders: Record<string, string> = {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${data.accessToken}`,
+            };
+            const retry = await fetch(`${API_BASE_URL}${endpoint}`, {
+              method,
+              headers: retryHeaders,
+              body: body ? JSON.stringify(body) : undefined,
             });
-            if (refreshRes.ok) {
-              const data = await refreshRes.json();
-              tokenStore.setAccess(data.accessToken);
-              if (data.refreshToken) {
-                tokenStore.setRefresh(data.refreshToken);
+            if (retry.ok) {
+              const cl = retry.headers.get("content-length");
+              const ct = retry.headers.get("content-type") ?? "";
+              if (retry.status === 204 || cl === "0" || !ct.includes("application/json")) {
+                return undefined as unknown as T;
               }
-              const retryHeaders: Record<string, string> = {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${data.accessToken}`,
-              };
-              const retry = await fetch(`${API_BASE_URL}${endpoint}`, {
-                method,
-                headers: retryHeaders,
-                body: body ? JSON.stringify(body) : undefined,
-              });
-              if (retry.ok) {
-                const cl = retry.headers.get("content-length");
-                const ct = retry.headers.get("content-type") ?? "";
-                if (retry.status === 204 || cl === "0" || !ct.includes("application/json")) {
-                  return undefined as unknown as T;
-                }
-                return retry.json() as Promise<T>;
-              }
+              return retry.json() as Promise<T>;
             }
-          } catch {}
-        }
+          }
+        } catch {}
         tokenStore.clear();
         localStorage.removeItem("ruumly-auth");
         window.location.href = "/login";
