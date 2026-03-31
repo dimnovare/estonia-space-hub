@@ -786,6 +786,9 @@ function AccountSecurity() {
             )}
           </div>
         </div>
+
+        {/* Data & Privacy */}
+        <DataPrivacySection />
       </div>
     </div>
   );
