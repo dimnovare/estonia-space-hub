@@ -152,13 +152,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    const legacyRefresh = tokenStore.getRefresh();
-    // Send cookie + legacy body token so the server revokes whichever it finds
     fetch(`${API_BASE_URL}/auth/logout`, {
       method:      "POST",
       credentials: "include",
       headers:     { "Content-Type": "application/json", Authorization: `Bearer ${tokenStore.getAccess() ?? ""}` },
-      body: legacyRefresh ? JSON.stringify({ refreshToken: legacyRefresh }) : undefined,
     }).catch(() => {});
     persist(null);
     window.location.href = "/login";
