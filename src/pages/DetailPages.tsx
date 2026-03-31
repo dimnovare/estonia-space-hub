@@ -319,7 +319,7 @@ export function MovingDetail() {
     <div className="container-wide py-6 pb-24 lg:pb-6">
       <SEO
         title={`${mListing.title} — Kolimisteenus ${mListing.city} — Ruumly`}
-        description={`${mListing.title} ${mListing.city}. Hind alates ${mListing.priceFrom}€ ${mListing.priceUnit}. ${mListing.description?.slice(0, 120) || "Broneeri otse meie kaudu."}`}
+        description={`${mListing.title} ${mListing.city}. Hind alates ${mListing.priceFrom}€ ${mListing.priceUnit}. ${mListing.description?.slice(0, 120) || t("seo.listingFallbackDesc")}`}
         canonical={`/moving/${mListing.id}`}
         image={mListing.image || undefined}
         type="product"
