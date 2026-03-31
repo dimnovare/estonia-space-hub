@@ -1562,6 +1562,8 @@ const translations: Record<Language, Record<string, string>> = {
     "trustBar.support": "Customer support",
     "trustBar.trustLine": "Trusted storage and transport providers across Estonia",
     "listing.new": "New",
+    "listing.price": "Price",
+    "common.cancel": "Cancel",
     "listing.verified": "Verified",
     "listing.favRemove": "Remove from favorites",
     "listing.favAdd": "Add to favorites",
