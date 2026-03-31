@@ -2,8 +2,10 @@ import { useSupplierListingExtras, useUpdateListingExtra } from "@/hooks/queries
 import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function AdminExtrasOverrides({ listingId }: { listingId: string }) {
+  const { t } = useLanguage();
   const { data: extras = [], isLoading } = useSupplierListingExtras(listingId);
   const updateExtra = useUpdateListingExtra();
 
@@ -11,7 +13,7 @@ export default function AdminExtrasOverrides({ listingId }: { listingId: string 
     const numVal = value === "" ? null : Number(value);
     updateExtra.mutate(
       { extraId, data: { [field]: numVal } as any },
-      { onError: (err: any) => toast.error(err?.message || "Salvestamine ebaõnnestus") }
+      { onError: (err: any) => toast.error(err?.message || t("toast.saveFailed")) }
     );
   };
 

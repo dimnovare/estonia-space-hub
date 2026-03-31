@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Upload, X, Loader2 } from "lucide-react";
 import { tokenStore } from "@/services/apiClient";
 import { toast } from "sonner";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface ImageUploaderProps {
   images: string[];
@@ -10,6 +11,7 @@ interface ImageUploaderProps {
 }
 
 export default function ImageUploader({ images, onChange, maxImages = 10 }: ImageUploaderProps) {
+  const { t } = useLanguage();
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -48,7 +50,7 @@ export default function ImageUploader({ images, onChange, maxImages = 10 }: Imag
       onChange([...images, ...newUrls].slice(0, maxImages));
       toast.success(`${newUrls.length} pilt(i) üles laetud`);
     } catch {
-      toast.error("Piltide üleslaadimine ebaõnnestus");
+      toast.error(t("toast.uploadFailed"));
     } finally {
       setUploading(false);
     }

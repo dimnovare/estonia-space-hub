@@ -252,7 +252,7 @@ export default function BookingPage() {
                   await authService.resendVerificationEmail();
                   setResendSent(true);
                 } catch {
-                  toast.error("Saatmine ebaõnnestus. Proovi uuesti.");
+                  toast.error(t("booking.sendFailed"));
                 }
               }}
               className="mt-3 text-sm font-medium text-amber-800 underline hover:text-amber-900"

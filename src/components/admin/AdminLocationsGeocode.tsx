@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MapPin, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface Props {
   address: string;
@@ -13,12 +14,13 @@ interface Props {
 const inp = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
 
 export default function GeocodeLookup({ address, lat, lng, onCoordsChange }: Props) {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [showManual, setShowManual] = useState(false);
 
   const geocode = async () => {
     if (!address.trim()) {
-      toast.error("Sisestage esmalt aadress.");
+      toast.error(t("geocode.enterAddress"));
       return;
     }
     setLoading(true);
@@ -30,12 +32,12 @@ export default function GeocodeLookup({ address, lat, lng, onCoordsChange }: Pro
       const data = await res.json();
       if (data.length > 0) {
         onCoordsChange(data[0].lat, data[0].lon);
-        toast.success("Koordinaadid leitud!");
+        toast.success(t("geocode.found"));
       } else {
-        toast.error("Aadressi ei leitud. Sisestage täpsem aadress.");
+        toast.error(t("geocode.notFound"));
       }
     } catch {
-      toast.error("Geokoodeerimine ebaõnnestus.");
+      toast.error(t("geocode.failed"));
     } finally {
       setLoading(false);
     }
