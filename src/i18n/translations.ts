@@ -32,7 +32,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Hero
     "hero.title": "Leia ja broneeri laopind",
-    "hero.titleHighlight": "Tallinnas",
+    "hero.titleHighlight": "Eestis",
     "hero.subtitle": "Võrdle hindu, broneeri minutitega. Kolimis- ja transporditeenused lisana.",
     "trust.title": "Parim hind ilma helistamiseta",
     "trust.badge1": "Asukoht + ühikud ühes",
@@ -1541,7 +1541,7 @@ const translations: Record<Language, Record<string, string>> = {
     "provider.nav.billing": "Payouts",
 
     "hero.title": "Find and book storage",
-    "hero.titleHighlight": "in Tallinn",
+    "hero.titleHighlight": "in Estonia",
     "hero.subtitle": "Compare prices, book in minutes. Moving and transport extras available.",
     "trust.title": "Best price without the phone calls",
     "trust.badge1": "Location + units in one",
@@ -3017,7 +3017,7 @@ const translations: Record<Language, Record<string, string>> = {
     "provider.nav.billing": "Выплаты",
 
     "hero.title": "Найдите и забронируйте склад",
-    "hero.titleHighlight": "в Таллинне",
+    "hero.titleHighlight": "в Эстонии",
     "hero.subtitle": "Сравните цены, забронируйте за минуты. Услуги переезда и транспорта как допы.",
     "trust.title": "Лучшая цена без звонков",
     "trust.badge1": "Локация + единицы в одном",
