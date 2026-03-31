@@ -3,8 +3,6 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 // ── In-memory token store ──────────────────
 // Access token: in-memory only (not persisted).
 // Refresh token: HttpOnly cookie set by backend (XSS-safe).
-//   During the 2-week migration window, sessionStorage is still read as a fallback
-//   for existing sessions. After the window, getRefresh/setRefresh can be removed.
 // CSRF token: in-memory only; sent as X-CSRF-Token header on /auth/refresh.
 let _accessToken: string | null = null;
 let _csrfToken:   string | null = null;
@@ -15,21 +13,9 @@ export const tokenStore = {
   getCsrf:    () => _csrfToken,
   setCsrf:    (t: string | null) => { _csrfToken = t; },
 
-  // ── Backward-compat: sessionStorage refresh token (remove after 2-week window) ──
-  getRefresh: () => {
-    try { return sessionStorage.getItem("ruumly-refresh"); } catch { return null; }
-  },
-  setRefresh: (t: string | null) => {
-    try {
-      if (t) sessionStorage.setItem("ruumly-refresh", t);
-      else sessionStorage.removeItem("ruumly-refresh");
-    } catch {}
-  },
-
   clear: () => {
     _accessToken = null;
     _csrfToken   = null;
-    try { sessionStorage.removeItem("ruumly-refresh"); } catch {}
   },
 };
 
@@ -60,27 +46,20 @@ class ApiClient {
       throw new Error(msg);
     }
     if (response.status === 401) {
-      if (token) {
-        // New flow: cookie carries the refresh token; CSRF token sent as header.
-        // Backward-compat: also send body refreshToken for sessions predating the cookie migration.
-        const legacyRefresh = tokenStore.getRefresh();
-        const csrf          = tokenStore.getCsrf();
+     if (token) {
+        const csrf = tokenStore.getCsrf();
         try {
           const refreshHeaders: Record<string, string> = { "Content-Type": "application/json" };
           if (csrf) refreshHeaders["X-CSRF-Token"] = csrf;
           const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
             method:      "POST",
-            credentials: "include",   // send ruumly-refresh cookie
+            credentials: "include",
             headers:     refreshHeaders,
-            // Body only needed for legacy sessions still using sessionStorage
-            body: legacyRefresh ? JSON.stringify({ refreshToken: legacyRefresh }) : undefined,
           });
           if (refreshRes.ok) {
             const data = await refreshRes.json();
             tokenStore.setAccess(data.accessToken);
             if (data.csrfToken) tokenStore.setCsrf(data.csrfToken);
-            // Keep writing sessionStorage during migration window so old code path still works
-            if (data.refreshToken) tokenStore.setRefresh(data.refreshToken);
             const retryHeaders: Record<string, string> = {
               "Content-Type": "application/json",
               Authorization: `Bearer ${data.accessToken}`,

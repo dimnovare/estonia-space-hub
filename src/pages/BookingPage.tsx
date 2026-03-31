@@ -20,7 +20,6 @@ import { trackEvent } from "@/lib/analytics";
 type SubmitPhase = "submitting" | "sending" | "waiting" | "done";
 
 export default function BookingPage() {
-  const [idempotencyKey] = useState(() => crypto.randomUUID());
   const [params] = useSearchParams();
   const listingId = params.get("listing");
   const { data: listing } = useListing(listingId || "");
@@ -34,7 +33,7 @@ export default function BookingPage() {
   const { data: listingExtras = [] } = useListingExtras(listingId || "");
 
   const { isAuthenticated } = useAuth();
-  const hasToken = !!tokenStore.getAccess() || !!tokenStore.getRefresh();
+  const hasToken = !!tokenStore.getAccess();
 
   const steps = [t("booking.detailsAndExtras"), t("booking.contactAndAuth"), t("booking.paymentAndReview")];
 
@@ -132,7 +131,6 @@ export default function BookingPage() {
       contactPhone: contactForm.getValues("phone"),
       paymentMethod: isRebateModel ? "later" : paymentMethod as "bank" | "card" | "later",
       notes: contactForm.getValues("notes"),
-      idempotencyKey,
     }).then(async (bookingResult: any) => {
       const invoiceId = bookingResult?.invoiceId;
 
