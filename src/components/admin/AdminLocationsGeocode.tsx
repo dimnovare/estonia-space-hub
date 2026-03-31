@@ -32,9 +32,9 @@ export default function GeocodeLookup({ address, lat, lng, onCoordsChange }: Pro
       const data = await res.json();
       if (data.length > 0) {
         onCoordsChange(data[0].lat, data[0].lon);
-        toast.success("Koordinaadid leitud!");
+        toast.success(t("geocode.found"));
       } else {
-        toast.error("Aadressi ei leitud. Sisestage täpsem aadress.");
+        toast.error(t("geocode.notFound"));
       }
     } catch {
       toast.error("Geokoodeerimine ebaõnnestus.");
