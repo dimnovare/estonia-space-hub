@@ -48,7 +48,7 @@ export default function ProviderPage() {
       badge: "Tasuta",
       fee: config.tiers.starter.monthlyFee,
       highlight: true,
-      features: STARTER_FEATURES,
+      features: getStarterFeatures(t),
     },
     {
       key: "standard",
