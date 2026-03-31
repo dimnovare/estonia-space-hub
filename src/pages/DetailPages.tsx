@@ -450,7 +450,7 @@ export function TrailerDetail() {
     <div className="container-wide py-6 pb-24 lg:pb-6">
       <SEO
         title={`${tListing.title} — Haagis ${tListing.city} — Ruumly`}
-        description={`${tListing.title} ${tListing.city}. Hind alates ${tListing.priceFrom}€ ${tListing.priceUnit}. ${tListing.description?.slice(0, 120) || "Broneeri otse meie kaudu."}`}
+        description={`${tListing.title} ${tListing.city}. Hind alates ${tListing.priceFrom}€ ${tListing.priceUnit}. ${tListing.description?.slice(0, 120) || t("seo.listingFallbackDesc")}`}
         canonical={`/trailer/${tListing.id}`}
         image={tListing.image || undefined}
         type="product"
