@@ -17,23 +17,23 @@ import { usePricingConfig } from "@/hooks/queries";
 import { fillPricing } from "@/lib/pricingPlaceholders";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const STARTER_FEATURES = [
-  "1 asukoht",
-  "Põhianalüütika",
-  "E-posti teavitused",
+const getStarterFeatures = (t: (k: string) => string) => [
+  t("provPage.starter.f1"),
+  t("provPage.starter.f2"),
+  t("provPage.starter.f3"),
 ];
-const STANDARD_FEATURES = [
-  "Kuni 5 asukohta",
-  "Täisanalüütika",
-  "Eelistatud otsingukoht",
-  "Prioriteetne tugi",
+const getStandardFeatures = (t: (k: string) => string) => [
+  t("provPage.standard.f1"),
+  t("provPage.standard.f2"),
+  t("provPage.standard.f3"),
+  t("provPage.standard.f4"),
 ];
-const PREMIUM_FEATURES = [
-  "Piiramatu arv asukohti",
-  "Täisanalüütika + eksport",
-  "Esimene otsingukoht + märge",
-  "API integratsioon",
-  "Personaalne haldur",
+const getPremiumFeatures = (t: (k: string) => string) => [
+  t("provPage.premium.f1"),
+  t("provPage.premium.f2"),
+  t("provPage.premium.f3"),
+  t("provPage.premium.f4"),
+  t("provPage.premium.f5"),
 ];
 
 export default function ProviderPage() {
