@@ -3,8 +3,6 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 // ── In-memory token store ──────────────────
 // Access token: in-memory only (not persisted).
 // Refresh token: HttpOnly cookie set by backend (XSS-safe).
-//   During the 2-week migration window, sessionStorage is still read as a fallback
-//   for existing sessions. After the window, getRefresh/setRefresh can be removed.
 // CSRF token: in-memory only; sent as X-CSRF-Token header on /auth/refresh.
 let _accessToken: string | null = null;
 let _csrfToken:   string | null = null;
