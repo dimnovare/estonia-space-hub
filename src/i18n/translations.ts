@@ -31,9 +31,9 @@ const translations: Record<Language, Record<string, string>> = {
     "provider.nav.billing": "Väljamaksed",
 
     // Hero
-    "hero.title": "Leia laopinda, kolimist ja logistikat",
-    "hero.titleHighlight": "ühest kohast",
-    "hero.subtitle": "Üks platvorm — laopinnad, kolimine ja haagised. Leia asukoht, vali sobiv ühik, broneeri.",
+    "hero.title": "Leia ja broneeri laopind",
+    "hero.titleHighlight": "Tallinnas",
+    "hero.subtitle": "Võrdle hindu, broneeri minutitega. Kolimis- ja transporditeenused lisana.",
     "trust.title": "Parim hind ilma helistamiseta",
     "trust.badge1": "Asukoht + ühikud ühes",
     "trust.badge2": "Kiire kinnitus",
