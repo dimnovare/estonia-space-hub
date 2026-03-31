@@ -2892,9 +2892,9 @@ const translations: Record<Language, Record<string, string>> = {
     "provider.nav.team": "Команда",
     "provider.nav.billing": "Выплаты",
 
-    "hero.title": "Найдите склад, переезд и логистику",
-    "hero.titleHighlight": "в одном месте",
-    "hero.subtitle": "Одна платформа — склады, переезд и прицепы. Найдите локацию, выберите тип, забронируйте.",
+    "hero.title": "Найдите и забронируйте склад",
+    "hero.titleHighlight": "в Таллинне",
+    "hero.subtitle": "Сравните цены, бронируйте за минуты. Услуги переезда и транспорта в качестве допов.",
     "trust.title": "Лучшая цена без звонков",
     "trust.badge1": "Локация + единицы в одном",
     "trust.badge2": "Быстрое подтверждение",
