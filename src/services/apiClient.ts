@@ -46,7 +46,11 @@ class ApiClient {
         body: body ? JSON.stringify(body) : undefined,
       });
     } catch {
-      throw new Error("Serveriga ei saada ühendust. Kontrolli internetiühendust.");
+      const lang = localStorage.getItem("ruumly-lang") || "et";
+      const msg = lang === "en" ? "Cannot connect to server. Check your internet connection."
+                : lang === "ru" ? "Не удаётся подключиться к серверу. Проверьте интернет."
+                : "Serveriga ei saada ühendust. Kontrolli internetiühendust.";
+      throw new Error(msg);
     }
     if (response.status === 401) {
       if (token) {
