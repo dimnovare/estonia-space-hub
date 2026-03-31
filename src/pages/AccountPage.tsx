@@ -883,7 +883,7 @@ function DataPrivacySection() {
   );
 }
 
-
+function useGenerateInvoicePdf() {
   const { t } = useLanguage();
   return (inv: Invoice) => {
   const statusLabel =
