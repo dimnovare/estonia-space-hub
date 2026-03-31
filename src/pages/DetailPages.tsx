@@ -131,7 +131,7 @@ export function WarehouseDetail() {
     <div className="container-wide py-6 pb-24 lg:pb-6">
       <SEO
         title={`${wListing.title} — Laopind ${wListing.city} — Ruumly`}
-        description={`${wListing.title} ${wListing.city}. Hind alates ${wListing.priceFrom}€ ${wListing.priceUnit}. ${wListing.description?.slice(0, 120) || "Broneeri otse meie kaudu."}`}
+        description={`${wListing.title} ${wListing.city}. Hind alates ${wListing.priceFrom}€ ${wListing.priceUnit}. ${wListing.description?.slice(0, 120) || t("seo.listingFallbackDesc")}`}
         canonical={`/warehouse/${wListing.id}`}
         image={wListing.image || undefined}
         type="product"
