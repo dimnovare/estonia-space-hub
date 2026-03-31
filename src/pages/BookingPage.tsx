@@ -33,7 +33,7 @@ export default function BookingPage() {
   const { data: listingExtras = [] } = useListingExtras(listingId || "");
 
   const { isAuthenticated } = useAuth();
-  const hasToken = !!tokenStore.getAccess() || !!tokenStore.getRefresh();
+  const hasToken = !!tokenStore.getAccess();
 
   const steps = [t("booking.detailsAndExtras"), t("booking.contactAndAuth"), t("booking.paymentAndReview")];
 
