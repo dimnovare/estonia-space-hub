@@ -64,7 +64,7 @@ export default function ProviderPage() {
       badge: `€${config.tiers.premium.monthlyFee}/${t("provPage.tier.perMonth")}`,
       fee: config.tiers.premium.monthlyFee,
       highlight: false,
-      features: PREMIUM_FEATURES,
+      features: getPremiumFeatures(t),
     },
   ] : [];
 
