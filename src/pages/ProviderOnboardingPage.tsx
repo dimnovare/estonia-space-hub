@@ -112,8 +112,8 @@ export default function ProviderOnboardingPage() {
   return (
     <div className="container-wide py-8">
       <SEO
-        title="Liitu partnerina — Ruumly"
-        description="Registreeri oma laopind, kolimisteenus või haagis Ruumly platvormile. Tasuta liitumine."
+        title={`${t("seo.providerOnboarding")} — Ruumly`}
+        description={t("seo.providerOnboardingDesc")}
         canonical="/provider/onboarding"
       />
       <h1 className="font-display text-2xl font-bold">{t("onboard.title")}</h1>
