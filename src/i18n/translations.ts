@@ -1541,7 +1541,7 @@ const translations: Record<Language, Record<string, string>> = {
     "provider.nav.billing": "Payouts",
 
     "hero.title": "Find and book storage",
-    "hero.titleHighlight": "in Tallinn",
+    "hero.titleHighlight": "in Estonia",
     "hero.subtitle": "Compare prices, book in minutes. Moving and transport extras available.",
     "trust.title": "Best price without the phone calls",
     "trust.badge1": "Location + units in one",
