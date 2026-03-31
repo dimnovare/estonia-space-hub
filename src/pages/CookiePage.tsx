@@ -15,8 +15,8 @@ export default function CookiePage() {
   return (
     <div className="container-wide py-12">
       <SEO
-        title="Küpsiste poliitika — Ruumly"
-        description="Ruumly küpsiste kasutamise poliitika."
+        title={`${t("seo.cookies")} — Ruumly`}
+        description={t("seo.cookiesDesc")}
         canonical="/cookies"
       />
       <div className="mx-auto max-w-3xl">

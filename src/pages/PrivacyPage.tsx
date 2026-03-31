@@ -8,8 +8,8 @@ export default function PrivacyPage() {
   return (
     <div className="container-wide py-12">
       <SEO
-        title="Privaatsuspoliitika — Ruumly"
-        description="Ruumly privaatsuspoliitika. Kuidas me teie andmeid kogume ja kasutame."
+        title={`${t("seo.privacy")} — Ruumly`}
+        description={t("seo.privacyDesc")}
         canonical="/privacy"
       />
       <div className="mx-auto max-w-3xl">

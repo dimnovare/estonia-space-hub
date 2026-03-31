@@ -22,8 +22,8 @@ export default function AboutPage() {
   return (
     <div>
       <SEO
-        title="Meist — Ruumly"
-        description="Ruumly on Eesti suurim laopindade ja logistikateenuste platvorm. Meie missioon on muuta laopinna ja logistikateenuste leidmine lihtsamaks."
+        title={`${t("seo.about")} — Ruumly`}
+        description={t("seo.aboutDesc")}
         canonical="/about"
       />
       <section className="hero-gradient py-16 md:py-24">

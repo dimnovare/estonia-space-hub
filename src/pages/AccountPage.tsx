@@ -125,7 +125,7 @@ export default function AccountPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">
-      <SEO title="Minu konto — Ruumly" description="" noindex={true} />
+      <SEO title={`${t("seo.account")} — Ruumly`} description="" noindex={true} />
       <aside className="hidden w-56 shrink-0 border-r border-border bg-card lg:block">
         <div className="p-4">
           <p className="text-sm font-semibold">{user?.name}</p>

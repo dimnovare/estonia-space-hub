@@ -27,8 +27,8 @@ export default function HowItWorksPage() {
   return (
     <div>
       <SEO
-        title="Kuidas see töötab — Ruumly"
-        description="Neli lihtsat sammu laopinna, kolimisteenuse või haagise leidmiseks ja broneerimiseks Ruumly kaudu."
+        title={`${t("seo.howItWorks")} — Ruumly`}
+        description={t("seo.howItWorksDesc")}
         canonical="/how-it-works"
       />
       <section className="hero-gradient py-16 md:py-24">

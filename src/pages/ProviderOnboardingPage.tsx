@@ -152,7 +152,7 @@ export default function ProviderOnboardingPage() {
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.name")} *</label>
-              <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={inputClass} placeholder="OÜ Nimi" />
+              <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={inputClass} placeholder={t("onboard.companyPlaceholder")} />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>

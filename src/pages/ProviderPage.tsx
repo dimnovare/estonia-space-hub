@@ -86,8 +86,8 @@ export default function ProviderPage() {
   return (
     <div>
       <SEO
-        title="Partneriprogramm — Laopind ja logistika — Ruumly"
-        description="Liitu Eesti kiiremini kasvava laopindade ja logistika platvormiga. Tasuta alustamine, komisjonitasu alles siis kui klient broneerib."
+        title={`${t("seo.providerProgram")} — Ruumly`}
+        description={t("seo.providerProgramDesc")}
         canonical="/provider"
       />
 
