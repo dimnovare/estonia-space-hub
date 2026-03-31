@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function AdminExtrasOverrides({ listingId }: { listingId: string }) {
+  const { t } = useLanguage();
   const { data: extras = [], isLoading } = useSupplierListingExtras(listingId);
   const updateExtra = useUpdateListingExtra();
 
