@@ -32,7 +32,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Hero
     "hero.title": "Leia ja broneeri laopind",
-    "hero.titleHighlight": "Tallinnas",
+    "hero.titleHighlight": "Eestis",
     "hero.subtitle": "Võrdle hindu, broneeri minutitega. Kolimis- ja transporditeenused lisana.",
     "trust.title": "Parim hind ilma helistamiseta",
     "trust.badge1": "Asukoht + ühikud ühes",
