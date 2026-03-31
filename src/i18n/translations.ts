@@ -2328,6 +2328,8 @@ const translations: Record<Language, Record<string, string>> = {
     "provider.team.lastLogin": "Last login",
     "provider.team.noLogin": "Never logged in",
     "provider.team.empty": "No team members added yet",
+    "provider.team.email": "Email",
+    "provider.team.role": "Role",
     "provider.billing.title": "Payouts",
     "provider.billing.exportCsv": "Export CSV",
     "provider.billing.nextPayout": "Next payout",
