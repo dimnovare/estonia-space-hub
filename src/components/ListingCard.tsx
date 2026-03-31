@@ -59,13 +59,13 @@ export default function ListingCard({ listing }: { listing: Listing }) {
         {listing.isVerified && (
           <span className="absolute left-3 bottom-3 inline-flex items-center gap-1 rounded-full bg-card/90 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-success">
             <ShieldCheck className="h-3 w-3" />
-            Kontrollitud
+            {t("listing.verified")}
           </span>
         )}
         <button
           onClick={e => { e.preventDefault(); e.stopPropagation(); toggle(listing.id); }}
           className={`absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full transition-colors ${isFavorite(listing.id) ? "bg-white text-red-500" : "bg-card/80 text-muted-foreground hover:text-red-400"}`}
-          title={isFavorite(listing.id) ? "Eemalda lemmikutest" : "Lisa lemmikutesse"}
+          title={isFavorite(listing.id) ? t("listing.favRemove") : t("listing.favAdd")}
         >
           <Heart className={`h-4 w-4 ${isFavorite(listing.id) ? "fill-current" : ""}`} />
         </button>
@@ -82,12 +82,16 @@ export default function ListingCard({ listing }: { listing: Listing }) {
               {listing.address}, {listing.city}
             </p>
           </div>
-          {listing.reviewCount > 0 && (
+          {listing.reviewCount > 0 ? (
             <div className="flex shrink-0 items-center gap-1 text-xs">
               <Star className="h-3 w-3 fill-accent text-accent" />
               <span className="font-semibold text-foreground">{listing.rating}</span>
               <span className="text-muted-foreground">({listing.reviewCount})</span>
             </div>
+          ) : (
+            <span className="shrink-0 rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent">
+              {t("listing.new")}
+            </span>
           )}
         </div>
 

@@ -1,6 +1,6 @@
 import { useState, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, MapPin, ChevronDown, ChevronUp, CheckCircle, Phone } from "lucide-react";
+import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, MapPin, ChevronDown, ChevronUp, CheckCircle, Phone, BadgePercent, ShieldCheck, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFeaturedListings, useAllListings, usePricingConfig } from "@/hooks/queries";
@@ -265,6 +265,28 @@ export default function HomePage() {
         </div>
       </section>
       )}
+
+      {/* Why Ruumly */}
+      <section className="container-wide py-12 md:py-16">
+        <h2 className="text-center font-display text-2xl font-bold md:text-3xl">{t("home.whyRuumly.title")}</h2>
+        <div className="mx-auto mt-8 grid max-w-3xl gap-4 md:grid-cols-3">
+          {[
+            { icon: BadgePercent, text: fp(t("home.whyRuumly.savings")) },
+            { icon: ShieldCheck, text: t("home.whyRuumly.verified") },
+            { icon: XCircle, text: t("home.whyRuumly.cancellation") },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <div key={item.text} className="flex items-start gap-3 rounded-xl border border-border bg-card p-5">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10">
+                  <Icon className="h-4.5 w-4.5 text-accent" />
+                </div>
+                <p className="text-sm font-medium text-foreground">{item.text}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       {/* Beta badge */}
       <section className="container-wide py-10">
