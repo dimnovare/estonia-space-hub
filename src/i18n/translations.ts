@@ -831,6 +831,8 @@ const translations: Record<Language, Record<string, string>> = {
     "provider.team.lastLogin": "Viimane sisselogimine",
     "provider.team.noLogin": "Pole sisse loginud",
     "provider.team.empty": "Meeskonnaliikmeid pole veel lisatud",
+    "provider.team.email": "E-post",
+    "provider.team.role": "Roll",
     "provider.billing.title": "Väljamaksed",
     "provider.billing.exportCsv": "Ekspordi CSV",
     "provider.billing.nextPayout": "Järgmine väljamakse",
