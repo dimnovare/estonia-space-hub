@@ -1,4 +1,4 @@
-import { Building2, MapPin, CalendarCheck, Star } from "lucide-react";
+import { Building2, MapPin, CalendarCheck, Star, ShieldCheck, Tag, Lock, HeadphonesIcon } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAllListings, useBookingStats } from "@/hooks/queries";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,6 +20,13 @@ export default function TrustBar() {
     { icon: MapPin, value: cityCount, label: t("trustBar.cities") },
     ...((bookingStats?.totalBookings ?? 0) > 0 ? [{ icon: CalendarCheck, value: bookingStats!.totalBookings, label: t("trustBar.bookings") }] : []),
     ...((bookingStats?.averageRating ?? 0) > 0 ? [{ icon: Star, value: bookingStats!.averageRating!.toFixed(1), label: t("trustBar.rating") }] : []),
+  ];
+
+  const badges = [
+    { icon: ShieldCheck, label: t("trustBar.verified") },
+    { icon: Tag, label: t("trustBar.transparent") },
+    { icon: Lock, label: t("trustBar.secure") },
+    { icon: HeadphonesIcon, label: t("trustBar.support") },
   ];
 
   return (
@@ -50,9 +57,22 @@ export default function TrustBar() {
         })}
       </div>
 
-      <div className="mt-8 text-center">
+      {/* Trust badges */}
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-6">
+        {badges.map((badge) => {
+          const Icon = badge.icon;
+          return (
+            <span key={badge.label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Icon className="h-3.5 w-3.5 text-accent" />
+              {badge.label}
+            </span>
+          );
+        })}
+      </div>
+
+      <div className="mt-4 text-center">
         <p className="text-xs text-muted-foreground">
-          Usalduslikud ladustamis- ja transporditeenuse pakkujad üle Eesti
+          {t("trustBar.trustLine")}
         </p>
       </div>
     </section>

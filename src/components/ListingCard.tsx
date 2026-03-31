@@ -82,12 +82,16 @@ export default function ListingCard({ listing }: { listing: Listing }) {
               {listing.address}, {listing.city}
             </p>
           </div>
-          {listing.reviewCount > 0 && (
+          {listing.reviewCount > 0 ? (
             <div className="flex shrink-0 items-center gap-1 text-xs">
               <Star className="h-3 w-3 fill-accent text-accent" />
               <span className="font-semibold text-foreground">{listing.rating}</span>
               <span className="text-muted-foreground">({listing.reviewCount})</span>
             </div>
+          ) : (
+            <span className="shrink-0 rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent">
+              {t("listing.new")}
+            </span>
           )}
         </div>
 
