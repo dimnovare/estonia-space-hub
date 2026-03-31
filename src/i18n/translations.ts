@@ -3808,6 +3808,8 @@ const translations: Record<Language, Record<string, string>> = {
     "provider.team.lastLogin": "Последний вход",
     "provider.team.noLogin": "Ещё не входил",
     "provider.team.empty": "Участники ещё не добавлены",
+    "provider.team.email": "Эл. почта",
+    "provider.team.role": "Роль",
     "provider.billing.title": "Выплаты",
     "provider.billing.exportCsv": "Экспорт CSV",
     "provider.billing.nextPayout": "Следующая выплата",
