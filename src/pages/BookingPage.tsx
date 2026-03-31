@@ -20,6 +20,7 @@ import { trackEvent } from "@/lib/analytics";
 type SubmitPhase = "submitting" | "sending" | "waiting" | "done";
 
 export default function BookingPage() {
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
   const [params] = useSearchParams();
   const listingId = params.get("listing");
   const { data: listing } = useListing(listingId || "");
