@@ -26,7 +26,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     try { localStorage.setItem("ruumly-lang", lang); } catch {}
     // If user is logged in, persist preference on backend
     // Check if user has an active session (refresh token = logged in)
-    const hasSession = !!sessionStorage.getItem("ruumly-refresh");
+    const hasSession = !!localStorage.getItem("ruumly-auth");
     if (hasSession) {
       authService.updateLanguage(lang).catch(() => {});
     }

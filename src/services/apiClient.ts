@@ -15,21 +15,9 @@ export const tokenStore = {
   getCsrf:    () => _csrfToken,
   setCsrf:    (t: string | null) => { _csrfToken = t; },
 
-  // ── Backward-compat: sessionStorage refresh token (remove after 2-week window) ──
-  getRefresh: () => {
-    try { return sessionStorage.getItem("ruumly-refresh"); } catch { return null; }
-  },
-  setRefresh: (t: string | null) => {
-    try {
-      if (t) sessionStorage.setItem("ruumly-refresh", t);
-      else sessionStorage.removeItem("ruumly-refresh");
-    } catch {}
-  },
-
   clear: () => {
     _accessToken = null;
     _csrfToken   = null;
-    try { sessionStorage.removeItem("ruumly-refresh"); } catch {}
   },
 };
 
