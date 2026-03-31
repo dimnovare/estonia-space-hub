@@ -795,8 +795,8 @@ function useGenerateInvoicePdf() {
   const { t } = useLanguage();
   return (inv: Invoice) => {
   const statusLabel =
-    inv.status === "paid" ? "Makstud" :
-    inv.status === "pending" ? "Ootel" : "Tähtaeg ületatud";
+    inv.status === "paid" ? t("account.invoiceStatus.paid") :
+    inv.status === "pending" ? t("account.invoiceStatus.pending") : t("account.invoiceStatus.overdue");
   const badgeClass =
     inv.status === "paid" ? "badge-paid" :
     inv.status === "pending" ? "badge-pending" : "badge-overdue";
