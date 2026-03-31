@@ -20,7 +20,7 @@ export default function GeocodeLookup({ address, lat, lng, onCoordsChange }: Pro
 
   const geocode = async () => {
     if (!address.trim()) {
-      toast.error("Sisestage esmalt aadress.");
+      toast.error(t("geocode.enterAddress"));
       return;
     }
     setLoading(true);
