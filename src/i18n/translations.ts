@@ -3498,6 +3498,7 @@ const translations: Record<Language, Record<string, string>> = {
     "admin.date": "Дата",
     "admin.status": "Статус",
     "admin.partner": "Партнёр",
+    "admin.partnerName": "Имя партнёра",
     "admin.integration": "Интеграция",
     "admin.amount": "Сумма",
     "admin.margin": "Маржа",
