@@ -460,33 +460,56 @@ export default function ProviderListings() {
                               </span>
                             </td>
                             <td className="py-2">
-                              <button
-                                type="button"
-                                onClick={() => setExpandedUnit(isExpanded ? null : unit.id)}
-                                className="rounded p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                                title={t("provider.extras.title")}
-                              >
-                                {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                              </button>
-                            </td>
-                            <td className="py-2">
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  if (!confirm(t("provider.listings.deleteUnitConfirm") || "Delete this unit?")) return;
-                                  try {
-                                    await apiClient.delete(`/locations/${loc.id}/units/${unit.id}`);
-                                    queryClient.invalidateQueries({ queryKey: ["locations"] });
-                                    toast.success(t("toast.unitDeleted") || "Unit deleted");
-                                  } catch (err: any) {
-                                    toast.error(err?.message || t("provider.listings.deleteFailed"));
-                                  }
-                                }}
-                                className="rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                                title={t("admin.delete")}
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
+                              <div className="flex items-center gap-0.5">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingUnitData({
+                                      id: unit.id,
+                                      locationId: loc.id,
+                                      title: unit.title,
+                                      type: unit.type,
+                                      priceFrom: unit.priceFrom,
+                                      priceUnit: unit.priceUnit || "€/month",
+                                      sizeM2: unit.sizeM2,
+                                      quantityTotal: unit.quantityTotal || 1,
+                                      description: unit.description || "",
+                                      vatRate: unit.vatRate,
+                                      images: unit.images || [],
+                                    });
+                                    setEditUnitOpen(true);
+                                  }}
+                                  className="rounded p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                                  title={t("provider.listings.editUnit") || "Edit"}
+                                >
+                                  <Pencil className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setExpandedUnit(isExpanded ? null : unit.id)}
+                                  className="rounded p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                                  title={t("provider.extras.title")}
+                                >
+                                  {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    if (!confirm(t("provider.listings.deleteUnitConfirm") || "Delete this unit?")) return;
+                                    try {
+                                      await apiClient.delete(`/locations/${loc.id}/units/${unit.id}`);
+                                      queryClient.invalidateQueries({ queryKey: ["locations"] });
+                                      toast.success(t("toast.unitDeleted") || "Unit deleted");
+                                    } catch (err: any) {
+                                      toast.error(err?.message || t("provider.listings.deleteFailed"));
+                                    }
+                                  }}
+                                  className="rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                                  title={t("admin.delete")}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );
