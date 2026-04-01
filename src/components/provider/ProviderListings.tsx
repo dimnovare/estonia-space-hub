@@ -36,6 +36,7 @@ const locationSchema = z.object({
   lng: z.coerce.number().optional(),
   description: z.string().optional(),
   openingHours: z.string().optional(),
+  images: z.array(z.string()).optional(),
 });
 type LocationForm = z.infer<typeof locationSchema>;
 
