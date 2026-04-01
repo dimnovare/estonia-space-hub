@@ -322,7 +322,7 @@ export const bankService = {
     return apiClient.get<BankDetails>("/provider/bank-details");
   },
   async updateBankDetails(data: BankDetails): Promise<void> {
-    await apiClient.patch("/admin/my-bank-details", data);
+    await apiClient.patch("/provider/bank-details", data);
   },
 };
 
