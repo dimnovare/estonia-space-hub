@@ -1296,6 +1296,8 @@ const translations: Record<Language, Record<string, string>> = {
     "admin.tierMaxLocations": "Max asukohti",
     "admin.tierUnlimited": "999 = piiramatu",
     "admin.tierStarterFree": "Starter (tasuta)",
+    "admin.tierMaxUnits": "Max üksusi",
+    "admin.tierMaxExtras": "Max lisateenuseid",
     "admin.extrasPricingTitle": "Lisateenuste hinnakujundus",
     "admin.extrasPricingDesc": "Lisateenuste hinnakujundus toimib samamoodi nagu põhihind.",
     "admin.pricingOverrideHint": "Iga partneri täpsemad allahindlused seadistatakse Partnerid → Muuda all.",
