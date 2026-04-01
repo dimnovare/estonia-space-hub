@@ -48,7 +48,7 @@ export default function ProviderCalendar() {
   const toggleBlock = async () => {
     if (!date || !selectedLocationId) return;
     if (isBooked(date)) return;
-    const dateStr = date.toISOString().split("T")[0];
+    const dateStr = formatLocal(date);
     try {
       if (isBlocked(date)) {
         const existing = blockedDatesRaw.find((b: any) => b.date === dateStr);
