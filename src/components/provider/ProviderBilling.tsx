@@ -93,7 +93,9 @@ export default function ProviderBilling() {
           <div>
             <p className="text-xs font-medium text-muted-foreground">{t("provider.billing.currentPlan")}</p>
             <div className="mt-0.5 flex items-center gap-2">
-              <p className="font-display text-lg font-bold">{supplierData?.tier ?? "Starter"}</p>
+              <p className="font-display text-lg font-bold">{
+                ({ Starter: t("provPage.starter.name"), Standard: t("provPage.growth.name"), Premium: t("provPage.business.name") } as Record<string, string>)[supplierData?.tier ?? "Starter"] || supplierData?.tier || "Starter"
+              }</p>
               {isRebate && (
                 <span className="rounded-full bg-amber-100 text-amber-700 px-2 py-0.5 text-[10px] font-medium">{t("provider.billing.rebate")}</span>
               )}

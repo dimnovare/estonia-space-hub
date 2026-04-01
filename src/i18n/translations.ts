@@ -1014,6 +1014,7 @@ const translations: Record<Language, Record<string, string>> = {
     "location.noUnits": "Hetkel pole vabu ühikuid",
     "location.fullyBooked": "Kõik broneeritud",
     "location.availableUnits": "vaba üksust",
+    "location.available": "saadaval",
     "location.backToSearch": "Tagasi otsingusse",
     "location.unitTypes": "Saadaval olevad ühikud",
 
@@ -1348,6 +1349,9 @@ const translations: Record<Language, Record<string, string>> = {
     "provider.listings.deleteLocationConfirm": "Kustuta asukoht? Kõik seotud üksused kustutatakse samuti.",
     "provider.listings.locationDeleted": "Asukoht kustutatud",
     "provider.listings.deleteFailed": "Kustutamine ebaõnnestus",
+    "provider.listings.deleteUnitConfirm": "Kustuta see üksus?",
+    "provider.listings.cantDeleteBooked": "Broneeritud üksust ei saa kustutada. Deaktiveerige see.",
+    "toast.unitDeleted": "Üksus kustutatud",
     "provider.listings.findCoords": "Leia",
     "provider.listings.coordsFound": "Koordinaadid leitud!",
     "provider.listings.addressNotFound": "Aadressi ei leitud",
@@ -1538,6 +1542,9 @@ const translations: Record<Language, Record<string, string>> = {
     "provPage.business.f5": "Piiramatult lisateenuseid",
     "provPage.business.f6": "Kalendri sünkroniseerimine (iCal)",
     "provPage.business.f7": "Sotsiaalmeedia reklaam",
+    "provPage.starter.name": "Starter",
+    "provPage.growth.name": "Growth",
+    "provPage.business.name": "Business",
   },
 
   en: {
@@ -2519,6 +2526,7 @@ const translations: Record<Language, Record<string, string>> = {
     "location.noUnits": "No units available now",
     "location.fullyBooked": "Fully booked",
     "location.availableUnits": "units available",
+    "location.available": "available",
     "location.backToSearch": "Back to search",
     "location.unitTypes": "Available unit types",
 
@@ -2846,6 +2854,9 @@ const translations: Record<Language, Record<string, string>> = {
     "provider.listings.deleteLocationConfirm": "Delete location? All associated units will be deleted too.",
     "provider.listings.locationDeleted": "Location deleted",
     "provider.listings.deleteFailed": "Delete failed",
+    "provider.listings.deleteUnitConfirm": "Delete this unit?",
+    "provider.listings.cantDeleteBooked": "Cannot delete a unit with active bookings. Deactivate it instead.",
+    "toast.unitDeleted": "Unit deleted",
     "provider.listings.findCoords": "Find",
     "provider.listings.coordsFound": "Coordinates found!",
     "provider.listings.addressNotFound": "Address not found",
@@ -3036,6 +3047,9 @@ const translations: Record<Language, Record<string, string>> = {
     "provPage.business.f5": "Unlimited extras",
     "provPage.business.f6": "Calendar sync (iCal)",
     "provPage.business.f7": "Social media feature",
+    "provPage.starter.name": "Starter",
+    "provPage.growth.name": "Growth",
+    "provPage.business.name": "Business",
   },
 
   ru: {
@@ -4016,6 +4030,7 @@ const translations: Record<Language, Record<string, string>> = {
     "location.noUnits": "Нет доступных единиц",
     "location.fullyBooked": "Полностью забронировано",
     "location.availableUnits": "свободных единиц",
+    "location.available": "доступно",
     "location.backToSearch": "Назад к поиску",
     "location.unitTypes": "Доступные типы единиц",
 
@@ -4343,6 +4358,9 @@ const translations: Record<Language, Record<string, string>> = {
     "provider.listings.deleteLocationConfirm": "Удалить локацию? Все связанные единицы тоже будут удалены.",
     "provider.listings.locationDeleted": "Локация удалена",
     "provider.listings.deleteFailed": "Удаление не удалось",
+    "provider.listings.deleteUnitConfirm": "Удалить эту единицу?",
+    "provider.listings.cantDeleteBooked": "Невозможно удалить единицу с активными бронированиями. Деактивируйте её.",
+    "toast.unitDeleted": "Единица удалена",
     "provider.listings.findCoords": "Найти",
     "provider.listings.coordsFound": "Координаты найдены!",
     "provider.listings.addressNotFound": "Адрес не найден",
@@ -4533,6 +4551,9 @@ const translations: Record<Language, Record<string, string>> = {
     "provPage.business.f5": "Неограниченные доп. услуги",
     "provPage.business.f6": "Синхронизация календаря (iCal)",
     "provPage.business.f7": "Реклама в соцсетях",
+    "provPage.starter.name": "Starter",
+    "provPage.growth.name": "Growth",
+    "provPage.business.name": "Business",
   },
 };
 
