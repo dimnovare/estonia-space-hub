@@ -189,8 +189,9 @@ export const listingService = {
 
 // ─── Order Service ──────────────────────────────────────────────────────────────
 export const orderService = {
-  async getAll(): Promise<Order[]> {
-    return apiClient.get<Order[]>("/orders");
+  async getAll(params?: { supplierId?: string }): Promise<Order[]> {
+    const qs = params?.supplierId ? `?supplierId=${params.supplierId}` : "";
+    return apiClient.get<Order[]>(`/orders${qs}`);
   },
   async getById(id: string): Promise<Order | undefined> {
     try { return await apiClient.get<Order>(`/orders/${id}`); } catch { return undefined; }

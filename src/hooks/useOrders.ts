@@ -10,11 +10,11 @@ function unwrap<T>(res: unknown): T[] {
   return [];
 }
 
-export function useOrders() {
+export function useOrders(supplierId?: string) {
   const { isAuthenticated } = useAuth();
   return useQuery({
-    queryKey: queryKeys.orders.all,
-    queryFn: async () => unwrap<Order>(await orderService.getAll()),
+    queryKey: supplierId ? [...queryKeys.orders.all, supplierId] : queryKeys.orders.all,
+    queryFn: async () => unwrap<Order>(await orderService.getAll(supplierId ? { supplierId } : undefined)),
     enabled: isAuthenticated,
     staleTime: 15_000,
   });

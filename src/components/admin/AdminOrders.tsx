@@ -8,9 +8,9 @@ import { ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG, generateOrderEmailPreview
 import type { Order, OrderStatus } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
 
-export default function AdminOrders() {
+export default function AdminOrders({ supplierId }: { supplierId?: string }) {
   const { t } = useLanguage();
-  const { data: orders = [], isLoading } = useOrders();
+  const { data: orders = [], isLoading } = useOrders(supplierId);
   const updateStatus  = useUpdateOrderStatus();
   const approveOrder  = useApproveOrder();
   const rejectOrder   = useRejectOrder();

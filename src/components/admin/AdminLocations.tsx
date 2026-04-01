@@ -14,13 +14,13 @@ import { toast } from "sonner";
 const inp = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
 const typeIcons: Record<string, typeof Warehouse> = { warehouse: Warehouse, Warehouse: Warehouse, moving: Truck, Moving: Truck, trailer: CarFront, Trailer: CarFront };
 
-export default function AdminLocations() {
+export default function AdminLocations({ supplierId }: { supplierId?: string }) {
   const { t } = useLanguage();
   const qc = useQueryClient();
 
   const { data: locations = [], isLoading } = useQuery({
-    queryKey: ["admin-locations"],
-    queryFn: () => locationService.getAll(),
+    queryKey: ["admin-locations", supplierId],
+    queryFn: () => locationService.getAll(supplierId ? { supplierId } : undefined),
     staleTime: 30_000,
   });
 
