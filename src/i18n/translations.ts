@@ -2526,6 +2526,7 @@ const translations: Record<Language, Record<string, string>> = {
     "location.noUnits": "No units available now",
     "location.fullyBooked": "Fully booked",
     "location.availableUnits": "units available",
+    "location.available": "available",
     "location.backToSearch": "Back to search",
     "location.unitTypes": "Available unit types",
 
