@@ -100,7 +100,7 @@ function LocationDialog({
       );
     } else {
       createLoc.mutate(
-        { supplierId: user?.supplierId || undefined, name: data.name, address: data.address, city: data.city, lat: data.lat ?? 0, lng: data.lng ?? 0, description: data.description, openingHours: data.openingHours },
+        { supplierId: user?.supplierId || undefined, name: data.name, address: data.address, city: data.city, lat: data.lat ?? 0, lng: data.lng ?? 0, description: data.description, openingHours: data.openingHours, images },
         {
           onSuccess: () => {
             toast.success(t("toast.locationCreated"));
