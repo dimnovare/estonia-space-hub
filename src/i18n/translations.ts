@@ -4319,6 +4319,8 @@ const translations: Record<Language, Record<string, string>> = {
     "admin.tierMaxLocations": "Макс. локаций",
     "admin.tierUnlimited": "999 = без ограничений",
     "admin.tierStarterFree": "Starter (бесплатно)",
+    "admin.tierMaxUnits": "Макс. единиц",
+    "admin.tierMaxExtras": "Макс. допуслуг",
     "admin.extrasPricingTitle": "Цены на доп. услуги",
     "admin.extrasPricingDesc": "Ценообразование доп. услуг работает так же, как базовое.",
     "admin.pricingOverrideHint": "Индивидуальные настройки в разделе Партнёры → Редактировать.",
