@@ -215,7 +215,8 @@ export const orderService = {
 // ─── Booking Service ────────────────────────────────────────────────────────────
 export const bookingService = {
   async getAll(): Promise<Booking[]> {
-    const bookings = await apiClient.get<Booking[]>("/bookings");
+    const res = await apiClient.get<any>("/bookings");
+    const bookings = Array.isArray(res) ? res : res?.data ?? [];
     return bookings.map(normalizeBooking);
   },
   async getById(id: string): Promise<Booking | undefined> {
