@@ -27,7 +27,12 @@ export default function ProviderCalendar() {
     queryFn: () => apiClient.get<any[]>(`/locations/${selectedLocationId}/blocked-dates`),
     enabled: !!selectedLocationId,
   });
-  const blockedDates = blockedDatesRaw.map((b: any) => new Date(b.date));
+  const formatLocal = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const blockedDateStrings = blockedDatesRaw.map((b: any) => b.date?.split("T")[0]);
+  const blockedDates = blockedDatesRaw.map((b: any) => {
+    const parts = (b.date?.split("T")[0] || "").split("-");
+    return new Date(+parts[0], +parts[1] - 1, +parts[2]);
+  });
 
   const filteredBookings = selectedLocationId
     ? bookings.filter(b => (b as any).locationId === selectedLocationId)
@@ -37,7 +42,7 @@ export default function ProviderCalendar() {
     .filter(b => b.status === "confirmed" || b.status === "active")
     .map(b => new Date(b.startDate));
 
-  const isBlocked = (d: Date) => blockedDates.some(bd => bd.toDateString() === d.toDateString());
+  const isBlocked = (d: Date) => blockedDateStrings.includes(formatLocal(d));
   const isBooked = (d: Date) => bookedDates.some(bd => bd.toDateString() === d.toDateString());
 
   const toggleBlock = async () => {
