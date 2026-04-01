@@ -185,6 +185,10 @@ function LocationDialog({
             <Input {...form.register("openingHours")} />
           </div>
           <div>
+            <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.images")}</label>
+            <ImageUploader images={images} onChange={setImages} />
+          </div>
+          <div>
             <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.locationDesc")}</label>
             <Textarea rows={3} {...form.register("description")} />
           </div>
