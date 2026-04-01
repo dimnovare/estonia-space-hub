@@ -1542,6 +1542,9 @@ const translations: Record<Language, Record<string, string>> = {
     "provPage.business.f5": "Piiramatult lisateenuseid",
     "provPage.business.f6": "Kalendri sünkroniseerimine (iCal)",
     "provPage.business.f7": "Sotsiaalmeedia reklaam",
+    "provPage.starter.name": "Starter",
+    "provPage.growth.name": "Growth",
+    "provPage.business.name": "Business",
   },
 
   en: {
