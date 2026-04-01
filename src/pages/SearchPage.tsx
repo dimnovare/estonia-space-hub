@@ -343,15 +343,10 @@ export default function SearchPage() {
                             loading="lazy"
                           />
                         )}
-                        <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-card/90 backdrop-blur-sm px-2.5 py-1 text-[11px] font-semibold text-foreground">
+                        <span className={`absolute right-2 top-2 inline-flex items-center gap-1 rounded-full backdrop-blur-sm px-2.5 py-1 text-[11px] font-semibold ${loc.fullyBooked ? "bg-destructive/90 text-white" : "bg-card/90 text-foreground"}`}>
                           <Layers className="h-3 w-3" />
-                          {loc.unitCount} {t("location.units")}
+                          {loc.fullyBooked ? t("location.fullyBooked") : `${loc.availableUnits ?? loc.unitCount} ${t("location.available")}`}
                         </span>
-                        {loc.fullyBooked && (
-                          <span className="absolute left-2 top-2 rounded-full bg-destructive/90 backdrop-blur-sm px-2.5 py-1 text-[11px] font-semibold text-white">
-                            {t("location.fullyBooked")}
-                          </span>
-                        )}
                       </div>
                       <div className="p-4">
                         <h3 className="truncate font-sans text-sm font-semibold text-foreground">{loc.name}</h3>
