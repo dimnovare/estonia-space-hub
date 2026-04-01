@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useLocations, useCreateLocation, useUpdateLocation, useAddUnit } from "@/hooks/queries";
@@ -351,6 +351,8 @@ export default function ProviderListings() {
   const [editLoc, setEditLoc] = useState<SupplierLocation | null>(null);
   const [unitDialogLocId, setUnitDialogLocId] = useState<string | null>(null);
   const [expandedUnit, setExpandedUnit] = useState<string | null>(null);
+  const [editUnitOpen, setEditUnitOpen] = useState(false);
+  const [editingUnitData, setEditingUnitData] = useState<any>(null);
 
   if (isLoading) return (
     <div className="flex items-center justify-center py-20">
@@ -430,7 +432,6 @@ export default function ProviderListings() {
                         <th className="pb-2 pr-4 font-medium">{t("admin.locations.quantity")}</th>
                         <th className="pb-2 pr-4 font-medium">{t("listing.price")}</th>
                         <th className="pb-2 font-medium" />
-                        <th className="pb-2 font-medium" />
                       </tr>
                     </thead>
                     <tbody>
@@ -458,33 +459,56 @@ export default function ProviderListings() {
                               </span>
                             </td>
                             <td className="py-2">
-                              <button
-                                type="button"
-                                onClick={() => setExpandedUnit(isExpanded ? null : unit.id)}
-                                className="rounded p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                                title={t("provider.extras.title")}
-                              >
-                                {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                              </button>
-                            </td>
-                            <td className="py-2">
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  if (!confirm(t("provider.listings.deleteUnitConfirm") || "Delete this unit?")) return;
-                                  try {
-                                    await apiClient.delete(`/locations/${loc.id}/units/${unit.id}`);
-                                    queryClient.invalidateQueries({ queryKey: ["locations"] });
-                                    toast.success(t("toast.unitDeleted") || "Unit deleted");
-                                  } catch (err: any) {
-                                    toast.error(err?.message || t("provider.listings.deleteFailed"));
-                                  }
-                                }}
-                                className="rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                                title={t("admin.delete")}
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
+                              <div className="flex items-center gap-0.5">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingUnitData({
+                                      id: unit.id,
+                                      locationId: loc.id,
+                                      title: unit.title,
+                                      type: unit.type,
+                                      priceFrom: unit.priceFrom,
+                                      priceUnit: unit.priceUnit || "€/month",
+                                      sizeM2: unit.sizeM2,
+                                      quantityTotal: unit.quantityTotal || 1,
+                                      description: unit.description || "",
+                                      vatRate: unit.vatRate,
+                                      images: unit.images || [],
+                                    });
+                                    setEditUnitOpen(true);
+                                  }}
+                                  className="rounded p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                                  title={t("provider.listings.editUnit") || "Edit"}
+                                >
+                                  <Pencil className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setExpandedUnit(isExpanded ? null : unit.id)}
+                                  className="rounded p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                                  title={t("provider.extras.title")}
+                                >
+                                  {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    if (!confirm(t("provider.listings.deleteUnitConfirm") || "Delete this unit?")) return;
+                                    try {
+                                      await apiClient.delete(`/locations/${loc.id}/units/${unit.id}`);
+                                      queryClient.invalidateQueries({ queryKey: ["locations"] });
+                                      toast.success(t("toast.unitDeleted") || "Unit deleted");
+                                    } catch (err: any) {
+                                      toast.error(err?.message || t("provider.listings.deleteFailed"));
+                                    }
+                                  }}
+                                  className="rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                                  title={t("admin.delete")}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -552,6 +576,175 @@ export default function ProviderListings() {
           locationId={unitDialogLocId}
         />
       )}
+
+      {/* Edit Unit Dialog */}
+      {editingUnitData && (
+        <EditUnitDialog
+          open={editUnitOpen}
+          onOpenChange={(v) => { setEditUnitOpen(v); if (!v) setEditingUnitData(null); }}
+          unitData={editingUnitData}
+        />
+      )}
     </div>
+  );
+}
+
+// ── Edit Unit Dialog ──
+
+function EditUnitDialog({
+  open,
+  onOpenChange,
+  unitData,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  unitData: any;
+}) {
+  const { t } = useLanguage();
+  const queryClient = useQueryClient();
+  const [saving, setSaving] = useState(false);
+  const [images, setImages] = useState<string[]>(unitData?.images || []);
+
+  const form = useForm<UnitForm>({
+    resolver: zodResolver(unitSchema),
+    defaultValues: {
+      title: unitData?.title || "",
+      type: unitData?.type || "Warehouse",
+      priceFrom: unitData?.priceFrom || 0,
+      priceUnit: unitData?.priceUnit || "€/month",
+      sizeM2: unitData?.sizeM2,
+      quantityTotal: unitData?.quantityTotal || 1,
+      description: unitData?.description || "",
+      vatRate: unitData?.vatRate,
+    },
+  });
+
+  useEffect(() => {
+    if (unitData) {
+      form.reset({
+        title: unitData.title || "",
+        type: unitData.type || "Warehouse",
+        priceFrom: unitData.priceFrom || 0,
+        priceUnit: unitData.priceUnit || "€/month",
+        sizeM2: unitData.sizeM2,
+        quantityTotal: unitData.quantityTotal || 1,
+        description: unitData.description || "",
+        vatRate: unitData.vatRate,
+      });
+      setImages(unitData.images || []);
+    }
+  }, [unitData]);
+
+  const onSubmit = async (data: UnitForm) => {
+    setSaving(true);
+    try {
+      await apiClient.patch(
+        `/locations/${unitData.locationId}/units/${unitData.id}`,
+        {
+          title: data.title,
+          priceFrom: data.priceFrom,
+          priceUnit: data.priceUnit,
+          sizeM2: data.sizeM2,
+          quantityTotal: data.quantityTotal,
+          description: data.description,
+          vatRate: data.vatRate,
+          images,
+        }
+      );
+      queryClient.invalidateQueries({ queryKey: ["locations"] });
+      toast.success(t("toast.unitUpdated") || "Unit updated");
+      onOpenChange(false);
+    } catch (err: any) {
+      toast.error(err?.message || t("toast.saveFailed"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t("provider.listings.editUnit") || "Edit unit"}</DialogTitle>
+          <DialogDescription className="sr-only">{t("provider.listings.editUnit") || "Edit unit"}</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitTitle")}</label>
+            <Input {...form.register("title")} />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitType")}</label>
+            <Controller
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Warehouse">{t("provider.listings.typeWarehouse")}</SelectItem>
+                    <SelectItem value="Moving">{t("provider.listings.typeMoving")}</SelectItem>
+                    <SelectItem value="Trailer">{t("provider.listings.typeTrailer")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitPriceFrom")}</label>
+              <Input type="number" step="0.01" {...form.register("priceFrom")} />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitPriceUnit")}</label>
+              <Input {...form.register("priceUnit")} />
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitSizeM2")}</label>
+              <Input type="number" step="0.1" {...form.register("sizeM2")} />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitQuantity")}</label>
+              <Input type="number" {...form.register("quantityTotal")} />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitVatRate")}</label>
+            <Controller
+              control={form.control}
+              name="vatRate"
+              render={({ field }) => (
+                <Select value={String(field.value ?? "")} onValueChange={(v) => field.onChange(v ? Number(v) : undefined)}>
+                  <SelectTrigger><SelectValue placeholder={t("provider.listings.selectVatRate")} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="24">24% ({t("provider.listings.vatStandard")})</SelectItem>
+                    <SelectItem value="13">13% ({t("provider.listings.vatReduced")})</SelectItem>
+                    <SelectItem value="9">9% ({t("provider.listings.vatReduced")})</SelectItem>
+                    <SelectItem value="0">0% ({t("provider.listings.vatExempt")})</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitDesc")}</label>
+            <Textarea rows={2} {...form.register("description")} />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.images") || "Images"}</label>
+            <ImageUploader images={images} onChange={setImages} />
+          </div>
+          <Button type="submit" disabled={saving} className="w-full">
+            {saving ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t("account.saving")}</>
+            ) : (
+              t("provider.listings.saveUnit") || "Save changes"
+            )}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
