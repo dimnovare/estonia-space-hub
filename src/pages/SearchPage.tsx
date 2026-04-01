@@ -330,7 +330,9 @@ export default function SearchPage() {
                     <Link
                       key={loc.id}
                       to={`/location/${loc.id}`}
-                      className="card-elevated group block overflow-hidden"
+                      className={`card-elevated group block overflow-hidden transition-all ${selectedListingId === loc.id ? "ring-2 ring-accent" : ""}`}
+                      onMouseEnter={() => setSelectedListingId(loc.id)}
+                      onMouseLeave={() => setSelectedListingId(null)}
                     >
                       <div className="relative aspect-[16/10] overflow-hidden">
                         {loc.images?.[0] && (
