@@ -1673,7 +1673,7 @@ const translations: Record<Language, Record<string, string>> = {
     "provPage.step3.title": "Get orders",
     "provPage.step3.desc": "Clients find and book your services.",
     "provPage.pricing.title": "Plans & pricing",
-    "provPage.pricing.subtitle": "Try free for 30 days. Then choose a plan that fits.",
+    "provPage.pricing.subtitle": "Try free for 30 days. Plans from €19/month.",
     "provPage.tier.trial": "Trial",
     "provPage.tier.starter": "Starter",
     "provPage.tier.growth": "Growth",
