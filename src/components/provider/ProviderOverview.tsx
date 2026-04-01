@@ -1,4 +1,4 @@
-import { List, Package, Eye, DollarSign, Inbox } from "lucide-react";
+import { List, Package, Eye, DollarSign, Inbox, AlertTriangle, MapPin } from "lucide-react";
 import { useLocations } from "@/hooks/queries";
 import { useOrders } from "@/hooks/useOrders";
 import { useBookings } from "@/hooks/useBookings";
