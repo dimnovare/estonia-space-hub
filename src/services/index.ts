@@ -387,7 +387,7 @@ export const locationService = {
     return apiClient.get<SupplierLocation>(`/locations/${id}`);
   },
   async create(data: {
-    supplierId: string;
+    supplierId?: string;
     name: string;
     address: string;
     city: string;
@@ -398,7 +398,9 @@ export const locationService = {
     images?: string[];
     notes?: string;
   }): Promise<SupplierLocation> {
-    return apiClient.post<SupplierLocation>("/locations", data);
+    const payload = { ...data };
+    if (!payload.supplierId) delete payload.supplierId;
+    return apiClient.post<SupplierLocation>("/locations", payload);
   },
   async update(id: string, data: Partial<{
     name: string;
