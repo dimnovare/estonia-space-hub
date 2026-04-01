@@ -191,8 +191,9 @@ export default function ProviderPage() {
         </p>
 
         {/* Trial CTA */}
-        <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-accent/30 bg-accent/5 px-5 py-3 text-center">
-          <p className="text-sm font-medium text-accent">{t("provPage.trialCta")}</p>
+        <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-accent/30 bg-accent/5 px-5 py-4 text-center">
+          <p className="text-base font-bold text-accent">{t("provPage.trialCta")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("provPage.trialDesc")}</p>
         </div>
 
         {/* Margin note */}
