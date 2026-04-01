@@ -461,6 +461,11 @@ export default function ProviderListings() {
                             </td>
                             <td className="py-2 pr-4 text-muted-foreground">
                               {unit.quantityTotal ?? 1}
+                              {loc.fullyBooked && (
+                                <span className="ml-1.5 text-[10px] text-destructive font-medium">
+                                  ({t("provider.listings.booked")})
+                                </span>
+                              )}
                             </td>
                             <td className="py-2 pr-4">
                               €{unit.priceFrom}
