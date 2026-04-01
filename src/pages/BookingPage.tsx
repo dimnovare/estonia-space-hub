@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { authService } from "@/services";
 import { toast } from "sonner";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
-import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand, Info } from "lucide-react";
+import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand, Info, Warehouse } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListing, useCreateBooking, useSuppliers, usePricingConfig, useListingExtras } from "@/hooks/queries";
 import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
@@ -286,7 +286,13 @@ export default function BookingPage() {
                 <h2 className="font-display text-xl font-semibold">{t("booking.selectDetails")}</h2>
                 {listing && (
                   <div className="flex items-center gap-3 rounded-xl border border-border p-3">
-                    <img src={listing.image} alt={listing?.title || "Listing image"} className="h-16 w-20 rounded-lg object-cover" />
+                    {listing.image && listing.image.length > 0 ? (
+                      <img src={listing.image} alt={listing?.title || "Listing image"} className="h-16 w-20 rounded-lg object-cover" />
+                    ) : (
+                      <div className="flex h-16 w-20 items-center justify-center rounded-lg bg-secondary">
+                        <Warehouse className="h-6 w-6 text-muted-foreground/40" />
+                      </div>
+                    )}
                     <div>
                       <div className="text-sm font-semibold">{listing.title}</div>
                       <div className="text-xs text-muted-foreground">{listing.city} · al. {listing.priceFrom}€</div>
@@ -537,7 +543,13 @@ export default function BookingPage() {
             <h3 className="text-sm font-semibold">{t("booking.yourBooking")}</h3>
             {listing && (
               <div className="mt-3 flex items-center gap-2">
-                <img src={listing.image} alt={listing?.title || "Listing image"} className="h-10 w-12 rounded object-cover" />
+                {listing.image && listing.image.length > 0 ? (
+                  <img src={listing.image} alt={listing?.title || "Listing image"} className="h-10 w-12 rounded object-cover" />
+                ) : (
+                  <div className="flex h-10 w-12 items-center justify-center rounded bg-secondary">
+                    <Warehouse className="h-4 w-4 text-muted-foreground/40" />
+                  </div>
+                )}
                 <div className="text-xs"><div className="font-medium">{listing.title}</div><div className="text-muted-foreground">{listing.city}</div></div>
               </div>
             )}
