@@ -294,7 +294,14 @@ export default function AdminSuppliers() {
               <div className="rounded-xl border border-border p-4">
                 <h3 className="flex items-center gap-2 text-sm font-semibold"><Server className="h-4 w-4 text-accent" /> {t("admin.integrationSettings")}</h3>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2 text-sm">
-                  <div><p className="text-xs text-muted-foreground">{t("admin.type")}</p><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${INTEGRATION_TYPE_CONFIG[selected.integrationType].color}`}>{intIcon(selected.integrationType)} {INTEGRATION_TYPE_CONFIG[selected.integrationType].label}</span></div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">{t("admin.type")}</p>
+                    <select className={inp} value={selected.integrationType} onChange={(e) => setSelected({ ...selected, integrationType: e.target.value as any })}>
+                      <option value="manual">{t("integration.manual") || "Manual"}</option>
+                      <option value="email">{t("integration.email") || "Email"}</option>
+                      <option value="api">{t("integration.api") || "API"}</option>
+                    </select>
+                  </div>
                   <div><p className="text-xs text-muted-foreground">{t("admin.health")}</p><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${healthColor(selected.integrationHealth)}`}>{healthLabel(selected.integrationHealth)}</span></div>
                   {selected.apiEndpoint && (<div className="col-span-2"><p className="text-xs text-muted-foreground">{t("admin.apiEndpoint")}</p><p className="font-mono text-xs mt-0.5 rounded-md bg-secondary px-2 py-1">{selected.apiEndpoint}</p></div>)}
                 </div>
