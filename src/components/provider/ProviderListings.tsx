@@ -558,6 +558,18 @@ export default function ProviderListings() {
         </div>
       )}
 
+      {locations.length > 0 && (
+        <div className="mt-4 flex items-center gap-4 rounded-lg border border-border p-3 text-xs text-muted-foreground">
+          <span>{locations.length} {t("provider.listings.totalLocations")}</span>
+          <span>{locations.reduce((sum, l) => sum + (l.units?.length ?? 0), 0)} {t("provider.listings.totalUnits")}</span>
+          {locations.some(l => l.fullyBooked) && (
+            <span className="text-destructive font-medium">
+              {locations.filter(l => l.fullyBooked).length} {t("provider.listings.fullyBookedCount")}
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Add Location Dialog */}
       <LocationDialog
         open={locDialogOpen}
