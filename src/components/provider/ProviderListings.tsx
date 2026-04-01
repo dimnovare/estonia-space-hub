@@ -539,6 +539,7 @@ export default function ProviderListings() {
             lng: editLoc.lng,
             description: editLoc.description,
             openingHours: editLoc.openingHours ?? "",
+            images: (editLoc as any).images || [],
           }}
         />
       )}
