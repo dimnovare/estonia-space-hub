@@ -98,9 +98,18 @@ export default function LocationDetailPage() {
       )}
 
       {/* Units heading */}
-      <h2 className="font-display text-xl font-bold">{t("location.allUnits")}</h2>
+      <div className="flex items-center gap-3">
+        <h2 className="font-display text-xl font-bold">{t("location.allUnits")}</h2>
+        {location.fullyBooked && (
+          <span className="rounded-full bg-destructive/90 px-2.5 py-1 text-[11px] font-semibold text-white">
+            {t("location.fullyBooked")}
+          </span>
+        )}
+      </div>
       <p className="mt-1 text-sm text-muted-foreground">
-        {location.unitCount} {t("location.units")}
+        {location.fullyBooked
+          ? `${location.unitCount} ${t("location.units")} · ${t("location.fullyBooked")}`
+          : `${location.availableUnits ?? location.unitCount} / ${location.unitCount} ${t("location.availableUnits")}`}
         {location.priceFrom != null && (
           <> · {t("location.from")} €{location.priceFrom}{t("location.perMonth")}</>
         )}

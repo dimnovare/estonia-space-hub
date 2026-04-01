@@ -347,6 +347,11 @@ export default function SearchPage() {
                           <Layers className="h-3 w-3" />
                           {loc.unitCount} {t("location.units")}
                         </span>
+                        {loc.fullyBooked && (
+                          <span className="absolute left-2 top-2 rounded-full bg-destructive/90 backdrop-blur-sm px-2.5 py-1 text-[11px] font-semibold text-white">
+                            {t("location.fullyBooked")}
+                          </span>
+                        )}
                       </div>
                       <div className="p-4">
                         <h3 className="truncate font-sans text-sm font-semibold text-foreground">{loc.name}</h3>

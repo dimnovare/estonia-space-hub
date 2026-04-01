@@ -90,7 +90,7 @@ function createMarkerIcon(listing: Listing, isSelected: boolean) {
 }
 
 function createLocationMarkerIcon(location: SupplierLocation, isSelected: boolean, unitLabel = "units") {
-  const color = "#1E3A5F";
+  const color = location.fullyBooked ? "#888888" : "#1E3A5F";
   const size = isSelected ? 44 : 36;
   const iconPath = typeIconPaths.warehouse;
 

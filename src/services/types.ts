@@ -273,6 +273,8 @@ export interface SupplierLocation {
   openingHours?: string;
   isActive: boolean;
   unitCount: number;
+  availableUnits: number;
+  fullyBooked: boolean;
   priceFrom?: number;
   createdAt?: string;
   units?: Listing[];

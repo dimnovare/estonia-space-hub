@@ -1009,6 +1009,8 @@ const translations: Record<Language, Record<string, string>> = {
     "location.unitSize": "Suurus",
     "location.quantity": "Kogus",
     "location.noUnits": "Hetkel pole vabu ühikuid",
+    "location.fullyBooked": "Kõik broneeritud",
+    "location.availableUnits": "vaba üksust",
     "location.backToSearch": "Tagasi otsingusse",
     "location.unitTypes": "Saadaval olevad ühikud",
 
@@ -2499,6 +2501,8 @@ const translations: Record<Language, Record<string, string>> = {
     "location.unitSize": "Size",
     "location.quantity": "Quantity",
     "location.noUnits": "No units available now",
+    "location.fullyBooked": "Fully booked",
+    "location.availableUnits": "units available",
     "location.backToSearch": "Back to search",
     "location.unitTypes": "Available unit types",
 
@@ -3981,6 +3985,8 @@ const translations: Record<Language, Record<string, string>> = {
     "location.unitSize": "Размер",
     "location.quantity": "Количество",
     "location.noUnits": "Нет доступных единиц",
+    "location.fullyBooked": "Полностью забронировано",
+    "location.availableUnits": "свободных единиц",
     "location.backToSearch": "Назад к поиску",
     "location.unitTypes": "Доступные типы единиц",
 
