@@ -91,12 +91,15 @@ export default function AdminSuppliers() {
   const handleSaveSelected = () => {
     if (!selected) return;
     const data: Record<string, unknown> = {
+      name: selected.name,
+      registryCode: selected.registryCode,
       contactName: selected.contactName,
       contactEmail: selected.contactEmail,
       contactPhone: selected.contactPhone,
       notes: selected.notes,
       partnerDiscountRate: selected.partnerDiscountRate,
       clientDiscountRate: selected.clientDiscountRate,
+      integrationType: selected.integrationType,
       tier: selected.tier,
       billingModel: selected.billingModel,
     };
