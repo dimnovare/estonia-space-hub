@@ -190,7 +190,7 @@ export default function AccountPage() {
 }
 
 function AccountOverview({ onNavigate }: { onNavigate: (tab: string) => void }) {
-  const { data: bookings = [], isLoading } = useBookings();
+  const { data: bookings = [], isLoading } = useBookings(true);
   const active = bookings.filter(b => b.status === "confirmed" || b.status === "active");
   const pending = bookings.filter(b => b.status === "pending");
   const { role } = useAuth();
@@ -340,7 +340,7 @@ function AccountBookings() {
   const { t } = useLanguage();
   const statusConfig = useStatusConfig();
   const [filter, setFilter] = useState<"all" | BookingStatus>("all");
-  const { data: bookings = [], isLoading } = useBookings();
+  const { data: bookings = [], isLoading } = useBookings(true);
   const filtered = filter === "all" ? bookings : bookings.filter(b => b.status === filter);
 
   if (isLoading) return <SkeletonList count={4} />;

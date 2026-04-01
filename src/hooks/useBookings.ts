@@ -10,9 +10,14 @@ function unwrap<T>(res: unknown): T[] {
   return [];
 }
 
-export function useBookings() {
+export function useBookings(personal = false) {
   const { isAuthenticated } = useAuth();
-  return useQuery({ queryKey: queryKeys.bookings.all, queryFn: async () => unwrap<Booking>(await bookingService.getAll()), enabled: isAuthenticated, staleTime: 30_000 });
+  return useQuery({ 
+    queryKey: [...queryKeys.bookings.all, personal ? "personal" : "all"], 
+    queryFn: async () => unwrap<Booking>(await bookingService.getAll(personal)), 
+    enabled: isAuthenticated, 
+    staleTime: 30_000 
+  });
 }
 
 export function useBooking(id: string) {

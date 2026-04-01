@@ -6,6 +6,7 @@ import { ESTONIAN_CITIES } from "@/lib/constants";
 import { Loader2, MapPin, Warehouse, Truck, CarFront, Plus, Pencil, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import ListingExtrasManager from "./ListingExtrasManager";
+import ImageUploader from "@/components/admin/ImageUploader";
 import type { SupplierLocation } from "@/services/types";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
@@ -36,6 +37,7 @@ const locationSchema = z.object({
   lng: z.coerce.number().optional(),
   description: z.string().optional(),
   openingHours: z.string().optional(),
+  images: z.array(z.string()).optional(),
 });
 type LocationForm = z.infer<typeof locationSchema>;
 
@@ -69,7 +71,7 @@ function LocationDialog({
   const updateLoc = useUpdateLocation();
   const { user } = useAuth();
   const isEdit = !!locationId;
-
+  const [images, setImages] = useState<string[]>(defaultValues?.images || []);
   const form = useForm<LocationForm>({
     resolver: zodResolver(locationSchema),
     defaultValues: {
@@ -87,7 +89,7 @@ function LocationDialog({
   const onSubmit = (data: LocationForm) => {
     if (isEdit) {
       updateLoc.mutate(
-        { id: locationId!, data: { name: data.name, address: data.address, city: data.city, lat: data.lat ?? 0, lng: data.lng ?? 0, description: data.description, openingHours: data.openingHours } },
+        { id: locationId!, data: { name: data.name, address: data.address, city: data.city, lat: data.lat ?? 0, lng: data.lng ?? 0, description: data.description, openingHours: data.openingHours, images } },
         {
           onSuccess: () => {
             toast.success(t("toast.locationUpdated"));
@@ -98,7 +100,7 @@ function LocationDialog({
       );
     } else {
       createLoc.mutate(
-        { supplierId: user?.supplierId || undefined, name: data.name, address: data.address, city: data.city, lat: data.lat ?? 0, lng: data.lng ?? 0, description: data.description, openingHours: data.openingHours },
+        { supplierId: user?.supplierId || undefined, name: data.name, address: data.address, city: data.city, lat: data.lat ?? 0, lng: data.lng ?? 0, description: data.description, openingHours: data.openingHours, images },
         {
           onSuccess: () => {
             toast.success(t("toast.locationCreated"));
@@ -181,6 +183,10 @@ function LocationDialog({
           <div>
             <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.locationHours")}</label>
             <Input {...form.register("openingHours")} />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.images")}</label>
+            <ImageUploader images={images} onChange={setImages} />
           </div>
           <div>
             <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.locationDesc")}</label>
@@ -424,6 +430,7 @@ export default function ProviderListings() {
                         <th className="pb-2 pr-4 font-medium">{t("admin.locations.quantity")}</th>
                         <th className="pb-2 pr-4 font-medium">{t("listing.price")}</th>
                         <th className="pb-2 font-medium" />
+                        <th className="pb-2 font-medium" />
                       </tr>
                     </thead>
                     <tbody>
@@ -458,6 +465,25 @@ export default function ProviderListings() {
                                 title={t("provider.extras.title")}
                               >
                                 {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                              </button>
+                            </td>
+                            <td className="py-2">
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  if (!confirm(t("provider.listings.deleteUnitConfirm") || "Delete this unit?")) return;
+                                  try {
+                                    await apiClient.delete(`/locations/${loc.id}/units/${unit.id}`);
+                                    queryClient.invalidateQueries({ queryKey: ["locations"] });
+                                    toast.success(t("toast.unitDeleted") || "Unit deleted");
+                                  } catch (err: any) {
+                                    toast.error(err?.message || t("provider.listings.deleteFailed"));
+                                  }
+                                }}
+                                className="rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                                title={t("admin.delete")}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
                               </button>
                             </td>
                           </tr>
@@ -513,6 +539,7 @@ export default function ProviderListings() {
             lng: editLoc.lng,
             description: editLoc.description,
             openingHours: editLoc.openingHours ?? "",
+            images: (editLoc as any).images || [],
           }}
         />
       )}
