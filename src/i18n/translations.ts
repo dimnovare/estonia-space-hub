@@ -2843,8 +2843,6 @@ const translations: Record<Language, Record<string, string>> = {
     "provider.listings.deleteLocationConfirm": "Delete location? All associated units will be deleted too.",
     "provider.listings.locationDeleted": "Location deleted",
     "provider.listings.deleteFailed": "Delete failed",
-    "provider.listings.deleteUnitConfirm": "Delete this unit?",
-    "toast.unitDeleted": "Unit deleted",
     "provider.listings.findCoords": "Find",
     "provider.listings.coordsFound": "Coordinates found!",
     "provider.listings.addressNotFound": "Address not found",
