@@ -271,9 +271,9 @@ export default function AdminSuppliers() {
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">{t("admin.tier")}</label>
                     <select className={inp} value={(selected.tier ?? "starter").toLowerCase()} onChange={(e) => setSelected({ ...selected, tier: e.target.value as "starter" | "standard" | "premium" })}>
-                      <option value="starter">{t("admin.tierStarter")}</option>
-                      <option value="standard">{t("admin.tierStandard")}</option>
-                      <option value="premium">{t("admin.tierPremium")}</option>
+                      <option value="starter">Starter (€19/{t("provPage.tier.perMonth") || "mo"})</option>
+                      <option value="standard">Growth (€49/{t("provPage.tier.perMonth") || "mo"})</option>
+                      <option value="premium">Business (€99/{t("provPage.tier.perMonth") || "mo"})</option>
                     </select>
                   </div>
                   <div>
