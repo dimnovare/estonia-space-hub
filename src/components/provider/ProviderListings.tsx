@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useLocations, useCreateLocation, useUpdateLocation, useAddUnit } from "@/hooks/queries";
 import { ESTONIAN_CITIES } from "@/lib/constants";
-import { Loader2, MapPin, Warehouse, Truck, CarFront, Plus, Pencil, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { Loader2, MapPin, Warehouse, Truck, CarFront, Plus, Pencil, ChevronDown, ChevronUp, Trash2, AlertTriangle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import ListingExtrasManager from "./ListingExtrasManager";
 import ImageUploader from "@/components/admin/ImageUploader";
