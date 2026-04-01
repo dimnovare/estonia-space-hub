@@ -27,7 +27,12 @@ export default function ProviderCalendar() {
     queryFn: () => apiClient.get<any[]>(`/locations/${selectedLocationId}/blocked-dates`),
     enabled: !!selectedLocationId,
   });
-  const blockedDates = blockedDatesRaw.map((b: any) => new Date(b.date));
+  const formatLocal = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const blockedDateStrings = blockedDatesRaw.map((b: any) => b.date?.split("T")[0]);
+  const blockedDates = blockedDatesRaw.map((b: any) => {
+    const parts = (b.date?.split("T")[0] || "").split("-");
+    return new Date(+parts[0], +parts[1] - 1, +parts[2]);
+  });
 
   const filteredBookings = selectedLocationId
     ? bookings.filter(b => (b as any).locationId === selectedLocationId)
@@ -37,13 +42,13 @@ export default function ProviderCalendar() {
     .filter(b => b.status === "confirmed" || b.status === "active")
     .map(b => new Date(b.startDate));
 
-  const isBlocked = (d: Date) => blockedDates.some(bd => bd.toDateString() === d.toDateString());
+  const isBlocked = (d: Date) => blockedDateStrings.includes(formatLocal(d));
   const isBooked = (d: Date) => bookedDates.some(bd => bd.toDateString() === d.toDateString());
 
   const toggleBlock = async () => {
     if (!date || !selectedLocationId) return;
     if (isBooked(date)) return;
-    const dateStr = date.toISOString().split("T")[0];
+    const dateStr = formatLocal(date);
     try {
       if (isBlocked(date)) {
         const existing = blockedDatesRaw.find((b: any) => b.date === dateStr);
@@ -174,7 +179,7 @@ export default function ProviderCalendar() {
                   <span key={i} className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2.5 py-1 text-xs text-destructive">
                     {bd.toLocaleDateString(locale, { day: "numeric", month: "short" })}
                     <button onClick={async () => {
-                      const dateStr = bd.toISOString().split("T")[0];
+                      const dateStr = formatLocal(bd);
                       const existing = blockedDatesRaw.find((b: any) => b.date === dateStr);
                       if (existing) {
                         try {
