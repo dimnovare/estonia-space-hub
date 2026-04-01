@@ -4334,8 +4334,6 @@ const translations: Record<Language, Record<string, string>> = {
     "provider.listings.deleteLocationConfirm": "Удалить локацию? Все связанные единицы тоже будут удалены.",
     "provider.listings.locationDeleted": "Локация удалена",
     "provider.listings.deleteFailed": "Удаление не удалось",
-    "provider.listings.deleteUnitConfirm": "Удалить эту единицу?",
-    "toast.unitDeleted": "Единица удалена",
     "provider.listings.findCoords": "Найти",
     "provider.listings.coordsFound": "Координаты найдены!",
     "provider.listings.addressNotFound": "Адрес не найден",
