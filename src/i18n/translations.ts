@@ -2824,7 +2824,6 @@ const translations: Record<Language, Record<string, string>> = {
     "provider.listings.locationDeleted": "Location deleted",
     "provider.listings.deleteFailed": "Delete failed",
     "provider.listings.deleteUnitConfirm": "Delete this unit?",
-    "provider.listings.images": "Images",
     "toast.unitDeleted": "Unit deleted",
     "provider.listings.findCoords": "Find",
     "provider.listings.coordsFound": "Coordinates found!",
