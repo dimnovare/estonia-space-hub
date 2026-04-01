@@ -4030,6 +4030,7 @@ const translations: Record<Language, Record<string, string>> = {
     "location.noUnits": "Нет доступных единиц",
     "location.fullyBooked": "Полностью забронировано",
     "location.availableUnits": "свободных единиц",
+    "location.available": "доступно",
     "location.backToSearch": "Назад к поиску",
     "location.unitTypes": "Доступные типы единиц",
 
