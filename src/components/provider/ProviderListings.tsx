@@ -576,6 +576,14 @@ export default function ProviderListings() {
           locationId={unitDialogLocId}
         />
       )}
-    </div>
+
+      {/* Edit Unit Dialog */}
+      {editingUnitData && (
+        <EditUnitDialog
+          open={editUnitOpen}
+          onOpenChange={(v) => { setEditUnitOpen(v); if (!v) setEditingUnitData(null); }}
+          unitData={editingUnitData}
+        />
+      )}
   );
 }
