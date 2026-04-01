@@ -3192,7 +3192,7 @@ const translations: Record<Language, Record<string, string>> = {
     "provPage.step3.title": "Получайте заказы",
     "provPage.step3.desc": "Клиенты находят и бронируют ваши услуги.",
     "provPage.pricing.title": "Тарифы и цены",
-    "provPage.pricing.subtitle": "Попробуйте бесплатно 30 дней. Затем выберите подходящий план.",
+    "provPage.pricing.subtitle": "Попробуйте бесплатно 30 дней. Планы от €19/мес.",
     "provPage.tier.trial": "Пробный период",
     "provPage.tier.starter": "Starter",
     "provPage.tier.growth": "Growth",
