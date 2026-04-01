@@ -376,10 +376,11 @@ export const publicSettingsService = {
 
 // ─── Location Service ────────────────────────────────────────────────────────
 export const locationService = {
-  async getAll(params?: { city?: string; type?: string }): Promise<SupplierLocation[]> {
+  async getAll(params?: { city?: string; type?: string; supplierId?: string }): Promise<SupplierLocation[]> {
     const qs = new URLSearchParams();
     if (params?.city) qs.set("city", params.city);
     if (params?.type) qs.set("type", params.type);
+    if (params?.supplierId) qs.set("supplierId", params.supplierId);
     const query = qs.toString();
     return apiClient.get<SupplierLocation[]>(`/locations${query ? `?${query}` : ""}`);
   },
