@@ -68,6 +68,7 @@ class ApiClient {
             const retry = await fetch(`${API_BASE_URL}${endpoint}`, {
               method,
               headers: retryHeaders,
+              credentials: "include",
               body: body ? JSON.stringify(body) : undefined,
             });
             if (retry.ok) {
