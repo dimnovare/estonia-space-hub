@@ -1014,6 +1014,7 @@ const translations: Record<Language, Record<string, string>> = {
     "location.noUnits": "Hetkel pole vabu ühikuid",
     "location.fullyBooked": "Kõik broneeritud",
     "location.availableUnits": "vaba üksust",
+    "location.available": "saadaval",
     "location.backToSearch": "Tagasi otsingusse",
     "location.unitTypes": "Saadaval olevad ühikud",
 
