@@ -1,4 +1,4 @@
-import { List, Package, Eye, DollarSign, Inbox } from "lucide-react";
+import { List, Package, Eye, DollarSign, Inbox, AlertTriangle, MapPin } from "lucide-react";
 import { useLocations } from "@/hooks/queries";
 import { useOrders } from "@/hooks/useOrders";
 import { useBookings } from "@/hooks/useBookings";
@@ -56,8 +56,35 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
     );
   }
 
+  const fullyBookedLocations = locations.filter(loc => loc.fullyBooked);
+
   return (
     <div>
+      {fullyBookedLocations.length > 0 && (
+        <div className="mb-6 rounded-xl border border-warning/30 bg-warning/5 p-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                {fullyBookedLocations.length === 1
+                  ? t("provider.overview.oneLocationFull")
+                  : t("provider.overview.multipleLocationsFull").replace("{count}", String(fullyBookedLocations.length))}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t("provider.overview.fullLocationHint")}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {fullyBookedLocations.map(loc => (
+                  <span key={loc.id} className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning">
+                    <MapPin className="h-3 w-3" />
+                    {loc.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <h1 className="font-display text-2xl font-bold">{t("provider.overview.title")}</h1>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
