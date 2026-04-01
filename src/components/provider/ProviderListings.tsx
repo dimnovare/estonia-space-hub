@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useLocations, useCreateLocation, useUpdateLocation, useAddUnit } from "@/hooks/queries";
 import { ESTONIAN_CITIES } from "@/lib/constants";
-import { Loader2, MapPin, Warehouse, Truck, CarFront, Plus, Pencil, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { Loader2, MapPin, Warehouse, Truck, CarFront, Plus, Pencil, ChevronDown, ChevronUp, Trash2, AlertTriangle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import ListingExtrasManager from "./ListingExtrasManager";
 import ImageUploader from "@/components/admin/ImageUploader";
@@ -420,6 +420,16 @@ export default function ProviderListings() {
                 <span className="shrink-0 rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
                   {loc.unitCount} {t("location.units")}
                 </span>
+                {loc.fullyBooked ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2.5 py-0.5 text-[11px] font-medium text-destructive">
+                    <AlertTriangle className="h-3 w-3" />
+                    {t("provider.listings.fullyBooked")}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-0.5 text-[11px] font-medium text-success">
+                    {loc.availableUnits ?? loc.units?.length ?? 0} {t("location.available")}
+                  </span>
+                )}
               </div>
 
               {loc.units && loc.units.length > 0 ? (
@@ -451,6 +461,11 @@ export default function ProviderListings() {
                             </td>
                             <td className="py-2 pr-4 text-muted-foreground">
                               {unit.quantityTotal ?? 1}
+                              {loc.fullyBooked && (
+                                <span className="ml-1.5 text-[10px] text-destructive font-medium">
+                                  ({t("provider.listings.booked")})
+                                </span>
+                              )}
                             </td>
                             <td className="py-2 pr-4">
                               €{unit.priceFrom}
@@ -540,6 +555,18 @@ export default function ProviderListings() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {locations.length > 0 && (
+        <div className="mt-4 flex items-center gap-4 rounded-lg border border-border p-3 text-xs text-muted-foreground">
+          <span>{locations.length} {t("provider.listings.totalLocations")}</span>
+          <span>{locations.reduce((sum, l) => sum + (l.units?.length ?? 0), 0)} {t("provider.listings.totalUnits")}</span>
+          {locations.some(l => l.fullyBooked) && (
+            <span className="text-destructive font-medium">
+              {locations.filter(l => l.fullyBooked).length} {t("provider.listings.fullyBookedCount")}
+            </span>
+          )}
         </div>
       )}
 
