@@ -219,7 +219,9 @@ export default function AdminSettings() {
             <div className="grid gap-4 sm:grid-cols-3">
               {(["starter", "standard", "premium"] as const).map(tier => (
                 <div key={tier} className={`rounded-lg border p-4 ${tier === "starter" ? "border-accent/30 bg-accent/5" : "border-border bg-card"}`}>
-                  <p className="text-sm font-semibold text-foreground capitalize mb-3">{tier === "starter" ? t("admin.tierStarterFree") : tier === "standard" ? "Standard" : "Premium"}</p>
+                  <p className="text-sm font-semibold text-foreground capitalize mb-3">
+                    {tier === "starter" ? "Starter (€19)" : tier === "standard" ? "Growth (€49)" : "Business (€99)"}
+                  </p>
                   <div className="space-y-3">
                     <div>
                       <label className="text-[10px] font-medium text-muted-foreground">{t("admin.tierMonthlyFee")}</label>
@@ -232,6 +234,18 @@ export default function AdminSettings() {
                       <input type="number" min="1" className={inp}
                         value={settings[`tier.${tier}.maxLocations`]}
                         onChange={e => set(`tier.${tier}.maxLocations`, e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-medium text-muted-foreground">{t("admin.tierMaxUnits") || "Max active units"}</label>
+                      <input type="number" min="1" className={inp}
+                        value={settings[`tier.${tier}.maxActiveUnits`]}
+                        onChange={e => set(`tier.${tier}.maxActiveUnits`, e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-medium text-muted-foreground">{t("admin.tierMaxExtras") || "Max extras per unit"}</label>
+                      <input type="number" min="0" className={inp}
+                        value={settings[`tier.${tier}.maxExtras`]}
+                        onChange={e => set(`tier.${tier}.maxExtras`, e.target.value)} />
                       {tier === "premium" && (
                         <p className="mt-0.5 text-[10px] text-muted-foreground">{t("admin.tierUnlimited")}</p>
                       )}
