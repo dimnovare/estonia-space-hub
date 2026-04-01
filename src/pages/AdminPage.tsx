@@ -29,6 +29,11 @@ export default function AdminPage() {
   const setActiveTab = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("tab", id); return n; }, { replace: true });
   const { t } = useLanguage();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const { data: suppliers = [] } = useQuery({
+    queryKey: ["suppliers"],
+    queryFn: () => supplierService.getAll(),
+  });
+  const [filterSupplierId, setFilterSupplierId] = useState<string>("");
 
   const sidebarLinks = [
     { id: "dashboard", label: t("admin.dashboard"), icon: LayoutDashboard },
