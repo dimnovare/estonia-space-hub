@@ -71,7 +71,7 @@ function LocationDialog({
   const updateLoc = useUpdateLocation();
   const { user } = useAuth();
   const isEdit = !!locationId;
-
+  const [images, setImages] = useState<string[]>(defaultValues?.images || []);
   const form = useForm<LocationForm>({
     resolver: zodResolver(locationSchema),
     defaultValues: {
