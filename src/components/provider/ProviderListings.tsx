@@ -461,6 +461,25 @@ export default function ProviderListings() {
                                 {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                               </button>
                             </td>
+                            <td className="py-2">
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  if (!confirm(t("provider.listings.deleteUnitConfirm") || "Delete this unit?")) return;
+                                  try {
+                                    await apiClient.delete(`/locations/${loc.id}/units/${unit.id}`);
+                                    queryClient.invalidateQueries({ queryKey: ["locations"] });
+                                    toast.success(t("toast.unitDeleted") || "Unit deleted");
+                                  } catch (err: any) {
+                                    toast.error(err?.message || t("provider.listings.deleteFailed"));
+                                  }
+                                }}
+                                className="rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                                title={t("admin.delete")}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </td>
                           </tr>
                         );
                       })}
