@@ -543,7 +543,13 @@ export default function BookingPage() {
             <h3 className="text-sm font-semibold">{t("booking.yourBooking")}</h3>
             {listing && (
               <div className="mt-3 flex items-center gap-2">
-                <img src={listing.image} alt={listing?.title || "Listing image"} className="h-10 w-12 rounded object-cover" />
+                {listing.image && listing.image.length > 0 ? (
+                  <img src={listing.image} alt={listing?.title || "Listing image"} className="h-10 w-12 rounded object-cover" />
+                ) : (
+                  <div className="flex h-10 w-12 items-center justify-center rounded bg-secondary">
+                    <Warehouse className="h-4 w-4 text-muted-foreground/40" />
+                  </div>
+                )}
                 <div className="text-xs"><div className="font-medium">{listing.title}</div><div className="text-muted-foreground">{listing.city}</div></div>
               </div>
             )}

@@ -39,7 +39,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
   return (
     <Link to={detailPath} className="card-elevated group block overflow-hidden">
       <div className="relative aspect-[16/10] overflow-hidden">
-        {listing.image ? (
+        {listing.image && listing.image.length > 0 ? (
           <img
             src={listing.image}
             alt={`${listing.title} — ${listing.city}`}
