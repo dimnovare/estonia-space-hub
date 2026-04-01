@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, Zap, Hand, RefreshCw, Server, PlusCircle, Save, Loader2, Trash2 } from "lucide-react";
+import { Mail, Zap, Hand, RefreshCw, Server, PlusCircle, Save, Loader2, Trash2, Ban, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supplierService } from "@/services";
