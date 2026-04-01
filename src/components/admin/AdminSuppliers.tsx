@@ -243,6 +243,14 @@ export default function AdminSuppliers() {
             <div className="space-y-5">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-lg bg-secondary/50 p-3">
+                  <p className="text-xs text-muted-foreground">{t("admin.partnerName")}</p>
+                  <input className={inp} value={selected.name} onChange={(e) => setSelected({ ...selected, name: e.target.value })} />
+                </div>
+                <div className="rounded-lg bg-secondary/50 p-3">
+                  <p className="text-xs text-muted-foreground">{t("admin.registryCode")}</p>
+                  <input className={inp} value={selected.registryCode} onChange={(e) => setSelected({ ...selected, registryCode: e.target.value })} />
+                </div>
+                <div className="rounded-lg bg-secondary/50 p-3">
                   <p className="text-xs text-muted-foreground">{t("admin.contactPerson")}</p>
                   <input className={inp} value={selected.contactName} onChange={(e) => setSelected({ ...selected, contactName: e.target.value })} />
                 </div>
@@ -253,10 +261,6 @@ export default function AdminSuppliers() {
                 <div className="rounded-lg bg-secondary/50 p-3">
                   <p className="text-xs text-muted-foreground">{t("admin.phone")}</p>
                   <input className={inp} value={selected.contactPhone} onChange={(e) => setSelected({ ...selected, contactPhone: e.target.value })} />
-                </div>
-                <div className="rounded-lg bg-secondary/50 p-3">
-                  <p className="text-xs text-muted-foreground">{t("admin.registryCode")}</p>
-                  <p className="text-sm font-medium font-mono mt-1">{selected.registryCode}</p>
                 </div>
               </div>
 
