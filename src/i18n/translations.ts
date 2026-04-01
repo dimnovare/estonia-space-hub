@@ -3047,6 +3047,9 @@ const translations: Record<Language, Record<string, string>> = {
     "provPage.business.f5": "Unlimited extras",
     "provPage.business.f6": "Calendar sync (iCal)",
     "provPage.business.f7": "Social media feature",
+    "provPage.starter.name": "Starter",
+    "provPage.growth.name": "Growth",
+    "provPage.business.name": "Business",
   },
 
   ru: {
