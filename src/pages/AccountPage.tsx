@@ -396,14 +396,6 @@ function AccountMessages() {
   const [selectedBooking, setSelectedBooking] = useState<string | null>(null);
   const [newMsg, setNewMsg] = useState("");
 
-  // Auto-select the booking thread from notification click
-  useEffect(() => {
-    if (initialBookingId && bookings.length > 0 && !selectedBooking) {
-      const match = bookings.find(b => b.id === initialBookingId);
-      if (match) handleSelectBooking(match.id);
-    }
-  }, [initialBookingId, bookings, selectedBooking]);
-
   const { data: activeMessages = [], isLoading: msgsLoading } = useQuery({
     queryKey: ["messages", selectedBooking],
     queryFn: () => messageService.getByBookingId(selectedBooking!),
@@ -435,6 +427,14 @@ function AccountMessages() {
     setSelectedBooking(bid);
     markReadMutation.mutate(bid);
   };
+
+  // Auto-select the booking thread from notification click
+  useEffect(() => {
+    if (initialBookingId && bookings.length > 0 && !selectedBooking) {
+      const match = bookings.find(b => b.id === initialBookingId);
+      if (match) handleSelectBooking(match.id);
+    }
+  }, [initialBookingId, bookings, selectedBooking]);
 
   const sendMessage = () => {
     if (!newMsg.trim() || !selectedBooking) return;
