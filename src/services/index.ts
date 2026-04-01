@@ -189,8 +189,9 @@ export const listingService = {
 
 // ─── Order Service ──────────────────────────────────────────────────────────────
 export const orderService = {
-  async getAll(): Promise<Order[]> {
-    return apiClient.get<Order[]>("/orders");
+  async getAll(params?: { supplierId?: string }): Promise<Order[]> {
+    const qs = params?.supplierId ? `?supplierId=${params.supplierId}` : "";
+    return apiClient.get<Order[]>(`/orders${qs}`);
   },
   async getById(id: string): Promise<Order | undefined> {
     try { return await apiClient.get<Order>(`/orders/${id}`); } catch { return undefined; }
@@ -376,10 +377,11 @@ export const publicSettingsService = {
 
 // ─── Location Service ────────────────────────────────────────────────────────
 export const locationService = {
-  async getAll(params?: { city?: string; type?: string }): Promise<SupplierLocation[]> {
+  async getAll(params?: { city?: string; type?: string; supplierId?: string }): Promise<SupplierLocation[]> {
     const qs = new URLSearchParams();
     if (params?.city) qs.set("city", params.city);
     if (params?.type) qs.set("type", params.type);
+    if (params?.supplierId) qs.set("supplierId", params.supplierId);
     const query = qs.toString();
     return apiClient.get<SupplierLocation[]>(`/locations${query ? `?${query}` : ""}`);
   },

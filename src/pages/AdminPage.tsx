@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard, List, MessageSquare, Settings, Users, FileText,
   Package, Activity, ChevronDown, Plug, Route, MapPin, Banknote, Receipt
 } from "lucide-react";
+import { supplierService } from "@/services";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
 import AdminDashboard from "@/components/admin/AdminDashboard";
@@ -27,6 +29,11 @@ export default function AdminPage() {
   const setActiveTab = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("tab", id); return n; }, { replace: true });
   const { t } = useLanguage();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const { data: suppliers = [] } = useQuery({
+    queryKey: ["suppliers"],
+    queryFn: () => supplierService.getAll(),
+  });
+  const [filterSupplierId, setFilterSupplierId] = useState<string>("");
 
   const sidebarLinks = [
     { id: "dashboard", label: t("admin.dashboard"), icon: LayoutDashboard },
@@ -91,10 +98,31 @@ export default function AdminPage() {
             </>
           )}
         </div>
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <label className="text-sm font-medium text-muted-foreground">{t("admin.filterByPartner")}</label>
+          <select
+            value={filterSupplierId}
+            onChange={(e) => setFilterSupplierId(e.target.value)}
+            className="rounded-lg border border-border bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">{t("admin.allPartners")}</option>
+            {suppliers.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+          {filterSupplierId && (
+            <button
+              onClick={() => setFilterSupplierId("")}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              ✕ {t("admin.clearFilter")}
+            </button>
+          )}
+        </div>
         {activeTab === "dashboard" && <AdminDashboard />}
         
-        {activeTab === "locations" && <AdminLocations />}
-        {activeTab === "orders" && <AdminOrders />}
+        {activeTab === "locations" && <AdminLocations supplierId={filterSupplierId || undefined} />}
+        {activeTab === "orders" && <AdminOrders supplierId={filterSupplierId || undefined} />}
         {activeTab === "suppliers" && <AdminSuppliers />}
         {activeTab === "integrations" && <AdminIntegrations />}
         {activeTab === "routing" && <AdminRouting />}
