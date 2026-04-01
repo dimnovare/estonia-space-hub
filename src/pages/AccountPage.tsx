@@ -340,7 +340,7 @@ function AccountBookings() {
   const { t } = useLanguage();
   const statusConfig = useStatusConfig();
   const [filter, setFilter] = useState<"all" | BookingStatus>("all");
-  const { data: bookings = [], isLoading } = useBookings();
+  const { data: bookings = [], isLoading } = useBookings(true);
   const filtered = filter === "all" ? bookings : bookings.filter(b => b.status === filter);
 
   if (isLoading) return <SkeletonList count={4} />;
