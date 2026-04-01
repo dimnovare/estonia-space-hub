@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, Zap, Hand, RefreshCw, Server, PlusCircle, Save, Loader2, Trash2 } from "lucide-react";
+import { Mail, Zap, Hand, RefreshCw, Server, PlusCircle, Save, Loader2, Trash2, Ban, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supplierService } from "@/services";
@@ -91,12 +91,15 @@ export default function AdminSuppliers() {
   const handleSaveSelected = () => {
     if (!selected) return;
     const data: Record<string, unknown> = {
+      name: selected.name,
+      registryCode: selected.registryCode,
       contactName: selected.contactName,
       contactEmail: selected.contactEmail,
       contactPhone: selected.contactPhone,
       notes: selected.notes,
       partnerDiscountRate: selected.partnerDiscountRate,
       clientDiscountRate: selected.clientDiscountRate,
+      integrationType: selected.integrationType,
       tier: selected.tier,
       billingModel: selected.billingModel,
     };
@@ -240,6 +243,14 @@ export default function AdminSuppliers() {
             <div className="space-y-5">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-lg bg-secondary/50 p-3">
+                  <p className="text-xs text-muted-foreground">{t("admin.partnerName")}</p>
+                  <input className={inp} value={selected.name} onChange={(e) => setSelected({ ...selected, name: e.target.value })} />
+                </div>
+                <div className="rounded-lg bg-secondary/50 p-3">
+                  <p className="text-xs text-muted-foreground">{t("admin.registryCode")}</p>
+                  <input className={inp} value={selected.registryCode} onChange={(e) => setSelected({ ...selected, registryCode: e.target.value })} />
+                </div>
+                <div className="rounded-lg bg-secondary/50 p-3">
                   <p className="text-xs text-muted-foreground">{t("admin.contactPerson")}</p>
                   <input className={inp} value={selected.contactName} onChange={(e) => setSelected({ ...selected, contactName: e.target.value })} />
                 </div>
@@ -251,10 +262,6 @@ export default function AdminSuppliers() {
                   <p className="text-xs text-muted-foreground">{t("admin.phone")}</p>
                   <input className={inp} value={selected.contactPhone} onChange={(e) => setSelected({ ...selected, contactPhone: e.target.value })} />
                 </div>
-                <div className="rounded-lg bg-secondary/50 p-3">
-                  <p className="text-xs text-muted-foreground">{t("admin.registryCode")}</p>
-                  <p className="text-sm font-medium font-mono mt-1">{selected.registryCode}</p>
-                </div>
               </div>
 
               {/* Tier + Billing model */}
@@ -264,9 +271,9 @@ export default function AdminSuppliers() {
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">{t("admin.tier")}</label>
                     <select className={inp} value={(selected.tier ?? "starter").toLowerCase()} onChange={(e) => setSelected({ ...selected, tier: e.target.value as "starter" | "standard" | "premium" })}>
-                      <option value="starter">{t("admin.tierStarter")}</option>
-                      <option value="standard">{t("admin.tierStandard")}</option>
-                      <option value="premium">{t("admin.tierPremium")}</option>
+                      <option value="starter">Starter (€19/{t("provPage.tier.perMonth") || "mo"})</option>
+                      <option value="standard">Growth (€49/{t("provPage.tier.perMonth") || "mo"})</option>
+                      <option value="premium">Business (€99/{t("provPage.tier.perMonth") || "mo"})</option>
                     </select>
                   </div>
                   <div>
@@ -287,7 +294,14 @@ export default function AdminSuppliers() {
               <div className="rounded-xl border border-border p-4">
                 <h3 className="flex items-center gap-2 text-sm font-semibold"><Server className="h-4 w-4 text-accent" /> {t("admin.integrationSettings")}</h3>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2 text-sm">
-                  <div><p className="text-xs text-muted-foreground">{t("admin.type")}</p><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${INTEGRATION_TYPE_CONFIG[selected.integrationType].color}`}>{intIcon(selected.integrationType)} {INTEGRATION_TYPE_CONFIG[selected.integrationType].label}</span></div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">{t("admin.type")}</p>
+                    <select className={inp} value={selected.integrationType} onChange={(e) => setSelected({ ...selected, integrationType: e.target.value as any })}>
+                      <option value="manual">{t("integration.manual") || "Manual"}</option>
+                      <option value="email">{t("integration.email") || "Email"}</option>
+                      <option value="api">{t("integration.api") || "API"}</option>
+                    </select>
+                  </div>
                   <div><p className="text-xs text-muted-foreground">{t("admin.health")}</p><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${healthColor(selected.integrationHealth)}`}>{healthLabel(selected.integrationHealth)}</span></div>
                   {selected.apiEndpoint && (<div className="col-span-2"><p className="text-xs text-muted-foreground">{t("admin.apiEndpoint")}</p><p className="font-mono text-xs mt-0.5 rounded-md bg-secondary px-2 py-1">{selected.apiEndpoint}</p></div>)}
                 </div>
@@ -366,7 +380,13 @@ export default function AdminSuppliers() {
                   {updateMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                   {t("admin.save")}
                 </Button>
-                <Button variant="outline" size="sm" className="flex-1" onClick={() => toggleStatus(selected.id)}>{selected.isActive ? t("admin.block") : t("admin.activate")}</Button>
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => toggleStatus(selected.id)}>
+                  {selected.isActive ? (
+                    <><Ban className="mr-1 h-3.5 w-3.5" /> {t("admin.deactivate") || "Deactivate"}</>
+                  ) : (
+                    <><CheckCircle className="mr-1 h-3.5 w-3.5" /> {t("admin.activate")}</>
+                  )}
+                </Button>
                 <Button variant="outline" size="sm" className="flex-1 text-destructive hover:bg-destructive/10" onClick={async () => {
                   if (!confirm(t("admin.deletePartnerConfirm"))) return;
                   try {

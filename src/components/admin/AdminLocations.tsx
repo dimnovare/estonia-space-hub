@@ -195,7 +195,7 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
     <div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="font-display text-2xl font-bold">{t("admin.locations")}</h1>
-        <Button onClick={() => { setNewLoc({ ...emptyLoc, supplierId: suppliers[0]?.id ?? "" }); setAddLocOpen(true); }} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
+        <Button onClick={() => { setNewLoc({ ...emptyLoc, supplierId: supplierId ?? (suppliers[0]?.id ?? "") }); setAddLocOpen(true); }} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
           <PlusCircle className="mr-1 h-3.5 w-3.5" /> {t("admin.locations.add")}
         </Button>
       </div>

@@ -4,6 +4,7 @@ import { tokenStore } from "@/services/apiClient";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 
+
 interface ImageUploaderProps {
   images: string[];
   onChange: (images: string[]) => void;
@@ -89,7 +90,7 @@ export default function ImageUploader({ images, onChange, maxImages = 10 }: Imag
               ? <Loader2 className="h-5 w-5 animate-spin" />
               : <Upload className="h-5 w-5" />}
             <span className="text-[9px]">
-              {uploading ? "Laen üles..." : "Lisa pilt"}
+              {uploading ? (t("toast.uploading") || "Uploading...") : t("provider.listings.addImage")}
             </span>
           </button>
         )}

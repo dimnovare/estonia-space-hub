@@ -98,6 +98,7 @@ export default function AdminPage() {
             </>
           )}
         </div>
+        {["locations", "orders", "payouts", "rebates"].includes(activeTab) && (
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <label className="text-sm font-medium text-muted-foreground">{t("admin.filterByPartner")}</label>
           <select
@@ -119,6 +120,7 @@ export default function AdminPage() {
             </button>
           )}
         </div>
+        )}
         {activeTab === "dashboard" && <AdminDashboard />}
         
         {activeTab === "locations" && <AdminLocations supplierId={filterSupplierId || undefined} />}
@@ -130,8 +132,8 @@ export default function AdminPage() {
         {activeTab === "users" && <AdminUsers />}
         {activeTab === "content" && <AdminContent />}
         {activeTab === "audit" && <AdminAudit />}
-        {activeTab === "payouts" && <AdminPayouts />}
-        {activeTab === "rebates" && <AdminRebates />}
+        {activeTab === "payouts" && <AdminPayouts supplierId={filterSupplierId || undefined} />}
+        {activeTab === "rebates" && <AdminRebates supplierId={filterSupplierId || undefined} />}
         {activeTab === "settings" && <AdminSettings />}
       </main>
     </div>
