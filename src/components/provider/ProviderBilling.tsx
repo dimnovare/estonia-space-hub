@@ -132,6 +132,48 @@ export default function ProviderBilling() {
         </div>
       </div>
 
+      {/* Change plan */}
+      <div className="mt-6 rounded-xl border border-border p-5">
+        <h3 className="text-sm font-semibold">{t("provider.billing.changePlan")}</h3>
+        <p className="mt-1 text-xs text-muted-foreground">{t("provider.billing.changePlanDesc")}</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          {[
+            { tier: "Starter", fee: 19, units: 5, locations: 1 },
+            { tier: "Standard", fee: 49, units: 20, locations: 3 },
+            { tier: "Premium", fee: 99, units: 50, locations: 10 },
+          ].map(plan => {
+            const isCurrent = supplierData?.tier?.toLowerCase() === plan.tier.toLowerCase();
+            const displayName = plan.tier === "Standard" ? "Growth" : plan.tier === "Premium" ? "Business" : "Starter";
+            return (
+              <div key={plan.tier} className={`rounded-lg border p-4 text-center ${isCurrent ? "border-accent bg-accent/5" : "border-border"}`}>
+                <p className="text-sm font-semibold">{displayName}</p>
+                <p className="mt-1 font-display text-xl font-bold">€{plan.fee}<span className="text-sm font-normal text-muted-foreground">/{t("provider.billing.month")}</span></p>
+                <p className="mt-1 text-[11px] text-muted-foreground">{plan.units} {t("provider.listings.totalUnits")} · {plan.locations} {t("provider.listings.totalLocations")}</p>
+                {isCurrent ? (
+                  <span className="mt-3 inline-block rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
+                    {t("provider.billing.currentPlan")}
+                  </span>
+                ) : (
+                  <Button variant="outline" size="sm" className="mt-3" onClick={async () => {
+                    if (!confirm(`${t("provider.billing.confirmChange")} ${displayName}?`)) return;
+                    try {
+                      await apiClient.patch("/supplier/tier", { tier: plan.tier });
+                      queryClient.invalidateQueries({ queryKey: ["bank-details"] });
+                      queryClient.invalidateQueries({ queryKey: ["my-supplier-profile"] });
+                      toast.success(t("provider.billing.planChanged") || "Plan changed");
+                      window.location.reload();
+                    } catch (err: any) { toast.error(err?.message || t("toast.saveFailed")); }
+                  }}>
+                    {plan.fee > (supplierData?.monthlyFee || 0)
+                      ? t("provider.billing.upgrade")
+                      : t("provider.billing.downgrade")}
+                  </Button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
       {/* Payout / Rebate summary cards */}
       {isRebate ? (
         <div className="mt-6 rounded-xl border border-border p-4">
