@@ -391,8 +391,18 @@ function AccountMessages() {
   const { t } = useLanguage();
   const { data: bookings = [] } = useBookings();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const initialBookingId = searchParams.get("bookingId");
   const [selectedBooking, setSelectedBooking] = useState<string | null>(null);
   const [newMsg, setNewMsg] = useState("");
+
+  // Auto-select the booking thread from notification click
+  useEffect(() => {
+    if (initialBookingId && bookings.length > 0 && !selectedBooking) {
+      const match = bookings.find(b => b.id === initialBookingId);
+      if (match) handleSelectBooking(match.id);
+    }
+  }, [initialBookingId, bookings, selectedBooking]);
 
   const { data: activeMessages = [], isLoading: msgsLoading } = useQuery({
     queryKey: ["messages", selectedBooking],
