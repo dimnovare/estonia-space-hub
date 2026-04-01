@@ -380,7 +380,13 @@ export default function AdminSuppliers() {
                   {updateMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                   {t("admin.save")}
                 </Button>
-                <Button variant="outline" size="sm" className="flex-1" onClick={() => toggleStatus(selected.id)}>{selected.isActive ? t("admin.block") : t("admin.activate")}</Button>
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => toggleStatus(selected.id)}>
+                  {selected.isActive ? (
+                    <><Ban className="mr-1 h-3.5 w-3.5" /> {t("admin.deactivate") || "Deactivate"}</>
+                  ) : (
+                    <><CheckCircle className="mr-1 h-3.5 w-3.5" /> {t("admin.activate")}</>
+                  )}
+                </Button>
                 <Button variant="outline" size="sm" className="flex-1 text-destructive hover:bg-destructive/10" onClick={async () => {
                   if (!confirm(t("admin.deletePartnerConfirm"))) return;
                   try {

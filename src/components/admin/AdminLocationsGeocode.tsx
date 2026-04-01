@@ -54,7 +54,7 @@ export default function GeocodeLookup({ address, lat, lng, onCoordsChange }: Pro
       </div>
       {(lat || lng) && (
         <p className="text-xs text-muted-foreground">
-          Koordinaadid: {lat}, {lng}
+          {t("provider.listings.coordinates")}: {lat}, {lng}
         </p>
       )}
       {!showManual ? (

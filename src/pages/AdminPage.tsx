@@ -132,8 +132,8 @@ export default function AdminPage() {
         {activeTab === "users" && <AdminUsers />}
         {activeTab === "content" && <AdminContent />}
         {activeTab === "audit" && <AdminAudit />}
-        {activeTab === "payouts" && <AdminPayouts />}
-        {activeTab === "rebates" && <AdminRebates />}
+        {activeTab === "payouts" && <AdminPayouts supplierId={filterSupplierId || undefined} />}
+        {activeTab === "rebates" && <AdminRebates supplierId={filterSupplierId || undefined} />}
         {activeTab === "settings" && <AdminSettings />}
       </main>
     </div>
