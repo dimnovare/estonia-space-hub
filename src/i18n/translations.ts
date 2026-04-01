@@ -126,7 +126,7 @@ const translations: Record<Language, Record<string, string>> = {
     "provPage.step3.title": "Saa tellimusi",
     "provPage.step3.desc": "Kliendid leiavad ja broneerivad sinu teenuseid.",
     "provPage.pricing.title": "Paketid ja hinnad",
-    "provPage.pricing.subtitle": "Proovige tasuta 30 päeva. Seejärel valige sobiv pakett.",
+    "provPage.pricing.subtitle": "Proovi tasuta 30 päeva. Paketid alates €19/kuus.",
     "provPage.tier.trial": "Prooviversioon",
     "provPage.tier.starter": "Starter",
     "provPage.tier.growth": "Growth",
