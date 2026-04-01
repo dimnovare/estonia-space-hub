@@ -49,7 +49,7 @@ export default function GeocodeLookup({ address, lat, lng, onCoordsChange }: Pro
         <div className="flex-1" />
         <Button type="button" variant="outline" size="sm" onClick={geocode} disabled={loading || !address.trim()} className="shrink-0">
           {loading ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <MapPin className="mr-1 h-3.5 w-3.5" />}
-          Leia koordinaadid
+          {t("geocode.findCoordinates")}
         </Button>
       </div>
       {(lat || lng) && (
