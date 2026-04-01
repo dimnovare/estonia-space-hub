@@ -36,6 +36,7 @@ class ApiClient {
       response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method,
         headers,
+        credentials: "include",
         body: body ? JSON.stringify(body) : undefined,
       });
     } catch {
