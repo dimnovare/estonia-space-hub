@@ -179,7 +179,7 @@ export default function ProviderCalendar() {
                   <span key={i} className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2.5 py-1 text-xs text-destructive">
                     {bd.toLocaleDateString(locale, { day: "numeric", month: "short" })}
                     <button onClick={async () => {
-                      const dateStr = bd.toISOString().split("T")[0];
+                      const dateStr = formatLocal(bd);
                       const existing = blockedDatesRaw.find((b: any) => b.date === dateStr);
                       if (existing) {
                         try {
