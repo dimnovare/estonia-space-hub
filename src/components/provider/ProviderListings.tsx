@@ -432,7 +432,6 @@ export default function ProviderListings() {
                         <th className="pb-2 pr-4 font-medium">{t("admin.locations.quantity")}</th>
                         <th className="pb-2 pr-4 font-medium">{t("listing.price")}</th>
                         <th className="pb-2 font-medium" />
-                        <th className="pb-2 font-medium" />
                       </tr>
                     </thead>
                     <tbody>
