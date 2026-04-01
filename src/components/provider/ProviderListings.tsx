@@ -6,6 +6,7 @@ import { ESTONIAN_CITIES } from "@/lib/constants";
 import { Loader2, MapPin, Warehouse, Truck, CarFront, Plus, Pencil, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import ListingExtrasManager from "./ListingExtrasManager";
+import ImageUploader from "@/components/admin/ImageUploader";
 import type { SupplierLocation } from "@/services/types";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
