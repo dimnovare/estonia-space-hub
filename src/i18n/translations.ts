@@ -2808,6 +2808,8 @@ const translations: Record<Language, Record<string, string>> = {
     "admin.tierMaxLocations": "Max locations",
     "admin.tierUnlimited": "999 = unlimited",
     "admin.tierStarterFree": "Starter (free)",
+    "admin.tierMaxUnits": "Max active units",
+    "admin.tierMaxExtras": "Max extras per unit",
     "admin.extrasPricingTitle": "Extras pricing",
     "admin.extrasPricingDesc": "Extras pricing works the same as base pricing.",
     "admin.pricingOverrideHint": "Per-partner overrides are configured under Partners → Edit.",
