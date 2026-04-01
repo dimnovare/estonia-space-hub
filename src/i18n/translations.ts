@@ -1341,7 +1341,6 @@ const translations: Record<Language, Record<string, string>> = {
     "provider.listings.locationDeleted": "Asukoht kustutatud",
     "provider.listings.deleteFailed": "Kustutamine ebaõnnestus",
     "provider.listings.deleteUnitConfirm": "Kustuta see üksus?",
-    "provider.listings.images": "Pildid",
     "toast.unitDeleted": "Üksus kustutatud",
     "provider.listings.findCoords": "Leia",
     "provider.listings.coordsFound": "Koordinaadid leitud!",
