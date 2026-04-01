@@ -4306,7 +4306,6 @@ const translations: Record<Language, Record<string, string>> = {
     "provider.listings.locationDeleted": "Локация удалена",
     "provider.listings.deleteFailed": "Удаление не удалось",
     "provider.listings.deleteUnitConfirm": "Удалить эту единицу?",
-    "provider.listings.images": "Изображения",
     "toast.unitDeleted": "Единица удалена",
     "provider.listings.findCoords": "Найти",
     "provider.listings.coordsFound": "Координаты найдены!",
