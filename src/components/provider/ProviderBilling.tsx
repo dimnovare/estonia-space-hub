@@ -173,6 +173,7 @@ export default function ProviderBilling() {
             );
           })}
         </div>
+      </div>
 
       {/* Payout / Rebate summary cards */}
       {isRebate ? (
