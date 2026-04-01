@@ -319,10 +319,10 @@ export interface BankDetails {
 
 export const bankService = {
   async getBankDetails(): Promise<BankDetails> {
-    return apiClient.get<BankDetails>("/admin/my-bank-details");
+    return apiClient.get<BankDetails>("/provider/bank-details");
   },
   async updateBankDetails(data: BankDetails): Promise<void> {
-    await apiClient.patch("/admin/my-bank-details", data);
+    await apiClient.patch("/provider/bank-details", data);
   },
 };
 
