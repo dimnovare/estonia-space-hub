@@ -24,7 +24,7 @@ interface PayoutSummary {
   totalMargin: number;
 }
 
-export default function AdminPayouts() {
+export default function AdminPayouts({ supplierId }: { supplierId?: string }) {
   const { t, language } = useLanguage();
   const locale = localeMap[language] || "en-GB";
   const [payouts, setPayouts] = useState<Payout[]>([]);

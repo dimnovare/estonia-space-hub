@@ -21,7 +21,7 @@ const statusMap: Record<string, { labelKey: string; label: string; className: st
   overdue: { labelKey: "rebate.overdue", label: "Overdue", className: "bg-destructive/10 text-destructive" },
 };
 
-export default function AdminRebates() {
+export default function AdminRebates({ supplierId }: { supplierId?: string }) {
   const { t } = useLanguage();
   const qc = useQueryClient();
   const [period, setPeriod] = useState(getPrevMonth);
