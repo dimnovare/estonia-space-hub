@@ -17,23 +17,34 @@ import { usePricingConfig } from "@/hooks/queries";
 import { fillPricing } from "@/lib/pricingPlaceholders";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const getTrialFeatures = (t: (k: string) => string) => [
+  t("provPage.trial.f1"),
+  t("provPage.trial.f2"),
+  t("provPage.trial.f3"),
+];
 const getStarterFeatures = (t: (k: string) => string) => [
   t("provPage.starter.f1"),
   t("provPage.starter.f2"),
   t("provPage.starter.f3"),
+  t("provPage.starter.f4"),
+  t("provPage.starter.f5"),
 ];
-const getStandardFeatures = (t: (k: string) => string) => [
-  t("provPage.standard.f1"),
-  t("provPage.standard.f2"),
-  t("provPage.standard.f3"),
-  t("provPage.standard.f4"),
+const getGrowthFeatures = (t: (k: string) => string) => [
+  t("provPage.growth.f1"),
+  t("provPage.growth.f2"),
+  t("provPage.growth.f3"),
+  t("provPage.growth.f4"),
+  t("provPage.growth.f5"),
+  t("provPage.growth.f6"),
 ];
-const getPremiumFeatures = (t: (k: string) => string) => [
-  t("provPage.premium.f1"),
-  t("provPage.premium.f2"),
-  t("provPage.premium.f3"),
-  t("provPage.premium.f4"),
-  t("provPage.premium.f5"),
+const getBusinessFeatures = (t: (k: string) => string) => [
+  t("provPage.business.f1"),
+  t("provPage.business.f2"),
+  t("provPage.business.f3"),
+  t("provPage.business.f4"),
+  t("provPage.business.f5"),
+  t("provPage.business.f6"),
+  t("provPage.business.f7"),
 ];
 
 export default function ProviderPage() {
@@ -41,32 +52,36 @@ export default function ProviderPage() {
   const { data: config, isLoading: configLoading } = usePricingConfig();
   const fp = (text: string) => fillPricing(text, config);
 
-  const tiers = config ? [
+  const tiers = [
+    {
+      key: "trial",
+      name: t("provPage.tier.trial"),
+      badge: t("provPage.tier.free"),
+      highlight: true,
+      features: getTrialFeatures(t),
+    },
     {
       key: "starter",
       name: t("provPage.tier.starter"),
-      badge: "Tasuta",
-      fee: config.tiers.starter.monthlyFee,
-      highlight: true,
+      badge: `€19/${t("provPage.tier.perMonth")}`,
+      highlight: false,
       features: getStarterFeatures(t),
     },
     {
-      key: "standard",
-      name: t("provPage.tier.standard"),
-      badge: `€${config.tiers.standard.monthlyFee}/${t("provPage.tier.perMonth")}`,
-      fee: config.tiers.standard.monthlyFee,
+      key: "growth",
+      name: t("provPage.tier.growth"),
+      badge: `€49/${t("provPage.tier.perMonth")}`,
       highlight: false,
-      features: getStandardFeatures(t),
+      features: getGrowthFeatures(t),
     },
     {
-      key: "premium",
-      name: t("provPage.tier.premium"),
-      badge: `€${config.tiers.premium.monthlyFee}/${t("provPage.tier.perMonth")}`,
-      fee: config.tiers.premium.monthlyFee,
+      key: "business",
+      name: t("provPage.tier.business"),
+      badge: `€99/${t("provPage.tier.perMonth")}`,
       highlight: false,
-      features: getPremiumFeatures(t),
+      features: getBusinessFeatures(t),
     },
-  ] : [];
+  ];
 
   const benefits = [
     { icon: Users, titleKey: "provPage.benefit1.title", descKey: "provPage.benefit1.desc" },
