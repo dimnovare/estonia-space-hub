@@ -189,12 +189,19 @@ export default function ProviderPage() {
         <p className="mx-auto mt-3 max-w-xl text-center text-sm text-muted-foreground">
           {t("provPage.pricing.subtitle")}
         </p>
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {configLoading ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-80 rounded-2xl" />
-            ))
-          ) : tiers.map((tier) => (
+
+        {/* Trial CTA */}
+        <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-accent/30 bg-accent/5 px-5 py-3 text-center">
+          <p className="text-sm font-medium text-accent">{t("provPage.trialCta")}</p>
+        </div>
+
+        {/* Margin note */}
+        <p className="mx-auto mt-4 max-w-xl text-center text-sm font-medium text-foreground">
+          {t("provPage.marginNote")}
+        </p>
+
+        <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {tiers.map((tier) => (
             <div
               key={tier.key}
               className={`relative overflow-hidden rounded-2xl border p-6 ${
@@ -229,16 +236,12 @@ export default function ProviderPage() {
                       : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                   }`}
                 >
-                  {t("provPage.tier.choosePlan")}
+                  {tier.highlight ? t("provPage.tier.startTrial") : t("provPage.tier.choosePlan")}
                 </Button>
               </Link>
             </div>
           ))}
         </div>
-        <p className="mx-auto mt-6 max-w-lg text-center text-sm text-muted-foreground">
-          Kliendi soodustus sõltub teie partnerlepingust.
-          Mida parem lepinguhind, seda atraktiivsem teie kuulutus klientidele.
-        </p>
       </section>
 
       {/* ── FAQ ── */}
