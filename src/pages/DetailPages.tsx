@@ -88,6 +88,7 @@ export function WarehouseDetail() {
   const fp = (text: string) => fillPricing(text, pricingConfig);
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
   const { data: listing, isLoading } = useListing(id);
+  const { data: apiExtras = [] } = useListingExtras(listing?.id || "");
 
   useEffect(() => {
     if (listing) trackEvent("listing_view", { listing_id: listing.id, type: listing.type, city: listing.city || "" });
@@ -96,8 +97,6 @@ export function WarehouseDetail() {
   if (isLoading) return <LoadingDetail />;
   if (!listing || listing.type !== "warehouse") return <NotFoundDetail />;
   const wListing = listing as WarehouseListing;
-
-  const { data: apiExtras = [] } = useListingExtras(wListing.id);
   const extraOptions = apiExtras.map((e: any) => ({
     id: e.key,
     label: e.label,
