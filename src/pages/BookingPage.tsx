@@ -600,8 +600,9 @@ export default function BookingPage() {
               </div>
             )}
             <div className="mt-4 space-y-1 text-xs text-muted-foreground">
-              {detailsForm.watch("date") && <p>{t("booking.date")}: {detailsForm.watch("date")}</p>}
-              <p>{t("booking.period")}: {detailsForm.watch("duration")}</p>
+              {detailsForm.watch("startDate") && <p>{t("booking.startDate")}: {detailsForm.watch("startDate")}</p>}
+              {detailsForm.watch("endDate") && <p>{t("booking.endDate")}: {detailsForm.watch("endDate")}</p>}
+              {detailsForm.watch("startDate") && detailsForm.watch("endDate") && <p>{t("booking.duration")}: {formatDuration(detailsForm.watch("startDate"), detailsForm.watch("endDate"), t)}</p>}
               {selectedExtras.length > 0 && <p>{t("booking.extras")}: {selectedExtras.length}</p>}
             </div>
             {listing && (
