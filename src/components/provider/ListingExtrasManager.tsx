@@ -105,7 +105,7 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
                 <th className="pb-2 pr-3 font-medium">{t("provider.extras.label")}</th>
                 <th className="pb-2 pr-3 font-medium">{t("provider.extras.yourPrice")}</th>
                 <th className="pb-2 pr-3 font-medium">{t("provider.extras.customerSees")}</th>
-                <th className="pb-2 pr-3 font-medium">Allahindlus</th>
+                <th className="pb-2 pr-3 font-medium">{t("provider.extras.discountCol")}</th>
                 <th className="pb-2 pr-3 font-medium">{t("provider.extras.active")}</th>
                 <th className="pb-2 font-medium" />
               </tr>
