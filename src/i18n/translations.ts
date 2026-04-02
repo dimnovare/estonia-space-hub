@@ -2661,7 +2661,6 @@ const translations: Record<Language, Record<string, string>> = {
     "admin.resetTrialConfirm": "Reset 30-day trial for this partner?",
     "admin.trialReset": "Trial reset — 30 days from now",
     "admin.trialEnds": "Trial ends",
-    "admin.lastTested": "Last tested",
     "admin.locations.type": "Type",
     "admin.locations.warehouse": "Storage",
     "admin.locations.moving": "Moving",
