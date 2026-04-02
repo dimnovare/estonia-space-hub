@@ -4121,6 +4121,7 @@ const translations: Record<Language, Record<string, string>> = {
     "geocode.failed": "Ошибка геокодирования.",
     "geocode.found": "Координаты найдены!",
     "geocode.findCoordinates": "Найти координаты",
+    "geocode.editManually": "Изменить вручную",
     "toast.uploading": "Загрузка...",
     "admin.deactivate": "Деактивировать",
     "toast.messageFailed": "Ошибка отправки сообщения",
