@@ -143,9 +143,9 @@ export default function BookingPage() {
     createBooking.mutateAsync({
       idempotencyKey,
       listingId: listingId!,
-      startDate: detailsForm.getValues("date"),
-      endDate: computeEndDate(detailsForm.getValues("date"), detailsForm.getValues("duration")),
-      duration: detailsForm.getValues("duration"),
+      startDate: detailsForm.getValues("startDate"),
+      endDate: detailsForm.getValues("endDate"),
+      duration: formatDuration(detailsForm.getValues("startDate"), detailsForm.getValues("endDate"), t),
       extras: selectedExtras,
       contactName: contactForm.getValues("name"),
       contactEmail: contactForm.getValues("email"),
