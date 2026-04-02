@@ -815,9 +815,11 @@ function DataPrivacySection() {
     setExporting(true);
     try {
       const baseUrl = import.meta.env.VITE_API_URL || "";
-      const token = (apiClient as any).accessToken;
       const res = await fetch(`${baseUrl}/auth/account/export`, {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
+        headers: { 
+          Authorization: `Bearer ${tokenStore.getAccess() ?? ""}`,
+        },
       });
       if (!res.ok) throw new Error(await res.text());
       const blob = await res.blob();
