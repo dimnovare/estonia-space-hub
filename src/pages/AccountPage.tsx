@@ -966,7 +966,7 @@ function useGenerateInvoicePdf() {
         <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
       </tr>
     </tbody>
-    <tr class="total-row"><td>Kokku</td><td>&euro;${inv.amount}</td><td></td></tr>
+    <tr class="total-row"><td>${t("booking.total")}</td><td>&euro;${inv.amount}</td><td></td></tr>
   </table>
   <div class="footer">
     <p>Ruumly OÜ &middot; ruumly.eu &middot; info@ruumly.eu</p>
