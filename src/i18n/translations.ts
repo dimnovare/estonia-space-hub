@@ -1097,7 +1097,7 @@ const translations: Record<Language, Record<string, string>> = {
     "admin.resetTrialConfirm": "Lähtestada 30-päevane prooviperiood?",
     "admin.trialReset": "Prooviperiood lähtestatud",
     "admin.trialEnds": "Prooviperiood lõpeb",
-    "admin.lastTested": "Testitud",
+    
     "admin.locations.type": "Tüüp",
     "admin.locations.warehouse": "Laopind",
     "admin.locations.moving": "Kolimine",
