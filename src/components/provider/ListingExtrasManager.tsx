@@ -210,7 +210,7 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
             )}
             {showCustomerPreview && newNoDiscount && (
               <p className="mt-1 text-[11px] text-muted-foreground">
-                {t("provider.extras.customerWillSee")}: €{parsedNewPrice} (allahindlust ei rakendata)
+                {t("provider.extras.customerWillSee")}: €{parsedNewPrice} ({t("provider.extras.noDiscountApplied")})
               </p>
             )}
           </div>
