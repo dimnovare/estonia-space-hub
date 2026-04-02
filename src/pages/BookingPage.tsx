@@ -331,27 +331,40 @@ export default function BookingPage() {
                     </div>
                   </div>
                 )}
-                <div>
-                  <label className="mb-1 block text-sm font-medium">{t("booking.date")}</label>
-                  <input type="date" {...detailsForm.register("date")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-                  {detailsForm.formState.errors.date && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.date.message}</p>}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium">{t("booking.startDate")}</label>
+                    <input type="date" {...detailsForm.register("startDate")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    {detailsForm.formState.errors.startDate && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.startDate.message}</p>}
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium">{t("booking.endDate")}</label>
+                    <input type="date" {...detailsForm.register("endDate")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    {detailsForm.formState.errors.endDate && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.endDate.message}</p>}
+                  </div>
                 </div>
-                <div>
-                  <label className="mb-1 block text-sm font-medium">{t("booking.period")}</label>
-                  <select {...detailsForm.register("duration")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent">
-                    {[
-                      { value: "1 päev", label: t("booking.dur.1day") },
-                      { value: "1 nädal", label: t("booking.dur.1week") },
-                      { value: "1 kuu", label: t("booking.dur.1month") },
-                      { value: "3 kuud", label: t("booking.dur.3months") },
-                      { value: "6 kuud", label: t("booking.dur.6months") },
-                      { value: "12 kuud", label: t("booking.dur.12months") },
-                    ].map((d) => (
-                      <option key={d.value} value={d.value}>{d.label}</option>
-                    ))}
-                  </select>
-                  {detailsForm.formState.errors.duration && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.duration.message}</p>}
-                </div>
+                {detailsForm.watch("startDate") && detailsForm.watch("endDate") && new Date(detailsForm.watch("endDate")) > new Date(detailsForm.watch("startDate")) && (
+                  <div className="rounded-lg border border-border bg-secondary/50 p-3 space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{t("booking.duration")}</span>
+                      <span className="font-medium">{formatDuration(detailsForm.watch("startDate"), detailsForm.watch("endDate"), t)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{t("booking.estimatedPrice")}</span>
+                      <span className="font-semibold text-accent">
+                        €{calculateEstimatedPrice(
+                          listing?.priceFrom || 0,
+                          listing?.priceUnit || "/month",
+                          detailsForm.watch("startDate"),
+                          detailsForm.watch("endDate")
+                        ).toFixed(2)}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      {t("booking.priceNote")} {listing?.priceUnit?.replace("€", "").replace("/", "/ ") || "/ month"}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Extras section — only shown if listing has extras */}
