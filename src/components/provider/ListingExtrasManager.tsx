@@ -188,7 +188,7 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
         <div className="flex items-end gap-2">
           <div className="flex-1">
             <label className="mb-1 block text-[11px] text-muted-foreground">
-              Teie tavahind (otse klientidele)
+              {t("provider.extras.yourPublicPrice")}
             </label>
             <Input
               type="number"
