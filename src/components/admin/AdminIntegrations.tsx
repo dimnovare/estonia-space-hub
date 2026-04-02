@@ -81,7 +81,7 @@ export default function AdminIntegrations() {
               </div>
             </div>
             {s.lastTestedAt && (
-              <p className="mt-2 text-[10px] text-muted-foreground">Testitud: {s.lastTestedAt}</p>
+              <p className="mt-2 text-[10px] text-muted-foreground">{t("admin.lastTested")}: {s.lastTestedAt}</p>
             )}
           </div>
         ))}

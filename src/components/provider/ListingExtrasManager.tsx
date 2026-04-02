@@ -222,11 +222,11 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
                 className="mt-0.5"
               />
               <div>
-                <span className="text-xs font-medium">Sellel teenusel ei ole partnerihinda</span>
+                <span className="text-xs font-medium">{t("provider.extras.noPartnerPrice")}</span>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
                   {newNoDiscount
-                    ? "Allahindlust ei rakendata. Klient maksab teie täishinna. Saate kogu summa."
-                    : "Ruumly rakendab teie partneri allahindlust. Klient näeb soodsamat hinda."}
+                    ? t("provider.extras.noDiscountExplained")
+                    : t("provider.extras.discountApplied")}
                 </p>
               </div>
             </label>

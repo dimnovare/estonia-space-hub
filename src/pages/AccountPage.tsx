@@ -1035,11 +1035,11 @@ function AccountBilling() {
             <table className="w-full text-sm">
               <thead className="border-b border-border bg-secondary/50">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Arve nr</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Kirjeldus</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Summa</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Staatus</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Kuupäev</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("billing.invoiceNr")}</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("billing.description")}</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("billing.amount")}</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("billing.status")}</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("billing.date")}</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground"></th>
                 </tr>
               </thead>
