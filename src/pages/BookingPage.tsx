@@ -104,7 +104,7 @@ export default function BookingPage() {
             - (pricingConfig as any).ruumlyMinMarginRate)
         : 5);
 
-  // computeEndDate imported from @/lib/dateUtils
+
 
   const publicPrice = listing ? listing.priceFrom : 0;
   const ourPrice = listing
