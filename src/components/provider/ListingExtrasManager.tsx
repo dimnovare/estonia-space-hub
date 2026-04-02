@@ -203,7 +203,7 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
                 {t("provider.extras.customerWillSee")}: €{calcCustomerPrice(parsedNewPrice)}
                 {customerDiscount > 0 && (
                   <span className="ml-1 text-primary">
-                    ({customerDiscount}% soodustus vs teie hind)
+                    ({customerDiscount}% {t("provider.extras.discountVsYourPrice")})
                   </span>
                 )}
               </p>
