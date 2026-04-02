@@ -6,19 +6,43 @@ import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, Cr
 import { Button } from "@/components/ui/button";
 import { useListing, useCreateBooking, useSuppliers, usePricingConfig, useListingExtras } from "@/hooks/queries";
 import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
-import { computeEndDate } from "@/lib/dateUtils";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { SEO } from "@/components/SEO";
 import { paymentService } from "@/services";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { bookingDetailsSchema, bookingContactSchema, type BookingDetailsForm, type BookingContactForm } from "@/lib/schemas";
+import { bookingContactSchema, type BookingContactForm } from "@/lib/schemas";
 import { tokenStore } from "@/services/apiClient";
 import BookingInlineAuth from "@/components/BookingInlineAuth";
 import { trackEvent } from "@/lib/analytics";
+import { z } from "zod";
 
 type SubmitPhase = "submitting" | "sending" | "waiting" | "done";
+
+function formatDuration(start: string, end: string, t: (k: string) => string): string {
+  const s = new Date(start);
+  const e = new Date(end);
+  const days = Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24));
+  if (days <= 0) return "—";
+  if (days === 1) return `1 ${t("booking.day")}`;
+  if (days < 7) return `${days} ${t("booking.days")}`;
+  if (days === 7) return `1 ${t("booking.week")}`;
+  if (days < 30) return `${days} ${t("booking.days")}`;
+  const months = Math.floor(days / 30);
+  const remainDays = days % 30;
+  if (remainDays === 0) return `${months} ${months === 1 ? t("booking.month") : t("booking.months")}`;
+  return `${months} ${months === 1 ? t("booking.month") : t("booking.months")}, ${remainDays} ${t("booking.days")}`;
+}
+
+function calculateEstimatedPrice(priceFrom: number, priceUnit: string, start: string, end: string): number {
+  const days = Math.max(1, Math.round((new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24)));
+  const unit = (priceUnit || "").toLowerCase().replace("€", "").trim().replace(/^\//, "");
+  if (unit.includes("day") || unit.includes("päev")) return priceFrom * days;
+  if (unit.includes("week") || unit.includes("nädal")) return Math.round(priceFrom * days / 7 * 100) / 100;
+  if (unit.includes("time") || unit.includes("kord")) return priceFrom;
+  return Math.round(priceFrom * days / 30 * 100) / 100;
+}
 
 export default function BookingPage() {
   const [params] = useSearchParams();
@@ -52,9 +76,17 @@ export default function BookingPage() {
   const [showVerifyBanner, setShowVerifyBanner] = useState(false);
   const [resendSent, setResendSent] = useState(false);
 
-  const detailsForm = useForm<BookingDetailsForm>({
-    resolver: zodResolver(bookingDetailsSchema),
-    defaultValues: { date: "", duration: "1 kuu" },
+  const detailsForm = useForm<{ startDate: string; endDate: string }>({
+    resolver: zodResolver(z.object({
+      startDate: z.string().min(1, t("booking.startDateRequired") || "Start date required")
+        .regex(/^\d{4}-\d{2}-\d{2}$/, "yyyy-MM-dd"),
+      endDate: z.string().min(1, t("booking.endDateRequired") || "End date required")
+        .regex(/^\d{4}-\d{2}-\d{2}$/, "yyyy-MM-dd"),
+    }).refine(data => {
+      if (!data.startDate || !data.endDate) return true;
+      return new Date(data.endDate) > new Date(data.startDate);
+    }, { message: t("booking.endAfterStart") || "End date must be after start date", path: ["endDate"] })),
+    defaultValues: { startDate: "", endDate: "" },
   });
 
   const contactForm = useForm<BookingContactForm>({
@@ -72,7 +104,7 @@ export default function BookingPage() {
             - (pricingConfig as any).ruumlyMinMarginRate)
         : 5);
 
-  // computeEndDate imported from @/lib/dateUtils
+
 
   const publicPrice = listing ? listing.priceFrom : 0;
   const ourPrice = listing
@@ -111,9 +143,9 @@ export default function BookingPage() {
     createBooking.mutateAsync({
       idempotencyKey,
       listingId: listingId!,
-      startDate: detailsForm.getValues("date"),
-      endDate: computeEndDate(detailsForm.getValues("date"), detailsForm.getValues("duration")),
-      duration: detailsForm.getValues("duration"),
+      startDate: detailsForm.getValues("startDate"),
+      endDate: detailsForm.getValues("endDate"),
+      duration: formatDuration(detailsForm.getValues("startDate"), detailsForm.getValues("endDate"), t),
       extras: selectedExtras,
       contactName: contactForm.getValues("name"),
       contactEmail: contactForm.getValues("email"),
@@ -299,27 +331,40 @@ export default function BookingPage() {
                     </div>
                   </div>
                 )}
-                <div>
-                  <label className="mb-1 block text-sm font-medium">{t("booking.date")}</label>
-                  <input type="date" {...detailsForm.register("date")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-                  {detailsForm.formState.errors.date && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.date.message}</p>}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium">{t("booking.startDate")}</label>
+                    <input type="date" {...detailsForm.register("startDate")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    {detailsForm.formState.errors.startDate && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.startDate.message}</p>}
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium">{t("booking.endDate")}</label>
+                    <input type="date" {...detailsForm.register("endDate")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    {detailsForm.formState.errors.endDate && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.endDate.message}</p>}
+                  </div>
                 </div>
-                <div>
-                  <label className="mb-1 block text-sm font-medium">{t("booking.period")}</label>
-                  <select {...detailsForm.register("duration")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent">
-                    {[
-                      { value: "1 päev", label: t("booking.dur.1day") },
-                      { value: "1 nädal", label: t("booking.dur.1week") },
-                      { value: "1 kuu", label: t("booking.dur.1month") },
-                      { value: "3 kuud", label: t("booking.dur.3months") },
-                      { value: "6 kuud", label: t("booking.dur.6months") },
-                      { value: "12 kuud", label: t("booking.dur.12months") },
-                    ].map((d) => (
-                      <option key={d.value} value={d.value}>{d.label}</option>
-                    ))}
-                  </select>
-                  {detailsForm.formState.errors.duration && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.duration.message}</p>}
-                </div>
+                {detailsForm.watch("startDate") && detailsForm.watch("endDate") && new Date(detailsForm.watch("endDate")) > new Date(detailsForm.watch("startDate")) && (
+                  <div className="rounded-lg border border-border bg-secondary/50 p-3 space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{t("booking.duration")}</span>
+                      <span className="font-medium">{formatDuration(detailsForm.watch("startDate"), detailsForm.watch("endDate"), t)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{t("booking.estimatedPrice")}</span>
+                      <span className="font-semibold text-accent">
+                        €{calculateEstimatedPrice(
+                          listing?.priceFrom || 0,
+                          listing?.priceUnit || "/month",
+                          detailsForm.watch("startDate"),
+                          detailsForm.watch("endDate")
+                        ).toFixed(2)}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      {t("booking.priceNote")} {listing?.priceUnit?.replace("€", "").replace("/", "/ ") || "/ month"}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Extras section — only shown if listing has extras */}
@@ -404,8 +449,9 @@ export default function BookingPage() {
                 <h2 className="font-display text-xl font-semibold">{t("booking.review")}</h2>
                 <div className="space-y-3 rounded-xl border border-border p-4 text-sm">
                   {listing && <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.service")}</span><span className="font-medium">{listing.title}</span></div>}
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.date")}</span><span className="font-medium">{detailsForm.getValues("date") || "—"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.period")}</span><span className="font-medium">{detailsForm.getValues("duration")}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.startDate")}</span><span className="font-medium">{detailsForm.getValues("startDate") || "—"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.endDate")}</span><span className="font-medium">{detailsForm.getValues("endDate") || "—"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.duration")}</span><span className="font-medium">{formatDuration(detailsForm.getValues("startDate"), detailsForm.getValues("endDate"), t)}</span></div>
                   {selectedExtras.length > 0 && (
                     <div className="space-y-1">
                       <span className="text-muted-foreground">{t("booking.extras")}</span>
@@ -554,8 +600,9 @@ export default function BookingPage() {
               </div>
             )}
             <div className="mt-4 space-y-1 text-xs text-muted-foreground">
-              {detailsForm.watch("date") && <p>{t("booking.date")}: {detailsForm.watch("date")}</p>}
-              <p>{t("booking.period")}: {detailsForm.watch("duration")}</p>
+              {detailsForm.watch("startDate") && <p>{t("booking.startDate")}: {detailsForm.watch("startDate")}</p>}
+              {detailsForm.watch("endDate") && <p>{t("booking.endDate")}: {detailsForm.watch("endDate")}</p>}
+              {detailsForm.watch("startDate") && detailsForm.watch("endDate") && <p>{t("booking.duration")}: {formatDuration(detailsForm.watch("startDate"), detailsForm.watch("endDate"), t)}</p>}
               {selectedExtras.length > 0 && <p>{t("booking.extras")}: {selectedExtras.length}</p>}
             </div>
             {listing && (
