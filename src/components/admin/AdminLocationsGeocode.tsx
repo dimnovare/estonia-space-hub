@@ -59,7 +59,7 @@ export default function GeocodeLookup({ address, lat, lng, onCoordsChange }: Pro
       )}
       {!showManual ? (
         <button type="button" className="text-[10px] text-accent hover:underline" onClick={() => setShowManual(true)}>
-          Muuda käsitsi
+          {t("geocode.editManually")}
         </button>
       ) : (
         <div className="flex gap-2">

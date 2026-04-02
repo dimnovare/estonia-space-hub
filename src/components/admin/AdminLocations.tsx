@@ -559,6 +559,33 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
                   </select>
                 </div>
               </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.type")}</label>
+                <select className={inp} value={editingUnit.type || ""} onChange={(e) => setEditingUnit({ ...editingUnit, type: e.target.value })}>
+                  <option value="warehouse">{t("admin.locations.warehouse")}</option>
+                  <option value="moving">{t("admin.locations.moving")}</option>
+                  <option value="trailer">{t("admin.locations.trailer")}</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.vatRate")}</label>
+                <select className={inp} value={editingUnit.vatRate ?? ""} onChange={(e) => setEditingUnit({ ...editingUnit, vatRate: e.target.value ? Number(e.target.value) : null })}>
+                  <option value="">—</option>
+                  <option value="24">24%</option>
+                  <option value="13">13%</option>
+                  <option value="9">9%</option>
+                  <option value="0">0%</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.description")}</label>
+                <textarea className={inp} rows={2} value={editingUnit.description || ""} onChange={(e) => setEditingUnit({ ...editingUnit, description: e.target.value })} />
+              </div>
+              <div className="flex items-center gap-2">
+                <input type="checkbox" checked={editingUnit.isActive !== false}
+                  onChange={e => setEditingUnit({ ...editingUnit, isActive: e.target.checked })} />
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.active") || "Active"}</label>
+              </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" onClick={() => setEditUnitOpen(false)}>{t("admin.cancel")}</Button>
                 <Button
@@ -570,9 +597,12 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
                         sizeM2: editingUnit.sizeM2,
                         quantityTotal: editingUnit.quantityTotal,
                         priceUnit: editingUnit.priceUnit,
+                        description: editingUnit.description,
+                        vatRate: editingUnit.vatRate,
+                        isActive: editingUnit.isActive,
                       });
                       invalidate();
-                      toast.success("Üksus uuendatud");
+                      toast.success(t("toast.unitUpdated") || "Unit updated");
                       setEditUnitOpen(false);
                     } catch (err: any) {
                       toast.error(err.message || t("admin.deleteFailed"));

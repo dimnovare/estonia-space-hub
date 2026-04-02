@@ -23,7 +23,7 @@ import { ORDER_STATUS_CONFIG } from "@/lib/constants";
 import type { Order } from "@/services/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { messageService } from "@/services";
-import { apiClient } from "@/services/apiClient";
+import { apiClient, tokenStore } from "@/services/apiClient";
 import type { Booking, BookingStatus } from "@/services/types";
 import type { Invoice, Message } from "@/services/types";
 import { SkeletonList } from "@/components/SkeletonCard";
@@ -815,9 +815,11 @@ function DataPrivacySection() {
     setExporting(true);
     try {
       const baseUrl = import.meta.env.VITE_API_URL || "";
-      const token = (apiClient as any).accessToken;
       const res = await fetch(`${baseUrl}/auth/account/export`, {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
+        headers: { 
+          Authorization: `Bearer ${tokenStore.getAccess() ?? ""}`,
+        },
       });
       if (!res.ok) throw new Error(await res.text());
       const blob = await res.blob();
@@ -839,9 +841,10 @@ function DataPrivacySection() {
     try {
       await apiClient.delete("/auth/account");
       toast.success(t("account.accountDeleted"));
+      tokenStore.clear();
       localStorage.clear();
       sessionStorage.clear();
-      navigate("/");
+      window.location.href = "/";
     } catch (err: any) {
       toast.error(err?.message || t("toast.updateFailed"));
     } finally {

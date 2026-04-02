@@ -297,9 +297,9 @@ export default function AdminSuppliers() {
                   <div>
                     <p className="text-xs text-muted-foreground">{t("admin.type")}</p>
                     <select className={inp} value={selected.integrationType} onChange={(e) => setSelected({ ...selected, integrationType: e.target.value as any })}>
-                      <option value="manual">{t("integration.manual") || "Manual"}</option>
-                      <option value="email">{t("integration.email") || "Email"}</option>
-                      <option value="api">{t("integration.api") || "API"}</option>
+                      <option value="manual">{INTEGRATION_TYPE_CONFIG["manual"].label}</option>
+                      <option value="email">{INTEGRATION_TYPE_CONFIG["email"].label}</option>
+                      <option value="api">{INTEGRATION_TYPE_CONFIG["api"].label}</option>
                     </select>
                   </div>
                   <div><p className="text-xs text-muted-foreground">{t("admin.health")}</p><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${healthColor(selected.integrationHealth)}`}>{healthLabel(selected.integrationHealth)}</span></div>
