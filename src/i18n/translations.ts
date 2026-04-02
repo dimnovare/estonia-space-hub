@@ -2602,6 +2602,7 @@ const translations: Record<Language, Record<string, string>> = {
     "geocode.failed": "Geocoding failed.",
     "geocode.found": "Coordinates found!",
     "geocode.findCoordinates": "Find coordinates",
+    "geocode.editManually": "Edit manually",
     "toast.uploading": "Uploading...",
     "admin.deactivate": "Deactivate",
     "toast.messageFailed": "Failed to send message",
