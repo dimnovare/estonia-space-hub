@@ -958,7 +958,7 @@ function useGenerateInvoicePdf() {
     </div>
   </div>
   <table>
-    <thead><tr><th>Kirjeldus</th><th>Summa</th><th>Staatus</th></tr></thead>
+    <thead><tr><th>${t("billing.description")}</th><th>${t("billing.amount")}</th><th>${t("billing.status")}</th></tr></thead>
     <tbody>
       <tr>
         <td>${inv.description}</td>
