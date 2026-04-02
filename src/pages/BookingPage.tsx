@@ -449,8 +449,9 @@ export default function BookingPage() {
                 <h2 className="font-display text-xl font-semibold">{t("booking.review")}</h2>
                 <div className="space-y-3 rounded-xl border border-border p-4 text-sm">
                   {listing && <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.service")}</span><span className="font-medium">{listing.title}</span></div>}
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.date")}</span><span className="font-medium">{detailsForm.getValues("date") || "—"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.period")}</span><span className="font-medium">{detailsForm.getValues("duration")}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.startDate")}</span><span className="font-medium">{detailsForm.getValues("startDate") || "—"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.endDate")}</span><span className="font-medium">{detailsForm.getValues("endDate") || "—"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.duration")}</span><span className="font-medium">{formatDuration(detailsForm.getValues("startDate"), detailsForm.getValues("endDate"), t)}</span></div>
                   {selectedExtras.length > 0 && (
                     <div className="space-y-1">
                       <span className="text-muted-foreground">{t("booking.extras")}</span>
