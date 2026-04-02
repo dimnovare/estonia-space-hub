@@ -298,7 +298,7 @@ function BookingCard({ booking }: { booking: Booking }) {
               <div className="mt-2 flex justify-between border-t border-border pt-2 text-sm font-bold"><span>{t("booking.total")}</span><span>€{booking.total}</span></div>
             </div>
             <div>
-              <p className="text-xs font-semibold text-muted-foreground mb-2">Ajalugu</p>
+              <p className="text-xs font-semibold text-muted-foreground mb-2">{t("booking.history")}</p>
               <div className="space-y-2">
                 {(order?.timeline || booking.timeline.map(t => ({ ...t, time: "", detail: undefined }))).map((t, i) => (
                   <div key={i} className="flex items-start gap-2">
