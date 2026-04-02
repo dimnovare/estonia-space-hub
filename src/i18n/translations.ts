@@ -1077,6 +1077,7 @@ const translations: Record<Language, Record<string, string>> = {
     "geocode.failed": "Geokoodeerimine ebaõnnestus.",
     "geocode.found": "Koordinaadid leitud!",
     "geocode.findCoordinates": "Leia koordinaadid",
+    "geocode.editManually": "Muuda käsitsi",
     "toast.uploading": "Laen üles...",
     "admin.deactivate": "Deaktiveeri",
     "toast.messageFailed": "Sõnumi saatmine ebaõnnestus",
