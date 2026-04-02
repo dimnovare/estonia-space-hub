@@ -23,7 +23,7 @@ import { ORDER_STATUS_CONFIG } from "@/lib/constants";
 import type { Order } from "@/services/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { messageService } from "@/services";
-import { apiClient } from "@/services/apiClient";
+import { apiClient, tokenStore } from "@/services/apiClient";
 import type { Booking, BookingStatus } from "@/services/types";
 import type { Invoice, Message } from "@/services/types";
 import { SkeletonList } from "@/components/SkeletonCard";
