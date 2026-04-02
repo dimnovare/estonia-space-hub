@@ -1,21 +1,36 @@
 import { useState, useEffect } from "react";
-import { Search, RefreshCw } from "lucide-react";
+import { Search, RefreshCw, Save } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { userService } from "@/services";
+import { userService, supplierService } from "@/services";
+import { apiClient } from "@/services/apiClient";
 import type { User as ServiceUser } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { toast } from "sonner";
 
 export default function AdminUsers() {
   const { t } = useLanguage();
   const [users, setUsers] = useState<ServiceUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<ServiceUser | null>(null);
+  const [editUser, setEditUser] = useState<(ServiceUser & { emailVerified?: boolean; supplierId?: string }) | null>(null);
   const [filterRole, setFilterRole] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const { data: suppliers = [] } = useQuery({
+    queryKey: ["suppliers"],
+    queryFn: () => supplierService.getAll(),
+  });
+
   useEffect(() => { userService.getAll().then(data => { setUsers(data); setLoading(false); }); }, []);
+
+  useEffect(() => {
+    if (selectedUser) setEditUser({ ...selectedUser });
+    else setEditUser(null);
+  }, [selectedUser]);
 
   const filtered = users.filter(u => {
     if (filterRole !== "all" && u.role !== filterRole) return false;
@@ -24,10 +39,7 @@ export default function AdminUsers() {
     return true;
   });
 
-  const toggleStatus = (id: string) => {
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, status: u.status === "active" ? "blocked" as const : "active" as const } : u));
-    if (selectedUser?.id === id) setSelectedUser(prev => prev ? { ...prev, status: prev.status === "active" ? "blocked" as const : "active" as const } : prev);
-  };
+  const inp = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
 
   const roleLabel = (r: string) => r === "customer" ? t("admin.customer") : r === "provider" ? t("admin.provider") : r === "admin" ? t("admin.title") : t("admin.guest");
 
@@ -109,21 +121,95 @@ export default function AdminUsers() {
 
       <Dialog open={!!selectedUser} onOpenChange={(o) => { if (!o) setSelectedUser(null); }}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{selectedUser?.name}</DialogTitle></DialogHeader>
-          {selectedUser && (
+          <DialogHeader><DialogTitle>{editUser?.name || selectedUser?.name}</DialogTitle></DialogHeader>
+          {editUser && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">{t("admin.email")}</p><p className="text-sm font-medium">{selectedUser.email}</p></div>
-                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">{t("admin.phone")}</p><p className="text-sm font-medium">{selectedUser.phone || "—"}</p></div>
-                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">{t("admin.role")}</p><p className="text-sm font-medium">{roleLabel(selectedUser.role)}</p></div>
-                <div className="rounded-lg bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">{t("admin.registered")}</p><p className="text-sm font-medium">{selectedUser.registeredAt}</p></div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.name")}</label>
+                  <input className={inp} value={editUser.name} onChange={e => setEditUser({ ...editUser, name: e.target.value })} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.email")}</label>
+                  <p className="mt-1 text-sm font-medium">{editUser.email}</p>
+                  <p className="text-[10px] text-muted-foreground">{t("admin.emailNotEditable") || "Email cannot be changed by admin"}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.phone")}</label>
+                  <input className={inp} value={editUser.phone || ""} onChange={e => setEditUser({ ...editUser, phone: e.target.value })} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.company")}</label>
+                  <input className={inp} value={editUser.company || ""} onChange={e => setEditUser({ ...editUser, company: e.target.value })} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.role")}</label>
+                  <select className={inp} value={editUser.role} onChange={e => setEditUser({ ...editUser, role: e.target.value as any })}>
+                    <option value="customer">{t("admin.customer")}</option>
+                    <option value="provider">{t("admin.provider")}</option>
+                    <option value="admin">{t("admin.title")}</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin.status")}</label>
+                  <select className={inp} value={editUser.status} onChange={e => setEditUser({ ...editUser, status: e.target.value as any })}>
+                    <option value="active">{t("admin.active")}</option>
+                    <option value="blocked">{t("admin.blocked")}</option>
+                  </select>
+                </div>
               </div>
-              {selectedUser.company && <p className="text-sm"><span className="text-muted-foreground">{t("admin.company")}:</span> {selectedUser.company}</p>}
+
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.linkToSupplier")}</label>
+                <select className={inp} value={editUser.supplierId || ""} onChange={e => setEditUser({ ...editUser, supplierId: e.target.value || undefined })}>
+                  <option value="">{t("admin.noSupplier") || "— No supplier linked —"}</option>
+                  {suppliers.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={editUser.emailVerified || false}
+                  onCheckedChange={(checked) => setEditUser({ ...editUser, emailVerified: !!checked })}
+                />
+                <label className="text-sm font-medium">
+                  {t("admin.emailVerified") || "Email verified"}
+                </label>
+              </div>
+
+              <p className="text-[10px] text-muted-foreground">
+                {t("admin.registered")}: {editUser.registeredAt}
+                {" · "}
+                {t("admin.bookings")}: {editUser.bookingsCount}
+              </p>
+
               <div className="flex gap-2 pt-2">
-                <Button variant="outline" size="sm" className="flex-1" onClick={() => toggleStatus(selectedUser.id)}>
-                  {selectedUser.status === "active" ? t("admin.block") : t("admin.activate")}
+                <Button size="sm" className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90" onClick={async () => {
+                  try {
+                    await apiClient.patch(`/admin/users/${editUser.id}`, {
+                      name: editUser.name,
+                      phone: editUser.phone,
+                      company: editUser.company,
+                      role: editUser.role,
+                      status: editUser.status,
+                      emailVerified: editUser.emailVerified,
+                      supplierId: editUser.supplierId || null,
+                    });
+                    setUsers(prev => prev.map(u => u.id === editUser.id ? { ...u, ...editUser } : u));
+                    toast.success(t("admin.userUpdated") || "User updated");
+                    setSelectedUser(null);
+                  } catch (err: any) {
+                    toast.error(err?.message || t("toast.saveFailed"));
+                  }
+                }}>
+                  <Save className="mr-1.5 h-3.5 w-3.5" />
+                  {t("admin.save")}
                 </Button>
-                <Button variant="outline" size="sm" className="flex-1" onClick={() => setSelectedUser(null)}>{t("admin.close")}</Button>
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => setSelectedUser(null)}>
+                  {t("admin.close")}
+                </Button>
               </div>
             </div>
           )}
