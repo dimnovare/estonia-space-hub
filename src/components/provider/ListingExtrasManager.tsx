@@ -105,7 +105,7 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
                 <th className="pb-2 pr-3 font-medium">{t("provider.extras.label")}</th>
                 <th className="pb-2 pr-3 font-medium">{t("provider.extras.yourPrice")}</th>
                 <th className="pb-2 pr-3 font-medium">{t("provider.extras.customerSees")}</th>
-                <th className="pb-2 pr-3 font-medium">Allahindlus</th>
+                <th className="pb-2 pr-3 font-medium">{t("provider.extras.discountCol")}</th>
                 <th className="pb-2 pr-3 font-medium">{t("provider.extras.active")}</th>
                 <th className="pb-2 font-medium" />
               </tr>
@@ -137,7 +137,7 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
                           }}
                           disabled={updateExtra.isPending}
                         />
-                        <span className="text-[11px] text-muted-foreground">Ei allahindlust</span>
+                        <span className="text-[11px] text-muted-foreground">{t("provider.extras.noDiscount")}</span>
                       </label>
                     </td>
                     <td className="py-2 pr-3">
@@ -188,7 +188,7 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
         <div className="flex items-end gap-2">
           <div className="flex-1">
             <label className="mb-1 block text-[11px] text-muted-foreground">
-              Teie tavahind (otse klientidele)
+              {t("provider.extras.yourPublicPrice")}
             </label>
             <Input
               type="number"
@@ -203,14 +203,14 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
                 {t("provider.extras.customerWillSee")}: €{calcCustomerPrice(parsedNewPrice)}
                 {customerDiscount > 0 && (
                   <span className="ml-1 text-primary">
-                    ({customerDiscount}% soodustus vs teie hind)
+                    ({customerDiscount}% {t("provider.extras.discountVsYourPrice")})
                   </span>
                 )}
               </p>
             )}
             {showCustomerPreview && newNoDiscount && (
               <p className="mt-1 text-[11px] text-muted-foreground">
-                {t("provider.extras.customerWillSee")}: €{parsedNewPrice} (allahindlust ei rakendata)
+                {t("provider.extras.customerWillSee")}: €{parsedNewPrice} ({t("provider.extras.noDiscountApplied")})
               </p>
             )}
           </div>
@@ -222,11 +222,11 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
                 className="mt-0.5"
               />
               <div>
-                <span className="text-xs font-medium">Sellel teenusel ei ole partnerihinda</span>
+                <span className="text-xs font-medium">{t("provider.extras.noPartnerPrice")}</span>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
                   {newNoDiscount
-                    ? "Allahindlust ei rakendata. Klient maksab teie täishinna. Saate kogu summa."
-                    : "Ruumly rakendab teie partneri allahindlust. Klient näeb soodsamat hinda."}
+                    ? t("provider.extras.noDiscountExplained")
+                    : t("provider.extras.discountApplied")}
                 </p>
               </div>
             </label>

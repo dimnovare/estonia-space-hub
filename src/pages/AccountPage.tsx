@@ -292,13 +292,13 @@ function BookingCard({ booking }: { booking: Booking }) {
               </div>
             )}
             <div className="rounded-lg border border-border p-3">
-              <div className="flex justify-between text-sm"><span className="text-muted-foreground">Tavahind</span><span className="line-through">€{booking.basePrice}</span></div>
-              <div className="flex justify-between text-sm font-medium"><span>Ruumly hind</span><span className="text-accent">€{booking.platformPrice}</span></div>
-              {booking.extrasTotal > 0 && <div className="flex justify-between text-sm"><span className="text-muted-foreground">Lisateenused</span><span>€{booking.extrasTotal}</span></div>}
-              <div className="mt-2 flex justify-between border-t border-border pt-2 text-sm font-bold"><span>Kokku</span><span>€{booking.total}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-muted-foreground">{t("booking.publicPrice")}</span><span className="line-through">€{booking.basePrice}</span></div>
+              <div className="flex justify-between text-sm font-medium"><span>{t("booking.ruumlyPrice")}</span><span className="text-accent">€{booking.platformPrice}</span></div>
+              {booking.extrasTotal > 0 && <div className="flex justify-between text-sm"><span className="text-muted-foreground">{t("booking.extras")}</span><span>€{booking.extrasTotal}</span></div>}
+              <div className="mt-2 flex justify-between border-t border-border pt-2 text-sm font-bold"><span>{t("booking.total")}</span><span>€{booking.total}</span></div>
             </div>
             <div>
-              <p className="text-xs font-semibold text-muted-foreground mb-2">Ajalugu</p>
+              <p className="text-xs font-semibold text-muted-foreground mb-2">{t("booking.history")}</p>
               <div className="space-y-2">
                 {(order?.timeline || booking.timeline.map(t => ({ ...t, time: "", detail: undefined }))).map((t, i) => (
                   <div key={i} className="flex items-start gap-2">
@@ -958,7 +958,7 @@ function useGenerateInvoicePdf() {
     </div>
   </div>
   <table>
-    <thead><tr><th>Kirjeldus</th><th>Summa</th><th>Staatus</th></tr></thead>
+    <thead><tr><th>${t("billing.description")}</th><th>${t("billing.amount")}</th><th>${t("billing.status")}</th></tr></thead>
     <tbody>
       <tr>
         <td>${inv.description}</td>
@@ -966,7 +966,7 @@ function useGenerateInvoicePdf() {
         <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
       </tr>
     </tbody>
-    <tr class="total-row"><td>Kokku</td><td>&euro;${inv.amount}</td><td></td></tr>
+    <tr class="total-row"><td>${t("booking.total")}</td><td>&euro;${inv.amount}</td><td></td></tr>
   </table>
   <div class="footer">
     <p>Ruumly OÜ &middot; ruumly.eu &middot; info@ruumly.eu</p>
@@ -1035,11 +1035,11 @@ function AccountBilling() {
             <table className="w-full text-sm">
               <thead className="border-b border-border bg-secondary/50">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Arve nr</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Kirjeldus</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Summa</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Staatus</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Kuupäev</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("billing.invoiceNr")}</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("billing.description")}</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("billing.amount")}</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("billing.status")}</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("billing.date")}</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground"></th>
                 </tr>
               </thead>
