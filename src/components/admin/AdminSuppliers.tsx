@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Mail, Zap, Hand, RefreshCw, Server, PlusCircle, Save, Loader2, Trash2, Ban, CheckCircle } from "lucide-react";
+import { Mail, Zap, Hand, RefreshCw, Server, PlusCircle, Save, Loader2, Trash2, Ban, CheckCircle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supplierService } from "@/services";
+import { apiClient } from "@/services/apiClient";
 import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
 import type { Supplier } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -288,6 +289,25 @@ export default function AdminSuppliers() {
                         : t("admin.billingMarketplaceDesc")}
                     </p>
                   </div>
+                </div>
+                <div className="mt-3 flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs"
+                    onClick={async () => {
+                      if (!confirm(t("admin.resetTrialConfirm") || "Reset 30-day trial for this partner?")) return;
+                      try {
+                        await apiClient.post(`/admin/suppliers/${selected.id}/reset-trial`, {});
+                        toast.success(t("admin.trialReset") || "Trial reset — 30 days from now");
+                        invalidate();
+                      } catch (err: any) { toast.error(err?.message || t("toast.saveFailed")); }
+                    }}>
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    {t("admin.resetTrial") || "Reset trial (30 days)"}
+                  </Button>
+                  {(selected as any).trialEndsAt && (
+                    <span className="text-[10px] text-muted-foreground">
+                      {t("admin.trialEnds")}: {new Date((selected as any).trialEndsAt).toLocaleDateString()}
+                    </span>
+                  )}
                 </div>
               </div>
 
