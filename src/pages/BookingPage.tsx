@@ -76,9 +76,17 @@ export default function BookingPage() {
   const [showVerifyBanner, setShowVerifyBanner] = useState(false);
   const [resendSent, setResendSent] = useState(false);
 
-  const detailsForm = useForm<BookingDetailsForm>({
-    resolver: zodResolver(bookingDetailsSchema),
-    defaultValues: { date: "", duration: "1 kuu" },
+  const detailsForm = useForm<{ startDate: string; endDate: string }>({
+    resolver: zodResolver(z.object({
+      startDate: z.string().min(1, t("booking.startDateRequired") || "Start date required")
+        .regex(/^\d{4}-\d{2}-\d{2}$/, "yyyy-MM-dd"),
+      endDate: z.string().min(1, t("booking.endDateRequired") || "End date required")
+        .regex(/^\d{4}-\d{2}-\d{2}$/, "yyyy-MM-dd"),
+    }).refine(data => {
+      if (!data.startDate || !data.endDate) return true;
+      return new Date(data.endDate) > new Date(data.startDate);
+    }, { message: t("booking.endAfterStart") || "End date must be after start date", path: ["endDate"] })),
+    defaultValues: { startDate: "", endDate: "" },
   });
 
   const contactForm = useForm<BookingContactForm>({
