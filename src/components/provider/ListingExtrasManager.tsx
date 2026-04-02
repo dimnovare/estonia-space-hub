@@ -137,7 +137,7 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
                           }}
                           disabled={updateExtra.isPending}
                         />
-                        <span className="text-[11px] text-muted-foreground">Ei allahindlust</span>
+                        <span className="text-[11px] text-muted-foreground">{t("provider.extras.noDiscount")}</span>
                       </label>
                     </td>
                     <td className="py-2 pr-3">
