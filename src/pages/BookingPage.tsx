@@ -12,12 +12,37 @@ import { SEO } from "@/components/SEO";
 import { paymentService } from "@/services";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { bookingDetailsSchema, bookingContactSchema, type BookingDetailsForm, type BookingContactForm } from "@/lib/schemas";
+import { bookingContactSchema, type BookingContactForm } from "@/lib/schemas";
 import { tokenStore } from "@/services/apiClient";
 import BookingInlineAuth from "@/components/BookingInlineAuth";
 import { trackEvent } from "@/lib/analytics";
+import { z } from "zod";
 
 type SubmitPhase = "submitting" | "sending" | "waiting" | "done";
+
+function formatDuration(start: string, end: string, t: (k: string) => string): string {
+  const s = new Date(start);
+  const e = new Date(end);
+  const days = Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24));
+  if (days <= 0) return "—";
+  if (days === 1) return `1 ${t("booking.day")}`;
+  if (days < 7) return `${days} ${t("booking.days")}`;
+  if (days === 7) return `1 ${t("booking.week")}`;
+  if (days < 30) return `${days} ${t("booking.days")}`;
+  const months = Math.floor(days / 30);
+  const remainDays = days % 30;
+  if (remainDays === 0) return `${months} ${months === 1 ? t("booking.month") : t("booking.months")}`;
+  return `${months} ${months === 1 ? t("booking.month") : t("booking.months")}, ${remainDays} ${t("booking.days")}`;
+}
+
+function calculateEstimatedPrice(priceFrom: number, priceUnit: string, start: string, end: string): number {
+  const days = Math.max(1, Math.round((new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24)));
+  const unit = (priceUnit || "").toLowerCase().replace("€", "").trim().replace(/^\//, "");
+  if (unit.includes("day") || unit.includes("päev")) return priceFrom * days;
+  if (unit.includes("week") || unit.includes("nädal")) return Math.round(priceFrom * days / 7 * 100) / 100;
+  if (unit.includes("time") || unit.includes("kord")) return priceFrom;
+  return Math.round(priceFrom * days / 30 * 100) / 100;
+}
 
 export default function BookingPage() {
   const [params] = useSearchParams();
