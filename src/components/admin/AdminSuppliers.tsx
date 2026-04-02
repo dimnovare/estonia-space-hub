@@ -290,6 +290,25 @@ export default function AdminSuppliers() {
                     </p>
                   </div>
                 </div>
+                <div className="mt-3 flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs"
+                    onClick={async () => {
+                      if (!confirm(t("admin.resetTrialConfirm") || "Reset 30-day trial for this partner?")) return;
+                      try {
+                        await apiClient.post(`/admin/suppliers/${selected.id}/reset-trial`, {});
+                        toast.success(t("admin.trialReset") || "Trial reset — 30 days from now");
+                        invalidate();
+                      } catch (err: any) { toast.error(err?.message || t("toast.saveFailed")); }
+                    }}>
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    {t("admin.resetTrial") || "Reset trial (30 days)"}
+                  </Button>
+                  {(selected as any).trialEndsAt && (
+                    <span className="text-[10px] text-muted-foreground">
+                      {t("admin.trialEnds")}: {new Date((selected as any).trialEndsAt).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="rounded-xl border border-border p-4">
