@@ -292,10 +292,10 @@ function BookingCard({ booking }: { booking: Booking }) {
               </div>
             )}
             <div className="rounded-lg border border-border p-3">
-              <div className="flex justify-between text-sm"><span className="text-muted-foreground">Tavahind</span><span className="line-through">€{booking.basePrice}</span></div>
-              <div className="flex justify-between text-sm font-medium"><span>Ruumly hind</span><span className="text-accent">€{booking.platformPrice}</span></div>
-              {booking.extrasTotal > 0 && <div className="flex justify-between text-sm"><span className="text-muted-foreground">Lisateenused</span><span>€{booking.extrasTotal}</span></div>}
-              <div className="mt-2 flex justify-between border-t border-border pt-2 text-sm font-bold"><span>Kokku</span><span>€{booking.total}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-muted-foreground">{t("booking.publicPrice")}</span><span className="line-through">€{booking.basePrice}</span></div>
+              <div className="flex justify-between text-sm font-medium"><span>{t("booking.ruumlyPrice")}</span><span className="text-accent">€{booking.platformPrice}</span></div>
+              {booking.extrasTotal > 0 && <div className="flex justify-between text-sm"><span className="text-muted-foreground">{t("booking.extras")}</span><span>€{booking.extrasTotal}</span></div>}
+              <div className="mt-2 flex justify-between border-t border-border pt-2 text-sm font-bold"><span>{t("booking.total")}</span><span>€{booking.total}</span></div>
             </div>
             <div>
               <p className="text-xs font-semibold text-muted-foreground mb-2">Ajalugu</p>
