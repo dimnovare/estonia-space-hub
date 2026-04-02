@@ -841,9 +841,10 @@ function DataPrivacySection() {
     try {
       await apiClient.delete("/auth/account");
       toast.success(t("account.accountDeleted"));
+      tokenStore.clear();
       localStorage.clear();
       sessionStorage.clear();
-      navigate("/");
+      window.location.href = "/";
     } catch (err: any) {
       toast.error(err?.message || t("toast.updateFailed"));
     } finally {
