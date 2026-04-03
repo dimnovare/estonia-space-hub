@@ -308,7 +308,7 @@ export default function BookingPage() {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 pb-28 lg:pb-0">
 
           {/* ── Step 0: Details + Extras ── */}
           {step === 0 && (
@@ -412,22 +412,22 @@ export default function BookingPage() {
                 <h2 className="font-display text-xl font-semibold">{t("booking.contact")}</h2>
                 <div>
                   <label className="mb-1 block text-sm font-medium">{t("booking.name")}</label>
-                  <input type="text" {...contactForm.register("name")} placeholder={t("booking.placeholder.name")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  <input type="text" {...contactForm.register("name")} placeholder={t("booking.placeholder.name")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent" />
                   {contactForm.formState.errors.name && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.name.message}</p>}
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium">{t("booking.email")}</label>
-                  <input type="email" {...contactForm.register("email")} placeholder={t("booking.placeholder.email")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  <input type="email" {...contactForm.register("email")} placeholder={t("booking.placeholder.email")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent" />
                   {contactForm.formState.errors.email && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.email.message}</p>}
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium">{t("booking.phone")}</label>
-                  <input type="tel" {...contactForm.register("phone")} placeholder={t("booking.placeholder.phone")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  <input type="tel" {...contactForm.register("phone")} placeholder={t("booking.placeholder.phone")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent" />
                   {contactForm.formState.errors.phone && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.phone.message}</p>}
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium">{t("booking.notes")}</label>
-                  <textarea {...contactForm.register("notes")} rows={3} placeholder={t("booking.placeholder.notes")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  <textarea {...contactForm.register("notes")} rows={3} placeholder={t("booking.placeholder.notes")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent" />
                   {contactForm.formState.errors.notes && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.notes.message}</p>}
                 </div>
               </div>
