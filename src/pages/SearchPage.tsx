@@ -448,7 +448,7 @@ function FilterContent({
     <>
       <div className="flex flex-wrap gap-2">
         <Select value={cityFilter || "all"} onValueChange={(v) => updateFilters({ city: v === "all" ? "" : v })}>
-          <SelectTrigger className="w-[140px] shrink-0">
+          <SelectTrigger className="w-full sm:w-[160px] shrink-0">
             <SelectValue placeholder={t("search.allCities")} />
           </SelectTrigger>
           <SelectContent>
