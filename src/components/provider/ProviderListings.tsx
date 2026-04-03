@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useLocations, useCreateLocation, useUpdateLocation, useAddUnit } from "@/hooks/queries";
+import { useFeatureDefinitions } from "@/hooks/useFeatureDefinitions";
 import { ESTONIAN_CITIES } from "@/lib/constants";
 import { Loader2, MapPin, Warehouse, Truck, CarFront, Plus, Pencil, ChevronDown, ChevronUp, Trash2, AlertTriangle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -216,8 +217,10 @@ function UnitDialog({
   onOpenChange: (v: boolean) => void;
   locationId: string;
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const addUnit = useAddUnit();
+  const { data: featureDefs = {} } = useFeatureDefinitions();
+  const [features, setFeatures] = useState<Record<string, boolean>>({});
 
   const form = useForm<UnitForm>({
     resolver: zodResolver(unitSchema),
@@ -229,6 +232,9 @@ function UnitDialog({
       description: "",
     },
   });
+
+  const watchedType = form.watch("type")?.toLowerCase() || "warehouse";
+  const typeDefs = featureDefs[watchedType] || [];
 
   const onSubmit = (data: UnitForm) => {
     addUnit.mutate(
@@ -244,6 +250,9 @@ function UnitDialog({
           description: data.description,
           vatRate: data.vatRate,
           pricesIncludeVat: false,
+          features: Object.fromEntries(
+            Object.entries(features).filter(([, v]) => v)
+          ),
         },
       },
       {
@@ -327,6 +336,27 @@ function UnitDialog({
             <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitDesc")}</label>
             <Textarea rows={2} {...form.register("description")} />
           </div>
+          {typeDefs.length > 0 && (
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.features") || "Features"}</label>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {typeDefs.map(f => (
+                  <button
+                    key={f.key}
+                    type="button"
+                    onClick={() => setFeatures(prev => ({ ...prev, [f.key]: !prev[f.key] }))}
+                    className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                      features[f.key]
+                        ? "border-accent bg-accent/10 text-accent"
+                        : "border-border text-muted-foreground hover:border-foreground"
+                    }`}
+                  >
+                    {f.labels[language] || f.labels.en || f.key}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <Button type="submit" disabled={addUnit.isPending} className="w-full">
             {addUnit.isPending ? (
               <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t("provider.listings.saving")}</>
@@ -490,6 +520,7 @@ export default function ProviderListings() {
                                       description: unit.description || "",
                                       vatRate: unit.vatRate,
                                       images: unit.images || [],
+                                      features: (unit as any).features || {},
                                     });
                                     setEditUnitOpen(true);
                                   }}
@@ -627,10 +658,12 @@ function EditUnitDialog({
   onOpenChange: (v: boolean) => void;
   unitData: any;
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [images, setImages] = useState<string[]>(unitData?.images || []);
+  const { data: featureDefs = {} } = useFeatureDefinitions();
+  const [features, setFeatures] = useState<Record<string, boolean>>(unitData?.features || {});
 
   const form = useForm<UnitForm>({
     resolver: zodResolver(unitSchema),
@@ -659,6 +692,7 @@ function EditUnitDialog({
         vatRate: unitData.vatRate,
       });
       setImages(unitData.images || []);
+      setFeatures(unitData.features || {});
     }
   }, [unitData]);
 
@@ -676,6 +710,9 @@ function EditUnitDialog({
           description: data.description,
           vatRate: data.vatRate,
           images,
+          features: Object.fromEntries(
+            Object.entries(features).filter(([, v]) => v)
+          ),
         }
       );
       queryClient.invalidateQueries({ queryKey: ["locations"] });
@@ -763,6 +800,32 @@ function EditUnitDialog({
             <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.images") || "Images"}</label>
             <ImageUploader images={images} onChange={setImages} />
           </div>
+          {(() => {
+            const editType = form.watch("type")?.toLowerCase() || "warehouse";
+            const defs = featureDefs[editType] || [];
+            if (defs.length === 0) return null;
+            return (
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.features") || "Features"}</label>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {defs.map(f => (
+                    <button
+                      key={f.key}
+                      type="button"
+                      onClick={() => setFeatures(prev => ({ ...prev, [f.key]: !prev[f.key] }))}
+                      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                        features[f.key]
+                          ? "border-accent bg-accent/10 text-accent"
+                          : "border-border text-muted-foreground hover:border-foreground"
+                      }`}
+                    >
+                      {f.labels[language] || f.labels.en || f.key}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
           <Button type="submit" disabled={saving} className="w-full">
             {saving ? (
               <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t("account.saving")}</>
