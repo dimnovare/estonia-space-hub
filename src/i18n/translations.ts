@@ -1619,9 +1619,9 @@ const et: Record<string, string> = {
     "provPage.starter.name": "Starter",
     "provPage.growth.name": "Growth",
     "provPage.business.name": "Business",
-  },
+};
 
-  en: {
+const en: Record<string, string> = {
     "nav.storage": "Storage",
     "nav.moving": "Moving",
     "nav.trailer": "Trailer rental",
