@@ -7814,7 +7814,6 @@ const lt: Record<string, string> = {
     "verify.success": "Jūsų el. pašto adresas sėkmingai patvirtintas.",
     "verify.successSub": "Dabar galite rezervuoti paslaugas Ruumly.",
 };
-};
 const translations: Record<Language, Record<string, string>> = { et, en, ru, lv, lt };
 
 export default translations;
