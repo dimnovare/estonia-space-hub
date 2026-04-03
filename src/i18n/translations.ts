@@ -4772,7 +4772,30 @@ const ru: Record<string, string> = {
     "provPage.starter.name": "Starter",
     "provPage.growth.name": "Growth",
     "provPage.business.name": "Business",
-  },
 };
+
+// ── Latvian ─────────────────────────────
+const lv: Record<string, string> = {
+  // TODO: Professional translation needed — English as fallback
+  ...en,
+  "hero.title": "Atrodiet un rezervējiet noliktavu Baltijā",
+  "hero.subtitle": "Salīdziniet cenas, rezervējiet dažās minūtēs.",
+  "nav.search": "Meklēt",
+  "nav.login": "Ielogoties",
+  "nav.register": "Reģistrēties",
+};
+
+// ── Lithuanian ──────────────────────────
+const lt: Record<string, string> = {
+  // TODO: Professional translation needed — English as fallback
+  ...en,
+  "hero.title": "Raskite ir rezervuokite sandėlį Baltijos šalyse",
+  "hero.subtitle": "Palyginkite kainas, rezervuokite per kelias minutes.",
+  "nav.search": "Ieškoti",
+  "nav.login": "Prisijungti",
+  "nav.register": "Registruotis",
+};
+
+const translations: Record<Language, Record<string, string>> = { et, en, ru, lv, lt };
 
 export default translations;

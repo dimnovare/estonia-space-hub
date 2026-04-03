@@ -13,7 +13,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 function getInitialLanguage(): Language {
   try {
     const stored = localStorage.getItem("ruumly-lang");
-    if (stored && (stored === "et" || stored === "en" || stored === "ru")) return stored;
+    if (stored && ["et", "en", "ru", "lv", "lt"].includes(stored)) return stored;
   } catch {}
   return "et";
 }
