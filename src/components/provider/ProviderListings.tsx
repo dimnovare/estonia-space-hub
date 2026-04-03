@@ -710,6 +710,9 @@ function EditUnitDialog({
           description: data.description,
           vatRate: data.vatRate,
           images,
+          features: Object.fromEntries(
+            Object.entries(features).filter(([, v]) => v)
+          ),
         }
       );
       queryClient.invalidateQueries({ queryKey: ["locations"] });
