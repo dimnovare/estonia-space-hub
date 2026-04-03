@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from "@/components/ui/drawer";
 import { useListings, useLocations } from "@/hooks/queries";
+import { useQuery } from "@tanstack/react-query";
 import type { Listing, ListingType, ListingFilters } from "@/services/types";
 import { apiClient } from "@/services/apiClient";
 import ListingCard from "@/components/ListingCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
-import { ESTONIAN_CITIES } from "@/lib/constants";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { trackEvent } from "@/lib/analytics";
 
@@ -21,6 +21,12 @@ export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
   const { t } = useLanguage();
+
+  const { data: availableCities = [] } = useQuery({
+    queryKey: ["available-cities"],
+    queryFn: () => apiClient.get<{ city: string; country: string }[]>("/locations/cities"),
+    staleTime: 5 * 60_000,
+  });
 
   // All filter state derived from URL
   const activeType = (searchParams.get("type") as ListingType | "all") || "all";
@@ -272,6 +278,7 @@ export default function SearchPage() {
                 shortTerm={shortTerm} longTerm={longTerm} withVan={withVan} packingHelp={packingHelp}
                 loadingHelp={loadingHelp} pricingFixed={pricingFixed} trailerClosed={trailerClosed}
                 activeFiltersCount={activeFiltersCount} updateFilters={updateFilters} clearAll={clearAll}
+                availableCities={availableCities}
               />
             </div>
           )}
@@ -290,6 +297,7 @@ export default function SearchPage() {
                   shortTerm={shortTerm} longTerm={longTerm} withVan={withVan} packingHelp={packingHelp}
                   loadingHelp={loadingHelp} pricingFixed={pricingFixed} trailerClosed={trailerClosed}
                   activeFiltersCount={activeFiltersCount} updateFilters={updateFilters} clearAll={clearAll}
+                  availableCities={availableCities}
                 />
                 <DrawerClose asChild>
                   <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
@@ -436,13 +444,14 @@ interface FilterContentProps {
   activeFiltersCount: number;
   updateFilters: (u: Record<string, string>) => void;
   clearAll: () => void;
+  availableCities: { city: string; country: string }[];
 }
 
 function FilterContent({
   t, cityFilter, priceMax, availableNow, activeType,
   heated, access24, indoor, security, loadingDock, forkliftFilter,
   shortTerm, longTerm, withVan, packingHelp, loadingHelp, pricingFixed,
-  trailerClosed, activeFiltersCount, updateFilters, clearAll,
+  trailerClosed, activeFiltersCount, updateFilters, clearAll, availableCities,
 }: FilterContentProps) {
   return (
     <>
@@ -453,8 +462,8 @@ function FilterContent({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t("search.allCities")}</SelectItem>
-            {ESTONIAN_CITIES.map((city) => (
-              <SelectItem key={city} value={city}>{city}</SelectItem>
+            {availableCities.map((c) => (
+              <SelectItem key={`${c.country}-${c.city}`} value={c.city}>{c.city}</SelectItem>
             ))}
           </SelectContent>
         </Select>
