@@ -269,7 +269,7 @@ function UnitDialog({
             <Input {...form.register("title")} />
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitType")}</label>
+            <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitType")} <span className="text-destructive">*</span></label>
             <Controller
               control={form.control}
               name="type"
