@@ -54,7 +54,15 @@ export default function ProviderOnboardingPage() {
     { key: "trailer", label: t("onboard.service.trailer"), icon: CarFront },
   ];
 
-  const serviceAreas = ["Tallinn", "Tartu", "Pärnu", "Narva", "Viljandi", "Rakvere", t("onboard.area.all")];
+  const { data: availableCities = [] } = useQuery({
+    queryKey: ["available-cities"],
+    queryFn: () => apiClient.get<{ city: string; country: string }[]>("/locations/cities"),
+    staleTime: 5 * 60_000,
+  });
+
+  const serviceAreas = availableCities.length > 0
+    ? [...availableCities.map(c => c.city), t("onboard.area.all")]
+    : [t("onboard.area.all")];
 
   const toggleService = (key: string) => setSelectedServices((p) => p.includes(key) ? p.filter((s) => s !== key) : [...p, key]);
   const toggleArea = (key: string) => setSelectedAreas((p) => p.includes(key) ? p.filter((a) => a !== key) : [...p, key]);
