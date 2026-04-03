@@ -1647,7 +1647,7 @@ const en: Record<string, string> = {
     "provider.nav.billing": "Payouts",
 
     "hero.title": "Find and book storage",
-    "hero.titleHighlight": "in Estonia",
+    "hero.titleHighlight": "in the Baltics",
     "hero.subtitle": "Compare prices, book in minutes. Moving and transport extras available.",
     "trust.title": "Best price without the phone calls",
     "trust.badge1": "Location + units in one",
