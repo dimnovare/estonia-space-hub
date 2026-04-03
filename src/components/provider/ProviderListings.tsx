@@ -217,8 +217,10 @@ function UnitDialog({
   onOpenChange: (v: boolean) => void;
   locationId: string;
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const addUnit = useAddUnit();
+  const { data: featureDefs = {} } = useFeatureDefinitions();
+  const [features, setFeatures] = useState<Record<string, boolean>>({});
 
   const form = useForm<UnitForm>({
     resolver: zodResolver(unitSchema),
@@ -230,6 +232,9 @@ function UnitDialog({
       description: "",
     },
   });
+
+  const watchedType = form.watch("type")?.toLowerCase() || "warehouse";
+  const typeDefs = featureDefs[watchedType] || [];
 
   const onSubmit = (data: UnitForm) => {
     addUnit.mutate(
@@ -245,6 +250,9 @@ function UnitDialog({
           description: data.description,
           vatRate: data.vatRate,
           pricesIncludeVat: false,
+          features: Object.fromEntries(
+            Object.entries(features).filter(([, v]) => v)
+          ),
         },
       },
       {
