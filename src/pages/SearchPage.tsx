@@ -22,6 +22,12 @@ export default function SearchPage() {
   const query = searchParams.get("q") || "";
   const { t } = useLanguage();
 
+  const { data: availableCities = [] } = useQuery({
+    queryKey: ["available-cities"],
+    queryFn: () => apiClient.get<{ city: string; country: string }[]>("/locations/cities"),
+    staleTime: 5 * 60_000,
+  });
+
   // All filter state derived from URL
   const activeType = (searchParams.get("type") as ListingType | "all") || "all";
   const sort = searchParams.get("sort") || "best";
