@@ -21,8 +21,9 @@ const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
+  const { data: featureDefs = {} } = useFeatureDefinitions();
   const { data: availableCities = [] } = useQuery({
     queryKey: ["available-cities"],
     queryFn: () => apiClient.get<{ city: string; country: string }[]>("/locations/cities"),
