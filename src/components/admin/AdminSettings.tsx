@@ -258,6 +258,25 @@ export default function AdminSettings() {
             </div>
           </div>
 
+          {/* ── Feature Definitions ── */}
+          <div className="mt-6 pt-5 border-t border-border">
+            <p className="text-xs font-semibold text-foreground mb-1">{t("admin.featureDefinitions") || "Feature Definitions"}</p>
+            <p className="text-xs text-muted-foreground mb-3">
+              {t("admin.featureDefinitionsDesc") || "Configure which features are available for each listing type. JSON format."}
+            </p>
+            {["warehouse", "moving", "trailer"].map(type => (
+              <div key={type} className="mb-3">
+                <label className="text-[10px] font-medium text-muted-foreground uppercase">{type}</label>
+                <textarea
+                  rows={4}
+                  className={`${inp} font-mono text-[11px]`}
+                  value={settings[`features.${type}`] || "[]"}
+                  onChange={e => set(`features.${type}`, e.target.value)}
+                />
+              </div>
+            ))}
+          </div>
+
           {/* ── Extras Pricing ── */}
           <div className="mt-6 pt-5 border-t border-border">
             <p className="text-xs font-semibold text-foreground mb-1">{t("admin.extrasPricingTitle")}</p>
