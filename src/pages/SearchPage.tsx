@@ -458,7 +458,7 @@ function FilterContent({
             ))}
           </SelectContent>
         </Select>
-        <input type="number" placeholder={t("search.maxPrice")} value={priceMax} onChange={(e) => updateFilters({ priceMax: e.target.value })} className="w-28 rounded-full border border-border bg-card px-3 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-accent" />
+        <input type="number" placeholder={t("search.maxPrice")} value={priceMax} onChange={(e) => updateFilters({ priceMax: e.target.value })} className="w-24 sm:w-28 rounded-full border border-border bg-card px-3 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-accent" />
         <FilterToggle label={t("search.availableNow")} active={availableNow} onChange={(v) => updateFilters({ availableNow: v ? "true" : "" })} />
       </div>
 

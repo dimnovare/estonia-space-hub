@@ -468,7 +468,7 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="text-xs font-medium text-muted-foreground">{t("admin.price")} (€)</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.price")} (€) <span className="text-destructive">*</span></label>
                 <input type="number" className={inp} value={newUnit.priceFrom} onChange={(e) => setNewUnit({ ...newUnit, priceFrom: e.target.value })} />
               </div>
               <div>

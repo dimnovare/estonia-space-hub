@@ -623,7 +623,7 @@ export default function BookingPage() {
       </div>
 
       {/* Mobile sticky pricing bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border bg-card px-3 pt-2 pb-3 lg:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border bg-card px-3 pt-2 pb-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
         {/* Pricing summary row */}
         <div className="mb-2 flex items-center justify-between text-xs">
           <div className="flex items-center gap-3">

@@ -287,7 +287,7 @@ function UnitDialog({
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitPriceFrom")}</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitPriceFrom")} <span className="text-destructive">*</span></label>
               <Input type="number" step="0.01" {...form.register("priceFrom")} />
             </div>
             <div>
