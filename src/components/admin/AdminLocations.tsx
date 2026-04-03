@@ -459,7 +459,7 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
               <input className={inp} placeholder={t("admin.locations.unitPlaceholder")} value={newUnit.title} onChange={(e) => setNewUnit({ ...newUnit, title: e.target.value })} />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("admin.type")}</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("admin.type")} <span className="text-destructive">*</span></label>
               <select className={inp} value={newUnit.type} onChange={(e) => setNewUnit({ ...newUnit, type: e.target.value as any })}>
                 <option value="Warehouse">{t("admin.warehouseType")}</option>
                 <option value="Moving">{t("admin.movingType")}</option>
