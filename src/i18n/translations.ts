@@ -1102,6 +1102,7 @@ const translations: Record<Language, Record<string, string>> = {
     "admin.emailVerified": "E-post kinnitatud",
     "admin.emailNotEditable": "E-posti ei saa admin muuta",
     "admin.userUpdated": "Kasutaja uuendatud",
+    "admin.nameRequired": "Partneri nimi on kohustuslik",
     
     "admin.locations.type": "Tüüp",
     "admin.locations.warehouse": "Laopind",
@@ -2671,6 +2672,7 @@ const translations: Record<Language, Record<string, string>> = {
     "admin.emailVerified": "Email verified",
     "admin.emailNotEditable": "Email cannot be changed by admin",
     "admin.userUpdated": "User updated",
+    "admin.nameRequired": "Partner name is required",
     "admin.locations.type": "Type",
     "admin.locations.warehouse": "Storage",
     "admin.locations.moving": "Moving",
@@ -4233,6 +4235,7 @@ const translations: Record<Language, Record<string, string>> = {
     "admin.emailVerified": "Email подтверждён",
     "admin.emailNotEditable": "Email не может быть изменён администратором",
     "admin.userUpdated": "Пользователь обновлён",
+    "admin.nameRequired": "Имя партнёра обязательно",
     "admin.locations.type": "Тип",
     "admin.locations.warehouse": "Склад",
     "admin.locations.moving": "Переезд",

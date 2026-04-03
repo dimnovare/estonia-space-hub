@@ -125,11 +125,11 @@ function LocationDialog({
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
           <div>
-            <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.locationName")}</label>
+            <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.locationName")} <span className="text-destructive">*</span></label>
             <Input {...form.register("name")} />
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.locationCity")}</label>
+            <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.locationCity")} <span className="text-destructive">*</span></label>
             <Controller
               control={form.control}
               name="city"
@@ -147,7 +147,7 @@ function LocationDialog({
           </div>
           <div className="flex items-end gap-2">
             <div className="flex-1">
-              <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.locationAddress")}</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.locationAddress")} <span className="text-destructive">*</span></label>
               <Input {...form.register("address")} />
             </div>
             <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={async () => {
@@ -265,11 +265,11 @@ function UnitDialog({
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
           <div>
-            <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitTitle")}</label>
+            <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitTitle")} <span className="text-destructive">*</span></label>
             <Input {...form.register("title")} />
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitType")}</label>
+            <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitType")} <span className="text-destructive">*</span></label>
             <Controller
               control={form.control}
               name="type"
@@ -287,7 +287,7 @@ function UnitDialog({
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitPriceFrom")}</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitPriceFrom")} <span className="text-destructive">*</span></label>
               <Input type="number" step="0.01" {...form.register("priceFrom")} />
             </div>
             <div>

@@ -407,16 +407,16 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
               </select>
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("admin.title_field")}</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("admin.title_field")} <span className="text-destructive">*</span></label>
               <input className={inp} value={newLoc.name} onChange={(e) => setNewLoc({ ...newLoc, name: e.target.value })} />
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="text-xs font-medium text-muted-foreground">{t("admin.address")}</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.address")} <span className="text-destructive">*</span></label>
                 <input className={inp} value={newLoc.address} onChange={(e) => setNewLoc({ ...newLoc, address: e.target.value })} />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">{t("admin.city")}</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.city")} <span className="text-destructive">*</span></label>
                 <input className={inp} value={newLoc.city} onChange={(e) => setNewLoc({ ...newLoc, city: e.target.value })} />
               </div>
             </div>
@@ -455,11 +455,11 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
           <DialogHeader><DialogTitle>{t("admin.locations.addUnit")}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("admin.title_field")}</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("admin.title_field")} <span className="text-destructive">*</span></label>
               <input className={inp} placeholder={t("admin.locations.unitPlaceholder")} value={newUnit.title} onChange={(e) => setNewUnit({ ...newUnit, title: e.target.value })} />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("admin.type")}</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("admin.type")} <span className="text-destructive">*</span></label>
               <select className={inp} value={newUnit.type} onChange={(e) => setNewUnit({ ...newUnit, type: e.target.value as any })}>
                 <option value="Warehouse">{t("admin.warehouseType")}</option>
                 <option value="Moving">{t("admin.movingType")}</option>
@@ -468,7 +468,7 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="text-xs font-medium text-muted-foreground">{t("admin.price")} (€)</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.price")} (€) <span className="text-destructive">*</span></label>
                 <input type="number" className={inp} value={newUnit.priceFrom} onChange={(e) => setNewUnit({ ...newUnit, priceFrom: e.target.value })} />
               </div>
               <div>

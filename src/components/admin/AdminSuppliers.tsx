@@ -108,6 +108,10 @@ export default function AdminSuppliers() {
   };
 
   const handleCreate = () => {
+    if (!createForm.name.trim()) {
+      toast.error(t("admin.nameRequired") || "Partner name is required");
+      return;
+    }
     const data: Record<string, unknown> = {
       name: createForm.name,
       registryCode: createForm.registryCode,

@@ -250,7 +250,7 @@ export default function BookingPage() {
   }
 
   return (
-    <div className="container-wide py-8 pb-40 lg:pb-8">
+    <div className="container-wide py-8 pb-48 lg:pb-8">
       <SEO
         title={`${t("booking.seoTitle")} — Ruumly`}
         description={t("booking.seoDesc")}
@@ -334,12 +334,12 @@ export default function BookingPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="mb-1 block text-sm font-medium">{t("booking.startDate")}</label>
-                    <input type="date" {...detailsForm.register("startDate")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    <input type="date" {...detailsForm.register("startDate")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent" />
                     {detailsForm.formState.errors.startDate && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.startDate.message}</p>}
                   </div>
                   <div>
                     <label className="mb-1 block text-sm font-medium">{t("booking.endDate")}</label>
-                    <input type="date" {...detailsForm.register("endDate")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    <input type="date" {...detailsForm.register("endDate")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent" />
                     {detailsForm.formState.errors.endDate && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.endDate.message}</p>}
                   </div>
                 </div>
@@ -623,7 +623,7 @@ export default function BookingPage() {
       </div>
 
       {/* Mobile sticky pricing bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border bg-card px-3 pt-2 pb-3 lg:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border bg-card px-3 pt-2 pb-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
         {/* Pricing summary row */}
         <div className="mb-2 flex items-center justify-between text-xs">
           <div className="flex items-center gap-3">

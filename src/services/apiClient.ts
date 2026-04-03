@@ -93,6 +93,8 @@ class ApiClient {
         const errorBody = await response.json();
         if (errorBody.message) {
           message = errorBody.message;
+        } else if (errorBody.error) {
+          message = errorBody.error;
         } else if (errorBody.errors) {
           const msgs = Object.values(errorBody.errors).flat().filter(Boolean);
           if (msgs.length > 0) message = (msgs as string[]).join(". ");
