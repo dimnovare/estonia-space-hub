@@ -147,7 +147,7 @@ function LocationDialog({
           </div>
           <div className="flex items-end gap-2">
             <div className="flex-1">
-              <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.locationAddress")}</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.locationAddress")} <span className="text-destructive">*</span></label>
               <Input {...form.register("address")} />
             </div>
             <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={async () => {
