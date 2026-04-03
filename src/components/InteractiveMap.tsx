@@ -184,8 +184,8 @@ export default function InteractiveMap({
     if (!mapRef.current || mapInstance.current) return;
 
     mapInstance.current = L.map(mapRef.current, {
-      center,
-      zoom,
+      center: effectiveCenter,
+      zoom: effectiveZoom,
       zoomControl: true,
       attributionControl: true,
     });
