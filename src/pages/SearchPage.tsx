@@ -8,6 +8,7 @@ import { useListings, useLocations } from "@/hooks/queries";
 import { useQuery } from "@tanstack/react-query";
 import type { Listing, ListingType, ListingFilters } from "@/services/types";
 import { apiClient } from "@/services/apiClient";
+import { useFeatureDefinitions, type FeatureDefinition } from "@/hooks/useFeatureDefinitions";
 import ListingCard from "@/components/ListingCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/i18n/LanguageContext";
