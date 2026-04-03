@@ -21,7 +21,7 @@ export default function HomePage() {
   const [selectedCity, setSelectedCity] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const settings = usePlatformSettings();
 
   const { data: featured = [], isLoading: featuredLoading } = useFeaturedListings();
