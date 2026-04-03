@@ -13,6 +13,7 @@ interface InteractiveMapProps {
   onLocationClick?: (location: SupplierLocation) => void;
   center?: [number, number];
   zoom?: number;
+  language?: string;
   tUnits?: string;
   tFrom?: string;
   tPerMonth?: string;
@@ -148,13 +149,31 @@ export default function InteractiveMap({
   selectedId = null,
   onMarkerClick,
   onLocationClick,
-  center = [56.8, 24.5],
-  zoom = 6,
+  center,
+  zoom,
+  language = "et",
   tUnits = "units",
   tFrom = "From",
   tPerMonth = "/mo",
   tAllUnits = "All units",
 }: InteractiveMapProps) {
+  const defaultCenters: Record<string, [number, number]> = {
+    et: [58.8, 25.5],
+    en: [57.5, 24.5],
+    ru: [57.5, 24.5],
+    lv: [56.95, 24.1],
+    lt: [55.2, 23.9],
+  };
+  const defaultZooms: Record<string, number> = {
+    et: 7,
+    en: 6,
+    ru: 6,
+    lv: 7,
+    lt: 7,
+  };
+  const effectiveCenter = center || defaultCenters[language] || defaultCenters.en;
+  const effectiveZoom = zoom || defaultZooms[language] || 6;
+
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
@@ -165,8 +184,8 @@ export default function InteractiveMap({
     if (!mapRef.current || mapInstance.current) return;
 
     mapInstance.current = L.map(mapRef.current, {
-      center,
-      zoom,
+      center: effectiveCenter,
+      zoom: effectiveZoom,
       zoomControl: true,
       attributionControl: true,
     });
