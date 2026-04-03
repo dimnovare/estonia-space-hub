@@ -658,10 +658,12 @@ function EditUnitDialog({
   onOpenChange: (v: boolean) => void;
   unitData: any;
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [images, setImages] = useState<string[]>(unitData?.images || []);
+  const { data: featureDefs = {} } = useFeatureDefinitions();
+  const [features, setFeatures] = useState<Record<string, boolean>>(unitData?.features || {});
 
   const form = useForm<UnitForm>({
     resolver: zodResolver(unitSchema),
