@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useLocations, useCreateLocation, useUpdateLocation, useAddUnit } from "@/hooks/queries";
+import { useFeatureDefinitions } from "@/hooks/useFeatureDefinitions";
 import { ESTONIAN_CITIES } from "@/lib/constants";
 import { Loader2, MapPin, Warehouse, Truck, CarFront, Plus, Pencil, ChevronDown, ChevronUp, Trash2, AlertTriangle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
