@@ -244,7 +244,7 @@ export default function LoginPage() {
                   toast.error(t("error.googleFailed2"));
                 }}
                 useOneTap={false}
-                width={320}
+                width={300}
                 text="continue_with"
                 shape="rectangular"
                 theme="outline"
