@@ -444,13 +444,14 @@ interface FilterContentProps {
   activeFiltersCount: number;
   updateFilters: (u: Record<string, string>) => void;
   clearAll: () => void;
+  availableCities: { city: string; country: string }[];
 }
 
 function FilterContent({
   t, cityFilter, priceMax, availableNow, activeType,
   heated, access24, indoor, security, loadingDock, forkliftFilter,
   shortTerm, longTerm, withVan, packingHelp, loadingHelp, pricingFixed,
-  trailerClosed, activeFiltersCount, updateFilters, clearAll,
+  trailerClosed, activeFiltersCount, updateFilters, clearAll, availableCities,
 }: FilterContentProps) {
   return (
     <>
@@ -461,8 +462,8 @@ function FilterContent({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t("search.allCities")}</SelectItem>
-            {ESTONIAN_CITIES.map((city) => (
-              <SelectItem key={city} value={city}>{city}</SelectItem>
+            {availableCities.map((c) => (
+              <SelectItem key={`${c.country}-${c.city}`} value={c.city}>{c.city}</SelectItem>
             ))}
           </SelectContent>
         </Select>
