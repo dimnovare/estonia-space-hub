@@ -277,13 +277,10 @@ export default function SearchPage() {
               </DrawerHeader>
               <div className="overflow-y-auto px-4 pb-6 space-y-3">
                 <FilterContent
-                  t={t} cityFilter={cityFilter} priceMax={priceMax} availableNow={availableNow}
-                  activeType={activeType} heated={heated} access24={access24} indoor={indoor}
-                  security={security} loadingDock={loadingDock} forkliftFilter={forkliftFilter}
-                  shortTerm={shortTerm} longTerm={longTerm} withVan={withVan} packingHelp={packingHelp}
-                  loadingHelp={loadingHelp} pricingFixed={pricingFixed} trailerClosed={trailerClosed}
+                  t={t} language={language} cityFilter={cityFilter} priceMax={priceMax} availableNow={availableNow}
+                  activeType={activeType} featureDefs={featureDefs}
                   activeFiltersCount={activeFiltersCount} updateFilters={updateFilters} clearAll={clearAll}
-                  availableCities={availableCities}
+                  availableCities={availableCities} searchParams={searchParams}
                 />
                 <DrawerClose asChild>
                   <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
