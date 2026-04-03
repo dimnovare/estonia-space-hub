@@ -278,6 +278,7 @@ export default function SearchPage() {
                 shortTerm={shortTerm} longTerm={longTerm} withVan={withVan} packingHelp={packingHelp}
                 loadingHelp={loadingHelp} pricingFixed={pricingFixed} trailerClosed={trailerClosed}
                 activeFiltersCount={activeFiltersCount} updateFilters={updateFilters} clearAll={clearAll}
+                availableCities={availableCities}
               />
             </div>
           )}
