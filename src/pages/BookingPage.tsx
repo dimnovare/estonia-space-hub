@@ -250,7 +250,7 @@ export default function BookingPage() {
   }
 
   return (
-    <div className="container-wide py-8 pb-40 lg:pb-8">
+    <div className="container-wide py-8 pb-48 lg:pb-8">
       <SEO
         title={`${t("booking.seoTitle")} — Ruumly`}
         description={t("booking.seoDesc")}
