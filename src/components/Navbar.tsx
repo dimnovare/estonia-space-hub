@@ -1,6 +1,7 @@
 import { Link, useLocation, useSearchParams, useNavigate } from "react-router-dom";
-import { Menu, X, User, LogIn, LogOut, ChevronDown, Bell, LayoutDashboard, Shield } from "lucide-react";
+import { Menu, X, User, LogIn, LogOut, ChevronDown, Bell, LayoutDashboard, Shield, Check } from "lucide-react";
 import { useState } from "react";
+import type { Language } from "@/i18n/translations";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { LANGUAGES } from "@/i18n/translations";
@@ -26,6 +27,7 @@ function isLinkActive(link: typeof navLinks[0], pathname: string, searchType: st
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -66,18 +68,37 @@ export default function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <div className="flex items-center gap-0.5 rounded-lg border border-border bg-card p-0.5">
-            {LANGUAGES.map((lang) => (
-              <button
-                key={lang.code}
-                onClick={() => setLanguage(lang.code as "et" | "en" | "ru")}
-                className={`flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium transition-colors ${language === lang.code ? "bg-accent/10 text-accent" : "text-muted-foreground hover:text-foreground"}`}
-                title={lang.label}
-              >
-                <FlagIcon lang={lang.code} />
-                <span className="hidden sm:inline uppercase">{lang.code}</span>
-              </button>
-            ))}
+          <div className="relative">
+            <button
+              onClick={() => setLangOpen(prev => !prev)}
+              className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-secondary"
+            >
+              <FlagIcon lang={language} />
+              <span className="uppercase">{language}</span>
+              <ChevronDown className="h-3 w-3 text-muted-foreground" />
+            </button>
+            {langOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setLangOpen(false)} />
+                <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-xl border border-border bg-card py-1 shadow-lg">
+                  {LANGUAGES.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => { setLanguage(lang.code as Language); setLangOpen(false); }}
+                      className={`flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors ${
+                        language === lang.code
+                          ? "bg-accent/10 text-accent font-medium"
+                          : "text-foreground hover:bg-secondary"
+                      }`}
+                    >
+                      <FlagIcon lang={lang.code} />
+                      <span>{lang.label}</span>
+                      {language === lang.code && <Check className="ml-auto h-3.5 w-3.5" />}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
           {isAuthenticated ? (
@@ -167,12 +188,12 @@ export default function Navbar() {
               </Link>
             );
           })}
-          <div className="mt-2 flex items-center gap-1 px-3">
+          <div className="mt-2 flex flex-wrap items-center gap-1 px-3">
             {LANGUAGES.map((lang) => (
               <button
                 key={lang.code}
-                onClick={() => { setLanguage(lang.code as "et" | "en" | "ru"); }}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${language === lang.code ? "bg-accent/10 text-accent" : "text-muted-foreground hover:text-foreground"}`}
+                onClick={() => { setLanguage(lang.code as Language); }}
+                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors ${language === lang.code ? "bg-accent/10 text-accent" : "text-muted-foreground hover:text-foreground"}`}
                 title={lang.label}
               >
                 <FlagIcon lang={lang.code} className="h-4 w-6 rounded-sm" />
