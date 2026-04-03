@@ -8,7 +8,8 @@ import { usePricingConfig } from "@/hooks/queries";
 import { fillPricing } from "@/lib/pricingPlaceholders";
 import { useAuth } from "@/contexts/AuthContext";
 import { providerService } from "@/services";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/services/apiClient";
 import { toast } from "sonner";
 
 export default function ProviderOnboardingPage() {
