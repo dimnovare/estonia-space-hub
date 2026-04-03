@@ -412,7 +412,7 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="text-xs font-medium text-muted-foreground">{t("admin.address")}</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.address")} <span className="text-destructive">*</span></label>
                 <input className={inp} value={newLoc.address} onChange={(e) => setNewLoc({ ...newLoc, address: e.target.value })} />
               </div>
               <div>
