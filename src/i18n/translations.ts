@@ -8,8 +8,7 @@ export const LANGUAGES: { code: Language; label: string; flag: string }[] = [
   { code: "lt", label: "Lietuvių", flag: "LT" },
 ];
 
-const translations: Record<Language, Record<string, string>> = {
-  et: {
+const et: Record<string, string> = {
     // Nav
     "nav.storage": "Laopinnad",
     "nav.moving": "Kolimine",
