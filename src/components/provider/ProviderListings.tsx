@@ -800,6 +800,32 @@ function EditUnitDialog({
             <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.images") || "Images"}</label>
             <ImageUploader images={images} onChange={setImages} />
           </div>
+          {(() => {
+            const editType = form.watch("type")?.toLowerCase() || "warehouse";
+            const defs = featureDefs[editType] || [];
+            if (defs.length === 0) return null;
+            return (
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.features") || "Features"}</label>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {defs.map(f => (
+                    <button
+                      key={f.key}
+                      type="button"
+                      onClick={() => setFeatures(prev => ({ ...prev, [f.key]: !prev[f.key] }))}
+                      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                        features[f.key]
+                          ? "border-accent bg-accent/10 text-accent"
+                          : "border-border text-muted-foreground hover:border-foreground"
+                      }`}
+                    >
+                      {f.labels[language] || f.labels.en || f.key}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
           <Button type="submit" disabled={saving} className="w-full">
             {saving ? (
               <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t("account.saving")}</>
