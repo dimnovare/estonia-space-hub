@@ -2672,6 +2672,7 @@ const translations: Record<Language, Record<string, string>> = {
     "admin.emailVerified": "Email verified",
     "admin.emailNotEditable": "Email cannot be changed by admin",
     "admin.userUpdated": "User updated",
+    "admin.nameRequired": "Partner name is required",
     "admin.locations.type": "Type",
     "admin.locations.warehouse": "Storage",
     "admin.locations.moving": "Moving",
