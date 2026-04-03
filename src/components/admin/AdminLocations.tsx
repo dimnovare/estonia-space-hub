@@ -416,7 +416,7 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
                 <input className={inp} value={newLoc.address} onChange={(e) => setNewLoc({ ...newLoc, address: e.target.value })} />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">{t("admin.city")}</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.city")} <span className="text-destructive">*</span></label>
                 <input className={inp} value={newLoc.city} onChange={(e) => setNewLoc({ ...newLoc, city: e.target.value })} />
               </div>
             </div>
