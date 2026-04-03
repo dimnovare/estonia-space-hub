@@ -297,6 +297,7 @@ export default function SearchPage() {
                   shortTerm={shortTerm} longTerm={longTerm} withVan={withVan} packingHelp={packingHelp}
                   loadingHelp={loadingHelp} pricingFixed={pricingFixed} trailerClosed={trailerClosed}
                   activeFiltersCount={activeFiltersCount} updateFilters={updateFilters} clearAll={clearAll}
+                  availableCities={availableCities}
                 />
                 <DrawerClose asChild>
                   <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
