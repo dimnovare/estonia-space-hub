@@ -81,24 +81,22 @@ export default function SearchPage() {
     type: activeType !== "all" ? activeType : undefined,
   });
 
-  // Client-side post-filters for feature-specific booleans
+  // Client-side post-filters for dynamic feature booleans
   const filtered = useMemo(() => {
     let results = serverFiltered;
-    if (heated) results = results.filter((l) => l.type === "warehouse" && (l as any).heated);
-    if (access24) results = results.filter((l) => l.type === "warehouse" && (l as any).access24_7);
-    if (indoor) results = results.filter((l) => l.type === "warehouse" && (l as any).indoor);
-    if (security) results = results.filter((l) => l.type === "warehouse" && (l as any).security);
-    if (loadingDock) results = results.filter((l) => l.type === "warehouse" && (l as any).loadingDock);
-    if (forkliftFilter) results = results.filter((l) => l.type === "warehouse" && (l as any).forklift);
-    if (shortTerm) results = results.filter((l) => l.type === "warehouse" && (l as any).shortTerm);
-    if (longTerm) results = results.filter((l) => l.type === "warehouse" && (l as any).longTerm);
-    if (withVan) results = results.filter((l) => l.type === "moving" && (l as any).withVan);
-    if (packingHelp) results = results.filter((l) => l.type === "moving" && (l as any).packingHelp);
-    if (loadingHelp) results = results.filter((l) => l.type === "moving" && (l as any).loadingHelp);
-    if (pricingFixed) results = results.filter((l) => l.type === "moving" && (l as any).pricingModel === "fixed");
-    if (trailerClosed) results = results.filter((l) => l.type === "trailer" && (l as any).trailerType.toLowerCase().includes("kinnine"));
+    Object.entries(featureDefs).forEach(([type, features]) => {
+      features.forEach(f => {
+        if (searchParams.get(f.key) === "true") {
+          results = results.filter(l => {
+            if (type !== "all" && l.type !== type) return false;
+            const feat = (l as any).features || {};
+            return feat[f.key] === true || feat[f.key] === "true";
+          });
+        }
+      });
+    });
     return results;
-  }, [serverFiltered, heated, access24, indoor, security, loadingDock, forkliftFilter, shortTerm, longTerm, withVan, packingHelp, loadingHelp, pricingFixed, trailerClosed]);
+  }, [serverFiltered, featureDefs, searchParams]);
 
   // Local-only UI state
   const isMobile = useIsMobile();
