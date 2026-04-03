@@ -4235,6 +4235,7 @@ const translations: Record<Language, Record<string, string>> = {
     "admin.emailVerified": "Email подтверждён",
     "admin.emailNotEditable": "Email не может быть изменён администратором",
     "admin.userUpdated": "Пользователь обновлён",
+    "admin.nameRequired": "Имя партнёра обязательно",
     "admin.locations.type": "Тип",
     "admin.locations.warehouse": "Склад",
     "admin.locations.moving": "Переезд",
