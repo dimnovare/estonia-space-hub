@@ -1,9 +1,16 @@
 import type { IntegrationType, OrderStatus, Order } from "@/services/types";
 
-export const ESTONIAN_CITIES = [
-  "Tallinn", "Tartu", "Pärnu", "Narva", "Viljandi",
-  "Rakvere", "Haapsalu", "Jõhvi", "Kuressaare",
-] as const;
+export const BALTIC_CITIES = {
+  EE: ["Tallinn", "Tartu", "Pärnu", "Narva", "Viljandi", "Rakvere", "Haapsalu", "Jõhvi", "Kuressaare"],
+  LV: ["Rīga", "Daugavpils", "Liepāja", "Jelgava", "Jūrmala"],
+  LT: ["Vilnius", "Kaunas", "Klaipėda", "Šiauliai", "Panevėžys"],
+} as const;
+
+// Backward compat
+export const ESTONIAN_CITIES = BALTIC_CITIES.EE;
+
+// All cities flattened for search
+export const ALL_CITIES = [...BALTIC_CITIES.EE, ...BALTIC_CITIES.LV, ...BALTIC_CITIES.LT];
 
 export const INTEGRATION_TYPE_CONFIG: Record<IntegrationType, { label: string; color: string; description: string }> = {
   api: { label: "API", color: "bg-success/10 text-success", description: "Automatic API integration" },
