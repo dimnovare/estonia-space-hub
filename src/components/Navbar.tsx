@@ -27,6 +27,7 @@ function isLinkActive(link: typeof navLinks[0], pathname: string, searchType: st
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
