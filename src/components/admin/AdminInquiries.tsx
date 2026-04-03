@@ -35,7 +35,7 @@ export default function AdminInquiries() {
       apiClient.patch<Inquiry>(`/admin/inquiries/${id}`, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-inquiries"] });
-      toast.success("Päring uuendatud");
+      toast.success(t("toast.inquiryUpdated") || "Inquiry updated");
     },
     onError: (err: any) => toast.error(err.message || t("toast.updateFailed")),
   });

@@ -105,7 +105,10 @@ export default function ProviderAnalytics() {
               </ResponsiveContainer>
             </div>
             <div className="card-elevated p-5">
-              <h3 className="text-sm font-semibold mb-4">{t("provider.analytics.revenue")}</h3>
+              <h3 className="text-sm font-semibold mb-1">{t("provider.analytics.revenue")}</h3>
+              <p className="text-[10px] text-muted-foreground mb-3">
+                {t("provider.analytics.revenueNote") || "Total booking value through Ruumly"}
+              </p>
               <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={revenueData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />

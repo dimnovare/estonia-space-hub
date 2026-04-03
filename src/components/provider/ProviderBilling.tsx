@@ -233,7 +233,7 @@ export default function ProviderBilling() {
               </label>
               <input
                 className={inp}
-                placeholder="Ettevõtte nimi"
+                placeholder={t("provider.billing.companyName") || "Company name"}
                 value={bankForm.bankAccountName}
                 onChange={e => setBankForm(p => ({ ...p, bankAccountName: e.target.value }))}
               />
