@@ -427,6 +427,7 @@ export const locationService = {
     description?: string;
     vatRate?: number;
     pricesIncludeVat: boolean;
+    features?: Record<string, boolean>;
   }): Promise<{ id: string }> {
     return apiClient.post<{ id: string }>(`/locations/${locationId}/units`, unit);
   },
