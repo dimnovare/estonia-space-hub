@@ -3196,9 +3196,9 @@ const en: Record<string, string> = {
     "provPage.starter.name": "Starter",
     "provPage.growth.name": "Growth",
     "provPage.business.name": "Business",
-  },
+};
 
-  ru: {
+const ru: Record<string, string> = {
     "nav.storage": "Склады",
     "nav.moving": "Переезд",
     "nav.trailer": "Аренда прицепа",
