@@ -125,7 +125,7 @@ function LocationDialog({
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
           <div>
-            <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.locationName")}</label>
+            <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.locationName")} <span className="text-destructive">*</span></label>
             <Input {...form.register("name")} />
           </div>
           <div>
