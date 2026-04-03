@@ -692,6 +692,7 @@ function EditUnitDialog({
         vatRate: unitData.vatRate,
       });
       setImages(unitData.images || []);
+      setFeatures(unitData.features || {});
     }
   }, [unitData]);
 
