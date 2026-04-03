@@ -129,7 +129,7 @@ function LocationDialog({
             <Input {...form.register("name")} />
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.locationCity")}</label>
+            <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.locationCity")} <span className="text-destructive">*</span></label>
             <Controller
               control={form.control}
               name="city"
