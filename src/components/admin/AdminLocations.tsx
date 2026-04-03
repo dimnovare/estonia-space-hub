@@ -455,7 +455,7 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
           <DialogHeader><DialogTitle>{t("admin.locations.addUnit")}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("admin.title_field")}</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("admin.title_field")} <span className="text-destructive">*</span></label>
               <input className={inp} placeholder={t("admin.locations.unitPlaceholder")} value={newUnit.title} onChange={(e) => setNewUnit({ ...newUnit, title: e.target.value })} />
             </div>
             <div>
