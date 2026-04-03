@@ -308,7 +308,7 @@ export default function BookingPage() {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 pb-28 lg:pb-0">
 
           {/* ── Step 0: Details + Extras ── */}
           {step === 0 && (

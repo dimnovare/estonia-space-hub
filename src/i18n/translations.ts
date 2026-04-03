@@ -3227,7 +3227,7 @@ const ru: Record<string, string> = {
     "provider.nav.billing": "Выплаты",
 
     "hero.title": "Найдите и забронируйте склад",
-    "hero.titleHighlight": "в Эстонии",
+    "hero.titleHighlight": "в Балтии",
     "hero.subtitle": "Сравните цены, забронируйте за минуты. Услуги переезда и транспорта как допы.",
     "trust.title": "Лучшая цена без звонков",
     "trust.badge1": "Локация + единицы в одном",
