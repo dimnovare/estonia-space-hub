@@ -35,19 +35,6 @@ export default function SearchPage() {
   const sort = searchParams.get("sort") || "best";
   const cityFilter = searchParams.get("city") || "";
   const priceMax = searchParams.get("priceMax") || "";
-  const heated = searchParams.get("heated") === "true";
-  const access24 = searchParams.get("access24") === "true";
-  const indoor = searchParams.get("indoor") === "true";
-  const security = searchParams.get("security") === "true";
-  const loadingDock = searchParams.get("loadingDock") === "true";
-  const forkliftFilter = searchParams.get("forklift") === "true";
-  const shortTerm = searchParams.get("shortTerm") === "true";
-  const longTerm = searchParams.get("longTerm") === "true";
-  const withVan = searchParams.get("withVan") === "true";
-  const packingHelp = searchParams.get("packingHelp") === "true";
-  const loadingHelp = searchParams.get("loadingHelp") === "true";
-  const pricingFixed = searchParams.get("pricingFixed") === "true";
-  const trailerClosed = searchParams.get("trailerClosed") === "true";
   const availableNow = searchParams.get("availableNow") === "true";
 
   // Debounced search: separate input value from query used in API calls
