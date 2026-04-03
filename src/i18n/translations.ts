@@ -1102,6 +1102,7 @@ const translations: Record<Language, Record<string, string>> = {
     "admin.emailVerified": "E-post kinnitatud",
     "admin.emailNotEditable": "E-posti ei saa admin muuta",
     "admin.userUpdated": "Kasutaja uuendatud",
+    "admin.nameRequired": "Partneri nimi on kohustuslik",
     
     "admin.locations.type": "Tüüp",
     "admin.locations.warehouse": "Laopind",
