@@ -520,6 +520,7 @@ export default function ProviderListings() {
                                       description: unit.description || "",
                                       vatRate: unit.vatRate,
                                       images: unit.images || [],
+                                      features: (unit as any).features || {},
                                     });
                                     setEditUnitOpen(true);
                                   }}
