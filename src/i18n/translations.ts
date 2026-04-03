@@ -33,7 +33,7 @@ const et: Record<string, string> = {
 
     // Hero
     "hero.title": "Leia ja broneeri laopind",
-    "hero.titleHighlight": "Eestis",
+    "hero.titleHighlight": "Baltikumis",
     "hero.subtitle": "Võrdle hindu, broneeri minutitega. Kolimis- ja transporditeenused lisana.",
     "trust.title": "Parim hind ilma helistamiseta",
     "trust.badge1": "Asukoht + ühikud ühes",
