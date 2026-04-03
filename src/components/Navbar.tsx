@@ -188,12 +188,12 @@ export default function Navbar() {
               </Link>
             );
           })}
-          <div className="mt-2 flex items-center gap-1 px-3">
+          <div className="mt-2 flex flex-wrap items-center gap-1 px-3">
             {LANGUAGES.map((lang) => (
               <button
                 key={lang.code}
-                onClick={() => { setLanguage(lang.code as "et" | "en" | "ru"); }}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${language === lang.code ? "bg-accent/10 text-accent" : "text-muted-foreground hover:text-foreground"}`}
+                onClick={() => { setLanguage(lang.code as Language); }}
+                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors ${language === lang.code ? "bg-accent/10 text-accent" : "text-muted-foreground hover:text-foreground"}`}
                 title={lang.label}
               >
                 <FlagIcon lang={lang.code} className="h-4 w-6 rounded-sm" />
