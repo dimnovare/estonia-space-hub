@@ -1,13 +1,14 @@
-export type Language = "et" | "en" | "ru";
+export type Language = "et" | "en" | "ru" | "lv" | "lt";
 
 export const LANGUAGES: { code: Language; label: string; flag: string }[] = [
   { code: "et", label: "Eesti", flag: "ET" },
   { code: "en", label: "English", flag: "EN" },
   { code: "ru", label: "Русский", flag: "RU" },
+  { code: "lv", label: "Latviešu", flag: "LV" },
+  { code: "lt", label: "Lietuvių", flag: "LT" },
 ];
 
-const translations: Record<Language, Record<string, string>> = {
-  et: {
+const et: Record<string, string> = {
     // Nav
     "nav.storage": "Laopinnad",
     "nav.moving": "Kolimine",
@@ -1618,9 +1619,9 @@ const translations: Record<Language, Record<string, string>> = {
     "provPage.starter.name": "Starter",
     "provPage.growth.name": "Growth",
     "provPage.business.name": "Business",
-  },
+};
 
-  en: {
+const en: Record<string, string> = {
     "nav.storage": "Storage",
     "nav.moving": "Moving",
     "nav.trailer": "Trailer rental",
@@ -3195,9 +3196,9 @@ const translations: Record<Language, Record<string, string>> = {
     "provPage.starter.name": "Starter",
     "provPage.growth.name": "Growth",
     "provPage.business.name": "Business",
-  },
+};
 
-  ru: {
+const ru: Record<string, string> = {
     "nav.storage": "Склады",
     "nav.moving": "Переезд",
     "nav.trailer": "Аренда прицепа",
@@ -4771,7 +4772,30 @@ const translations: Record<Language, Record<string, string>> = {
     "provPage.starter.name": "Starter",
     "provPage.growth.name": "Growth",
     "provPage.business.name": "Business",
-  },
 };
+
+// ── Latvian ─────────────────────────────
+const lv: Record<string, string> = {
+  // TODO: Professional translation needed — English as fallback
+  ...en,
+  "hero.title": "Atrodiet un rezervējiet noliktavu Baltijā",
+  "hero.subtitle": "Salīdziniet cenas, rezervējiet dažās minūtēs.",
+  "nav.search": "Meklēt",
+  "nav.login": "Ielogoties",
+  "nav.register": "Reģistrēties",
+};
+
+// ── Lithuanian ──────────────────────────
+const lt: Record<string, string> = {
+  // TODO: Professional translation needed — English as fallback
+  ...en,
+  "hero.title": "Raskite ir rezervuokite sandėlį Baltijos šalyse",
+  "hero.subtitle": "Palyginkite kainas, rezervuokite per kelias minutes.",
+  "nav.search": "Ieškoti",
+  "nav.login": "Prisijungti",
+  "nav.register": "Registruotis",
+};
+
+const translations: Record<Language, Record<string, string>> = { et, en, ru, lv, lt };
 
 export default translations;

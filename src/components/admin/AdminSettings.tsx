@@ -126,6 +126,8 @@ export default function AdminSettings() {
                 <option value="et">Eesti</option>
                 <option value="en">English</option>
                 <option value="ru">Русский</option>
+                <option value="lv">Latviešu</option>
+                <option value="lt">Lietuvių</option>
               </select>
             </div>
           </div>

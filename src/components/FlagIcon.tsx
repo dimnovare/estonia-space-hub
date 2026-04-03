@@ -54,6 +54,35 @@ export function FlagIcon({
     );
   }
 
+  if (lang === "lv") {
+    return (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 21 15"
+        className={className}
+        aria-label="Latviešu"
+      >
+        <rect width="21" height="15" fill="#9E3039" />
+        <rect y="6" width="21" height="3" fill="#FFFFFF" />
+      </svg>
+    );
+  }
+
+  if (lang === "lt") {
+    return (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 21 15"
+        className={className}
+        aria-label="Lietuvių"
+      >
+        <rect width="21" height="5" fill="#FDB913" />
+        <rect y="5" width="21" height="5" fill="#006A44" />
+        <rect y="10" width="21" height="5" fill="#C1272D" />
+      </svg>
+    );
+  }
+
   return (
     <span className="text-xs font-semibold tracking-wide uppercase">
       {lang}
