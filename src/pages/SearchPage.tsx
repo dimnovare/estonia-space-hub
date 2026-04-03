@@ -147,8 +147,10 @@ export default function SearchPage() {
     { value: "trailer", label: t("search.type.trailer") },
   ];
 
-  const allFilters = [heated, access24, indoor, security, loadingDock, forkliftFilter, shortTerm, longTerm, withVan, packingHelp, loadingHelp, pricingFixed, trailerClosed, availableNow];
-  const activeFiltersCount = allFilters.filter(Boolean).length + (cityFilter ? 1 : 0) + (priceMax ? 1 : 0);
+  const activeFiltersCount = Object.values(featureDefs)
+    .flat()
+    .filter(f => searchParams.get(f.key) === "true").length
+    + (availableNow ? 1 : 0) + (cityFilter ? 1 : 0) + (priceMax ? 1 : 0);
 
   function clearAll() {
     setSearchParams(prev => {
