@@ -143,7 +143,7 @@ export default function HomePage() {
                   );
                 })}
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <div className="relative flex-1">
                   <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <input
@@ -152,24 +152,26 @@ export default function HomePage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                    className="w-full rounded-lg border-0 bg-secondary py-3 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="w-full rounded-lg border-0 bg-secondary py-3 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent min-h-[44px]"
                   />
                 </div>
-                <Select value={selectedCity} onValueChange={setSelectedCity}>
-                  <SelectTrigger className="w-[140px] shrink-0 border-0 bg-secondary text-sm">
-                    <SelectValue placeholder={t("search.allCities")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t("search.allCities")}</SelectItem>
-                    {ESTONIAN_CITIES.map((city) => (
-                      <SelectItem key={city} value={city}>{city}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button onClick={handleSearch} className="shrink-0 bg-accent px-6 text-accent-foreground hover:bg-accent/90">
-                  <Search className="mr-2 h-4 w-4" />
-                  {t("hero.search")}
-                </Button>
+                <div className="flex gap-2">
+                  <Select value={selectedCity} onValueChange={setSelectedCity}>
+                    <SelectTrigger className="flex-1 sm:w-[140px] sm:flex-none shrink-0 border-0 bg-secondary text-sm min-h-[44px]">
+                      <SelectValue placeholder={t("search.allCities")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t("search.allCities")}</SelectItem>
+                      {ESTONIAN_CITIES.map((city) => (
+                        <SelectItem key={city} value={city}>{city}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button onClick={handleSearch} className="shrink-0 bg-accent px-6 text-accent-foreground hover:bg-accent/90 min-h-[44px]">
+                    <Search className="mr-2 h-4 w-4" />
+                    {t("hero.search")}
+                  </Button>
+                </div>
               </div>
             </div>
 
