@@ -261,13 +261,10 @@ export default function SearchPage() {
           {showFilters && !isMobile && (
             <div className="mt-3 space-y-3 border-t border-border pt-3">
               <FilterContent
-                t={t} cityFilter={cityFilter} priceMax={priceMax} availableNow={availableNow}
-                activeType={activeType} heated={heated} access24={access24} indoor={indoor}
-                security={security} loadingDock={loadingDock} forkliftFilter={forkliftFilter}
-                shortTerm={shortTerm} longTerm={longTerm} withVan={withVan} packingHelp={packingHelp}
-                loadingHelp={loadingHelp} pricingFixed={pricingFixed} trailerClosed={trailerClosed}
+                t={t} language={language} cityFilter={cityFilter} priceMax={priceMax} availableNow={availableNow}
+                activeType={activeType} featureDefs={featureDefs}
                 activeFiltersCount={activeFiltersCount} updateFilters={updateFilters} clearAll={clearAll}
-                availableCities={availableCities}
+                availableCities={availableCities} searchParams={searchParams}
               />
             </div>
           )}
