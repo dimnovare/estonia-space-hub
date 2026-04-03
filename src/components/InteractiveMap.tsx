@@ -13,6 +13,7 @@ interface InteractiveMapProps {
   onLocationClick?: (location: SupplierLocation) => void;
   center?: [number, number];
   zoom?: number;
+  language?: string;
   tUnits?: string;
   tFrom?: string;
   tPerMonth?: string;
