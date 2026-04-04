@@ -6140,7 +6140,7 @@ const lv: Record<string, string> = {
     "provider.listings.occupancy": "Occupancy",
     "provider.listings.price": "Cena (€/mēnesis)",
     "provider.listings.save": "Saglabāt",
-    "provider.listings.saveUnit": "Saglabāt changes",
+    "provider.listings.saveUnit": "Saglabāt izmaiņas",
     "provider.listings.saving": "Saving...",
     "provider.listings.selectVatRate": "Izvēlieties PVN rate",
     "provider.listings.serviceType": "Pakalpojums type",
