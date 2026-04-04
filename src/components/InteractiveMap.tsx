@@ -18,6 +18,7 @@ interface InteractiveMapProps {
   tFrom?: string;
   tPerMonth?: string;
   tAllUnits?: string;
+  tSearch?: string;
 }
 
 const typeColors: Record<string, string> = {
