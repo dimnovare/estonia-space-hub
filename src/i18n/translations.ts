@@ -3186,7 +3186,7 @@ const en: Record<string, string> = {
     "provPage.starter.f3": "Basic analytics",
     "provPage.starter.f4": "Email support (48h)",
     "provPage.starter.f5": "Up to 2 extras per unit",
-    "provPage.growth.f1": "3 locations, up to 20 units",
+    "provPage.growth.f1": "2 locations, up to 10 units",
     "provPage.growth.f2": "Boosted search placement",
     "provPage.growth.f3": "Full analytics dashboard",
     "provPage.growth.f4": "Email support (24h)",
