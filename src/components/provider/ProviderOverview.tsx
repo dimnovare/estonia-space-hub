@@ -91,6 +91,35 @@ export default function ProviderOverview({ onGoToOrders, supplier }: { onGoToOrd
           </div>
         </div>
       )}
+
+      {(isOverLimit || isNearLimit) && (
+        <div className={`mb-6 rounded-xl border p-4 ${
+          isOverLimit
+            ? "border-destructive/30 bg-destructive/5"
+            : "border-warning/30 bg-warning/5"
+        }`}>
+          <div className="flex items-start gap-3">
+            <AlertTriangle className={`h-5 w-5 shrink-0 mt-0.5 ${
+              isOverLimit ? "text-destructive" : "text-warning"
+            }`} />
+            <div>
+              <p className="text-sm font-semibold">
+                {isOverLimit
+                  ? t("provider.overview.overLimit").replace("{count}", String(totalUnits)).replace("{max}", String(maxUnits))
+                  : t("provider.overview.nearLimit").replace("{count}", String(totalUnits)).replace("{max}", String(maxUnits))}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t("provider.overview.upgradeHint")}
+              </p>
+              <a href="/provider/dashboard?ptab=billing"
+                className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline">
+                {t("provider.overview.viewPlans")} →
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
       <h1 className="font-display text-2xl font-bold">{t("provider.overview.title")}</h1>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
