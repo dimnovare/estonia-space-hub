@@ -205,13 +205,10 @@ export default function InteractiveMap({
     };
   }, []);
 
-  // Re-center map when language changes (and no markers to fit)
+  // Re-center map when language changes
   useEffect(() => {
     if (!mapInstance.current || center) return;
-    const hasItems = listings.length > 0 || locations.length > 0;
-    if (!hasItems) {
-      mapInstance.current.setView(effectiveCenter, effectiveZoom, { animate: true });
-    }
+    mapInstance.current.setView(effectiveCenter, effectiveZoom, { animate: true });
   }, [language]);
 
   useEffect(() => {
