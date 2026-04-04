@@ -7646,6 +7646,7 @@ const lt: Record<string, string> = {
     "provider.listings.add": "Pridėti listing",
     "provider.listings.addImage": "Pridėti paveikslėlis",
     "provider.listings.addLocation": "Pridėti vietovę",
+    "provider.listings.active": "Aktyvus",
     "provider.listings.addUnit": "Pridėti vienetą",
     "provider.listings.address": "Adresas",
     "provider.listings.addressNotFound": "Adresas not found",
