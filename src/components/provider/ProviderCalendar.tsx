@@ -92,6 +92,43 @@ export default function ProviderCalendar() {
         </Select>
       </div>
 
+      <div className="flex items-center gap-2 mt-4">
+        <a
+          href={`${import.meta.env.VITE_API_URL || ""}/api/supplier/calendar.ics`}
+          download="ruumly-bookings.ics"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-secondary transition-colors"
+          onClick={(e) => {
+            e.preventDefault();
+            const token = localStorage.getItem("ruumly-auth");
+            fetch(`${import.meta.env.VITE_API_URL || ""}/api/supplier/calendar.ics`, {
+              headers: { Authorization: `Bearer ${token}` },
+            })
+              .then(res => res.blob())
+              .then(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "ruumly-bookings.ics";
+                a.click();
+                URL.revokeObjectURL(url);
+              })
+              .catch(() => toast.error(t("toast.error")));
+          }}
+        >
+          <Download className="h-3.5 w-3.5" />
+          {t("provider.calendar.export") || "Export .ics"}
+        </a>
+
+        <button
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-secondary transition-colors text-muted-foreground cursor-not-allowed opacity-50"
+          disabled
+          title={t("provider.calendar.importComingSoon") || "Coming soon"}
+        >
+          <Upload className="h-3.5 w-3.5" />
+          {t("provider.calendar.import") || "Import .ics"}
+        </button>
+      </div>
+
       <div className="mt-6 grid gap-6 lg:grid-cols-[auto_1fr]">
         <div className="card-elevated p-4">
           <Calendar
