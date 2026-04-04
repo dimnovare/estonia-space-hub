@@ -70,6 +70,7 @@ const et: Record<string, string> = {
     "hero.search": "Otsi",
     "hero.searchPlaceholder": "Otsi aadressi, piirkonda või teenust...",
     "hero.listSpace": "Lisa oma pind →",
+    "hero.valueHint": "Võrdle hindu, broneeri minutitega — ilma telefonikõnedeta",
 
     // Categories
     "cat.all": "Kõik teenused",
