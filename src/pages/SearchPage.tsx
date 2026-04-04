@@ -380,6 +380,17 @@ export default function SearchPage() {
                   <Button variant="outline" size="sm" className="mt-5" onClick={clearAll}>
                     {t("empty.search.clearFilters")}
                   </Button>
+                  <div className="mt-4">
+                    <p className="text-sm text-muted-foreground">{t("search.tryNearby")}</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {availableCities.slice(0, 5).map(c => (
+                        <button key={c.city} onClick={() => updateFilters({ city: c.city })}
+                          className="rounded-full border border-border px-3 py-1 text-xs hover:bg-secondary">
+                          {c.city}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <div className="mt-6 flex w-full items-center gap-2">
                     <input
                       type="email"
