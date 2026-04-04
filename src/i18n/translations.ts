@@ -3181,7 +3181,7 @@ const en: Record<string, string> = {
     "provPage.trial.f1": "All features for 30 days",
     "provPage.trial.f2": "No credit card required",
     "provPage.trial.f3": "Unlimited units during trial",
-    "provPage.starter.f1": "1 location, up to 5 units",
+    "provPage.starter.f1": "1 location, up to 3 units",
     "provPage.starter.f2": "Standard search placement",
     "provPage.starter.f3": "Basic analytics",
     "provPage.starter.f4": "Email support (48h)",
