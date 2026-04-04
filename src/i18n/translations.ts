@@ -5765,7 +5765,7 @@ const lv: Record<string, string> = {
     "provPage.faq.q5": "Vai var atcelt jebkurā laikā?",
     "provPage.faq.q5.a": "Jā, līguma nav. Jūs varat deaktivizēt kontu jebkurā laikā.",
     "provPage.faq.title": "Biežāk uzdotie jautājumi",
-    "provPage.growth.f1": "3 atrašanās vietas, līdz 20 vienībām",
+    "provPage.growth.f1": "2 vietas, līdz 10 vienībām",
     "provPage.growth.f2": "Prioritāra meklēšanas pozīcija",
     "provPage.growth.f3": "Pilna analītika",
     "provPage.growth.f4": "E-pasta atbalsts (24h)",
