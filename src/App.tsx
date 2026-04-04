@@ -42,6 +42,7 @@ const ProviderDashboardPage = lazy(() => import("@/pages/ProviderDashboardPage")
 const LocationDetailPage = lazy(() => import("@/pages/LocationDetailPage"));
 const ProviderOnboardingPage = lazy(() => import("@/pages/ProviderOnboardingPage"));
 const AccountPage = lazy(() => import("@/pages/AccountPage"));
+const CityPage = lazy(() => import("@/pages/CityPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -132,6 +133,7 @@ function AppContent() {
             <Route path="/book" element={<BookingPage />} />
             <Route path="/bookings/:id" element={<ProtectedRoute><BookingRedirect /></ProtectedRoute>} />
             <Route path="/provider" element={<ProviderPage />} />
+            <Route path="/storage/:slug" element={<CityPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/how-it-works" element={<HowItWorksPage />} />
