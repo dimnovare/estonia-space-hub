@@ -211,9 +211,9 @@ export default function ProviderPage() {
                   : "border-border bg-card"
               }`}
             >
-              <div className="flex items-center justify-between">
-                <h3 className="font-display text-lg font-bold">{tier.name}</h3>
-                <span className={`rounded-full px-3 py-0.5 text-xs font-semibold ${
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="font-display text-lg font-bold truncate">{tier.name}</h3>
+                <span className={`shrink-0 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-semibold leading-tight ${
                   tier.highlight
                     ? "bg-accent text-accent-foreground"
                     : "bg-secondary text-secondary-foreground"
