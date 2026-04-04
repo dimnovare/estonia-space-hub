@@ -5746,7 +5746,7 @@ const lv: Record<string, string> = {
     "provPage.benefits.title": "Kāpēc izvēlēties Ruumly?",
     "provPage.bottomCta.subtitle": "Pievienojieties simtiem partneru, kas jau izmanto Ruumly jaunu klientu piesaistei.",
     "provPage.bottomCta.title": "Gatavs sākt?",
-    "provPage.business.f1": "10 atrašanās vietas, līdz 50 vienībām",
+    "provPage.business.f1": "5 vietas, līdz 30 vienībām",
     "provPage.business.f2": "Prioritāra meklēšana + Verificēta atzīme",
     "provPage.business.f3": "Pilna analītika + eksports",
     "provPage.business.f4": "Prioritārs atbalsts (4h)",
