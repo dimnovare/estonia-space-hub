@@ -674,7 +674,7 @@ function AccountProfile() {
   const { t } = useLanguage();
   const { user, updateProfile } = useAuth();
   const form = useForm<ProfileForm>({
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(createProfileSchema(t)),
     defaultValues: { name: user?.name || "", phone: user?.phone || "" },
   });
 
