@@ -6923,7 +6923,7 @@ const lt: Record<string, string> = {
     "booking.day": "diena",
     "booking.days": "dienos",
     "booking.details": "Informacija",
-    "booking.detailsAndExtras": "Informacija & papildomos paslaugos",
+    "booking.detailsAndExtras": "Informacija",
     "booking.dur.12months": "12 mėnesių",
     "booking.dur.1day": "1 diena",
     "booking.dur.1month": "1 mėnuo",
