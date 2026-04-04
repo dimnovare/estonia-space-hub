@@ -241,7 +241,10 @@ export default function InteractiveMap({
             ${loc.address}, ${loc.city}
           </div>
           ${loc.priceFrom ? `<div style="font-weight: 700; font-size: 16px; color: #1E3A5F; margin-bottom: 4px;">${tFrom} €${loc.priceFrom}${tPerMonth}</div>` : ''}
-          <a href="/location/${loc.id}" style="font-size: 12px; color: #2EC4B6; text-decoration: none; font-weight: 600;">${tAllUnits} (${loc.unitCount}) →</a>
+          <div style="display: flex; gap: 6px; margin-top: 6px;">
+            <a href="/location/${loc.id}" style="flex: 1; text-align: center; font-size: 12px; color: #2EC4B6; text-decoration: none; font-weight: 600; padding: 6px 0; border: 1px solid #2EC4B6; border-radius: 6px;">${tAllUnits} (${loc.unitCount})</a>
+            <a href="/search?q=${encodeURIComponent(loc.city || '')}" style="flex: 1; text-align: center; font-size: 12px; color: white; background: #2EC4B6; text-decoration: none; font-weight: 600; padding: 6px 0; border-radius: 6px;">${tSearch} →</a>
+          </div>
         </div>
       `;
 
