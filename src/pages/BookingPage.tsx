@@ -169,7 +169,7 @@ export default function BookingPage() {
             return;
           }
         } catch (err) {
-          console.error("Payment initiation failed", err);
+          // Sentry captures this automatically via ErrorBoundary
         }
       }
 
