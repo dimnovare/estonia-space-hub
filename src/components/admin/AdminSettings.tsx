@@ -262,19 +262,76 @@ export default function AdminSettings() {
           <div className="mt-6 pt-5 border-t border-border">
             <p className="text-xs font-semibold text-foreground mb-1">{t("admin.featureDefinitions") || "Feature Definitions"}</p>
             <p className="text-xs text-muted-foreground mb-3">
-              {t("admin.featureDefinitionsDesc") || "Configure which features are available for each listing type. JSON format."}
+              {t("admin.featureDefinitionsDesc") || "Configure which features are available for each listing type."}
             </p>
-            {["warehouse", "moving", "trailer"].map(type => (
-              <div key={type} className="mb-3">
-                <label className="text-[10px] font-medium text-muted-foreground uppercase">{type}</label>
-                <textarea
-                  rows={4}
-                  className={`${inp} font-mono text-[11px]`}
-                  value={settings[`features.${type}`] || "[]"}
-                  onChange={e => set(`features.${type}`, e.target.value)}
-                />
-              </div>
-            ))}
+            {["warehouse", "moving", "trailer"].map(type => {
+              let features: any[] = [];
+              try { features = JSON.parse(settings[`features.${type}`] || "[]"); } catch {}
+              return (
+                <div key={type} className="mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-sm font-semibold capitalize">{type}</h4>
+                    <Button size="sm" variant="outline" onClick={() => {
+                      const newFeature = {
+                        key: `new_${Date.now()}`,
+                        type: "boolean",
+                        showInSearch: true,
+                        labels: { et: "", en: "", ru: "", lv: "", lt: "" }
+                      };
+                      const updated = [...features, newFeature];
+                      set(`features.${type}`, JSON.stringify(updated));
+                    }}>
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Add feature
+                    </Button>
+                  </div>
+                  {features.map((f: any, i: number) => (
+                    <div key={f.key} className="rounded-lg border border-border p-3 mb-2">
+                      <div className="grid gap-2 sm:grid-cols-3">
+                        <input className={inp} value={f.key} placeholder="Key (e.g. heated)"
+                          onChange={e => {
+                            const u = [...features]; u[i] = { ...u[i], key: e.target.value };
+                            set(`features.${type}`, JSON.stringify(u));
+                          }} />
+                        <input className={inp} value={f.labels?.en || ""} placeholder="English label"
+                          onChange={e => {
+                            const u = [...features];
+                            u[i] = { ...u[i], labels: { ...u[i].labels, en: e.target.value } };
+                            set(`features.${type}`, JSON.stringify(u));
+                          }} />
+                        <div className="flex items-center gap-2">
+                          <label className="flex items-center gap-1 text-xs">
+                            <input type="checkbox" checked={f.showInSearch}
+                              onChange={e => {
+                                const u = [...features]; u[i] = { ...u[i], showInSearch: e.target.checked };
+                                set(`features.${type}`, JSON.stringify(u));
+                              }} />
+                            Show in search
+                          </label>
+                          <button onClick={() => {
+                            const u = features.filter((_: any, j: number) => j !== i);
+                            set(`features.${type}`, JSON.stringify(u));
+                          }} className="text-destructive hover:bg-destructive/10 rounded p-1">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="mt-2 grid gap-2 sm:grid-cols-4">
+                        {["et", "lv", "lt", "ru"].map(lang => (
+                          <input key={lang} className={`${inp} text-xs`}
+                            value={f.labels?.[lang] || ""}
+                            placeholder={lang.toUpperCase()}
+                            onChange={e => {
+                              const u = [...features];
+                              u[i] = { ...u[i], labels: { ...u[i].labels, [lang]: e.target.value } };
+                              set(`features.${type}`, JSON.stringify(u));
+                            }} />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
           </div>
 
           {/* ── Extras Pricing ── */}
