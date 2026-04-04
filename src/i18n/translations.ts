@@ -6297,7 +6297,7 @@ const lv: Record<string, string> = {
     "search.loadingHelp": "Ielādē help",
     "search.longTerm": "Lieslēgtsg-term",
     "search.map": "Map",
-    "search.maxPrice": "Max price €",
+    "search.maxPrice": "Maks. cena €",
     "search.movingFilters": "Pārvākšanās pakalpojums filters",
     "search.noResults": "Nav atrasti rezultāti",
     "search.noResultsDesc": "Mēģiniet mainīt meklēšanas kritērijus.",
