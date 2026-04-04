@@ -4454,6 +4454,8 @@ const ru: Record<string, string> = {
     "search.notifyEmail": "Ваш email",
     "search.notifyMe": "Уведомить меня",
     "search.notifySuccess": "Сообщим вам, как только появится!",
+    "search.tryNearby": "Попробуйте другие города:",
+    "search.save": "Экономия",
     "booking.paymentRecommended": "Рекомендуется",
     "booking.payLaterWarning": "Счёт отправляется по email. Бронирование подтверждается после получения оплаты.",
     "booking.rebate.confirmed": "Бронирование подтверждено!",
