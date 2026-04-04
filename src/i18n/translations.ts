@@ -7697,6 +7697,8 @@ const lt: Record<string, string> = {
     "search.notifyEmail": "Jūsų email",
     "search.notifyMe": "Notify me",
     "search.notifySuccess": "We'll let you know when something arrives!",
+    "search.tryNearby": "Išbandykite kitus miestus:",
+    "search.save": "Sutaupykite",
     "search.packingHelp": "Packing help",
     "search.results": "rezultatai",
     "search.resultsFound": "{count} listings found",
