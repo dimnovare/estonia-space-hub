@@ -6180,6 +6180,8 @@ const lv: Record<string, string> = {
     "search.notifyEmail": "Jūsu email",
     "search.notifyMe": "Notify me",
     "search.notifySuccess": "We'll let you know when something arrives!",
+    "search.tryNearby": "Izmēģiniet citas pilsētas:",
+    "search.save": "Ietaupiet",
     "search.packingHelp": "Packing help",
     "search.results": "rezultāti",
     "search.resultsFound": "{count} listings found",
