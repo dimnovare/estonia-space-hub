@@ -7665,6 +7665,7 @@ const lt: Record<string, string> = {
     "provider.listings.defaultTitle": "Naujas listing",
     "provider.listings.deleteFailed": "Ištrinti nepavyko",
     "provider.listings.deleteLocationConfirm": "Ištrinti location? Visi associated units will be deleted too.",
+    "provider.listings.deleteUnit": "Ištrinti vienetą",
     "provider.listings.deleteUnitConfirm": "Ištrinti this unit?",
     "provider.listings.descPlaceholder": "Aprašykite jūsų paslauga...",
     "provider.listings.description": "Aprašymas",
