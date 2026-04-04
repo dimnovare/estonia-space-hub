@@ -6282,7 +6282,7 @@ const lv: Record<string, string> = {
     "reviews.title": "Atsauksmes",
     "search.access24": "24/7 access",
     "search.allCities": "Visas pilsētas",
-    "search.availableNow": "Pieejams now",
+    "search.availableNow": "Pieejams tagad",
     "search.city": "Pilsēta...",
     "search.clearFilters": "Notīrīt filtrus",
     "search.closedTrailer": "Aizvērtd trailer",
