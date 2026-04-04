@@ -358,6 +358,13 @@ export default function SearchPage() {
                               {t("search.save")} {(loc as any).customerDiscount}%
                             </span>
                           )}
+                          {(loc as any).quantityTotal && (loc as any).quantityBooked &&
+                           (loc as any).quantityTotal - (loc as any).quantityBooked <= 3 &&
+                           (loc as any).quantityTotal - (loc as any).quantityBooked > 0 && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 text-[10px] font-semibold text-warning">
+                              🔥 {t("search.unitsLeft").replace("{n}", String((loc as any).quantityTotal - (loc as any).quantityBooked))}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </Link>
