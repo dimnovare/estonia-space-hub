@@ -204,7 +204,7 @@ export default function SearchPage() {
       {mobileView === "map" && (
         <div className="h-[calc(100vh-8rem)] lg:hidden relative">
           <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary">{t("map.loading")}</div>}>
-            <InteractiveMap listings={filtered.filter(l => !locations.some(loc => loc.lat === l.lat && loc.lng === l.lng))} locations={locations} className="rounded-none" height="h-full" language={language} selectedId={selectedListingId} onMarkerClick={handleMarkerClick} onLocationClick={(loc: any) => setSelectedListingId(loc.id)} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} />
+            <InteractiveMap listings={filtered.filter(l => !locations.some(loc => loc.lat === l.lat && loc.lng === l.lng))} locations={locations} className="rounded-none" height="h-full" language={language} selectedId={selectedListingId} onMarkerClick={handleMarkerClick} onLocationClick={(loc: any) => setSelectedListingId(loc.id)} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} />
           </Suspense>
           {selectedListingId && (() => {
             const selected = filtered.find(l => l.id === selectedListingId);
