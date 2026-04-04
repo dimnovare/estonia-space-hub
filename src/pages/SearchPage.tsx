@@ -1,6 +1,6 @@
 import { useState, useMemo, lazy, Suspense, useCallback, useRef, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers, Warehouse } from "lucide-react";
+import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers, Warehouse, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from "@/components/ui/drawer";
@@ -342,6 +342,13 @@ export default function SearchPage() {
                       <div className="p-4">
                         <h3 className="truncate font-sans text-sm font-semibold text-foreground">{loc.name}</h3>
                         <p className="mt-0.5 text-xs text-muted-foreground">{loc.supplierName}</p>
+                        {(loc as any).rating > 0 && (
+                          <div className="mt-1 flex items-center gap-1 text-xs">
+                            <Star className="h-3 w-3 fill-accent text-accent" />
+                            <span className="font-medium">{(loc as any).rating.toFixed(1)}</span>
+                            <span className="text-muted-foreground">({(loc as any).reviewCount})</span>
+                          </div>
+                        )}
                         <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                           <MapPin className="h-3 w-3 shrink-0" />
                           {loc.address}, {loc.city}
