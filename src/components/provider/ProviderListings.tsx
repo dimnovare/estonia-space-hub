@@ -258,6 +258,7 @@ function UnitDialog({
       },
       {
         onSuccess: () => {
+          trackEvent("provider_first_unit", {});
           toast.success(t("toast.unitAdded"));
           onOpenChange(false);
         },

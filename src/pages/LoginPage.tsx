@@ -229,6 +229,7 @@ export default function LoginPage() {
                   setLoading(true);
                   loginWithGoogle(credentialResponse.credential)
                     .then(() => {
+                      trackEvent("user_registered", { method: "google" });
                       trackEvent("login", { method: "google" });
                       toast.success(t("login.successLogin"));
                       navigate(from, { replace: true });

@@ -73,6 +73,7 @@ export default function ProviderOnboardingPage() {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
+      trackEvent("provider_signup_started", {});
       await providerService.apply({
         companyName,
         registryCode,
