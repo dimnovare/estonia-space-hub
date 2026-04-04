@@ -157,6 +157,7 @@ export default function InteractiveMap({
   tFrom = "From",
   tPerMonth = "/mo",
   tAllUnits = "All units",
+  tSearch = "Search",
 }: InteractiveMapProps) {
   const defaultCenters: Record<string, [number, number]> = {
     et: [58.8, 25.5],
