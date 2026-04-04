@@ -4760,7 +4760,7 @@ const ru: Record<string, string> = {
     "provPage.trial.f1": "Все функции на 30 дней",
     "provPage.trial.f2": "Кредитная карта не требуется",
     "provPage.trial.f3": "Неограниченное кол-во единиц в пробном периоде",
-    "provPage.starter.f1": "1 локация, до 5 единиц",
+    "provPage.starter.f1": "1 локация, до 3 единиц",
     "provPage.starter.f2": "Стандартное размещение в поиске",
     "provPage.starter.f3": "Базовая аналитика",
     "provPage.starter.f4": "Поддержка по e-mail (48ч)",
