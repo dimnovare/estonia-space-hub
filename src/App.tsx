@@ -133,6 +133,7 @@ function AppContent() {
             <Route path="/book" element={<BookingPage />} />
             <Route path="/bookings/:id" element={<ProtectedRoute><BookingRedirect /></ProtectedRoute>} />
             <Route path="/provider" element={<ProviderPage />} />
+            <Route path="/storage/:slug" element={<CityPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/how-it-works" element={<HowItWorksPage />} />
