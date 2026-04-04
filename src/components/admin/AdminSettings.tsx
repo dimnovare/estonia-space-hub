@@ -270,7 +270,7 @@ export default function AdminSettings() {
               return (
                 <div key={type} className="mb-6">
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-semibold capitalize">{type}</h4>
+                    <h4 className="text-sm font-semibold capitalize">{t(`cat.${type}`) || type}</h4>
                     <Button size="sm" variant="outline" onClick={() => {
                       const newFeature = {
                         key: `new_${Date.now()}`,
