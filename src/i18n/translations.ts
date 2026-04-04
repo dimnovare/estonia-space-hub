@@ -6112,7 +6112,6 @@ const lv: Record<string, string> = {
     "provider.listings.description": "Apraksts",
     "provider.listings.editLocation": "Rediģēt atrašanās vietu",
     "provider.listings.editUnit": "Rediģēt vienību",
-    "provider.listings.saveUnit": "Saglabāt izmaiņas",
     "provider.listings.enterAddress": "Ievadiet an address pirmais",
     "provider.listings.features": "Īpašības",
     "provider.listings.featuresDesc": "Izvēlieties features for jūsu listing:",
