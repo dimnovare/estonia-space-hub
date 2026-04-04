@@ -2869,6 +2869,8 @@ const en: Record<string, string> = {
     "search.notifyEmail": "Your email",
     "search.notifyMe": "Notify me",
     "search.notifySuccess": "We'll let you know when something arrives!",
+    "search.tryNearby": "Try other cities:",
+    "search.save": "Save",
     "booking.paymentRecommended": "Recommended",
     "booking.payLaterWarning": "Invoice sent by email. Booking is confirmed after payment is received.",
     "booking.rebate.confirmed": "Booking confirmed!",
