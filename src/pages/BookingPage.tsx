@@ -90,7 +90,7 @@ export default function BookingPage() {
   });
 
   const contactForm = useForm<BookingContactForm>({
-    resolver: zodResolver(bookingContactSchema),
+    resolver: zodResolver(createBookingContactSchema(t)),
     defaultValues: { name: "", email: "", phone: "", notes: "" },
   });
 

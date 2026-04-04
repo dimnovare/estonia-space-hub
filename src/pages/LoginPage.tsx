@@ -35,8 +35,8 @@ export default function LoginPage() {
   const location = useLocation();
   const from = (location.state as any)?.from || "/account";
 
-  const loginForm = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
-  const registerForm = useForm<RegisterForm>({ resolver: zodResolver(registerSchema) });
+  const loginForm = useForm<LoginForm>({ resolver: zodResolver(createLoginSchema(t)) });
+  const registerForm = useForm<RegisterForm>({ resolver: zodResolver(createRegisterSchema(t)) });
 
   // Check for reset token in URL
   useEffect(() => {

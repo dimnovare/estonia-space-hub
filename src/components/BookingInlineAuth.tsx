@@ -24,8 +24,8 @@ export default function BookingInlineAuth({ onSuccess }: BookingInlineAuthProps)
   const { login, register: authRegister, loginWithGoogle } = useAuth();
   const { inviteCodeRequired } = usePlatformSettings();
 
-  const loginForm = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
-  const registerForm = useForm<RegisterForm>({ resolver: zodResolver(registerSchema) });
+  const loginForm = useForm<LoginForm>({ resolver: zodResolver(createLoginSchema(t)) });
+  const registerForm = useForm<RegisterForm>({ resolver: zodResolver(createRegisterSchema(t)) });
 
   const googleEnabled = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const isRegister = view === "register";
