@@ -5412,7 +5412,7 @@ const lv: Record<string, string> = {
     "booking.payLaterNote": "Mēs nosūtīsim jums rēķinu pa e-pastu. Maksājuma termiņš ir 7 dienas.",
     "booking.payLaterWarning": "Rēķins nosūtīts pa e-pastu. Rezervācija tiek apstiprināta pēc maksājuma saņemšanas.",
     "booking.payment": "Maksājums",
-    "booking.paymentAndReview": "Maksājums un pārskats",
+    "booking.paymentAndReview": "Apstiprināt",
     "booking.paymentMethod": "Maksājuma veids",
     "booking.paymentRecommended": "Ieteicams",
     "booking.period": "Periods",
