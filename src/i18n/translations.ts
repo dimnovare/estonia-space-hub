@@ -6087,6 +6087,7 @@ const lv: Record<string, string> = {
     "provider.listings.add": "Pievienot listing",
     "provider.listings.addImage": "Pievienot attēls",
     "provider.listings.addLocation": "Pievienot atrašanās vietu",
+    "provider.listings.active": "Aktīvs",
     "provider.listings.addUnit": "Pievienot vienību",
     "provider.listings.address": "Adrese",
     "provider.listings.addressNotFound": "Adrese not found",
