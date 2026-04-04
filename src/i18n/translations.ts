@@ -4318,6 +4318,8 @@ const ru: Record<string, string> = {
     "toast.deleteFailed": "Ошибка удаления",
     "toast.uploadFailed": "Ошибка загрузки изображений",
     "booking.sendFailed": "Отправка не удалась. Попробуйте снова.",
+    "booking.resendVerification": "Отправить письмо повторно",
+    "booking.resendSent": "Письмо отправлено! Проверьте почту.",
     "geocode.enterAddress": "Сначала введите адрес.",
     "geocode.notFound": "Адрес не найден. Введите более точный адрес.",
     "geocode.failed": "Ошибка геокодирования.",
