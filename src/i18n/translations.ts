@@ -2714,6 +2714,8 @@ const en: Record<string, string> = {
     "toast.deleteFailed": "Delete failed",
     "toast.uploadFailed": "Image upload failed",
     "booking.sendFailed": "Sending failed. Please try again.",
+    "booking.resendVerification": "Resend verification email",
+    "booking.resendSent": "Email sent! Check your inbox.",
     "geocode.enterAddress": "Please enter an address first.",
     "geocode.notFound": "Address not found. Enter a more specific address.",
     "geocode.failed": "Geocoding failed.",
