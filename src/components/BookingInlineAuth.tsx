@@ -9,7 +9,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema, registerSchema, type LoginForm, type RegisterForm } from "@/lib/schemas";
+import { createLoginSchema, createRegisterSchema, type LoginForm, type RegisterForm } from "@/lib/schemas";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 interface BookingInlineAuthProps {
