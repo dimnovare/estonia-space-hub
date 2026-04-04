@@ -482,6 +482,7 @@ export default function BookingPage() {
                     <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.phone")}</span><span className="font-medium">{contactForm.getValues("phone")}</span></div>
                   </div>
 
+                  {/* Prices here are frontend estimates; server calculates final prices on submission */}
                   {listing && (
                     <div className="border-t border-border pt-3 space-y-1">
                       <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.publicPrice")}</span><span className="font-medium line-through text-muted-foreground">{publicPrice}€</span></div>
