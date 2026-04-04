@@ -7280,7 +7280,7 @@ const lt: Record<string, string> = {
     "provPage.faq.q5": "Ar galima atšaukti bet kuriuo metu?",
     "provPage.faq.q5.a": "Taip, sutarties nėra.",
     "provPage.faq.title": "Dažnai užduodami klausimai",
-    "provPage.growth.f1": "3 vietovės, iki 20 vienetų",
+    "provPage.growth.f1": "2 vietos, iki 10 vienetų",
     "provPage.growth.f2": "Prioritetinė paieškos pozicija",
     "provPage.growth.f3": "Pilna analitika",
     "provPage.growth.f4": "El. pašto palaikymas (24 val.)",
