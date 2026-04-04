@@ -1283,6 +1283,8 @@ const et: Record<string, string> = {
     "search.notifyEmail": "Teie e-post",
     "search.notifyMe": "Teavita mind",
     "search.notifySuccess": "Saatsime teile teate, kui midagi lisandub!",
+    "search.tryNearby": "Proovi teisi linnu:",
+    "search.save": "Säästad",
     "booking.paymentRecommended": "Soovitatav",
     "booking.payLaterWarning": "Arve saadetakse e-postiga. Broneeringut kinnitatakse pärast makse laekumist.",
     "booking.rebate.confirmed": "Broneering kinnitatud!",
