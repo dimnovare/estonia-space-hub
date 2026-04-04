@@ -1,3 +1,9 @@
+// NOTE: These are DISPLAY-ONLY estimates shown before booking.
+// Actual prices are calculated server-side in BookingService.
+// These functions use the pricing config from /api/settings/public.
+// If pricing logic changes, update BookingService first — these
+// are convenience approximations for the UI.
+
 export function calculatePricing(
   publicPrice: number,
   partnerDiscountRate: number = 15,
