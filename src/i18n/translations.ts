@@ -5420,6 +5420,8 @@ const lv: Record<string, string> = {
     "booking.selectDetails": "Izvēlieties detaļas",
     "booking.selectExtras": "Izvēlieties papildu pakalpojumus (neobligāti)",
     "booking.sendFailed": "Nosūtīšana neizdevās. Lūdzu mēģiniet vēlreiz.",
+    "booking.resendVerification": "Nosūtīt verifikācijas e-pastu atkārtoti",
+    "booking.resendSent": "E-pasts nosūtīts! Pārbaudiet savu pastkasti.",
     "booking.seoDesc": "Rezervējiet noliktavu, pārvākšanās pakalpojumus vai piekabes caur Ruumly.",
     "booking.seoTitle": "Rezervēt",
     "booking.service": "Pakalpojums",
