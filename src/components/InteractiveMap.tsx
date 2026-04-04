@@ -18,6 +18,7 @@ interface InteractiveMapProps {
   tFrom?: string;
   tPerMonth?: string;
   tAllUnits?: string;
+  tSearch?: string;
 }
 
 const typeColors: Record<string, string> = {
@@ -156,6 +157,7 @@ export default function InteractiveMap({
   tFrom = "From",
   tPerMonth = "/mo",
   tAllUnits = "All units",
+  tSearch = "Search",
 }: InteractiveMapProps) {
   const defaultCenters: Record<string, [number, number]> = {
     et: [58.8, 25.5],
@@ -231,7 +233,7 @@ export default function InteractiveMap({
 
       const popupHtml = `
         <div style="min-width: 200px; font-family: 'DM Sans', sans-serif;">
-          ${loc.images?.[0] ? `<img src="${loc.images[0]}" alt="${loc.name} — ${loc.city || ''}" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />` : ''}
+          ${loc.images?.[0] ? `<img src="${loc.images[0]}" alt="${loc.name}" onerror="this.style.display='none'" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />` : '<div style="width: 100%; height: 70px; background: #f0f0f0; border-radius: 8px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 12px;">📍</div>'}
           <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #1E3A5F;">${loc.name}</div>
           <div style="font-size: 12px; color: #666; margin-bottom: 4px;">${loc.supplierName}</div>
           <div style="font-size: 12px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
@@ -239,7 +241,10 @@ export default function InteractiveMap({
             ${loc.address}, ${loc.city}
           </div>
           ${loc.priceFrom ? `<div style="font-weight: 700; font-size: 16px; color: #1E3A5F; margin-bottom: 4px;">${tFrom} €${loc.priceFrom}${tPerMonth}</div>` : ''}
-          <a href="/location/${loc.id}" style="font-size: 12px; color: #2EC4B6; text-decoration: none; font-weight: 600;">${tAllUnits} (${loc.unitCount}) →</a>
+          <div style="display: flex; gap: 6px; margin-top: 6px;">
+            <a href="/location/${loc.id}" style="flex: 1; text-align: center; font-size: 12px; color: #2EC4B6; text-decoration: none; font-weight: 600; padding: 6px 0; border: 1px solid #2EC4B6; border-radius: 6px;">${tAllUnits} (${loc.unitCount})</a>
+            <a href="/search?q=${encodeURIComponent(loc.city || '')}" style="flex: 1; text-align: center; font-size: 12px; color: white; background: #2EC4B6; text-decoration: none; font-weight: 600; padding: 6px 0; border-radius: 6px;">${tSearch} →</a>
+          </div>
         </div>
       `;
 
@@ -267,7 +272,7 @@ export default function InteractiveMap({
 
       const popupHtml = `
         <div style="min-width: 200px; font-family: 'DM Sans', sans-serif;">
-          <img src="${listing.image}" alt="${listing.title} — ${listing.city || ''}" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />
+          ${listing.image ? `<img src="${listing.image}" alt="${listing.title}" onerror="this.style.display='none'" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />` : '<div style="width: 100%; height: 70px; background: #f0f0f0; border-radius: 8px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 12px;">📍</div>'}
           <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #1E3A5F;">${listing.title}</div>
           <div style="font-size: 12px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -277,7 +282,7 @@ export default function InteractiveMap({
             <span style="font-weight: 700; font-size: 16px; color: #1E3A5F;">${tFrom} ${listing.priceFrom}€</span>
             <span style="font-size: 11px; color: ${typeColor}; background: ${typeColor}10; padding: 2px 8px; border-radius: 10px; font-weight: 600;">${typeName}</span>
           </div>
-          <div style="font-size: 11px; color: #888; margin-top: 4px;">⭐ ${listing.rating} (${listing.reviewCount} arvustust)</div>
+          ${listing.rating > 0 ? `<div style="font-size: 11px; color: #888; margin-top: 4px;">⭐ ${listing.rating} (${listing.reviewCount})</div>` : ''}
         </div>
       `;
 
