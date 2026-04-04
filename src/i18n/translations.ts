@@ -6272,6 +6272,7 @@ const lv: Record<string, string> = {
     "search.notifySuccess": "We'll let you know when something arrives!",
     "search.tryNearby": "Izmēģiniet citas pilsētas:",
     "search.save": "Ietaupiet",
+    "search.unitsLeft": "Tikai {n} brīvas!",
     "cityPage.seoTitle": "Noliktavas {city} — Salīdziniet cenas un rezervējiet | Ruumly",
     "cityPage.seoDesc": "Atrodiet un rezervējiet noliktavas {city}. Salīdziniet cenas un rezervējiet tiešsaistē.",
     "cityPage.heroTitle": "Noliktavas {city}",
