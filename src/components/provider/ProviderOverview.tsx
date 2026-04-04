@@ -4,6 +4,8 @@ import { useOrders } from "@/hooks/useOrders";
 import { useBookings } from "@/hooks/useBookings";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/services/apiClient";
 
 export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () => void }) {
   const { t } = useLanguage();
@@ -13,6 +15,18 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
   const listingCount = locations.reduce((sum, loc) => sum + (loc.units?.length ?? 0), 0);
   const isLoading = ordersLoading || bookingsLoading;
   const pendingOrders = allOrders.filter(o => o.status === "sent" || o.status === "created");
+
+  const { data: supplierData } = useQuery({
+    queryKey: ["my-supplier-profile"],
+    queryFn: () => apiClient.get<{ tier?: string }>("/suppliers/me"),
+    staleTime: 5 * 60_000,
+  });
+
+  const totalUnits = listingCount;
+  const tierLimits: Record<string, number> = { starter: 3, standard: 10, premium: 30 };
+  const maxUnits = tierLimits[supplierData?.tier?.toLowerCase() ?? "starter"] ?? 3;
+  const isOverLimit = totalUnits > maxUnits;
+  const isNearLimit = totalUnits >= maxUnits - 1 && !isOverLimit;
 
   const thisMonthStr = new Date().toISOString().slice(0, 7);
 
@@ -85,6 +99,35 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
           </div>
         </div>
       )}
+
+      {(isOverLimit || isNearLimit) && (
+        <div className={`mb-6 rounded-xl border p-4 ${
+          isOverLimit
+            ? "border-destructive/30 bg-destructive/5"
+            : "border-warning/30 bg-warning/5"
+        }`}>
+          <div className="flex items-start gap-3">
+            <AlertTriangle className={`h-5 w-5 shrink-0 mt-0.5 ${
+              isOverLimit ? "text-destructive" : "text-warning"
+            }`} />
+            <div>
+              <p className="text-sm font-semibold">
+                {isOverLimit
+                  ? t("provider.overview.overLimit").replace("{count}", String(totalUnits)).replace("{max}", String(maxUnits))
+                  : t("provider.overview.nearLimit").replace("{count}", String(totalUnits)).replace("{max}", String(maxUnits))}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t("provider.overview.upgradeHint")}
+              </p>
+              <a href="/provider/dashboard?ptab=billing"
+                className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline">
+                {t("provider.overview.viewPlans")} →
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
       <h1 className="font-display text-2xl font-bold">{t("provider.overview.title")}</h1>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
