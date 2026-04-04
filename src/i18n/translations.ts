@@ -1294,6 +1294,7 @@ const et: Record<string, string> = {
     "search.notifySuccess": "Saatsime teile teate, kui midagi lisandub!",
     "search.tryNearby": "Proovi teisi linnu:",
     "search.save": "Säästad",
+    "search.unitsLeft": "Ainult {n} vaba!",
     "cityPage.seoTitle": "Laopinnad {city} — Võrdle hindu ja broneeri | Ruumly",
     "cityPage.seoDesc": "Otsi ja broneeri laopindu linnas {city}. Võrdle hindu, asukohti ja broneeri kohe.",
     "cityPage.heroTitle": "Laopinnad linnas {city}",
