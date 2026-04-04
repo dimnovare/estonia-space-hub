@@ -69,7 +69,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const email = await authRegister(data.name, data.email, data.password, data.inviteCode);
-      trackEvent("register", { method: "email" });
+      trackEvent("user_registered", { method: "email" });
       setRegisteredEmail(email);
       setView("verify-sent");
     } catch (err: any) { const msg = err.message || ""; toast.error(msg.startsWith("error.") ? t(msg) : msg || t("error.registerFailed")); }
