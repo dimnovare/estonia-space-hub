@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Globe, ToggleLeft, Save, Loader2, Percent } from "lucide-react";
+import { Globe, ToggleLeft, Save, Loader2, Percent, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { apiClient } from "@/services/apiClient";
