@@ -42,6 +42,7 @@ const ProviderDashboardPage = lazy(() => import("@/pages/ProviderDashboardPage")
 const LocationDetailPage = lazy(() => import("@/pages/LocationDetailPage"));
 const ProviderOnboardingPage = lazy(() => import("@/pages/ProviderOnboardingPage"));
 const AccountPage = lazy(() => import("@/pages/AccountPage"));
+const CityPage = lazy(() => import("@/pages/CityPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
