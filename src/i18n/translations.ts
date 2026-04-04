@@ -672,7 +672,9 @@ const et: Record<string, string> = {
     "admin.apiEndpoint": "API lõpp-punkt",
     "admin.apiAuth": "API autentimine",
     "admin.recipientEmail": "Saaja e-post",
-    "admin.mappingProfile": "Kaardistusprofiil",
+    "admin.mappingProfile": "Kohandatud JSON mall",
+    "admin.insertTemplate": "Sisesta näidismall",
+    "admin.mappingHint": "Saadaolevad: {{orderId}}, {{listingTitle}}, {{listingType}}, {{startDate}}, {{endDate}}, {{duration}}, {{customerName}}, {{customerEmail}}, {{customerPhone}}, {{supplierPrice}}, {{extrasTotal}}, {{extras}}, {{notes}}",
     "admin.lastTested": "Viimati testitud",
     // Routing rules
     "admin.routingTitle": "Marsruutimise reeglid",
