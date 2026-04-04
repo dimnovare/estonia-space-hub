@@ -2907,6 +2907,7 @@ const en: Record<string, string> = {
     "search.notifySuccess": "We'll let you know when something arrives!",
     "search.tryNearby": "Try other cities:",
     "search.save": "Save",
+    "search.unitsLeft": "Only {n} left!",
     "cityPage.seoTitle": "Storage in {city} — Compare prices and book online | Ruumly",
     "cityPage.seoDesc": "Find and book storage units in {city}. Compare prices, locations, and book instantly.",
     "cityPage.heroTitle": "Storage in {city}",
