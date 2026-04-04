@@ -11,6 +11,7 @@ import { providerService } from "@/services";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/analytics";
 
 export default function ProviderOnboardingPage() {
   const [step, setStep] = useState(0);
@@ -72,6 +73,7 @@ export default function ProviderOnboardingPage() {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
+      trackEvent("provider_signup_started", {});
       await providerService.apply({
         companyName,
         registryCode,

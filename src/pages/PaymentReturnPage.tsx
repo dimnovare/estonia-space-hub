@@ -1,13 +1,22 @@
+import { useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
+import { trackEvent } from "@/lib/analytics";
 
 export default function PaymentReturnPage() {
   const [searchParams] = useSearchParams();
   const invoiceId = searchParams.get("invoice");
+  const bookingId = searchParams.get("booking") || searchParams.get("id") || invoiceId;
   const { t } = useLanguage();
+
+  useEffect(() => {
+    if (bookingId) {
+      trackEvent("booking_completed", { bookingId });
+    }
+  }, [bookingId]);
 
   return (
     <div className="container-wide flex min-h-[60vh] items-center justify-center py-16">

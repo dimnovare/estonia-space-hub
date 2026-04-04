@@ -135,6 +135,7 @@ export default function BookingPage() {
   };
 
   const submitBooking = () => {
+    trackEvent("booking_started", { listingId: listingId!, type: listing?.type });
     trackEvent("booking_created", {
       listing_type: listing?.type || "",
       city: listing?.city || "",

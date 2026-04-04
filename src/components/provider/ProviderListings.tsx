@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { trackEvent } from "@/lib/analytics";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -257,6 +258,7 @@ function UnitDialog({
       },
       {
         onSuccess: () => {
+          trackEvent("provider_first_unit", {});
           toast.success(t("toast.unitAdded"));
           onOpenChange(false);
         },
