@@ -346,12 +346,17 @@ export default function SearchPage() {
                           <MapPin className="h-3 w-3 shrink-0" />
                           {loc.address}, {loc.city}
                         </p>
-                        <div className="mt-3 flex items-baseline gap-1 border-t border-border pt-3">
+                        <div className="mt-3 flex items-baseline gap-2 border-t border-border pt-3">
                           {loc.priceFrom != null && (
                             <>
                               <span className="font-display text-lg font-bold text-foreground">{t("location.from")} €{loc.priceFrom}</span>
                               <span className="text-xs text-muted-foreground">/ kuu</span>
                             </>
+                          )}
+                          {loc.priceFrom && (loc as any).customerDiscount > 0 && (
+                            <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
+                              {t("search.save")} {(loc as any).customerDiscount}%
+                            </span>
                           )}
                         </div>
                       </div>
