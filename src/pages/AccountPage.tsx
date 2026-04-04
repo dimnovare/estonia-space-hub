@@ -710,7 +710,7 @@ function AccountSecurity() {
   const [submitting, setSubmitting] = useState(false);
   const { user } = useAuth();
   const pwForm = useForm<PasswordForm>({
-    resolver: zodResolver(passwordSchema),
+    resolver: zodResolver(createPasswordSchema(t)),
   });
 
   const onSubmit = async (data: PasswordForm) => {
