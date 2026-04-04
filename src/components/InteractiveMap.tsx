@@ -205,6 +205,12 @@ export default function InteractiveMap({
     };
   }, []);
 
+  // Re-center map when language changes
+  useEffect(() => {
+    if (!mapInstance.current || center) return;
+    mapInstance.current.setView(effectiveCenter, effectiveZoom, { animate: true });
+  }, [language]);
+
   useEffect(() => {
     if (!mapInstance.current || !markersRef.current) return;
 

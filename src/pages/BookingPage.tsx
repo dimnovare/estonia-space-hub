@@ -285,11 +285,11 @@ export default function BookingPage() {
               }}
               className="mt-3 text-sm font-medium text-amber-800 underline hover:text-amber-900"
             >
-              Saada kinnitusmeil uuesti
+              {t("booking.resendVerification")}
             </button>
           ) : (
             <p className="mt-3 text-sm font-medium text-amber-800">
-              Meil on saadetud! Kontrolli oma postkasti.
+              {t("booking.resendSent")}
             </p>
           )}
         </div>
