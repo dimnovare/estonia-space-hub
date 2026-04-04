@@ -7284,7 +7284,7 @@ const lt: Record<string, string> = {
     "provPage.growth.f2": "Prioritetinė paieškos pozicija",
     "provPage.growth.f3": "Pilna analitika",
     "provPage.growth.f4": "El. pašto palaikymas (24 val.)",
-    "provPage.growth.f5": "Iki 10 papildomų paslaugų",
+    "provPage.growth.f5": "Iki 5 papildomų paslaugų",
     "provPage.growth.f6": "Įtraukta į naujienlaiškį",
     "provPage.growth.name": "Growth",
     "provPage.hero.cta": "Pradėti nemokamai",
