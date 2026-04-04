@@ -7840,7 +7840,7 @@ const lt: Record<string, string> = {
     "reviews.title": "Atsiliepimai",
     "search.access24": "24/7 access",
     "search.allCities": "Visi miestai",
-    "search.availableNow": "Prieinamas now",
+    "search.availableNow": "Prieinamas dabar",
     "search.city": "Miestas...",
     "search.clearFilters": "Išvalyti filtrus",
     "search.closedTrailer": "Uždarytid trailer",
