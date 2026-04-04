@@ -4,8 +4,10 @@ import { useOrders } from "@/hooks/useOrders";
 import { useBookings } from "@/hooks/useBookings";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/services/apiClient";
 
-export default function ProviderOverview({ onGoToOrders, supplier }: { onGoToOrders: () => void; supplier?: any }) {
+export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () => void }) {
   const { t } = useLanguage();
   const { data: allOrders = [], isLoading: ordersLoading } = useOrders();
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings();
@@ -14,9 +16,15 @@ export default function ProviderOverview({ onGoToOrders, supplier }: { onGoToOrd
   const isLoading = ordersLoading || bookingsLoading;
   const pendingOrders = allOrders.filter(o => o.status === "sent" || o.status === "created");
 
+  const { data: supplierData } = useQuery({
+    queryKey: ["my-supplier-profile"],
+    queryFn: () => apiClient.get<{ tier?: string }>("/suppliers/me"),
+    staleTime: 5 * 60_000,
+  });
+
   const totalUnits = listingCount;
   const tierLimits: Record<string, number> = { starter: 3, standard: 10, premium: 30 };
-  const maxUnits = tierLimits[supplier?.tier?.toLowerCase() ?? "starter"] ?? 3;
+  const maxUnits = tierLimits[supplierData?.tier?.toLowerCase() ?? "starter"] ?? 3;
   const isOverLimit = totalUnits > maxUnits;
   const isNearLimit = totalUnits >= maxUnits - 1 && !isOverLimit;
 
