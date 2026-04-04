@@ -9,7 +9,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema, registerSchema, type LoginForm, type RegisterForm } from "@/lib/schemas";
+import { createLoginSchema, createRegisterSchema, type LoginForm, type RegisterForm } from "@/lib/schemas";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 interface BookingInlineAuthProps {
@@ -24,8 +24,8 @@ export default function BookingInlineAuth({ onSuccess }: BookingInlineAuthProps)
   const { login, register: authRegister, loginWithGoogle } = useAuth();
   const { inviteCodeRequired } = usePlatformSettings();
 
-  const loginForm = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
-  const registerForm = useForm<RegisterForm>({ resolver: zodResolver(registerSchema) });
+  const loginForm = useForm<LoginForm>({ resolver: zodResolver(createLoginSchema(t)) });
+  const registerForm = useForm<RegisterForm>({ resolver: zodResolver(createRegisterSchema(t)) });
 
   const googleEnabled = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const isRegister = view === "register";

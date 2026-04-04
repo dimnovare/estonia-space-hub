@@ -12,7 +12,7 @@ import { SEO } from "@/components/SEO";
 import { paymentService } from "@/services";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { bookingContactSchema, type BookingContactForm } from "@/lib/schemas";
+import { createBookingContactSchema, type BookingContactForm } from "@/lib/schemas";
 import { tokenStore } from "@/services/apiClient";
 import BookingInlineAuth from "@/components/BookingInlineAuth";
 import { trackEvent } from "@/lib/analytics";
@@ -90,7 +90,7 @@ export default function BookingPage() {
   });
 
   const contactForm = useForm<BookingContactForm>({
-    resolver: zodResolver(bookingContactSchema),
+    resolver: zodResolver(createBookingContactSchema(t)),
     defaultValues: { name: "", email: "", phone: "", notes: "" },
   });
 
