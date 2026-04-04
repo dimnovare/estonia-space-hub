@@ -5769,7 +5769,7 @@ const lv: Record<string, string> = {
     "provPage.growth.f2": "Prioritāra meklēšanas pozīcija",
     "provPage.growth.f3": "Pilna analītika",
     "provPage.growth.f4": "E-pasta atbalsts (24h)",
-    "provPage.growth.f5": "Līdz 10 papildu pakalpojumiem",
+    "provPage.growth.f5": "Līdz 5 papildu pakalpojumiem",
     "provPage.growth.f6": "Iekļauts jaunumu vēstulē",
     "provPage.growth.name": "Growth",
     "provPage.hero.cta": "Sākt bez maksas",
