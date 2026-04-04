@@ -1,31 +1,59 @@
-import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/services/apiClient";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 
 export default function ProviderProfile() {
-  const { user, updateProfile } = useAuth();
   const { t } = useLanguage();
+
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ["supplier-profile"],
+    queryFn: () => apiClient.get<any>("/supplier/profile"),
+  });
+
   const [formData, setFormData] = useState({
-    company: user?.company || "",
+    company: "",
     regCode: "",
     vatNumber: "",
-    email: user?.email || "",
-    name: user?.name || "",
-    phone: user?.phone || "",
+    email: "",
+    name: "",
+    phone: "",
   });
+
+  useEffect(() => {
+    if (profile) setFormData({
+      company: profile.name || "",
+      regCode: profile.registryCode || "",
+      vatNumber: "",
+      email: profile.contactEmail || "",
+      name: profile.contactName || "",
+      phone: profile.contactPhone || "",
+    });
+  }, [profile]);
 
   const inp = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
 
-  const handleSave = () => {
-    updateProfile({
-      name: formData.name,
-      phone: formData.phone,
-      company: formData.company,
-    });
-    toast.success(t("toast.profileSaved"));
+  const handleSave = async () => {
+    try {
+      await apiClient.patch("/supplier/profile", {
+        contactName: formData.name,
+        contactEmail: formData.email,
+        contactPhone: formData.phone,
+      });
+      toast.success(t("toast.profileSaved"));
+    } catch (err: any) {
+      toast.error(err?.message || t("toast.saveFailed"));
+    }
   };
+
+  if (isLoading) {
+    return <div className="animate-pulse space-y-4 max-w-lg">
+      <div className="h-8 w-48 rounded bg-muted" />
+      {[...Array(4)].map((_, i) => <div key={i} className="h-10 rounded bg-muted" />)}
+    </div>;
+  }
 
   return (
     <div>
@@ -48,7 +76,6 @@ export default function ProviderProfile() {
           <input className={inp} value={formData.email} onChange={e => setFormData(p => ({ ...p, email: e.target.value }))} />
         </div>
         <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleSave}>{t("provider.profile.save")}</Button>
-        {/* TODO: Remove this note once backend sync is implemented */}
       </div>
     </div>
   );
