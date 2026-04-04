@@ -5379,7 +5379,7 @@ const lv: Record<string, string> = {
     "booking.day": "diena",
     "booking.days": "dienas",
     "booking.details": "Detaļas",
-    "booking.detailsAndExtras": "Detaļas & papildu pakalpojumi",
+    "booking.detailsAndExtras": "Detaļas",
     "booking.dur.12months": "12 mēneši",
     "booking.dur.1day": "1 diena",
     "booking.dur.1month": "1 mēnesis",
