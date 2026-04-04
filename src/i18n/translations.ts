@@ -6956,7 +6956,7 @@ const lt: Record<string, string> = {
     "booking.payLaterNote": "Mes atsiųsime jums sąskaitą el. paštu. Mokėjimo terminas — 7 dienos.",
     "booking.payLaterWarning": "Sąskaita išsiųsta el. paštu. Rezervacija patvirtinama gavus mokėjimą.",
     "booking.payment": "Mokėjimas",
-    "booking.paymentAndReview": "Mokėjimas ir peržiūra",
+    "booking.paymentAndReview": "Patvirtinti",
     "booking.paymentMethod": "Mokėjimo būdas",
     "booking.paymentRecommended": "Rekomenduojamas",
     "booking.period": "Periodas",
