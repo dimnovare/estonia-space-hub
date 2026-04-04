@@ -7816,6 +7816,7 @@ const lt: Record<string, string> = {
     "search.notifySuccess": "We'll let you know when something arrives!",
     "search.tryNearby": "Išbandykite kitus miestus:",
     "search.save": "Sutaupykite",
+    "search.unitsLeft": "Liko tik {n}!",
     "cityPage.seoTitle": "Sandėliai {city} — Palyginkite kainas ir rezervuokite | Ruumly",
     "cityPage.seoDesc": "Raskite ir rezervuokite sandėlius {city}. Palyginkite kainas ir rezervuokite internetu.",
     "cityPage.heroTitle": "Sandėliai {city}",
