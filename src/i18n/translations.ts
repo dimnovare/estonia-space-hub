@@ -6956,6 +6956,8 @@ const lt: Record<string, string> = {
     "booking.selectDetails": "Pasirinkite detales",
     "booking.selectExtras": "Pasirinkite papildomas paslaugas (neprivaloma)",
     "booking.sendFailed": "Siuntimas nepavyko. Bandykite dar kartą.",
+    "booking.resendVerification": "Persiųsti patvirtinimo el. laišką",
+    "booking.resendSent": "Laiškas išsiųstas! Patikrinkite pašto dėžutę.",
     "booking.seoDesc": "Rezervuokite sandėlį, perkraustymo paslaugas ar priekabas per Ruumly.",
     "booking.seoTitle": "Rezervuoti",
     "booking.service": "Paslauga",
