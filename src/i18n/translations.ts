@@ -1601,7 +1601,7 @@ const et: Record<string, string> = {
     "provPage.trial.f1": "Kõik funktsioonid 30 päevaks",
     "provPage.trial.f2": "Krediitkaarti ei nõuta",
     "provPage.trial.f3": "Piiramatu arv üksusi prooviperioodil",
-    "provPage.starter.f1": "1 asukoht, kuni 5 üksust",
+    "provPage.starter.f1": "1 asukoht, kuni 3 üksust",
     "provPage.starter.f2": "Tavapärane otsingukoht",
     "provPage.starter.f3": "Põhianalüütika",
     "provPage.starter.f4": "E-posti tugi (48h)",
