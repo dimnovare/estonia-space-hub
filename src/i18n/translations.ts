@@ -70,6 +70,7 @@ const et: Record<string, string> = {
     "hero.search": "Otsi",
     "hero.searchPlaceholder": "Otsi aadressi, piirkonda või teenust...",
     "hero.listSpace": "Lisa oma pind →",
+    "hero.valueHint": "Võrdle hindu, broneeri minutitega — ilma telefonikõnedeta",
 
     // Categories
     "cat.all": "Kõik teenused",
@@ -1717,6 +1718,7 @@ const en: Record<string, string> = {
     "hero.search": "Search",
     "hero.searchPlaceholder": "Search address, area, or service...",
     "hero.listSpace": "List your space →",
+    "hero.valueHint": "Compare prices, book in minutes — no phone calls needed",
 
     "cat.all": "All services",
     "cat.warehouse": "Storage",
@@ -3330,6 +3332,7 @@ const ru: Record<string, string> = {
     "hero.search": "Поиск",
     "hero.searchPlaceholder": "Поиск по адресу, району или услуге...",
     "hero.listSpace": "Разместить объект →",
+    "hero.valueHint": "Сравните цены, бронируйте за минуты — без звонков",
 
     "cat.all": "Все услуги",
     "cat.warehouse": "Склады",
@@ -5640,6 +5643,7 @@ const lv: Record<string, string> = {
     "geocode.found": "Koordinātas atrastas!",
     "geocode.notFound": "Adrese nav atrasta.",
     "hero.listSpace": "Pievienot savu platību →",
+    "hero.valueHint": "Salīdziniet cenas, rezervējiet minūtēs — bez telefona zvaniem",
     "hero.search": "Meklēt",
     "hero.searchPlaceholder": "Meklēt adresi, rajonu vai pakalpojumu...",
     "hero.subtitle": "Salīdziniet cenas, rezervējiet dažu minūšu laikā. Pārvākšanās un transporta pakalpojumi pieejami.",
@@ -7184,6 +7188,7 @@ const lt: Record<string, string> = {
     "geocode.found": "Koordinatės rastos!",
     "geocode.notFound": "Adresas nerastas.",
     "hero.listSpace": "Pridėti savo plotą →",
+    "hero.valueHint": "Palyginkite kainas, rezervuokite per minutes — be skambučių",
     "hero.search": "Ieškoti",
     "hero.searchPlaceholder": "Ieškoti adreso, rajono ar paslaugos...",
     "hero.subtitle": "Palyginkite kainas, rezervuokite per kelias minutes. Perkraustymo ir transporto paslaugos prieinamos.",
