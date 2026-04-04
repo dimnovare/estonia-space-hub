@@ -5,7 +5,7 @@ import { useBookings } from "@/hooks/useBookings";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () => void }) {
+export default function ProviderOverview({ onGoToOrders, supplier }: { onGoToOrders: () => void; supplier?: any }) {
   const { t } = useLanguage();
   const { data: allOrders = [], isLoading: ordersLoading } = useOrders();
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings();
@@ -13,6 +13,12 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
   const listingCount = locations.reduce((sum, loc) => sum + (loc.units?.length ?? 0), 0);
   const isLoading = ordersLoading || bookingsLoading;
   const pendingOrders = allOrders.filter(o => o.status === "sent" || o.status === "created");
+
+  const totalUnits = listingCount;
+  const tierLimits: Record<string, number> = { starter: 3, standard: 10, premium: 30 };
+  const maxUnits = tierLimits[supplier?.tier?.toLowerCase() ?? "starter"] ?? 3;
+  const isOverLimit = totalUnits > maxUnits;
+  const isNearLimit = totalUnits >= maxUnits - 1 && !isOverLimit;
 
   const thisMonthStr = new Date().toISOString().slice(0, 7);
 
