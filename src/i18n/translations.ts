@@ -7296,7 +7296,7 @@ const lt: Record<string, string> = {
     "provPage.marginNote": "Jūsų pelno marža lieka vienoda kiekviename plane.",
     "provPage.pricing.subtitle": "Išbandykite nemokamai 30 dienų. Planai nuo €19/mėn.",
     "provPage.pricing.title": "Tarifai ir kainos",
-    "provPage.starter.f1": "1 vietovė, iki 5 vienetų",
+    "provPage.starter.f1": "1 vieta, iki 3 vienetų",
     "provPage.starter.f2": "Standartinė paieškos pozicija",
     "provPage.starter.f3": "Pagrindinė analitika",
     "provPage.starter.f4": "El. pašto palaikymas (48 val.)",
