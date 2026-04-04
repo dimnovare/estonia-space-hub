@@ -174,6 +174,10 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
+            <p className="mt-3 flex items-center justify-center gap-2 text-sm text-primary-foreground/70">
+              <CheckCircle className="h-4 w-4" />
+              {t("hero.valueHint")}
+            </p>
 
             {/* Contact info */}
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs text-primary-foreground/50">
