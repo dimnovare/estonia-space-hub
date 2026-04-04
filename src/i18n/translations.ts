@@ -4519,6 +4519,7 @@ const ru: Record<string, string> = {
     "search.notifySuccess": "Сообщим вам, как только появится!",
     "search.tryNearby": "Попробуйте другие города:",
     "search.save": "Экономия",
+    "search.unitsLeft": "Осталось {n}!",
     "cityPage.seoTitle": "Склады в {city} — Сравнить цены и забронировать | Ruumly",
     "cityPage.seoDesc": "Найдите и забронируйте склады в {city}. Сравните цены и бронируйте онлайн.",
     "cityPage.heroTitle": "Склады в {city}",
