@@ -7699,7 +7699,7 @@ const lt: Record<string, string> = {
     "provider.listings.occupancy": "Occupancy",
     "provider.listings.price": "Kaina (€/mėnuo)",
     "provider.listings.save": "Išsaugoti",
-    "provider.listings.saveUnit": "Išsaugoti changes",
+    "provider.listings.saveUnit": "Išsaugoti pakeitimus",
     "provider.listings.saving": "Saving...",
     "provider.listings.selectVatRate": "Pasirinkite PVM rate",
     "provider.listings.serviceType": "Paslauga type",
