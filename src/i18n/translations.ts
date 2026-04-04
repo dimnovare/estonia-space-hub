@@ -4765,7 +4765,7 @@ const ru: Record<string, string> = {
     "provPage.starter.f3": "Базовая аналитика",
     "provPage.starter.f4": "Поддержка по e-mail (48ч)",
     "provPage.starter.f5": "До 2 доп. услуг на единицу",
-    "provPage.growth.f1": "3 локации, до 20 единиц",
+    "provPage.growth.f1": "2 локации, до 10 единиц",
     "provPage.growth.f2": "Приоритетная позиция в поиске",
     "provPage.growth.f3": "Полная аналитика",
     "provPage.growth.f4": "Поддержка по e-mail (24ч)",
