@@ -11,11 +11,23 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 function getInitialLanguage(): Language {
+  const supported: Language[] = ["et", "en", "ru", "lv", "lt"];
   try {
     const stored = localStorage.getItem("ruumly-lang");
-    if (stored && ["et", "en", "ru", "lv", "lt"].includes(stored)) return stored as Language;
+    if (stored && supported.includes(stored as Language)) return stored as Language;
   } catch {}
-  return "et";
+
+  // Auto-detect from browser on first visit
+  try {
+    const browserLang = navigator.language?.toLowerCase() || "";
+    if (browserLang.startsWith("lv")) return "lv";
+    if (browserLang.startsWith("lt")) return "lt";
+    if (browserLang.startsWith("ru")) return "ru";
+    if (browserLang.startsWith("en")) return "en";
+    if (browserLang.startsWith("et")) return "et";
+  } catch {}
+
+  return "et"; // Default for Estonian users
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
