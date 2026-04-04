@@ -6106,6 +6106,7 @@ const lv: Record<string, string> = {
     "provider.listings.defaultTitle": "Jauns listing",
     "provider.listings.deleteFailed": "Dzēšana neizdevās",
     "provider.listings.deleteLocationConfirm": "Dzēst locatiieslēgts? Visi associated units will be deleted too.",
+    "provider.listings.deleteUnit": "Dzēst vienību",
     "provider.listings.deleteUnitConfirm": "Dzēst this unit?",
     "provider.listings.descPlaceholder": "Aprakstiet jūsu pakalpojums...",
     "provider.listings.description": "Apraksts",
