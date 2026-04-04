@@ -126,6 +126,49 @@ export default function AdminIntegrations() {
                   <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm font-mono" value={editItem.apiAuthPlaceholder || ""} onChange={e => setEditItem({ ...editItem, apiAuthPlaceholder: e.target.value })} placeholder="Bearer sk_live_***" />
                 </div>
               )}
+              {(editItem.postingMode === "api" || editItem.fallbackPostingMode === "api") && (
+                <div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-medium text-muted-foreground">
+                      {t("admin.mappingProfile") || "Custom payload template"}
+                    </label>
+                    <button
+                      type="button"
+                      className="text-[10px] text-accent hover:underline"
+                      onClick={() => setEditItem({
+                        ...editItem,
+                        mappingProfile: JSON.stringify({
+                          order_id: "{{orderId}}",
+                          service: "{{listingTitle}}",
+                          type: "{{listingType}}",
+                          start: "{{startDate}}",
+                          end: "{{endDate}}",
+                          period: "{{duration}}",
+                          client: {
+                            name: "{{customerName}}",
+                            email: "{{customerEmail}}",
+                            phone: "{{customerPhone}}"
+                          },
+                          price: "{{supplierPrice}}",
+                          extras_price: "{{extrasTotal}}",
+                          comments: "{{notes}}"
+                        }, null, 2)
+                      })}
+                    >
+                      {t("admin.insertTemplate") || "Insert example template"}
+                    </button>
+                  </div>
+                  <textarea
+                    rows={10}
+                    className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-accent"
+                    value={editItem.mappingProfile || ""}
+                    onChange={e => setEditItem({ ...editItem, mappingProfile: e.target.value })}
+                    placeholder='Leave empty for default payload. Use {{placeholders}} for custom mapping.'
+                  />
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    {t("admin.mappingHint") || "Available: {{orderId}}, {{listingTitle}}, {{listingType}}, {{startDate}}, {{endDate}}, {{duration}}, {{customerName}}, {{customerEmail}}, {{customerPhone}}, {{supplierPrice}}, {{extrasTotal}}, {{extras}}, {{notes}}"}
+                  </p>
+                </div>
               {(editItem.postingMode === "email" || editItem.fallbackPostingMode === "email") && (
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">{t("admin.recipientEmail")}</label>
