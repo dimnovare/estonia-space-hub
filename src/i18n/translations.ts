@@ -7188,6 +7188,7 @@ const lt: Record<string, string> = {
     "geocode.found": "Koordinatės rastos!",
     "geocode.notFound": "Adresas nerastas.",
     "hero.listSpace": "Pridėti savo plotą →",
+    "hero.valueHint": "Palyginkite kainas, rezervuokite per minutes — be skambučių",
     "hero.search": "Ieškoti",
     "hero.searchPlaceholder": "Ieškoti adreso, rajono ar paslaugos...",
     "hero.subtitle": "Palyginkite kainas, rezervuokite per kelias minutes. Perkraustymo ir transporto paslaugos prieinamos.",
