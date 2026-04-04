@@ -1103,6 +1103,8 @@ const et: Record<string, string> = {
     "toast.deleteFailed": "Kustutamine ebaõnnestus",
     "toast.uploadFailed": "Piltide üleslaadimine ebaõnnestus",
     "booking.sendFailed": "Saatmine ebaõnnestus. Proovi uuesti.",
+    "booking.resendVerification": "Saada kinnitusmeil uuesti",
+    "booking.resendSent": "Meil on saadetud! Kontrolli oma postkasti.",
     "geocode.enterAddress": "Sisestage esmalt aadress.",
     "geocode.notFound": "Aadressi ei leitud. Sisestage täpsem aadress.",
     "geocode.failed": "Geokoodeerimine ebaõnnestus.",
