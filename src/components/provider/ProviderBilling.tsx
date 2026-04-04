@@ -138,9 +138,9 @@ export default function ProviderBilling() {
         <p className="mt-1 text-xs text-muted-foreground">{t("provider.billing.changePlanDesc")}</p>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           {[
-            { tier: "Starter", fee: 19, units: 5, locations: 1 },
-            { tier: "Standard", fee: 49, units: 20, locations: 3 },
-            { tier: "Premium", fee: 99, units: 50, locations: 10 },
+            { tier: "Starter", fee: 19, units: 3, locations: 1 },
+            { tier: "Standard", fee: 49, units: 10, locations: 2 },
+            { tier: "Premium", fee: 99, units: 30, locations: 5 },
           ].map(plan => {
             const isCurrent = supplierData?.tier?.toLowerCase() === plan.tier.toLowerCase();
             const displayName = plan.tier === "Standard" ? "Growth" : plan.tier === "Premium" ? "Business" : "Starter";

@@ -7261,7 +7261,7 @@ const lt: Record<string, string> = {
     "provPage.benefits.title": "Kodėl rinktis Ruumly?",
     "provPage.bottomCta.subtitle": "Prisijunkite prie partnerių, naudojančių Ruumly naujų klientų pritraukimui.",
     "provPage.bottomCta.title": "Pasiruošę pradėti?",
-    "provPage.business.f1": "10 vietovių, iki 50 vienetų",
+    "provPage.business.f1": "5 vietos, iki 30 vienetų",
     "provPage.business.f2": "Prioritetinė paieška + Patikrintas ženklas",
     "provPage.business.f3": "Pilna analitika + eksportas",
     "provPage.business.f4": "Prioritetinis palaikymas (4 val.)",
