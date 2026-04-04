@@ -5781,7 +5781,7 @@ const lv: Record<string, string> = {
     "provPage.marginNote": "Jūsu peļņas norma paliek vienāda katrā plānā. Augstāks plāns = lielāka redzamība, vairāk rezervāciju.",
     "provPage.pricing.subtitle": "Izmēģiniet bez maksas 30 dienas. Plāni no €19/mēn.",
     "provPage.pricing.title": "Tarifi un cenas",
-    "provPage.starter.f1": "1 atrašanās vieta, līdz 5 vienībām",
+    "provPage.starter.f1": "1 vieta, līdz 3 vienībām",
     "provPage.starter.f2": "Standarta meklēšanas pozīcija",
     "provPage.starter.f3": "Pamata analītika",
     "provPage.starter.f4": "E-pasta atbalsts (48h)",
