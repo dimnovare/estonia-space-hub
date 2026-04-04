@@ -5643,6 +5643,7 @@ const lv: Record<string, string> = {
     "geocode.found": "Koordinātas atrastas!",
     "geocode.notFound": "Adrese nav atrasta.",
     "hero.listSpace": "Pievienot savu platību →",
+    "hero.valueHint": "Salīdziniet cenas, rezervējiet minūtēs — bez telefona zvaniem",
     "hero.search": "Meklēt",
     "hero.searchPlaceholder": "Meklēt adresi, rajonu vai pakalpojumu...",
     "hero.subtitle": "Salīdziniet cenas, rezervējiet dažu minūšu laikā. Pārvākšanās un transporta pakalpojumi pieejami.",
