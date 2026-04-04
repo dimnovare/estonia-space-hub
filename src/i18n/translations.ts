@@ -1718,6 +1718,7 @@ const en: Record<string, string> = {
     "hero.search": "Search",
     "hero.searchPlaceholder": "Search address, area, or service...",
     "hero.listSpace": "List your space →",
+    "hero.valueHint": "Compare prices, book in minutes — no phone calls needed",
 
     "cat.all": "All services",
     "cat.warehouse": "Storage",
