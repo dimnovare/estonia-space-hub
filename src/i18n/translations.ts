@@ -7855,7 +7855,7 @@ const lt: Record<string, string> = {
     "search.loadingHelp": "Kraunama help",
     "search.longTerm": "Long-term",
     "search.map": "Map",
-    "search.maxPrice": "Max price €",
+    "search.maxPrice": "Maks. kaina €",
     "search.movingFilters": "Perkraustymas paslauga filters",
     "search.noResults": "Rezultatų nerasta",
     "search.noResultsDesc": "Pabandykite pakeisti paieškos kriterijus.",
