@@ -3332,6 +3332,7 @@ const ru: Record<string, string> = {
     "hero.search": "Поиск",
     "hero.searchPlaceholder": "Поиск по адресу, району или услуге...",
     "hero.listSpace": "Разместить объект →",
+    "hero.valueHint": "Сравните цены, бронируйте за минуты — без звонков",
 
     "cat.all": "Все услуги",
     "cat.warehouse": "Склады",
