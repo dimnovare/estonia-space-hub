@@ -364,13 +364,7 @@ export const rebateService = {
 
 // ─── Public Settings Service ────────────────────────────────────────────────
 export const publicSettingsService = {
-  async getPublic(): Promise<{
-    siteName: string;
-    siteEmail: string;
-    sitePhone: string;
-    openHours: string;
-    openHoursSat: string;
-  }> {
+  async getPublic(): Promise<Record<string, any>> {
     return apiClient.get("/settings/public");
   },
 };

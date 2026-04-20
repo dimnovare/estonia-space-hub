@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { apiClient } from "@/services/apiClient";
 import { toast } from "sonner";
+import AdminAboutPage from "./AdminAboutPage";
 
 const DEFAULT_SETTINGS: Record<string, string> = {
   siteName:               "Ruumly",
@@ -37,6 +38,14 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   showProviderCta:        "true",
   showFaq:                "true",
   showMap:                "true",
+  "aboutPage.enabled":     "true",
+  "aboutPage.showStats":   "false",
+  "aboutPage.founders":    "[]",
+  "aboutPage.mission.et":  "",
+  "aboutPage.mission.en":  "",
+  "aboutPage.mission.ru":  "",
+  "aboutPage.mission.lv":  "",
+  "aboutPage.mission.lt":  "",
 };
 
 export default function AdminSettings() {
