@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, lazy, Suspense, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, MapPin, ChevronDown, ChevronUp, CheckCircle, Phone, BadgePercent, ShieldCheck, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
 import { ESTONIAN_CITIES } from "@/lib/constants";
 import TrustBar from "@/components/TrustBar";
+import { apiClient } from "@/services/apiClient";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
@@ -28,6 +29,47 @@ export default function HomePage() {
   const { data: allResult } = useAllListings();
   const allListings = allResult?.data || [];
   const listingCount = allResult?.total ?? 0;
+
+  // Supply gating for LV/LT — fall back to EN headline if no listings in country.
+  // Cached in sessionStorage to avoid re-fetching on every render.
+  const [hasLocalSupply, setHasLocalSupply] = useState<boolean | null>(() => {
+    if (language !== "lv" && language !== "lt") return true;
+    const cached = sessionStorage.getItem(`ruumly-supply-${language}`);
+    return cached === null ? null : cached === "1";
+  });
+
+  useEffect(() => {
+    if (language !== "lv" && language !== "lt") {
+      setHasLocalSupply(true);
+      return;
+    }
+    const cacheKey = `ruumly-supply-${language}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached !== null) {
+      setHasLocalSupply(cached === "1");
+      return;
+    }
+    const country = language.toUpperCase();
+    apiClient
+      .get<{ data: unknown[]; total: number }>(`/listings?country=${country}&limit=1`)
+      .then((res) => {
+        const has = (res?.total ?? res?.data?.length ?? 0) > 0;
+        sessionStorage.setItem(cacheKey, has ? "1" : "0");
+        setHasLocalSupply(has);
+      })
+      .catch(() => {
+        // On error, assume supply exists to avoid hiding the localized headline incorrectly.
+        setHasLocalSupply(true);
+      });
+  }, [language]);
+
+  // EN fallback headline parts (used when LV/LT has no supply).
+  const useEnFallback = (language === "lv" || language === "lt") && hasLocalSupply === false;
+  const heroTitle = useEnFallback ? "Rent storage in the Baltics" : t("hero.title");
+  const heroTitleHighlight = useEnFallback ? "in 60 seconds" : t("hero.titleHighlight");
+  const heroSubtitle = useEnFallback
+    ? "Compare prices, see photos, book online. No phone calls, no site visits."
+    : (settings.heroSubtitle || t("hero.subtitle"));
 
   // Hero trust strip — partners (unique suppliers) and cities, derived from public listings
   const partnerCount = new Set(allListings.map((l: any) => l.supplierId).filter(Boolean)).size;
@@ -109,10 +151,10 @@ export default function HomePage() {
         <div className="container-wide relative">
           <div className="mx-auto max-w-3xl text-center">
             <h1 className="font-display text-4xl font-bold leading-tight text-primary-foreground md:text-5xl lg:text-6xl">
-              {t("hero.title")}{" "}
-              <span className="text-gradient">{t("hero.titleHighlight")}</span>
+              {heroTitle}{" "}
+              <span className="text-gradient">{heroTitleHighlight}</span>
             </h1>
-            <p className="mt-4 text-lg text-primary-foreground/70 md:text-xl">{settings.heroSubtitle || t("hero.subtitle")}</p>
+            <p className="mt-4 text-lg text-primary-foreground/70 md:text-xl">{heroSubtitle}</p>
 
             {/* Social proof row */}
             <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-primary-foreground/60">

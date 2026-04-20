@@ -32,7 +32,7 @@ const et: Record<string, string> = {
     "provider.nav.billing": "Väljamaksed",
 
     // Hero
-    "hero.title": "Rendi laopinda",
+    "hero.title": "Rendi laopinda Eestis",
     "hero.titleHighlight": "60 sekundiga",
     "hero.subtitle": "Võrdle hindu, vaata pilte, broneeri online. Ilma telefonikõnedeta, ilma kohalesõiduta.",
     "hero.trustStrip": "{partners} partnerit · {cities} linna · broneeringud alates 2026",
@@ -1695,7 +1695,7 @@ const en: Record<string, string> = {
     "provider.nav.team": "Team",
     "provider.nav.billing": "Payouts",
 
-    "hero.title": "Rent a storage unit",
+    "hero.title": "Rent storage in the Baltics",
     "hero.titleHighlight": "in 60 seconds",
     "hero.subtitle": "Compare prices, see photos, book online. No phone calls, no site visits.",
     "hero.trustStrip": "{partners} partners · {cities} cities · bookings since 2026",
@@ -3324,7 +3324,7 @@ const ru: Record<string, string> = {
     "provider.nav.team": "Команда",
     "provider.nav.billing": "Выплаты",
 
-    "hero.title": "Арендуйте склад",
+    "hero.title": "Арендуй склад в странах Балтии",
     "hero.titleHighlight": "за 60 секунд",
     "hero.subtitle": "Сравнивайте цены, смотрите фото, бронируйте онлайн. Без звонков, без визитов.",
     "hero.trustStrip": "{partners} партнёров · {cities} городов · бронирования с 2026",
@@ -5694,7 +5694,7 @@ const lv: Record<string, string> = {
     "hero.search": "Meklēt",
     "hero.searchPlaceholder": "Meklēt adresi, rajonu vai pakalpojumu...",
     "hero.subtitle": "Salīdzini cenas, skati bildes, rezervē tiešsaistē. Bez zvaniem, bez klātienes apmeklējumiem.",
-    "hero.title": "Īrē noliktavu",
+    "hero.title": "Īrē noliktavas telpu Latvijā",
     "hero.titleHighlight": "60 sekundēs",
     "hero.trustStrip": "{partners} partneri · {cities} pilsētas · rezervācijas kopš 2026",
     "hero.providerCta": "Vai esi pakalpojumu sniedzējs? Pievienojies bez maksas →",
@@ -7263,7 +7263,7 @@ const lt: Record<string, string> = {
     "hero.search": "Ieškoti",
     "hero.searchPlaceholder": "Ieškoti adreso, rajono ar paslaugos...",
     "hero.subtitle": "Palyginkite kainas, peržiūrėkite nuotraukas, rezervuokite internetu. Jokių skambučių, jokių apsilankymų.",
-    "hero.title": "Išsinuomokite sandėlį",
+    "hero.title": "Išsinuomok sandėliuką Lietuvoje",
     "hero.titleHighlight": "per 60 sekundžių",
     "hero.trustStrip": "{partners} partnerių · {cities} miestų · rezervacijos nuo 2026",
     "hero.providerCta": "Ar esate paslaugų teikėjas? Prisijunkite nemokamai →",
