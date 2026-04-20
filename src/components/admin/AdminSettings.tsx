@@ -418,6 +418,8 @@ export default function AdminSettings() {
           </div>
         )}
 
+        <AdminAboutPage settings={settings} set={set} setBool={setBool} />
+
         <div className="flex justify-end">
           <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleSave} disabled={saving}>
             {saving
