@@ -29,6 +29,11 @@ export default function HomePage() {
   const allListings = allResult?.data || [];
   const listingCount = allResult?.total ?? 0;
 
+  // Hero trust strip — partners (unique suppliers) and cities, derived from public listings
+  const partnerCount = new Set(allListings.map((l: any) => l.supplierId).filter(Boolean)).size;
+  const cityCount = new Set(allListings.map((l: any) => l.city).filter(Boolean)).size;
+  const showTrustStrip = partnerCount > 0 && cityCount > 0;
+
   const categories = [
     { key: "all", label: t("cat.all"), icon: Search },
     { key: "warehouse", label: t("cat.warehouse"), icon: Warehouse },
@@ -179,6 +184,23 @@ export default function HomePage() {
               {t("hero.valueHint")}
             </p>
 
+            {showTrustStrip && (
+              <p className="mt-3 text-sm text-primary-foreground/70">
+                {t("hero.trustStrip")
+                  .replace("{partners}", String(partnerCount))
+                  .replace("{cities}", String(cityCount))}
+              </p>
+            )}
+
+            <div className="mt-4">
+              <Link
+                to="/provider"
+                className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline"
+              >
+                {t("hero.providerCta")}
+              </Link>
+            </div>
+
             {/* Contact info */}
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs text-primary-foreground/50">
               {settings.sitePhone && (
@@ -203,11 +225,6 @@ export default function HomePage() {
               )}
             </div>
 
-            <div className="mt-3">
-              <Link to="/provider" className="text-sm text-primary-foreground/60 underline decoration-primary-foreground/30 hover:text-primary-foreground/80 hover:decoration-primary-foreground/50 transition-colors">
-                {t("hero.listSpace")}
-              </Link>
-            </div>
           </div>
         </div>
       </section>
