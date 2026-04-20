@@ -274,6 +274,24 @@ function BookingCard({ booking }: { booking: Booking }) {
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="pr-8">{booking.listingTitle}</DialogTitle></DialogHeader>
           <div className="space-y-4">
+            {booking.isReservation && booking.reservedUntil && (
+              <div className="rounded-xl border-2 border-warning/40 bg-warning/10 p-4">
+                <div className="flex items-start gap-3">
+                  <Clock className="h-5 w-5 text-warning shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-display text-sm font-bold text-foreground">
+                      {t("booking.reservation.banner")}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {t("booking.reservation.expires")}:{" "}
+                      <span className="font-semibold text-foreground">
+                        {new Date(booking.reservedUntil).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div><span className="text-xs text-muted-foreground">{t("req.requestId")}</span><p className="text-sm font-medium break-all">{booking.id}</p></div>
               <div><span className="text-xs text-muted-foreground">{t("detail.provider")}</span><p className="text-sm font-medium">{booking.provider}</p></div>

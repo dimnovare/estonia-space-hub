@@ -170,6 +170,8 @@ export interface Booking {
   total: number;
   createdAt: string;
   timeline: { date: string; event: string; status: BookingStatus }[];
+  isReservation?: boolean;
+  reservedUntil?: string;
 }
 
 export interface Notification {
