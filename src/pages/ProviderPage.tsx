@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 import {
-  Users, LayoutDashboard, BadgePercent, Zap, ArrowRight,
-  UserPlus, ListPlus, ShoppingCart, Check, HelpCircle,
-  ChevronDown,
+  ArrowRight,
+  UserPlus, ListPlus, ShoppingCart, Check,
+  TrendingUp, PhoneOff, Search, Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/accordion";
 import { usePricingConfig } from "@/hooks/queries";
 import { fillPricing } from "@/lib/pricingPlaceholders";
-import { Skeleton } from "@/components/ui/skeleton";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 const getTrialFeatures = (t: (k: string) => string) => [
   t("provPage.trial.f1"),
@@ -51,6 +51,11 @@ export default function ProviderPage() {
   const { t } = useLanguage();
   const { data: config, isLoading: configLoading } = usePricingConfig();
   const fp = (text: string) => fillPricing(text, config);
+  const settings = usePlatformSettings() as any;
+  const featuredPartners: { name: string; logoUrl: string }[] = Array.isArray(settings?.featuredPartners)
+    ? settings.featuredPartners
+    : [];
+  const showPartners = featuredPartners.length >= 3;
 
   const tiers = [
     {
@@ -83,17 +88,17 @@ export default function ProviderPage() {
     },
   ];
 
-  const benefits = [
-    { icon: Users, titleKey: "provPage.benefit1.title", descKey: "provPage.benefit1.desc" },
-    { icon: LayoutDashboard, titleKey: "provPage.benefit2.title", descKey: "provPage.benefit2.desc" },
-    { icon: BadgePercent, titleKey: "provPage.benefit3.title", descKey: "provPage.benefit3.desc" },
-    { icon: Zap, titleKey: "provPage.benefit4.title", descKey: "provPage.benefit4.desc" },
+  const outcomes = [
+    { icon: TrendingUp, titleKey: "provPage.outcome1.title", descKey: "provPage.outcome1.desc" },
+    { icon: PhoneOff,   titleKey: "provPage.outcome2.title", descKey: "provPage.outcome2.desc" },
+    { icon: Search,     titleKey: "provPage.outcome3.title", descKey: "provPage.outcome3.desc" },
   ];
 
   const steps = [
-    { icon: UserPlus, titleKey: "provPage.step1.title", descKey: "provPage.step1.desc" },
-    { icon: ListPlus, titleKey: "provPage.step2.title", descKey: "provPage.step2.desc" },
-    { icon: ShoppingCart, titleKey: "provPage.step3.title", descKey: "provPage.step3.desc" },
+    { icon: UserPlus,     titleKey: "provPage.step1.title" },
+    { icon: ListPlus,     titleKey: "provPage.step2.title" },
+    { icon: ShoppingCart, titleKey: "provPage.step3.title" },
+    { icon: Wallet,       titleKey: "provPage.step4.title" },
   ];
 
   const faqKeys = ["provPage.faq.q1", "provPage.faq.q2", "provPage.faq.q3", "provPage.faq.q4", "provPage.faq.q5"];
@@ -129,43 +134,38 @@ export default function ProviderPage() {
         </div>
       </section>
 
-      {/* ── Benefits ── */}
-      <section className="container-wide py-16 md:py-24">
-        <h2 className="text-center font-display text-2xl font-bold md:text-3xl">
-          {t("provPage.benefits.title")}
-        </h2>
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {benefits.map((b, i) => {
-            const Icon = b.icon;
+      {/* ── Outcome cards ── */}
+      <section className="container-wide py-16 md:py-20">
+        <div className="grid gap-4 md:grid-cols-3 md:gap-6">
+          {outcomes.map((o, i) => {
+            const Icon = o.icon;
             return (
-              <div key={i} className="card-elevated p-6 text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10">
+              <div key={i} className="card-elevated p-6 md:p-7 text-center md:text-left">
+                <div className="mx-auto md:mx-0 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10">
                   <Icon className="h-7 w-7 text-accent" />
                 </div>
-                <h3 className="mt-4 font-display text-base font-semibold">{t(b.titleKey)}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{fp(t(b.descKey))}</p>
+                <h3 className="mt-4 font-display text-lg font-semibold">{t(o.titleKey)}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t(o.descKey)}</p>
               </div>
             );
           })}
         </div>
       </section>
 
-      {/* ── How it works ── */}
+      {/* ── How it works (4 steps) ── */}
       <section className="surface-sunken py-16 md:py-24">
         <div className="container-wide">
           <h2 className="text-center font-display text-2xl font-bold md:text-3xl">
             {t("provPage.howItWorks.title")}
           </h2>
-          <div className="mt-10 grid gap-8 md:grid-cols-3">
+          <div className="mt-10 grid gap-8 sm:grid-cols-2 md:grid-cols-4">
             {steps.map((s, i) => {
               const Icon = s.icon;
               return (
                 <div key={i} className="relative text-center">
-                  {/* Step number */}
                   <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-accent text-lg font-bold text-accent-foreground">
                     {i + 1}
                   </div>
-                  {/* Connector line (desktop only) */}
                   {i < steps.length - 1 && (
                     <div className="absolute left-[calc(50%+2rem)] top-6 hidden h-px w-[calc(100%-4rem)] bg-border md:block" />
                   )}
@@ -173,7 +173,6 @@ export default function ProviderPage() {
                     <Icon className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <h3 className="mt-2 font-display text-base font-semibold">{t(s.titleKey)}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{t(s.descKey)}</p>
                 </div>
               );
             })}
@@ -181,13 +180,33 @@ export default function ProviderPage() {
         </div>
       </section>
 
-      {/* ── Pricing tiers ── */}
+      {/* ── Social proof: featured partners ── */}
+      {showPartners && (
+        <section className="container-wide py-12 md:py-16">
+          <h2 className="text-center font-display text-xl font-semibold md:text-2xl text-muted-foreground">
+            {t("provPage.partners.title")}
+          </h2>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-10 gap-y-6 opacity-80">
+            {featuredPartners.map((p) => (
+              <img
+                key={p.name}
+                src={p.logoUrl}
+                alt={p.name}
+                loading="lazy"
+                className="h-8 md:h-10 w-auto object-contain grayscale"
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── Pricing tiers (below the fold) ── */}
       <section className="container-wide py-16 md:py-24">
         <h2 className="text-center font-display text-2xl font-bold md:text-3xl">
-          {t("provPage.pricing.title")}
+          {t("provPage.pricing.titleNew")}
         </h2>
         <p className="mx-auto mt-3 max-w-xl text-center text-sm text-muted-foreground">
-          {t("provPage.pricing.subtitle")}
+          {t("provPage.pricing.introNew")}
         </p>
 
         {/* Trial CTA */}
