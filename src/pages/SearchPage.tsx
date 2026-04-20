@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { Listing, ListingType, ListingFilters } from "@/services/types";
 import { apiClient } from "@/services/apiClient";
 import { useFeatureDefinitions, type FeatureDefinition } from "@/hooks/useFeatureDefinitions";
+import { useDebounce } from "@/hooks/useDebounce";
 import ListingCard from "@/components/ListingCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -36,6 +37,8 @@ export default function SearchPage() {
   const cityFilter = searchParams.get("city") || "";
   const priceMax = searchParams.get("priceMax") || "";
   const availableNow = searchParams.get("availableNow") === "true";
+
+  const debouncedPriceMax = useDebounce(priceMax, 400);
 
   // Debounced search: separate input value from query used in API calls
   const [searchInput, setSearchInput] = useState(query);
@@ -68,10 +71,10 @@ export default function SearchPage() {
     type: activeType !== "all" ? activeType as ListingType : undefined,
     query: debouncedQ || undefined,
     city: cityFilter || undefined,
-    priceMax: priceMax ? parseInt(priceMax) : undefined,
+    priceMax: debouncedPriceMax ? parseInt(debouncedPriceMax) : undefined,
     availableNow: availableNow || undefined,
     sort: sort as any,
-  }), [activeType, debouncedQ, cityFilter, priceMax, availableNow, sort]);
+  }), [activeType, debouncedQ, cityFilter, debouncedPriceMax, availableNow, sort]);
 
   const { data: result, isLoading } = useListings(filters);
   const serverFiltered = result?.data || [];
