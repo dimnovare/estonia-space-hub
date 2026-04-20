@@ -5694,7 +5694,7 @@ const lv: Record<string, string> = {
     "hero.search": "Meklēt",
     "hero.searchPlaceholder": "Meklēt adresi, rajonu vai pakalpojumu...",
     "hero.subtitle": "Salīdzini cenas, skati bildes, rezervē tiešsaistē. Bez zvaniem, bez klātienes apmeklējumiem.",
-    "hero.title": "Īrē noliktavu",
+    "hero.title": "Īrē noliktavas telpu Latvijā",
     "hero.titleHighlight": "60 sekundēs",
     "hero.trustStrip": "{partners} partneri · {cities} pilsētas · rezervācijas kopš 2026",
     "hero.providerCta": "Vai esi pakalpojumu sniedzējs? Pievienojies bez maksas →",
