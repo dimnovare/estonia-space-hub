@@ -32,7 +32,7 @@ const et: Record<string, string> = {
     "provider.nav.billing": "Väljamaksed",
 
     // Hero
-    "hero.title": "Rendi laopinda",
+    "hero.title": "Rendi laopinda Eestis",
     "hero.titleHighlight": "60 sekundiga",
     "hero.subtitle": "Võrdle hindu, vaata pilte, broneeri online. Ilma telefonikõnedeta, ilma kohalesõiduta.",
     "hero.trustStrip": "{partners} partnerit · {cities} linna · broneeringud alates 2026",
