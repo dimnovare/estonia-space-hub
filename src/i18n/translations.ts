@@ -7263,7 +7263,7 @@ const lt: Record<string, string> = {
     "hero.search": "Ieškoti",
     "hero.searchPlaceholder": "Ieškoti adreso, rajono ar paslaugos...",
     "hero.subtitle": "Palyginkite kainas, peržiūrėkite nuotraukas, rezervuokite internetu. Jokių skambučių, jokių apsilankymų.",
-    "hero.title": "Išsinuomokite sandėlį",
+    "hero.title": "Išsinuomok sandėliuką Lietuvoje",
     "hero.titleHighlight": "per 60 sekundžių",
     "hero.trustStrip": "{partners} partnerių · {cities} miestų · rezervacijos nuo 2026",
     "hero.providerCta": "Ar esate paslaugų teikėjas? Prisijunkite nemokamai →",
