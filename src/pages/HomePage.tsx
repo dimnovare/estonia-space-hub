@@ -30,6 +30,47 @@ export default function HomePage() {
   const allListings = allResult?.data || [];
   const listingCount = allResult?.total ?? 0;
 
+  // Supply gating for LV/LT — fall back to EN headline if no listings in country.
+  // Cached in sessionStorage to avoid re-fetching on every render.
+  const [hasLocalSupply, setHasLocalSupply] = useState<boolean | null>(() => {
+    if (language !== "lv" && language !== "lt") return true;
+    const cached = sessionStorage.getItem(`ruumly-supply-${language}`);
+    return cached === null ? null : cached === "1";
+  });
+
+  useEffect(() => {
+    if (language !== "lv" && language !== "lt") {
+      setHasLocalSupply(true);
+      return;
+    }
+    const cacheKey = `ruumly-supply-${language}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached !== null) {
+      setHasLocalSupply(cached === "1");
+      return;
+    }
+    const country = language.toUpperCase();
+    apiClient
+      .get<{ data: unknown[]; total: number }>(`/listings?country=${country}&limit=1`)
+      .then((res) => {
+        const has = (res?.total ?? res?.data?.length ?? 0) > 0;
+        sessionStorage.setItem(cacheKey, has ? "1" : "0");
+        setHasLocalSupply(has);
+      })
+      .catch(() => {
+        // On error, assume supply exists to avoid hiding the localized headline incorrectly.
+        setHasLocalSupply(true);
+      });
+  }, [language]);
+
+  // EN fallback headline parts (used when LV/LT has no supply).
+  const useEnFallback = (language === "lv" || language === "lt") && hasLocalSupply === false;
+  const heroTitle = useEnFallback ? "Rent storage in the Baltics" : t("hero.title");
+  const heroTitleHighlight = useEnFallback ? "in 60 seconds" : t("hero.titleHighlight");
+  const heroSubtitle = useEnFallback
+    ? "Compare prices, see photos, book online. No phone calls, no site visits."
+    : (settings.heroSubtitle || t("hero.subtitle"));
+
   // Hero trust strip — partners (unique suppliers) and cities, derived from public listings
   const partnerCount = new Set(allListings.map((l: any) => l.supplierId).filter(Boolean)).size;
   const cityCount = new Set(allListings.map((l: any) => l.city).filter(Boolean)).size;
