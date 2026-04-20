@@ -3324,7 +3324,7 @@ const ru: Record<string, string> = {
     "provider.nav.team": "Команда",
     "provider.nav.billing": "Выплаты",
 
-    "hero.title": "Арендуйте склад",
+    "hero.title": "Арендуй склад в странах Балтии",
     "hero.titleHighlight": "за 60 секунд",
     "hero.subtitle": "Сравнивайте цены, смотрите фото, бронируйте онлайн. Без звонков, без визитов.",
     "hero.trustStrip": "{partners} партнёров · {cities} городов · бронирования с 2026",
