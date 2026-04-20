@@ -15,6 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createBookingContactSchema, type BookingContactForm } from "@/lib/schemas";
 import { tokenStore } from "@/services/apiClient";
 import BookingInlineAuth from "@/components/BookingInlineAuth";
+import ReservationCountdown from "@/components/ReservationCountdown";
 import { trackEvent } from "@/lib/analytics";
 import { z } from "zod";
 
@@ -242,26 +243,8 @@ export default function BookingPage() {
             <>
               {paymentMethod === "later" && (
                 <>
-                  <div className="mt-6 rounded-xl border-2 border-warning/40 bg-warning/10 p-4">
-                    <div className="flex items-start gap-3">
-                      <Clock className="h-6 w-6 text-warning shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="font-display text-base font-bold text-foreground">
-                          {t("booking.reservation.banner")}
-                        </p>
-                        {reservedUntil && (
-                          <p className="mt-1 text-sm text-muted-foreground">
-                            {t("booking.reservation.expires")}:{" "}
-                            <span className="font-semibold text-foreground">
-                              {new Date(reservedUntil).toLocaleString(
-                                language === "et" ? "et-EE" : language === "ru" ? "ru-RU" : "en-GB",
-                                { dateStyle: "medium", timeStyle: "short" }
-                              )}
-                            </span>
-                          </p>
-                        )}
-                      </div>
-                    </div>
+                  <div className="mt-6">
+                    <ReservationCountdown reservedUntil={reservedUntil} size="lg" />
                   </div>
                   <p className="mt-3 rounded-lg bg-accent/5 border border-accent/20 p-3 text-xs text-muted-foreground">
                     {t("booking.payLaterNote")}
