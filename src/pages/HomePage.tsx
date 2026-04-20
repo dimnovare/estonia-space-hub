@@ -151,10 +151,10 @@ export default function HomePage() {
         <div className="container-wide relative">
           <div className="mx-auto max-w-3xl text-center">
             <h1 className="font-display text-4xl font-bold leading-tight text-primary-foreground md:text-5xl lg:text-6xl">
-              {t("hero.title")}{" "}
-              <span className="text-gradient">{t("hero.titleHighlight")}</span>
+              {heroTitle}{" "}
+              <span className="text-gradient">{heroTitleHighlight}</span>
             </h1>
-            <p className="mt-4 text-lg text-primary-foreground/70 md:text-xl">{settings.heroSubtitle || t("hero.subtitle")}</p>
+            <p className="mt-4 text-lg text-primary-foreground/70 md:text-xl">{heroSubtitle}</p>
 
             {/* Social proof row */}
             <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-primary-foreground/60">
