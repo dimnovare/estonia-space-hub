@@ -73,6 +73,7 @@ export default function BookingPage() {
   const [paymentMethod, setPaymentMethod] = useState("bank");
   const [submitted, setSubmitted] = useState(false);
   const [phase, setPhase] = useState<SubmitPhase>("submitting");
+  const [reservedUntil, setReservedUntil] = useState<string | null>(null);
   const [showVerifyBanner, setShowVerifyBanner] = useState(false);
   const [resendSent, setResendSent] = useState(false);
 
@@ -173,6 +174,11 @@ export default function BookingPage() {
         }
       }
 
+      if (paymentMethod === "later") {
+        const expires = bookingResult?.reservedUntil
+          || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+        setReservedUntil(expires);
+      }
       setSubmitted(true);
     }).catch((err: any) => {
       const msg = err?.message?.toLowerCase() || "";
@@ -235,9 +241,32 @@ export default function BookingPage() {
           {phase === "done" && (
             <>
               {paymentMethod === "later" && (
-                <p className="mt-4 rounded-lg bg-accent/5 border border-accent/20 p-3 text-xs text-muted-foreground">
-                  {t("booking.payLaterNote")}
-                </p>
+                <>
+                  <div className="mt-6 rounded-xl border-2 border-warning/40 bg-warning/10 p-4">
+                    <div className="flex items-start gap-3">
+                      <Clock className="h-6 w-6 text-warning shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="font-display text-base font-bold text-foreground">
+                          {t("booking.reservation.banner")}
+                        </p>
+                        {reservedUntil && (
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {t("booking.reservation.expires")}:{" "}
+                            <span className="font-semibold text-foreground">
+                              {new Date(reservedUntil).toLocaleString(
+                                language === "et" ? "et-EE" : language === "ru" ? "ru-RU" : "en-GB",
+                                { dateStyle: "medium", timeStyle: "short" }
+                              )}
+                            </span>
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="mt-3 rounded-lg bg-accent/5 border border-accent/20 p-3 text-xs text-muted-foreground">
+                    {t("booking.payLaterNote")}
+                  </p>
+                </>
               )}
               <div className="mt-6 flex justify-center gap-3">
                 <Link to="/account?tab=bookings"><Button variant="outline">{t("booking.myBookings")}</Button></Link>
@@ -545,9 +574,14 @@ export default function BookingPage() {
                           </div>
                         </button>
                         {pm.id === "later" && (
-                          <p className="mt-1.5 ml-14 text-[11px] text-muted-foreground">
-                            {t("booking.payLaterWarning")}
-                          </p>
+                          <>
+                            <p className="mt-1.5 ml-14 text-xs text-muted-foreground">
+                              {t("booking.payLaterExplainer")}
+                            </p>
+                            <p className="mt-1 ml-14 text-[11px] text-muted-foreground">
+                              {t("booking.payLaterWarning")}
+                            </p>
+                          </>
                         )}
                       </div>
                     );
