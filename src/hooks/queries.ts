@@ -13,7 +13,12 @@ function unwrapArray<T>(res: unknown): T[] {
 }
 
 export function useListings(filters?: ListingFilters) {
-  return useQuery({ queryKey: ["listings", filters], queryFn: () => listingService.search(filters) });
+  return useQuery({
+    queryKey: ["listings", filters],
+    queryFn: () => listingService.search(filters),
+    placeholderData: (prev) => prev,
+    retry: (failureCount, error: any) => error?.status !== 429 && failureCount < 2,
+  });
 }
 
 export function useAllListings() {
