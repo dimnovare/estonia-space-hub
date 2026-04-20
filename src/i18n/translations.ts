@@ -1695,7 +1695,7 @@ const en: Record<string, string> = {
     "provider.nav.team": "Team",
     "provider.nav.billing": "Payouts",
 
-    "hero.title": "Rent a storage unit",
+    "hero.title": "Rent storage in the Baltics",
     "hero.titleHighlight": "in 60 seconds",
     "hero.subtitle": "Compare prices, see photos, book online. No phone calls, no site visits.",
     "hero.trustStrip": "{partners} partners · {cities} cities · bookings since 2026",
