@@ -15,6 +15,15 @@ export interface SupplierApplication {
 }
 export type IntegrationType = "api" | "email" | "manual";
 export type OrderStatus = "created" | "sending" | "sent" | "confirmed" | "rejected" | "active" | "completed" | "cancelled";
+export type LeadStatus = "new" | "contacted" | "won" | "lost";
+
+export interface LeadSummary {
+  newCount: number;
+  contactedCount: number;
+  wonThisWeek: number;
+  lostThisWeek: number;
+}
+
 export type BookingStatus = "pending" | "confirmed" | "active" | "completed" | "cancelled";
 export type ListingType = "warehouse" | "moving" | "trailer";
 export type ApprovalMode = "auto" | "admin" | "provider";
@@ -140,6 +149,9 @@ export interface Order {
   confirmedAt?: string;
   timeline: OrderTimeline[];
   notes: string;
+  leadStatus?: LeadStatus;
+  lastContactAt?: string | null;
+  providerNotes?: string | null;
 }
 
 export interface OrderTimeline {

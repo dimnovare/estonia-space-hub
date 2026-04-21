@@ -7,6 +7,7 @@ import type {
   Listing, ListingBase, ListingType, ListingFilters, PaginatedResponse, CreateBookingInput,
   SupplierLocation, PaymentResult, SupplierApplication,
   WarehouseListing, MovingListing, TrailerListing,
+  LeadStatus, LeadSummary,
 } from "./types";
 
 // ─── Listing helpers ───────────────────────────────────────────────────────────
@@ -210,6 +211,12 @@ export const orderService = {
   },
   async updateStatus(id: string, status: OrderStatus): Promise<Order> {
     return apiClient.patch<Order>(`/orders/${id}/status`, { status });
+  },
+  async getLeadSummary(): Promise<LeadSummary> {
+    return apiClient.get<LeadSummary>("/orders/lead-summary");
+  },
+  async updateLead(id: string, data: { status?: LeadStatus; providerNotes?: string; lastContactAt?: string }): Promise<Order> {
+    return apiClient.patch<Order>(`/orders/${id}/lead`, data);
   },
 };
 
