@@ -1,9 +1,20 @@
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import ruumlyLogo from "/ruumly-logo.png";
 
 export default function Footer() {
   const { t } = useLanguage();
+  const settings = usePlatformSettings() as any;
+  const aboutEnabled = String(settings["aboutPage.enabled"] ?? "true") !== "false";
+
+  const companyLinks = [
+    ...(aboutEnabled ? [{ label: t("footer.about"), to: "/about" }] : []),
+    { label: t("footer.howItWorks"), to: "/how-it-works" },
+    { label: t("footer.contact"), to: "/contact" },
+    { label: t("footer.forProviders"), to: "/provider" },
+    { label: t("footer.faq"), to: "/faq" },
+  ];
 
   const footerLinks = {
     [t("footer.services")]: [
@@ -11,13 +22,7 @@ export default function Footer() {
       { label: t("footer.movingService"), to: "/search?type=moving" },
       { label: t("footer.trailerRental"), to: "/search?type=trailer" },
     ],
-    [t("footer.company")]: [
-      { label: t("footer.about"), to: "/about" },
-      { label: t("footer.howItWorks"), to: "/how-it-works" },
-      { label: t("footer.contact"), to: "/contact" },
-      { label: t("footer.forProviders"), to: "/provider" },
-      { label: t("footer.faq"), to: "/faq" },
-    ],
+    [t("footer.company")]: companyLinks,
     [t("footer.legal")]: [
       { label: t("footer.terms"), to: "/terms" },
       { label: t("footer.privacy"), to: "/privacy" },
