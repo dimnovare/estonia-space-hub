@@ -7,6 +7,9 @@ export default function Footer() {
   const { t } = useLanguage();
   const settings = usePlatformSettings() as any;
   const aboutEnabled = String(settings["aboutPage.enabled"] ?? "true") !== "false";
+  const blogEnabled = String(settings["blog.enabled"] ?? "false") === "true";
+  const blogInFooter = String(settings["blog.showInFooter"] ?? "true") !== "false";
+  const showBlog = blogEnabled && blogInFooter;
 
   const companyLinks = [
     ...(aboutEnabled ? [{ label: t("footer.about"), to: "/about" }] : []),
@@ -14,6 +17,7 @@ export default function Footer() {
     { label: t("footer.contact"), to: "/contact" },
     { label: t("footer.forProviders"), to: "/provider" },
     { label: t("footer.faq"), to: "/faq" },
+    ...(showBlog ? [{ label: t("blog.title"), to: "/blog" }] : []),
   ];
 
   const footerLinks = {
