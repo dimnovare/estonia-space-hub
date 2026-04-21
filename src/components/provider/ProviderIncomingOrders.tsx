@@ -9,6 +9,9 @@ import EmailTemplatePreview from "@/components/EmailTemplatePreview";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useLanguage } from "@/i18n/LanguageContext";
+import LeadSummaryStrip from "@/components/provider/LeadSummaryStrip";
+import LeadStatusChip from "@/components/provider/LeadStatusChip";
+import LeadNotesEditor from "@/components/provider/LeadNotesEditor";
 
 export default function ProviderIncomingOrders() {
   const { t } = useLanguage();
@@ -74,6 +77,8 @@ export default function ProviderIncomingOrders() {
           <Download className="h-3.5 w-3.5" /> <span className="hidden sm:inline">{t("provider.orders.exportCsv").replace(" CSV", "")}</span> CSV
         </Button>
       </div>
+
+      <LeadSummaryStrip />
 
       <div className="mt-4 flex gap-2 overflow-x-auto">
         {[
@@ -143,6 +148,7 @@ export default function ProviderIncomingOrders() {
                     <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                       <span className="text-xs font-mono text-muted-foreground">{order.id}</span>
                       <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ${statusCfg.color}`}>{t(statusCfg.labelKey) || statusCfg.label}</span>
+                      <LeadStatusChip orderId={order.id} current={order.leadStatus} lastContactAt={order.lastContactAt} />
                     </div>
                     <div className="mt-2 text-sm font-medium">{order.listingTitle}</div>
                     <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
@@ -183,6 +189,7 @@ export default function ProviderIncomingOrders() {
                   </Button>
                 )}
               </div>
+              <LeadNotesEditor orderId={order.id} initial={order.providerNotes} />
             </div>
           );
         })}
