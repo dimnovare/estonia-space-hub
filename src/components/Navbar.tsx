@@ -8,9 +8,10 @@ import { LANGUAGES } from "@/i18n/translations";
 import { FlagIcon } from "@/components/FlagIcon";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import ruumlyLogo from "/ruumly-logo.png";
 
-const navLinks = [
+const baseNavLinks = [
   { to: "/search?type=warehouse", tKey: "nav.storage", matchType: "warehouse" },
   { to: "/search?type=moving", tKey: "nav.moving", matchType: "moving" },
   { to: "/search?type=trailer", tKey: "nav.trailer", matchType: "trailer" },
@@ -18,7 +19,7 @@ const navLinks = [
   { to: "/provider", tKey: "nav.forProviders", matchType: "", isProviderLink: true },
 ];
 
-function isLinkActive(link: typeof navLinks[0], pathname: string, searchType: string | null) {
+function isLinkActive(link: typeof baseNavLinks[0], pathname: string, searchType: string | null) {
   if (link.matchType && pathname === "/search") return searchType === link.matchType;
   if (!link.matchType) return pathname === link.to;
   return false;
@@ -37,13 +38,19 @@ export default function Navbar() {
   const { user, isAuthenticated, role, logout } = useAuth();
   const { data: notifications = [] } = useNotifications();
   const unreadCount = notifications.filter((n) => !n.read).length;
+  const settings = usePlatformSettings() as any;
+  const blogEnabled = String(settings["blog.enabled"] ?? "false") === "true";
+  const blogInNav = String(settings["blog.showInNav"] ?? "false") === "true";
+  const navLinks = blogEnabled && blogInNav
+    ? [...baseNavLinks, { to: "/blog", tKey: "blog.title", matchType: "" }]
+    : baseNavLinks;
 
   const handleLogout = () => {
     logout();
     setUserMenuOpen(false);
   };
 
-  const getLinkHref = (link: typeof navLinks[0]) => {
+  const getLinkHref = (link: typeof baseNavLinks[0]) => {
     if (link.isProviderLink && role === "provider") return "/provider/dashboard";
     return link.to;
   };

@@ -43,6 +43,8 @@ const LocationDetailPage = lazy(() => import("@/pages/LocationDetailPage"));
 const ProviderOnboardingPage = lazy(() => import("@/pages/ProviderOnboardingPage"));
 const AccountPage = lazy(() => import("@/pages/AccountPage"));
 const CityPage = lazy(() => import("@/pages/CityPage"));
+const BlogIndexPage = lazy(() => import("@/pages/BlogIndexPage"));
+const BlogPostPage = lazy(() => import("@/pages/BlogPostPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -138,6 +140,8 @@ function AppContent() {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/how-it-works" element={<HowItWorksPage />} />
             <Route path="/faq" element={<FAQPage />} />
+            <Route path="/blog" element={<BlogIndexPage />} />
+            <Route path="/blog/:slug" element={<BlogPostPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/verify" element={<VerifyEmailPage />} />
             <Route path="/terms" element={<TermsPage />} />
