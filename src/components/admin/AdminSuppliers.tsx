@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, Zap, Hand, RefreshCw, Server, PlusCircle, Save, Loader2, Trash2, Ban, CheckCircle } from "lucide-react";
+import { Mail, Zap, Hand, RefreshCw, Server, PlusCircle, Save, Loader2, Trash2, Ban, CheckCircle, Star, ShieldCheck, Flag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supplierService } from "@/services";
@@ -276,7 +276,7 @@ export default function AdminSuppliers() {
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">{t("admin.tier")}</label>
                     <select className={inp} value={(selected.tier ?? "starter").toLowerCase()} onChange={(e) => setSelected({ ...selected, tier: e.target.value as "starter" | "standard" | "premium" })}>
-                      <option value="starter">Starter (€19/{t("provPage.tier.perMonth") || "mo"})</option>
+                      <option value="starter">Free (€0/{t("provPage.tier.perMonth") || "mo"})</option>
                       <option value="standard">Growth (€49/{t("provPage.tier.perMonth") || "mo"})</option>
                       <option value="premium">Business (€99/{t("provPage.tier.perMonth") || "mo"})</option>
                     </select>
@@ -293,6 +293,126 @@ export default function AdminSuppliers() {
                         : t("admin.billingMarketplaceDesc")}
                     </p>
                   </div>
+                </div>
+              </div>
+
+              {/* ── Subscription & Benefits ── */}
+              <div className="rounded-xl border border-border p-4 space-y-4">
+                <h3 className="flex items-center gap-2 text-sm font-semibold">
+                  <Star className="h-4 w-4 text-accent" /> {t("admin.subBenefits.title")}
+                </h3>
+
+                {/* Onboarding read-only */}
+                <div className="rounded-lg bg-secondary/40 p-3">
+                  <p className="text-xs font-medium text-muted-foreground">{t("admin.subBenefits.onboarding")}</p>
+                  <p className="mt-1 text-sm">
+                    {selected.onboardingStartedAt
+                      ? selected.isInOnboarding
+                        ? t("admin.subBenefits.onboardingActive")
+                            .replace("{date}", new Date(selected.onboardingStartedAt).toLocaleDateString())
+                            .replace("{n}", String(selected.onboardingDaysRemaining ?? 0))
+                        : t("admin.subBenefits.onboardingComplete")
+                      : t("admin.subBenefits.onboardingNotStarted")}
+                  </p>
+                </div>
+
+                {/* Effective pricing */}
+                {selected.effectivePricing && (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-lg bg-secondary/40 p-3">
+                      <p className="text-xs text-muted-foreground">{t("admin.subBenefits.effectiveCommission")}</p>
+                      <p className="mt-1 font-display text-lg font-bold">{selected.effectivePricing.effectiveCommissionRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg bg-secondary/40 p-3">
+                      <p className="text-xs text-muted-foreground">{t("admin.subBenefits.effectiveMonthlyFee")}</p>
+                      <p className="mt-1 font-display text-lg font-bold">€{selected.effectivePricing.effectiveMonthlyFee ?? 0}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Toggles + priority */}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-lg border border-border p-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="flex items-center gap-1.5 text-xs font-semibold">
+                        <Star className="h-3.5 w-3.5 text-amber-500" />
+                        {t("admin.subBenefits.foundingPartner")}
+                      </p>
+                      <p className="mt-0.5 text-[10px] text-muted-foreground">{t("admin.subBenefits.foundingPartnerDesc")}</p>
+                    </div>
+                    <Button
+                      variant={selected.isFoundingPartner ? "default" : "outline"}
+                      size="sm"
+                      className="text-xs"
+                      onClick={async () => {
+                        const grant = !selected.isFoundingPartner;
+                        const path = grant ? "grant-founding-partner" : "revoke-founding-partner";
+                        try {
+                          await apiClient.post(`/admin/suppliers/${selected.id}/${path}`, {});
+                          toast.success(grant ? t("admin.subBenefits.foundingGranted") : t("admin.subBenefits.foundingRevoked"));
+                          setSelected({ ...selected, isFoundingPartner: grant });
+                          invalidate();
+                        } catch (err: any) { toast.error(err?.message || t("toast.saveFailed")); }
+                      }}
+                    >
+                      {selected.isFoundingPartner ? t("admin.subBenefits.revoke") : t("admin.subBenefits.grant")}
+                    </Button>
+                  </div>
+
+                  <div className="rounded-lg border border-border p-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="flex items-center gap-1.5 text-xs font-semibold">
+                        <ShieldCheck className="h-3.5 w-3.5 text-success" />
+                        {t("admin.subBenefits.verified")}
+                      </p>
+                      <p className="mt-0.5 text-[10px] text-muted-foreground">{t("admin.subBenefits.verifiedDesc")}</p>
+                    </div>
+                    <Button
+                      variant={selected.isVerified ? "default" : "outline"}
+                      size="sm"
+                      className="text-xs"
+                      onClick={async () => {
+                        const verify = !selected.isVerified;
+                        const path = verify ? "verify" : "unverify";
+                        try {
+                          await apiClient.post(`/admin/suppliers/${selected.id}/${path}`, {});
+                          toast.success(verify ? t("admin.subBenefits.verifiedYes") : t("admin.subBenefits.verifiedNo"));
+                          setSelected({ ...selected, isVerified: verify });
+                          invalidate();
+                        } catch (err: any) { toast.error(err?.message || t("toast.saveFailed")); }
+                      }}
+                    >
+                      {selected.isVerified ? t("admin.subBenefits.unverify") : t("admin.subBenefits.verify")}
+                    </Button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <Flag className="h-3.5 w-3.5" />
+                    {t("admin.subBenefits.priority")}
+                  </label>
+                  <select
+                    className={inp}
+                    value={selected.priority ?? "standard"}
+                    onChange={async (e) => {
+                      const newPriority = e.target.value as "standard" | "high" | "critical";
+                      const prev = selected.priority;
+                      setSelected({ ...selected, priority: newPriority });
+                      try {
+                        await apiClient.patch(`/admin/suppliers/${selected.id}/priority`, { priority: newPriority });
+                        toast.success(t("admin.subBenefits.priorityChanged"));
+                        invalidate();
+                      } catch (err: any) {
+                        toast.error(err?.message || t("toast.saveFailed"));
+                        setSelected({ ...selected, priority: prev });
+                      }
+                    }}
+                  >
+                    <option value="standard">{t("admin.subBenefits.priorityStandard")}</option>
+                    <option value="high">{t("admin.subBenefits.priorityHigh")}</option>
+                    <option value="critical">{t("admin.subBenefits.priorityCritical")}</option>
+                  </select>
                 </div>
               </div>
 
