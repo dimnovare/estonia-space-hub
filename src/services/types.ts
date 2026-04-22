@@ -69,6 +69,16 @@ export interface Supplier {
   clientDiscountRate: number;
   tier: "starter" | "standard" | "premium";
   billingModel: "marketplace" | "rebate";
+  isVerified?: boolean;
+  isFoundingPartner?: boolean;
+  priority?: "standard" | "high" | "critical";
+  onboardingStartedAt?: string | null;
+  onboardingDaysRemaining?: number | null;
+  isInOnboarding?: boolean;
+  effectivePricing?: {
+    effectiveCommissionRate?: number;
+    effectiveMonthlyFee?: number;
+  };
 }
 
 export interface PartnerIntegrationSettings {
