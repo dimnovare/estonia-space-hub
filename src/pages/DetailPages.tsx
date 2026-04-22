@@ -202,6 +202,7 @@ export function WarehouseDetail() {
               <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" /> {wListing.rating} ({wListing.reviewCount} {t("detail.reviews")})</span>
             )}
           </div>
+          <PartnerBadges listing={wListing} />
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{wListing.description}</p>
 
           <h2 className="mt-8 font-display text-lg font-semibold">{t("detail.features")}</h2>
@@ -386,6 +387,7 @@ export function MovingDetail() {
               <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" /> {mListing.rating} ({mListing.reviewCount})</span>
             )}
           </div>
+          <PartnerBadges listing={mListing} />
           <p className="mt-4 text-sm text-muted-foreground">{mListing.description}</p>
 
           <h2 className="mt-8 font-display text-lg font-semibold">{t("detail.servicesIncluded")}</h2>
@@ -517,6 +519,7 @@ export function TrailerDetail() {
               <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" /> {tListing.rating} ({tListing.reviewCount})</span>
             )}
           </div>
+          <PartnerBadges listing={tListing} />
           <p className="mt-4 text-sm text-muted-foreground">{tListing.description}</p>
 
           <h2 className="mt-8 font-display text-lg font-semibold">{t("detail.specifications")}</h2>
