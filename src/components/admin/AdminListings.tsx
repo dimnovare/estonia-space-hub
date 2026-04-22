@@ -217,7 +217,7 @@ export default function AdminListings() {
                 </div>
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Aadress</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.listings.address")}</label>
                 <input className={inp} value={editItem.address ?? ""} onChange={e => setEditItem({ ...editItem, address: e.target.value })} />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -234,11 +234,11 @@ export default function AdminListings() {
                 </div>
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Kirjeldus</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.listings.description")}</label>
                 <textarea className={inp + " min-h-[60px]"} value={editItem.description ?? ""} onChange={e => setEditItem({ ...editItem, description: e.target.value })} />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Pildid</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.listings.images")}</label>
                 <ImageUploader
                   images={editItem.images || []}
                   onChange={imgs => setEditItem({ ...editItem, images: imgs })}
@@ -248,7 +248,7 @@ export default function AdminListings() {
 
               {/* Supplier */}
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Partner</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.listings.partner")}</label>
                 <select className={inp} value={editItem.supplierId ?? ""} onChange={e => setEditItem({ ...editItem, supplierId: e.target.value })}>
                   <option value="">— Vali partner —</option>
                   {suppliers.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -260,22 +260,22 @@ export default function AdminListings() {
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("admin.pricing")}</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground">Partneri allahindlus (% override)</label>
-                    <input type="number" className={inp} placeholder="Partneri vaikimisi"
+                    <label className="text-xs font-medium text-muted-foreground">{t("admin.listings.partnerDiscountOverride")}</label>
+                    <input type="number" className={inp} placeholder={t("admin.listings.partnerDefault")}
                       value={editItem.partnerDiscountRateOverride ?? ""}
                       onChange={e => setEditItem({ ...editItem, partnerDiscountRateOverride: e.target.value ? Number(e.target.value) : null })} />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground">Kliendi allahindlus (% override)</label>
-                    <input type="number" className={inp} placeholder="Vaikimisi"
+                    <label className="text-xs font-medium text-muted-foreground">{t("admin.listings.clientDiscountOverride")}</label>
+                    <input type="number" className={inp} placeholder={t("admin.listings.default")}
                       value={editItem.clientDiscountRateOverride ?? ""}
                       onChange={e => setEditItem({ ...editItem, clientDiscountRateOverride: e.target.value ? Number(e.target.value) : null })} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground">KM määr (%)</label>
-                    <input type="number" className={inp} placeholder="0 = ei kohaldu"
+                    <label className="text-xs font-medium text-muted-foreground">{t("admin.listings.vatRate")}</label>
+                    <input type="number" className={inp} placeholder={t("admin.listings.vatRateNotApplicable")}
                       value={editItem.vatRate ?? ""}
                       onChange={e => setEditItem({ ...editItem, vatRate: e.target.value ? Number(e.target.value) : null })} />
                   </div>
@@ -283,7 +283,7 @@ export default function AdminListings() {
                     <input type="checkbox" id="vat-incl" className="rounded border-border"
                       checked={editItem.pricesIncludeVat ?? false}
                       onChange={e => setEditItem({ ...editItem, pricesIncludeVat: e.target.checked })} />
-                    <label htmlFor="vat-incl" className="text-xs font-medium text-muted-foreground">Hinnad sisaldavad KM-i</label>
+                    <label htmlFor="vat-incl" className="text-xs font-medium text-muted-foreground">{t("admin.listings.pricesIncludeVat")}</label>
                   </div>
                 </div>
               </div>

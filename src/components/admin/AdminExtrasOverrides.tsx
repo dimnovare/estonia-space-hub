@@ -37,28 +37,28 @@ export default function AdminExtrasOverrides({ listingId }: { listingId: string 
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-[11px] text-muted-foreground">
-                  Partneri allahindlus % (tühi = partneri vaikimisi, 0 = ei allahindlust)
+                  {t("admin.extras.partnerDiscountHelp")}
                 </label>
                 <Input
                   type="number"
                   min="0"
                   max="100"
                   className="h-8 text-xs"
-                  placeholder="Partneri vaikimisi"
+                  placeholder={t("admin.listings.partnerDefault")}
                   defaultValue={extra.partnerDiscountRate ?? ""}
                   onBlur={(e) => handleUpdate(extra.id, "partnerDiscountRate", e.target.value)}
                 />
               </div>
               <div>
                 <label className="text-[11px] text-muted-foreground">
-                  Kliendihinna override (€, tühi = automaatne)
+                  {t("admin.extras.clientOverrideHelp")}
                 </label>
                 <Input
                   type="number"
                   min="0"
                   step="0.01"
                   className="h-8 text-xs"
-                  placeholder="Automaatne"
+                  placeholder={t("admin.extras.automatic")}
                   defaultValue={extra.customerPriceOverride ?? ""}
                   onBlur={(e) => handleUpdate(extra.id, "customerPriceOverride", e.target.value)}
                 />

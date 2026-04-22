@@ -21,7 +21,7 @@ export default function ImageUploader({ images, onChange, maxImages = 10 }: Imag
       ["image/jpeg", "image/png", "image/webp"].includes(f.type) && f.size <= 5 * 1024 * 1024
     );
     if (validFiles.length === 0) {
-      toast.error("Lubatud on ainult JPG, PNG või WebP failid (max 5MB)");
+      toast.error(t("admin.upload.invalidFormat"));
       return;
     }
 
