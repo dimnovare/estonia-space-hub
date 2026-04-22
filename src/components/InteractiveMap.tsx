@@ -19,6 +19,8 @@ interface InteractiveMapProps {
   tPerMonth?: string;
   tAllUnits?: string;
   tSearch?: string;
+  tVerified?: string;
+  tFoundingPartner?: string;
 }
 
 const typeColors: Record<string, string> = {
@@ -158,6 +160,8 @@ export default function InteractiveMap({
   tPerMonth = "/mo",
   tAllUnits = "All units",
   tSearch = "Search",
+  tVerified = "Verified",
+  tFoundingPartner = "Founding Partner",
 }: InteractiveMapProps) {
   const defaultCenters: Record<string, [number, number]> = {
     et: [58.8, 25.5],
@@ -274,6 +278,7 @@ export default function InteractiveMap({
         <div style="min-width: 200px; font-family: 'DM Sans', sans-serif;">
           ${listing.image ? `<img src="${listing.image}" alt="${listing.title}" onerror="this.style.display='none'" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />` : '<div style="width: 100%; height: 70px; background: #f0f0f0; border-radius: 8px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 12px;">📍</div>'}
           <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #1E3A5F;">${listing.title}</div>
+          ${(listing.isVerified || listing.isFoundingPartner) ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;">${listing.isVerified ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:#16A34A;background:#16A34A14;padding:2px 6px;border-radius:10px;">✓ ${tVerified}</span>` : ''}${listing.isFoundingPartner ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:#2EC4B6;background:#2EC4B614;padding:2px 6px;border-radius:10px;">★ ${tFoundingPartner}</span>` : ''}</div>` : ''}
           <div style="font-size: 12px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
             ${listing.address}, ${listing.city}

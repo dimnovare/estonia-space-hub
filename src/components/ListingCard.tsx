@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { MapPin, Star, Warehouse, Truck, CarFront, Heart, ShieldCheck, BadgePercent } from "lucide-react";
+import { MapPin, Star, Warehouse, Truck, CarFront, Heart, ShieldCheck, BadgePercent, Award } from "lucide-react";
 import type { Listing } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -56,12 +56,26 @@ export default function ListingCard({ listing }: { listing: Listing }) {
             {t(badgeKeys[listing.badge])}
           </span>
         )}
-        {listing.isVerified && (
-          <span className="absolute left-3 bottom-3 inline-flex items-center gap-1 rounded-full bg-card/90 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-success">
-            <ShieldCheck className="h-3 w-3" />
-            {t("listing.verified")}
-          </span>
-        )}
+        <div className="absolute right-2 top-12 flex flex-col items-end gap-1">
+          {listing.isVerified && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full bg-card/95 backdrop-blur-sm px-2 py-0.5 text-[10px] font-semibold text-success shadow-sm"
+              title={t("listing.badge.verifiedTooltip")}
+            >
+              <ShieldCheck className="h-3 w-3" />
+              {t("listing.badge.verified")}
+            </span>
+          )}
+          {listing.isFoundingPartner && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full bg-card/95 backdrop-blur-sm px-2 py-0.5 text-[10px] font-semibold text-accent shadow-sm"
+              title={t("listing.badge.foundingPartnerTooltip")}
+            >
+              <Award className="h-3 w-3" />
+              {t("listing.badge.foundingPartner")}
+            </span>
+          )}
+        </div>
         <button
           onClick={e => { e.preventDefault(); e.stopPropagation(); toggle(listing.id); }}
           className={`absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full transition-colors ${isFavorite(listing.id) ? "bg-white text-red-500" : "bg-card/80 text-muted-foreground hover:text-red-400"}`}

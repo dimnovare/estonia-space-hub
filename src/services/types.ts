@@ -265,6 +265,7 @@ export interface ListingBase {
   vatRate?: number | null;
   pricesIncludeVat?: boolean;
   isVerified?: boolean;
+  isFoundingPartner?: boolean;
 }
 
 export interface SupplierListingExtra {

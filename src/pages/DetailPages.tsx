@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { MapPin, Star, Check, ArrowLeft, Calendar, Shield, BadgePercent, Zap, Mail, Hand, Building2, CheckCircle, Loader2, Info } from "lucide-react";
+import { MapPin, Star, Check, ArrowLeft, Calendar, Shield, BadgePercent, Zap, Mail, Hand, Building2, CheckCircle, Loader2, Info, ShieldCheck, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListing, useSuppliers, usePricingConfig, useListingExtras } from "@/hooks/queries";
 import { fillPricing } from "@/lib/pricingPlaceholders";
@@ -15,6 +15,33 @@ import { trackEvent } from "@/lib/analytics";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
+
+function PartnerBadges({ listing }: { listing: Listing }) {
+  const { t } = useLanguage();
+  if (!listing.isVerified && !listing.isFoundingPartner) return null;
+  return (
+    <div className="mt-2 flex flex-wrap gap-2">
+      {listing.isVerified && (
+        <span
+          className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-1 text-xs font-semibold text-success"
+          title={t("listing.badge.verifiedTooltip")}
+        >
+          <ShieldCheck className="h-3.5 w-3.5" />
+          {t("listing.badge.verified")}
+        </span>
+      )}
+      {listing.isFoundingPartner && (
+        <span
+          className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2.5 py-1 text-xs font-semibold text-accent"
+          title={t("listing.badge.foundingPartnerTooltip")}
+        >
+          <Award className="h-3.5 w-3.5" />
+          {t("listing.badge.foundingPartner")}
+        </span>
+      )}
+    </div>
+  );
+}
 
 function SupplierBadge({ supplierId }: { supplierId?: string }) {
   const { data: suppliers = [] } = useSuppliers();
@@ -175,6 +202,7 @@ export function WarehouseDetail() {
               <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" /> {wListing.rating} ({wListing.reviewCount} {t("detail.reviews")})</span>
             )}
           </div>
+          <PartnerBadges listing={wListing} />
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{wListing.description}</p>
 
           <h2 className="mt-8 font-display text-lg font-semibold">{t("detail.features")}</h2>
@@ -359,6 +387,7 @@ export function MovingDetail() {
               <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" /> {mListing.rating} ({mListing.reviewCount})</span>
             )}
           </div>
+          <PartnerBadges listing={mListing} />
           <p className="mt-4 text-sm text-muted-foreground">{mListing.description}</p>
 
           <h2 className="mt-8 font-display text-lg font-semibold">{t("detail.servicesIncluded")}</h2>
@@ -490,6 +519,7 @@ export function TrailerDetail() {
               <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" /> {tListing.rating} ({tListing.reviewCount})</span>
             )}
           </div>
+          <PartnerBadges listing={tListing} />
           <p className="mt-4 text-sm text-muted-foreground">{tListing.description}</p>
 
           <h2 className="mt-8 font-display text-lg font-semibold">{t("detail.specifications")}</h2>
