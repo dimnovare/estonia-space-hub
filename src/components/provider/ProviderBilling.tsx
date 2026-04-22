@@ -26,11 +26,19 @@ export default function ProviderBilling() {
       canHavePromotedBadge?: boolean;
       subscriptionEndsAt?: string;
       billingModel?: string;
+      isInOnboarding?: boolean;
+      onboardingDaysRemaining?: number;
+      isFoundingPartner?: boolean;
     }>("/supplier/profile"),
     staleTime: 60_000,
   });
 
   const isRebate = supplierData?.billingModel === "rebate";
+  const tierKey = (supplierData?.tier ?? "Starter").toLowerCase();
+  const isFreeTier = tierKey === "starter" || tierKey === "free";
+  const isInOnboarding = !!supplierData?.isInOnboarding;
+  const onboardingDaysRemaining = supplierData?.onboardingDaysRemaining ?? 0;
+  const isFoundingPartner = !!supplierData?.isFoundingPartner;
 
   const [bankForm, setBankForm] = useState({
     iban: "", bankAccountName: "", bankName: ""
@@ -87,6 +95,32 @@ export default function ProviderBilling() {
     <div>
       <h1 className="font-display text-2xl font-bold">{t("provider.billing.title")}</h1>
 
+      {/* Founding partner badge */}
+      {isFoundingPartner && (
+        <div className="mt-6 rounded-xl border border-accent/40 bg-accent/5 px-4 py-3">
+          <p className="text-sm font-semibold text-accent">⭐ {t("provider.billing.foundingPartnerBadge")}</p>
+        </div>
+      )}
+
+      {/* Onboarding status */}
+      {isInOnboarding ? (
+        <div className="mt-6 rounded-xl border border-success/30 bg-success/5 p-4">
+          <p className="text-sm font-semibold text-success">
+            {t("provider.billing.onboardingActive").replace("{n}", String(onboardingDaysRemaining))}
+          </p>
+          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-success/10">
+            <div
+              className="h-full bg-success transition-all"
+              style={{ width: `${Math.min(100, Math.max(0, ((90 - onboardingDaysRemaining) / 90) * 100))}%` }}
+            />
+          </div>
+        </div>
+      ) : isFreeTier ? (
+        <div className="mt-6 rounded-xl border border-border bg-secondary/30 px-4 py-3">
+          <p className="text-xs text-muted-foreground">{t("provider.billing.onboardingExpired")}</p>
+        </div>
+      ) : null}
+
       {/* Plan summary */}
       <div className="mt-6 rounded-xl border border-border p-5">
         <div className="flex items-center justify-between">
@@ -94,13 +128,13 @@ export default function ProviderBilling() {
             <p className="text-xs font-medium text-muted-foreground">{t("provider.billing.currentPlan")}</p>
             <div className="mt-0.5 flex items-center gap-2">
               <p className="font-display text-lg font-bold">{
-                ({ Starter: t("provPage.starter.name"), Standard: t("provPage.growth.name"), Premium: t("provPage.business.name") } as Record<string, string>)[supplierData?.tier ?? "Starter"] || supplierData?.tier || "Starter"
+                ({ Starter: t("provPage.starter.name"), Free: t("provPage.starter.name"), Standard: t("provPage.growth.name"), Growth: t("provPage.growth.name"), Premium: t("provPage.business.name"), Business: t("provPage.business.name") } as Record<string, string>)[supplierData?.tier ?? "Starter"] || supplierData?.tier || "Free"
               }</p>
               {isRebate && (
                 <span className="rounded-full bg-amber-100 text-amber-700 px-2 py-0.5 text-[10px] font-medium">{t("provider.billing.rebate")}</span>
               )}
             </div>
-            {supplierData?.subscriptionEndsAt && (
+            {!isFreeTier && supplierData?.subscriptionEndsAt && (
               <p className="mt-0.5 text-xs text-muted-foreground">
                 {t("provider.billing.validUntil")}{" "}
                 {new Date(supplierData.subscriptionEndsAt).toLocaleDateString(locale)}
@@ -120,9 +154,7 @@ export default function ProviderBilling() {
             </p>
           </div>
           <div className="text-center">
-            <p className="font-display text-lg font-bold">
-              {supplierData?.maxLocations != null && supplierData.maxLocations >= 999 ? "∞" : supplierData?.maxLocations ?? 1}
-            </p>
+            <p className="font-display text-lg font-bold">∞</p>
             <p className="text-xs text-muted-foreground">{t("provider.billing.locations")}</p>
           </div>
           <div className="text-center">
@@ -135,38 +167,34 @@ export default function ProviderBilling() {
       {/* Change plan */}
       <div className="mt-6 rounded-xl border border-border p-5">
         <h3 className="text-sm font-semibold">{t("provider.billing.changePlan")}</h3>
-        <p className="mt-1 text-xs text-muted-foreground">{t("provider.billing.changePlanDesc")}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{t("provider.billing.contactToUpgrade")}</p>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           {[
-            { tier: "Starter", fee: 19, units: 3, locations: 1 },
-            { tier: "Standard", fee: 49, units: 10, locations: 2 },
-            { tier: "Premium", fee: 99, units: 30, locations: 5 },
+            { tier: "Starter", fee: 0, commission: 12, displayName: "Free" },
+            { tier: "Standard", fee: 49, commission: 8, displayName: "Growth" },
+            { tier: "Premium", fee: 99, commission: 6, displayName: "Business" },
           ].map(plan => {
             const isCurrent = supplierData?.tier?.toLowerCase() === plan.tier.toLowerCase();
-            const displayName = plan.tier === "Standard" ? "Growth" : plan.tier === "Premium" ? "Business" : "Starter";
             return (
               <div key={plan.tier} className={`rounded-lg border p-4 text-center ${isCurrent ? "border-accent bg-accent/5" : "border-border"}`}>
-                <p className="text-sm font-semibold">{displayName}</p>
+                <p className="text-sm font-semibold">{plan.displayName}</p>
                 <p className="mt-1 font-display text-xl font-bold">€{plan.fee}<span className="text-sm font-normal text-muted-foreground">/{t("provider.billing.month")}</span></p>
-                <p className="mt-1 text-[11px] text-muted-foreground">{plan.units} {t("provider.listings.totalUnits")} · {plan.locations} {t("provider.listings.totalLocations")}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">{plan.commission}% {t("provider.billing.partnerDiscount")} · {t("provider.billing.unlimited")}</p>
                 {isCurrent ? (
                   <span className="mt-3 inline-block rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
                     {t("provider.billing.currentPlan")}
                   </span>
+                ) : plan.fee === 0 ? (
+                  <Button variant="outline" size="sm" className="mt-3" disabled>
+                    {t("provider.billing.downgrade")}
+                  </Button>
                 ) : (
-                  <Button variant="outline" size="sm" className="mt-3" onClick={async () => {
-                    if (!confirm(`${t("provider.billing.confirmChange")} ${displayName}?`)) return;
-                    try {
-                      await apiClient.patch("/supplier/tier", { tier: plan.tier });
-                      queryClient.invalidateQueries({ queryKey: ["bank-details"] });
-                      queryClient.invalidateQueries({ queryKey: ["my-supplier-profile"] });
-                      toast.success(t("provider.billing.planChanged") || "Plan changed");
-                      window.location.reload();
-                    } catch (err: any) { toast.error(err?.message || t("toast.saveFailed")); }
-                  }}>
-                    {plan.fee > (supplierData?.monthlyFee || 0)
-                      ? t("provider.billing.upgrade")
-                      : t("provider.billing.downgrade")}
+                  <Button variant="outline" size="sm" className="mt-3" asChild>
+                    <a href={`/contact?subject=${encodeURIComponent("Upgrade to " + plan.displayName)}`}>
+                      {plan.displayName === "Growth"
+                        ? t("provider.billing.upgradeToGrowth")
+                        : t("provider.billing.upgradeToBusiness")}
+                    </a>
                   </Button>
                 )}
               </div>

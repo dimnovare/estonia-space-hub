@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
-  UserPlus, ListPlus, ShoppingCart, Check,
+  UserPlus, ListPlus, ShoppingCart, Check, Star, Megaphone,
   TrendingUp, PhoneOff, Search, Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,21 +13,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { usePricingConfig } from "@/hooks/queries";
-import { fillPricing } from "@/lib/pricingPlaceholders";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
-const getTrialFeatures = (t: (k: string) => string) => [
-  t("provPage.trial.f1"),
-  t("provPage.trial.f2"),
-  t("provPage.trial.f3"),
-];
-const getStarterFeatures = (t: (k: string) => string) => [
-  t("provPage.starter.f1"),
-  t("provPage.starter.f2"),
-  t("provPage.starter.f3"),
-  t("provPage.starter.f4"),
-  t("provPage.starter.f5"),
+const getFreeFeatures = (t: (k: string) => string) => [
+  t("provPage.free.f1"),
+  t("provPage.free.f2"),
+  t("provPage.free.f3"),
+  t("provPage.free.f4"),
+  t("provPage.free.f5"),
 ];
 const getGrowthFeatures = (t: (k: string) => string) => [
   t("provPage.growth.f1"),
@@ -49,8 +42,6 @@ const getBusinessFeatures = (t: (k: string) => string) => [
 
 export default function ProviderPage() {
   const { t } = useLanguage();
-  const { data: config, isLoading: configLoading } = usePricingConfig();
-  const fp = (text: string) => fillPricing(text, config);
   const settings = usePlatformSettings() as any;
   const featuredPartners: { name: string; logoUrl: string }[] = Array.isArray(settings?.featuredPartners)
     ? settings.featuredPartners
@@ -59,30 +50,29 @@ export default function ProviderPage() {
 
   const tiers = [
     {
-      key: "trial",
-      name: t("provPage.tier.trial"),
-      badge: t("provPage.tier.free"),
-      highlight: true,
-      features: getTrialFeatures(t),
-    },
-    {
-      key: "starter",
-      name: t("provPage.tier.starter"),
-      badge: `€19/${t("provPage.tier.perMonth")}`,
+      key: "free",
+      name: t("provPage.tier.freeName"),
+      price: t("provPage.tier.freePrice"),
+      commission: t("provPage.tier.commission12"),
+      highlightBadge: t("provPage.tier.freeBadge"),
       highlight: false,
-      features: getStarterFeatures(t),
+      features: getFreeFeatures(t),
     },
     {
       key: "growth",
-      name: t("provPage.tier.growth"),
-      badge: `€49/${t("provPage.tier.perMonth")}`,
-      highlight: false,
+      name: t("provPage.growth.name"),
+      price: t("provPage.tier.commission8"),
+      commission: "",
+      highlightBadge: t("provPage.tier.mostPopular"),
+      highlight: true,
       features: getGrowthFeatures(t),
     },
     {
       key: "business",
-      name: t("provPage.tier.business"),
-      badge: `€99/${t("provPage.tier.perMonth")}`,
+      name: t("provPage.business.name"),
+      price: t("provPage.tier.commission6"),
+      commission: "",
+      highlightBadge: t("provPage.tier.seriousOperators"),
       highlight: false,
       features: getBusinessFeatures(t),
     },
@@ -94,11 +84,10 @@ export default function ProviderPage() {
     { icon: Search,     titleKey: "provPage.outcome3.title", descKey: "provPage.outcome3.desc" },
   ];
 
-  const steps = [
-    { icon: UserPlus,     titleKey: "provPage.step1.title" },
-    { icon: ListPlus,     titleKey: "provPage.step2.title" },
-    { icon: ShoppingCart, titleKey: "provPage.step3.title" },
-    { icon: Wallet,       titleKey: "provPage.step4.title" },
+  const pricingSteps = [
+    { icon: UserPlus, titleKey: "provPage.pricingHow.step1.title", descKey: "provPage.pricingHow.step1.desc" },
+    { icon: Wallet,   titleKey: "provPage.pricingHow.step2.title", descKey: "provPage.pricingHow.step2.desc" },
+    { icon: Star,     titleKey: "provPage.pricingHow.step3.title", descKey: "provPage.pricingHow.step3.desc" },
   ];
 
   const faqKeys = ["provPage.faq.q1", "provPage.faq.q2", "provPage.faq.q3", "provPage.faq.q4", "provPage.faq.q5"];
@@ -152,35 +141,48 @@ export default function ProviderPage() {
         </div>
       </section>
 
-      {/* ── How it works (4 steps) ── */}
+      {/* ── The deal (marketing promise) ── */}
       <section className="surface-sunken py-16 md:py-24">
-        <div className="container-wide">
-          <h2 className="text-center font-display text-2xl font-bold md:text-3xl">
-            {t("provPage.howItWorks.title")}
+        <div className="container-wide mx-auto max-w-3xl">
+          <div className="flex items-center justify-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10">
+              <Megaphone className="h-7 w-7 text-accent" />
+            </div>
+          </div>
+          <h2 className="mt-5 text-center font-display text-2xl font-bold md:text-3xl">
+            {t("provPage.deal.title")}
           </h2>
-          <div className="mt-10 grid gap-8 sm:grid-cols-2 md:grid-cols-4">
-            {steps.map((s, i) => {
-              const Icon = s.icon;
-              return (
-                <div key={i} className="relative text-center">
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-accent text-lg font-bold text-accent-foreground">
-                    {i + 1}
-                  </div>
-                  {i < steps.length - 1 && (
-                    <div className="absolute left-[calc(50%+2rem)] top-6 hidden h-px w-[calc(100%-4rem)] bg-border md:block" />
-                  )}
-                  <div className="mx-auto mt-4 flex h-10 w-10 items-center justify-center">
-                    <Icon className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                  <h3 className="mt-2 font-display text-base font-semibold">{t(s.titleKey)}</h3>
-                </div>
-              );
-            })}
+          <div className="mt-6 space-y-4 text-sm leading-relaxed text-muted-foreground md:text-base">
+            <p>{t("provPage.deal.body1")}</p>
+            <p>{t("provPage.deal.body2")}</p>
+            <p className="font-medium text-foreground">{t("provPage.deal.body3")}</p>
           </div>
         </div>
       </section>
 
-      {/* ── Social proof: featured partners ── */}
+      {/* ── How pricing works ── */}
+      <section className="container-wide py-16 md:py-20">
+        <h2 className="text-center font-display text-2xl font-bold md:text-3xl">
+          {t("provPage.pricingHow.title")}
+        </h2>
+        <div className="mt-10 grid gap-4 md:grid-cols-3 md:gap-6">
+          {pricingSteps.map((s, i) => {
+            const Icon = s.icon;
+            return (
+              <div key={i} className="card-elevated p-6 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10">
+                  <Icon className="h-6 w-6 text-accent" />
+                </div>
+                <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{i + 1}</p>
+                <h3 className="mt-1 font-display text-base font-semibold">{t(s.titleKey)}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{t(s.descKey)}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ── Featured partners ── */}
       {showPartners && (
         <section className="container-wide py-12 md:py-16">
           <h2 className="text-center font-display text-xl font-semibold md:text-2xl text-muted-foreground">
@@ -200,8 +202,9 @@ export default function ProviderPage() {
         </section>
       )}
 
-      {/* ── Pricing tiers (below the fold) ── */}
-      <section className="container-wide py-16 md:py-24">
+      {/* ── Pricing tiers ── */}
+      <section className="surface-sunken py-16 md:py-24">
+        <div className="container-wide">
         <h2 className="text-center font-display text-2xl font-bold md:text-3xl">
           {t("provPage.pricing.titleNew")}
         </h2>
@@ -209,18 +212,7 @@ export default function ProviderPage() {
           {t("provPage.pricing.introNew")}
         </p>
 
-        {/* Trial CTA */}
-        <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-accent/30 bg-accent/5 px-5 py-4 text-center">
-          <p className="text-base font-bold text-accent">{t("provPage.trialCta")}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{t("provPage.trialDesc")}</p>
-        </div>
-
-        {/* Margin note */}
-        <p className="mx-auto mt-4 max-w-xl text-center text-sm font-medium text-foreground">
-          {t("provPage.marginNote")}
-        </p>
-
-        <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid gap-6 md:grid-cols-3">
           {tiers.map((tier) => (
             <div
               key={tier.key}
@@ -230,16 +222,26 @@ export default function ProviderPage() {
                   : "border-border bg-card"
               }`}
             >
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="font-display text-lg font-bold truncate">{tier.name}</h3>
-                <span className={`shrink-0 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-semibold leading-tight ${
-                  tier.highlight
-                    ? "bg-accent text-accent-foreground"
-                    : "bg-secondary text-secondary-foreground"
-                }`}>
-                  {tier.badge}
+              {tier.highlightBadge && tier.highlight && (
+                <span className="absolute right-3 top-3 rounded-full bg-accent px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-foreground">
+                  {tier.highlightBadge}
                 </span>
-              </div>
+              )}
+              <h3 className="font-display text-xl font-bold">{tier.name}</h3>
+              <p className="mt-2 text-sm font-semibold text-foreground">{tier.price}</p>
+              {tier.commission && (
+                <p className="mt-1 text-xs text-muted-foreground">{tier.commission}</p>
+              )}
+              {tier.key === "free" && (
+                <p className="mt-3 rounded-lg bg-success/10 px-3 py-2 text-[11px] font-medium leading-relaxed text-success">
+                  {tier.highlightBadge}
+                </p>
+              )}
+              {tier.key !== "free" && tier.highlightBadge && !tier.highlight && (
+                <span className="mt-3 inline-block rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {tier.highlightBadge}
+                </span>
+              )}
               <ul className="mt-5 space-y-2">
                 {tier.features.map((feat) => (
                   <li key={feat} className="flex items-start gap-2 text-sm">
@@ -256,11 +258,21 @@ export default function ProviderPage() {
                       : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                   }`}
                 >
-                  {tier.highlight ? t("provPage.tier.startTrial") : t("provPage.tier.choosePlan")}
+                  {t("provPage.tier.choosePlan")}
                 </Button>
               </Link>
             </div>
           ))}
+        </div>
+        </div>
+      </section>
+
+      {/* ── Marketing promise tagline ── */}
+      <section className="container-wide py-12 md:py-16">
+        <div className="mx-auto max-w-2xl rounded-2xl border border-accent/30 bg-accent/5 p-6 text-center">
+          <p className="font-display text-lg font-semibold md:text-xl">
+            {t("provPage.marketingPromise.title")}
+          </p>
         </div>
       </section>
 
