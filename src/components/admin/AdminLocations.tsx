@@ -312,7 +312,7 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
                       try {
                         await apiClient.delete(`/locations/${selected.id}`);
                         invalidate();
-                        toast.success("Asukoht kustutatud");
+                        toast.success(t("admin.locations.deleted"));
                         setSelectedId(null);
                       } catch (err: any) {
                         toast.error(err.message || t("provider.listings.deleteFailed"));
@@ -372,7 +372,7 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
                                     try {
                                       await apiClient.delete(`/locations/${selected.id}/units/${u.id}`);
                                       invalidate();
-                                      toast.success("Üksus kustutatud");
+                                      toast.success(t("admin.locations.unitDeleted"));
                                     } catch (err: any) {
                                       toast.error(err.message || t("provider.listings.deleteFailed"));
                                     }

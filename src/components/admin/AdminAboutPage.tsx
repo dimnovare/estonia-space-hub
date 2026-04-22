@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const LANGS: { code: "et" | "en" | "ru" | "lv" | "lt"; label: string }[] = [
   { code: "et", label: "ET" },
@@ -69,6 +70,7 @@ function parseFounders(raw?: string): AdminFounder[] {
 }
 
 export default function AdminAboutPage({ settings, set, setBool }: Props) {
+  const { t } = useLanguage();
   const enabled = settings["aboutPage.enabled"] !== "false";
   const showStats = settings["aboutPage.showStats"] === "true";
   const stored = parseFounders(settings["aboutPage.founders"]);
@@ -128,18 +130,18 @@ export default function AdminAboutPage({ settings, set, setBool }: Props) {
   return (
     <div className="rounded-xl border border-border p-5">
       <h3 className="flex items-center gap-2 font-display text-base font-semibold">
-        <Users className="h-4 w-4 text-accent" /> About page
+        <Users className="h-4 w-4 text-accent" /> {t("admin.about.title")}
       </h3>
       <p className="mt-1 text-xs text-muted-foreground">
-        Halda /about lehe sisu, asutajate kaarte ja statistika nähtavust.
+        {t("admin.about.subtitle")}
       </p>
 
       {/* Toggles */}
       <div className="mt-4 space-y-3">
         <div className="flex items-center justify-between rounded-lg border border-border p-3">
           <div>
-            <div className="text-sm font-medium">About page enabled</div>
-            <div className="text-xs text-muted-foreground">Kui välja lülitatud, näeb külastaja 404 lehte.</div>
+            <div className="text-sm font-medium">{t("admin.about.enabledLabel")}</div>
+            <div className="text-xs text-muted-foreground">{t("admin.about.enabledDesc")}</div>
           </div>
           <button
             type="button"
@@ -153,8 +155,8 @@ export default function AdminAboutPage({ settings, set, setBool }: Props) {
         </div>
         <div className="flex items-center justify-between rounded-lg border border-border p-3">
           <div>
-            <div className="text-sm font-medium">Show stats</div>
-            <div className="text-xs text-muted-foreground">Kuva statistika kohatäidet (päris numbrid tulevad hiljem).</div>
+            <div className="text-sm font-medium">{t("admin.about.showStatsLabel")}</div>
+            <div className="text-xs text-muted-foreground">{t("admin.about.showStatsDesc")}</div>
           </div>
           <button
             type="button"
@@ -170,7 +172,7 @@ export default function AdminAboutPage({ settings, set, setBool }: Props) {
 
       {/* Mission per language */}
       <div className="mt-6">
-        <p className="text-xs font-semibold text-foreground mb-2">Missiooni tekst (keelte kaupa)</p>
+        <p className="text-xs font-semibold text-foreground mb-2">{t("admin.about.missionHeader")}</p>
         <div className="grid gap-3">
           {LANGS.map((l) => (
             <div key={l.code}>
@@ -179,7 +181,7 @@ export default function AdminAboutPage({ settings, set, setBool }: Props) {
                 className="mt-1 min-h-[100px]"
                 value={settings[`aboutPage.mission.${l.code}`] || ""}
                 onChange={(e) => set(`aboutPage.mission.${l.code}`, e.target.value)}
-                placeholder={`Missioon (${l.label})…`}
+                placeholder={t("admin.about.missionPlaceholder").replace("{lang}", l.label)}
               />
             </div>
           ))}
@@ -189,15 +191,15 @@ export default function AdminAboutPage({ settings, set, setBool }: Props) {
       {/* Founders */}
       <div className="mt-6 pt-5 border-t border-border">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-semibold text-foreground">Asutajad</p>
+          <p className="text-xs font-semibold text-foreground">{t("admin.about.foundersHeader")}</p>
           <Button size="sm" variant="outline" onClick={addFounder}>
-            <Plus className="h-3.5 w-3.5 mr-1" /> Lisa asutaja
+            <Plus className="h-3.5 w-3.5 mr-1" /> {t("admin.about.addFounder")}
           </Button>
         </div>
 
         {isEmpty && showHint && (
           <div className="mb-2 rounded-lg bg-accent/5 border border-accent/20 p-3 text-xs text-accent">
-            💡 Näidisasutaja — klõpsa muutmiseks või eemalda. Salvestamata, kuni muudad.
+            {t("admin.about.sampleFounderHint")}
           </div>
         )}
 
@@ -209,16 +211,16 @@ export default function AdminAboutPage({ settings, set, setBool }: Props) {
 
         <div className="space-y-4">
           {founders.length === 0 && (
-            <p className="text-xs text-muted-foreground italic">Asutajaid pole lisatud.</p>
+            <p className="text-xs text-muted-foreground italic">{t("admin.about.noFounders")}</p>
           )}
           {founders.map((f, i) => (
             <div key={i} className="rounded-lg border border-border p-4">
               <div className="flex items-start justify-between mb-3">
-                <span className="text-xs font-semibold text-muted-foreground">Asutaja #{i + 1}</span>
+                <span className="text-xs font-semibold text-muted-foreground">{t("admin.about.founderLabel").replace("{n}", String(i + 1))}</span>
                 <button
                   onClick={() => removeFounder(i)}
                   className="text-destructive hover:bg-destructive/10 rounded p-1"
-                  aria-label="Eemalda"
+                  aria-label={t("admin.about.remove")}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -226,7 +228,7 @@ export default function AdminAboutPage({ settings, set, setBool }: Props) {
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <Label className="text-xs">Nimi *</Label>
+                  <Label className="text-xs">{t("admin.about.fieldName")}</Label>
                   <Input
                     className="mt-1"
                     value={f.name}
@@ -235,7 +237,7 @@ export default function AdminAboutPage({ settings, set, setBool }: Props) {
                   />
                 </div>
                 <div>
-                  <Label className="text-xs">Foto URL</Label>
+                  <Label className="text-xs">{t("admin.about.fieldPhoto")}</Label>
                   <Input
                     className="mt-1"
                     value={f.photoUrl}
@@ -244,7 +246,7 @@ export default function AdminAboutPage({ settings, set, setBool }: Props) {
                   />
                 </div>
                 <div>
-                  <Label className="text-xs">E-post</Label>
+                  <Label className="text-xs">{t("admin.about.fieldEmail")}</Label>
                   <Input
                     className="mt-1"
                     type="email"
@@ -254,7 +256,7 @@ export default function AdminAboutPage({ settings, set, setBool }: Props) {
                   />
                 </div>
                 <div>
-                  <Label className="text-xs">LinkedIn URL</Label>
+                  <Label className="text-xs">{t("admin.about.fieldLinkedin")}</Label>
                   <Input
                     className="mt-1"
                     value={f.linkedinUrl}
@@ -265,7 +267,7 @@ export default function AdminAboutPage({ settings, set, setBool }: Props) {
               </div>
 
               <div className="mt-3">
-                <Label className="text-xs">Roll (keelte kaupa)</Label>
+                <Label className="text-xs">{t("admin.about.fieldRole")}</Label>
                 <div className="mt-1 grid gap-2 sm:grid-cols-5">
                   {LANGS.map((l) => (
                     <Input
@@ -280,7 +282,7 @@ export default function AdminAboutPage({ settings, set, setBool }: Props) {
               </div>
 
               <div className="mt-3">
-                <Label className="text-xs">Bio (keelte kaupa)</Label>
+                <Label className="text-xs">{t("admin.about.fieldBio")}</Label>
                 <div className="mt-1 grid gap-2 sm:grid-cols-2">
                   {LANGS.map((l) => (
                     <div key={l.code}>
