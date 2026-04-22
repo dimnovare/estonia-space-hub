@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
-  UserPlus, ListPlus, ShoppingCart, Check,
+  UserPlus, ListPlus, ShoppingCart, Check, Star, Megaphone,
   TrendingUp, PhoneOff, Search, Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,21 +13,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { usePricingConfig } from "@/hooks/queries";
-import { fillPricing } from "@/lib/pricingPlaceholders";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
-const getTrialFeatures = (t: (k: string) => string) => [
-  t("provPage.trial.f1"),
-  t("provPage.trial.f2"),
-  t("provPage.trial.f3"),
-];
-const getStarterFeatures = (t: (k: string) => string) => [
-  t("provPage.starter.f1"),
-  t("provPage.starter.f2"),
-  t("provPage.starter.f3"),
-  t("provPage.starter.f4"),
-  t("provPage.starter.f5"),
+const getFreeFeatures = (t: (k: string) => string) => [
+  t("provPage.free.f1"),
+  t("provPage.free.f2"),
+  t("provPage.free.f3"),
+  t("provPage.free.f4"),
+  t("provPage.free.f5"),
 ];
 const getGrowthFeatures = (t: (k: string) => string) => [
   t("provPage.growth.f1"),
@@ -49,8 +42,6 @@ const getBusinessFeatures = (t: (k: string) => string) => [
 
 export default function ProviderPage() {
   const { t } = useLanguage();
-  const { data: config, isLoading: configLoading } = usePricingConfig();
-  const fp = (text: string) => fillPricing(text, config);
   const settings = usePlatformSettings() as any;
   const featuredPartners: { name: string; logoUrl: string }[] = Array.isArray(settings?.featuredPartners)
     ? settings.featuredPartners
@@ -59,30 +50,29 @@ export default function ProviderPage() {
 
   const tiers = [
     {
-      key: "trial",
-      name: t("provPage.tier.trial"),
-      badge: t("provPage.tier.free"),
-      highlight: true,
-      features: getTrialFeatures(t),
-    },
-    {
-      key: "starter",
-      name: t("provPage.tier.starter"),
-      badge: `€19/${t("provPage.tier.perMonth")}`,
+      key: "free",
+      name: t("provPage.tier.freeName"),
+      price: t("provPage.tier.freePrice"),
+      commission: t("provPage.tier.commission12"),
+      highlightBadge: t("provPage.tier.freeBadge"),
       highlight: false,
-      features: getStarterFeatures(t),
+      features: getFreeFeatures(t),
     },
     {
       key: "growth",
-      name: t("provPage.tier.growth"),
-      badge: `€49/${t("provPage.tier.perMonth")}`,
-      highlight: false,
+      name: t("provPage.growth.name"),
+      price: t("provPage.tier.commission8"),
+      commission: "",
+      highlightBadge: t("provPage.tier.mostPopular"),
+      highlight: true,
       features: getGrowthFeatures(t),
     },
     {
       key: "business",
-      name: t("provPage.tier.business"),
-      badge: `€99/${t("provPage.tier.perMonth")}`,
+      name: t("provPage.business.name"),
+      price: t("provPage.tier.commission6"),
+      commission: "",
+      highlightBadge: t("provPage.tier.seriousOperators"),
       highlight: false,
       features: getBusinessFeatures(t),
     },
@@ -94,11 +84,10 @@ export default function ProviderPage() {
     { icon: Search,     titleKey: "provPage.outcome3.title", descKey: "provPage.outcome3.desc" },
   ];
 
-  const steps = [
-    { icon: UserPlus,     titleKey: "provPage.step1.title" },
-    { icon: ListPlus,     titleKey: "provPage.step2.title" },
-    { icon: ShoppingCart, titleKey: "provPage.step3.title" },
-    { icon: Wallet,       titleKey: "provPage.step4.title" },
+  const pricingSteps = [
+    { icon: UserPlus, titleKey: "provPage.pricingHow.step1.title", descKey: "provPage.pricingHow.step1.desc" },
+    { icon: Wallet,   titleKey: "provPage.pricingHow.step2.title", descKey: "provPage.pricingHow.step2.desc" },
+    { icon: Star,     titleKey: "provPage.pricingHow.step3.title", descKey: "provPage.pricingHow.step3.desc" },
   ];
 
   const faqKeys = ["provPage.faq.q1", "provPage.faq.q2", "provPage.faq.q3", "provPage.faq.q4", "provPage.faq.q5"];
