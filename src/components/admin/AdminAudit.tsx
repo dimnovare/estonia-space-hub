@@ -12,8 +12,9 @@ export default function AdminAudit() {
   useEffect(() => { auditService.getAll().then(data => { setLogs(data); setLoading(false); }); }, []);
 
   const actionColor = (a: string) => {
-    if (a.includes("confirmed") || a.includes("activated")) return "bg-success/10 text-success";
-    if (a.includes("rejected") || a.includes("blocked") || a.includes("deactivated")) return "bg-destructive/10 text-destructive";
+    if (a.includes("confirmed") || a.includes("activated") || a.includes("verified") || a.includes("founding-granted")) return "bg-success/10 text-success";
+    if (a.includes("rejected") || a.includes("blocked") || a.includes("deactivated") || a.includes("unverified") || a.includes("founding-revoked")) return "bg-destructive/10 text-destructive";
+    if (a.includes("priority-changed")) return "bg-amber-100 text-amber-700";
     if (a.includes("sent")) return "bg-info/10 text-info";
     return "bg-secondary text-muted-foreground";
   };
