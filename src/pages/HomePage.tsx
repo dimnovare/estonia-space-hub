@@ -133,7 +133,9 @@ export default function HomePage() {
             "url": "https://ruumly.eu",
             "logo": {
               "@type": "ImageObject",
-              "url": "https://ruumly.eu/ruumly-logo.png"
+            "url": "https://ruumly.eu/ruumly-icon-512.png",
+            "width": 512,
+            "height": 512
             },
             "contactPoint": {
               "@type": "ContactPoint",
