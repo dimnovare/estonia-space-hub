@@ -4,6 +4,7 @@ import type { Listing } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import { getSavingsDisplay } from "@/lib/savingsDisplay";
+import { useSizeBuckets, bucketCodeForSize } from "@/hooks/useSizeBuckets";
 
 const badgeStyles: Record<string, string> = {
   cheapest: "badge-cheapest",
@@ -30,6 +31,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
   const detailPath = `/${listing.type}/${listing.id}`;
   const { t } = useLanguage();
   const { isFavorite, toggle } = useFavorites();
+  const { data: sizeBuckets } = useSizeBuckets();
   const discountRate = listing.clientDiscountRateOverride
     ?? listing.clientDiscountRate
     ?? 0;
@@ -109,11 +111,16 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           )}
         </div>
 
-        {(listing as any).size && (listing as any).size > 0 && (
-          <p className="mt-2 text-xs text-muted-foreground">
-            {(listing as any).size} {(listing as any).sizeUnit || "m²"}
-          </p>
-        )}
+        {(listing as any).size && (listing as any).size > 0 && (() => {
+          const sizeVal = (listing as any).size as number;
+          const bucketCode = bucketCodeForSize(sizeBuckets, sizeVal);
+          return (
+            <p className="mt-2 text-xs text-muted-foreground">
+              {sizeVal} {(listing as any).sizeUnit || "m²"}
+              {bucketCode && <span className="ml-1">· {bucketCode}</span>}
+            </p>
+          );
+        })()}
 
         <div className="mt-3 flex items-baseline gap-2 border-t border-border pt-3">
           {savingsInfo ? (

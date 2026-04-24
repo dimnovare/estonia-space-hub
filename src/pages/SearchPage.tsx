@@ -16,6 +16,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { trackEvent } from "@/lib/analytics";
+import { SizeBucketFilter } from "@/components/search/SizeBucketFilter";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
@@ -37,6 +38,9 @@ export default function SearchPage() {
   const cityFilter = searchParams.get("city") || "";
   const priceMax = searchParams.get("priceMax") || "";
   const availableNow = searchParams.get("availableNow") === "true";
+  const sizeCategory = searchParams.get("sizeCategory") || undefined;
+  const minSize = searchParams.get("minSize") || "";
+  const maxSize = searchParams.get("maxSize") || "";
 
   const debouncedPriceMax = useDebounce(priceMax, 400);
 
@@ -74,7 +78,10 @@ export default function SearchPage() {
     priceMax: debouncedPriceMax ? parseInt(debouncedPriceMax) : undefined,
     availableNow: availableNow || undefined,
     sort: sort as any,
-  }), [activeType, debouncedQ, cityFilter, debouncedPriceMax, availableNow, sort]);
+    sizeCategory: sizeCategory as any,
+    minSize: minSize ? parseFloat(minSize) : undefined,
+    maxSize: maxSize ? parseFloat(maxSize) : undefined,
+  }), [activeType, debouncedQ, cityFilter, debouncedPriceMax, availableNow, sort, sizeCategory, minSize, maxSize]);
 
   const { data: result, isLoading } = useListings(filters);
   const serverFiltered = result?.data || [];
@@ -125,13 +132,22 @@ export default function SearchPage() {
   };
 
   function updateFilters(updates: Record<string, string>) {
+    const next = { ...updates };
+    // Category and exact range are mutually exclusive expressions of size.
+    if ("sizeCategory" in next && next.sizeCategory) {
+      next.minSize = "";
+      next.maxSize = "";
+    }
+    if (("minSize" in next && next.minSize) || ("maxSize" in next && next.maxSize)) {
+      next.sizeCategory = "";
+    }
     setSearchParams(prev => {
-      const next = new URLSearchParams(prev);
-      Object.entries(updates).forEach(([k, v]) => {
-        if (v && v !== "false" && v !== "") next.set(k, v);
-        else next.delete(k);
+      const params = new URLSearchParams(prev);
+      Object.entries(next).forEach(([k, v]) => {
+        if (v && v !== "false" && v !== "") params.set(k, v);
+        else params.delete(k);
       });
-      return next;
+      return params;
     }, { replace: true });
   }
 
@@ -153,7 +169,8 @@ export default function SearchPage() {
   const activeFiltersCount = Object.values(featureDefs)
     .flat()
     .filter(f => searchParams.get(f.key) === "true").length
-    + (availableNow ? 1 : 0) + (cityFilter ? 1 : 0) + (priceMax ? 1 : 0);
+    + (availableNow ? 1 : 0) + (cityFilter ? 1 : 0) + (priceMax ? 1 : 0)
+    + (sizeCategory ? 1 : 0) + (minSize || maxSize ? 1 : 0);
 
   function clearAll() {
     setSearchParams(prev => {
@@ -259,6 +276,15 @@ export default function SearchPage() {
               </div>
             </div>
           </div>
+
+          {(activeType === "all" || activeType === "warehouse") && (
+            <div className="mt-2">
+              <SizeBucketFilter
+                selectedCode={sizeCategory}
+                onChange={(code) => updateFilters({ sizeCategory: code ?? "" })}
+              />
+            </div>
+          )}
 
           {/* Desktop inline filters */}
           {showFilters && !isMobile && (
@@ -484,6 +510,37 @@ function FilterContent({
         <input type="number" placeholder={t("search.maxPrice")} value={priceMax} onChange={(e) => updateFilters({ priceMax: e.target.value })} className="w-24 sm:w-28 rounded-full border border-border bg-card px-3 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-accent" />
         <FilterToggle label={t("search.availableNow")} active={availableNow} onChange={(v) => updateFilters({ availableNow: v ? "true" : "" })} />
       </div>
+
+      {(activeType === "all" || activeType === "warehouse") && (
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium">{t("filters.size.advanced")}</h4>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min="0"
+              step="0.1"
+              placeholder={t("filters.minSize.label")}
+              value={searchParams.get("minSize") || ""}
+              onChange={(e) => updateFilters({ minSize: e.target.value })}
+              className="w-24 rounded-lg border border-border bg-card px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+            <span className="text-muted-foreground">—</span>
+            <input
+              type="number"
+              min="0"
+              step="0.1"
+              placeholder={t("filters.maxSize.label")}
+              value={searchParams.get("maxSize") || ""}
+              onChange={(e) => updateFilters({ maxSize: e.target.value })}
+              className="w-24 rounded-lg border border-border bg-card px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+            <span className="text-sm text-muted-foreground">m²</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {t("filters.size.advanced.hint")}
+          </p>
+        </div>
+      )}
 
       {Object.entries(featureDefs)
         .filter(([type]) => activeType === "all" || activeType === type)

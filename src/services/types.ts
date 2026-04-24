@@ -349,6 +349,9 @@ export interface ListingFilters {
   sort?: "best" | "cheapest" | "rating" | "newest";
   page?: number;
   limit?: number;
+  minSize?: number;
+  maxSize?: number;
+  sizeCategory?: "XS" | "S" | "M" | "L" | "XL";
 }
 
 export interface PaginatedResponse<T> {
