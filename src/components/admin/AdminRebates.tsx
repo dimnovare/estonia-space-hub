@@ -14,6 +14,30 @@ function getPrevMonth(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+function getLocalizedMonths(language: string): string[] {
+  const localeMap: Record<string, string> = {
+    et: "et-EE",
+    en: "en-US",
+    ru: "ru-RU",
+    lv: "lv-LV",
+    lt: "lt-LT",
+  };
+  const locale = localeMap[language] ?? "et-EE";
+  const formatter = new Intl.DateTimeFormat(locale, { month: "long" });
+  return Array.from({ length: 12 }, (_, i) =>
+    formatter.format(new Date(2024, i, 1))
+  );
+}
+
+function parsePeriod(period: string): { year: number; month: number } {
+  const [y, m] = period.split("-").map(Number);
+  return { year: y, month: m };
+}
+
+function formatPeriod(year: number, month: number): string {
+  return `${year}-${String(month).padStart(2, "0")}`;
+}
+
 const statusMap: Record<string, { labelKey: string; label: string; className: string }> = {
   draft: { labelKey: "rebate.draft", label: "Draft", className: "bg-secondary text-muted-foreground" },
   sent: { labelKey: "rebate.sent", label: "Sent", className: "bg-blue-100 text-blue-700" },
@@ -22,9 +46,13 @@ const statusMap: Record<string, { labelKey: string; label: string; className: st
 };
 
 export default function AdminRebates({ supplierId }: { supplierId?: string }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const qc = useQueryClient();
   const [period, setPeriod] = useState(getPrevMonth);
+  const months = getLocalizedMonths(language);
+  const { year: selectedYear, month: selectedMonth } = parsePeriod(period);
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
   const { data, isLoading } = useQuery({
     queryKey: ["rebate-invoices", period],
@@ -84,7 +112,26 @@ export default function AdminRebates({ supplierId }: { supplierId?: string }) {
         <div className="mt-3 flex flex-wrap items-end gap-3">
           <div>
             <label className="text-xs font-medium text-muted-foreground">{t("admin.rebates.period")}</label>
-            <input type="month" className={inp} value={period} onChange={e => setPeriod(e.target.value)} />
+            <div className="flex items-center gap-2">
+              <select
+                className={inp}
+                value={selectedMonth}
+                onChange={e => setPeriod(formatPeriod(selectedYear, parseInt(e.target.value)))}
+              >
+                {months.map((name, idx) => (
+                  <option key={idx + 1} value={idx + 1}>{name}</option>
+                ))}
+              </select>
+              <select
+                className={inp}
+                value={selectedYear}
+                onChange={e => setPeriod(formatPeriod(parseInt(e.target.value), selectedMonth))}
+              >
+                {yearOptions.map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
           </div>
           <Button
             onClick={() => generateMut.mutate()}
