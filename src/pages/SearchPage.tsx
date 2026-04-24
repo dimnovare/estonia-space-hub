@@ -511,6 +511,37 @@ function FilterContent({
         <FilterToggle label={t("search.availableNow")} active={availableNow} onChange={(v) => updateFilters({ availableNow: v ? "true" : "" })} />
       </div>
 
+      {(activeType === "all" || activeType === "warehouse") && (
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium">{t("filters.size.advanced")}</h4>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min="0"
+              step="0.1"
+              placeholder={t("filters.minSize.label")}
+              value={searchParams.get("minSize") || ""}
+              onChange={(e) => updateFilters({ minSize: e.target.value })}
+              className="w-24 rounded-lg border border-border bg-card px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+            <span className="text-muted-foreground">—</span>
+            <input
+              type="number"
+              min="0"
+              step="0.1"
+              placeholder={t("filters.maxSize.label")}
+              value={searchParams.get("maxSize") || ""}
+              onChange={(e) => updateFilters({ maxSize: e.target.value })}
+              className="w-24 rounded-lg border border-border bg-card px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+            <span className="text-sm text-muted-foreground">m²</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {t("filters.size.advanced.hint")}
+          </p>
+        </div>
+      )}
+
       {Object.entries(featureDefs)
         .filter(([type]) => activeType === "all" || activeType === type)
         .map(([type, features]) => {
