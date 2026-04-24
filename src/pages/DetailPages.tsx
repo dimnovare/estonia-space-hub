@@ -44,6 +44,7 @@ function PartnerBadges({ listing }: { listing: Listing }) {
 }
 
 function SupplierBadge({ supplierId }: { supplierId?: string }) {
+  const { t } = useLanguage();
   const { data: suppliers = [] } = useSuppliers();
   const supplier = suppliers.find(s => s.id === supplierId);
   if (!supplier) return null;
@@ -57,7 +58,7 @@ function SupplierBadge({ supplierId }: { supplierId?: string }) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-xs font-medium">{supplier.name}</div>
-          <div className="text-[10px] text-muted-foreground">Ruumly partner</div>
+          <div className="text-[10px] text-muted-foreground">{t("listing.supplier.partnerBadge")}</div>
         </div>
         <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${intCfg.color}`}>
           <IntIcon className="h-3 w-3" /> {intCfg.label}
