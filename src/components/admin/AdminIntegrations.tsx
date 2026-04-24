@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Edit, Save, Link2, Loader2 } from "lucide-react";
+import { Edit, Save, Link2, Loader2, Power } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -23,10 +23,16 @@ export default function AdminIntegrations() {
   const updateMutation = useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: any }) =>
       integrationSettingsService.update(id, updates),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["integration-settings"] });
-      toast.success(t("toast.integrationUpdated"));
-      setEditOpen(false);
+      if (variables.updates?.isActive === false) {
+        toast.success(t("toast.integrationDeactivated"));
+      } else if (variables.updates?.isActive === true && Object.keys(variables.updates).length === 1) {
+        toast.success(t("toast.integrationReactivated"));
+      } else {
+        toast.success(t("toast.integrationUpdated"));
+        setEditOpen(false);
+      }
     },
     onError: (err: any) => toast.error(err.message || t("toast.updateFailed")),
   });
@@ -54,14 +60,14 @@ export default function AdminIntegrations() {
 
       <div className="mt-6 space-y-3">
         {settings.map(s => (
-          <div key={s.id} className={`rounded-xl border p-4 transition-colors ${s.isActive ? "border-border" : "border-border bg-muted/30"}`}>
+          <div key={s.id} className={`rounded-xl border p-4 transition-colors ${s.isActive ? "border-border" : "border-border bg-muted/30 opacity-60"}`}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary"><Link2 className="h-5 w-5 text-muted-foreground" /></div>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm font-semibold truncate">{s.supplierName}</span>
-                    {!s.isActive && <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-medium text-destructive shrink-0">{t("admin.inactive")}</span>}
+                    {!s.isActive && <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-medium text-destructive shrink-0">{t("admin.integrations.inactiveBadge")}</span>}
                   </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${approvalColor(s.approvalMode)}`}>{approvalLabel(s.approvalMode)}</span>
@@ -78,6 +84,16 @@ export default function AdminIntegrations() {
                   </span>
                 )}
                 <Button variant="outline" size="sm" onClick={() => openEdit(s)} className="shrink-0"><Edit className="h-3.5 w-3.5 mr-1" /> {t("admin.edit")}</Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateMutation.mutate({ id: s.id, updates: { isActive: !s.isActive } })}
+                  disabled={updateMutation.isPending}
+                  className="shrink-0"
+                >
+                  <Power className="h-3.5 w-3.5 mr-1" />
+                  {s.isActive ? t("admin.integrations.deactivate") : t("admin.integrations.reactivate")}
+                </Button>
               </div>
             </div>
             {s.lastTestedAt && (
