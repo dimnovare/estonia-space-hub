@@ -57,7 +57,15 @@ const queryClient = new QueryClient({
     },
     mutations: {
       onError: (error: any) => {
-        toast.error(error?.message || "Midagi läks valesti");
+        const lang = (typeof window !== "undefined" && localStorage.getItem("ruumly-lang")) || "et";
+        const fallbackMessages: Record<string, string> = {
+          et: "Midagi läks valesti",
+          en: "Something went wrong",
+          ru: "Что-то пошло не так",
+          lv: "Kaut kas nogāja greizi",
+          lt: "Kažkas nepavyko",
+        };
+        toast.error(error?.message || fallbackMessages[lang] || fallbackMessages.et);
       },
     },
   },
