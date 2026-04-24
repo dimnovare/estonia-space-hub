@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Edit, Save, Link2, Loader2, Power } from "lucide-react";
+import { Edit, Save, Link2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -23,16 +23,10 @@ export default function AdminIntegrations() {
   const updateMutation = useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: any }) =>
       integrationSettingsService.update(id, updates),
-    onSuccess: (_data, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["integration-settings"] });
-      if (variables.updates?.isActive === false) {
-        toast.success(t("toast.integrationDeactivated"));
-      } else if (variables.updates?.isActive === true && Object.keys(variables.updates).length === 1) {
-        toast.success(t("toast.integrationReactivated"));
-      } else {
-        toast.success(t("toast.integrationUpdated"));
-        setEditOpen(false);
-      }
+      toast.success(t("toast.integrationUpdated"));
+      setEditOpen(false);
     },
     onError: (err: any) => toast.error(err.message || t("toast.updateFailed")),
   });
@@ -84,16 +78,6 @@ export default function AdminIntegrations() {
                   </span>
                 )}
                 <Button variant="outline" size="sm" onClick={() => openEdit(s)} className="shrink-0"><Edit className="h-3.5 w-3.5 mr-1" /> {t("admin.edit")}</Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => updateMutation.mutate({ id: s.id, updates: { isActive: !s.isActive } })}
-                  disabled={updateMutation.isPending}
-                  className="shrink-0"
-                >
-                  <Power className="h-3.5 w-3.5 mr-1" />
-                  {s.isActive ? t("admin.integrations.deactivate") : t("admin.integrations.reactivate")}
-                </Button>
               </div>
             </div>
             {s.lastTestedAt && (
