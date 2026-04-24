@@ -948,21 +948,21 @@ function useGenerateInvoicePdf() {
   <div class="header">
     <div class="logo">Ruumly</div>
     <div class="invoice-meta">
-      <h1>ARVE</h1>
+      <h1>${t("invoice.title")}</h1>
       <p>${inv.id}</p>
     </div>
   </div>
   <div class="info-grid">
     <div class="info-block">
-      <label>Väljastaja</label>
-      <p>Ruumly OÜ</p>
-      <p>Tallinn, Eesti</p>
+      <label>${t("invoice.issuer")}</label>
+      <p>${import.meta.env.VITE_LEGAL_ENTITY_NAME || "Ruumly"}</p>
+      <p>${t("invoice.address")}</p>
       <p>info@ruumly.eu</p>
     </div>
     <div class="info-block">
-      <label>Arve kuupäev</label>
+      <label>${t("invoice.date")}</label>
       <p>${inv.issuedAt}</p>
-      ${inv.paidAt ? `<label style="margin-top:12px">Tasutud</label><p>${inv.paidAt}</p>` : ""}
+      ${inv.paidAt ? `<label style="margin-top:12px">${t("invoice.paid")}</label><p>${inv.paidAt}</p>` : ""}
     </div>
   </div>
   <table>
@@ -977,8 +977,7 @@ function useGenerateInvoicePdf() {
     <tr class="total-row"><td>${t("booking.total")}</td><td>&euro;${inv.amount}</td><td></td></tr>
   </table>
   <div class="footer">
-    <p>Ruumly OÜ &middot; ruumly.eu &middot; info@ruumly.eu</p>
-    <p>Eesti suurim laopindade ja logistikateenuste platvorm</p>
+    <p>${import.meta.env.VITE_LEGAL_ENTITY_NAME || "Ruumly"} &middot; ruumly.eu &middot; info@ruumly.eu</p>
   </div>
 </body>
 </html>`;
