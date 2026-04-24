@@ -15,9 +15,30 @@ interface Props {
 
 export function SizeBucketFilter({ selectedCode, onChange }: Props) {
   const { t } = useLanguage();
-  const { data: buckets, isLoading } = useSizeBuckets();
+  const { data: buckets, isLoading, isError, error } = useSizeBuckets();
 
-  if (isLoading || !buckets || buckets.length === 0) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-medium text-muted-foreground">
+          {t("search.size.label")}
+        </span>
+        <div className="h-7 w-64 animate-pulse rounded-full bg-secondary/40" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    console.error("[SizeBucketFilter] Failed to load size buckets:", error);
+    return (
+      <div className="text-xs text-destructive">
+        {t("search.size.loadError")}
+      </div>
+    );
+  }
+
+  if (!buckets || buckets.length === 0) {
+    console.warn("[SizeBucketFilter] Buckets endpoint returned empty array");
     return null;
   }
 
