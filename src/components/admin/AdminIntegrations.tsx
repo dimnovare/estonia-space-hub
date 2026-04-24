@@ -68,7 +68,7 @@ export default function AdminIntegrations() {
                     <span>→ {postingLabel(s.postingMode)}</span>
                     <span className="text-muted-foreground/50 hidden sm:inline">({t("admin.fallbackMode")}: {postingLabel(s.fallbackPostingMode)})</span>
                   </div>
-                  <p className="mt-0.5 text-[10px] text-muted-foreground sm:hidden">Tagavaravalik: {postingLabel(s.fallbackPostingMode)}</p>
+                  <p className="mt-0.5 text-[10px] text-muted-foreground sm:hidden">{t("admin.fallbackMode")}: {postingLabel(s.fallbackPostingMode)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 sm:shrink-0">

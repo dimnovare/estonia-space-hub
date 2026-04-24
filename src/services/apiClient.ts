@@ -41,10 +41,14 @@ class ApiClient {
       });
     } catch {
       const lang = localStorage.getItem("ruumly-lang") || "et";
-      const msg = lang === "en" ? "Cannot connect to server. Check your internet connection."
-                : lang === "ru" ? "Не удаётся подключиться к серверу. Проверьте интернет."
-                : "Serveriga ei saada ühendust. Kontrolli internetiühendust.";
-      throw new Error(msg);
+      const messages: Record<string, string> = {
+        et: "Serveriga ei saada ühendust. Kontrolli internetiühendust.",
+        en: "Cannot connect to server. Check your internet connection.",
+        ru: "Не удаётся подключиться к серверу. Проверьте интернет.",
+        lv: "Nevar izveidot savienojumu ar serveri. Pārbaudiet interneta savienojumu.",
+        lt: "Nepavyko prisijungti prie serverio. Patikrinkite interneto ryšį.",
+      };
+      throw new Error(messages[lang] || messages.et);
     }
     if (response.status === 401) {
      if (token) {

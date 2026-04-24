@@ -308,7 +308,7 @@ export default function HomePage() {
       )}
 
       {/* Featured listings */}
-      {settings.showFeaturedListings && (
+      {settings.showFeaturedListings && (featuredLoading || featured.length > 0) && (
       <section className="surface-sunken py-16 md:py-20">
         <div className="container-wide">
           <div className="flex items-end justify-between">
