@@ -70,11 +70,29 @@ export default function AdminSettings() {
   const set = (key: string, value: string) =>
     setSettings(prev => ({ ...prev, [key]: value }));
 
+  // Keys that default to TRUE when unset (display logic uses !== "false").
+  // For these, undefined should be treated as "true" so the toggle flips correctly on first click.
+  const DEFAULT_TRUE_KEYS = new Set([
+    "aboutPage.enabled",
+    "showFeaturedListings",
+    "showHowItWorks",
+    "showProviderCta",
+    "showFaq",
+    "showMap",
+    "blog.showInFooter",
+  ]);
+
   const setBool = (key: string) =>
-    setSettings(prev => ({
-      ...prev,
-      [key]: prev[key] === "true" ? "false" : "true",
-    }));
+    setSettings(prev => {
+      const current = prev[key];
+      const isCurrentlyTrue = current === undefined
+        ? DEFAULT_TRUE_KEYS.has(key)
+        : current === "true";
+      return {
+        ...prev,
+        [key]: isCurrentlyTrue ? "false" : "true",
+      };
+    });
 
   const handleSave = async () => {
     setSaving(true);
