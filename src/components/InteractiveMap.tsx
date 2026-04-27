@@ -21,6 +21,7 @@ interface InteractiveMapProps {
   tSearch?: string;
   tVerified?: string;
   tFoundingPartner?: string;
+  tViewDetails?: string;
 }
 
 const typeColors: Record<string, string> = {
@@ -162,6 +163,7 @@ export default function InteractiveMap({
   tSearch = "Search",
   tVerified = "Verified",
   tFoundingPartner = "Founding Partner",
+  tViewDetails = "View →",
 }: InteractiveMapProps) {
   const defaultCenters: Record<string, [number, number]> = {
     et: [58.8, 25.5],
@@ -288,6 +290,7 @@ export default function InteractiveMap({
             <span style="font-size: 11px; color: ${typeColor}; background: ${typeColor}10; padding: 2px 8px; border-radius: 10px; font-weight: 600;">${typeName}</span>
           </div>
           ${listing.rating > 0 ? `<div style="font-size: 11px; color: #888; margin-top: 4px;">⭐ ${listing.rating} (${listing.reviewCount})</div>` : ''}
+          <a href="/${listing.type}/${listing.id}" style="display: block; text-align: center; margin-top: 8px; font-size: 12px; color: white; background: #2EC4B6; text-decoration: none; font-weight: 600; padding: 6px 0; border-radius: 6px;">${tViewDetails}</a>
         </div>
       `;
 
