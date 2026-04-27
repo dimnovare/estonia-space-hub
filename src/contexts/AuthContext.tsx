@@ -48,7 +48,6 @@ interface AuthContextType {
   register: (name: string, email: string, password: string, inviteCode?: string) => Promise<string>;
   loginWithGoogle: (credential: string) => Promise<void>;
   logout: () => void;
-  switchRole: (role: UserRole) => void;
   updateProfile: (updates: Partial<AppUser>) => void;
 }
 
@@ -169,10 +168,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.href = "/login";
   }, []);
 
-  const switchRole = useCallback((_role: UserRole) => {
-    // Dev-only: not applicable with real auth
-  }, []);
-
   const updateProfile = useCallback((updates: Partial<AppUser>) => {
     setUser((prev) => {
       if (!prev) return prev;
@@ -188,7 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: !!user,
       isInitializing,
       role: user?.role || "guest",
-      login, register, loginWithGoogle, logout, switchRole, updateProfile,
+      login, register, loginWithGoogle, logout, updateProfile,
     }}>
       {children}
     </AuthContext.Provider>
