@@ -81,6 +81,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const stored = localStorage.getItem("ruumly-auth");
 
+    // Skip optimistic refresh for first-time visitors — no point hitting
+    // /auth/refresh when there's no session marker (saves a 401 round-trip).
+    if (!stored) {
+      tokenStore.clear();
+      setIsInitializing(false);
+      return;
+    }
+
     // Cookie-based refresh: credentials: "include" sends the HttpOnly cookie.
     fetch(`${API_BASE_URL}/auth/refresh`, {
       method:      "POST",
