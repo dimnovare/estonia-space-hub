@@ -171,7 +171,7 @@ export default function Navbar() {
           )}
         </div>
 
-        <div className="flex items-center gap-1 md:hidden">
+        <div className="flex items-center gap-1 lg:hidden">
           {isAuthenticated && unreadCount > 0 && (
             <Link to="/account?tab=notifications" className="relative p-2 rounded-lg hover:bg-secondary">
               <Bell className="h-5 w-5 text-muted-foreground" />
@@ -185,7 +185,7 @@ export default function Navbar() {
       </div>
 
       {open && (
-        <div className="border-t border-border bg-card px-4 pb-4 pt-2 md:hidden">
+        <div className="border-t border-border bg-card px-4 pb-4 pt-2 lg:hidden">
           {navLinks.map((l) => {
             const href = getLinkHref(l);
             const active = isLinkActive(l, location.pathname, currentType);
