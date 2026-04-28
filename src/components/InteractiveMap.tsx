@@ -241,7 +241,7 @@ export default function InteractiveMap({
         <div style="min-width: 200px; font-family: 'DM Sans', sans-serif;">
           ${loc.images?.[0] ? `<img src="${loc.images[0]}" alt="${loc.name}" onerror="this.style.display='none'" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />` : '<div style="width: 100%; height: 70px; background: #f0f0f0; border-radius: 8px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 12px;">📍</div>'}
           <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #1E3A5F;">${loc.name}</div>
-          <div style="font-size: 12px; color: #666; margin-bottom: 4px;">${loc.supplierName}</div>
+          ${loc.supplierName ? `<div style="font-size: 12px; color: #666; margin-bottom: 4px;">${loc.supplierName}</div>` : ''}
           <div style="font-size: 12px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
             ${loc.address}, ${loc.city}
