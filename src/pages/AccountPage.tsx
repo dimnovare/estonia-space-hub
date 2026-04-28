@@ -686,9 +686,13 @@ function AccountProfile() {
     defaultValues: { name: user?.name || "", phone: user?.phone || "" },
   });
 
-  const onSubmit = (data: ProfileForm) => {
-    updateProfile({ name: data.name, phone: data.phone || "" });
-    toast.success(t("toast.profileSaved"));
+  const onSubmit = async (data: ProfileForm) => {
+    try {
+      await updateProfile({ name: data.name, phone: data.phone || "" });
+      toast.success(t("toast.profileSaved"));
+    } catch (err: any) {
+      toast.error(err?.message || t("error.generic"));
+    }
   };
 
   return (

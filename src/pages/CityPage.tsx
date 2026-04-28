@@ -1,6 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
+import { useListings } from "@/hooks/queries";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
 import { MapPin, Layers, Search, ArrowRight, ChevronDown } from "lucide-react";
@@ -30,7 +31,36 @@ export default function CityPage() {
     staleTime: 5 * 60_000,
   });
 
-  const topLocations = locations.slice(0, 4);
+  // Fall back to top listings when no Locations exist for this city —
+  // keeps CityPage useful for cities that only have standalone single-listing sites.
+  const { data: listingsResult } = useListings({ city });
+  const cityListings: any[] = Array.isArray(listingsResult)
+    ? listingsResult
+    : (listingsResult as any)?.data || [];
+
+  const topItems = locations.length > 0
+    ? locations.slice(0, 4).map((loc: any) => ({
+        id: loc.id,
+        name: loc.name,
+        images: loc.images,
+        address: loc.address,
+        city: loc.city,
+        availableUnits: loc.availableUnits ?? loc.unitCount,
+        fullyBooked: loc.fullyBooked,
+        priceFrom: loc.priceFrom,
+        href: `/location/${loc.id}`,
+      }))
+    : cityListings.slice(0, 4).map((l: any) => ({
+        id: l.id,
+        name: l.title,
+        images: l.image ? [l.image] : (l.images || []),
+        address: l.address,
+        city: l.city,
+        availableUnits: undefined,
+        fullyBooked: false,
+        priceFrom: l.priceFrom,
+        href: `/${l.type}/${l.id}`,
+      }));
 
   const seoTitle = t("cityPage.seoTitle").replace("{city}", city);
   const seoDesc = t("cityPage.seoDesc").replace("{city}", city);
@@ -78,12 +108,12 @@ export default function CityPage() {
               </div>
             ))}
           </div>
-        ) : topLocations.length > 0 ? (
+        ) : topItems.length > 0 ? (
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {topLocations.map((loc: any) => (
+            {topItems.map((loc: any) => (
               <Link
                 key={loc.id}
-                to={`/location/${loc.id}`}
+                to={loc.href}
                 className="card-elevated group block overflow-hidden"
               >
                 <div className="relative aspect-[16/10] overflow-hidden">
@@ -95,10 +125,12 @@ export default function CityPage() {
                       loading="lazy"
                     />
                   )}
-                  <span className={`absolute right-2 top-2 inline-flex items-center gap-1 rounded-full backdrop-blur-sm px-2.5 py-1 text-[11px] font-semibold ${loc.fullyBooked ? "bg-destructive/90 text-white" : "bg-card/90 text-foreground"}`}>
-                    <Layers className="h-3 w-3" />
-                    {loc.fullyBooked ? t("location.fullyBooked") : `${loc.availableUnits ?? loc.unitCount} ${t("location.available")}`}
-                  </span>
+                  {(loc.fullyBooked || loc.availableUnits != null) && (
+                    <span className={`absolute right-2 top-2 inline-flex items-center gap-1 rounded-full backdrop-blur-sm px-2.5 py-1 text-[11px] font-semibold ${loc.fullyBooked ? "bg-destructive/90 text-white" : "bg-card/90 text-foreground"}`}>
+                      <Layers className="h-3 w-3" />
+                      {loc.fullyBooked ? t("location.fullyBooked") : `${loc.availableUnits} ${t("location.available")}`}
+                    </span>
+                  )}
                 </div>
                 <div className="p-4">
                   <h3 className="truncate font-sans text-sm font-semibold text-foreground">{loc.name}</h3>
