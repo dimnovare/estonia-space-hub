@@ -212,11 +212,11 @@ export default function ProviderPage() {
           {t("provPage.pricing.introNew")}
         </p>
 
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
+        <div className="mt-10 grid items-stretch gap-6 md:grid-cols-3">
           {tiers.map((tier) => (
             <div
               key={tier.key}
-              className={`relative overflow-hidden rounded-2xl border p-6 ${
+              className={`relative flex flex-col overflow-hidden rounded-2xl border p-6 ${
                 tier.highlight
                   ? "border-accent bg-accent/5 ring-2 ring-accent/20"
                   : "border-border bg-card"
@@ -250,7 +250,7 @@ export default function ProviderPage() {
                   </li>
                 ))}
               </ul>
-              <Link to="/provider/onboarding" className="mt-6 block">
+              <Link to="/provider/onboarding" className="mt-auto pt-6 block">
                 <Button
                   className={`w-full ${
                     tier.highlight

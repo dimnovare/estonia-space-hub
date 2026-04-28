@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruumly-v2";
+const CACHE_NAME = "ruumly-v3";
 const PRECACHE_URLS = ["/", "/index.html"];
 
 self.addEventListener("install", (event) => {
@@ -50,7 +50,15 @@ self.addEventListener("fetch", (event) => {
           }
           return response;
         })
-        .catch(() => cached); // Offline fallback: serve cache if network fails
+        .catch(() => {
+          // Network failed. Return cached if available, otherwise a synthetic offline response.
+          if (cached) return cached;
+          return new Response("Offline — content not cached.", {
+            status: 503,
+            statusText: "Service Unavailable",
+            headers: { "Content-Type": "text/plain" },
+          });
+        });
       return cached || fetched;
     })
   );
