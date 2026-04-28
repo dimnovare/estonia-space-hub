@@ -48,7 +48,7 @@ interface AuthContextType {
   register: (name: string, email: string, password: string, inviteCode?: string) => Promise<string>;
   loginWithGoogle: (credential: string) => Promise<void>;
   logout: () => void;
-  updateProfile: (updates: Partial<AppUser>) => void;
+  updateProfile: (updates: Partial<AppUser>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -168,12 +168,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.href = "/login";
   }, []);
 
-  const updateProfile = useCallback((updates: Partial<AppUser>) => {
+  const updateProfile = useCallback(async (updates: Partial<AppUser>) => {
+    // Persist to backend first; only update local state if the API call succeeds.
+    const updatedRaw = await apiClient.patch<AuthResponse["user"]>("/auth/me", {
+      name: updates.name,
+      phone: updates.phone,
+      company: updates.company,
+    });
+
+    const normalized = normalizeUser(updatedRaw);
     setUser((prev) => {
-      if (!prev) return prev;
-      const updated = { ...prev, ...updates };
-      try { localStorage.setItem("ruumly-auth", JSON.stringify(updated)); } catch {}
-      return updated;
+      const merged = prev ? { ...prev, ...normalized } : normalized;
+      try { localStorage.setItem("ruumly-auth", JSON.stringify(merged)); } catch {}
+      return merged;
     });
   }, []);
 

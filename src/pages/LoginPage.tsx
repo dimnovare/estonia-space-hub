@@ -49,9 +49,14 @@ export default function LoginPage() {
     }
   }, []);
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, from, navigate]);
+
   if (isAuthenticated) {
-    navigate(from, { replace: true });
-    return null;
+    return null; // Render nothing while the effect navigates away
   }
 
   const handleLogin = async (data: LoginForm) => {
