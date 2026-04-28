@@ -108,12 +108,12 @@ export default function CityPage() {
               </div>
             ))}
           </div>
-        ) : topLocations.length > 0 ? (
+        ) : topItems.length > 0 ? (
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {topLocations.map((loc: any) => (
+            {topItems.map((loc: any) => (
               <Link
                 key={loc.id}
-                to={`/location/${loc.id}`}
+                to={loc.href}
                 className="card-elevated group block overflow-hidden"
               >
                 <div className="relative aspect-[16/10] overflow-hidden">
@@ -125,10 +125,12 @@ export default function CityPage() {
                       loading="lazy"
                     />
                   )}
-                  <span className={`absolute right-2 top-2 inline-flex items-center gap-1 rounded-full backdrop-blur-sm px-2.5 py-1 text-[11px] font-semibold ${loc.fullyBooked ? "bg-destructive/90 text-white" : "bg-card/90 text-foreground"}`}>
-                    <Layers className="h-3 w-3" />
-                    {loc.fullyBooked ? t("location.fullyBooked") : `${loc.availableUnits ?? loc.unitCount} ${t("location.available")}`}
-                  </span>
+                  {(loc.fullyBooked || loc.availableUnits != null) && (
+                    <span className={`absolute right-2 top-2 inline-flex items-center gap-1 rounded-full backdrop-blur-sm px-2.5 py-1 text-[11px] font-semibold ${loc.fullyBooked ? "bg-destructive/90 text-white" : "bg-card/90 text-foreground"}`}>
+                      <Layers className="h-3 w-3" />
+                      {loc.fullyBooked ? t("location.fullyBooked") : `${loc.availableUnits} ${t("location.available")}`}
+                    </span>
+                  )}
                 </div>
                 <div className="p-4">
                   <h3 className="truncate font-sans text-sm font-semibold text-foreground">{loc.name}</h3>
