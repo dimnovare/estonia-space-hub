@@ -449,6 +449,16 @@ export default function BookingPage() {
                     </p>
                   </div>
                 )}
+                {isUnavailable && availability && (
+                  <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3">
+                    <p className="text-sm font-medium text-destructive">
+                      {t("booking.notAvailable")}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {availability.bookedCount} / {availability.totalUnits} {t("booking.unitsBookedForPeriod")}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Extras section — only shown if listing has extras */}
@@ -661,7 +671,7 @@ export default function BookingPage() {
             ) : <div />}
             <Button
               onClick={handleNext}
-              disabled={createBooking.isPending || (step === 2 && !isAuthenticated)}
+              disabled={createBooking.isPending || (step === 2 && !isAuthenticated) || (step === 0 && isUnavailable)}
               className="bg-accent text-accent-foreground hover:bg-accent/90"
             >
               {step < steps.length - 1 ? (
@@ -740,7 +750,7 @@ export default function BookingPage() {
             )}
             <Button
               onClick={handleNext}
-              disabled={createBooking.isPending || (step === 2 && !isAuthenticated)}
+              disabled={createBooking.isPending || (step === 2 && !isAuthenticated) || (step === 0 && isUnavailable)}
               className="bg-accent text-accent-foreground hover:bg-accent/90 px-6"
             >
               {step < steps.length - 1 ? t("booking.next") : t("booking.confirm")}
