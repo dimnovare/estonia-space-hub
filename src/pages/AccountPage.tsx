@@ -255,6 +255,18 @@ function BookingCard({ booking }: { booking: Booking }) {
   const StatusIcon = status.icon;
   const { data: orders = [] } = useOrders();
   const order = orders.find(o => o.bookingId === booking.id);
+  const queryClient = useQueryClient();
+  const cancelMutation = useMutation({
+    mutationFn: (id: string) => apiClient.patch(`/bookings/${id}/cancel`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      setOpen(false);
+      toast.success(t("toast.bookingCancelled"));
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || t("error.generic"));
+    },
+  });
 
   return (
     <>
