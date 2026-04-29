@@ -45,6 +45,33 @@ function calculateEstimatedPrice(priceFrom: number, priceUnit: string, start: st
   return Math.round(priceFrom * days / 30 * 100) / 100;
 }
 
+function computeDurationMultiplier(priceUnit: string, start: string, end: string): number {
+  if (!start || !end) return 1;
+  const days = Math.max(1, Math.round((new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24)));
+  const unit = (priceUnit || "").toLowerCase().replace("€", "").trim().replace(/^\//, "");
+  if (unit.includes("day") || unit.includes("päev")) return days;
+  if (unit.includes("week") || unit.includes("nädal")) return Math.round(days / 7 * 100) / 100;
+  if (unit.includes("time") || unit.includes("kord")) return 1;
+  return Math.round(days / 30 * 100) / 100;
+}
+
+function todayIsoDate(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function addDaysIso(iso: string, days: number): string {
+  const d = new Date(iso);
+  d.setDate(d.getDate() + days);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 export default function BookingPage() {
   const [params] = useSearchParams();
   const listingId = params.get("listing");
