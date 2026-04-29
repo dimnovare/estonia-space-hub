@@ -5,7 +5,13 @@ import { apiClient } from "@/services/apiClient";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 
-const localeMap: Record<string, string> = { et: "et-EE", en: "en-GB", ru: "ru-RU" };
+const localeMap: Record<string, string> = {
+  et: "et-EE",
+  en: "en-GB",
+  ru: "ru-RU",
+  lv: "lv-LV",
+  lt: "lt-LT",
+};
 
 interface Payout {
   id: string;

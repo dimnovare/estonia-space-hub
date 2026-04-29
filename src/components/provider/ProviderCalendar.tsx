@@ -11,7 +11,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { toast } from "sonner";
 
-const localeMap: Record<string, string> = { et: "et-EE", en: "en-GB", ru: "ru-RU" };
+const localeMap: Record<string, string> = {
+  et: "et-EE",
+  en: "en-GB",
+  ru: "ru-RU",
+  lv: "lv-LV",
+  lt: "lt-LT",
+};
 
 export default function ProviderCalendar() {
   const { t, language } = useLanguage();

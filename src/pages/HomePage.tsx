@@ -3,14 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, MapPin, ChevronDown, ChevronUp, CheckCircle, Phone, BadgePercent, ShieldCheck, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useFeaturedListings, useAllListings, usePricingConfig } from "@/hooks/queries";
+import { useFeaturedListings, useAllListings, usePricingConfig, useCities } from "@/hooks/queries";
 import { fillPricing } from "@/lib/pricingPlaceholders";
 import ListingCard from "@/components/ListingCard";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
-import { ESTONIAN_CITIES } from "@/lib/constants";
 import TrustBar from "@/components/TrustBar";
 import { apiClient } from "@/services/apiClient";
 
@@ -29,6 +28,7 @@ export default function HomePage() {
   const { data: allResult } = useAllListings();
   const allListings = allResult?.data || [];
   const listingCount = allResult?.total ?? 0;
+  const { data: citiesFromApi = [] } = useCities();
 
   // Supply gating for LV/LT — fall back to EN headline if no listings in country.
   // Cached in sessionStorage to avoid re-fetching on every render.
@@ -51,9 +51,10 @@ export default function HomePage() {
     }
     const country = language.toUpperCase();
     apiClient
-      .get<{ data: unknown[]; total: number }>(`/listings?country=${country}&limit=1`)
-      .then((res) => {
-        const has = (res?.total ?? res?.data?.length ?? 0) > 0;
+      .get<Array<{ city: string; country: string }>>(`/locations/cities`)
+      .then((cities: any) => {
+        const list = Array.isArray(cities) ? cities : [];
+        const has = list.some((c: any) => c.country === country);
         sessionStorage.setItem(cacheKey, has ? "1" : "0");
         setHasLocalSupply(has);
       })
@@ -211,8 +212,8 @@ export default function HomePage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">{t("search.allCities")}</SelectItem>
-                      {ESTONIAN_CITIES.map((city) => (
-                        <SelectItem key={city} value={city}>{city}</SelectItem>
+                      {citiesFromApi.map((c: any) => (
+                        <SelectItem key={c.city} value={c.city}>{c.city}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

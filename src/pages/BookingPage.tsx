@@ -85,7 +85,7 @@ export default function BookingPage() {
   const { data: pricingConfig } = usePricingConfig();
   const { data: listingExtras = [] } = useListingExtras(listingId || "");
 
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const hasToken = !!tokenStore.getAccess();
 
   const steps = [t("booking.detailsAndExtras"), t("booking.contactAndAuth"), t("booking.paymentAndReview")];
@@ -120,8 +120,26 @@ export default function BookingPage() {
 
   const contactForm = useForm<BookingContactForm>({
     resolver: zodResolver(createBookingContactSchema(t)),
-    defaultValues: { name: "", email: "", phone: "", notes: "" },
+    defaultValues: {
+      name: user?.name || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+      notes: "",
+    },
   });
+
+  // Reset form when user changes (e.g. login during booking flow)
+  useEffect(() => {
+    if (user) {
+      contactForm.reset({
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        notes: contactForm.getValues("notes") || "",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const toggleExtra = (id: string) =>
     setSelectedExtras((prev) => (prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]));
