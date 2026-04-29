@@ -27,6 +27,8 @@ export default function AdminSuppliers() {
   const [testingId, setTestingId] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<{ success: boolean; latency: number } | null>(null);
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
+  const [countryFilter, setCountryFilter] = useState<"all" | "EE" | "LV" | "LT">("all");
+  const [tierFilter, setTierFilter] = useState<"all" | "starter" | "standard" | "premium">("all");
   const [createOpen, setCreateOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -63,7 +65,13 @@ export default function AdminSuppliers() {
     onError: (err: any) => toast.error(err.message || t("admin.deleteFailed")),
   });
 
-  const filteredRaw = filter === "all" ? suppliers : filter === "active" ? suppliers.filter(s => s.isActive) : suppliers.filter(s => !s.isActive);
+  const filteredRaw = suppliers.filter(s => {
+    if (filter === "active" && !s.isActive) return false;
+    if (filter === "inactive" && s.isActive) return false;
+    if (countryFilter !== "all" && (s as any).country !== countryFilter) return false;
+    if (tierFilter !== "all" && (s.tier?.toLowerCase() !== tierFilter)) return false;
+    return true;
+  });
   const filtered = [...filteredRaw].sort((a, b) => {
     if (a.isActive === b.isActive) return 0;
     return a.isActive ? -1 : 1;
@@ -156,12 +164,24 @@ export default function AdminSuppliers() {
         <div className="card-elevated p-4"><div className="text-sm text-muted-foreground">{t("admin.apiIntegrations")}</div><div className="mt-1 font-display text-2xl font-bold">{suppliers.filter(s => s.integrationType === "api").length}</div></div>
         <div className="card-elevated p-4"><div className="text-sm text-muted-foreground">{t("admin.totalRevenue")}</div><div className="mt-1 font-display text-2xl font-bold">€{suppliers.reduce((s, sup) => s + sup.revenue, 0).toLocaleString()}</div></div>
       </div>
-      <div className="mt-6 flex gap-2">
+      <div className="mt-6 flex flex-wrap items-center gap-2">
         {(["all", "active", "inactive"] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)} className={`rounded-full px-3 py-1.5 text-xs font-medium ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
             {f === "all" ? t("admin.all") : f === "active" ? t("admin.active") : t("admin.inactive")}
           </button>
         ))}
+        <select value={countryFilter} onChange={(e) => setCountryFilter(e.target.value as any)} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs">
+          <option value="all">All countries</option>
+          <option value="EE">Estonia</option>
+          <option value="LV">Latvia</option>
+          <option value="LT">Lithuania</option>
+        </select>
+        <select value={tierFilter} onChange={(e) => setTierFilter(e.target.value as any)} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs">
+          <option value="all">All tiers</option>
+          <option value="starter">Starter</option>
+          <option value="standard">Standard</option>
+          <option value="premium">Premium</option>
+        </select>
       </div>
       {/* Mobile cards */}
       <div className="mt-4 space-y-2 md:hidden">
