@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 export default function ProviderProfile() {
   const { t } = useLanguage();
+  const qc = useQueryClient();
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["supplier-profile"],
@@ -38,11 +39,14 @@ export default function ProviderProfile() {
   const handleSave = async () => {
     try {
       await apiClient.patch("/supplier/profile", {
+        name: formData.company,
+        registryCode: formData.regCode,
         contactName: formData.name,
         contactEmail: formData.email,
         contactPhone: formData.phone,
       });
       toast.success(t("toast.profileSaved"));
+      qc.invalidateQueries({ queryKey: ["supplier-profile"] });
     } catch (err: any) {
       toast.error(err?.message || t("toast.saveFailed"));
     }
