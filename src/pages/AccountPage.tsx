@@ -343,6 +343,28 @@ function BookingCard({ booking }: { booking: Booking }) {
                 </Button>
               </div>
             )}
+            {(booking.status === "pending" || booking.status === "confirmed" || booking.status === "active") && (
+              <div className="pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-1.5 text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/10"
+                  disabled={cancelMutation.isPending}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm(t("booking.confirmCancel"))) {
+                      cancelMutation.mutate(booking.id);
+                    }
+                  }}
+                >
+                  {cancelMutation.isPending ? (
+                    <><Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("common.cancelling")}</>
+                  ) : (
+                    <><XCircle className="h-3.5 w-3.5" /> {t("booking.cancelBooking")}</>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
