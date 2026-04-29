@@ -6,7 +6,6 @@ import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, Cr
 import { Button } from "@/components/ui/button";
 import { useListing, useCreateBooking, useSuppliers, usePricingConfig, useListingExtras } from "@/hooks/queries";
 import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/services/apiClient";
 import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
