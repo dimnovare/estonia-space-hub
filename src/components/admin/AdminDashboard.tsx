@@ -54,7 +54,7 @@ export default function AdminDashboard() {
   const statCards = [
     { label: t("admin.stats.listings"), value: stats?.totalListings?.toString() ?? "—", icon: Eye },
     { label: t("admin.stats.orders"), value: stats?.totalOrders?.toString() ?? orders.length.toString(), icon: Package },
-    { label: t("admin.stats.users"), value: stats?.totalUsers?.toString() ?? users.length.toString(), icon: Users },
+    { label: t("admin.stats.users"), value: users.length.toString(), icon: Users },
     {
       label: t("admin.stats.revenue"),
       value: stats
