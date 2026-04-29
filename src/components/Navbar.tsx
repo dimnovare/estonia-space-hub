@@ -186,6 +186,7 @@ export default function Navbar() {
 
       {open && (
         <div className="border-t border-border bg-card px-4 pb-4 pt-2 lg:hidden">
+          <div className="mx-auto max-w-md">
           {navLinks.map((l) => {
             const href = getLinkHref(l);
             const active = isLinkActive(l, location.pathname, currentType);
@@ -195,7 +196,7 @@ export default function Navbar() {
               </Link>
             );
           })}
-          <div className="mt-2 flex flex-wrap items-center gap-1 px-3">
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-1 px-3">
             {LANGUAGES.map((lang) => (
               <button
                 key={lang.code}
@@ -238,6 +239,7 @@ export default function Navbar() {
                 </Link>
               </div>
             )}
+          </div>
           </div>
         </div>
       )}
