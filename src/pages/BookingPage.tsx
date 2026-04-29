@@ -193,6 +193,10 @@ export default function BookingPage() {
 
   const handleNext = () => {
     if (step === 0) {
+      if (isUnavailable) {
+        toast.error(t("booking.notAvailable") || "Not available for these dates");
+        return;
+      }
       // Validate details form (date + duration), then advance
       detailsForm.handleSubmit(() => setStep(1))();
     } else if (step === 1) {
