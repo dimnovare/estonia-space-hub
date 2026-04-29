@@ -5,6 +5,8 @@ import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand, Info, Warehouse } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListing, useCreateBooking, useSuppliers, usePricingConfig, useListingExtras } from "@/hooks/queries";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/services/apiClient";
 import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -160,6 +162,19 @@ export default function BookingPage() {
 
   const watchedStartDate = detailsForm.watch("startDate");
   const watchedEndDate = detailsForm.watch("endDate");
+
+  const { data: availability } = useQuery({
+    queryKey: ["listing-availability", listing?.id, watchedStartDate, watchedEndDate],
+    queryFn: () => apiClient.get<{
+      totalUnits: number;
+      bookedCount: number;
+      available: number;
+      isAvailable: boolean;
+    }>(`/listings/${listing!.id}/availability?startDate=${watchedStartDate}&endDate=${watchedEndDate}`),
+    enabled: !!listing?.id && !!watchedStartDate && !!watchedEndDate,
+    staleTime: 30_000,
+  });
+  const isUnavailable = !!availability && !availability.isAvailable;
   const durationMultiplier = listing && watchedStartDate && watchedEndDate
     ? computeDurationMultiplier(listing.priceUnit || "/month", watchedStartDate, watchedEndDate)
     : 1;
