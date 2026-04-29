@@ -255,6 +255,18 @@ function BookingCard({ booking }: { booking: Booking }) {
   const StatusIcon = status.icon;
   const { data: orders = [] } = useOrders();
   const order = orders.find(o => o.bookingId === booking.id);
+  const queryClient = useQueryClient();
+  const cancelMutation = useMutation({
+    mutationFn: (id: string) => apiClient.patch(`/bookings/${id}/cancel`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      setOpen(false);
+      toast.success(t("toast.bookingCancelled"));
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || t("error.generic"));
+    },
+  });
 
   return (
     <>
@@ -328,6 +340,28 @@ function BookingCard({ booking }: { booking: Booking }) {
                   onClick={(e) => { e.stopPropagation(); setReviewOpen(true); }}
                 >
                   <Star className="h-3.5 w-3.5" /> {t("reviews.leave")}
+                </Button>
+              </div>
+            )}
+            {(booking.status === "pending" || booking.status === "confirmed" || booking.status === "active") && (
+              <div className="pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-1.5 text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/10"
+                  disabled={cancelMutation.isPending}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm(t("booking.confirmCancel"))) {
+                      cancelMutation.mutate(booking.id);
+                    }
+                  }}
+                >
+                  {cancelMutation.isPending ? (
+                    <><Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("common.cancelling")}</>
+                  ) : (
+                    <><XCircle className="h-3.5 w-3.5" /> {t("booking.cancelBooking")}</>
+                  )}
                 </Button>
               </div>
             )}

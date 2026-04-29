@@ -45,6 +45,33 @@ function calculateEstimatedPrice(priceFrom: number, priceUnit: string, start: st
   return Math.round(priceFrom * days / 30 * 100) / 100;
 }
 
+function computeDurationMultiplier(priceUnit: string, start: string, end: string): number {
+  if (!start || !end) return 1;
+  const days = Math.max(1, Math.round((new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24)));
+  const unit = (priceUnit || "").toLowerCase().replace("€", "").trim().replace(/^\//, "");
+  if (unit.includes("day") || unit.includes("päev")) return days;
+  if (unit.includes("week") || unit.includes("nädal")) return Math.round(days / 7 * 100) / 100;
+  if (unit.includes("time") || unit.includes("kord")) return 1;
+  return Math.round(days / 30 * 100) / 100;
+}
+
+function todayIsoDate(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function addDaysIso(iso: string, days: number): string {
+  const d = new Date(iso);
+  d.setDate(d.getDate() + days);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 export default function BookingPage() {
   const [params] = useSearchParams();
   const listingId = params.get("listing");
@@ -88,7 +115,7 @@ export default function BookingPage() {
       if (!data.startDate || !data.endDate) return true;
       return new Date(data.endDate) > new Date(data.startDate);
     }, { message: t("booking.endAfterStart") || "End date must be after start date", path: ["endDate"] })),
-    defaultValues: { startDate: "", endDate: "" },
+    defaultValues: { startDate: todayIsoDate(), endDate: addDaysIso(todayIsoDate(), 1) },
   });
 
   const contactForm = useForm<BookingContactForm>({
@@ -108,15 +135,23 @@ export default function BookingPage() {
 
 
 
-  const publicPrice = listing ? listing.priceFrom : 0;
-  const ourPrice = listing
-    ? Math.round(publicPrice * (1 - clientDiscount / 100))
+  const watchedStartDate = detailsForm.watch("startDate");
+  const watchedEndDate = detailsForm.watch("endDate");
+  const durationMultiplier = listing && watchedStartDate && watchedEndDate
+    ? computeDurationMultiplier(listing.priceUnit || "/month", watchedStartDate, watchedEndDate)
+    : 1;
+
+  const publicPriceUnit = listing ? listing.priceFrom : 0;
+  const publicPrice = Math.round(publicPriceUnit * durationMultiplier * 100) / 100;
+  const ourPriceUnit = listing
+    ? Math.round(publicPriceUnit * (1 - clientDiscount / 100))
     : 0;
-  const savings = publicPrice - ourPrice;
+  const ourPrice = Math.round(ourPriceUnit * durationMultiplier * 100) / 100;
+  const savings = Math.round((publicPrice - ourPrice) * 100) / 100;
   const extrasTotal = selectedExtras.reduce(
     (s, id) => s + (listingExtras.find(e => e.key === id)?.price || 0), 0);
   const pricing = listing
-    ? { total: ourPrice + extrasTotal, extrasTotal }
+    ? { total: Math.round((ourPrice + extrasTotal) * 100) / 100, extrasTotal }
     : null;
 
   const handleNext = () => {
@@ -347,12 +382,12 @@ export default function BookingPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="mb-1 block text-sm font-medium">{t("booking.startDate")}</label>
-                    <input type="date" {...detailsForm.register("startDate")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent" />
+                    <input type="date" min={todayIsoDate()} {...detailsForm.register("startDate")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent" />
                     {detailsForm.formState.errors.startDate && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.startDate.message}</p>}
                   </div>
                   <div>
                     <label className="mb-1 block text-sm font-medium">{t("booking.endDate")}</label>
-                    <input type="date" {...detailsForm.register("endDate")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent" />
+                    <input type="date" min={watchedStartDate || todayIsoDate()} {...detailsForm.register("endDate")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent" />
                     {detailsForm.formState.errors.endDate && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.endDate.message}</p>}
                   </div>
                 </div>
@@ -556,15 +591,15 @@ export default function BookingPage() {
                             {paymentMethod === pm.id && <div className="h-2.5 w-2.5 rounded-full bg-accent" />}
                           </div>
                         </button>
-                        {pm.id === "later" && (
-                          <>
-                            <p className="mt-1.5 ml-14 text-xs text-muted-foreground">
+                        {pm.id === "later" && paymentMethod === "later" && (
+                          <div className="mt-2 ml-14 rounded-lg border border-accent/20 bg-accent/5 p-3 space-y-1.5">
+                            <p className="text-xs text-foreground">
                               {t("booking.payLaterExplainer")}
                             </p>
-                            <p className="mt-1 ml-14 text-[11px] text-muted-foreground">
+                            <p className="text-[11px] text-muted-foreground">
                               {t("booking.payLaterWarning")}
                             </p>
-                          </>
+                          </div>
                         )}
                       </div>
                     );
