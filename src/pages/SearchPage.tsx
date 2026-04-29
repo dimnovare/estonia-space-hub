@@ -81,6 +81,7 @@ export default function SearchPage() {
     sizeCategory: sizeCategory as any,
     minSize: minSize ? parseFloat(minSize) : undefined,
     maxSize: maxSize ? parseFloat(maxSize) : undefined,
+    limit: 200,
   }), [activeType, debouncedQ, cityFilter, debouncedPriceMax, availableNow, sort, sizeCategory, minSize, maxSize]);
 
   const { data: result, isLoading } = useListings(filters);
@@ -90,9 +91,16 @@ export default function SearchPage() {
     city: cityFilter || undefined,
     type: activeType !== "all" ? activeType : undefined,
   });
-  // Hide Location cards/pins when user is doing a text search.
-  // Locations are useful for browse, not for keyword filtering.
-  const locations = debouncedQ ? [] : locationsRaw;
+  // Locations are useful for browse-by-area, not for narrow filters.
+  // Hide whenever a filter applies to Listings only (not to Locations),
+  // to avoid showing 3 location cards next to "1 listing found".
+  const hasRestrictiveFilter = !!debouncedQ
+    || !!sizeCategory
+    || !!minSize
+    || !!maxSize
+    || !!debouncedPriceMax
+    || availableNow;
+  const locations = hasRestrictiveFilter ? [] : locationsRaw;
 
   // Client-side post-filters for dynamic feature booleans
   const filtered = useMemo(() => {
