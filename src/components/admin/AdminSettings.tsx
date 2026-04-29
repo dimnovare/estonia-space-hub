@@ -53,6 +53,7 @@ const DEFAULT_SETTINGS: Record<string, string> = {
 
 export default function AdminSettings() {
   const { t } = useLanguage();
+  const qc = useQueryClient();
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
