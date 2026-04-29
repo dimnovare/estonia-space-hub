@@ -46,7 +46,7 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   "aboutPage.mission.ru":  "",
   "aboutPage.mission.lv":  "",
   "aboutPage.mission.lt":  "",
-  "blog.enabled":          "false",
+  "blog.enabled":          "true",
   "blog.showInFooter":     "true",
 };
 
@@ -81,6 +81,7 @@ export default function AdminSettings() {
     "showProviderCta",
     "showFaq",
     "showMap",
+    "blog.enabled",
     "blog.showInFooter",
   ]);
 
