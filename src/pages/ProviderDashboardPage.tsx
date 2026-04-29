@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/useNotifications";
 import { SEO } from "@/components/SEO";
 import { notificationService } from "@/services";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/services/apiClient";
 import ProviderOverview from "@/components/provider/ProviderOverview";
 import ProviderIncomingOrders from "@/components/provider/ProviderIncomingOrders";
 import ProviderListings from "@/components/provider/ProviderListings";
@@ -47,6 +48,13 @@ export default function ProviderDashboardPage() {
   const { user } = useAuth();
   const sidebarLinks = useSidebarLinks();
   const queryClient = useQueryClient();
+
+  const { data: supplierProfile } = useQuery<any>({
+    queryKey: ["supplier-profile"],
+    queryFn: () => apiClient.get("/supplier/profile"),
+    enabled: !!user,
+    staleTime: 30_000,
+  });
 
   const { data: notifications = [] } = useNotifications();
   const unreadCount = notifications.filter((n: any) => !n.read).length;
@@ -91,7 +99,7 @@ export default function ProviderDashboardPage() {
       <SEO title={`${t("seo.providerDashboard")} — Ruumly`} description="" noindex={true} />
       <aside className="hidden w-56 shrink-0 border-r border-border bg-card lg:block">
         <div className="p-4">
-          <p className="text-sm font-semibold">{user?.company || user?.name}</p>
+          <p className="text-sm font-semibold">{supplierProfile?.name || user?.company || user?.name}</p>
           <p className="text-xs text-muted-foreground">{t("provider.panel")}</p>
         </div>
         <nav className="space-y-0.5 px-2">
