@@ -135,15 +135,23 @@ export default function BookingPage() {
 
 
 
-  const publicPrice = listing ? listing.priceFrom : 0;
-  const ourPrice = listing
-    ? Math.round(publicPrice * (1 - clientDiscount / 100))
+  const watchedStartDate = detailsForm.watch("startDate");
+  const watchedEndDate = detailsForm.watch("endDate");
+  const durationMultiplier = listing && watchedStartDate && watchedEndDate
+    ? computeDurationMultiplier(listing.priceUnit || "/month", watchedStartDate, watchedEndDate)
+    : 1;
+
+  const publicPriceUnit = listing ? listing.priceFrom : 0;
+  const publicPrice = Math.round(publicPriceUnit * durationMultiplier * 100) / 100;
+  const ourPriceUnit = listing
+    ? Math.round(publicPriceUnit * (1 - clientDiscount / 100))
     : 0;
-  const savings = publicPrice - ourPrice;
+  const ourPrice = Math.round(ourPriceUnit * durationMultiplier * 100) / 100;
+  const savings = Math.round((publicPrice - ourPrice) * 100) / 100;
   const extrasTotal = selectedExtras.reduce(
     (s, id) => s + (listingExtras.find(e => e.key === id)?.price || 0), 0);
   const pricing = listing
-    ? { total: ourPrice + extrasTotal, extrasTotal }
+    ? { total: Math.round((ourPrice + extrasTotal) * 100) / 100, extrasTotal }
     : null;
 
   const handleNext = () => {
