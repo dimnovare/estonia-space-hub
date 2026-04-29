@@ -5,6 +5,7 @@ import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand, Info, Warehouse } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListing, useCreateBooking, useSuppliers, usePricingConfig, useListingExtras } from "@/hooks/queries";
+import { useQuery } from "@tanstack/react-query";
 import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,7 +14,7 @@ import { paymentService } from "@/services";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createBookingContactSchema, type BookingContactForm } from "@/lib/schemas";
-import { tokenStore } from "@/services/apiClient";
+import { tokenStore, apiClient } from "@/services/apiClient";
 import BookingInlineAuth from "@/components/BookingInlineAuth";
 import ReservationCountdown from "@/components/ReservationCountdown";
 import { trackEvent } from "@/lib/analytics";
@@ -160,6 +161,19 @@ export default function BookingPage() {
 
   const watchedStartDate = detailsForm.watch("startDate");
   const watchedEndDate = detailsForm.watch("endDate");
+
+  const { data: availability } = useQuery({
+    queryKey: ["listing-availability", listing?.id, watchedStartDate, watchedEndDate],
+    queryFn: () => apiClient.get<{
+      totalUnits: number;
+      bookedCount: number;
+      available: number;
+      isAvailable: boolean;
+    }>(`/listings/${listing!.id}/availability?startDate=${watchedStartDate}&endDate=${watchedEndDate}`),
+    enabled: !!listing?.id && !!watchedStartDate && !!watchedEndDate,
+    staleTime: 30_000,
+  });
+  const isUnavailable = !!availability && !availability.isAvailable;
   const durationMultiplier = listing && watchedStartDate && watchedEndDate
     ? computeDurationMultiplier(listing.priceUnit || "/month", watchedStartDate, watchedEndDate)
     : 1;
@@ -435,6 +449,16 @@ export default function BookingPage() {
                     </p>
                   </div>
                 )}
+                {isUnavailable && availability && (
+                  <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3">
+                    <p className="text-sm font-medium text-destructive">
+                      {t("booking.notAvailable")}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {availability.bookedCount} / {availability.totalUnits} {t("booking.unitsBookedForPeriod")}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Extras section — only shown if listing has extras */}
@@ -647,7 +671,7 @@ export default function BookingPage() {
             ) : <div />}
             <Button
               onClick={handleNext}
-              disabled={createBooking.isPending || (step === 2 && !isAuthenticated)}
+              disabled={createBooking.isPending || (step === 2 && !isAuthenticated) || (step === 0 && isUnavailable)}
               className="bg-accent text-accent-foreground hover:bg-accent/90"
             >
               {step < steps.length - 1 ? (
@@ -726,7 +750,7 @@ export default function BookingPage() {
             )}
             <Button
               onClick={handleNext}
-              disabled={createBooking.isPending || (step === 2 && !isAuthenticated)}
+              disabled={createBooking.isPending || (step === 2 && !isAuthenticated) || (step === 0 && isUnavailable)}
               className="bg-accent text-accent-foreground hover:bg-accent/90 px-6"
             >
               {step < steps.length - 1 ? t("booking.next") : t("booking.confirm")}
