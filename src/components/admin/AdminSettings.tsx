@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Globe, ToggleLeft, Save, Loader2, Percent, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -52,6 +53,7 @@ const DEFAULT_SETTINGS: Record<string, string> = {
 
 export default function AdminSettings() {
   const { t } = useLanguage();
+  const qc = useQueryClient();
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -102,6 +104,7 @@ export default function AdminSettings() {
     try {
       await apiClient.patch("/admin/settings", settings);
       toast.success(t("admin.settingsSaved"));
+      qc.invalidateQueries({ queryKey: ["platform-settings-public"] });
     } catch (err: any) {
       toast.error(err.message || t("toast.saveFailed"));
     } finally {
