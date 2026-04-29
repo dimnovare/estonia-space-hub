@@ -29,6 +29,14 @@ export function useAllListings() {
   });
 }
 
+export function useCities() {
+  return useQuery({
+    queryKey: ["cities"],
+    queryFn: () => apiClient.get<{ city: string; country: string }[]>("/locations/cities"),
+    staleTime: 5 * 60_000,
+  });
+}
+
 export function useListing(id: string | undefined) {
   return useQuery({ queryKey: ["listing", id], queryFn: () => listingService.getById(id!), enabled: !!id });
 }
