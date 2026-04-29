@@ -591,15 +591,15 @@ export default function BookingPage() {
                             {paymentMethod === pm.id && <div className="h-2.5 w-2.5 rounded-full bg-accent" />}
                           </div>
                         </button>
-                        {pm.id === "later" && (
-                          <>
-                            <p className="mt-1.5 ml-14 text-xs text-muted-foreground">
+                        {pm.id === "later" && paymentMethod === "later" && (
+                          <div className="mt-2 ml-14 rounded-lg border border-accent/20 bg-accent/5 p-3 space-y-1.5">
+                            <p className="text-xs text-foreground">
                               {t("booking.payLaterExplainer")}
                             </p>
-                            <p className="mt-1 ml-14 text-[11px] text-muted-foreground">
+                            <p className="text-[11px] text-muted-foreground">
                               {t("booking.payLaterWarning")}
                             </p>
-                          </>
+                          </div>
                         )}
                       </div>
                     );
