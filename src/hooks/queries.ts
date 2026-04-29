@@ -22,7 +22,11 @@ export function useListings(filters?: ListingFilters) {
 }
 
 export function useAllListings() {
-  return useQuery({ queryKey: ["listings", "all"], queryFn: () => listingService.search() });
+  return useQuery({
+    queryKey: ["listings", "all"],
+    queryFn: () => listingService.search({ limit: 200 }),
+    staleTime: 5 * 60_000,
+  });
 }
 
 export function useListing(id: string | undefined) {
