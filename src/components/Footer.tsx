@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
-import ruumlyLogo from "/ruumly-logo.png";
+import ruumlyLogo from "/ruumly-logo.webp";
 
 export default function Footer() {
   const { t } = useLanguage();
@@ -43,6 +43,10 @@ export default function Footer() {
               <img
                 src={ruumlyLogo}
                 alt="Ruumly"
+                width={170}
+                height={50}
+                loading="lazy"
+                decoding="async"
                 className="h-[36px] sm:h-[42px] lg:h-[50px] w-auto object-contain"
                 style={{
                   filter: 'invert(1) brightness(2) contrast(1.1) drop-shadow(0 1px 1px rgba(0,0,0,0.3))'
