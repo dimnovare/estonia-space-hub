@@ -14,7 +14,7 @@ import { paymentService } from "@/services";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createBookingContactSchema, type BookingContactForm } from "@/lib/schemas";
-import { tokenStore } from "@/services/apiClient";
+import { tokenStore, apiClient } from "@/services/apiClient";
 import BookingInlineAuth from "@/components/BookingInlineAuth";
 import ReservationCountdown from "@/components/ReservationCountdown";
 import { trackEvent } from "@/lib/analytics";
