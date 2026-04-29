@@ -115,7 +115,7 @@ export default function BookingPage() {
       if (!data.startDate || !data.endDate) return true;
       return new Date(data.endDate) > new Date(data.startDate);
     }, { message: t("booking.endAfterStart") || "End date must be after start date", path: ["endDate"] })),
-    defaultValues: { startDate: "", endDate: "" },
+    defaultValues: { startDate: todayIsoDate(), endDate: addDaysIso(todayIsoDate(), 1) },
   });
 
   const contactForm = useForm<BookingContactForm>({
