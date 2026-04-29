@@ -86,10 +86,13 @@ export default function SearchPage() {
   const { data: result, isLoading } = useListings(filters);
   const serverFiltered = result?.data || [];
 
-  const { data: locations = [] } = useLocations({
+  const { data: locationsRaw = [] } = useLocations({
     city: cityFilter || undefined,
     type: activeType !== "all" ? activeType : undefined,
   });
+  // Hide Location cards/pins when user is doing a text search.
+  // Locations are useful for browse, not for keyword filtering.
+  const locations = debouncedQ ? [] : locationsRaw;
 
   // Client-side post-filters for dynamic feature booleans
   const filtered = useMemo(() => {
