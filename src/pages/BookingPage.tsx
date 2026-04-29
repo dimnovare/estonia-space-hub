@@ -144,12 +144,17 @@ export default function BookingPage() {
   const toggleExtra = (id: string) =>
     setSelectedExtras((prev) => (prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]));
 
+  // Match backend formula in BookingService.CreateAsync:
+  // customerDiscountRate = max(0, partnerDiscount - ruumlyMinMargin)
+  // Per-listing override wins. Otherwise compute from supplier's partnerDiscount
+  // (exposed on listing if available, else platform default), minus ruumlyMinMargin.
+  const partnerDiscount = (listing as any)?.partnerDiscountRateOverride
+    ?? (listing as any)?.partnerDiscountRate
+    ?? (pricingConfig as any)?.defaultPartnerDiscount
+    ?? 0;
+  const ruumlyMinMargin = (pricingConfig as any)?.ruumlyMinMarginRate ?? 0;
   const clientDiscount = (listing as any)?.clientDiscountRateOverride
-    ?? (listing as any)?.clientDiscountRate
-    ?? (pricingConfig
-        ? Math.max(0, (pricingConfig as any).defaultPartnerDiscount
-            - (pricingConfig as any).ruumlyMinMarginRate)
-        : 5);
+    ?? Math.max(0, partnerDiscount - ruumlyMinMargin);
 
 
 
@@ -416,16 +421,15 @@ export default function BookingPage() {
                       <span className="font-medium">{formatDuration(detailsForm.watch("startDate"), detailsForm.watch("endDate"), t)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{t("booking.estimatedPrice")}</span>
-                      <span className="font-semibold text-accent">
-                        €{calculateEstimatedPrice(
-                          listing?.priceFrom || 0,
-                          listing?.priceUnit || "/month",
-                          detailsForm.watch("startDate"),
-                          detailsForm.watch("endDate")
-                        ).toFixed(2)}
-                      </span>
+                      <span className="text-muted-foreground">{t("booking.yourPrice")}</span>
+                      <span className="font-semibold text-accent">€{ourPrice.toFixed(2)}</span>
                     </div>
+                    {savings > 0 && (
+                      <div className="flex justify-end text-[11px] text-muted-foreground gap-1">
+                        <span className="line-through">€{publicPrice.toFixed(2)}</span>
+                        <span>{t("booking.youSave")} €{savings.toFixed(2)}</span>
+                      </div>
+                    )}
                     <p className="text-[11px] text-muted-foreground">
                       {t("booking.priceNote")} {listing?.priceUnit?.replace("€", "").replace("/", "/ ") || "/ month"}
                     </p>
