@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, Loader2, KeyRound } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
+import GoogleAuthScope from "@/components/GoogleAuthScope";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +17,7 @@ interface BookingInlineAuthProps {
   onSuccess: () => void;
 }
 
-export default function BookingInlineAuth({ onSuccess }: BookingInlineAuthProps) {
+function BookingInlineAuthInner({ onSuccess }: BookingInlineAuthProps) {
   const [view, setView] = useState<"login" | "register">("login");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
