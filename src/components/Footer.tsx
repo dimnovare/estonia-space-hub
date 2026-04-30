@@ -60,7 +60,7 @@ export default function Footer() {
           </div>
           {Object.entries(footerLinks).map(([title, links]) => (
             <div key={title}>
-              <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider opacity-60">{title}</h4>
+              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-primary-foreground/85">{title}</h3>
               <ul className="space-y-2">
                 {links.map((l) => (
                   <li key={l.label}>
