@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Mail, Wifi, Hand, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useOrders, useApproveOrder, useRejectOrder, useConfirmOrder, useUpdateOrderStatus } from "@/hooks/useOrders";
+import { useOrders, useApproveOrder, useRejectOrder, useUpdateOrderStatus } from "@/hooks/useOrders";
 import { SkeletonList } from "@/components/SkeletonCard";
 import { ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG, generateOrderEmailPreview } from "@/lib/constants";
 import type { Order, OrderStatus } from "@/services/types";
@@ -14,7 +14,6 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
   const updateStatus  = useUpdateOrderStatus();
   const approveOrder  = useApproveOrder();
   const rejectOrder   = useRejectOrder();
-  const confirmOrder  = useConfirmOrder();
 
   const [filter, setFilter] = useState<"all" | OrderStatus>("all");
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
