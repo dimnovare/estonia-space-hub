@@ -207,7 +207,10 @@ export default function HomePage() {
                 </div>
                 <div className="flex gap-2">
                   <Select value={selectedCity} onValueChange={setSelectedCity}>
-                    <SelectTrigger className="flex-1 sm:w-[140px] sm:flex-none shrink-0 border-0 bg-secondary text-sm min-h-[44px]">
+                    <SelectTrigger
+                      aria-label={t("search.allCities") || "Select city"}
+                      className="flex-1 sm:w-[140px] sm:flex-none shrink-0 border-0 bg-secondary text-sm min-h-[44px]"
+                    >
                       <SelectValue placeholder={t("search.allCities")} />
                     </SelectTrigger>
                     <SelectContent>
