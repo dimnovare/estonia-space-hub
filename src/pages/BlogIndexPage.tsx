@@ -12,7 +12,7 @@ const PAGE_SIZE = 10;
 export default function BlogIndexPage() {
   const { language, t } = useLanguage();
   const settings = usePlatformSettings() as any;
-  const enabled = String(settings["blog.enabled"] ?? "false") === "true";
+  const enabled = String(settings.blog?.enabled ?? "false") === "true";
 
   const [searchParams, setSearchParams] = useSearchParams();
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);

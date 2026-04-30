@@ -6,9 +6,9 @@ import ruumlyLogo from "/ruumly-logo.webp";
 export default function Footer() {
   const { t } = useLanguage();
   const settings = usePlatformSettings() as any;
-  const aboutEnabled = String(settings["aboutPage.enabled"] ?? "true") !== "false";
-  const blogEnabled = String(settings["blog.enabled"] ?? "false") === "true";
-  const blogInFooter = String(settings["blog.showInFooter"] ?? "true") !== "false";
+  const aboutEnabled = String(settings.aboutPage?.enabled ?? "true") !== "false";
+  const blogEnabled = String(settings.blog?.enabled ?? "false") === "true";
+  const blogInFooter = String(settings.blog?.showInFooter ?? "true") !== "false";
   const showBlog = blogEnabled && blogInFooter;
 
   const companyLinks = [

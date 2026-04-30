@@ -13,7 +13,7 @@ export default function BlogPostPage() {
   const { slug = "" } = useParams<{ slug: string }>();
   const { language, t } = useLanguage();
   const settings = usePlatformSettings() as any;
-  const enabled = String(settings["blog.enabled"] ?? "false") === "true";
+  const enabled = String(settings.blog?.enabled ?? "false") === "true";
 
   if (!enabled) return <NotFound />;
 

@@ -39,8 +39,8 @@ export default function Navbar() {
   const { data: notifications = [] } = useNotifications();
   const unreadCount = notifications.filter((n) => !n.read).length;
   const settings = usePlatformSettings() as any;
-  const blogEnabled = String(settings["blog.enabled"] ?? "false") === "true";
-  const blogInNav = String(settings["blog.showInNav"] ?? "false") === "true";
+  const blogEnabled = String(settings.blog?.enabled ?? "false") === "true";
+  const blogInNav = String(settings.blog?.showInNav ?? "false") === "true";
   const navLinks = blogEnabled && blogInNav
     ? [...baseNavLinks, { to: "/blog", tKey: "blog.title", matchType: "" }]
     : baseNavLinks;

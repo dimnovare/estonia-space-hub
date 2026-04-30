@@ -47,13 +47,12 @@ export default function AboutPage() {
   const { t, language } = useLanguage();
   const settings = usePlatformSettings() as any;
 
-  const enabled = String(settings["aboutPage.enabled"] ?? "true") !== "false";
-  const showStats = String(settings["aboutPage.showStats"] ?? "false") === "true";
-  const missionKey = `aboutPage.mission.${language}`;
-  const missionText = (settings[missionKey] || "").trim();
+  const enabled = String(settings.aboutPage?.enabled ?? "true") !== "false";
+  const showStats = String(settings.aboutPage?.showStats ?? "false") === "true";
+  const missionText = (settings.aboutPage?.[`mission.${language}`] || "").trim();
 
   const founders: Founder[] = useMemo(() => {
-    const raw = settings["aboutPage.founders"];
+    const raw = settings.aboutPage?.founders;
     if (!raw) return [];
     try {
       const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
