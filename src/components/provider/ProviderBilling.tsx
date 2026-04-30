@@ -6,18 +6,21 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { bankService, rebateService } from "@/services";
+import { bankService, rebateService, type BankDetails } from "@/services";
 import { toast } from "sonner";
 import { apiClient } from "@/services/apiClient";
+import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
+import { withSupplier } from "@/lib/withSupplier";
 
 export default function ProviderBilling() {
   const { t, language } = useLanguage();
   const locale = language === "et" ? "et-EE" : language === "ru" ? "ru-RU" : "en-GB";
   const queryClient = useQueryClient();
   const [editingBank, setEditingBank] = useState(false);
+  const supplierId = useImpersonatedSupplierId();
 
   const { data: supplierData, error: supplierError } = useQuery({
-    queryKey: ["my-supplier-profile"],
+    queryKey: ["supplier-profile-billing", supplierId],
     queryFn: () => apiClient.get<{
       tier?: string;
       partnerDiscountRate?: number;
@@ -30,7 +33,7 @@ export default function ProviderBilling() {
       isInOnboarding?: boolean;
       onboardingDaysRemaining?: number;
       isFoundingPartner?: boolean;
-    }>("/supplier/profile"),
+    }>(withSupplier("/supplier/profile", supplierId)),
     staleTime: 60_000,
     retry: false,
   });
@@ -46,9 +49,9 @@ export default function ProviderBilling() {
     iban: "", bankAccountName: "", bankName: ""
   });
 
-  const { data: bankDetails, isLoading: bankLoading, error: bankError } = useQuery({
-    queryKey: ["bank-details"],
-    queryFn: bankService.getBankDetails,
+  const { data: bankDetails, isLoading: bankLoading, error: bankError } = useQuery<BankDetails>({
+    queryKey: ["bank-details", supplierId],
+    queryFn: () => bankService.getBankDetails(supplierId),
     retry: false,
   });
 
@@ -66,9 +69,9 @@ export default function ProviderBilling() {
   });
 
   const saveBankMutation = useMutation({
-    mutationFn: bankService.updateBankDetails,
+    mutationFn: (data: BankDetails) => bankService.updateBankDetails(data, supplierId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["bank-details"] });
+      queryClient.invalidateQueries({ queryKey: ["bank-details", supplierId] });
       toast.success(t("toast.bankDetailsSaved"));
       setEditingBank(false);
     },
