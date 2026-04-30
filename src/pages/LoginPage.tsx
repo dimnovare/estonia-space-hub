@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, Loader2, CheckCircle, KeyRound } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
+import GoogleAuthScope from "@/components/GoogleAuthScope";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +19,7 @@ import { trackEvent } from "@/lib/analytics";
 
 type AuthView = "login" | "register" | "forgot" | "forgot-sent" | "reset" | "verify-sent";
 
-export default function LoginPage() {
+function LoginPageInner() {
   const [showPassword, setShowPassword] = useState(false);
   const [view, setView] = useState<AuthView>("login");
   const [loading, setLoading] = useState(false);
@@ -358,5 +359,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <GoogleAuthScope>
+      <LoginPageInner />
+    </GoogleAuthScope>
   );
 }

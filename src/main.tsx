@@ -1,11 +1,9 @@
 import { createRoot } from "react-dom/client";
-import { GoogleOAuthProvider } from "@react-oauth/google";
 import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
 import { initGA } from "./lib/analytics";
 
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";
 // GA4 is initialized only after cookie consent — see CookieConsent.tsx
 // If consent was already given in a previous session, init immediately
 if (localStorage.getItem("ruumly-cookie-consent") === "true") {
@@ -21,8 +19,13 @@ if ("serviceWorker" in navigator) {
 
 createRoot(document.getElementById("root")!).render(
   <HelmetProvider>
-    <GoogleOAuthProvider clientId={googleClientId}>
-      <App />
-    </GoogleOAuthProvider>
+    {/*
+      GoogleOAuthProvider is intentionally NOT mounted at the root.
+      It loads accounts.google.com/gsi/client (sets ~25 third-party cookies)
+      on mount, which tanks Lighthouse Best Practices on the homepage.
+      It is mounted lazily inside LoginPage and BookingInlineAuth via
+      <GoogleAuthScope> only when the user reaches a sign-in surface.
+    */}
+    <App />
   </HelmetProvider>
 );
