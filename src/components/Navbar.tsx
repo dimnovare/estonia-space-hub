@@ -9,7 +9,7 @@ import { FlagIcon } from "@/components/FlagIcon";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
-import ruumlyLogo from "/ruumly-logo.webp";
+// Logo served from /public via static URLs to enable srcSet retina handling
 
 const baseNavLinks = [
   { to: "/search?type=warehouse", tKey: "nav.storage", matchType: "warehouse" },
