@@ -536,6 +536,15 @@ export default function AdminSuppliers() {
               </div>
               {selected.lastOrderAt && <p className="text-xs text-muted-foreground">{t("admin.lastOrder")}: {selected.lastOrderAt}</p>}
               <div className="flex gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 gap-1"
+                  onClick={() => navigate(`/provider?supplierId=${selected.id}`)}
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  {t("admin.suppliers.viewDashboard")}
+                </Button>
                 <Button onClick={handleSaveSelected} disabled={updateMutation.isPending} className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90">
                   {updateMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                   {t("admin.save")}
