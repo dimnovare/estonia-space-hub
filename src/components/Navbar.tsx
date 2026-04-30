@@ -60,10 +60,11 @@ export default function Navbar() {
       <div className="container-wide flex h-20 lg:h-[88px] items-center justify-between">
         <Link to="/" className="flex-shrink-0 flex items-center">
           <img
-            src={ruumlyLogo}
+            src="/ruumly-logo@1x.webp"
+            srcSet="/ruumly-logo@1x.webp 1x, /ruumly-logo.webp 2x"
             alt="Ruumly"
-            width={211}
-            height={62}
+            width={179}
+            height={52}
             decoding="async"
             className="h-[42px] sm:h-[52px] lg:h-[62px] w-auto object-contain"
           />
