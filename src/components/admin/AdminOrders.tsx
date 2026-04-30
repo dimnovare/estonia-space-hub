@@ -153,7 +153,10 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
                   <Button
                     size="sm"
                     disabled={updateStatus.isPending}
-                    onClick={() => updateStatus.mutate({ id: viewOrder.id, status: "sent" })}
+                    onClick={() => updateStatus.mutate(
+                      { id: viewOrder.id, status: "sent" },
+                      { onSuccess: (updated) => setViewOrder(updated) }
+                    )}
                     className="bg-info text-white hover:bg-info/90"
                   >
                     <Send className="mr-1 h-3.5 w-3.5" />
@@ -165,7 +168,9 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
                     <Button
                       size="sm"
                       disabled={approveOrder.isPending}
-                      onClick={() => approveOrder.mutate(viewOrder.id)}
+                      onClick={() => approveOrder.mutate(viewOrder.id, {
+                        onSuccess: (updated) => setViewOrder(updated),
+                      })}
                       className="bg-success text-white hover:bg-success/90"
                     >
                       {approveOrder.isPending ? "..." : t("admin.markConfirmed")}
@@ -174,7 +179,10 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
                       size="sm"
                       variant="outline"
                       disabled={rejectOrder.isPending}
-                      onClick={() => rejectOrder.mutate({ id: viewOrder.id, reason: "Admin rejected" })}
+                      onClick={() => rejectOrder.mutate(
+                        { id: viewOrder.id, reason: "Admin rejected" },
+                        { onSuccess: (updated) => setViewOrder(updated) }
+                      )}
                       className="text-destructive"
                     >
                       {rejectOrder.isPending ? "..." : t("admin.markRejected")}
@@ -185,7 +193,10 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
                   <Button
                     size="sm"
                     disabled={updateStatus.isPending}
-                    onClick={() => updateStatus.mutate({ id: viewOrder.id, status: "completed" })}
+                    onClick={() => updateStatus.mutate(
+                      { id: viewOrder.id, status: "completed" },
+                      { onSuccess: (updated) => setViewOrder(updated) }
+                    )}
                     className="bg-primary text-primary-foreground"
                   >
                     {updateStatus.isPending ? "..." : t("admin.markCompleted")}
@@ -195,7 +206,10 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
                   <Button
                     size="sm"
                     disabled={updateStatus.isPending}
-                    onClick={() => updateStatus.mutate({ id: viewOrder.id, status: "completed" })}
+                    onClick={() => updateStatus.mutate(
+                      { id: viewOrder.id, status: "completed" },
+                      { onSuccess: (updated) => setViewOrder(updated) }
+                    )}
                     className="bg-primary text-primary-foreground"
                   >
                     {updateStatus.isPending ? "..." : t("admin.markCompleted")}
