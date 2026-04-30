@@ -443,12 +443,77 @@ export default function BookingPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="mb-1 block text-sm font-medium">{t("booking.startDate")}</label>
-                    <input type="date" min={todayIsoDate()} {...detailsForm.register("startDate")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent" />
+                    <Controller
+                      control={detailsForm.control}
+                      name="startDate"
+                      render={({ field }) => {
+                        const locale = dateFnsLocaleMap[language as keyof typeof dateFnsLocaleMap] ?? et;
+                        const selected = isoToDate(field.value);
+                        return (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button
+                                type="button"
+                                className={cn(
+                                  "w-full rounded-lg border border-border bg-card px-3 py-2 text-left text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {selected ? format(selected, "PPP", { locale }) : t("booking.startDate")}
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <CalendarComp
+                                mode="single"
+                                selected={selected}
+                                onSelect={(d) => d && field.onChange(dateToIso(d))}
+                                disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+                                initialFocus
+                                className={cn("p-3 pointer-events-auto")}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        );
+                      }}
+                    />
                     {detailsForm.formState.errors.startDate && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.startDate.message}</p>}
                   </div>
                   <div>
                     <label className="mb-1 block text-sm font-medium">{t("booking.endDate")}</label>
-                    <input type="date" min={watchedStartDate || todayIsoDate()} {...detailsForm.register("endDate")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent" />
+                    <Controller
+                      control={detailsForm.control}
+                      name="endDate"
+                      render={({ field }) => {
+                        const locale = dateFnsLocaleMap[language as keyof typeof dateFnsLocaleMap] ?? et;
+                        const selected = isoToDate(field.value);
+                        const minDate = isoToDate(watchedStartDate) ?? new Date(new Date().setHours(0, 0, 0, 0));
+                        return (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button
+                                type="button"
+                                className={cn(
+                                  "w-full rounded-lg border border-border bg-card px-3 py-2 text-left text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {selected ? format(selected, "PPP", { locale }) : t("booking.endDate")}
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <CalendarComp
+                                mode="single"
+                                selected={selected}
+                                onSelect={(d) => d && field.onChange(dateToIso(d))}
+                                disabled={(d) => d < minDate}
+                                initialFocus
+                                className={cn("p-3 pointer-events-auto")}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        );
+                      }}
+                    />
                     {detailsForm.formState.errors.endDate && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.endDate.message}</p>}
                   </div>
                 </div>
