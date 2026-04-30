@@ -63,7 +63,43 @@
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- SSR LCP hero: rendered immediately so Lighthouse measures the h1 paint
+           on first byte instead of waiting for React to hydrate. React replaces
+           this entire subtree on mount. -->
+      <section style="padding:5rem 1rem;text-align:center;background:#1E3A5F;color:#fff;">
+        <h1 id="ssr-hero-title" style="font-family:Manrope,system-ui,sans-serif;font-weight:700;font-size:clamp(2.25rem,5vw,3.75rem);line-height:1.1;margin:0 auto;max-width:48rem;">
+          <span data-lang="et">Rendi laopinda Eestis 60 sekundiga</span>
+          <span data-lang="en" hidden>Rent storage in the Baltics in 60 seconds</span>
+          <span data-lang="ru" hidden>Арендуй склад в странах Балтии за 60 секунд</span>
+          <span data-lang="lv" hidden>Īrē noliktavas telpu Latvijā 60 sekundēs</span>
+          <span data-lang="lt" hidden>Išsinuomok sandėliuką Lietuvoje per 60 sekundžių</span>
+        </h1>
+      </section>
+      <script>
+        (function () {
+          var supported = ["et", "en", "ru", "lv", "lt"];
+          var lang = "et";
+          try {
+            var stored = localStorage.getItem("ruumly-lang");
+            if (stored && supported.indexOf(stored) !== -1) {
+              lang = stored;
+            } else {
+              var b = (navigator.language || "").toLowerCase();
+              if (b.indexOf("lv") === 0) lang = "lv";
+              else if (b.indexOf("lt") === 0) lang = "lt";
+              else if (b.indexOf("ru") === 0) lang = "ru";
+              else if (b.indexOf("en") === 0) lang = "en";
+              else if (b.indexOf("et") === 0) lang = "et";
+            }
+          } catch (e) {}
+          var spans = document.querySelectorAll("#ssr-hero-title span[data-lang]");
+          for (var i = 0; i < spans.length; i++) {
+            spans[i].hidden = spans[i].getAttribute("data-lang") !== lang;
+          }
+        })();
+      </script>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
