@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { apiClient } from "@/services/apiClient";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -9,10 +10,15 @@ export default function ProviderProfile() {
   const { t } = useLanguage();
   const qc = useQueryClient();
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading, error } = useQuery({
     queryKey: ["supplier-profile"],
     queryFn: () => apiClient.get<any>("/supplier/profile"),
+    retry: false,
   });
+
+  const needsSupplierContext =
+    (error as any)?.code === "supplier_context_required" ||
+    (error as any)?.body?.error === "supplier_context_required";
 
   const [formData, setFormData] = useState({
     company: "",
@@ -57,6 +63,25 @@ export default function ProviderProfile() {
       <div className="h-8 w-48 rounded bg-muted" />
       {[...Array(4)].map((_, i) => <div key={i} className="h-10 rounded bg-muted" />)}
     </div>;
+  }
+
+  if (needsSupplierContext) {
+    return (
+      <div className="rounded-xl border border-border bg-secondary/30 p-8 text-center">
+        <h2 className="font-display text-lg font-semibold">
+          {t("provider.adminContextRequired.title")}
+        </h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {t("provider.adminContextRequired.body")}
+        </p>
+        <Link
+          to="/admin?tab=partners"
+          className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+        >
+          {t("provider.adminContextRequired.linkLabel")} →
+        </Link>
+      </div>
+    );
   }
 
   return (
