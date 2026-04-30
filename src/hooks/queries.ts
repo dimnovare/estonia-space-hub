@@ -274,7 +274,7 @@ export interface BookingStats {
   averageRating: number;
 }
 
-export function useBookingStats() {
+export function useBookingStats(enabled: boolean = true) {
   return useQuery<BookingStats>({
     queryKey: ["bookings", "stats"],
     queryFn: async () => {
@@ -282,6 +282,7 @@ export function useBookingStats() {
       return res as BookingStats;
     },
     staleTime: 5 * 60 * 1000,
+    enabled,
   });
 }
 
