@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useLocations, useCreateLocation, useUpdateLocation, useAddUnit } from "@/hooks/queries";
 import { useFeatureDefinitions } from "@/hooks/useFeatureDefinitions";
+import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import { ESTONIAN_CITIES } from "@/lib/constants";
 import { Loader2, MapPin, Warehouse, Truck, CarFront, Plus, Pencil, ChevronDown, ChevronUp, Trash2, AlertTriangle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -377,7 +378,8 @@ function UnitDialog({
 export default function ProviderListings() {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
-  const { data: locations = [], isLoading } = useLocations();
+  const supplierId = useImpersonatedSupplierId();
+  const { data: locations = [], isLoading } = useLocations(supplierId ? { supplierId } : undefined);
 
   const [locDialogOpen, setLocDialogOpen] = useState(false);
   const [editLoc, setEditLoc] = useState<SupplierLocation | null>(null);

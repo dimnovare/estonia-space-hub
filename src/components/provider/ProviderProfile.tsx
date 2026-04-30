@@ -5,14 +5,17 @@ import { apiClient } from "@/services/apiClient";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
+import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
+import { withSupplier } from "@/lib/withSupplier";
 
 export default function ProviderProfile() {
   const { t } = useLanguage();
   const qc = useQueryClient();
+  const supplierId = useImpersonatedSupplierId();
 
   const { data: profile, isLoading, error } = useQuery({
-    queryKey: ["supplier-profile"],
-    queryFn: () => apiClient.get<any>("/supplier/profile"),
+    queryKey: ["supplier-profile", supplierId],
+    queryFn: () => apiClient.get<any>(withSupplier("/supplier/profile", supplierId)),
     retry: false,
   });
 
@@ -44,7 +47,7 @@ export default function ProviderProfile() {
 
   const handleSave = async () => {
     try {
-      await apiClient.patch("/supplier/profile", {
+      await apiClient.patch(withSupplier("/supplier/profile", supplierId), {
         name: formData.company,
         registryCode: formData.regCode,
         contactName: formData.name,
@@ -52,7 +55,7 @@ export default function ProviderProfile() {
         contactPhone: formData.phone,
       });
       toast.success(t("toast.profileSaved"));
-      qc.invalidateQueries({ queryKey: ["supplier-profile"] });
+      qc.invalidateQueries({ queryKey: ["supplier-profile", supplierId] });
     } catch (err: any) {
       toast.error(err?.message || t("toast.saveFailed"));
     }

@@ -4,12 +4,14 @@ import { useOrders } from "@/hooks/useOrders";
 import { useBookings } from "@/hooks/useBookings";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 
 export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () => void }) {
   const { t } = useLanguage();
-  const { data: allOrders = [], isLoading: ordersLoading } = useOrders();
-  const { data: bookings = [], isLoading: bookingsLoading } = useBookings();
-  const { data: locations = [] } = useLocations();
+  const supplierId = useImpersonatedSupplierId();
+  const { data: allOrders = [], isLoading: ordersLoading } = useOrders(supplierId ?? undefined);
+  const { data: bookings = [], isLoading: bookingsLoading } = useBookings(supplierId);
+  const { data: locations = [] } = useLocations(supplierId ? { supplierId } : undefined);
   const listingCount = locations.reduce((sum, loc) => sum + (loc.units?.length ?? 0), 0);
   const isLoading = ordersLoading || bookingsLoading;
   const pendingOrders = allOrders.filter(o => o.status === "sent" || o.status === "created");

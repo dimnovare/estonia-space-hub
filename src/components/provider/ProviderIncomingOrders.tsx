@@ -9,13 +9,15 @@ import EmailTemplatePreview from "@/components/EmailTemplatePreview";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import LeadSummaryStrip from "@/components/provider/LeadSummaryStrip";
 import LeadStatusChip from "@/components/provider/LeadStatusChip";
 import LeadNotesEditor from "@/components/provider/LeadNotesEditor";
 
 export default function ProviderIncomingOrders() {
   const { t } = useLanguage();
-  const { data: orders = [], isLoading } = useOrders();
+  const supplierId = useImpersonatedSupplierId();
+  const { data: orders = [], isLoading } = useOrders(supplierId ?? undefined);
   const approveOrder = useApproveOrder();
   const rejectOrder  = useRejectOrder();
   const confirmOrder = useConfirmOrder();

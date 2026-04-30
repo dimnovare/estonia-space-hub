@@ -4,6 +4,7 @@ import type { ListingFilters, CreateBookingInput, Review, CreateReviewInput, Boo
 import { toast } from "sonner";
 import { apiClient } from "@/services/apiClient";
 import { useAuth } from "@/contexts/AuthContext";
+import { withSupplier } from "@/lib/withSupplier";
 
 /** Safely unwrap paginated { data: T[] } or plain T[] responses */
 function unwrapArray<T>(res: unknown): T[] {
@@ -111,10 +112,16 @@ export function useRoutingRules() {
   return useQuery({ queryKey: ["routing-rules"], queryFn: async () => unwrapArray<OrderRoutingRule>(await routingRuleService.getAll()), enabled: isAuthenticated && role === "admin", staleTime: 30_000 });
 }
 
-export function useLocations(params?: { city?: string; type?: string }) {
+export function useLocations(params?: { city?: string; type?: string; supplierId?: string | null }) {
   return useQuery({
     queryKey: ["locations", params],
-    queryFn: async () => unwrapArray<SupplierLocation>(await locationService.getAll(params)),
+    queryFn: async () => unwrapArray<SupplierLocation>(
+      await locationService.getAll({
+        city: params?.city,
+        type: params?.type,
+        supplierId: params?.supplierId ?? undefined,
+      })
+    ),
     staleTime: 60_000,
   });
 }
@@ -192,12 +199,12 @@ export function useCreateReview() {
   });
 }
 
-export function useSupplierTeam() {
+export function useSupplierTeam(supplierId?: string | null) {
   const { isAuthenticated, role } = useAuth();
   return useQuery<TeamMember[]>({
-    queryKey: ["supplier-team"],
+    queryKey: ["supplier-team", supplierId ?? null],
     queryFn: async () => {
-      const res = await apiClient.get("/supplier/team");
+      const res = await apiClient.get(withSupplier("/supplier/team", supplierId ?? null));
       return unwrapArray<TeamMember>(res);
     },
     enabled: isAuthenticated && (role === "provider" || role === "admin"),
@@ -205,24 +212,24 @@ export function useSupplierTeam() {
   });
 }
 
-export function useInviteTeamMember() {
+export function useInviteTeamMember(supplierId?: string | null) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: { email: string; name: string }) =>
-      apiClient.post("/supplier/team/invite", data),
+      apiClient.post(withSupplier("/supplier/team/invite", supplierId ?? null), data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["supplier-team"] });
+      qc.invalidateQueries({ queryKey: ["supplier-team", supplierId ?? null] });
     },
   });
 }
 
-export function useRemoveTeamMember() {
+export function useRemoveTeamMember(supplierId?: string | null) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (userId: string) =>
-      apiClient.delete(`/supplier/team/${userId}`),
+      apiClient.delete(withSupplier(`/supplier/team/${userId}`, supplierId ?? null)),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["supplier-team"] });
+      qc.invalidateQueries({ queryKey: ["supplier-team", supplierId ?? null] });
     },
   });
 }

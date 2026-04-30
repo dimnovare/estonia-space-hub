@@ -10,6 +10,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { toast } from "sonner";
+import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 
 const localeMap: Record<string, string> = {
   et: "et-EE",
@@ -23,8 +24,9 @@ export default function ProviderCalendar() {
   const { t, language } = useLanguage();
   const locale = localeMap[language] || "en-GB";
   const queryClient = useQueryClient();
-  const { data: bookings = [] } = useBookings();
-  const { data: locations = [] } = useLocations();
+  const supplierId = useImpersonatedSupplierId();
+  const { data: bookings = [] } = useBookings(supplierId);
+  const { data: locations = [] } = useLocations(supplierId ? { supplierId } : undefined);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedLocationId, setSelectedLocationId] = useState<string>("");
 
@@ -99,6 +101,7 @@ export default function ProviderCalendar() {
       </div>
 
       <div className="flex items-center gap-2 mt-4">
+        {!supplierId && (
         <a
           href={`${import.meta.env.VITE_API_URL || ""}/api/supplier/calendar.ics`}
           download="ruumly-bookings.ics"
@@ -124,6 +127,7 @@ export default function ProviderCalendar() {
           <Download className="h-3.5 w-3.5" />
           {t("provider.calendar.export") || "Export .ics"}
         </a>
+        )}
 
         <button
           className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-secondary transition-colors text-muted-foreground cursor-not-allowed opacity-50"

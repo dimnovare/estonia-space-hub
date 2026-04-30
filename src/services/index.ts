@@ -1,6 +1,7 @@
 // ─── Frontend Service Layer — wired to real backend ───
 
 import { apiClient } from "./apiClient";
+import { withSupplier } from "@/lib/withSupplier";
 import type {
   User, Supplier, Order, Booking, Notification, Invoice, Message,
   AuditLogEntry, OrderStatus, PartnerIntegrationSettings, OrderRoutingRule,
@@ -329,11 +330,11 @@ export interface BankDetails {
 }
 
 export const bankService = {
-  async getBankDetails(): Promise<BankDetails> {
-    return apiClient.get<BankDetails>("/provider/bank-details");
+  async getBankDetails(supplierId?: string | null): Promise<BankDetails> {
+    return apiClient.get<BankDetails>(withSupplier("/provider/bank-details", supplierId ?? null));
   },
-  async updateBankDetails(data: BankDetails): Promise<void> {
-    await apiClient.patch("/provider/bank-details", data);
+  async updateBankDetails(data: BankDetails, supplierId?: string | null): Promise<void> {
+    await apiClient.patch(withSupplier("/provider/bank-details", supplierId ?? null), data);
   },
 };
 

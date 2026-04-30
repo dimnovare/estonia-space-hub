@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useSupplierTeam, useInviteTeamMember, useRemoveTeamMember } from "@/hooks/queries";
 import { useAuth } from "@/contexts/AuthContext";
+import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -19,9 +20,10 @@ import { format } from "date-fns";
 
 export default function ProviderTeam() {
   const { t } = useLanguage();
-  const { data: members, isLoading, error } = useSupplierTeam();
-  const invite = useInviteTeamMember();
-  const remove = useRemoveTeamMember();
+  const supplierId = useImpersonatedSupplierId();
+  const { data: members, isLoading, error } = useSupplierTeam(supplierId);
+  const invite = useInviteTeamMember(supplierId);
+  const remove = useRemoveTeamMember(supplierId);
 
   const needsSupplierContext =
     (error as any)?.code === "supplier_context_required" ||
