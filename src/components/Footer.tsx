@@ -54,7 +54,7 @@ export default function Footer() {
                 }}
               />
             </Link>
-            <p className="mt-3 text-sm opacity-70">
+            <p className="mt-3 text-sm text-primary-foreground/80">
               {t("footer.tagline")}
             </p>
           </div>
@@ -64,7 +64,7 @@ export default function Footer() {
               <ul className="space-y-2">
                 {links.map((l) => (
                   <li key={l.label}>
-                    <Link to={l.to} className="text-sm opacity-70 transition-opacity hover:opacity-100">
+                    <Link to={l.to} className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors">
                       {l.label}
                     </Link>
                   </li>
@@ -73,7 +73,7 @@ export default function Footer() {
             </div>
           ))}
         </div>
-        <div className="mt-10 border-t border-primary-foreground/10 pt-6 text-center text-xs opacity-50">
+        <div className="mt-10 border-t border-primary-foreground/10 pt-6 text-center text-xs text-primary-foreground/75">
           <div>© {new Date().getFullYear()} Ruumly. {t("footer.rights")}</div>
           <div className="mt-1">Ruumly · info@ruumly.eu · Tallinn, Estonia</div>
         </div>
