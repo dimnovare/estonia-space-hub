@@ -200,3 +200,11 @@ function BookingInlineAuthInner({ onSuccess }: BookingInlineAuthProps) {
     </div>
   );
 }
+
+export default function BookingInlineAuth(props: BookingInlineAuthProps) {
+  return (
+    <GoogleAuthScope>
+      <BookingInlineAuthInner {...props} />
+    </GoogleAuthScope>
+  );
+}
