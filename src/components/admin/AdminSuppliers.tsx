@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, Zap, Hand, RefreshCw, Server, PlusCircle, Save, Loader2, Trash2, Ban, CheckCircle, Star, ShieldCheck, Flag } from "lucide-react";
+import { Mail, Zap, Hand, RefreshCw, Server, PlusCircle, Save, Loader2, Trash2, Ban, CheckCircle, Star, ShieldCheck, Flag, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supplierService } from "@/services";
@@ -10,12 +10,14 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const inp = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
 
 export default function AdminSuppliers() {
   const { t } = useLanguage();
   const qc = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: suppliers = [], isLoading } = useQuery({
     queryKey: queryKeys.suppliers.all,
@@ -245,7 +247,20 @@ export default function AdminSuppliers() {
                     )}
                   </div>
                 </td>
-                <td className="px-4 py-3"><Button variant="outline" size="sm" className="text-xs" onClick={() => { setSelected(s); setTestResult(null); }}>{t("admin.view")}</Button></td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-1">
+                    <Button variant="outline" size="sm" className="text-xs" onClick={() => { setSelected(s); setTestResult(null); }}>{t("admin.view")}</Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      title={t("admin.suppliers.viewDashboard")}
+                      onClick={(e) => { e.stopPropagation(); navigate(`/provider?supplierId=${s.id}`); }}
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
