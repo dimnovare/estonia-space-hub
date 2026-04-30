@@ -67,6 +67,8 @@ export function useUpdateOrderStatus() {
       orderService.updateStatus(id, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-revenue"] });
     },
   });
 }
