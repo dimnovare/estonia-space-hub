@@ -47,7 +47,7 @@ export default function AdminDashboard() {
         customerPaid: number;
         avgMarginPercent: number;
       }>;
-    }>("/admin/revenue"),
+    }>("/admin/dashboard/revenue"),
     staleTime: 60_000,
   });
 
