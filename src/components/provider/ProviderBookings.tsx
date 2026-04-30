@@ -5,13 +5,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useBookings } from "@/hooks/useBookings";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { Booking } from "@/services/types";
+import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 
 const FILTERS = ["all", "pending", "reserved", "confirmed", "active", "completed", "cancelled"] as const;
 type FilterKey = typeof FILTERS[number];
 
 export default function ProviderBookings() {
   const { t } = useLanguage();
-  const { data: bookings = [], isLoading } = useBookings();
+  const supplierId = useImpersonatedSupplierId();
+  const { data: bookings = [], isLoading } = useBookings(supplierId);
   const [filter, setFilter] = useState<FilterKey>("all");
   const [viewBooking, setViewBooking] = useState<Booking | null>(null);
 
