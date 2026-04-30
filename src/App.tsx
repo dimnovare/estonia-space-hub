@@ -49,12 +49,24 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (failureCount, error: any) => {
-        if ([401, 403, 404].includes(error?.status)) return false;
-        return failureCount < 2;
+        const status = error?.status;
+        // Don't retry any 4xx — they will not succeed by retrying.
+        if (typeof status === "number" && status >= 400 && status < 500) {
+          return false;
+        }
+        // Default behavior for network/5xx errors: up to 3 retries.
+        return failureCount < 3;
       },
       staleTime: 30_000,
     },
     mutations: {
+      retry: (failureCount, error: any) => {
+        const status = error?.status;
+        if (typeof status === "number" && status >= 400 && status < 500) {
+          return false;
+        }
+        return failureCount < 1;
+      },
       onError: (error: any) => {
         const lang = (typeof window !== "undefined" && localStorage.getItem("ruumly-lang")) || "et";
         const fallbackMessages: Record<string, string> = {

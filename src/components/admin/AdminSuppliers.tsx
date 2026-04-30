@@ -255,7 +255,7 @@ export default function AdminSuppliers() {
                       size="sm"
                       className="h-8 w-8 p-0"
                       title={t("admin.suppliers.viewDashboard")}
-                      onClick={(e) => { e.stopPropagation(); navigate(`/provider?supplierId=${s.id}`); }}
+                      onClick={(e) => { e.stopPropagation(); navigate(`/provider/dashboard?supplierId=${s.id}`); }}
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
                     </Button>
@@ -540,7 +540,7 @@ export default function AdminSuppliers() {
                   variant="outline"
                   size="sm"
                   className="flex-1 gap-1"
-                  onClick={() => navigate(`/provider?supplierId=${selected.id}`)}
+                  onClick={() => navigate(`/provider/dashboard?supplierId=${selected.id}`)}
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   {t("admin.suppliers.viewDashboard")}
