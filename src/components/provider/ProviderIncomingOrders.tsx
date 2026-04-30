@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Inbox } from "lucide-react";
 import { Check, X, Mail, Download } from "lucide-react";
-import { useOrders, useApproveOrder, useRejectOrder, useConfirmOrder } from "@/hooks/useOrders";
+import { useOrders, useApproveOrder, useRejectOrder, useConfirmOrder, useUpdateOrderStatus } from "@/hooks/useOrders";
 import { SkeletonList } from "@/components/SkeletonCard";
 import { ORDER_STATUS_CONFIG } from "@/lib/constants";
 import type { Order } from "@/services/types";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
+import { useAuth } from "@/contexts/AuthContext";
 import LeadSummaryStrip from "@/components/provider/LeadSummaryStrip";
 import LeadStatusChip from "@/components/provider/LeadStatusChip";
 import LeadNotesEditor from "@/components/provider/LeadNotesEditor";
@@ -17,10 +18,13 @@ import LeadNotesEditor from "@/components/provider/LeadNotesEditor";
 export default function ProviderIncomingOrders() {
   const { t } = useLanguage();
   const supplierId = useImpersonatedSupplierId();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const { data: orders = [], isLoading } = useOrders(supplierId ?? undefined);
   const approveOrder = useApproveOrder();
   const rejectOrder  = useRejectOrder();
   const confirmOrder = useConfirmOrder();
+  const updateStatus = useUpdateOrderStatus();
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [filter, setFilter] = useState<string>("all");
@@ -69,7 +73,7 @@ export default function ProviderIncomingOrders() {
     URL.revokeObjectURL(url);
   };
 
-  const isMutating = approveOrder.isPending || rejectOrder.isPending || confirmOrder.isPending;
+  const isMutating = approveOrder.isPending || rejectOrder.isPending || confirmOrder.isPending || updateStatus.isPending;
 
   return (
     <div>
@@ -232,6 +236,11 @@ export default function ProviderIncomingOrders() {
                         </div>
                       </div>
                     ))}
+                    {selectedOrder.timeline.length === 0 && (
+                      <p className="text-xs text-muted-foreground italic">
+                        {t("provider.orders.noHistory")}
+                      </p>
+                    )}
                   </div>
                 </div>
                 {selectedOrder.notes && (
@@ -274,6 +283,22 @@ export default function ProviderIncomingOrders() {
                     >
                       <X className="h-3.5 w-3.5" />
                       {rejectOrder.isPending ? "..." : t("provider.orders.reject")}
+                    </Button>
+                  </div>
+                )}
+                {isAdmin && (selectedOrder.status === "confirmed" || selectedOrder.status === "active") && (
+                  <div className="flex gap-2 pt-2 border-t border-border">
+                    <Button
+                      size="sm"
+                      className="bg-primary text-primary-foreground hover:bg-primary/90 gap-1"
+                      disabled={isMutating}
+                      onClick={() => updateStatus.mutate(
+                        { id: selectedOrder.id, status: "completed" },
+                        { onSuccess: (updated) => setSelectedOrder(updated) }
+                      )}
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      {updateStatus.isPending ? "..." : t("admin.markCompleted")}
                     </Button>
                   </div>
                 )}
