@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   LayoutDashboard, List, Package, Calendar as CalendarIcon, Star, Settings, Users, CreditCard,
-  BarChart3, Inbox, Bell, Volume2, VolumeX, ChevronDown
+  BarChart3, Inbox, Bell, Volume2, VolumeX, ChevronDown, X
 } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,6 +13,8 @@ import { SEO } from "@/components/SEO";
 import { notificationService } from "@/services";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
+import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
+import { withSupplier } from "@/lib/withSupplier";
 import ProviderOverview from "@/components/provider/ProviderOverview";
 import ProviderIncomingOrders from "@/components/provider/ProviderIncomingOrders";
 import ProviderListings from "@/components/provider/ProviderListings";
@@ -49,12 +51,14 @@ export default function ProviderDashboardPage() {
   const { user } = useAuth();
   const sidebarLinks = useSidebarLinks();
   const queryClient = useQueryClient();
+  const supplierId = useImpersonatedSupplierId();
 
   const { data: supplierProfile } = useQuery<any>({
-    queryKey: ["supplier-profile"],
-    queryFn: () => apiClient.get("/supplier/profile"),
+    queryKey: ["supplier-profile", supplierId],
+    queryFn: () => apiClient.get(withSupplier("/supplier/profile", supplierId)),
     enabled: !!user,
     staleTime: 30_000,
+    retry: false,
   });
 
   const { data: notifications = [] } = useNotifications();
@@ -63,7 +67,7 @@ export default function ProviderDashboardPage() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const { data: allOrders = [] } = useOrders();
+  const { data: allOrders = [] } = useOrders(supplierId ?? undefined);
   const bellRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -118,6 +122,33 @@ export default function ProviderDashboardPage() {
       </aside>
 
       <main className="flex-1 overflow-x-hidden p-4 sm:p-6">
+        {supplierId && (
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-50 px-4 py-3 dark:bg-amber-950/30">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="font-semibold text-amber-900 dark:text-amber-200">
+                {t("admin.impersonation.viewingAs")}:
+              </span>
+              <span className="text-amber-900 dark:text-amber-100">
+                {supplierProfile?.name ?? "…"}
+              </span>
+              {supplierProfile?.tier && (
+                <span className="rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-medium uppercase text-amber-900 dark:bg-amber-800 dark:text-amber-100">
+                  {supplierProfile.tier}
+                </span>
+              )}
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1 border-amber-600/40 text-amber-900 hover:bg-amber-100 dark:text-amber-100 dark:hover:bg-amber-900/40"
+              onClick={() => navigate("/admin?tab=partners")}
+            >
+              <X className="h-3.5 w-3.5" />
+              {t("admin.impersonation.exit")}
+            </Button>
+          </div>
+        )}
+
         <div className="mb-4 flex items-center justify-between gap-3">
           <div className="flex-1 lg:hidden relative">
             <button onClick={() => setMobileNavOpen(!mobileNavOpen)} className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium">
