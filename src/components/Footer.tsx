@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
-import ruumlyLogo from "/ruumly-logo.webp";
+// Logo served from /public via static URLs to enable srcSet retina handling
 
 export default function Footer() {
   const { t } = useLanguage();
@@ -41,10 +41,11 @@ export default function Footer() {
           <div>
             <Link to="/" className="inline-block">
               <img
-                src={ruumlyLogo}
+                src="/ruumly-logo@1x.webp"
+                srcSet="/ruumly-logo@1x.webp 1x, /ruumly-logo.webp 2x"
                 alt="Ruumly"
-                width={170}
-                height={50}
+                width={179}
+                height={52}
                 loading="lazy"
                 decoding="async"
                 className="h-[36px] sm:h-[42px] lg:h-[50px] w-auto object-contain"
