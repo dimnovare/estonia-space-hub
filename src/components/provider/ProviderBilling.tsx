@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Edit2, Save, X, Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -15,7 +16,7 @@ export default function ProviderBilling() {
   const queryClient = useQueryClient();
   const [editingBank, setEditingBank] = useState(false);
 
-  const { data: supplierData } = useQuery({
+  const { data: supplierData, error: supplierError } = useQuery({
     queryKey: ["my-supplier-profile"],
     queryFn: () => apiClient.get<{
       tier?: string;
@@ -31,6 +32,7 @@ export default function ProviderBilling() {
       isFoundingPartner?: boolean;
     }>("/supplier/profile"),
     staleTime: 60_000,
+    retry: false,
   });
 
   const isRebate = supplierData?.billingModel === "rebate";
@@ -44,10 +46,17 @@ export default function ProviderBilling() {
     iban: "", bankAccountName: "", bankName: ""
   });
 
-  const { data: bankDetails, isLoading: bankLoading } = useQuery({
+  const { data: bankDetails, isLoading: bankLoading, error: bankError } = useQuery({
     queryKey: ["bank-details"],
     queryFn: bankService.getBankDetails,
+    retry: false,
   });
+
+  const needsSupplierContext =
+    (supplierError as any)?.code === "supplier_context_required" ||
+    (supplierError as any)?.body?.error === "supplier_context_required" ||
+    (bankError as any)?.code === "supplier_context_required" ||
+    (bankError as any)?.body?.error === "supplier_context_required";
 
   const { data: rebateInvoices = [] } = useQuery({
     queryKey: ["supplier-rebate-invoices"],
@@ -94,6 +103,24 @@ export default function ProviderBilling() {
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">{t("provider.billing.title")}</h1>
+
+      {needsSupplierContext ? (
+        <div className="mt-6 rounded-xl border border-border bg-secondary/30 p-8 text-center">
+          <h2 className="font-display text-lg font-semibold">
+            {t("provider.adminContextRequired.title")}
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {t("provider.adminContextRequired.body")}
+          </p>
+          <Link
+            to="/admin?tab=partners"
+            className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+          >
+            {t("provider.adminContextRequired.linkLabel")} →
+          </Link>
+        </div>
+      ) : (
+      <>
 
       {/* Founding partner badge */}
       {isFoundingPartner && (
@@ -388,6 +415,8 @@ export default function ProviderBilling() {
             {t("provider.billing.historyNote")}
           </p>
         </div>
+      )}
+      </>
       )}
     </div>
   );

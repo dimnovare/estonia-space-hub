@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Users, Loader2, UserPlus } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useSupplierTeam, useInviteTeamMember, useRemoveTeamMember } from "@/hooks/queries";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,9 +19,13 @@ import { format } from "date-fns";
 
 export default function ProviderTeam() {
   const { t } = useLanguage();
-  const { data: members, isLoading } = useSupplierTeam();
+  const { data: members, isLoading, error } = useSupplierTeam();
   const invite = useInviteTeamMember();
   const remove = useRemoveTeamMember();
+
+  const needsSupplierContext =
+    (error as any)?.code === "supplier_context_required" ||
+    (error as any)?.body?.error === "supplier_context_required";
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -52,6 +57,28 @@ export default function ProviderTeam() {
         <h1 className="font-display text-2xl font-bold">{t("provider.team.title")}</h1>
         <div className="mt-6 space-y-3">
           {[1, 2, 3].map((i) => <Skeleton key={i} className="h-14 w-full" />)}
+        </div>
+      </div>
+    );
+  }
+
+  if (needsSupplierContext) {
+    return (
+      <div className="space-y-6">
+        <h1 className="font-display text-2xl font-bold">{t("provider.team.title")}</h1>
+        <div className="rounded-xl border border-border bg-secondary/30 p-8 text-center">
+          <h2 className="font-display text-lg font-semibold">
+            {t("provider.adminContextRequired.title")}
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {t("provider.adminContextRequired.body")}
+          </p>
+          <Link
+            to="/admin?tab=partners"
+            className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+          >
+            {t("provider.adminContextRequired.linkLabel")} →
+          </Link>
         </div>
       </div>
     );

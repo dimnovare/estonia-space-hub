@@ -93,8 +93,12 @@ class ApiClient {
     }
     if (!response.ok) {
       let message = `API error: ${response.status}`;
+      let errorCode: string | undefined;
+      let errorBodyRaw: any = undefined;
       try {
         const errorBody = await response.json();
+        errorBodyRaw = errorBody;
+        if (typeof errorBody?.error === "string") errorCode = errorBody.error;
         if (errorBody.message) {
           message = errorBody.message;
         } else if (errorBody.error) {
@@ -108,6 +112,8 @@ class ApiClient {
       } catch {}
       const err = new Error(message);
       (err as any).status = response.status;
+      if (errorCode) (err as any).code = errorCode;
+      if (errorBodyRaw !== undefined) (err as any).body = errorBodyRaw;
       throw err;
     }
     // 204 No Content or empty body — return undefined safely
