@@ -3,23 +3,30 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useAllListings, useBookingStats } from "@/hooks/queries";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ESTONIAN_CITIES } from "@/lib/constants";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 export default function TrustBar() {
   const { t } = useLanguage();
+  const settings = usePlatformSettings() as any;
+  const showStats = String(settings.aboutPage?.showStats ?? "false") === "true";
   const { data: allResult, isLoading: listingsLoading } = useAllListings();
-  const { data: bookingStats, isLoading: statsLoading } = useBookingStats();
+  const { data: bookingStats, isLoading: statsLoading } = useBookingStats(showStats);
 
   const listingCount = allResult?.total ?? allResult?.data?.length ?? 0;
   const allListings = allResult?.data || [];
   const cityCount = new Set(allListings.map((l: any) => l.city).filter(Boolean)).size || ESTONIAN_CITIES.length;
 
-  const isLoading = listingsLoading || statsLoading;
+  const isLoading = listingsLoading || (showStats && statsLoading);
 
   const stats = [
     { icon: Building2, value: listingCount, label: t("trustBar.listings") },
     { icon: MapPin, value: cityCount, label: t("trustBar.cities") },
-    ...((bookingStats?.totalBookings ?? 0) > 0 ? [{ icon: CalendarCheck, value: bookingStats!.totalBookings, label: t("trustBar.bookings") }] : []),
-    ...((bookingStats?.averageRating ?? 0) > 0 ? [{ icon: Star, value: bookingStats!.averageRating!.toFixed(1), label: t("trustBar.rating") }] : []),
+    ...(showStats && (bookingStats?.totalBookings ?? 0) > 0
+      ? [{ icon: CalendarCheck, value: bookingStats!.totalBookings, label: t("trustBar.bookings") }]
+      : []),
+    ...(showStats && (bookingStats?.averageRating ?? 0) > 0
+      ? [{ icon: Star, value: bookingStats!.averageRating!.toFixed(1), label: t("trustBar.rating") }]
+      : []),
   ];
 
   const badges = [
