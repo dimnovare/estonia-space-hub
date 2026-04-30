@@ -1,6 +1,6 @@
 import { useState, useMemo, lazy, Suspense, useCallback, useRef, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers, Warehouse, Star } from "lucide-react";
+import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers, Warehouse, Truck, CarFront, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from "@/components/ui/drawer";
@@ -366,13 +366,30 @@ export default function SearchPage() {
                       onMouseLeave={() => setSelectedListingId(null)}
                     >
                       <div className="relative aspect-[16/10] overflow-hidden">
-                        {loc.images?.[0] && (
+                        {loc.images?.[0] ? (
                           <img
                             src={loc.images[0]}
                             alt={loc.name}
                             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                             loading="lazy"
                           />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-secondary">
+                            {(() => {
+                              const counts: Record<string, number> = {};
+                              ((loc as any).units ?? []).forEach((u: any) => {
+                                const tt = (u?.type || "warehouse").toLowerCase();
+                                counts[tt] = (counts[tt] ?? 0) + 1;
+                              });
+                              let dominant = "warehouse";
+                              let max = 0;
+                              Object.entries(counts).forEach(([tt, c]) => {
+                                if (c > max) { dominant = tt; max = c; }
+                              });
+                              const LocIcon = dominant === "moving" ? Truck : dominant === "trailer" ? CarFront : Warehouse;
+                              return <LocIcon className="h-10 w-10 text-muted-foreground/30" />;
+                            })()}
+                          </div>
                         )}
                         <span className={`absolute right-2 top-2 inline-flex items-center gap-1 rounded-full backdrop-blur-sm px-2.5 py-1 text-[11px] font-semibold ${loc.fullyBooked ? "bg-destructive/90 text-white" : "bg-card/90 text-foreground"}`}>
                           <Layers className="h-3 w-3" />

@@ -53,7 +53,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-secondary">
-            <Warehouse className="h-10 w-10 text-muted-foreground/30" />
+            <Icon className="h-10 w-10 text-muted-foreground/30" />
           </div>
         )}
         {listing.badge && (

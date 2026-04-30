@@ -95,9 +95,23 @@ function createMarkerIcon(listing: Listing, isSelected: boolean) {
 }
 
 function createLocationMarkerIcon(location: SupplierLocation, isSelected: boolean, unitLabel = "units") {
-  const color = location.fullyBooked ? "#888888" : "#1E3A5F";
   const size = isSelected ? 44 : 36;
-  const iconPath = typeIconPaths.warehouse;
+
+  // Derive icon from the dominant listing type within this location.
+  const typeCounts: Record<string, number> = {};
+  (location.units ?? []).forEach((u: any) => {
+    const t = (u?.type || "warehouse").toLowerCase();
+    typeCounts[t] = (typeCounts[t] ?? 0) + 1;
+  });
+  let dominantType = "warehouse";
+  let maxCount = 0;
+  Object.entries(typeCounts).forEach(([t, count]) => {
+    if (count > maxCount) { dominantType = t; maxCount = count; }
+  });
+  const iconPath = typeIconPaths[dominantType] ?? typeIconPaths.warehouse;
+  const markerColor = location.fullyBooked
+    ? "#888888"
+    : (typeColors[dominantType] ?? "#1E3A5F");
 
   return L.divIcon({
     className: "custom-marker",
@@ -114,7 +128,7 @@ function createLocationMarkerIcon(location: SupplierLocation, isSelected: boolea
           height: ${size}px;
           border-radius: 50% 50% 50% 0;
           transform: rotate(-45deg);
-          background: ${color};
+          background: ${markerColor};
           border: 3px solid ${isSelected ? '#2EC4B6' : 'white'};
           box-shadow: 0 4px 12px rgba(0,0,0,0.25);
           display: flex;
@@ -133,10 +147,10 @@ function createLocationMarkerIcon(location: SupplierLocation, isSelected: boolea
           border-radius: 12px;
           font-size: 11px;
           font-weight: 700;
-          color: ${color};
+          color: ${markerColor};
           box-shadow: 0 2px 8px rgba(0,0,0,0.15);
           white-space: nowrap;
-          border: 1px solid ${color}20;
+          border: 1px solid ${markerColor}20;
         ">${location.unitCount} ${unitLabel}${location.priceFrom ? ` · €${location.priceFrom}` : ''}</div>
       </div>
     `,
