@@ -1,6 +1,6 @@
 import { useState, useMemo, lazy, Suspense, useCallback, useRef, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers, Warehouse, Truck, CarFront, Star } from "lucide-react";
+import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers, Warehouse, Truck, CarFront, Star, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from "@/components/ui/drawer";
@@ -381,12 +381,12 @@ export default function SearchPage() {
                                 const tt = (u?.type || "warehouse").toLowerCase();
                                 counts[tt] = (counts[tt] ?? 0) + 1;
                               });
-                              let dominant = "warehouse";
-                              let max = 0;
-                              Object.entries(counts).forEach(([tt, c]) => {
-                                if (c > max) { dominant = tt; max = c; }
-                              });
-                              const LocIcon = dominant === "moving" ? Truck : dominant === "trailer" ? CarFront : Warehouse;
+                              const distinct = Object.keys(counts);
+                              if (distinct.length > 1) {
+                                return <Building2 className="h-10 w-10 text-slate-500/60" />;
+                              }
+                              const single = distinct[0] ?? "warehouse";
+                              const LocIcon = single === "moving" ? Truck : single === "trailer" ? CarFront : Warehouse;
                               return <LocIcon className="h-10 w-10 text-muted-foreground/30" />;
                             })()}
                           </div>

@@ -28,6 +28,7 @@ const typeColors: Record<string, string> = {
   warehouse: "#1E3A5F",
   moving: "#3B82F6",
   trailer: "#2EC4B6",
+  multi: "#64748B", // slate-500, neutral for mixed-type Locations
 };
 
 const typeLabels: Record<string, string> = {
@@ -41,6 +42,8 @@ const typeIconPaths: Record<string, string> = {
   warehouse: `<rect x="4" y="10" width="16" height="12" rx="1" fill="none" stroke="white" stroke-width="2"/><path d="M2 10l10-6 10 6" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`,
   moving: `<rect x="1" y="6" width="12" height="12" rx="1" fill="none" stroke="white" stroke-width="2"/><path d="M13 10h4l3 4v4h-4" fill="none" stroke="white" stroke-width="2" stroke-linejoin="round"/><circle cx="6" cy="18" r="2" fill="none" stroke="white" stroke-width="2"/><circle cx="17" cy="18" r="2" fill="none" stroke="white" stroke-width="2"/>`,
   trailer: `<rect x="1" y="7" width="14" height="10" rx="1" fill="none" stroke="white" stroke-width="2"/><path d="M15 14h5l2 3h1" fill="none" stroke="white" stroke-width="2" stroke-linejoin="round"/><circle cx="6" cy="17" r="2" fill="none" stroke="white" stroke-width="2"/><circle cx="18" cy="17" r="2" fill="none" stroke="white" stroke-width="2"/>`,
+  // lucide Building2 paths
+  multi: `<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" fill="none" stroke="white" stroke-width="2" stroke-linejoin="round"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" fill="none" stroke="white" stroke-width="2" stroke-linejoin="round"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" fill="none" stroke="white" stroke-width="2" stroke-linejoin="round"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4" stroke="white" stroke-width="2" stroke-linecap="round"/>`,
 };
 
 function createMarkerIcon(listing: Listing, isSelected: boolean) {
@@ -97,21 +100,24 @@ function createMarkerIcon(listing: Listing, isSelected: boolean) {
 function createLocationMarkerIcon(location: SupplierLocation, isSelected: boolean, unitLabel = "units") {
   const size = isSelected ? 44 : 36;
 
-  // Derive icon from the dominant listing type within this location.
+  // Derive icon: if Location has multiple distinct types, use neutral "multi" icon.
+  // Otherwise use the single type's icon.
   const typeCounts: Record<string, number> = {};
   (location.units ?? []).forEach((u: any) => {
     const t = (u?.type || "warehouse").toLowerCase();
     typeCounts[t] = (typeCounts[t] ?? 0) + 1;
   });
-  let dominantType = "warehouse";
-  let maxCount = 0;
-  Object.entries(typeCounts).forEach(([t, count]) => {
-    if (count > maxCount) { dominantType = t; maxCount = count; }
-  });
-  const iconPath = typeIconPaths[dominantType] ?? typeIconPaths.warehouse;
+  const distinctTypes = Object.keys(typeCounts);
+  let resolvedType = "warehouse";
+  if (distinctTypes.length > 1) {
+    resolvedType = "multi";
+  } else if (distinctTypes.length === 1) {
+    resolvedType = distinctTypes[0];
+  }
+  const iconPath = typeIconPaths[resolvedType] ?? typeIconPaths.warehouse;
   const markerColor = location.fullyBooked
     ? "#888888"
-    : (typeColors[dominantType] ?? "#1E3A5F");
+    : (typeColors[resolvedType] ?? "#1E3A5F");
 
   return L.divIcon({
     className: "custom-marker",

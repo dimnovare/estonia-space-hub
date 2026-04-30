@@ -19,6 +19,26 @@ import BookingInlineAuth from "@/components/BookingInlineAuth";
 import ReservationCountdown from "@/components/ReservationCountdown";
 import { trackEvent } from "@/lib/analytics";
 import { z } from "zod";
+import { Controller } from "react-hook-form";
+import { Calendar as CalendarComp } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format, parseISO } from "date-fns";
+import { et, enUS, ru, lv, lt } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+
+const dateFnsLocaleMap = { et, en: enUS, ru, lv, lt } as const;
+
+function isoToDate(iso: string): Date | undefined {
+  if (!iso) return undefined;
+  try { return parseISO(iso); } catch { return undefined; }
+}
+
+function dateToIso(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 
 type SubmitPhase = "submitting" | "sending" | "waiting" | "done";
 
@@ -423,12 +443,77 @@ export default function BookingPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="mb-1 block text-sm font-medium">{t("booking.startDate")}</label>
-                    <input type="date" min={todayIsoDate()} {...detailsForm.register("startDate")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent" />
+                    <Controller
+                      control={detailsForm.control}
+                      name="startDate"
+                      render={({ field }) => {
+                        const locale = dateFnsLocaleMap[language as keyof typeof dateFnsLocaleMap] ?? et;
+                        const selected = isoToDate(field.value);
+                        return (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button
+                                type="button"
+                                className={cn(
+                                  "w-full rounded-lg border border-border bg-card px-3 py-2 text-left text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {selected ? format(selected, "PPP", { locale }) : t("booking.startDate")}
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <CalendarComp
+                                mode="single"
+                                selected={selected}
+                                onSelect={(d) => d && field.onChange(dateToIso(d))}
+                                disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+                                initialFocus
+                                className={cn("p-3 pointer-events-auto")}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        );
+                      }}
+                    />
                     {detailsForm.formState.errors.startDate && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.startDate.message}</p>}
                   </div>
                   <div>
                     <label className="mb-1 block text-sm font-medium">{t("booking.endDate")}</label>
-                    <input type="date" min={watchedStartDate || todayIsoDate()} {...detailsForm.register("endDate")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent" />
+                    <Controller
+                      control={detailsForm.control}
+                      name="endDate"
+                      render={({ field }) => {
+                        const locale = dateFnsLocaleMap[language as keyof typeof dateFnsLocaleMap] ?? et;
+                        const selected = isoToDate(field.value);
+                        const minDate = isoToDate(watchedStartDate) ?? new Date(new Date().setHours(0, 0, 0, 0));
+                        return (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button
+                                type="button"
+                                className={cn(
+                                  "w-full rounded-lg border border-border bg-card px-3 py-2 text-left text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {selected ? format(selected, "PPP", { locale }) : t("booking.endDate")}
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <CalendarComp
+                                mode="single"
+                                selected={selected}
+                                onSelect={(d) => d && field.onChange(dateToIso(d))}
+                                disabled={(d) => d < minDate}
+                                initialFocus
+                                className={cn("p-3 pointer-events-auto")}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        );
+                      }}
+                    />
                     {detailsForm.formState.errors.endDate && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.endDate.message}</p>}
                   </div>
                 </div>
