@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
@@ -19,7 +19,8 @@ import ProviderListings from "@/components/provider/ProviderListings";
 import ProviderBookings from "@/components/provider/ProviderBookings";
 import ProviderCalendar from "@/components/provider/ProviderCalendar";
 import ProviderReviews from "@/components/provider/ProviderReviews";
-import ProviderAnalytics from "@/components/provider/ProviderAnalytics";
+// Lazy-load analytics so recharts (~100KB) is only fetched when the tab is opened
+const ProviderAnalytics = lazy(() => import("@/components/provider/ProviderAnalytics"));
 import ProviderProfile from "@/components/provider/ProviderProfile";
 import ProviderTeam from "@/components/provider/ProviderTeam";
 import ProviderBilling from "@/components/provider/ProviderBilling";
@@ -202,7 +203,11 @@ export default function ProviderDashboardPage() {
         {tab === "bookings" && <ProviderBookings />}
         {tab === "calendar" && <ProviderCalendar />}
         {tab === "reviews" && <ProviderReviews />}
-        {tab === "analytics" && <ProviderAnalytics />}
+        {tab === "analytics" && (
+          <Suspense fallback={<div className="py-16 text-center text-sm text-muted-foreground">Loading…</div>}>
+            <ProviderAnalytics />
+          </Suspense>
+        )}
         {tab === "profile" && <ProviderProfile />}
         {tab === "team" && <ProviderTeam />}
         {tab === "billing" && <ProviderBilling />}
