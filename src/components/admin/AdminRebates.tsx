@@ -62,9 +62,14 @@ export default function AdminRebates({ supplierId }: { supplierId?: string }) {
 
   const generateMut = useMutation({
     mutationFn: () => apiClient.post("/admin/rebate-invoices/generate", { period }),
-    onSuccess: () => {
+    onSuccess: (result: any) => {
       qc.invalidateQueries({ queryKey: ["rebate-invoices"] });
-      toast.success(t("admin.rebates.generated"));
+      const count = typeof result?.generated === "number" ? result.generated : 0;
+      if (count > 0) {
+        toast.success(t("admin.rebates.generatedCount").replace("{n}", String(count)));
+      } else {
+        toast.info(t("admin.rebates.noneEligible"));
+      }
     },
     onError: (err: any) => toast.error(err?.message || t("admin.rebates.generateFailed")),
   });
