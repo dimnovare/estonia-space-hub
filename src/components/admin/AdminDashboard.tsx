@@ -28,7 +28,7 @@ export default function AdminDashboard() {
         status: string;
         notes: string;
       }>;
-    }>("/admin/stats"),
+    }>("/admin/dashboard/stats"),
     staleTime: 60_000,
   });
 
