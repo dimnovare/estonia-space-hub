@@ -185,11 +185,21 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
                 {viewOrder.status === "confirmed" && (
                   <Button
                     size="sm"
-                    disabled={confirmOrder.isPending}
-                    onClick={() => confirmOrder.mutate(viewOrder.id)}
+                    disabled={updateStatus.isPending}
+                    onClick={() => updateStatus.mutate({ id: viewOrder.id, status: "completed" })}
                     className="bg-primary text-primary-foreground"
                   >
-                    {confirmOrder.isPending ? "..." : t("admin.markConfirmed")}
+                    {updateStatus.isPending ? "..." : t("admin.markCompleted")}
+                  </Button>
+                )}
+                {viewOrder.status === "active" && (
+                  <Button
+                    size="sm"
+                    disabled={updateStatus.isPending}
+                    onClick={() => updateStatus.mutate({ id: viewOrder.id, status: "completed" })}
+                    className="bg-primary text-primary-foreground"
+                  >
+                    {updateStatus.isPending ? "..." : t("admin.markCompleted")}
                   </Button>
                 )}
               </div>
