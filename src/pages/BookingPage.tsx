@@ -19,6 +19,26 @@ import BookingInlineAuth from "@/components/BookingInlineAuth";
 import ReservationCountdown from "@/components/ReservationCountdown";
 import { trackEvent } from "@/lib/analytics";
 import { z } from "zod";
+import { Controller } from "react-hook-form";
+import { Calendar as CalendarComp } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format, parseISO } from "date-fns";
+import { et, enUS, ru, lv, lt } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+
+const dateFnsLocaleMap = { et, en: enUS, ru, lv, lt } as const;
+
+function isoToDate(iso: string): Date | undefined {
+  if (!iso) return undefined;
+  try { return parseISO(iso); } catch { return undefined; }
+}
+
+function dateToIso(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 
 type SubmitPhase = "submitting" | "sending" | "waiting" | "done";
 
