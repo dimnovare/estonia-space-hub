@@ -61,6 +61,7 @@ export default function AdminDashboard() {
         ? `€${stats.totalRevenue.toLocaleString()}`
         : `€${suppliers.reduce((s, sup) => s + (sup.revenue ?? 0), 0).toLocaleString()}`,
       icon: DollarSign,
+      note: t("admin.stats.revenueAwaitingPayments"),
     },
   ];
 
@@ -82,6 +83,9 @@ export default function AdminDashboard() {
                 <Icon className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="mt-2 font-display text-2xl font-bold">{s.value}</div>
+              {(s as any).note && (
+                <div className="mt-1 text-[11px] text-muted-foreground">{(s as any).note}</div>
+              )}
             </div>
           );
         })}
