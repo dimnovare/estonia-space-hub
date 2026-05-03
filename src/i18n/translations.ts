@@ -470,6 +470,8 @@ const et: Record<string, string> = {
     "search.closedTrailer": "Kinnine haagis",
     "search.allCities": "Kõik linnad",
     "search.resultsFound": "{count} pakkumist leitud",
+    "search.filterByPartner": "Filtreeritud partneri järgi",
+    "search.clearPartnerFilter": "Tühista filter",
 
     // Login
     "login.title": "Logi sisse",
