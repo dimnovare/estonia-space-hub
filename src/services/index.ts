@@ -178,6 +178,8 @@ export const listingService = {
     if (filters?.minSize != null) params.set("minSize", String(filters.minSize));
     if (filters?.maxSize != null) params.set("maxSize", String(filters.maxSize));
     if (filters?.sizeCategory) params.set("sizeCategory", filters.sizeCategory);
+    if (filters?.supplierId) params.set("supplierId", filters.supplierId);
+    if (filters?.locationId) params.set("locationId", filters.locationId);
     const raw = await apiClient.get<{ data: ApiListing[]; total: number; page: number; limit: number; hasMore: boolean }>(
       `/listings?${params.toString()}`
     );

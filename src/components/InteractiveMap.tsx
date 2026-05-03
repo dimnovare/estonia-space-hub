@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Listing, SupplierLocation } from "@/services/types";
+import { getLangFromPath, DEFAULT_LANG } from "@/i18n/routing";
 
 interface InteractiveMapProps {
   listings?: Listing[];
@@ -246,6 +247,9 @@ export default function InteractiveMap({
     markerMap.current.clear();
 
     const bounds: L.LatLngExpression[] = [];
+    const langPrefix = (typeof window !== "undefined"
+      ? (getLangFromPath(window.location.pathname) ?? DEFAULT_LANG)
+      : DEFAULT_LANG);
 
     // Track which listing IDs are covered by locations
     const coveredListingIds = new Set<string>();
@@ -268,8 +272,8 @@ export default function InteractiveMap({
           </div>
           ${loc.priceFrom ? `<div style="font-weight: 700; font-size: 16px; color: #1E3A5F; margin-bottom: 4px;">${tFrom} €${loc.priceFrom}${tPerMonth}</div>` : ''}
           <div style="display: flex; gap: 6px; margin-top: 6px;">
-            <a href="/location/${loc.id}" style="flex: 1; text-align: center; font-size: 12px; color: #2EC4B6; text-decoration: none; font-weight: 600; padding: 6px 0; border: 1px solid #2EC4B6; border-radius: 6px;">${tAllUnits} (${loc.unitCount})</a>
-            <a href="/search?q=${encodeURIComponent(loc.city || '')}" style="flex: 1; text-align: center; font-size: 12px; color: white; background: #2EC4B6; text-decoration: none; font-weight: 600; padding: 6px 0; border-radius: 6px;">${tSearch} →</a>
+            <a href="/${langPrefix}/search?${loc.supplierId ? `supplierId=${loc.supplierId}&` : ''}locationId=${loc.id}" style="flex: 1; text-align: center; font-size: 12px; color: #2EC4B6; text-decoration: none; font-weight: 600; padding: 6px 0; border: 1px solid #2EC4B6; border-radius: 6px;">${tAllUnits} (${loc.unitCount})</a>
+            <a href="/${langPrefix}/search?q=${encodeURIComponent(loc.city || '')}" style="flex: 1; text-align: center; font-size: 12px; color: white; background: #2EC4B6; text-decoration: none; font-weight: 600; padding: 6px 0; border-radius: 6px;">${tSearch} →</a>
           </div>
         </div>
       `;
@@ -310,7 +314,7 @@ export default function InteractiveMap({
             <span style="font-size: 11px; color: ${typeColor}; background: ${typeColor}10; padding: 2px 8px; border-radius: 10px; font-weight: 600;">${typeName}</span>
           </div>
           ${listing.rating > 0 ? `<div style="font-size: 11px; color: #888; margin-top: 4px;">⭐ ${listing.rating} (${listing.reviewCount})</div>` : ''}
-          <a href="/${listing.type}/${listing.id}" style="display: block; text-align: center; margin-top: 8px; font-size: 12px; color: white; background: #2EC4B6; text-decoration: none; font-weight: 600; padding: 6px 0; border-radius: 6px;">${tViewDetails}</a>
+          <a href="/${langPrefix}/${listing.type}/${listing.id}" style="display: block; text-align: center; margin-top: 8px; font-size: 12px; color: white; background: #2EC4B6; text-decoration: none; font-weight: 600; padding: 6px 0; border-radius: 6px;">${tViewDetails}</a>
         </div>
       `;
 

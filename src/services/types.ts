@@ -352,6 +352,8 @@ export interface ListingFilters {
   minSize?: number;
   maxSize?: number;
   sizeCategory?: "XS" | "S" | "M" | "L" | "XL";
+  supplierId?: string;
+  locationId?: string;
 }
 
 export interface PaginatedResponse<T> {
