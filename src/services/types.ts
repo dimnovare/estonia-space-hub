@@ -241,6 +241,7 @@ export interface ListingBase {
   id: string;
   type: ListingType;
   supplierId: string;
+  supplierSlug?: string | null;
   title: string;
   provider: string;
   address: string;
