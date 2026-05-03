@@ -52,7 +52,15 @@ function buildStructuredData(partner: PartnerProfile, lang: Language) {
   };
 }
 
-function LocationCard({ partner, loc }: { partner: PartnerProfile; loc: PartnerLocation }) {
+function LocationCard({
+  partner,
+  loc,
+  priceFrom,
+}: {
+  partner: PartnerProfile;
+  loc: PartnerLocation;
+  priceFrom?: number;
+}) {
   const { t } = useLanguage();
   const cover = loc.images?.[0];
   return (
@@ -77,8 +85,10 @@ function LocationCard({ partner, loc }: { partner: PartnerProfile; loc: PartnerL
           </p>
         )}
         <div className="mt-3 flex items-center justify-between">
-          <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
-            {loc.listingCount} {t("partner.locationCard.unitsLabel")}
+          <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-foreground">
+            {priceFrom !== undefined
+              ? `${t("partner.locationCard.priceFrom")} €${priceFrom}/${t("partner.locationCard.perMonthShort")}`
+              : t("partner.locationCard.viewPrices")}
           </span>
           <Link
             to={`/search?supplierId=${partner.id}&locationId=${loc.id}`}
@@ -101,10 +111,47 @@ export default function PartnerPage() {
   // We rely on existing useListings; the search endpoint accepts no supplierId in ListingFilters,
   // so we filter client-side from the loaded set. Keep limit small.
   const { data: listingsRes } = useListings(partner?.id ? { limit: 50 } : undefined);
+  const priceFromByLocation = useMemo<Record<string, number>>(() => {
+    if (!partner || !listingsRes?.data) return {};
+    const out: Record<string, number> = {};
+    for (const l of listingsRes.data) {
+      if ((l as any).supplierId !== partner.id) continue;
+      const locId = (l as any).locationId as string | undefined;
+      if (!locId) continue;
+      const price = Number((l as any).priceFrom ?? 0);
+      if (!Number.isFinite(price) || price <= 0) continue;
+      if (out[locId] === undefined || price < out[locId]) {
+        out[locId] = price;
+      }
+    }
+    return out;
+  }, [partner, listingsRes]);
   const partnerListings = useMemo(() => {
     if (!partner || !listingsRes?.data) return [];
     return listingsRes.data.filter((l: any) => l.supplierId === partner.id).slice(0, 6);
   }, [partner, listingsRes]);
+
+  const mapCenter = useMemo<[number, number] | undefined>(() => {
+    const locs = partner?.locations ?? [];
+    if (locs.length === 0) return undefined;
+    const lat = locs.reduce((s, l) => s + l.lat, 0) / locs.length;
+    const lng = locs.reduce((s, l) => s + l.lng, 0) / locs.length;
+    return [lat, lng];
+  }, [partner]);
+  const mapZoom = useMemo<number | undefined>(() => {
+    const locs = partner?.locations ?? [];
+    if (locs.length <= 1) return 13;
+    const lats = locs.map((l) => l.lat);
+    const lngs = locs.map((l) => l.lng);
+    const span = Math.max(
+      Math.max(...lats) - Math.min(...lats),
+      Math.max(...lngs) - Math.min(...lngs),
+    );
+    if (span < 0.05) return 13;
+    if (span < 0.15) return 12;
+    if (span < 0.4) return 11;
+    return 10;
+  }, [partner]);
 
   if (isLoading) {
     return (
@@ -252,7 +299,12 @@ export default function PartnerPage() {
           <div className="mt-6 grid gap-6 lg:grid-cols-2">
             <div className="space-y-4">
               {partner.locations.map((loc) => (
-                <LocationCard key={loc.id} partner={partner} loc={loc} />
+                <LocationCard
+                  key={loc.id}
+                  partner={partner}
+                  loc={loc}
+                  priceFrom={priceFromByLocation[loc.id]}
+                />
               ))}
             </div>
             <div className="lg:sticky lg:top-20 lg:self-start">
@@ -275,6 +327,8 @@ export default function PartnerPage() {
                   }) as any)}
                   height="h-[400px] md:h-[500px]"
                   language={language}
+                  center={mapCenter}
+                  zoom={mapZoom}
                 />
               </Suspense>
             </div>
