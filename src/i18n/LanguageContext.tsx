@@ -41,7 +41,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     // Swap the lang segment, preserving the rest of the URL.
     const rest = stripLang(location.pathname);
     const target = `/${lang}${rest === "/" ? "" : rest}${location.search}${location.hash}`;
+    const scrollY = window.scrollY;
     navigate(target, { replace: true });
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollY, left: 0, behavior: "auto" });
+      });
+    });
   }, [location.pathname, location.search, location.hash, navigate]);
 
   const t = useCallback((key: string): string => {

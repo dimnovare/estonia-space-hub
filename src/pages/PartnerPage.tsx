@@ -55,14 +55,19 @@ function buildStructuredData(partner: PartnerProfile, lang: Language) {
 function LocationCard({
   partner,
   loc,
-  available,
 }: {
   partner: PartnerProfile;
   loc: PartnerLocation;
-  available?: number;
 }) {
   const { t } = useLanguage();
   const cover = loc.images?.[0];
+  const availabilityLabel =
+    loc.availableUnitCount !== null && loc.totalUnitCount !== null
+      ? `${loc.availableUnitCount} / ${loc.totalUnitCount} ${t("partner.locationCard.unitsLabel")}`
+      : loc.availableUnitCount !== null
+        ? `${loc.availableUnitCount} ${t("partner.locationCard.unitsLabel")}`
+        : `${loc.listingCount} ${t("partner.locationCard.unitsLabel")}`;
+  const isFull = loc.availableUnitCount === 0 || loc.totalUnitCount === 0;
   return (
     <div id={`location-${loc.id}`} className="card-elevated overflow-hidden scroll-mt-24">
       {cover ? (
@@ -85,8 +90,14 @@ function LocationCard({
           </p>
         )}
         <div className="mt-3 flex items-center justify-between">
-          <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
-            {available ?? 0} {t("partner.locationCard.unitsLabel")}
+          <span
+            className={
+              isFull
+                ? "rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
+                : "rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success-foreground"
+            }
+          >
+            {availabilityLabel}
           </span>
           <Link
             to={`/search?supplierId=${partner.id}&locationId=${loc.id}`}
@@ -105,42 +116,13 @@ export default function PartnerPage() {
   const { t, language } = useLanguage();
   const { data: partner, isLoading } = usePartner(slug);
 
-  // Listings preview — fetched only when partner is loaded so we have its id (rough filter on supplierName via query).
-  // We rely on existing useListings; the search endpoint accepts no supplierId in ListingFilters,
-  // so we filter client-side from the loaded set. Keep limit small.
-  const { data: listingsRes } = useListings(partner?.id ? { limit: 50 } : undefined);
-  const priceFromByLocation = useMemo<Record<string, number>>(() => {
-    if (!partner || !listingsRes?.data) return {};
-    const out: Record<string, number> = {};
-    for (const l of listingsRes.data) {
-      if ((l as any).supplierId !== partner.id) continue;
-      const locId = (l as any).locationId as string | undefined;
-      if (!locId) continue;
-      const price = Number((l as any).priceFrom ?? 0);
-      if (!Number.isFinite(price) || price <= 0) continue;
-      if (out[locId] === undefined || price < out[locId]) {
-        out[locId] = price;
-      }
-    }
-    return out;
-  }, [partner, listingsRes]);
-  const availableCountByLocation = useMemo<Record<string, number>>(() => {
-    if (!partner || !listingsRes?.data) return {};
-    const out: Record<string, number> = {};
-    for (const l of listingsRes.data as any[]) {
-      if (l.supplierId !== partner.id) continue;
-      const locId = l.locationId as string | undefined;
-      if (!locId) continue;
-      if (l.availableNow === true) {
-        out[locId] = (out[locId] ?? 0) + 1;
-      }
-    }
-    return out;
-  }, [partner, listingsRes]);
-  const partnerListings = useMemo(() => {
-    if (!partner || !listingsRes?.data) return [];
-    return listingsRes.data.filter((l: any) => l.supplierId === partner.id).slice(0, 6);
-  }, [partner, listingsRes]);
+  const { data: listingsRes } = useListings(
+    partner?.id ? { supplierId: partner.id, limit: 50 } : undefined
+  );
+  const partnerListings = useMemo(
+    () => (listingsRes?.data ?? []).slice(0, 6),
+    [listingsRes]
+  );
 
   const mapCenter = useMemo<[number, number] | undefined>(() => {
     const locs = partner?.locations ?? [];
@@ -314,7 +296,6 @@ export default function PartnerPage() {
                   key={loc.id}
                   partner={partner}
                   loc={loc}
-                  available={availableCountByLocation[loc.id] ?? 0}
                 />
               ))}
             </div>
@@ -335,6 +316,9 @@ export default function PartnerPage() {
                     description: l.description ?? "",
                     openingHours: l.openingHours ?? "",
                     unitCount: l.listingCount,
+                    availableUnitCount: l.availableUnitCount,
+                    totalUnitCount: l.totalUnitCount,
+                    fullyBooked: l.availableUnitCount === 0,
                   }) as any)}
                   height="h-[400px] md:h-[500px]"
                   language={language}

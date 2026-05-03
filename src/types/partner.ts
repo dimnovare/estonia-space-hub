@@ -10,6 +10,8 @@ export interface PartnerLocation {
   description: string | null;
   images: string[];
   listingCount: number;
+  totalUnitCount: number | null;
+  availableUnitCount: number | null;
 }
 
 export interface PartnerProfile {

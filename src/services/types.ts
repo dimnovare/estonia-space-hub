@@ -303,6 +303,8 @@ export interface SupplierLocation {
   priceFrom?: number;
   createdAt?: string;
   units?: Listing[];
+  availableUnitCount?: number | null;
+  totalUnitCount?: number | null;
 }
 
 export interface WarehouseListing extends ListingBase {

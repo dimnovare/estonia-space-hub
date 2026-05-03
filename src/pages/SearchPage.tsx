@@ -193,7 +193,6 @@ export default function SearchPage() {
     setSearchParams(prev => {
       const next = new URLSearchParams();
       if (prev.get("type")) next.set("type", prev.get("type")!);
-      if (prev.get("q")) next.set("q", prev.get("q")!);
       return next;
     }, { replace: true });
   }
@@ -339,6 +338,19 @@ export default function SearchPage() {
         </div>
 
         <div className="p-4">
+          {supplierIdFilter && (
+            <div className="mb-4 flex items-center justify-between rounded-lg border bg-accent/5 px-4 py-2">
+              <div className="text-sm">
+                {t("search.filterByPartner")}
+                <button
+                  className="ml-2 text-xs text-muted-foreground underline"
+                  onClick={() => updateFilters({ supplierId: "", locationId: "" })}
+                >
+                  {t("search.clearPartnerFilter")}
+                </button>
+              </div>
+            </div>
+          )}
           {isLoading ? (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
               {Array.from({ length: 6 }).map((_, i) => (
