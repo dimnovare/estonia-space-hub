@@ -12,6 +12,7 @@ import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
 import TrustBar from "@/components/TrustBar";
 import { apiClient } from "@/services/apiClient";
+import FeaturedPartnersStrip from "@/components/FeaturedPartnersStrip";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
@@ -312,6 +313,7 @@ export default function HomePage() {
       )}
 
       {/* Featured listings */}
+      {(settings as any).showFeaturedPartners === "true" && <FeaturedPartnersStrip />}
       {settings.showFeaturedListings && (featuredLoading || featured.length > 0) && (
       <section className="surface-sunken py-16 md:py-20">
         <div className="container-wide">
