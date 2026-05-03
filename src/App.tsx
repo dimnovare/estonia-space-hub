@@ -31,7 +31,7 @@ import NotFound from "@/pages/NotFound";
 import ProviderPage from "@/pages/ProviderPage";
 import RequestDetailPage from "@/pages/RequestDetailPage";
 import VerifyEmailPage from "@/pages/VerifyEmailPage";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
 import { trackPageView } from "@/lib/analytics";
 import { LangParamGuard, LangRedirect } from "@/i18n/routing";
@@ -86,7 +86,18 @@ const queryClient = new QueryClient({
 
 function ScrollToTop() {
   const { pathname } = useLocation();
-  useEffect(() => { window.scrollTo(0, 0); trackPageView(pathname); }, [pathname]);
+  const prevPathRef = useRef(pathname);
+  useEffect(() => {
+    const stripLang = (p: string) =>
+      p.replace(/^\/(et|en|ru|lv|lt)(?=\/|$)/, "");
+    const wasLangOnlyChange =
+      stripLang(prevPathRef.current) === stripLang(pathname);
+    if (!wasLangOnlyChange) {
+      window.scrollTo(0, 0);
+    }
+    trackPageView(pathname);
+    prevPathRef.current = pathname;
+  }, [pathname]);
   return null;
 }
 
