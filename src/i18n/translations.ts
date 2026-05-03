@@ -3638,6 +3638,20 @@ const en: Record<string, string> = {
     "admin.extras.clientOverrideHelp": "Client price override (€, empty = automatic)",
     "admin.extras.automatic": "Automatic",
     "admin.upload.invalidFormat": "Only JPG, PNG, or WebP files are allowed (max 5MB)",
+    "partner.seoTitleSuffix": "Storage in Tallinn",
+    "partner.locationsHeading": "All locations",
+    "partner.notFound": "Partner not found",
+    "partner.visitWebsite": "Visit website",
+    "partner.verified": "Verified",
+    "partner.foundingPartner": "Founding partner",
+    "partner.since": "Since {{year}}",
+    "partner.viewUnits": "View units",
+    "partner.viewAllListings": "View all {count} listings",
+    "partner.stats.locations": "locations",
+    "partner.stats.listings": "listings",
+    "featuredPartners.title": "Featured operators",
+    "featuredPartners.subtitle": "Verified storage and logistics partners on Ruumly",
+    "featuredPartners.locations": "locations",
 };
 
 const ru: Record<string, string> = {
