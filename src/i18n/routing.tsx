@@ -180,3 +180,13 @@ export function LangParamGuard({ children }: { children: React.ReactNode }) {
   const rest = location.pathname.replace(/^\/[^/]+/, "");
   return <RouterNavigate to={`/${fallback}${rest}${location.search}${location.hash}`} replace />;
 }
+
+// Convenience aliases — drop-in replacements with the SAME names as react-router-dom's
+// exports, so files can switch their import source from "react-router-dom" to
+// "@/i18n/routing" without renaming usages.
+export {
+  LocalizedLink as Link,
+  LocalizedNavLink as NavLink,
+  LocalizedNavigate as Navigate,
+};
+export { useLocalizedNavigate as useNavigate };
