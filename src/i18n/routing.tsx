@@ -190,3 +190,14 @@ export {
   LocalizedNavigate as Navigate,
 };
 export { useLocalizedNavigate as useNavigate };
+
+// Re-export the rest of react-router-dom so a single import statement is enough.
+export {
+  useLocation,
+  useParams,
+  useSearchParams,
+  Outlet,
+  Routes,
+  Route,
+  BrowserRouter,
+} from "react-router-dom";
