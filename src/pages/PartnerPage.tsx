@@ -55,11 +55,11 @@ function buildStructuredData(partner: PartnerProfile, lang: Language) {
 function LocationCard({
   partner,
   loc,
-  priceFrom,
+  available,
 }: {
   partner: PartnerProfile;
   loc: PartnerLocation;
-  priceFrom?: number;
+  available?: number;
 }) {
   const { t } = useLanguage();
   const cover = loc.images?.[0];
@@ -85,10 +85,8 @@ function LocationCard({
           </p>
         )}
         <div className="mt-3 flex items-center justify-between">
-          <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-foreground">
-            {priceFrom !== undefined
-              ? `${t("partner.locationCard.priceFrom")} €${priceFrom}/${t("partner.locationCard.perMonthShort")}`
-              : t("partner.locationCard.viewPrices")}
+          <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
+            {available ?? 0} {t("partner.locationCard.unitsLabel")}
           </span>
           <Link
             to={`/search?supplierId=${partner.id}&locationId=${loc.id}`}
@@ -122,6 +120,19 @@ export default function PartnerPage() {
       if (!Number.isFinite(price) || price <= 0) continue;
       if (out[locId] === undefined || price < out[locId]) {
         out[locId] = price;
+      }
+    }
+    return out;
+  }, [partner, listingsRes]);
+  const availableCountByLocation = useMemo<Record<string, number>>(() => {
+    if (!partner || !listingsRes?.data) return {};
+    const out: Record<string, number> = {};
+    for (const l of listingsRes.data as any[]) {
+      if (l.supplierId !== partner.id) continue;
+      const locId = l.locationId as string | undefined;
+      if (!locId) continue;
+      if (l.availableNow === true) {
+        out[locId] = (out[locId] ?? 0) + 1;
       }
     }
     return out;
@@ -303,7 +314,7 @@ export default function PartnerPage() {
                   key={loc.id}
                   partner={partner}
                   loc={loc}
-                  priceFrom={priceFromByLocation[loc.id]}
+                  available={availableCountByLocation[loc.id] ?? 0}
                 />
               ))}
             </div>
