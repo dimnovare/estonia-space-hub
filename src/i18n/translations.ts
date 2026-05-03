@@ -3650,6 +3650,7 @@ const en: Record<string, string> = {
     "partner.viewAllListings": "View all {count} listings",
     "partner.stats.locations": "locations",
     "partner.stats.listings": "listings",
+    "partner.locationCard.unitsLabel": "izmēru opcijas",
     "partner.locationCard.unitsLabel": "size options",
     "featuredPartners.title": "Featured operators",
     "featuredPartners.subtitle": "Verified storage and logistics partners on Ruumly",
