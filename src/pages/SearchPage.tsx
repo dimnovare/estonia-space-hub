@@ -193,7 +193,6 @@ export default function SearchPage() {
     setSearchParams(prev => {
       const next = new URLSearchParams();
       if (prev.get("type")) next.set("type", prev.get("type")!);
-      if (prev.get("q")) next.set("q", prev.get("q")!);
       return next;
     }, { replace: true });
   }
