@@ -1,0 +1,45 @@
+export interface PartnerLocation {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  country: string;
+  lat: number;
+  lng: number;
+  openingHours: string | null;
+  description: string | null;
+  images: string[];
+  listingCount: number;
+}
+
+export interface PartnerProfile {
+  id: string;
+  slug: string;
+  name: string;
+  country: string;
+  tagline: string | null;
+  longDescription: Record<string, string> | null;
+  logoUrl: string | null;
+  heroImageUrl: string | null;
+  websiteUrl: string | null;
+  foundedYear: number | null;
+  rating: number;
+  reviewCount: number;
+  tier: string;
+  isVerified: boolean;
+  foundingPartner: boolean;
+  locationCount: number;
+  listingCount: number;
+  locations: PartnerLocation[];
+}
+
+export interface FeaturedPartner {
+  id: string;
+  slug: string | null;
+  name: string;
+  tagline: string | null;
+  logoUrl: string | null;
+  locationCount: number;
+  tier: string;
+  isVerified: boolean;
+}
