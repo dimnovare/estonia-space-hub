@@ -300,7 +300,14 @@ export function WarehouseDetail() {
             </div>
 
             <div className="mt-4 rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
-              {t("detail.provider")}: <strong className="text-foreground">{wListing.provider}</strong>
+              {t("detail.provider")}:{" "}
+              {wListing.supplierSlug ? (
+                <Link to={`/partner/${wListing.supplierSlug}`} className="font-medium text-accent hover:underline">
+                  {wListing.provider}
+                </Link>
+              ) : (
+                <strong className="text-foreground">{wListing.provider}</strong>
+              )}
             </div>
             <SupplierBadge supplierId={wListing.supplierId} />
           </div>
@@ -439,7 +446,14 @@ export function MovingDetail() {
             <p className="mt-2 text-center text-xs text-muted-foreground">{fp(t("detail.savingsNote"))}</p>
             <p className="mt-1 flex items-center justify-center gap-1 text-[11px] text-success"><Shield className="h-3 w-3" /> {t("booking.cancellation.short")}</p>
             <div className="mt-4 rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
-              {t("detail.provider")}: <strong className="text-foreground">{mListing.provider}</strong>
+              {t("detail.provider")}:{" "}
+              {mListing.supplierSlug ? (
+                <Link to={`/partner/${mListing.supplierSlug}`} className="font-medium text-accent hover:underline">
+                  {mListing.provider}
+                </Link>
+              ) : (
+                <strong className="text-foreground">{mListing.provider}</strong>
+              )}
             </div>
             <SupplierBadge supplierId={mListing.supplierId} />
           </div>
@@ -576,7 +590,14 @@ export function TrailerDetail() {
             <p className="mt-2 text-center text-xs text-muted-foreground">{fp(t("detail.savingsNote"))}</p>
             <p className="mt-1 flex items-center justify-center gap-1 text-[11px] text-success"><Shield className="h-3 w-3" /> {t("booking.cancellation.short")}</p>
             <div className="mt-4 rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
-              {t("detail.provider")}: <strong className="text-foreground">{tListing.provider}</strong>
+              {t("detail.provider")}:{" "}
+              {tListing.supplierSlug ? (
+                <Link to={`/partner/${tListing.supplierSlug}`} className="font-medium text-accent hover:underline">
+                  {tListing.provider}
+                </Link>
+              ) : (
+                <strong className="text-foreground">{tListing.provider}</strong>
+              )}
             </div>
             <SupplierBadge supplierId={tListing.supplierId} />
           </div>
