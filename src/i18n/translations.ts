@@ -7190,6 +7190,20 @@ const lv: Record<string, string> = {
     "admin.extras.clientOverrideHelp": "Klienta cenas override (€, tukšs = automātiski)",
     "admin.extras.automatic": "Automātiski",
     "admin.upload.invalidFormat": "Atļauti tikai JPG, PNG vai WebP faili (maks. 5MB)",
+    "partner.seoTitleSuffix": "Storage in Tallinn",
+    "partner.locationsHeading": "All locations",
+    "partner.notFound": "Partner not found",
+    "partner.visitWebsite": "Visit website",
+    "partner.verified": "Verified",
+    "partner.foundingPartner": "Founding partner",
+    "partner.since": "Since {{year}}",
+    "partner.viewUnits": "View units",
+    "partner.viewAllListings": "View all {count} listings",
+    "partner.stats.locations": "locations",
+    "partner.stats.listings": "listings",
+    "featuredPartners.title": "Featured operators",
+    "featuredPartners.subtitle": "Verified storage and logistics partners on Ruumly",
+    "featuredPartners.locations": "locations",
 };
 // ── Lithuanian ──────────────────────────
 const lt: Record<string, string> = {
