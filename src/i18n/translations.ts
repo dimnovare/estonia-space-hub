@@ -1833,6 +1833,20 @@ const et: Record<string, string> = {
     "admin.extras.clientOverrideHelp": "Kliendihinna override (€, tühi = automaatne)",
     "admin.extras.automatic": "Automaatne",
     "admin.upload.invalidFormat": "Lubatud on ainult JPG, PNG või WebP failid (max 5MB)",
+    "partner.seoTitleSuffix": "Laopind Tallinnas",
+    "partner.locationsHeading": "Kõik asukohad",
+    "partner.notFound": "Partnerit ei leitud",
+    "partner.visitWebsite": "Külasta veebilehte",
+    "partner.verified": "Verifitseeritud",
+    "partner.foundingPartner": "Asutajapartner",
+    "partner.since": "Asutatud {{year}}",
+    "partner.viewUnits": "Vaata pindu",
+    "partner.viewAllListings": "Vaata kõiki {count} kuulutust",
+    "partner.stats.locations": "asukohta",
+    "partner.stats.listings": "vaba pinda",
+    "featuredPartners.title": "Esiletõstetud operaatorid",
+    "featuredPartners.subtitle": "Verifitseeritud lao- ja logistikapartnerid Ruumly platvormil",
+    "featuredPartners.locations": "asukohta",
 };
 
 const en: Record<string, string> = {
