@@ -56,7 +56,7 @@ function LocationCard({ partner, loc }: { partner: PartnerProfile; loc: PartnerL
   const { t } = useLanguage();
   const cover = loc.images?.[0];
   return (
-    <div className="card-elevated overflow-hidden">
+    <div id={`location-${loc.id}`} className="card-elevated overflow-hidden scroll-mt-24">
       {cover ? (
         <img src={cover} alt={`${loc.name} — ${loc.city}`} loading="lazy" className="h-40 w-full object-cover" />
       ) : (
@@ -78,7 +78,7 @@ function LocationCard({ partner, loc }: { partner: PartnerProfile; loc: PartnerL
         )}
         <div className="mt-3 flex items-center justify-between">
           <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
-            {loc.listingCount} {t("partner.stats.listings")}
+            {loc.listingCount} {t("partner.locationCard.unitsLabel")}
           </span>
           <Link
             to={`/search?supplierId=${partner.id}&locationId=${loc.id}`}
