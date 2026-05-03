@@ -1,6 +1,14 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useCallback, useEffect, type ReactNode } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import translations, { type Language } from "./translations";
 import { authService } from "@/services";
+import {
+  DEFAULT_LANG,
+  detectStoredOrBrowserLang,
+  getLangFromPath,
+  isSupportedLang,
+  stripLang,
+} from "./routing";
 
 interface LanguageContextType {
   language: Language;
@@ -10,39 +18,31 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-function getInitialLanguage(): Language {
-  const supported: Language[] = ["et", "en", "ru", "lv", "lt"];
-  try {
-    const stored = localStorage.getItem("ruumly-lang");
-    if (stored && supported.includes(stored as Language)) return stored as Language;
-  } catch {}
-
-  // Auto-detect from browser on first visit
-  try {
-    const browserLang = navigator.language?.toLowerCase() || "";
-    if (browserLang.startsWith("lv")) return "lv";
-    if (browserLang.startsWith("lt")) return "lt";
-    if (browserLang.startsWith("ru")) return "ru";
-    if (browserLang.startsWith("en")) return "en";
-    if (browserLang.startsWith("et")) return "et";
-  } catch {}
-
-  return "et"; // Default for Estonian users
-}
-
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLang] = useState<Language>(getInitialLanguage);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Authoritative language: from URL :lang segment, fall back to stored/browser/default.
+  const fromUrl = getLangFromPath(location.pathname);
+  const language: Language = fromUrl ?? detectStoredOrBrowserLang() ?? DEFAULT_LANG;
+
+  // Keep localStorage hint in sync so unprefixed visits land in the right language next time.
+  useEffect(() => {
+    try { localStorage.setItem("ruumly-lang", language); } catch {}
+  }, [language]);
 
   const setLanguage = useCallback((lang: Language) => {
-    setLang(lang);
+    if (!isSupportedLang(lang)) return;
     try { localStorage.setItem("ruumly-lang", lang); } catch {}
-    // If user is logged in, persist preference on backend
-    // Check if user has an active session (refresh token = logged in)
     const hasSession = !!localStorage.getItem("ruumly-auth");
     if (hasSession) {
       authService.updateLanguage(lang).catch(() => {});
     }
-  }, []);
+    // Swap the lang segment, preserving the rest of the URL.
+    const rest = stripLang(location.pathname);
+    const target = `/${lang}${rest === "/" ? "" : rest}${location.search}${location.hash}`;
+    navigate(target, { replace: true });
+  }, [location.pathname, location.search, location.hash, navigate]);
 
   const t = useCallback((key: string): string => {
     return translations[language]?.[key] || translations.et[key] || key;
