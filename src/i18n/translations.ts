@@ -5442,6 +5442,20 @@ const ru: Record<string, string> = {
     "admin.extras.clientOverrideHelp": "Override цены клиента (€, пусто = автоматически)",
     "admin.extras.automatic": "Автоматически",
     "admin.upload.invalidFormat": "Разрешены только файлы JPG, PNG или WebP (макс. 5MB)",
+    "partner.seoTitleSuffix": "Склады в Таллинне",
+    "partner.locationsHeading": "Все локации",
+    "partner.notFound": "Партнёр не найден",
+    "partner.visitWebsite": "Посетить сайт",
+    "partner.verified": "Проверено",
+    "partner.foundingPartner": "Партнёр-учредитель",
+    "partner.since": "С {{year}}",
+    "partner.viewUnits": "Смотреть объекты",
+    "partner.viewAllListings": "Смотреть все {count} объектов",
+    "partner.stats.locations": "локаций",
+    "partner.stats.listings": "объектов",
+    "featuredPartners.title": "Избранные операторы",
+    "featuredPartners.subtitle": "Проверенные партнёры по хранению и логистике на Ruumly",
+    "featuredPartners.locations": "локаций",
 };
 
 
