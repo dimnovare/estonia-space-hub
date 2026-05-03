@@ -41,6 +41,8 @@ export default function SearchPage() {
   const sizeCategory = searchParams.get("sizeCategory") || undefined;
   const minSize = searchParams.get("minSize") || "";
   const maxSize = searchParams.get("maxSize") || "";
+  const supplierIdFilter = searchParams.get("supplierId") || "";
+  const locationIdFilter = searchParams.get("locationId") || "";
 
   const debouncedPriceMax = useDebounce(priceMax, 400);
 
@@ -81,8 +83,10 @@ export default function SearchPage() {
     sizeCategory: sizeCategory as any,
     minSize: minSize ? parseFloat(minSize) : undefined,
     maxSize: maxSize ? parseFloat(maxSize) : undefined,
+    supplierId: supplierIdFilter || undefined,
+    locationId: locationIdFilter || undefined,
     limit: 200,
-  }), [activeType, debouncedQ, cityFilter, debouncedPriceMax, availableNow, sort, sizeCategory, minSize, maxSize]);
+  }), [activeType, debouncedQ, cityFilter, debouncedPriceMax, availableNow, sort, sizeCategory, minSize, maxSize, supplierIdFilter, locationIdFilter]);
 
   const { data: result, isLoading } = useListings(filters);
   const serverFiltered = result?.data || [];
