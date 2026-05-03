@@ -18,6 +18,7 @@ interface ApiListing {
   type: string;
   title: string;
   supplierName: string;
+  supplierSlug?: string | null;
   address: string;
   city: string;
   lat: number;
@@ -38,6 +39,7 @@ function mapListing(api: ApiListing): Listing {
     id: api.id,
     type: (api.type?.toLowerCase() || "warehouse") as ListingType,
     supplierId: (api as unknown as Record<string, unknown>).supplierId as string || "",
+    supplierSlug: api.supplierSlug ?? null,
     title: api.title || "",
     provider: api.supplierName || "",
     address: api.address || "",
