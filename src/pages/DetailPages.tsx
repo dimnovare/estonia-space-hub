@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link } from "@/i18n/routing";
 import { MapPin, Star, Check, ArrowLeft, Calendar, Shield, BadgePercent, Zap, Mail, Hand, Building2, CheckCircle, Loader2, Info, ShieldCheck, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListing, useSuppliers, usePricingConfig, useListingExtras } from "@/hooks/queries";

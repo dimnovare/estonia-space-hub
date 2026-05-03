@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Edit2, Save, X, Loader2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";

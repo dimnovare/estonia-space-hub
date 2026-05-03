@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/i18n/routing";
 import { Search, SlidersHorizontal, CheckCircle, MapPin, Shield, Clock, ArrowRight, BadgePercent } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";

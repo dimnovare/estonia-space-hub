@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Users, Loader2, UserPlus } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "@/i18n/routing";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useSupplierTeam, useInviteTeamMember, useRemoveTeamMember } from "@/hooks/queries";
 import { useAuth } from "@/contexts/AuthContext";

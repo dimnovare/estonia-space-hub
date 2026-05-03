@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "@/i18n/routing";
 import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard, List, MessageSquare, Settings, Users, FileText,

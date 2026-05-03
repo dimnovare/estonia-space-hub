@@ -1,4 +1,4 @@
-import { Link, useLocation, useSearchParams, useNavigate } from "react-router-dom";
+import { Link, useLocation, useSearchParams, useNavigate } from "@/i18n/routing";
 import { Menu, X, User, LogIn, LogOut, ChevronDown, Bell, LayoutDashboard, Shield, Check } from "lucide-react";
 import { useState } from "react";
 import type { Language } from "@/i18n/translations";
