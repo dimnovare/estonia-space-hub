@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/i18n/routing";
 import { MapPin, Star, Warehouse, Truck, CarFront, Heart, ShieldCheck, BadgePercent, Award } from "lucide-react";
 import type { Listing } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";

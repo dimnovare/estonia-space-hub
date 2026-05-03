@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { apiClient, tokenStore } from "@/services/apiClient";
 import type { UserRole } from "@/services/types";
+import { localizedHref } from "@/i18n/routing";
 
 export type { UserRole };
 
@@ -165,7 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       headers:     { "Content-Type": "application/json", Authorization: `Bearer ${tokenStore.getAccess() ?? ""}` },
     }).catch(() => {});
     persist(null);
-    window.location.href = "/login";
+    window.location.href = localizedHref("/login");
   }, []);
 
   const updateProfile = useCallback(async (updates: Partial<AppUser>) => {

@@ -1,4 +1,4 @@
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "@/i18n/routing";
 import { useAuth } from "@/contexts/AuthContext";
 
 /**

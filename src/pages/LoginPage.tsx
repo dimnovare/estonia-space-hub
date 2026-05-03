@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "@/i18n/routing";
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, Loader2, CheckCircle, KeyRound } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
 import GoogleAuthScope from "@/components/GoogleAuthScope";

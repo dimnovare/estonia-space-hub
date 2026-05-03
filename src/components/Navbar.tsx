@@ -1,4 +1,4 @@
-import { Link, useLocation, useSearchParams, useNavigate } from "react-router-dom";
+import { Link, useLocation, useSearchParams, useNavigate, stripLang } from "@/i18n/routing";
 import { Menu, X, User, LogIn, LogOut, ChevronDown, Bell, LayoutDashboard, Shield, Check } from "lucide-react";
 import { useState } from "react";
 import type { Language } from "@/i18n/translations";
@@ -20,8 +20,9 @@ const baseNavLinks = [
 ];
 
 function isLinkActive(link: typeof baseNavLinks[0], pathname: string, searchType: string | null) {
-  if (link.matchType && pathname === "/search") return searchType === link.matchType;
-  if (!link.matchType) return pathname === link.to;
+  const stripped = stripLang(pathname);
+  if (link.matchType && stripped === "/search") return searchType === link.matchType;
+  if (!link.matchType) return stripped === link.to;
   return false;
 }
 
@@ -32,7 +33,7 @@ export default function Navbar() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const isHome = location.pathname === "/";
+  const isHome = stripLang(location.pathname) === "/";
   const currentType = searchParams.get("type");
   const { language, setLanguage, t } = useLanguage();
   const { user, isAuthenticated, role, logout } = useAuth();

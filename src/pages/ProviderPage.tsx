@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/i18n/routing";
 import {
   ArrowRight,
   UserPlus, ListPlus, ShoppingCart, Check, Star, Megaphone,
