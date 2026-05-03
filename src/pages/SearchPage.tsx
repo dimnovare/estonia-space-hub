@@ -103,7 +103,9 @@ export default function SearchPage() {
     || !!minSize
     || !!maxSize
     || !!debouncedPriceMax
-    || availableNow;
+    || availableNow
+    || !!supplierIdFilter
+    || !!locationIdFilter;
   const locations = hasRestrictiveFilter ? [] : locationsRaw;
 
   // Client-side post-filters for dynamic feature booleans
