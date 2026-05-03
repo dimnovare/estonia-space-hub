@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { BrowserRouter, Route, Routes, useLocation, Outlet } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation, Outlet, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -34,6 +34,7 @@ import VerifyEmailPage from "@/pages/VerifyEmailPage";
 import { lazy, Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { trackPageView } from "@/lib/analytics";
+import { LangParamGuard, LangRedirect } from "@/i18n/routing";
 
 // Lazy-loaded heavy pages
 const AdminPage = lazy(() => import("@/pages/AdminPage"));
@@ -100,7 +101,7 @@ const PageLoader = () => (
 function AppContent() {
   const { maintenanceMode, apiUnreachable } = usePlatformSettings();
   const { role, isInitializing } = useAuth();
-  const isLoginPage = window.location.pathname === "/login";
+  const isLoginPage = /^\/[a-z]{2}\/login$/i.test(window.location.pathname) || window.location.pathname === "/login";
 
   // Auto-reload once on chunk load failure (stale deployment cache)
   useEffect(() => {
@@ -135,39 +136,43 @@ function AppContent() {
       <Navbar />
       <Suspense fallback={<PageLoader />}>
         <Routes>
-          <Route element={<NoFooter />}>
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />
-            <Route path="/admin/*" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />
-            <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
-            <Route path="/account/request/:id" element={<ProtectedRoute><RequestDetailPage /></ProtectedRoute>} />
-            <Route path="/provider/dashboard" element={<ProtectedRoute allowedRoles={["provider", "admin"]}><ProviderDashboardPage /></ProtectedRoute>} />
-            <Route path="/provider/onboarding" element={<ProtectedRoute><ProviderOnboardingPage /></ProtectedRoute>} />
+          <Route path="/:lang" element={<LangParamGuard><Outlet /></LangParamGuard>}>
+            <Route element={<NoFooter />}>
+              <Route path="search" element={<SearchPage />} />
+              <Route path="admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />
+              <Route path="admin/*" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />
+              <Route path="account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
+              <Route path="account/request/:id" element={<ProtectedRoute><RequestDetailPage /></ProtectedRoute>} />
+              <Route path="provider/dashboard" element={<ProtectedRoute allowedRoles={["provider", "admin"]}><ProviderDashboardPage /></ProtectedRoute>} />
+              <Route path="provider/onboarding" element={<ProtectedRoute><ProviderOnboardingPage /></ProtectedRoute>} />
+            </Route>
+            <Route element={<WithFooter />}>
+              <Route index element={<HomePage />} />
+              <Route path="warehouse/:id" element={<WarehouseDetail />} />
+              <Route path="moving/:id" element={<MovingDetail />} />
+              <Route path="trailer/:id" element={<TrailerDetail />} />
+              <Route path="location/:id" element={<LocationDetailPage />} />
+              <Route path="payment/return" element={<PaymentReturnPage />} />
+              <Route path="book" element={<BookingPage />} />
+              <Route path="bookings/:id" element={<ProtectedRoute><BookingRedirect /></ProtectedRoute>} />
+              <Route path="provider" element={<ProviderPage />} />
+              <Route path="storage/:slug" element={<CityPage />} />
+              <Route path="about" element={<AboutPage />} />
+              <Route path="contact" element={<ContactPage />} />
+              <Route path="how-it-works" element={<HowItWorksPage />} />
+              <Route path="faq" element={<FAQPage />} />
+              <Route path="blog" element={<BlogIndexPage />} />
+              <Route path="blog/:slug" element={<BlogPostPage />} />
+              <Route path="login" element={<LoginPage />} />
+              <Route path="verify" element={<VerifyEmailPage />} />
+              <Route path="terms" element={<TermsPage />} />
+              <Route path="privacy" element={<PrivacyPage />} />
+              <Route path="cookies" element={<CookiePage />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
           </Route>
-          <Route element={<WithFooter />}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/warehouse/:id" element={<WarehouseDetail />} />
-            <Route path="/moving/:id" element={<MovingDetail />} />
-            <Route path="/trailer/:id" element={<TrailerDetail />} />
-            <Route path="/location/:id" element={<LocationDetailPage />} />
-            <Route path="/payment/return" element={<PaymentReturnPage />} />
-            <Route path="/book" element={<BookingPage />} />
-            <Route path="/bookings/:id" element={<ProtectedRoute><BookingRedirect /></ProtectedRoute>} />
-            <Route path="/provider" element={<ProviderPage />} />
-            <Route path="/storage/:slug" element={<CityPage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/how-it-works" element={<HowItWorksPage />} />
-            <Route path="/faq" element={<FAQPage />} />
-            <Route path="/blog" element={<BlogIndexPage />} />
-            <Route path="/blog/:slug" element={<BlogPostPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/verify" element={<VerifyEmailPage />} />
-            <Route path="/terms" element={<TermsPage />} />
-            <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/cookies" element={<CookiePage />} />
-            <Route path="*" element={<NotFound />} />
-          </Route>
+          {/* Any unprefixed path → redirect to /:lang/<same-path> */}
+          <Route path="*" element={<LangRedirect />} />
         </Routes>
       </Suspense>
       <CookieConsent />
