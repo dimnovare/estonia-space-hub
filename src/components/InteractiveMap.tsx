@@ -159,11 +159,9 @@ function createLocationMarkerIcon(location: SupplierLocation, isSelected: boolea
           white-space: nowrap;
           border: 1px solid ${markerColor}20;
         ">${
-          (location.availableUnitCount != null && location.totalUnitCount != null)
-            ? `${location.availableUnitCount}/${location.totalUnitCount} ${unitLabel}`
-            : (location.availableUnitCount != null)
-              ? `${location.availableUnitCount} ${unitLabel}`
-              : `${location.unitCount} ${unitLabel}`
+          (location.availableUnitCount != null)
+            ? `${location.availableUnitCount} ${unitLabel}`
+            : `${location.unitCount} ${unitLabel}`
         }${location.priceFrom ? ` · €${location.priceFrom}` : ''}</div>
       </div>
     `,
@@ -278,7 +276,7 @@ export default function InteractiveMap({
           </div>
           ${loc.priceFrom ? `<div style="font-weight: 700; font-size: 16px; color: #1E3A5F; margin-bottom: 4px;">${tFrom} €${loc.priceFrom}${tPerMonth}</div>` : ''}
           <div style="display: flex; gap: 6px; margin-top: 6px;">
-            <a href="/${langPrefix}/search?${loc.supplierId ? `supplierId=${loc.supplierId}&` : ''}locationId=${loc.id}" style="flex: 1; text-align: center; font-size: 12px; color: #2EC4B6; text-decoration: none; font-weight: 600; padding: 6px 0; border: 1px solid #2EC4B6; border-radius: 6px;">${tAllUnits} (${loc.unitCount})</a>
+            <a href="/${langPrefix}/search?${loc.supplierId ? `supplierId=${loc.supplierId}&` : ''}locationId=${loc.id}" style="flex: 1; text-align: center; font-size: 12px; color: #2EC4B6; text-decoration: none; font-weight: 600; padding: 6px 0; border: 1px solid #2EC4B6; border-radius: 6px;">${tAllUnits} (${loc.availableUnitCount != null ? loc.availableUnitCount : loc.unitCount})</a>
             ${loc.supplierId ? '' : `<a href="/${langPrefix}/search?city=${encodeURIComponent(loc.city || '')}" style="flex: 1; text-align: center; font-size: 12px; color: white; background: #2EC4B6; text-decoration: none; font-weight: 600; padding: 6px 0; border-radius: 6px;">${tSearch} →</a>`}
           </div>
         </div>
