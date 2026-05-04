@@ -93,8 +93,8 @@ function LocationCard({
           <span
             className={
               isFull
-                ? "rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
-                : "rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success-foreground"
+                ? "rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-semibold text-zinc-600 ring-1 ring-zinc-200"
+                : "rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-200"
             }
           >
             {availabilityLabel}
@@ -144,6 +144,23 @@ export default function PartnerPage() {
     if (span < 0.15) return 12;
     if (span < 0.4) return 11;
     return 10;
+  }, [partner]);
+
+  const unitTotals = useMemo(() => {
+    const locs = partner?.locations ?? [];
+    let available = 0;
+    let total = 0;
+    let hasRealData = false;
+    for (const l of locs) {
+      if (l.totalUnitCount != null) {
+        total += l.totalUnitCount;
+        hasRealData = true;
+      }
+      if (l.availableUnitCount != null) {
+        available += l.availableUnitCount;
+      }
+    }
+    return { available, total, hasRealData };
   }, [partner]);
 
   if (isLoading) {
@@ -255,8 +272,22 @@ export default function PartnerPage() {
             <div className="text-xs text-muted-foreground">{t("partner.stats.locations")}</div>
           </div>
           <div className="rounded-xl border border-border bg-card p-5 text-center">
-            <div className="font-display text-2xl font-bold">{partner.listingCount}</div>
-            <div className="text-xs text-muted-foreground">{t("partner.stats.listings")}</div>
+            {unitTotals.hasRealData ? (
+              <>
+                <div className="font-display text-2xl font-bold">
+                  {unitTotals.available}
+                  <span className="text-base font-medium text-muted-foreground">
+                    {" / "}{unitTotals.total}
+                  </span>
+                </div>
+                <div className="text-xs text-muted-foreground">{t("partner.stats.unitsAvailable")}</div>
+              </>
+            ) : (
+              <>
+                <div className="font-display text-2xl font-bold">{partner.listingCount}</div>
+                <div className="text-xs text-muted-foreground">{t("partner.stats.sizes")}</div>
+              </>
+            )}
           </div>
           <div className="rounded-xl border border-border bg-card p-5 text-center">
             <div className="flex items-center justify-center gap-1 font-display text-2xl font-bold">
