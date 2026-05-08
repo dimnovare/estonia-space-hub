@@ -47,7 +47,7 @@ function mapListing(api: ApiListing): Listing {
     lat: api.lat ?? 0,
     lng: api.lng ?? 0,
     priceFrom: api.priceFrom ?? 0,
-    priceUnit: api.priceUnit || "€/kuu",
+    priceUnit: api.priceUnit || "/month",
     image: api.images?.[0] || "",
     images: api.images || [],
     availableNow: api.availableNow ?? false,
