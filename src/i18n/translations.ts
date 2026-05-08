@@ -11,6 +11,11 @@ export const LANGUAGES: { code: Language; label: string; flag: string }[] = [
 const et: Record<string, string> = {
     // Nav
     "nav.storage": "Laopinnad",
+    "priceUnit.month": "/kuu",
+    "priceUnit.week": "/näd",
+    "priceUnit.day": "/päev",
+    "priceUnit.hour": "/tund",
+    "account.chat.empty": "Vestlus on tühi. Saatke esimene sõnum.",
     "nav.moving": "Kolimine",
     "nav.trailer": "Haagise rent",
     "nav.howItWorks": "Kuidas töötab",
@@ -1859,6 +1864,11 @@ const et: Record<string, string> = {
 
 const en: Record<string, string> = {
     "nav.storage": "Storage",
+    "priceUnit.month": "/mo",
+    "priceUnit.week": "/wk",
+    "priceUnit.day": "/day",
+    "priceUnit.hour": "/hr",
+    "account.chat.empty": "Conversation is empty. Send the first message.",
     "nav.moving": "Moving",
     "nav.trailer": "Trailer rental",
     "nav.howItWorks": "How it works",
