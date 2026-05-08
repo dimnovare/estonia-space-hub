@@ -533,7 +533,7 @@ function AccountMessages() {
                   </div>
                 ) : activeMessages.length === 0 ? (
                   <div className="flex flex-col items-center py-8 text-center">
-                    <p className="text-xs text-muted-foreground">Vestlus on tühi. Saatke esimene sõnum.</p>
+                    <p className="text-xs text-muted-foreground">{t("account.chat.empty")}</p>
                   </div>
                 ) : activeMessages.map((m: any) => (
                   <div key={m.id} className={`flex ${m.from === "customer" ? "justify-end" : "justify-start"}`}>

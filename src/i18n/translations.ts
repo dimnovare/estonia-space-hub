@@ -11,6 +11,11 @@ export const LANGUAGES: { code: Language; label: string; flag: string }[] = [
 const et: Record<string, string> = {
     // Nav
     "nav.storage": "Laopinnad",
+    "priceUnit.month": "/kuu",
+    "priceUnit.week": "/näd",
+    "priceUnit.day": "/päev",
+    "priceUnit.hour": "/tund",
+    "account.chat.empty": "Vestlus on tühi. Saatke esimene sõnum.",
     "nav.moving": "Kolimine",
     "nav.trailer": "Haagise rent",
     "nav.howItWorks": "Kuidas töötab",
@@ -1859,6 +1864,11 @@ const et: Record<string, string> = {
 
 const en: Record<string, string> = {
     "nav.storage": "Storage",
+    "priceUnit.month": "/mo",
+    "priceUnit.week": "/wk",
+    "priceUnit.day": "/day",
+    "priceUnit.hour": "/hr",
+    "account.chat.empty": "Conversation is empty. Send the first message.",
     "nav.moving": "Moving",
     "nav.trailer": "Trailer rental",
     "nav.howItWorks": "How it works",
@@ -3672,6 +3682,11 @@ const en: Record<string, string> = {
 
 const ru: Record<string, string> = {
     "nav.storage": "Склады",
+    "priceUnit.month": "/мес",
+    "priceUnit.week": "/нед",
+    "priceUnit.day": "/день",
+    "priceUnit.hour": "/час",
+    "account.chat.empty": "Беседа пуста. Отправьте первое сообщение.",
     "nav.moving": "Переезд",
     "nav.trailer": "Аренда прицепа",
     "nav.howItWorks": "Как это работает",
@@ -5487,6 +5502,11 @@ const ru: Record<string, string> = {
 // ── Latvian ──────────────────────────
 const lv: Record<string, string> = {
     "about.cta": "Gatavs sākt?",
+    "priceUnit.month": "/mēn",
+    "priceUnit.week": "/ned",
+    "priceUnit.day": "/diena",
+    "priceUnit.hour": "/stunda",
+    "account.chat.empty": "Saruna ir tukša. Sūtiet pirmo ziņojumu.",
     "about.ctaProvider": "Pievienoties kā partneris",
     "about.ctaSearch": "Meklēt pakalpojumi",
     "about.hero": "Par Ruumly",
@@ -7240,6 +7260,11 @@ const lv: Record<string, string> = {
 // ── Lithuanian ──────────────────────────
 const lt: Record<string, string> = {
     "about.cta": "Pasiruošę pradėti?",
+    "priceUnit.month": "/mėn",
+    "priceUnit.week": "/sav",
+    "priceUnit.day": "/diena",
+    "priceUnit.hour": "/val",
+    "account.chat.empty": "Pokalbis tuščias. Išsiųskite pirmąją žinutę.",
     "about.ctaProvider": "Prisijungti kaip partneris",
     "about.ctaSearch": "Ieškoti paslaugos",
     "about.hero": "Apie Ruumly",

@@ -5,6 +5,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import { getSavingsDisplay } from "@/lib/savingsDisplay";
 import { useSizeBuckets, bucketCodeForSize } from "@/hooks/useSizeBuckets";
+import { formatPriceUnit } from "@/lib/priceUnit";
 
 const badgeStyles: Record<string, string> = {
   cheapest: "badge-cheapest",
@@ -36,7 +37,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
     ?? listing.clientDiscountRate
     ?? 0;
   const savingsInfo = getSavingsDisplay(listing.priceFrom, discountRate);
-  const priceUnit = listing.priceUnit.replace("€/", "");
+  const priceUnitLabel = formatPriceUnit(listing.priceUnit, t);
 
   return (
     <Link to={detailPath} className="card-elevated group block overflow-hidden">
@@ -128,11 +129,11 @@ export default function ListingCard({ listing }: { listing: Listing }) {
         <div className="mt-3 flex items-baseline gap-2 border-t border-border pt-3">
           {savingsInfo ? (
             <>
-              <span className="text-sm text-muted-foreground line-through">€{savingsInfo.directPrice}/{priceUnit}</span>
-              <span className="font-display text-lg font-bold text-accent">€{savingsInfo.ruumlyPrice}/{priceUnit}</span>
+              <span className="text-sm text-muted-foreground line-through">€{savingsInfo.directPrice}{priceUnitLabel}</span>
+              <span className="font-display text-lg font-bold text-accent">€{savingsInfo.ruumlyPrice}{priceUnitLabel}</span>
             </>
           ) : (
-            <span className="font-display text-lg font-bold text-foreground">{listing.priceFrom}€/{priceUnit}</span>
+            <span className="font-display text-lg font-bold text-foreground">€{listing.priceFrom}{priceUnitLabel}</span>
           )}
         </div>
         {savingsInfo && (
