@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useLocation } from "@/hooks/queries";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
+import { formatPriceUnit } from "@/lib/priceUnit";
 
 export default function LocationDetailPage() {
   const { id } = useParams();
@@ -151,7 +152,7 @@ export default function LocationDetailPage() {
                       €{unit.priceFrom}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      /{unit.priceUnit?.replace("€/", "") || "kuu"}
+                      {formatPriceUnit(unit.priceUnit, t)}
                     </span>
                   </div>
                   <Link to={`/book?listing=${unit.id}&type=${unit.type}`}>
