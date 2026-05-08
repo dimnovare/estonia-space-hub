@@ -432,7 +432,7 @@ export default function SearchPage() {
                           {loc.priceFrom != null && (
                             <>
                               <span className="font-display text-lg font-bold text-foreground">{t("location.from")} €{loc.priceFrom}</span>
-                              <span className="text-xs text-muted-foreground">/ kuu</span>
+                              <span className="text-xs text-muted-foreground">{t("priceUnit.month")}</span>
                             </>
                           )}
                           {loc.priceFrom && (loc as any).customerDiscount > 0 && (
