@@ -3682,6 +3682,11 @@ const en: Record<string, string> = {
 
 const ru: Record<string, string> = {
     "nav.storage": "Склады",
+    "priceUnit.month": "/мес",
+    "priceUnit.week": "/нед",
+    "priceUnit.day": "/день",
+    "priceUnit.hour": "/час",
+    "account.chat.empty": "Беседа пуста. Отправьте первое сообщение.",
     "nav.moving": "Переезд",
     "nav.trailer": "Аренда прицепа",
     "nav.howItWorks": "Как это работает",
@@ -5497,6 +5502,11 @@ const ru: Record<string, string> = {
 // ── Latvian ──────────────────────────
 const lv: Record<string, string> = {
     "about.cta": "Gatavs sākt?",
+    "priceUnit.month": "/mēn",
+    "priceUnit.week": "/ned",
+    "priceUnit.day": "/diena",
+    "priceUnit.hour": "/stunda",
+    "account.chat.empty": "Saruna ir tukša. Sūtiet pirmo ziņojumu.",
     "about.ctaProvider": "Pievienoties kā partneris",
     "about.ctaSearch": "Meklēt pakalpojumi",
     "about.hero": "Par Ruumly",
@@ -7250,6 +7260,11 @@ const lv: Record<string, string> = {
 // ── Lithuanian ──────────────────────────
 const lt: Record<string, string> = {
     "about.cta": "Pasiruošę pradėti?",
+    "priceUnit.month": "/mėn",
+    "priceUnit.week": "/sav",
+    "priceUnit.day": "/diena",
+    "priceUnit.hour": "/val",
+    "account.chat.empty": "Pokalbis tuščias. Išsiųskite pirmąją žinutę.",
     "about.ctaProvider": "Prisijungti kaip partneris",
     "about.ctaSearch": "Ieškoti paslaugos",
     "about.hero": "Apie Ruumly",
