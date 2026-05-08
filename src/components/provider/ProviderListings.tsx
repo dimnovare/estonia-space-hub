@@ -17,6 +17,7 @@ import { apiClient } from "@/services/apiClient";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { trackEvent } from "@/lib/analytics";
+import { formatPriceUnit } from "@/lib/priceUnit";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -504,7 +505,7 @@ export default function ProviderListings() {
                             <td className="py-2 pr-4">
                               €{unit.priceFrom}
                               <span className="text-muted-foreground">
-                                /{unit.priceUnit?.replace("€/", "") || "kuu"}
+                                {formatPriceUnit(unit.priceUnit, t)}
                               </span>
                             </td>
                             <td className="py-2">
