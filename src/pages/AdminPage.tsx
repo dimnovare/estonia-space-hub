@@ -8,7 +8,7 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminOrders from "@/components/admin/AdminOrders";
 import AdminSuppliers from "@/components/admin/AdminSuppliers";
-import AdminIntegrations from "@/components/admin/AdminIntegrations";
+
 import AdminRouting from "@/components/admin/AdminRouting";
 import AdminUsers from "@/components/admin/AdminUsers";
 import AdminLocations from "@/components/admin/AdminLocations";
@@ -61,7 +61,7 @@ export default function AdminPage() {
         {activeTab === "locations" && <AdminLocations supplierId={filterSupplierId || undefined} />}
         {activeTab === "orders" && <AdminOrders supplierId={filterSupplierId || undefined} />}
         {activeTab === "suppliers" && <AdminSuppliers />}
-        {activeTab === "integrations" && <AdminIntegrations />}
+        
         {activeTab === "routing" && <AdminRouting />}
         {activeTab === "inquiries" && <AdminInquiries />}
         {activeTab === "users" && <AdminUsers />}

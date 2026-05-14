@@ -173,7 +173,7 @@ export const supplierService = {
     status: "ok" | "error" | "skipped";
     durationMs?: number;
     unitsRefreshed?: number;
-    error?: string;
+    errorMessage?: string;
   }>> {
     const res = await apiClient.get<any>(`/admin/suppliers/${id}/poll-log?limit=${limit}`);
     return Array.isArray(res) ? res : res?.data ?? [];
