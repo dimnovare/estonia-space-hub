@@ -78,8 +78,8 @@ export function useLeadSummary() {
   const { isAuthenticated, user } = useAuth();
   const supplierId = useImpersonatedSupplierId();
   return useQuery<LeadSummary>({
-    queryKey: [...queryKeys.orders.all, "lead-summary"],
-    queryFn: () => orderService.getLeadSummary(),
+    queryKey: [...queryKeys.orders.all, "lead-summary", supplierId],
+    queryFn: () => orderService.getLeadSummary(supplierId ?? undefined),
     enabled: isAuthenticated && (user?.role !== "admin" || !!supplierId),
     staleTime: 30_000,
   });
