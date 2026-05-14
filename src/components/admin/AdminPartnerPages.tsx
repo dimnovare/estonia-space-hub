@@ -278,7 +278,7 @@ export default function AdminPartnerPages() {
 
               <section>
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("admin.sync.title")}</h3>
-                {selected.integrationType !== "Api" ? (
+                {selected.integrationType !== "api" ? (
                   <p className="mt-2 rounded-lg border border-border bg-secondary/40 p-3 text-xs text-muted-foreground">
                     {t("admin.sync.apiOnly")}
                   </p>
