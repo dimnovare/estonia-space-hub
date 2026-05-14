@@ -16,6 +16,44 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
+function buildProductSchema(listing: Listing) {
+  const schema: any = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: listing.title,
+    description: listing.description || listing.title,
+    image: listing.image || undefined,
+    brand: { "@type": "Brand", name: listing.provider },
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "EUR",
+      price: listing.priceFrom,
+      priceSpecification: {
+        "@type": "UnitPriceSpecification",
+        priceCurrency: "EUR",
+        price: listing.priceFrom,
+        billingDuration: 1,
+        billingIncrement: 1,
+        unitCode: "MON",
+      },
+      availability: listing.availableNow
+        ? "https://schema.org/InStock"
+        : "https://schema.org/SoldOut",
+      seller: { "@type": "Organization", name: listing.provider },
+    },
+  };
+  if (listing.reviewCount > 0) {
+    schema.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: listing.rating,
+      reviewCount: listing.reviewCount,
+      bestRating: 5,
+      worstRating: 1,
+    };
+  }
+  return schema;
+}
+
 function PartnerBadges({ listing }: { listing: Listing }) {
   const { t } = useLanguage();
   if (!listing.isVerified && !listing.isFoundingPartner) return null;
