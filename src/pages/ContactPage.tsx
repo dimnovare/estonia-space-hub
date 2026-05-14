@@ -80,21 +80,21 @@ export default function ContactPage() {
               <div className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block text-sm font-medium">{t("contact.name")}</label>
-                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    <label htmlFor="contact-name" className="mb-1 block text-sm font-medium">{t("contact.name")}</label>
+                    <input id="contact-name" type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                   </div>
                   <div>
-                    <label className="mb-1 block text-sm font-medium">{t("contact.email")}</label>
-                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    <label htmlFor="contact-email" className="mb-1 block text-sm font-medium">{t("contact.email")}</label>
+                    <input id="contact-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                   </div>
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium">{t("contact.subject")}</label>
-                  <input type="text" value={subject} onChange={(e) => setSubject(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  <label htmlFor="contact-subject" className="mb-1 block text-sm font-medium">{t("contact.subject")}</label>
+                  <input id="contact-subject" type="text" value={subject} onChange={(e) => setSubject(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium">{t("contact.message")}</label>
-                  <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={5} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  <label htmlFor="contact-message" className="mb-1 block text-sm font-medium">{t("contact.message")}</label>
+                  <textarea id="contact-message" value={message} onChange={(e) => setMessage(e.target.value)} rows={5} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                 </div>
                 <Button onClick={() => setSubmitted(true)} className="w-full bg-accent text-accent-foreground hover:bg-accent/90" size="lg">
                   {t("contact.send")}
