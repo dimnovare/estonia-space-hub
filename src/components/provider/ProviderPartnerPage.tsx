@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, Loader2, Save } from "lucide-react";
+import { ExternalLink, Globe, Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiClient } from "@/services/apiClient";
+import { useAuth } from "@/contexts/AuthContext";
+import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
+import { withSupplier } from "@/lib/withSupplier";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 
@@ -52,10 +55,13 @@ function diffPatch(initial: FormValues, current: FormValues): Record<string, unk
 export default function ProviderPartnerPage() {
   const { t } = useLanguage();
   const qc = useQueryClient();
+  const { user } = useAuth();
+  const supplierId = useImpersonatedSupplierId();
+  const isAdmin = user?.role === "admin";
 
   const { data, isLoading } = useQuery({
-    queryKey: ["supplier", "partner-page"],
-    queryFn: () => apiClient.get<any>("/supplier/partner-page"),
+    queryKey: ["supplier", "partner-page", supplierId],
+    queryFn: () => apiClient.get<any>(withSupplier("/supplier/partner-page", supplierId)),
     staleTime: 30_000,
   });
 
@@ -81,7 +87,7 @@ export default function ProviderPartnerPage() {
 
   const saveMutation = useMutation({
     mutationFn: (patch: Record<string, unknown>) =>
-      apiClient.patch<any>("/supplier/partner-page", patch),
+      apiClient.patch<any>(withSupplier("/supplier/partner-page", supplierId), patch),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["supplier", "partner-page"] });
       toast.success(t("provider.partnerPage.saved"));
@@ -112,6 +118,16 @@ export default function ProviderPartnerPage() {
         : "longDescriptionRu",
     [storyLang],
   );
+
+  if (!supplierId && isAdmin) {
+    return (
+      <div className="flex h-full min-h-[200px] flex-col items-center justify-center text-center text-sm text-muted-foreground">
+        <Globe className="mb-2 h-8 w-8 opacity-40" />
+        <p className="font-medium">{t("provider.partnerPage.selectPartnerFirst")}</p>
+        <p className="mt-1 max-w-[280px]">{t("provider.partnerPage.selectPartnerFirstDesc")}</p>
+      </div>
+    );
+  }
 
   if (isLoading || !form) {
     return (
