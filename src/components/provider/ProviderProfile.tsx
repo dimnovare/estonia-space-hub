@@ -78,7 +78,7 @@ export default function ProviderProfile() {
           {t("provider.adminContextRequired.body")}
         </p>
         <Link
-          to="/admin?tab=suppliers"
+          to="/admin/partners"
           className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
         >
           {t("provider.adminContextRequired.linkLabel")} →

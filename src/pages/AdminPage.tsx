@@ -1,20 +1,14 @@
 import { useState } from "react";
 import { useSearchParams } from "@/i18n/routing";
 import { useQuery } from "@tanstack/react-query";
-import {
-  LayoutDashboard, List, MessageSquare, Settings, Users, FileText,
-  Package, Activity, ChevronDown, Plug, Route, MapPin, Banknote, Receipt, Globe
-} from "lucide-react";
 import { supplierService } from "@/services";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
+import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminOrders from "@/components/admin/AdminOrders";
-import AdminSuppliers from "@/components/admin/AdminSuppliers";
-import AdminIntegrations from "@/components/admin/AdminIntegrations";
 import AdminRouting from "@/components/admin/AdminRouting";
 import AdminUsers from "@/components/admin/AdminUsers";
-
 import AdminLocations from "@/components/admin/AdminLocations";
 import AdminInquiries from "@/components/admin/AdminInquiries";
 import AdminContent from "@/components/admin/AdminContent";
@@ -22,114 +16,50 @@ import AdminAudit from "@/components/admin/AdminAudit";
 import AdminSettings from "@/components/admin/AdminSettings";
 import AdminPayouts from "@/components/admin/AdminPayouts";
 import AdminRebates from "@/components/admin/AdminRebates";
-import AdminPartnerPages from "@/components/admin/AdminPartnerPages";
 
 export default function AdminPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "dashboard";
-  const setActiveTab = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("tab", id); return n; }, { replace: true });
+  const setActiveTab = (id: string) =>
+    setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("tab", id); return n; }, { replace: true });
   const { t } = useLanguage();
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { data: suppliers = [] } = useQuery({
     queryKey: ["suppliers"],
     queryFn: () => supplierService.getAll(),
   });
   const [filterSupplierId, setFilterSupplierId] = useState<string>("");
 
-  const sidebarLinks = [
-    { id: "dashboard", label: t("admin.dashboard"), icon: LayoutDashboard },
-    
-    { id: "locations", label: t("admin.locations"), icon: MapPin },
-    { id: "orders", label: t("admin.orders"), icon: Package },
-    { id: "payouts", label: t("admin.payouts"), icon: Banknote },
-    { id: "rebates", label: t("admin.rebates"), icon: Receipt },
-
-    { id: "suppliers", label: t("admin.suppliers"), icon: Users },
-    { id: "partner-pages", label: t("admin.partnerPages"), icon: Globe },
-    { id: "integrations", label: t("admin.integrations"), icon: Plug },
-    { id: "routing", label: t("admin.routing"), icon: Route },
-    { id: "inquiries", label: t("admin.inquiries"), icon: MessageSquare },
-    { id: "users", label: t("admin.users"), icon: Users },
-    { id: "content", label: t("admin.content"), icon: FileText },
-    { id: "audit", label: t("admin.audit"), icon: Activity },
-    { id: "settings", label: t("admin.settings"), icon: Settings },
-  ];
-
-  const currentTab = sidebarLinks.find(l => l.id === activeTab);
-  const CurrentIcon = currentTab?.icon || LayoutDashboard;
-
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">
       <SEO title="Admin — Ruumly" description="" noindex={true} />
-      <aside className="hidden w-56 shrink-0 border-r border-border bg-card lg:block">
-        <div className="p-4">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("admin.title")}</h2>
-        </div>
-        <nav className="space-y-0.5 px-2">
-          {sidebarLinks.map((l) => {
-            const Icon = l.icon;
-            const active = activeTab === l.id;
-            return (
-              <button key={l.id} onClick={() => setActiveTab(l.id)}
-                className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
-                <Icon className="h-4 w-4" />{l.label}
-              </button>
-            );
-          })}
-        </nav>
-      </aside>
+      <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
       <main className="flex-1 overflow-x-hidden p-4 sm:p-6">
-        <div className="mb-4 lg:hidden relative">
-          <button onClick={() => setMobileNavOpen(!mobileNavOpen)} className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium">
-            <span className="flex items-center gap-2.5"><CurrentIcon className="h-4 w-4 text-muted-foreground" />{currentTab?.label}</span>
-            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${mobileNavOpen ? "rotate-180" : ""}`} />
-          </button>
-          {mobileNavOpen && (
-            <>
-              <div className="fixed inset-0 z-30" onClick={() => setMobileNavOpen(false)} />
-              <div className="absolute left-0 right-0 top-full z-40 mt-1 rounded-xl border border-border bg-card p-1 shadow-xl max-h-[60vh] overflow-y-auto">
-                {sidebarLinks.map((l) => {
-                  const Icon = l.icon;
-                  return (
-                    <button key={l.id} onClick={() => { setActiveTab(l.id); setMobileNavOpen(false); }} className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${activeTab === l.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
-                      <Icon className="h-4 w-4" />{l.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </div>
         {["locations", "orders", "payouts", "rebates"].includes(activeTab) && (
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          <label className="text-sm font-medium text-muted-foreground">{t("admin.filterByPartner")}</label>
-          <select
-            value={filterSupplierId}
-            onChange={(e) => setFilterSupplierId(e.target.value)}
-            className="rounded-lg border border-border bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="">{t("admin.allPartners")}</option>
-            {suppliers.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </select>
-          {filterSupplierId && (
-            <button
-              onClick={() => setFilterSupplierId("")}
-              className="text-xs text-muted-foreground hover:text-foreground"
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <label className="text-sm font-medium text-muted-foreground">{t("admin.filterByPartner")}</label>
+            <select
+              value={filterSupplierId}
+              onChange={(e) => setFilterSupplierId(e.target.value)}
+              className="rounded-lg border border-border bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              ✕ {t("admin.clearFilter")}
-            </button>
-          )}
-        </div>
+              <option value="">{t("admin.allPartners")}</option>
+              {suppliers.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+            {filterSupplierId && (
+              <button
+                onClick={() => setFilterSupplierId("")}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                ✕ {t("admin.clearFilter")}
+              </button>
+            )}
+          </div>
         )}
         {activeTab === "dashboard" && <AdminDashboard />}
-        
         {activeTab === "locations" && <AdminLocations supplierId={filterSupplierId || undefined} />}
         {activeTab === "orders" && <AdminOrders supplierId={filterSupplierId || undefined} />}
-        {activeTab === "suppliers" && <AdminSuppliers />}
-        {activeTab === "partner-pages" && <AdminPartnerPages />}
-        {activeTab === "integrations" && <AdminIntegrations />}
         {activeTab === "routing" && <AdminRouting />}
         {activeTab === "inquiries" && <AdminInquiries />}
         {activeTab === "users" && <AdminUsers />}
