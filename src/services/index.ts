@@ -163,6 +163,21 @@ export const supplierService = {
   async delete(id: string): Promise<void> {
     return apiClient.delete(`/admin/suppliers/${id}`);
   },
+  async syncNow(id: string): Promise<{ unitsRefreshed?: number; message?: string }> {
+    return apiClient.post<{ unitsRefreshed?: number; message?: string }>(
+      `/admin/suppliers/${id}/sync`, {}
+    );
+  },
+  async getPollLog(id: string, limit = 10): Promise<Array<{
+    timestamp: string;
+    status: "ok" | "error" | "skipped";
+    durationMs?: number;
+    unitsRefreshed?: number;
+    error?: string;
+  }>> {
+    const res = await apiClient.get<any>(`/admin/suppliers/${id}/poll-log?limit=${limit}`);
+    return Array.isArray(res) ? res : res?.data ?? [];
+  },
 };
 
 // ─── Listing Service ────────────────────────────────────────────────────────────

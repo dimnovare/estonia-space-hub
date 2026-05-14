@@ -79,6 +79,11 @@ export interface Supplier {
     effectiveCommissionRate?: number;
     effectiveMonthlyFee?: number;
   };
+  pollingEnabled?: boolean;
+  pollingIntervalMinutes?: number;
+  lastPolledAt?: string | null;
+  lastPollStatus?: "ok" | "error" | "skipped" | null;
+  nextPollAt?: string | null;
 }
 
 export interface PartnerIntegrationSettings {
