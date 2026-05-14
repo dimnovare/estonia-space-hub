@@ -60,8 +60,8 @@ export default function ProviderPartnerPage() {
   const isAdmin = user?.role === "admin";
 
   const { data, isLoading } = useQuery({
-    queryKey: ["supplier", "partner-page"],
-    queryFn: () => apiClient.get<any>("/supplier/partner-page"),
+    queryKey: ["supplier", "partner-page", supplierId],
+    queryFn: () => apiClient.get<any>(withSupplier("/supplier/partner-page", supplierId)),
     staleTime: 30_000,
   });
 
