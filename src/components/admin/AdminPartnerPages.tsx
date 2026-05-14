@@ -307,6 +307,12 @@ export default function AdminPartnerPages() {
                       )}
                     </div>
 
+                    {form.pollingEnabled && (
+                      <p className="text-[11px] text-muted-foreground">
+                        {t("admin.sync.connectivityNote")}
+                      </p>
+                    )}
+
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
                       <span className="text-muted-foreground">
                         {t("admin.sync.lastSynced")}:{" "}

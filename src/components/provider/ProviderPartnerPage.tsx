@@ -87,7 +87,7 @@ export default function ProviderPartnerPage() {
 
   const saveMutation = useMutation({
     mutationFn: (patch: Record<string, unknown>) =>
-      apiClient.patch<any>("/supplier/partner-page", patch),
+      apiClient.patch<any>(withSupplier("/supplier/partner-page", supplierId), patch),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["supplier", "partner-page"] });
       toast.success(t("provider.partnerPage.saved"));
@@ -118,6 +118,16 @@ export default function ProviderPartnerPage() {
         : "longDescriptionRu",
     [storyLang],
   );
+
+  if (!supplierId && isAdmin) {
+    return (
+      <div className="flex h-full min-h-[200px] flex-col items-center justify-center text-center text-sm text-muted-foreground">
+        <Globe className="mb-2 h-8 w-8 opacity-40" />
+        <p className="font-medium">{t("provider.partnerPage.selectPartnerFirst")}</p>
+        <p className="mt-1 max-w-[280px]">{t("provider.partnerPage.selectPartnerFirstDesc")}</p>
+      </div>
+    );
+  }
 
   if (isLoading || !form) {
     return (
