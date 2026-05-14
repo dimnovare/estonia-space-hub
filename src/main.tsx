@@ -4,6 +4,15 @@ import App from "./App.tsx";
 import "./index.css";
 import { initGA } from "./lib/analytics";
 
+// Keep <html lang="..."> in sync with the active language so SEO + a11y tools
+// see the right locale per route, not the hardcoded "et" baked into index.html.
+const updateHtmlLang = () => {
+  const match = window.location.pathname.match(/^\/(et|en|ru|lv|lt)(\/|$)/);
+  document.documentElement.setAttribute("lang", match?.[1] ?? "et");
+};
+updateHtmlLang();
+window.addEventListener("popstate", updateHtmlLang);
+
 // GA4 is initialized only after cookie consent — see CookieConsent.tsx
 // If consent was already given in a previous session, init immediately
 if (localStorage.getItem("ruumly-cookie-consent") === "true") {
