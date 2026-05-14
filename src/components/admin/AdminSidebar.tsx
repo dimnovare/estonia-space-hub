@@ -4,7 +4,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import {
   LayoutDashboard, MessageSquare, Settings, Users, FileText,
   Package, Activity, ChevronDown, Route, MapPin, Banknote, Receipt,
-  Building2, Plug,
+  Building2,
 } from "lucide-react";
 
 type Item = { id: string; label: string; icon: ComponentType<any>; href: string };
