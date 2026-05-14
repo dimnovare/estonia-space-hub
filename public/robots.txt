@@ -1,0 +1,27 @@
+User-agent: *
+
+Disallow: /et/admin
+Disallow: /en/admin
+Disallow: /ru/admin
+Disallow: /lv/admin
+Disallow: /lt/admin
+
+Disallow: /et/account
+Disallow: /en/account
+Disallow: /ru/account
+Disallow: /lv/account
+Disallow: /lt/account
+
+Disallow: /et/provider/dashboard
+Disallow: /en/provider/dashboard
+Disallow: /ru/provider/dashboard
+Disallow: /lv/provider/dashboard
+Disallow: /lt/provider/dashboard
+
+Disallow: /et/provider/onboarding
+Disallow: /en/provider/onboarding
+Disallow: /ru/provider/onboarding
+Disallow: /lv/provider/onboarding
+Disallow: /lt/provider/onboarding
+
+Sitemap: https://ruumly.eu/sitemap.xml
