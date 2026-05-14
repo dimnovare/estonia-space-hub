@@ -153,10 +153,10 @@ function AppContent() {
           <Route path="/:lang" element={<LangParamGuard><Outlet /></LangParamGuard>}>
             <Route element={<NoFooter />}>
               <Route path="search" element={<SearchPage />} />
-              <Route path="admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />
-              <Route path="admin/*" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />
               <Route path="admin/partners" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPartnerListPage /></ProtectedRoute>} />
               <Route path="admin/partners/:partnerId" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPartnerDetailPage /></ProtectedRoute>} />
+              <Route path="admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />
+              <Route path="admin/*" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />
               <Route path="account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
               <Route path="account/request/:id" element={<ProtectedRoute><RequestDetailPage /></ProtectedRoute>} />
               <Route path="provider/dashboard" element={<ProtectedRoute allowedRoles={["provider", "admin"]}><ProviderDashboardPage /></ProtectedRoute>} />

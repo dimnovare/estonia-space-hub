@@ -7,6 +7,8 @@ import { SEO } from "@/components/SEO";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminOrders from "@/components/admin/AdminOrders";
+import AdminSuppliers from "@/components/admin/AdminSuppliers";
+import AdminIntegrations from "@/components/admin/AdminIntegrations";
 import AdminRouting from "@/components/admin/AdminRouting";
 import AdminUsers from "@/components/admin/AdminUsers";
 import AdminLocations from "@/components/admin/AdminLocations";
@@ -18,10 +20,8 @@ import AdminPayouts from "@/components/admin/AdminPayouts";
 import AdminRebates from "@/components/admin/AdminRebates";
 
 export default function AdminPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "dashboard";
-  const setActiveTab = (id: string) =>
-    setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("tab", id); return n; }, { replace: true });
   const { t } = useLanguage();
   const { data: suppliers = [] } = useQuery({
     queryKey: ["suppliers"],
@@ -32,7 +32,7 @@ export default function AdminPage() {
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">
       <SEO title="Admin — Ruumly" description="" noindex={true} />
-      <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <AdminSidebar activeTab={activeTab} />
       <main className="flex-1 overflow-x-hidden p-4 sm:p-6">
         {["locations", "orders", "payouts", "rebates"].includes(activeTab) && (
           <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -60,6 +60,8 @@ export default function AdminPage() {
         {activeTab === "dashboard" && <AdminDashboard />}
         {activeTab === "locations" && <AdminLocations supplierId={filterSupplierId || undefined} />}
         {activeTab === "orders" && <AdminOrders supplierId={filterSupplierId || undefined} />}
+        {activeTab === "suppliers" && <AdminSuppliers />}
+        {activeTab === "integrations" && <AdminIntegrations />}
         {activeTab === "routing" && <AdminRouting />}
         {activeTab === "inquiries" && <AdminInquiries />}
         {activeTab === "users" && <AdminUsers />}
