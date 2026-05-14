@@ -14,9 +14,14 @@ import CookieConsent from "@/components/CookieConsent";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import MaintenancePage from "@/pages/MaintenancePage";
 import HomePage from "@/pages/HomePage";
-import SearchPage from "@/pages/SearchPage";
-import { WarehouseDetail, MovingDetail, TrailerDetail } from "@/pages/DetailPages";
-import BookingPage from "@/pages/BookingPage";
+const SearchPage = lazy(() => import("@/pages/SearchPage"));
+const BookingPage = lazy(() => import("@/pages/BookingPage"));
+const WarehouseDetail = lazy(() =>
+  import("@/pages/DetailPages").then(m => ({ default: m.WarehouseDetail })));
+const MovingDetail = lazy(() =>
+  import("@/pages/DetailPages").then(m => ({ default: m.MovingDetail })));
+const TrailerDetail = lazy(() =>
+  import("@/pages/DetailPages").then(m => ({ default: m.TrailerDetail })));
 import BookingRedirect from "@/pages/BookingRedirect";
 import PaymentReturnPage from "@/pages/PaymentReturnPage";
 import AboutPage from "@/pages/AboutPage";

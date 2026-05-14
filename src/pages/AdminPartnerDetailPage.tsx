@@ -203,7 +203,7 @@ function OverviewTab({ supplier: s }: { supplier: any }) {
         <Stat label="Avg rating" value={s.rating ? Number(s.rating).toFixed(1) : "—"} />
       </div>
 
-      {(s.ordersTotal ?? 0) === 0 && (
+      {!checklist.every(c => c.done) && (
         <section className="rounded-xl border border-border bg-card p-5">
           <h3 className="mb-3 text-sm font-semibold">Setup checklist</h3>
           <ul className="space-y-1.5 text-sm">
