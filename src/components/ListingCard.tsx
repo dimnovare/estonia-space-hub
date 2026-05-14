@@ -84,6 +84,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
         </div>
         <button
           onClick={e => { e.preventDefault(); e.stopPropagation(); toggle(listing.id); }}
+          aria-label={isFavorite(listing.id) ? t("listing.favRemove") : t("listing.favAdd")}
           className={`absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full transition-colors ${isFavorite(listing.id) ? "bg-white text-red-500" : "bg-card/80 text-muted-foreground hover:text-red-400"}`}
           title={isFavorite(listing.id) ? t("listing.favRemove") : t("listing.favAdd")}
         >

@@ -48,7 +48,7 @@ export default function HowItWorksPage() {
                   <Icon className="h-7 w-7 text-accent" />
                 </div>
                 <div>
-                  <h3 className="font-display text-xl font-semibold">{s.title}</h3>
+                  <h2 className="font-display text-xl font-semibold">{s.title}</h2>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.desc}</p>
                 </div>
               </div>

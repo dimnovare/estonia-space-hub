@@ -1,0 +1,19 @@
+# Ruumly
+
+> Marketplace for storage units, moving services, and trailer rentals across the Baltics (Estonia, Latvia, Lithuania). Up to 10% cheaper than booking direct with verified partners.
+
+## Pages
+
+- [Home](/): Search storage, moving, and trailers across the Baltics.
+- [Search](/search): Browse and filter all listings on a map.
+- [How it works](/how-it-works): Booking flow and platform overview.
+- [About](/about): Company background and mission.
+- [FAQ](/faq): Common questions about bookings, pricing, and partners.
+- [Contact](/contact): Reach the Ruumly team.
+- [Blog](/blog): Articles on storage, moving, and logistics in the Baltics.
+
+## Optional
+
+- [Terms](/terms)
+- [Privacy](/privacy)
+- [Cookies](/cookies)

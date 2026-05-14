@@ -28,6 +28,16 @@ export default function BlogPostPage() {
       { year: "numeric", month: "long", day: "numeric" },
     );
 
+  const articleStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.title,
+    description: post.excerpt,
+    datePublished: new Date(post.publishedAt).toISOString(),
+    author: post.author ? { "@type": "Person", name: post.author } : undefined,
+    image: post.coverImage || undefined,
+  };
+
   return (
     <>
       <SEO
@@ -35,6 +45,7 @@ export default function BlogPostPage() {
         description={post.excerpt}
         canonical={`/blog/${post.slug}`}
         type="article"
+        structuredData={articleStructuredData}
       />
       <Helmet>
         <meta property="article:published_time" content={new Date(post.publishedAt).toISOString()} />
