@@ -252,7 +252,7 @@ export default function SearchPage() {
               <div className="absolute bottom-4 left-4 right-4 z-[1000]">
                 <Link to={`/${selected.type}/${selected.id}`} onClick={() => setSelectedListingId(null)}
                   className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-lg">
-                  <img src={selected.image} alt="" className="h-16 w-20 rounded-lg object-cover shrink-0" />
+                  <img src={selected.image} alt={selected.title} className="h-16 w-20 rounded-lg object-cover shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium truncate">{selected.title}</div>
                     <div className="text-xs text-muted-foreground">{selected.city} · {selected.address}</div>

@@ -235,8 +235,11 @@ export const orderService = {
   async updateStatus(id: string, status: OrderStatus): Promise<Order> {
     return apiClient.patch<Order>(`/orders/${id}/status`, { status });
   },
-  async getLeadSummary(): Promise<LeadSummary> {
-    return apiClient.get<LeadSummary>("/orders/lead-summary");
+  async getLeadSummary(supplierId?: string): Promise<LeadSummary> {
+    const url = supplierId
+      ? `/orders/lead-summary?supplierId=${supplierId}`
+      : "/orders/lead-summary";
+    return apiClient.get<LeadSummary>(url);
   },
   async updateLead(id: string, data: { status?: LeadStatus; providerNotes?: string; lastContactAt?: string }): Promise<Order> {
     return apiClient.patch<Order>(`/orders/${id}/lead`, data);
