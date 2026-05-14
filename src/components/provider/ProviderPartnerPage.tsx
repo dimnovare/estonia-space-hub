@@ -138,11 +138,7 @@ export default function ProviderPartnerPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold">{t("provider.partnerPage.title")}</h1>
-      </header>
-
+    <div className="space-y-6">
       {/* Status banner */}
       {!slug ? (
         <div className="rounded-xl border border-blue-500/40 bg-blue-50 p-4 text-sm text-blue-900 dark:bg-blue-950/30 dark:text-blue-100">
