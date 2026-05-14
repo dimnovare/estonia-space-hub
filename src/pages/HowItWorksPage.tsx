@@ -30,7 +30,7 @@ export default function HowItWorksPage() {
       <SEO
         title={`${t("seo.howItWorks")} — Ruumly`}
         description={t("seo.howItWorksDesc")}
-        canonical="/how-it-works"
+        path="/how-it-works"
       />
       <section className="hero-gradient py-16 md:py-24">
         <div className="container-wide text-center">

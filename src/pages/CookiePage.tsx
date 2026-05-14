@@ -17,7 +17,7 @@ export default function CookiePage() {
       <SEO
         title={`${t("seo.cookies")} — Ruumly`}
         description={t("seo.cookiesDesc")}
-        canonical="/cookies"
+        path="/cookies"
       />
       <div className="mx-auto max-w-3xl">
         <div className="flex items-center gap-3 mb-6">

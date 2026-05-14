@@ -172,6 +172,12 @@ function OverviewTab({ supplier: s }: { supplier: any }) {
     queryFn: () => supplierService.getPollLog(s.id, 10),
     enabled: !!s.id,
   });
+  const { data: contractTemplates = [] } = useQuery({
+    queryKey: ["admin-contract-templates", s.id],
+    queryFn: () => apiClient.get<any[]>(`/admin/suppliers/${s.id}/contracts`),
+    enabled: !!s.id,
+    staleTime: 60_000,
+  });
 
   const Stat = ({ label, value }: { label: string; value: string | number }) => (
     <div className="rounded-xl border border-border bg-card p-4">
@@ -185,6 +191,7 @@ function OverviewTab({ supplier: s }: { supplier: any }) {
     { label: "Partner page published", done: !!s.isPartnerPagePublished },
     { label: "At least one active listing", done: (s.listingCount ?? 0) > 0 },
     { label: "Integration configured", done: s.integrationType !== "manual" || (s.listingCount ?? 0) > 0 },
+    { label: "Contract template uploaded", done: contractTemplates.length > 0 },
   ];
 
   return (
@@ -523,6 +530,8 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
     apiAuthType: ((integration?.apiAuthType ?? "bearer") as string).toLowerCase() as "bearer" | "apikey" | "none",
     apiToken: "",
     approvalMode: ((integration?.approvalMode ?? "auto") as string).toLowerCase() as "auto" | "manual",
+    postingMode: ((integration?.postingMode ?? "email") as string).toLowerCase() as "email" | "api" | "manual",
+    fallbackPostingMode: ((integration?.fallbackPostingMode ?? "email") as string).toLowerCase() as "email" | "api" | "manual",
     pollingEnabled: !!integration?.pollingEnabled,
     pollingIntervalMinutes: typeof integration?.pollingIntervalMinutes === "number" ? integration.pollingIntervalMinutes : 60,
   }), [integration]);
@@ -587,6 +596,30 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
               <option value="auto">Auto</option>
               <option value="manual">Manual</option>
             </select>
+          </div>
+          <div>
+            <label className="text-xs font-medium">Posting mode</label>
+            <select className={inp} value={form.postingMode}
+              onChange={(e) => setForm({ ...form, postingMode: e.target.value as any })}>
+              <option value="email">Email</option>
+              <option value="api">API</option>
+              <option value="manual">Manual</option>
+            </select>
+            <p className="mt-0.5 text-[10px] text-muted-foreground">
+              Primary channel for dispatching new orders to this supplier.
+            </p>
+          </div>
+          <div>
+            <label className="text-xs font-medium">Fallback posting mode</label>
+            <select className={inp} value={form.fallbackPostingMode}
+              onChange={(e) => setForm({ ...form, fallbackPostingMode: e.target.value as any })}>
+              <option value="email">Email</option>
+              <option value="api">API</option>
+              <option value="manual">Manual</option>
+            </select>
+            <p className="mt-0.5 text-[10px] text-muted-foreground">
+              Used when primary channel fails.
+            </p>
           </div>
           {form.integrationType === "email" && (
             <div className="md:col-span-2">

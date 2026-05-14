@@ -38,7 +38,7 @@ export default function LocationDetailPage() {
       <SEO
         title={`${location.name} — ${location.city} — Ruumly`}
         description={`${location.name} ${location.city}. ${location.unitCount} ${t("location.units")}. ${location.description?.slice(0, 120) || ""}`}
-        canonical={`/location/${location.id}`}
+        path={`/location/${location.id}`}
         image={location.images?.[0] || undefined}
         structuredData={{
           "@context": "https://schema.org",

@@ -75,7 +75,7 @@ export default function AboutPage() {
       <SEO
         title={`${t("seo.about")} — Ruumly`}
         description={t("seo.aboutDesc")}
-        canonical="/about"
+        path="/about"
       />
       <section className="hero-gradient py-16 md:py-24">
         <div className="container-wide text-center">

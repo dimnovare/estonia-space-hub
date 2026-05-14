@@ -97,7 +97,7 @@ export default function ProviderPage() {
       <SEO
         title={`${t("seo.providerProgram")} — Ruumly`}
         description={t("seo.providerProgramDesc")}
-        canonical="/provider"
+        path="/provider"
       />
 
       {/* ── Hero ── */}

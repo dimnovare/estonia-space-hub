@@ -197,7 +197,7 @@ export function WarehouseDetail() {
       <SEO
         title={`${wListing.title} — Laopind ${wListing.city} — Ruumly`}
         description={`${wListing.title} ${wListing.city}. Hind alates ${wListing.priceFrom}€ ${wListing.priceUnit}. ${wListing.description?.slice(0, 120) || t("seo.listingFallbackDesc")}`}
-        canonical={`/warehouse/${wListing.id}`}
+        path={`/warehouse/${wListing.id}`}
         image={wListing.image || undefined}
         type="product"
         structuredData={buildProductSchema(wListing)}
@@ -381,7 +381,7 @@ export function MovingDetail() {
       <SEO
         title={`${mListing.title} — Kolimisteenus ${mListing.city} — Ruumly`}
         description={`${mListing.title} ${mListing.city}. Hind alates ${mListing.priceFrom}€ ${mListing.priceUnit}. ${mListing.description?.slice(0, 120) || t("seo.listingFallbackDesc")}`}
-        canonical={`/moving/${mListing.id}`}
+        path={`/moving/${mListing.id}`}
         image={mListing.image || undefined}
         type="product"
         structuredData={buildProductSchema(mListing)}
@@ -515,7 +515,7 @@ export function TrailerDetail() {
       <SEO
         title={`${tListing.title} — Haagis ${tListing.city} — Ruumly`}
         description={`${tListing.title} ${tListing.city}. Hind alates ${tListing.priceFrom}€ ${tListing.priceUnit}. ${tListing.description?.slice(0, 120) || t("seo.listingFallbackDesc")}`}
-        canonical={`/trailer/${tListing.id}`}
+        path={`/trailer/${tListing.id}`}
         image={tListing.image || undefined}
         type="product"
         structuredData={buildProductSchema(tListing)}

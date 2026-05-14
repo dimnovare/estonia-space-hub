@@ -33,7 +33,7 @@ export default function ContactPage() {
       <SEO
         title={`${t("seo.contact")} — Ruumly`}
         description={t("seo.contactDesc")}
-        canonical="/contact"
+        path="/contact"
         structuredData={{
           "@context": "https://schema.org",
           "@type": "ContactPage",
