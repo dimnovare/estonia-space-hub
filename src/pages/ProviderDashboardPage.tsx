@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from "@/i18n/routing";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   LayoutDashboard, List, Package, Calendar as CalendarIcon, Star, Settings, Users, CreditCard,
-  BarChart3, Inbox, Bell, Volume2, VolumeX, ChevronDown, X, Globe
+  BarChart3, Inbox, Bell, Volume2, VolumeX, ChevronDown, X
 } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
 import { useAuth } from "@/contexts/AuthContext";
@@ -39,7 +39,6 @@ function useSidebarLinks() {
     { id: "reviews", label: t("provider.nav.reviews"), icon: Star },
     { id: "analytics", label: t("provider.nav.analytics"), icon: BarChart3 },
     { id: "profile", label: t("provider.nav.profile"), icon: Settings },
-    { id: "partner-page", label: t("provider.nav.partnerPage"), icon: Globe },
     { id: "team", label: t("provider.nav.team"), icon: Users },
     { id: "billing", label: t("provider.nav.billing"), icon: CreditCard },
   ];
@@ -241,8 +240,17 @@ export default function ProviderDashboardPage() {
             <ProviderAnalytics />
           </Suspense>
         )}
-        {tab === "profile" && <ProviderProfile />}
-        {tab === "partner-page" && <ProviderPartnerPage />}
+        {tab === "profile" && (
+          <div className="space-y-8">
+            <ProviderProfile />
+            <div className="border-t border-border pt-8">
+              <h2 className="mb-6 font-display text-xl font-bold">
+                {t("provider.nav.partnerPage")}
+              </h2>
+              <ProviderPartnerPage />
+            </div>
+          </div>
+        )}
         {tab === "team" && <ProviderTeam />}
         {tab === "billing" && <ProviderBilling />}
       </main>
