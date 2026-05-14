@@ -29,6 +29,25 @@ import { cn } from "@/lib/utils";
 
 const dateFnsLocaleMap = { et, en: enUS, ru, lv, lt } as const;
 
+function ContractCta({ bookingId, onSign }: { bookingId: string; onSign: () => void }) {
+  const { t } = useLanguage();
+  const { data } = useQuery({
+    queryKey: ["contract-templates", bookingId],
+    queryFn: () => apiClient.get<any>(`/contracts/templates?bookingId=${bookingId}`),
+    enabled: !!bookingId,
+  });
+  const list: any[] = Array.isArray(data) ? data : (data?.data ?? []);
+  if (!list || list.length === 0) return null;
+  return (
+    <button
+      onClick={onSign}
+      className="mt-3 w-full rounded-xl bg-accent py-3 text-sm font-semibold text-accent-foreground hover:bg-accent/90 transition-colors"
+    >
+      {t("contract.signNow")} →
+    </button>
+  );
+}
+
 function isoToDate(iso: string): Date | undefined {
   if (!iso) return undefined;
   try { return parseISO(iso); } catch { return undefined; }
