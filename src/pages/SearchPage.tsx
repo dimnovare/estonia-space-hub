@@ -1,6 +1,6 @@
 import { useState, useMemo, lazy, Suspense, useCallback, useRef, useEffect } from "react";
 import { useSearchParams, Link } from "@/i18n/routing";
-import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers, Warehouse, Truck, CarFront, Star, Building2 } from "lucide-react";
+import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers, Warehouse, Truck, CarFront, Star, Building2, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from "@/components/ui/drawer";
@@ -17,6 +17,7 @@ import { SEO } from "@/components/SEO";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { trackEvent } from "@/lib/analytics";
 import { SizeBucketFilter } from "@/components/search/SizeBucketFilter";
+import StorageSizeCalculator from "@/components/StorageSizeCalculator";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
@@ -24,6 +25,7 @@ export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
   const { t, language } = useLanguage();
+  const [calcOpen, setCalcOpen] = useState(false);
 
   const { data: featureDefs = {} } = useFeatureDefinitions();
   const { data: availableCities = [] } = useQuery({
@@ -369,6 +371,26 @@ export default function SearchPage() {
             </div>
           ) : (
             <>
+              <div className="mb-4 rounded-xl border border-border bg-card">
+                <button
+                  onClick={() => setCalcOpen(!calcOpen)}
+                  className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium"
+                >
+                  <span className="flex items-center gap-2">
+                    <Calculator className="h-4 w-4 text-accent" />
+                    {t("calculator.bannerTitle")}
+                  </span>
+                  <ChevronDown
+                    className={`h-4 w-4 text-muted-foreground transition-transform ${calcOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {calcOpen && (
+                  <div className="px-4 pb-4">
+                    <StorageSizeCalculator />
+                  </div>
+                )}
+              </div>
+
               <p className="mb-4 text-sm text-muted-foreground">
                 {t("search.resultsFound").replace("{count}", String(result?.total ?? filtered.length))}{query && ` ${t("search.forQuery")} "${query}"`}
               </p>
