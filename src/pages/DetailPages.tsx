@@ -162,19 +162,7 @@ export function WarehouseDetail() {
         canonical={`/warehouse/${wListing.id}`}
         image={wListing.image || undefined}
         type="product"
-        structuredData={{
-          "@context": "https://schema.org",
-          "@type": "LocalBusiness",
-          "name": wListing.title,
-          "description": wListing.description,
-          "url": `https://ruumly.eu/warehouse/${wListing.id}`,
-          "image": wListing.image,
-          "priceRange": `alates €${wListing.priceFrom}`,
-          "address": { "@type": "PostalAddress", "addressLocality": wListing.city, "addressCountry": "EE" },
-          ...(wListing.rating > 0 ? { "aggregateRating": { "@type": "AggregateRating", "ratingValue": wListing.rating, "reviewCount": wListing.reviewCount } } : {}),
-          "offers": { "@type": "Offer", "price": wListing.priceFrom, "priceCurrency": "EUR", "availability": wListing.availableNow ? "https://schema.org/InStock" : "https://schema.org/OutOfStock", "priceSpecification": { "@type": "UnitPriceSpecification", "price": wListing.priceFrom, "priceCurrency": "EUR", "unitText": wListing.priceUnit } },
-          "provider": { "@type": "Organization", "name": "Ruumly", "url": "https://ruumly.eu" }
-        }}
+        structuredData={buildProductSchema(wListing)}
       />
       <nav className="mb-4 flex items-center gap-1.5 text-xs text-muted-foreground">
         <Link to="/" className="hover:text-foreground transition-colors">{t("nav.home")}</Link>
@@ -358,19 +346,7 @@ export function MovingDetail() {
         canonical={`/moving/${mListing.id}`}
         image={mListing.image || undefined}
         type="product"
-        structuredData={{
-          "@context": "https://schema.org",
-          "@type": "Service",
-          "name": mListing.title,
-          "description": mListing.description,
-          "url": `https://ruumly.eu/moving/${mListing.id}`,
-          "image": mListing.image,
-          "priceRange": `alates €${mListing.priceFrom}`,
-          "address": { "@type": "PostalAddress", "addressLocality": mListing.city, "addressCountry": "EE" },
-          ...(mListing.rating > 0 ? { "aggregateRating": { "@type": "AggregateRating", "ratingValue": mListing.rating, "reviewCount": mListing.reviewCount } } : {}),
-          "offers": { "@type": "Offer", "price": mListing.priceFrom, "priceCurrency": "EUR", "availability": mListing.availableNow ? "https://schema.org/InStock" : "https://schema.org/OutOfStock" },
-          "provider": { "@type": "Organization", "name": "Ruumly", "url": "https://ruumly.eu" }
-        }}
+        structuredData={buildProductSchema(mListing)}
       />
       <nav className="mb-4 flex items-center gap-1.5 text-xs text-muted-foreground">
         <Link to="/" className="hover:text-foreground transition-colors">{t("nav.home")}</Link>
@@ -504,19 +480,7 @@ export function TrailerDetail() {
         canonical={`/trailer/${tListing.id}`}
         image={tListing.image || undefined}
         type="product"
-        structuredData={{
-          "@context": "https://schema.org",
-          "@type": "Service",
-          "name": tListing.title,
-          "description": tListing.description,
-          "url": `https://ruumly.eu/trailer/${tListing.id}`,
-          "image": tListing.image,
-          "priceRange": `alates €${tListing.priceFrom}`,
-          "address": { "@type": "PostalAddress", "addressLocality": tListing.city, "addressCountry": "EE" },
-          ...(tListing.rating > 0 ? { "aggregateRating": { "@type": "AggregateRating", "ratingValue": tListing.rating, "reviewCount": tListing.reviewCount } } : {}),
-          "offers": { "@type": "Offer", "price": tListing.priceFrom, "priceCurrency": "EUR", "availability": tListing.availableNow ? "https://schema.org/InStock" : "https://schema.org/OutOfStock" },
-          "provider": { "@type": "Organization", "name": "Ruumly", "url": "https://ruumly.eu" }
-        }}
+        structuredData={buildProductSchema(tListing)}
       />
       <nav className="mb-4 flex items-center gap-1.5 text-xs text-muted-foreground">
         <Link to="/" className="hover:text-foreground transition-colors">{t("nav.home")}</Link>
