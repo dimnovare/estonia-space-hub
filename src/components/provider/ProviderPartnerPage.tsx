@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, Loader2, Save } from "lucide-react";
+import { ExternalLink, Globe, Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiClient } from "@/services/apiClient";
+import { useAuth } from "@/contexts/AuthContext";
+import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
+import { withSupplier } from "@/lib/withSupplier";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 
