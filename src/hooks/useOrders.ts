@@ -12,11 +12,11 @@ function unwrap<T>(res: unknown): T[] {
 }
 
 export function useOrders(supplierId?: string) {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: supplierId ? [...queryKeys.orders.all, supplierId] : queryKeys.orders.all,
     queryFn: async () => unwrap<Order>(await orderService.getAll(supplierId ? { supplierId } : undefined)),
-    enabled: isAuthenticated && (user?.role !== "admin" || !!supplierId || typeof window === "undefined" || !window.location.pathname.includes("/provider/")),
+    enabled: isAuthenticated,
     staleTime: 15_000,
   });
 }
