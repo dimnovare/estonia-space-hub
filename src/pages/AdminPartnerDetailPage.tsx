@@ -797,7 +797,7 @@ function ContractsTab({ supplierId }: { supplierId: string }) {
               No templates yet.
             </p>
           ) : (
-            templates.map((tpl) => (
+            templates.filter(tpl => tpl.isActive !== false).map((tpl) => (
               <div key={tpl.id} className="flex items-center gap-2 rounded-lg border border-border p-2 text-sm">
                 <span className="flex-1 truncate font-medium">{tpl.name}</span>
                 {tpl.isDefault && (
