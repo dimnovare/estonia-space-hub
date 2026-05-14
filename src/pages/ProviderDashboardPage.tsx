@@ -142,7 +142,7 @@ export default function ProviderDashboardPage() {
               size="sm"
               variant="outline"
               className="gap-1 border-amber-600/40 text-amber-900 hover:bg-amber-100 dark:text-amber-100 dark:hover:bg-amber-900/40"
-              onClick={() => navigate("/admin?tab=suppliers")}
+              onClick={() => navigate("/admin/partners")}
             >
               <X className="h-3.5 w-3.5" />
               {t("admin.impersonation.exit")}
