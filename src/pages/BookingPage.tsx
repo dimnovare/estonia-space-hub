@@ -302,6 +302,8 @@ export default function BookingPage() {
   if (submitted) {
     const integrationLabel = supplier ? INTEGRATION_TYPE_CONFIG[supplier.integrationType] : null;
     const IntIcon = supplier?.integrationType === "api" ? Wifi : supplier?.integrationType === "email" ? Mail : Hand;
+    // Detect contract template availability for the created booking
+    // (rendered as a hook below; data is fetched only when an id exists)
 
     return (
       <div className="container-wide flex min-h-[60vh] items-center justify-center py-16">
@@ -356,9 +358,22 @@ export default function BookingPage() {
                 <Link to="/account?tab=bookings"><Button variant="outline">{t("booking.myBookings")}</Button></Link>
                 <Link to="/search"><Button className="bg-accent text-accent-foreground hover:bg-accent/90">{t("booking.searchMore")}</Button></Link>
               </div>
+              {createdBookingId && (
+                <ContractCta
+                  bookingId={createdBookingId}
+                  onSign={() => setShowContract(true)}
+                />
+              )}
             </>
           )}
         </div>
+        {showContract && createdBookingId && (
+          <ContractSigningModal
+            bookingId={createdBookingId}
+            onComplete={() => { setShowContract(false); navigate("/account?tab=bookings"); }}
+            onClose={() => setShowContract(false)}
+          />
+        )}
       </div>
     );
   }
