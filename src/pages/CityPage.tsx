@@ -63,7 +63,10 @@ export default function CityPage() {
       }));
 
   const seoTitle = t("cityPage.seoTitle").replace("{city}", city);
-  const seoDesc = t("cityPage.seoDesc").replace("{city}", city);
+  const seoDesc = t("city.seoDesc").replace("{city}", city);
+  const introText = t("city.introText")
+    .replace("{city}", city)
+    .replace("{count}", String(topItems.length || ""));
 
   const faqs = [
     { q: t("cityPage.faq1.q").replace("{city}", city), a: t("cityPage.faq1.a").replace("{city}", city) },
@@ -73,7 +76,17 @@ export default function CityPage() {
 
   return (
     <div>
-      <SEO title={seoTitle} description={seoDesc} canonical={`/storage/${slug}`} />
+      <SEO
+        title={`${t("city.storageIn")} ${city} — Ruumly`}
+        description={seoDesc}
+        path={`/storage/${slug}`}
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "SearchResultsPage",
+          name: `${t("city.storageIn")} ${city}`,
+          url: `https://ruumly.eu/${language}/storage/${slug}`,
+        }}
+      />
 
       {/* Hero */}
       <section className="bg-gradient-to-b from-secondary/50 to-background px-4 py-16 text-center">
@@ -93,6 +106,9 @@ export default function CityPage() {
 
       {/* Top locations */}
       <section className="container-wide py-12">
+        <p className="mx-auto mb-8 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+          {introText}
+        </p>
         <h2 className="font-display text-xl font-bold">
           {t("cityPage.topTitle").replace("{city}", city)}
         </h2>
