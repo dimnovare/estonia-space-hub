@@ -3,7 +3,7 @@ import { useSearchParams } from "@/i18n/routing";
 import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard, List, MessageSquare, Settings, Users, FileText,
-  Package, Activity, ChevronDown, Plug, Route, MapPin, Banknote, Receipt
+  Package, Activity, ChevronDown, Plug, Route, MapPin, Banknote, Receipt, Globe
 } from "lucide-react";
 import { supplierService } from "@/services";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -22,6 +22,7 @@ import AdminAudit from "@/components/admin/AdminAudit";
 import AdminSettings from "@/components/admin/AdminSettings";
 import AdminPayouts from "@/components/admin/AdminPayouts";
 import AdminRebates from "@/components/admin/AdminRebates";
+import AdminPartnerPages from "@/components/admin/AdminPartnerPages";
 
 export default function AdminPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -44,6 +45,7 @@ export default function AdminPage() {
     { id: "rebates", label: t("admin.rebates"), icon: Receipt },
 
     { id: "suppliers", label: t("admin.suppliers"), icon: Users },
+    { id: "partner-pages", label: t("admin.partnerPages"), icon: Globe },
     { id: "integrations", label: t("admin.integrations"), icon: Plug },
     { id: "routing", label: t("admin.routing"), icon: Route },
     { id: "inquiries", label: t("admin.inquiries"), icon: MessageSquare },
@@ -126,6 +128,7 @@ export default function AdminPage() {
         {activeTab === "locations" && <AdminLocations supplierId={filterSupplierId || undefined} />}
         {activeTab === "orders" && <AdminOrders supplierId={filterSupplierId || undefined} />}
         {activeTab === "suppliers" && <AdminSuppliers />}
+        {activeTab === "partner-pages" && <AdminPartnerPages />}
         {activeTab === "integrations" && <AdminIntegrations />}
         {activeTab === "routing" && <AdminRouting />}
         {activeTab === "inquiries" && <AdminInquiries />}
