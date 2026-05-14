@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, Loader2, Save, Globe, RefreshCw, ChevronDown } from "lucide-react";
+import { ExternalLink, Loader2, Save, Globe, RefreshCw, ChevronDown, Plus, Trash2, Pencil, FileText, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { supplierService } from "@/services";
 import { queryKeys } from "@/lib/queryKeys";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
+import { apiClient } from "@/services/apiClient";
 
 const inp =
   "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
@@ -503,6 +504,8 @@ export default function AdminPartnerPages() {
                 </a>
               </section>
 
+              <ContractTemplatesSection supplierId={selected.id} />
+
               <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
                 <Button variant="outline" onClick={handleCancel} disabled={saveMutation.isPending}>
                   Cancel
@@ -517,5 +520,157 @@ export default function AdminPartnerPages() {
         </div>
       </div>
     </div>
+  );
+}
+
+type ContractTpl = { id: string; name: string; html: string; isDefault?: boolean; isActive?: boolean };
+
+function ContractTemplatesSection({ supplierId }: { supplierId: string }) {
+  const { t } = useLanguage();
+  const qc = useQueryClient();
+  const listKey = ["admin-contract-templates", supplierId];
+  const { data: templates = [], isLoading } = useQuery({
+    queryKey: listKey,
+    queryFn: () => apiClient.get<ContractTpl[]>(`/admin/suppliers/${supplierId}/contracts`),
+    enabled: !!supplierId,
+  });
+
+  const [editing, setEditing] = useState<ContractTpl | null>(null);
+  const [adding, setAdding] = useState(false);
+
+  const saveMutation = useMutation({
+    mutationFn: async (tpl: ContractTpl) => {
+      const body = { name: tpl.name, html: tpl.html, isDefault: tpl.isDefault, isActive: tpl.isActive ?? true };
+      if (tpl.id && !tpl.id.startsWith("new-")) {
+        return apiClient.patch(`/admin/suppliers/${supplierId}/contracts/${tpl.id}`, body);
+      }
+      return apiClient.post(`/admin/suppliers/${supplierId}/contracts`, body);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: listKey });
+      setEditing(null);
+      setAdding(false);
+      toast.success("Saved");
+    },
+    onError: (err: any) => toast.error(err?.message || "Save failed"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => apiClient.delete(`/admin/suppliers/${supplierId}/contracts/${id}`),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: listKey }); toast.success("Deleted"); },
+    onError: (err: any) => toast.error(err?.message || "Delete failed"),
+  });
+
+  const previewHtml = (html: string) => {
+    const blob = new Blob([html], { type: "text/html" });
+    window.open(URL.createObjectURL(blob), "_blank");
+  };
+
+  const startAdd = () => {
+    setAdding(true);
+    setEditing({ id: `new-${Date.now()}`, name: "", html: "", isDefault: false, isActive: true });
+  };
+
+  return (
+    <section>
+      <div className="flex items-center justify-between">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <FileText className="h-3.5 w-3.5" /> {t("admin.contract.title")}
+        </h3>
+        {!editing && (
+          <Button variant="outline" size="sm" onClick={startAdd}>
+            <Plus className="h-3.5 w-3.5 mr-1" /> {t("admin.contract.add")}
+          </Button>
+        )}
+      </div>
+
+      {!editing && (
+        <div className="mt-2 space-y-1">
+          {isLoading ? (
+            <div className="h-12 animate-pulse rounded-lg bg-secondary" />
+          ) : templates.length === 0 ? (
+            <p className="rounded-lg border border-border bg-secondary/30 p-3 text-xs text-muted-foreground">
+              No templates yet.
+            </p>
+          ) : (
+            templates.map((tpl) => (
+              <div key={tpl.id} className="flex items-center gap-2 rounded-lg border border-border p-2 text-sm">
+                <span className="flex-1 truncate font-medium">{tpl.name}</span>
+                {tpl.isDefault && (
+                  <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-semibold text-accent">Default</span>
+                )}
+                <button
+                  className="text-muted-foreground hover:text-foreground"
+                  onClick={() => previewHtml(tpl.html)}
+                  title={t("admin.contract.preview")}
+                >
+                  <Eye className="h-4 w-4" />
+                </button>
+                <button className="text-muted-foreground hover:text-foreground" onClick={() => setEditing(tpl)}>
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button
+                  className="text-muted-foreground hover:text-destructive"
+                  onClick={() => {
+                    if (window.confirm(`Delete "${tpl.name}"?`)) deleteMutation.mutate(tpl.id);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {editing && (
+        <div className="mt-3 space-y-3 rounded-lg border border-border p-3">
+          <div>
+            <label className="text-xs font-medium">Name</label>
+            <input
+              className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+              value={editing.name}
+              onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium">{t("admin.contract.htmlEditor")}</label>
+            <textarea
+              rows={12}
+              className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-accent"
+              value={editing.html}
+              onChange={(e) => setEditing({ ...editing, html: e.target.value })}
+            />
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              {t("admin.contract.variables")}: {"{{tenant_name}}, {{unit_title}}, {{price}}, {{start_date}}, {{signed_date}}, {{supplier_name}}"}
+            </p>
+          </div>
+          <label className="flex items-center gap-2 text-xs">
+            <input
+              type="checkbox"
+              checked={!!editing.isDefault}
+              onChange={(e) => setEditing({ ...editing, isDefault: e.target.checked })}
+            />
+            {t("admin.contract.isDefault")}
+          </label>
+          <div className="flex justify-end gap-2 pt-1">
+            <Button variant="ghost" size="sm" onClick={() => previewHtml(editing.html)}>
+              <Eye className="h-3.5 w-3.5 mr-1" /> {t("admin.contract.preview")}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => { setEditing(null); setAdding(false); }}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              disabled={!editing.name.trim() || !editing.html.trim() || saveMutation.isPending}
+              onClick={() => saveMutation.mutate(editing)}
+            >
+              {saveMutation.isPending ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Save className="h-3.5 w-3.5 mr-1" />}
+              Save
+            </Button>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }

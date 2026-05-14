@@ -17,6 +17,7 @@ import { createBookingContactSchema, type BookingContactForm } from "@/lib/schem
 import { tokenStore, apiClient } from "@/services/apiClient";
 import BookingInlineAuth from "@/components/BookingInlineAuth";
 import ReservationCountdown from "@/components/ReservationCountdown";
+import ContractSigningModal from "@/components/ContractSigningModal";
 import { trackEvent } from "@/lib/analytics";
 import { z } from "zod";
 import { Controller } from "react-hook-form";
@@ -27,6 +28,25 @@ import { et, enUS, ru, lv, lt } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 const dateFnsLocaleMap = { et, en: enUS, ru, lv, lt } as const;
+
+function ContractCta({ bookingId, onSign }: { bookingId: string; onSign: () => void }) {
+  const { t } = useLanguage();
+  const { data } = useQuery({
+    queryKey: ["contract-templates", bookingId],
+    queryFn: () => apiClient.get<any>(`/contracts/templates?bookingId=${bookingId}`),
+    enabled: !!bookingId,
+  });
+  const list: any[] = Array.isArray(data) ? data : (data?.data ?? []);
+  if (!list || list.length === 0) return null;
+  return (
+    <button
+      onClick={onSign}
+      className="mt-3 w-full rounded-xl bg-accent py-3 text-sm font-semibold text-accent-foreground hover:bg-accent/90 transition-colors"
+    >
+      {t("contract.signNow")} →
+    </button>
+  );
+}
 
 function isoToDate(iso: string): Date | undefined {
   if (!iso) return undefined;
@@ -123,6 +143,8 @@ export default function BookingPage() {
   const [submitted, setSubmitted] = useState(false);
   const [phase, setPhase] = useState<SubmitPhase>("submitting");
   const [reservedUntil, setReservedUntil] = useState<string | null>(null);
+  const [createdBookingId, setCreatedBookingId] = useState<string | null>(null);
+  const [showContract, setShowContract] = useState(false);
   const [showVerifyBanner, setShowVerifyBanner] = useState(false);
   const [resendSent, setResendSent] = useState(false);
 
@@ -253,6 +275,8 @@ export default function BookingPage() {
       notes: contactForm.getValues("notes"),
     }).then(async (bookingResult: any) => {
       const invoiceId = bookingResult?.invoiceId;
+      const newBookingId = bookingResult?.id || bookingResult?.bookingId || null;
+      if (newBookingId) setCreatedBookingId(newBookingId);
 
       if (!isRebateModel && paymentMethod !== "later" && invoiceId) {
         try {
@@ -297,6 +321,8 @@ export default function BookingPage() {
   if (submitted) {
     const integrationLabel = supplier ? INTEGRATION_TYPE_CONFIG[supplier.integrationType] : null;
     const IntIcon = supplier?.integrationType === "api" ? Wifi : supplier?.integrationType === "email" ? Mail : Hand;
+    // Detect contract template availability for the created booking
+    // (rendered as a hook below; data is fetched only when an id exists)
 
     return (
       <div className="container-wide flex min-h-[60vh] items-center justify-center py-16">
@@ -351,9 +377,22 @@ export default function BookingPage() {
                 <Link to="/account?tab=bookings"><Button variant="outline">{t("booking.myBookings")}</Button></Link>
                 <Link to="/search"><Button className="bg-accent text-accent-foreground hover:bg-accent/90">{t("booking.searchMore")}</Button></Link>
               </div>
+              {createdBookingId && (
+                <ContractCta
+                  bookingId={createdBookingId}
+                  onSign={() => setShowContract(true)}
+                />
+              )}
             </>
           )}
         </div>
+        {showContract && createdBookingId && (
+          <ContractSigningModal
+            bookingId={createdBookingId}
+            onComplete={() => { setShowContract(false); navigate("/account?tab=bookings"); }}
+            onClose={() => setShowContract(false)}
+          />
+        )}
       </div>
     );
   }

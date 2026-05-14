@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReviewDialog from "@/components/ReviewDialog";
+import ContractSigningModal from "@/components/ContractSigningModal";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBookings } from "@/hooks/useBookings";
@@ -250,12 +251,30 @@ function BookingCard({ booking }: { booking: Booking }) {
   const statusConfig = useStatusConfig();
   const [open, setOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [contractOpen, setContractOpen] = useState(false);
   const Icon = typeIcons[booking.listingType];
   const status = statusConfig[booking.status];
   const StatusIcon = status.icon;
   const { data: orders = [] } = useOrders();
   const order = orders.find(o => o.bookingId === booking.id);
   const queryClient = useQueryClient();
+  const contractQuery = useQuery({
+    queryKey: ["contract", "booking", booking.id],
+    queryFn: () => apiClient.get<any>(`/contracts/booking/${booking.id}`),
+    enabled: open,
+    retry: false,
+    staleTime: 30_000,
+  });
+  const signedContract: any = contractQuery.data && (contractQuery.data.signedAt || contractQuery.data.html)
+    ? contractQuery.data
+    : null;
+  const handleViewContract = () => {
+    const html = signedContract?.html || signedContract?.renderedHtml;
+    if (!html) return;
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+  };
   const cancelMutation = useMutation({
     mutationFn: (id: string) => apiClient.patch(`/bookings/${id}/cancel`, {}),
     onSuccess: () => {
@@ -343,6 +362,35 @@ function BookingCard({ booking }: { booking: Booking }) {
                 </Button>
               </div>
             )}
+            {!contractQuery.isLoading && (
+              <div className="rounded-lg border border-border p-3">
+                <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
+                  <FileText className="h-3 w-3" /> {t("contract.signNow")}
+                </p>
+                {signedContract ? (
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs text-success font-medium">
+                      ✓ {t("contract.signed")}
+                      {signedContract.signedAt ? ` · ${new Date(signedContract.signedAt).toLocaleDateString()}` : ""}
+                    </span>
+                    <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleViewContract(); }}>
+                      <Download className="h-3.5 w-3.5 mr-1" /> {t("contract.download")}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs text-muted-foreground">{t("contract.notSigned")}</span>
+                    <Button
+                      size="sm"
+                      className="bg-accent text-accent-foreground hover:bg-accent/90"
+                      onClick={(e) => { e.stopPropagation(); setContractOpen(true); }}
+                    >
+                      {t("contract.signNow")} →
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
             {(booking.status === "pending" || booking.status === "confirmed" || booking.status === "active") && (
               <div className="pt-2">
                 <Button
@@ -374,6 +422,13 @@ function BookingCard({ booking }: { booking: Booking }) {
         bookingId={booking.id}
         listingId={booking.listingId}
       />
+      {contractOpen && (
+        <ContractSigningModal
+          bookingId={booking.id}
+          onComplete={() => { setContractOpen(false); contractQuery.refetch(); }}
+          onClose={() => setContractOpen(false)}
+        />
+      )}
     </>
   );
 }
