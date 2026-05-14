@@ -33,6 +33,7 @@ export interface PartnerProfile {
   locationCount: number;
   listingCount: number;
   locations: PartnerLocation[];
+  hasGoogleReviews?: boolean;
 }
 
 export interface FeaturedPartner {
