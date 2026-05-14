@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, Loader2, Save, Globe, RefreshCw, ChevronDown } from "lucide-react";
+import { ExternalLink, Loader2, Save, Globe, RefreshCw, ChevronDown, Plus, Trash2, Pencil, FileText, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { supplierService } from "@/services";
 import { queryKeys } from "@/lib/queryKeys";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
+import { apiClient } from "@/services/apiClient";
 
 const inp =
   "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
@@ -502,6 +503,8 @@ export default function AdminPartnerPages() {
                   <ExternalLink className="h-3 w-3" /> How to find your Place ID
                 </a>
               </section>
+
+              <ContractTemplatesSection supplierId={selected.id} />
 
               <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
                 <Button variant="outline" onClick={handleCancel} disabled={saveMutation.isPending}>
