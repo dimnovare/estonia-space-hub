@@ -511,6 +511,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
       toast.success("Integration saved");
       qc.invalidateQueries({ queryKey: ["admin-supplier-integration", supplierId] });
       qc.invalidateQueries({ queryKey: ["admin-supplier", supplierId] });
+      qc.invalidateQueries({ queryKey: queryKeys.suppliers.all });
     },
     onError: (err: any) => toast.error(err?.message ?? "Save failed"),
   });
