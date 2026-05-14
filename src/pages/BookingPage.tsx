@@ -17,6 +17,7 @@ import { createBookingContactSchema, type BookingContactForm } from "@/lib/schem
 import { tokenStore, apiClient } from "@/services/apiClient";
 import BookingInlineAuth from "@/components/BookingInlineAuth";
 import ReservationCountdown from "@/components/ReservationCountdown";
+import ContractSigningModal from "@/components/ContractSigningModal";
 import { trackEvent } from "@/lib/analytics";
 import { z } from "zod";
 import { Controller } from "react-hook-form";
@@ -123,6 +124,8 @@ export default function BookingPage() {
   const [submitted, setSubmitted] = useState(false);
   const [phase, setPhase] = useState<SubmitPhase>("submitting");
   const [reservedUntil, setReservedUntil] = useState<string | null>(null);
+  const [createdBookingId, setCreatedBookingId] = useState<string | null>(null);
+  const [showContract, setShowContract] = useState(false);
   const [showVerifyBanner, setShowVerifyBanner] = useState(false);
   const [resendSent, setResendSent] = useState(false);
 
@@ -253,6 +256,8 @@ export default function BookingPage() {
       notes: contactForm.getValues("notes"),
     }).then(async (bookingResult: any) => {
       const invoiceId = bookingResult?.invoiceId;
+      const newBookingId = bookingResult?.id || bookingResult?.bookingId || null;
+      if (newBookingId) setCreatedBookingId(newBookingId);
 
       if (!isRebateModel && paymentMethod !== "later" && invoiceId) {
         try {
