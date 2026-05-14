@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from "@/i18n/routing";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   LayoutDashboard, List, Package, Calendar as CalendarIcon, Star, Settings, Users, CreditCard,
-  BarChart3, Inbox, Bell, Volume2, VolumeX, ChevronDown, X
+  BarChart3, Inbox, Bell, Volume2, VolumeX, ChevronDown, X, Globe
 } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,6 +26,7 @@ const ProviderAnalytics = lazy(() => import("@/components/provider/ProviderAnaly
 import ProviderProfile from "@/components/provider/ProviderProfile";
 import ProviderTeam from "@/components/provider/ProviderTeam";
 import ProviderBilling from "@/components/provider/ProviderBilling";
+import ProviderPartnerPage from "@/components/provider/ProviderPartnerPage";
 
 function useSidebarLinks() {
   const { t } = useLanguage();
@@ -38,6 +39,7 @@ function useSidebarLinks() {
     { id: "reviews", label: t("provider.nav.reviews"), icon: Star },
     { id: "analytics", label: t("provider.nav.analytics"), icon: BarChart3 },
     { id: "profile", label: t("provider.nav.profile"), icon: Settings },
+    { id: "partner-page", label: t("provider.nav.partnerPage"), icon: Globe },
     { id: "team", label: t("provider.nav.team"), icon: Users },
     { id: "billing", label: t("provider.nav.billing"), icon: CreditCard },
   ];
@@ -240,6 +242,7 @@ export default function ProviderDashboardPage() {
           </Suspense>
         )}
         {tab === "profile" && <ProviderProfile />}
+        {tab === "partner-page" && <ProviderPartnerPage />}
         {tab === "team" && <ProviderTeam />}
         {tab === "billing" && <ProviderBilling />}
       </main>
