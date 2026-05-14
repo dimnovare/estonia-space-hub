@@ -157,7 +157,7 @@ export default function AdminPartnerDetailPage() {
         {tab === "profile" && <ProfileTab supplier={s} onSave={(p) => updateMutation.mutate(p)} pending={updateMutation.isPending} />}
         {tab === "commercial" && <CommercialTab supplier={s} onSave={(p) => updateMutation.mutate(p)} pending={updateMutation.isPending} />}
         {tab === "partner-page" && <PartnerPageTab supplier={s} onSave={(p) => updateMutation.mutate(p)} pending={updateMutation.isPending} />}
-        {tab === "integration" && <IntegrationTab supplier={s} onSave={(p) => updateMutation.mutate(p)} pending={updateMutation.isPending} />}
+        {tab === "integration" && <IntegrationTab supplierId={s.id} />}
         {tab === "contracts" && <ContractsTab supplierId={s.id} />}
       </main>
     </div>
@@ -496,25 +496,43 @@ function PartnerPageTab({ supplier, onSave, pending }: { supplier: any; onSave: 
 }
 
 // ─── Integration ───────────────────────────────────────────────────────────
-function IntegrationTab({ supplier, onSave, pending }: { supplier: any; onSave: (p: any) => void; pending: boolean }) {
+function IntegrationTab({ supplierId }: { supplierId: string }) {
+  const qc = useQueryClient();
+  const { data: integration, isLoading } = useQuery({
+    queryKey: ["admin-supplier-integration", supplierId],
+    queryFn: () => apiClient.get<any>(`/admin/suppliers/${supplierId}/integration`),
+    enabled: !!supplierId,
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: (patch: Record<string, unknown>) =>
+      apiClient.patch(`/admin/suppliers/${supplierId}/integration`, patch),
+    onSuccess: () => {
+      toast.success("Integration saved");
+      qc.invalidateQueries({ queryKey: ["admin-supplier-integration", supplierId] });
+      qc.invalidateQueries({ queryKey: ["admin-supplier", supplierId] });
+    },
+    onError: (err: any) => toast.error(err?.message ?? "Save failed"),
+  });
+
   const initial = useMemo(() => ({
-    integrationType: (supplier.integrationType ?? "manual") as "email" | "api" | "manual",
-    recipientEmail: supplier.recipientEmail ?? "",
-    apiEndpoint: supplier.apiEndpoint ?? "",
-    apiAuthType: (supplier.apiAuthType ?? "bearer") as "bearer" | "apikey" | "none",
+    integrationType: ((integration?.integrationType ?? "manual") as string).toLowerCase() as "email" | "api" | "manual",
+    recipientEmail: integration?.recipientEmail ?? "",
+    apiEndpoint: integration?.apiEndpoint ?? "",
+    apiAuthType: ((integration?.apiAuthType ?? "bearer") as string).toLowerCase() as "bearer" | "apikey" | "none",
     apiToken: "",
-    approvalMode: (supplier.approvalMode ?? "auto") as "auto" | "manual",
-    pollingEnabled: !!supplier.pollingEnabled,
-    pollingIntervalMinutes: typeof supplier.pollingIntervalMinutes === "number" ? supplier.pollingIntervalMinutes : 60,
-  }), [supplier]);
+    approvalMode: ((integration?.approvalMode ?? "auto") as string).toLowerCase() as "auto" | "manual",
+    pollingEnabled: !!integration?.pollingEnabled,
+    pollingIntervalMinutes: typeof integration?.pollingIntervalMinutes === "number" ? integration.pollingIntervalMinutes : 60,
+  }), [integration]);
   const [form, setForm] = useState(initial);
   useEffect(() => setForm(initial), [initial]);
   const dirty = JSON.stringify(form) !== JSON.stringify(initial);
 
   const [logOpen, setLogOpen] = useState(false);
   const { data: pollLog = [] } = useQuery({
-    queryKey: ["admin-supplier-poll", supplier.id, "tab"],
-    queryFn: () => supplierService.getPollLog(supplier.id, 10),
+    queryKey: ["admin-supplier-poll", supplierId, "tab"],
+    queryFn: () => supplierService.getPollLog(supplierId, 10),
     enabled: logOpen,
   });
 
@@ -525,7 +543,7 @@ function IntegrationTab({ supplier, onSave, pending }: { supplier: any; onSave: 
     setTestResult(null);
     try {
       const t0 = performance.now();
-      const res = await supplierService.syncNow(supplier.id);
+      const res = await supplierService.syncNow(supplierId);
       setTestResult({ ok: true, latency: Math.round(performance.now() - t0), message: res?.message });
     } catch (err: any) {
       setTestResult({ ok: false, message: err?.message ?? "Failed" });
@@ -537,8 +555,17 @@ function IntegrationTab({ supplier, onSave, pending }: { supplier: any; onSave: 
   const handleSave = () => {
     const patch: any = { ...form };
     if (!patch.apiToken) delete patch.apiToken;
-    onSave(patch);
+    saveMutation.mutate(patch);
   };
+
+  if (isLoading) return (
+    <div className="flex justify-center py-10">
+      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    </div>
+  );
+
+  const hasToken = !!integration?.hasApiToken;
+  const pending = saveMutation.isPending;
 
   return (
     <div className="space-y-5">
@@ -585,11 +612,13 @@ function IntegrationTab({ supplier, onSave, pending }: { supplier: any; onSave: 
                 <input
                   type="password"
                   className={inp}
-                  placeholder={supplier.apiTokenSet ? "••••••" : "Enter token"}
+                  placeholder={hasToken ? "••••••" : "Enter token"}
                   value={form.apiToken}
                   onChange={(e) => setForm({ ...form, apiToken: e.target.value })}
                 />
-                <p className="mt-1 text-[10px] text-muted-foreground">Leave empty to keep existing token.</p>
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  {hasToken && !form.apiToken ? "Currently set ✓ — leave empty to keep." : "Leave empty to keep existing token."}
+                </p>
               </div>
             </>
           )}
