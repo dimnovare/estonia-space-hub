@@ -7,6 +7,7 @@ import { SEO } from "@/components/SEO";
 import { ErrorState } from "@/components/ErrorState";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePartner } from "@/hooks/usePartner";
+import { usePartnerGoogleReviews } from "@/hooks/usePartnerGoogleReviews";
 import { useListings } from "@/hooks/queries";
 import ListingCard from "@/components/ListingCard";
 import type { PartnerLocation, PartnerProfile } from "@/types/partner";
@@ -115,6 +116,11 @@ export default function PartnerPage() {
   const { slug } = useParams();
   const { t, language } = useLanguage();
   const { data: partner, isLoading } = usePartner(slug);
+
+  const { data: googleData } = usePartnerGoogleReviews(
+    partner?.slug,
+    !!partner?.hasGoogleReviews,
+  );
 
   const { data: listingsRes } = useListings(
     partner?.id ? { supplierId: partner.id, limit: 50 } : undefined
@@ -363,6 +369,86 @@ export default function PartnerPage() {
       )}
 
       {/* Listings preview */}
+      {googleData && googleData.reviews.length > 0 && (
+        <section className="container-wide py-8">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-3">
+                <h2 className="font-display text-2xl font-bold">
+                  {t("partner.googleReviews.title")}
+                </h2>
+                <a
+                  href={googleData.mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs hover:bg-secondary transition-colors"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  Google
+                </a>
+              </div>
+              <div className="mt-2 flex items-center gap-2">
+                <div className="flex">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <Star
+                      key={i}
+                      className={`h-4 w-4 ${
+                        i <= Math.round(googleData.rating)
+                          ? "fill-accent text-accent"
+                          : "text-muted-foreground/30"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-sm font-semibold">{googleData.rating.toFixed(1)}</span>
+                <span className="text-xs text-muted-foreground">
+                  ({googleData.totalRatings.toLocaleString()} {t("partner.googleReviews.totalLabel")})
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {googleData.reviews.map((review, i) => (
+              <div key={i} className="card-elevated p-4">
+                <div className="flex items-center gap-3">
+                  {review.authorPhotoUrl ? (
+                    <img
+                      src={review.authorPhotoUrl}
+                      alt={review.authorName}
+                      loading="lazy"
+                      className="h-10 w-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-foreground">
+                      {review.authorName?.[0] ?? "?"}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{review.authorName}</p>
+                    <p className="text-xs text-muted-foreground">{review.relativeTimeDesc}</p>
+                  </div>
+                </div>
+                <div className="mt-3 flex">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <Star
+                      key={i}
+                      className={`h-3.5 w-3.5 ${
+                        i <= review.rating
+                          ? "fill-accent text-accent"
+                          : "text-muted-foreground/30"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className="mt-2 line-clamp-5 text-sm leading-relaxed text-muted-foreground">
+                  {review.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {partnerListings.length > 0 && (
         <section className="surface-sunken py-12">
           <div className="container-wide">

@@ -87,6 +87,7 @@
           for (var i = 0; i < spans.length; i++) {
             spans[i].hidden = spans[i].getAttribute("data-lang") !== lang;
           }
+          try { document.documentElement.setAttribute("lang", lang); } catch (e) {}
         })();
       </script>
     </div>
