@@ -237,6 +237,7 @@ export function useRemoveTeamMember(supplierId?: string | null) {
 export interface TierPricing {
   customerDiscountRate: number;
   monthlyFee: number;
+  commissionRate: number;
   maxLocations: number;
 }
 

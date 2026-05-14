@@ -118,7 +118,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const persist = (
     u: AppUser | null,
     token?: string,
-    _refresh?: string,
     csrf?: string
   ) => {
     setUser(u);
@@ -133,7 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     try {
       const res = await apiClient.post<AuthResponse>("/auth/login", { email, password });
-      persist(normalizeUser(res.user), res.accessToken, res.refreshToken, res.csrfToken);
+      persist(normalizeUser(res.user), res.accessToken, res.csrfToken);
     } catch (err: any) {
       throw new Error(err.message || "error.loginFailed");
     }
@@ -153,7 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithGoogle = useCallback(async (credential: string) => {
     try {
       const res = await apiClient.post<AuthResponse>("/auth/google", { credential });
-      persist(normalizeUser(res.user), res.accessToken, res.refreshToken, res.csrfToken);
+      persist(normalizeUser(res.user), res.accessToken, res.csrfToken);
     } catch (err: any) {
       throw new Error(err.message || "error.googleFailed");
     }
