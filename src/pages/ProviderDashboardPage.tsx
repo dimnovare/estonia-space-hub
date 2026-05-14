@@ -57,7 +57,7 @@ export default function ProviderDashboardPage() {
   const { data: supplierProfile } = useQuery<any>({
     queryKey: ["supplier-profile", supplierId],
     queryFn: () => apiClient.get(withSupplier("/supplier/profile", supplierId)),
-    enabled: !!user,
+    enabled: !!user && (user.role !== "admin" || !!supplierId),
     staleTime: 30_000,
     retry: false,
   });

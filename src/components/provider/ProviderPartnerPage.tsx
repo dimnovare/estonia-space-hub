@@ -60,8 +60,8 @@ export default function ProviderPartnerPage() {
   const isAdmin = user?.role === "admin";
 
   const { data, isLoading } = useQuery({
-    queryKey: ["supplier", "partner-page", supplierId],
-    queryFn: () => apiClient.get<any>(withSupplier("/supplier/partner-page", supplierId)),
+    queryKey: ["provider", "partner-page", supplierId],
+    queryFn: () => apiClient.get<any>(withSupplier("/provider/partner-page", supplierId)),
     staleTime: 30_000,
   });
 
@@ -87,9 +87,9 @@ export default function ProviderPartnerPage() {
 
   const saveMutation = useMutation({
     mutationFn: (patch: Record<string, unknown>) =>
-      apiClient.patch<any>(withSupplier("/supplier/partner-page", supplierId), patch),
+      apiClient.patch<any>(withSupplier("/provider/partner-page", supplierId), patch),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["supplier", "partner-page"] });
+      qc.invalidateQueries({ queryKey: ["provider", "partner-page"] });
       toast.success(t("provider.partnerPage.saved"));
     },
     onError: (err: any) => toast.error(err?.message || "Save failed"),

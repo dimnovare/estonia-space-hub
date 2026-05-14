@@ -3,6 +3,7 @@ import { orderService } from "@/services";
 import { queryKeys } from "@/lib/queryKeys";
 import type { Order, OrderStatus, LeadStatus, LeadSummary } from "@/services/types";
 import { useAuth } from "@/contexts/AuthContext";
+import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 
 function unwrap<T>(res: unknown): T[] {
   if (Array.isArray(res)) return res;
@@ -74,11 +75,12 @@ export function useUpdateOrderStatus() {
 }
 
 export function useLeadSummary() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const supplierId = useImpersonatedSupplierId();
   return useQuery<LeadSummary>({
     queryKey: [...queryKeys.orders.all, "lead-summary"],
     queryFn: () => orderService.getLeadSummary(),
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && (user?.role !== "admin" || !!supplierId),
     staleTime: 30_000,
   });
 }
