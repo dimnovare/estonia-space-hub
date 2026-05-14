@@ -46,6 +46,8 @@ const CityPage = lazy(() => import("@/pages/CityPage"));
 const BlogIndexPage = lazy(() => import("@/pages/BlogIndexPage"));
 const BlogPostPage = lazy(() => import("@/pages/BlogPostPage"));
 const PartnerPage = lazy(() => import("@/pages/PartnerPage"));
+const AdminPartnerListPage = lazy(() => import("@/pages/AdminPartnerListPage"));
+const AdminPartnerDetailPage = lazy(() => import("@/pages/AdminPartnerDetailPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -153,6 +155,8 @@ function AppContent() {
               <Route path="search" element={<SearchPage />} />
               <Route path="admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />
               <Route path="admin/*" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />
+              <Route path="admin/partners" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPartnerListPage /></ProtectedRoute>} />
+              <Route path="admin/partners/:partnerId" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPartnerDetailPage /></ProtectedRoute>} />
               <Route path="account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
               <Route path="account/request/:id" element={<ProtectedRoute><RequestDetailPage /></ProtectedRoute>} />
               <Route path="provider/dashboard" element={<ProtectedRoute allowedRoles={["provider", "admin"]}><ProviderDashboardPage /></ProtectedRoute>} />
