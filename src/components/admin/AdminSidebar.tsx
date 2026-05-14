@@ -18,8 +18,6 @@ function useItems(): Item[] {
     { id: "orders",       label: t("admin.orders"),       icon: Package,         href: "/admin?tab=orders" },
     { id: "payouts",      label: t("admin.payouts"),      icon: Banknote,        href: "/admin?tab=payouts" },
     { id: "rebates",      label: t("admin.rebates"),      icon: Receipt,         href: "/admin?tab=rebates" },
-    { id: "suppliers",    label: t("admin.suppliers"),    icon: Users,           href: "/admin?tab=suppliers" },
-    { id: "integrations", label: t("admin.integrations"), icon: Plug,            href: "/admin?tab=integrations" },
     { id: "routing",      label: t("admin.routing"),      icon: Route,           href: "/admin?tab=routing" },
     { id: "inquiries",    label: t("admin.inquiries"),    icon: MessageSquare,   href: "/admin?tab=inquiries" },
     { id: "users",        label: t("admin.users"),        icon: Users,           href: "/admin?tab=users" },
