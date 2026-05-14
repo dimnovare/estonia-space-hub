@@ -230,6 +230,7 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
                     maxLength={200}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    maxLength={200}
                   />
                 </div>
                 <div>
@@ -240,6 +241,7 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
                     placeholder="38501010000"
                     value={idCode}
                     onChange={(e) => setIdCode(e.target.value)}
+                    maxLength={20}
                   />
                 </div>
               </div>

@@ -55,7 +55,8 @@ class ApiClient {
         const csrf = tokenStore.getCsrf();
         try {
           const refreshHeaders: Record<string, string> = { "Content-Type": "application/json" };
-          if (csrf) refreshHeaders["X-CSRF-Token"] = csrf;
+          if (!csrf) throw new Error("Session expired. Please log in again.");
+          refreshHeaders["X-CSRF-Token"] = csrf;
           const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
             method:      "POST",
             credentials: "include",
