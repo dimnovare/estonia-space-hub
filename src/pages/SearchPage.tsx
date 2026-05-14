@@ -222,7 +222,7 @@ export default function SearchPage() {
           : titleMap[activeType] || "Otsi laopindu ja logistikat — Ruumly"}
         description={descMap[activeType] ||
           "Otsi ja broneeri laopindu, kolimisteenuseid ja haagiseid üle Eesti. Kuni 10% soodsam."}
-        canonical="/search"
+        path="/search"
       />
       <h1 className="sr-only">{t("search.title") || "Search results"}</h1>
       <div className="hidden lg:sticky lg:top-16 lg:block lg:h-[calc(100vh-4rem)] lg:w-1/2 xl:w-[55%]">

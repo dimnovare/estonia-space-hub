@@ -11,7 +11,7 @@ export default function TermsPage() {
       <SEO
         title={`${t("seo.terms")} — Ruumly`}
         description={t("seo.termsDesc")}
-        canonical="/terms"
+        path="/terms"
       />
       <div className="mx-auto max-w-3xl">
         <div className="flex items-center gap-3 mb-6">

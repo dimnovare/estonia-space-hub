@@ -402,7 +402,7 @@ export default function BookingPage() {
       <SEO
         title={`${t("booking.seoTitle")} — Ruumly`}
         description={t("booking.seoDesc")}
-        canonical="/book"
+        path="/book"
         noindex={true}
       />
       <Link to={listing ? `/${listing.type}/${listing.id}` : "/search"} className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">

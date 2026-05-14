@@ -114,7 +114,7 @@ export default function HomePage() {
       <SEO
         title="Ruumly — Laopinnad, kolimine ja haagised Eestis"
         description={fp("Leia ja broneeri laopindu, kolimisteenuseid ja haagiseid üle Eesti. Kuni {discount}% soodsam kui otse pakkujalt. Kiire kinnitus, kontrollitud partnerid.")}
-        canonical="/"
+        path="/"
         structuredData={{
           "@context": "https://schema.org",
           "@type": "WebSite",

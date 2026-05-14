@@ -43,7 +43,7 @@ export default function BlogPostPage() {
       <SEO
         title={post.title}
         description={post.excerpt}
-        canonical={`/blog/${post.slug}`}
+        path={`/blog/${post.slug}`}
         type="article"
         structuredData={articleStructuredData}
       />

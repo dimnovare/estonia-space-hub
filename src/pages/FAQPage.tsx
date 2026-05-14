@@ -63,7 +63,7 @@ export default function FAQPage() {
       <SEO
         title={`${t("seo.faq")} — Ruumly`}
         description={t("seo.faqDesc")}
-        canonical="/faq"
+        path="/faq"
         structuredData={faqStructuredData}
       />
       <h1 className="text-center font-display text-3xl font-bold md:text-4xl">{t("faq.title")}</h1>

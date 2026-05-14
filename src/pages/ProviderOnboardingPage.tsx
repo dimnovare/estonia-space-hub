@@ -125,7 +125,7 @@ export default function ProviderOnboardingPage() {
       <SEO
         title={`${t("seo.providerOnboarding")} — Ruumly`}
         description={t("seo.providerOnboardingDesc")}
-        canonical="/provider/onboarding"
+        path="/provider/onboarding"
       />
       <h1 className="font-display text-2xl font-bold">{t("onboard.title")}</h1>
       <p className="mt-1 text-sm text-muted-foreground">{t("onboard.subtitle")}</p>

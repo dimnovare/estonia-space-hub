@@ -42,7 +42,7 @@ export default function BlogIndexPage() {
       <SEO
         title={t("blog.title")}
         description={t("blog.title")}
-        canonical="/blog"
+        path="/blog"
       />
       <main className="container-wide py-10">
         <header className="mb-8">
