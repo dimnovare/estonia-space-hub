@@ -55,6 +55,9 @@ function diffPatch(initial: FormValues, current: FormValues): Record<string, unk
 export default function ProviderPartnerPage() {
   const { t } = useLanguage();
   const qc = useQueryClient();
+  const { user } = useAuth();
+  const supplierId = useImpersonatedSupplierId();
+  const isAdmin = user?.role === "admin";
 
   const { data, isLoading } = useQuery({
     queryKey: ["supplier", "partner-page"],
