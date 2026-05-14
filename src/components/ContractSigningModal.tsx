@@ -227,6 +227,7 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
                   <label className="text-xs font-medium">{t("contract.fullName")}</label>
                   <input
                     className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    maxLength={200}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                   />
@@ -235,6 +236,7 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
                   <label className="text-xs font-medium">{t("contract.idCode")}</label>
                   <input
                     className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    maxLength={20}
                     placeholder="38501010000"
                     value={idCode}
                     onChange={(e) => setIdCode(e.target.value)}
