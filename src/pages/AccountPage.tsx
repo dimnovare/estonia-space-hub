@@ -265,11 +265,9 @@ function BookingCard({ booking }: { booking: Booking }) {
     retry: false,
     staleTime: 30_000,
   });
-  const signedContract: any = contractQuery.data && (contractQuery.data.signedAt || contractQuery.data.html)
-    ? contractQuery.data
-    : null;
+  const signedContract: any = contractQuery.data?.signedAt ? contractQuery.data : null;
   const handleViewContract = () => {
-    const html = signedContract?.html || signedContract?.renderedHtml;
+    const html = signedContract?.renderedHtml ?? "";
     if (!html) return;
     const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);

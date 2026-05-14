@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@/i18n/routing";
-import { Search, Building2, ExternalLink } from "lucide-react";
+import { Search, Building2, ExternalLink, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/SEO";
@@ -61,6 +61,12 @@ export default function AdminPartnerListPage() {
               {filtered.length} / {suppliers.length}
             </p>
           </div>
+          <Button asChild size="sm">
+            <Link to="/admin?tab=suppliers">
+              <Plus className="mr-1 h-4 w-4" />
+              {t("admin.addPartner")}
+            </Link>
+          </Button>
         </header>
 
         <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -79,7 +85,7 @@ export default function AdminPartnerListPage() {
               onClick={() => setFilter(f)}
               className={`rounded-full px-3 py-1.5 text-xs font-medium ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}
             >
-              {f === "all" ? "All" : f === "active" ? "Active" : "With partner page"}
+              {f === "all" ? t("admin.allPartners") : f === "active" ? (t("admin.activePartners") || "Active") : (t("admin.partnerPages") || "With partner page")}
             </button>
           ))}
         </div>
