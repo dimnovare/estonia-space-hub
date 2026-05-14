@@ -5,6 +5,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
 import { usePricingConfig } from "@/hooks/queries";
 import { fillPricing } from "@/lib/pricingPlaceholders";
+import StorageSizeCalculator from "@/components/StorageSizeCalculator";
 
 export default function HowItWorksPage() {
   const { t } = useLanguage();
@@ -54,6 +55,18 @@ export default function HowItWorksPage() {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      <section className="surface-sunken py-16">
+        <div className="container-wide pt-4">
+          <h2 className="text-center font-display text-2xl font-bold">{t("calculator.pageTitle")}</h2>
+          <p className="mx-auto mt-2 max-w-md text-center text-sm text-muted-foreground">
+            {t("calculator.pageDesc")}
+          </p>
+          <div className="mx-auto mt-8 max-w-2xl">
+            <StorageSizeCalculator />
+          </div>
         </div>
       </section>
 
