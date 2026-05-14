@@ -46,12 +46,25 @@ export default function FAQPage() {
     },
   ];
 
+  const faqStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqCategories.flatMap((cat) =>
+      cat.items.map((item) => ({
+        "@type": "Question",
+        name: item.q,
+        acceptedAnswer: { "@type": "Answer", text: item.a },
+      })),
+    ),
+  };
+
   return (
     <div className="container-wide py-12">
       <SEO
         title={`${t("seo.faq")} — Ruumly`}
         description={t("seo.faqDesc")}
         canonical="/faq"
+        structuredData={faqStructuredData}
       />
       <h1 className="text-center font-display text-3xl font-bold md:text-4xl">{t("faq.title")}</h1>
       <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">{t("faq.subtitle")}</p>
