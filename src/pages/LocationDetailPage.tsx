@@ -40,6 +40,18 @@ export default function LocationDetailPage() {
         description={`${location.name} ${location.city}. ${location.unitCount} ${t("location.units")}. ${location.description?.slice(0, 120) || ""}`}
         canonical={`/location/${location.id}`}
         image={location.images?.[0] || undefined}
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "LocalBusiness",
+          name: location.name,
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: location.address,
+            addressLocality: location.city,
+          },
+          openingHours: location.openingHours || undefined,
+          image: location.images?.[0] || undefined,
+        }}
       />
 
       {/* Back */}
