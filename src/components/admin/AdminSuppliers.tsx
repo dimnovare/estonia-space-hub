@@ -48,11 +48,14 @@ export default function AdminSuppliers() {
 
   const createMutation = useMutation({
     mutationFn: (data: Record<string, unknown>) => supplierService.create(data),
-    onSuccess: () => {
+    onSuccess: (newSupplier) => {
       invalidate();
       toast.success(t("admin.partnerAdded"));
       setCreateOpen(false);
       setCreateForm(emptyCreate);
+      if (newSupplier?.id) {
+        navigate(`/admin/partners/${newSupplier.id}`);
+      }
     },
     onError: (err: any) => toast.error(err.message || t("admin.partnerCreateError")),
   });
