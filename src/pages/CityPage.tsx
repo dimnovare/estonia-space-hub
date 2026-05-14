@@ -62,7 +62,6 @@ export default function CityPage() {
         href: `/${l.type}/${l.id}`,
       }));
 
-  const seoTitle = t("cityPage.seoTitle").replace("{city}", city);
   const seoDesc = t("city.seoDesc").replace("{city}", city);
   const introText = t("city.introText")
     .replace("{city}", city)
