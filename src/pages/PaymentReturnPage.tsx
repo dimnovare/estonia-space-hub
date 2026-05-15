@@ -7,17 +7,19 @@ import { SEO } from "@/components/SEO";
 import { trackEvent } from "@/lib/analytics";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function PaymentReturnPage() {
   const [searchParams] = useSearchParams();
   const invoiceId = searchParams.get("invoice");
   const bookingId = searchParams.get("booking") || searchParams.get("id") || invoiceId;
   const { t } = useLanguage();
+  const { isAuthenticated } = useAuth();
 
   const { data: invoice } = useQuery({
-    queryKey: ["invoice", bookingId],
+    queryKey: ["invoice-status", bookingId],
     queryFn: () => apiClient.get<{ status: string }>(`/invoices/by-booking/${bookingId}`),
-    enabled: !!bookingId,
+    enabled: !!bookingId && isAuthenticated,
     refetchInterval: (query) => {
       const s = (query.state.data as { status: string } | undefined)?.status;
       return s === "pending" || s === "awaitingpayment" ? 3000 : false;
@@ -25,15 +27,9 @@ export default function PaymentReturnPage() {
   });
 
   const status = invoice?.status;
-  const isPending = !invoice || status === "pending";
-  const isProcessing = status === "awaitingpayment";
   const isFailed = status === "failed" || status === "cancelled";
-  const isPaid =
-    !!invoice &&
-    status !== "pending" &&
-    status !== "awaitingpayment" &&
-    status !== "failed" &&
-    status !== "cancelled";
+  const isPending = !invoice || status === "pending" || status === "awaitingpayment";
+  const isPaid = !!invoice && status === "paid";
 
   useEffect(() => {
     if (bookingId && isPaid) {
