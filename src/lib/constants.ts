@@ -136,10 +136,6 @@ const EMAIL_LABELS: Record<string, EmailLabels> = {
 
 export function generateOrderEmailPreview(order: Order, lang: string = "et"): string {
   const l = EMAIL_LABELS[lang] ?? EMAIL_LABELS.en;
-
-export function getEmailLabels(lang: string) {
-  return EMAIL_LABELS[lang] ?? EMAIL_LABELS.en;
-}
   const typeLabel = order.listingType === "warehouse" ? l.warehouse : order.listingType === "moving" ? l.moving : l.trailer;
   return `${l.greeting}, ${order.supplierName}!
 
@@ -194,4 +190,8 @@ ${l.signoff}
 ${l.team}
 info@ruumly.eu | +372 5555 1234
 `;
+}
+
+export function getEmailLabels(lang: string) {
+  return EMAIL_LABELS[lang] ?? EMAIL_LABELS.en;
 }
