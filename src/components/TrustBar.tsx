@@ -2,7 +2,7 @@ import { Building2, MapPin, CalendarCheck, Star, ShieldCheck, Tag, Lock, Headpho
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAllListings, useBookingStats } from "@/hooks/queries";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ESTONIAN_CITIES } from "@/lib/constants";
+
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 export default function TrustBar() {
