@@ -40,8 +40,11 @@ export default function ListingCard({ listing }: { listing: Listing }) {
   const priceUnitLabel = formatPriceUnit(listing.priceUnit, t);
 
   return (
-    <Link to={detailPath} className="card-elevated group block overflow-hidden">
-      <div className="relative aspect-[16/10] overflow-hidden">
+    <Link
+      to={detailPath}
+      className="card-elevated group block overflow-hidden hover:ring-1 hover:ring-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+    >
+      <div className="relative aspect-[4/3] sm:aspect-[16/10] overflow-hidden">
         {listing.image && listing.image.length > 0 ? (
           <img
             src={listing.image}
@@ -62,30 +65,18 @@ export default function ListingCard({ listing }: { listing: Listing }) {
             {t(badgeKeys[listing.badge])}
           </span>
         )}
-        <div className="absolute right-2 top-12 flex flex-col items-end gap-1">
-          {listing.isVerified && (
-            <span
-              className="inline-flex items-center gap-1 rounded-full bg-card/95 backdrop-blur-sm px-2 py-0.5 text-[10px] font-semibold text-success shadow-sm"
-              title={t("listing.badge.verifiedTooltip")}
-            >
-              <ShieldCheck className="h-3 w-3" />
-              {t("listing.badge.verified")}
-            </span>
-          )}
-          {listing.isFoundingPartner && (
-            <span
-              className="inline-flex items-center gap-1 rounded-full bg-card/95 backdrop-blur-sm px-2 py-0.5 text-[10px] font-semibold text-accent shadow-sm"
-              title={t("listing.badge.foundingPartnerTooltip")}
-            >
-              <Award className="h-3 w-3" />
-              {t("listing.badge.foundingPartner")}
-            </span>
-          )}
-        </div>
+        {savingsInfo && (
+          <span
+            className={`absolute ${listing.badge ? "left-3 top-12" : "left-3 top-3"} inline-flex items-center gap-1 rounded-full bg-success px-2.5 py-1 text-[10px] font-bold text-success-foreground shadow-sm`}
+          >
+            <BadgePercent className="h-3 w-3" />
+            {t("listing.savings").replace("{amount}", savingsInfo.savings)}
+          </span>
+        )}
         <button
           onClick={e => { e.preventDefault(); e.stopPropagation(); toggle(listing.id); }}
           aria-label={isFavorite(listing.id) ? t("listing.favRemove") : t("listing.favAdd")}
-          className={`absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full transition-colors ${isFavorite(listing.id) ? "bg-white text-red-500" : "bg-card/80 text-muted-foreground hover:text-red-400"}`}
+          className={`absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full backdrop-blur-sm shadow-sm transition-colors ${isFavorite(listing.id) ? "bg-white text-red-500" : "bg-card/95 text-muted-foreground hover:text-red-400"}`}
           title={isFavorite(listing.id) ? t("listing.favRemove") : t("listing.favAdd")}
         >
           <Heart className={`h-4 w-4 ${isFavorite(listing.id) ? "fill-current" : ""}`} />
@@ -97,17 +88,17 @@ export default function ListingCard({ listing }: { listing: Listing }) {
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <h3 className="truncate font-sans text-sm font-semibold text-foreground">{listing.title}</h3>
-            <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+            <h3 className="truncate font-sans text-base font-semibold text-foreground">{listing.title}</h3>
+            <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
               <MapPin className="h-3 w-3 shrink-0" />
-              {listing.address}, {listing.city}
+              <span className="truncate">{listing.address}, {listing.city}</span>
             </p>
           </div>
           {listing.reviewCount > 0 ? (
             <div className="flex shrink-0 items-center gap-1 text-xs">
               <Star className="h-3 w-3 fill-accent text-accent" />
-              <span className="font-semibold text-foreground">{listing.rating}</span>
-              <span className="text-muted-foreground">({listing.reviewCount})</span>
+              <span className="font-semibold text-foreground tabular-nums">{listing.rating}</span>
+              <span className="text-muted-foreground tabular-nums">({listing.reviewCount})</span>
             </div>
           ) : (
             <span className="shrink-0 rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent">
@@ -116,18 +107,41 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           )}
         </div>
 
+        {(listing.isVerified || listing.isFoundingPartner) && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {listing.isVerified && (
+              <span
+                className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success"
+                title={t("listing.badge.verifiedTooltip")}
+              >
+                <ShieldCheck className="h-3 w-3" />
+                {t("listing.badge.verified")}
+              </span>
+            )}
+            {listing.isFoundingPartner && (
+              <span
+                className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-semibold text-accent"
+                title={t("listing.badge.foundingPartnerTooltip")}
+              >
+                <Award className="h-3 w-3" />
+                {t("listing.badge.foundingPartner")}
+              </span>
+            )}
+          </div>
+        )}
+
         {(listing as any).size && (listing as any).size > 0 && (() => {
           const sizeVal = (listing as any).size as number;
           const bucketCode = bucketCodeForSize(sizeBuckets, sizeVal);
           return (
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className="mt-2 text-xs text-muted-foreground tabular-nums">
               {sizeVal} {(listing as any).sizeUnit || "m²"}
               {bucketCode && <span className="ml-1">· {bucketCode}</span>}
             </p>
           );
         })()}
 
-        <div className="mt-3 flex items-baseline gap-2 border-t border-border pt-3">
+        <div className="mt-3 flex items-baseline gap-2 border-t border-border pt-3 tabular-nums">
           {savingsInfo ? (
             <>
               <span className="text-sm text-muted-foreground line-through">€{savingsInfo.directPrice}{priceUnitLabel}</span>
@@ -137,14 +151,6 @@ export default function ListingCard({ listing }: { listing: Listing }) {
             <span className="font-display text-lg font-bold text-foreground">€{listing.priceFrom}{priceUnitLabel}</span>
           )}
         </div>
-        {savingsInfo && (
-          <div className="mt-1.5">
-            <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success">
-              <BadgePercent className="h-3 w-3" />
-              {t("listing.savings").replace("{amount}", savingsInfo.savings)}
-            </span>
-          </div>
-        )}
       </div>
     </Link>
   );

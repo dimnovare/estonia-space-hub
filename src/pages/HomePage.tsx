@@ -148,43 +148,45 @@ export default function HomePage() {
           }
         }}
       />
-      <section className="hero-gradient relative overflow-hidden py-20 md:py-28">
+      <section className="hero-gradient relative overflow-hidden py-10 md:py-24">
         <div className="absolute inset-0 opacity-10"
           style={{ backgroundImage: "radial-gradient(circle at 30% 50%, hsl(174 65% 47% / 0.3), transparent 60%)" }}
         />
         <div className="container-wide relative">
           <div className="mx-auto max-w-3xl text-center">
-            <h1 className="font-display text-4xl font-bold leading-tight text-primary-foreground md:text-5xl lg:text-6xl">
+            <h1 className="font-display text-3xl font-bold leading-tight tracking-tight text-primary-foreground sm:text-4xl md:text-5xl lg:text-6xl">
               {heroTitle}{" "}
               <span className="text-gradient">{heroTitleHighlight}</span>
             </h1>
-            <p className="mt-4 text-lg text-primary-foreground/70 md:text-xl">{heroSubtitle}</p>
+            <p className="mt-3 text-base leading-relaxed text-primary-foreground/75 md:mt-4 md:text-xl">{heroSubtitle}</p>
 
-            {/* Social proof row */}
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-primary-foreground/60">
+            {/* Social proof row — single inline strip with separators */}
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-primary-foreground/75">
               <span className="flex items-center gap-1.5">
                 <CheckCircle className="h-3.5 w-3.5 text-accent" />
                 {t("trust.badge1")}
               </span>
+              <span className="text-primary-foreground/30">·</span>
               <span className="flex items-center gap-1.5">
                 <Clock className="h-3.5 w-3.5 text-accent" />
                 {t("trust.badge2")}
               </span>
+              <span className="text-primary-foreground/30">·</span>
               <span className="flex items-center gap-1.5">
                 <Shield className="h-3.5 w-3.5 text-accent" />
                 {t("trust.badge3")}
               </span>
             </div>
 
-            <div className="card-prominent mx-auto mt-8 max-w-2xl p-2">
-              <div className="flex flex-wrap gap-1 border-b border-border pb-2 mb-2">
+            <div className="card-prominent mx-auto mt-6 max-w-2xl p-2 shadow-2xl shadow-accent/10 md:mt-8">
+              <div className="-mx-1 flex gap-1 overflow-x-auto border-b border-border px-1 pb-2 mb-2 snap-x scrollbar-hide">
                 {categories.map((cat) => {
                   const Icon = cat.icon;
                   return (
                     <button
                       key={cat.key}
                       onClick={() => setActiveCategory(cat.key)}
-                      className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                      className={`flex shrink-0 snap-start items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
                         activeCategory === cat.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"
                       }`}
                     >
@@ -203,14 +205,14 @@ export default function HomePage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                    className="w-full rounded-lg border-0 bg-secondary py-3 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent min-h-[44px]"
+                    className="w-full rounded-lg border-0 bg-secondary py-3 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent h-12"
                   />
                 </div>
                 <div className="flex gap-2">
                   <Select value={selectedCity} onValueChange={setSelectedCity}>
                     <SelectTrigger
                       aria-label={t("search.allCities") || "Select city"}
-                      className="flex-1 sm:w-[140px] sm:flex-none shrink-0 border-0 bg-secondary text-sm min-h-[44px]"
+                      className="flex-1 sm:w-[140px] sm:flex-none shrink-0 border-0 bg-secondary text-sm h-12"
                     >
                       <SelectValue placeholder={t("search.allCities")} />
                     </SelectTrigger>
@@ -221,20 +223,20 @@ export default function HomePage() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button onClick={handleSearch} className="shrink-0 bg-accent px-6 text-accent-foreground hover:bg-accent/90 min-h-[44px]">
+                  <Button onClick={handleSearch} className="shrink-0 bg-accent px-6 text-accent-foreground hover:bg-accent/90 h-12 active:scale-[0.97] transition-transform">
                     <Search className="mr-2 h-4 w-4" />
                     {t("hero.search")}
                   </Button>
                 </div>
               </div>
             </div>
-            <p className="mt-3 flex items-center justify-center gap-2 text-sm text-primary-foreground/70">
+            <p className="mt-3 flex items-center justify-center gap-2 text-sm text-primary-foreground/75">
               <CheckCircle className="h-4 w-4" />
               {t("hero.valueHint")}
             </p>
 
             {showTrustStrip && (
-              <p className="mt-3 text-sm text-primary-foreground/70">
+              <p className="mt-3 text-sm text-primary-foreground/75">
                 {t("hero.trustStrip")
                   .replace("{partners}", String(partnerCount))
                   .replace("{cities}", String(cityCount))}
@@ -250,8 +252,8 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {/* Contact info */}
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs text-primary-foreground/50">
+            {/* Contact info — desktop only; mobile is in the footer to keep the hero focused */}
+            <div className="mt-4 hidden md:flex flex-wrap items-center justify-center gap-2 text-xs text-primary-foreground/60">
               {settings.sitePhone && (
                 <>
                   <a href={`tel:${settings.sitePhone.replace(/\s/g, "")}`} className="flex items-center gap-1 hover:text-primary-foreground transition-colors">
@@ -273,7 +275,6 @@ export default function HomePage() {
                 <span>{settings.openHours}</span>
               )}
             </div>
-
           </div>
         </div>
       </section>
