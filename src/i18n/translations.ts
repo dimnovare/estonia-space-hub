@@ -1837,7 +1837,7 @@ const et: Record<string, string> = {
     "admin.about.enabledLabel": "About leht lubatud",
     "admin.about.enabledDesc": "Kui välja lülitatud, näeb külastaja 404 lehte.",
     "admin.about.showStatsLabel": "Näita broneeringute ja hinnangute arve",
-    "admin.about.showStatsDesc": "Kuvab broneeringute arvu ja keskmist hinnangut avalehe ribal ja Meist lehel. Hoia välja, kuni numbrid on reaalsed (20+ broneeringut)."
+    "admin.about.showStatsDesc": "Kuvab broneeringute arvu ja keskmist hinnangut avalehe ribal ja Meist lehel. Hoia välja, kuni numbrid on reaalsed (20+ broneeringut).",
     "admin.about.missionHeader": "Missiooni tekst (keelte kaupa)",
     "admin.about.foundersHeader": "Asutajad",
     "admin.about.addFounder": "Lisa asutaja",
@@ -3764,7 +3764,7 @@ const en: Record<string, string> = {
     "admin.about.enabledLabel": "About page enabled",
     "admin.about.enabledDesc": "When disabled, visitors see the 404 page.",
     "admin.about.showStatsLabel": "Show booking & rating counters",
-    "admin.about.showStatsDesc": "Show total bookings and average rating on the trust bar and About page. Keep off until you have meaningful numbers (20+ bookings)."
+    "admin.about.showStatsDesc": "Show total bookings and average rating on the trust bar and About page. Keep off until you have meaningful numbers (20+ bookings).",
     "admin.about.missionHeader": "Mission statement (per language)",
     "admin.about.foundersHeader": "Founders",
     "admin.about.addFounder": "Add founder",
@@ -5690,7 +5690,7 @@ const ru: Record<string, string> = {
     "admin.about.enabledLabel": "Страница About включена",
     "admin.about.enabledDesc": "Если выключено, посетители видят страницу 404.",
     "admin.about.showStatsLabel": "Показывать счётчики бронирований и рейтингов",
-    "admin.about.showStatsDesc": "Показывать общее количество бронирований и средний рейтинг в блоке доверия и на странице «О нас». Отключите, пока цифры не станут значимыми (20+ бронирований)."
+    "admin.about.showStatsDesc": "Показывать общее количество бронирований и средний рейтинг в блоке доверия и на странице «О нас». Отключите, пока цифры не станут значимыми (20+ бронирований).",
     "admin.about.missionHeader": "Текст миссии (по языкам)",
     "admin.about.foundersHeader": "Основатели",
     "admin.about.addFounder": "Добавить основателя",
@@ -7560,7 +7560,7 @@ const lv: Record<string, string> = {
     "admin.about.enabledLabel": "About lapa ieslēgta",
     "admin.about.enabledDesc": "Kad izslēgts, apmeklētāji redz 404 lapu.",
     "admin.about.showStatsLabel": "Rādīt rezervāciju un vērtējumu skaitītājus",
-    "admin.about.showStatsDesc": "Rāda kopējo rezervāciju skaitu un vidējo vērtējumu uzticamības joslā un Par mums lapā. Atstājiet izslēgtu, kamēr skaitļi nav nozīmīgi (20+ rezervācijas)."
+    "admin.about.showStatsDesc": "Rāda kopējo rezervāciju skaitu un vidējo vērtējumu uzticamības joslā un Par mums lapā. Atstājiet izslēgtu, kamēr skaitļi nav nozīmīgi (20+ rezervācijas).",
     "admin.about.missionHeader": "Misijas teksts (pa valodām)",
     "admin.about.foundersHeader": "Dibinātāji",
     "admin.about.addFounder": "Pievienot dibinātāju",
@@ -9428,7 +9428,7 @@ const lt: Record<string, string> = {
     "admin.about.enabledLabel": "About puslapis įjungtas",
     "admin.about.enabledDesc": "Kai išjungtas, lankytojai mato 404 puslapį.",
     "admin.about.showStatsLabel": "Rodyti rezervacijų ir įvertinimų skaitiklius",
-    "admin.about.showStatsDesc": "Rodo bendrą rezervacijų skaičių ir vidutinį įvertinimą pasitikėjimo juostoje ir Apie mus puslapyje. Palikite išjungtą, kol skaičiai bus prasmingi (20+ rezervacijų)."
+    "admin.about.showStatsDesc": "Rodo bendrą rezervacijų skaičių ir vidutinį įvertinimą pasitikėjimo juostoje ir Apie mus puslapyje. Palikite išjungtą, kol skaičiai bus prasmingi (20+ rezervacijų).",
     "admin.about.missionHeader": "Misijos tekstas (pagal kalbas)",
     "admin.about.foundersHeader": "Įkūrėjai",
     "admin.about.addFounder": "Pridėti įkūrėją",
