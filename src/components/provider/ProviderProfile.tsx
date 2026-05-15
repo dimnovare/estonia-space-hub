@@ -13,6 +13,8 @@ export default function ProviderProfile() {
   const { t } = useLanguage();
   const qc = useQueryClient();
   const supplierId = useImpersonatedSupplierId();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   const { data: profile, isLoading, error } = useQuery({
     queryKey: ["supplier-profile", supplierId],
