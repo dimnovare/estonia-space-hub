@@ -1,12 +1,14 @@
 import type { Order } from "@/services/types";
 import { generateOrderEmailPreview } from "@/lib/constants";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface EmailTemplatePreviewProps {
   order: Order;
 }
 
 export default function EmailTemplatePreview({ order }: EmailTemplatePreviewProps) {
-  const emailContent = generateOrderEmailPreview(order);
+  const { language } = useLanguage();
+  const emailContent = generateOrderEmailPreview(order, language);
 
   return (
     <div className="rounded-xl border border-border overflow-hidden">

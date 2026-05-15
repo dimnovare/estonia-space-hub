@@ -9,7 +9,7 @@ import type { Order, OrderStatus } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function AdminOrders({ supplierId }: { supplierId?: string }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { data: orders = [], isLoading } = useOrders(supplierId);
   const updateStatus  = useUpdateOrderStatus();
   const approveOrder  = useApproveOrder();
@@ -224,7 +224,7 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
                 <p className="text-sm font-semibold">{t("admin.emailPreview")}</p>
                 <Button variant="outline" size="sm" onClick={() => setEmailPreview(false)}>{t("admin.back")}</Button>
               </div>
-              <pre className="rounded-lg border border-border bg-card p-4 text-xs whitespace-pre-wrap font-mono max-h-96 overflow-y-auto">{generateOrderEmailPreview(viewOrder)}</pre>
+              <pre className="rounded-lg border border-border bg-card p-4 text-xs whitespace-pre-wrap font-mono max-h-96 overflow-y-auto">{generateOrderEmailPreview(viewOrder, language)}</pre>
             </div>
           )}
         </DialogContent>
