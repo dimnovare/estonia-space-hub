@@ -18,14 +18,22 @@ export default function PaymentReturnPage() {
     queryKey: ["invoice", bookingId],
     queryFn: () => apiClient.get<{ status: string }>(`/invoices/by-booking/${bookingId}`),
     enabled: !!bookingId,
-    refetchInterval: (query) =>
-      (query.state.data as { status: string } | undefined)?.status === "pending" ? 3000 : false,
+    refetchInterval: (query) => {
+      const s = (query.state.data as { status: string } | undefined)?.status;
+      return s === "pending" || s === "awaitingpayment" ? 3000 : false;
+    },
   });
 
   const status = invoice?.status;
   const isPending = !invoice || status === "pending";
+  const isProcessing = status === "awaitingpayment";
   const isFailed = status === "failed" || status === "cancelled";
-  const isPaid = status === "confirmed" || status === "paid";
+  const isPaid =
+    !!invoice &&
+    status !== "pending" &&
+    status !== "awaitingpayment" &&
+    status !== "failed" &&
+    status !== "cancelled";
 
   useEffect(() => {
     if (bookingId && isPaid) {
@@ -57,6 +65,18 @@ export default function PaymentReturnPage() {
                 {t("payment.backToBooking")}
               </Button>
             </Link>
+          </>
+        ) : isProcessing ? (
+          <>
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+              <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
+            </div>
+            <h1 className="mt-4 font-display text-2xl font-bold">
+              {t("payment.processing")}
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {t("payment.processingDesc")}
+            </p>
           </>
         ) : isPending ? (
           <>
