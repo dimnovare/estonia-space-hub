@@ -1110,6 +1110,8 @@ function AccountBilling() {
     <div>
        <h1 className="font-display text-2xl font-bold">{t("account.billing")}</h1>
       <p className="mt-2 text-sm text-muted-foreground">{t("account.billingDesc")}</p>
+      {isLoading && <div className="py-8 text-center"><Loader2 className="animate-spin mx-auto" /></div>}
+      {isError && <p className="text-sm text-destructive">{t("error.generic")}</p>}
       {invoices.length === 0 ? (
         <div className="mt-6 flex flex-col items-center py-12 text-center">
           <CreditCard className="h-12 w-12 text-muted-foreground/30" />
