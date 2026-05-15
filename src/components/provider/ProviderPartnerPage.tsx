@@ -12,7 +12,7 @@ import { toast } from "sonner";
 const inp =
   "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
 
-type Lang = "et" | "en" | "ru";
+type Lang = "et" | "en" | "ru" | "lv" | "lt";
 
 type FormValues = {
   logoUrl: string;
@@ -23,6 +23,8 @@ type FormValues = {
   longDescriptionEt: string;
   longDescriptionEn: string;
   longDescriptionRu: string;
+  longDescriptionLv: string;
+  longDescriptionLt: string;
   googlePlaceId: string;
 };
 
@@ -36,6 +38,8 @@ function toForm(d: any): FormValues {
     longDescriptionEt: d?.longDescription?.et ?? d?.longDescriptionEt ?? "",
     longDescriptionEn: d?.longDescription?.en ?? d?.longDescriptionEn ?? "",
     longDescriptionRu: d?.longDescription?.ru ?? d?.longDescriptionRu ?? "",
+    longDescriptionLv: d?.longDescription?.lv ?? d?.longDescriptionLv ?? "",
+    longDescriptionLt: d?.longDescription?.lt ?? d?.longDescriptionLt ?? "",
     googlePlaceId: d?.googlePlaceId ?? "",
   };
 }
@@ -115,7 +119,11 @@ export default function ProviderPartnerPage() {
         ? "longDescriptionEt"
         : storyLang === "en"
         ? "longDescriptionEn"
-        : "longDescriptionRu",
+        : storyLang === "ru"
+        ? "longDescriptionRu"
+        : storyLang === "lv"
+        ? "longDescriptionLv"
+        : "longDescriptionLt",
     [storyLang],
   );
 
@@ -222,7 +230,7 @@ export default function ProviderPartnerPage() {
           {t("provider.partnerPage.story")}
         </h2>
         <div className="mt-2 inline-flex rounded-lg border border-border p-0.5">
-          {(["et", "en", "ru"] as Lang[]).map((l) => (
+          {(["et", "en", "ru", "lv", "lt"] as Lang[]).map((l) => (
             <button
               key={l}
               type="button"
