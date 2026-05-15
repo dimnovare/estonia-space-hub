@@ -140,28 +140,6 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
         </>
       )}
 
-      <h2 className="mt-8 font-display text-lg font-semibold">{t("provider.overview.recentBookings")}</h2>
-      <div className="mt-3 space-y-2">
-        {bookings.length === 0 ? (
-          <div className="py-8 text-center text-sm text-muted-foreground">
-            <Package className="mx-auto h-8 w-8 text-muted-foreground/20 mb-3" />
-            {t("provider.bookings.noBookingsTitle")}
-          </div>
-        ) : bookings.slice(0, 3).map((b) => (
-          <div key={b.id} className="flex items-center justify-between rounded-xl border border-border p-4">
-            <div>
-              <div className="text-sm font-medium">{b.provider}</div>
-              <div className="text-xs text-muted-foreground">{b.listingTitle} · {b.startDate}</div>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${b.status === "confirmed" ? "bg-success/10 text-success" : b.status === "pending" ? "bg-warning/10 text-warning" : "bg-accent/10 text-accent"}`}>
-                {b.status === "confirmed" ? t("provider.overview.confirmed") : b.status === "pending" ? t("provider.overview.pending") : t("provider.overview.active")}
-              </span>
-              <span className="text-sm font-semibold">€{(b as any).total ?? (b as any).basePrice ?? 0}</span>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
