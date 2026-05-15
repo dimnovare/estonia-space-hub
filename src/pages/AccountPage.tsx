@@ -765,7 +765,7 @@ function AccountNotifications() {
                     onClick={(e) => { e.stopPropagation(); markOne.mutate(n.id); }}
                     className="shrink-0 rounded-lg border border-border px-2.5 py-1 text-[10px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors whitespace-nowrap"
                   >
-                    Märgi loetuks
+                    {t("notifications.markRead")}
                   </button>
                 )}
               </div>
