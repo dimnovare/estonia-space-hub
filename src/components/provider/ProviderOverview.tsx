@@ -1,32 +1,37 @@
 import { List, Package, Eye, DollarSign, Inbox, AlertTriangle, MapPin } from "lucide-react";
 import { useLocations } from "@/hooks/queries";
 import { useOrders } from "@/hooks/useOrders";
-import { useBookings } from "@/hooks/useBookings";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/services/apiClient";
+import { withSupplier } from "@/lib/withSupplier";
 
 export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () => void }) {
   const { t } = useLanguage();
   const supplierId = useImpersonatedSupplierId();
   const { data: allOrders = [], isLoading: ordersLoading } = useOrders(supplierId ?? undefined);
-  const { data: bookings = [], isLoading: bookingsLoading } = useBookings(supplierId);
   const { data: locations = [] } = useLocations(supplierId ? { supplierId } : undefined);
-  const listingCount = locations.reduce((sum, loc) => sum + (loc.units?.length ?? 0), 0);
-  const isLoading = ordersLoading || bookingsLoading;
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ["supplier-stats", supplierId],
+    queryFn: () => apiClient.get<{
+      totalBookings:     number;
+      thisMonthBookings: number;
+      thisMonthRevenue:  number;
+      activeBookings:    number;
+      totalUnits:        number;
+      bookedUnits:       number;
+      occupancyRate:     number;
+    }>(withSupplier("/supplier/stats", supplierId)),
+    staleTime: 60_000,
+  });
+  const isLoading = ordersLoading || statsLoading;
   const pendingOrders = allOrders.filter(o => o.status === "sent" || o.status === "created");
 
-  const thisMonthStr = new Date().toISOString().slice(0, 7);
-
-  const bookingsThisMonth = bookings.filter(b =>
-    b.createdAt?.startsWith(thisMonthStr)
-  ).length;
-
-  const revenueThisMonth = bookings
-    .filter(b =>
-      b.createdAt?.startsWith(thisMonthStr) &&
-      (b.status === "confirmed" || b.status === "active" || b.status === "completed"))
-    .reduce((sum, b) => sum + ((b as any).total ?? 0), 0);
+  const bookingsThisMonth = stats?.thisMonthBookings ?? 0;
+  const revenueThisMonth  = stats?.thisMonthRevenue  ?? 0;
+  const listingCount      = stats?.totalUnits        ?? 0;
 
   if (isLoading) {
     return (
