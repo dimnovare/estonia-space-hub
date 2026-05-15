@@ -49,7 +49,7 @@ export default function ImageUploader({ images, onChange, maxImages = 10 }: Imag
         ? results.map((r: any) => r.full || r.url || r)
         : [results.full || results.url || results];
       onChange([...images, ...newUrls].slice(0, maxImages));
-      toast.success(`${newUrls.length} pilt(i) üles laetud`);
+      toast.success(t("admin.upload.success").replace("{count}", String(newUrls.length)));
     } catch {
       toast.error(t("toast.uploadFailed"));
     } finally {
