@@ -39,14 +39,17 @@ export default function AdminPayouts({ supplierId }: { supplierId?: string }) {
   const [supplierFilter, setSupplierFilter] = useState("");
   const [markingId, setMarkingId] = useState<string | null>(null);
   const [references, setReferences] = useState<Record<string, string>>({});
+  const [backendSummary, setBackendSummary] = useState<PayoutSummary | null>(null);
 
   const fetchPayouts = () => {
     setLoading(true);
-    apiClient.get<Payout[]>("/admin/payouts")
+    apiClient.get<{ entries: Payout[]; summary: PayoutSummary } | Payout[]>("/admin/payouts")
       .then(data => {
         const arr = Array.isArray(data) ? data :
           (data as any).entries ?? (data as any).data ?? [];
         setPayouts(arr);
+        const bs = (data as any).summary;
+        if (bs) setBackendSummary(bs);
       })
       .catch((err: any) => toast.error(err?.message || t("admin.payouts.loadFailed")))
       .finally(() => setLoading(false));
@@ -62,11 +65,11 @@ export default function AdminPayouts({ supplierId }: { supplierId?: string }) {
     });
   }, [payouts, statusFilter, supplierFilter]);
 
-  const summary = useMemo<PayoutSummary>(() => ({
+  const summary = useMemo<PayoutSummary>(() => backendSummary ?? ({
     totalPending: payouts.filter(p => p.status === "pending").reduce((s, p) => s + p.supplierAmount, 0),
     totalPaid: payouts.filter(p => p.status === "paid").reduce((s, p) => s + p.supplierAmount, 0),
     totalMargin: payouts.reduce((s, p) => s + p.margin, 0),
-  }), [payouts]);
+  }), [payouts, backendSummary]);
 
   const markAsPaid = async (id: string) => {
     setMarkingId(id);
