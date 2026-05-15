@@ -1,8 +1,6 @@
 import { Building2, MapPin, CalendarCheck, Star, ShieldCheck, Tag, Lock, HeadphonesIcon } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAllListings, useBookingStats } from "@/hooks/queries";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ESTONIAN_CITIES } from "@/lib/constants";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 export default function TrustBar() {
@@ -12,19 +10,20 @@ export default function TrustBar() {
   const { data: allResult, isLoading: listingsLoading } = useAllListings();
   const { data: bookingStats, isLoading: statsLoading } = useBookingStats(showStats);
 
-  const listingCount = allResult?.total ?? allResult?.data?.length ?? 0;
+  const listingCount = allResult?.total ?? 0;
   const allListings = allResult?.data || [];
-  const cityCount = new Set(allListings.map((l: any) => l.city).filter(Boolean)).size || ESTONIAN_CITIES.length;
+  const cityCount = new Set(allListings.map((l: any) => l.city).filter(Boolean)).size;
 
-  const isLoading = listingsLoading || (showStats && statsLoading);
+  const shouldShowListings = !listingsLoading && listingCount > 0;
+  const shouldShowCities = !listingsLoading && cityCount > 0;
 
   const stats = [
-    { icon: Building2, value: listingCount, label: t("trustBar.listings") },
-    { icon: MapPin, value: cityCount, label: t("trustBar.cities") },
-    ...(showStats && (bookingStats?.totalBookings ?? 0) > 0
+    ...(shouldShowListings ? [{ icon: Building2, value: listingCount, label: t("trustBar.listings") }] : []),
+    ...(shouldShowCities ? [{ icon: MapPin, value: cityCount, label: t("trustBar.cities") }] : []),
+    ...(showStats && !statsLoading && (bookingStats?.totalBookings ?? 0) > 0
       ? [{ icon: CalendarCheck, value: bookingStats!.totalBookings, label: t("trustBar.bookings") }]
       : []),
-    ...(showStats && (bookingStats?.averageRating ?? 0) > 0
+    ...(showStats && !statsLoading && (bookingStats?.averageRating ?? 0) > 0
       ? [{ icon: Star, value: bookingStats!.averageRating!.toFixed(1), label: t("trustBar.rating") }]
       : []),
   ];
@@ -38,31 +37,22 @@ export default function TrustBar() {
 
   return (
     <section className="container-wide py-10 md:py-14">
-      {/* Stats grid */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div key={stat.label} className="flex flex-col items-center rounded-xl border border-border bg-card p-5 text-center">
-              {isLoading ? (
-                <>
-                  <Skeleton className="h-5 w-5 rounded-full" />
-                  <Skeleton className="mt-3 h-7 w-16" />
-                  <Skeleton className="mt-1.5 h-4 w-20" />
-                </>
-              ) : (
-                <>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10">
-                    <Icon className="h-5 w-5 text-accent" />
-                  </div>
-                  <span className="mt-3 font-display text-2xl font-bold">{stat.value}</span>
-                  <span className="mt-0.5 text-xs text-muted-foreground">{stat.label}</span>
-                </>
-              )}
-            </div>
-          );
-        })}
-      </div>
+      {stats.length > 0 && (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          {stats.map((stat) => {
+            const Icon = stat.icon;
+            return (
+              <div key={stat.label} className="flex flex-col items-center rounded-xl border border-border bg-card p-5 text-center">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10">
+                  <Icon className="h-5 w-5 text-accent" />
+                </div>
+                <span className="mt-3 font-display text-2xl font-bold">{stat.value}</span>
+                <span className="mt-0.5 text-xs text-muted-foreground">{stat.label}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Trust badges */}
       <div className="mt-8 flex flex-wrap items-center justify-center gap-6">
