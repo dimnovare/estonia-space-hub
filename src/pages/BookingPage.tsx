@@ -413,11 +413,10 @@ export default function BookingPage() {
       {showVerifyBanner && (
         <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm">
           <p className="font-semibold text-amber-800">
-            Kinnita oma e-posti aadress
+            {t("booking.verifyEmailTitle")}
           </p>
           <p className="mt-1 text-amber-700">
-            Broneerimiseks pead oma e-posti aadressi kinnitama.
-            Kontrolli oma postkasti ja rämpsposti kausta.
+            {t("booking.verifyEmailBody")}
           </p>
           {!resendSent ? (
             <button
