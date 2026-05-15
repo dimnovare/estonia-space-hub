@@ -33,7 +33,7 @@ export default function ReviewDialog({ open, onOpenChange, bookingId, listingId 
           setComment("");
         },
         onError: (err: any) => {
-          toast.error(err?.message || "Something went wrong");
+          toast.error(err?.message || t("error.generic"));
         },
       }
     );

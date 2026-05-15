@@ -348,7 +348,7 @@ function BookingCard({ booking }: { booking: Booking }) {
                 ))}
               </div>
             </div>
-            {booking.status === "completed" && (
+            {booking.status === "completed" && !booking.hasReview && (
               <div className="pt-2">
                 <Button
                   variant="outline"
@@ -359,6 +359,11 @@ function BookingCard({ booking }: { booking: Booking }) {
                   <Star className="h-3.5 w-3.5" /> {t("reviews.leave")}
                 </Button>
               </div>
+            )}
+            {booking.status === "completed" && booking.hasReview && (
+              <p className="text-xs text-muted-foreground text-center py-1">
+                {t("reviews.alreadyLeft") || "Review submitted ✓"}
+              </p>
             )}
             {!contractQuery.isLoading && (
               <div className="rounded-lg border border-border p-3">
