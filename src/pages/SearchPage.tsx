@@ -204,24 +204,23 @@ export default function SearchPage() {
   };
 
   const titleMap: Record<string, string> = {
-    warehouse: "Laopinnad Eestis",
-    moving: "Kolimisteenused Eestis",
-    trailer: "Haagise rent Eestis",
+    warehouse: t("seo.search.warehouseTitle"),
+    moving: t("seo.search.movingTitle"),
+    trailer: t("seo.search.trailerTitle"),
   };
   const descMap: Record<string, string> = {
-    warehouse: "Otsi ja broneeri laopindu üle Eesti. Võrdle hindu ja asukohti.",
-    moving: "Leia parimad kolimisteenused Eestis. Võrdle hindu.",
-    trailer: "Haagise rent Tallinnas ja üle Eesti. Parimad hinnad.",
+    warehouse: t("seo.search.warehouseDesc"),
+    moving: t("seo.search.movingDesc"),
+    trailer: t("seo.search.trailerDesc"),
   };
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-col lg:flex-row">
       <SEO
         title={query
-          ? `"${query}" — otsingutulemused — Ruumly`
-          : titleMap[activeType] || "Otsi laopindu ja logistikat — Ruumly"}
-        description={descMap[activeType] ||
-          "Otsi ja broneeri laopindu, kolimisteenuseid ja haagiseid üle Eesti. Kuni 10% soodsam."}
+          ? t("seo.search.withQuery").replace("{query}", query)
+          : titleMap[activeType] || t("seo.search.defaultTitle")}
+        description={descMap[activeType] || t("seo.search.defaultDesc")}
         path="/search"
       />
       <h1 className="sr-only">{t("search.title") || "Search results"}</h1>
