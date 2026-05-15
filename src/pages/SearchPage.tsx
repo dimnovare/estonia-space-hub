@@ -21,6 +21,9 @@ import StorageSizeCalculator from "@/components/StorageSizeCalculator";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
+const VALID_SORTS: ListingFilters["sort"][] = ["best", "cheapest", "rating", "newest"];
+const VALID_SIZE_CATS: ListingFilters["sizeCategory"][] = ["XS", "S", "M", "L", "XL"];
+
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
@@ -81,8 +84,12 @@ export default function SearchPage() {
     city: cityFilter || undefined,
     priceMax: debouncedPriceMax ? parseInt(debouncedPriceMax) : undefined,
     availableNow: availableNow || undefined,
-    sort: sort as any,
-    sizeCategory: sizeCategory as any,
+    sort: VALID_SORTS.includes(sort as ListingFilters["sort"])
+      ? (sort as ListingFilters["sort"])
+      : "best",
+    sizeCategory: VALID_SIZE_CATS.includes(sizeCategory as ListingFilters["sizeCategory"])
+      ? (sizeCategory as ListingFilters["sizeCategory"])
+      : undefined,
     minSize: minSize ? parseFloat(minSize) : undefined,
     maxSize: maxSize ? parseFloat(maxSize) : undefined,
     supplierId: supplierIdFilter || undefined,
@@ -439,11 +446,11 @@ export default function SearchPage() {
                       <div className="p-4">
                         <h3 className="truncate font-sans text-sm font-semibold text-foreground">{loc.name}</h3>
                         <p className="mt-0.5 text-xs text-muted-foreground">{loc.supplierName}</p>
-                        {(loc as any).rating > 0 && (
+                        {loc.rating != null && loc.rating > 0 && (
                           <div className="mt-1 flex items-center gap-1 text-xs">
                             <Star className="h-3 w-3 fill-accent text-accent" />
-                            <span className="font-medium">{(loc as any).rating.toFixed(1)}</span>
-                            <span className="text-muted-foreground">({(loc as any).reviewCount})</span>
+                            <span className="font-medium">{loc.rating.toFixed(1)}</span>
+                            <span className="text-muted-foreground">({loc.reviewCount})</span>
                           </div>
                         )}
                         <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
@@ -457,9 +464,9 @@ export default function SearchPage() {
                               <span className="text-xs text-muted-foreground">{t("priceUnit.month")}</span>
                             </>
                           )}
-                          {loc.priceFrom && (loc as any).customerDiscount > 0 && (
+                          {loc.priceFrom && (loc.bestCustomerDiscount ?? 0) > 0 && (
                             <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
-                              {t("search.save")} {(loc as any).customerDiscount}%
+                              {t("search.save")} {loc.bestCustomerDiscount}%
                             </span>
                           )}
                           {(loc as any).quantityTotal && (loc as any).quantityBooked &&

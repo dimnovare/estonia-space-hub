@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useBookings } from "@/hooks/useBookings";
 import { useLanguage } from "@/i18n/LanguageContext";
-import type { Booking } from "@/services/types";
+import type { Booking, BookingStatus } from "@/services/types";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 
 const FILTERS = ["all", "pending", "reserved", "confirmed", "active", "completed", "cancelled"] as const;
@@ -33,11 +33,11 @@ export default function ProviderBookings() {
     : s === "cancelled" ? "bg-destructive/10 text-destructive"
     : "bg-accent/10 text-accent";
 
-  const filtered = bookings.filter(b => filter === "all" || b.status === (filter as any));
+  const filtered = bookings.filter(b => filter === "all" || b.status === (filter as BookingStatus));
 
   const exportCSV = () => {
     const headers = [t("provider.bookings.id"), t("provider.bookings.client"), t("provider.bookings.listing"), t("provider.bookings.date"), t("provider.bookings.amount"), t("provider.bookings.status")];
-    const rows = bookings.map(b => [b.id, customerName(b), b.listingTitle, b.startDate, `€${(b as any).total ?? (b as any).basePrice ?? 0}`, statusLabel(b.status)]);
+    const rows = bookings.map(b => [b.id, customerName(b), b.listingTitle, b.startDate, `€${b.total ?? b.basePrice ?? 0}`, statusLabel(b.status)]);
     const csv = [headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -73,7 +73,7 @@ export default function ProviderBookings() {
       </div>
       <div className="mt-4 flex gap-2 overflow-x-auto">
         {FILTERS.map((f) => {
-          const count = f === "all" ? bookings.length : bookings.filter(b => b.status === (f as any)).length;
+          const count = f === "all" ? bookings.length : bookings.filter(b => b.status === (f as BookingStatus)).length;
           const label = f === "all" ? t("provider.bookings.all") : statusLabel(f);
           return (
             <button
@@ -99,8 +99,8 @@ export default function ProviderBookings() {
                 {statusLabel(b.status)}
               </span>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">{b.listingTitle} · {b.startDate} · {(b as any).duration ?? ""}</p>
-            <p className="mt-1 text-sm font-semibold">€{(b as any).total ?? (b as any).basePrice ?? 0}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{b.listingTitle} · {b.startDate} · {b.duration ?? ""}</p>
+            <p className="mt-1 text-sm font-semibold">€{b.total ?? b.basePrice ?? 0}</p>
           </button>
         ))}
       </div>
@@ -127,7 +127,7 @@ export default function ProviderBookings() {
                 <td className="px-4 py-3 font-medium">{customerName(b)}</td>
                 <td className="px-4 py-3 text-muted-foreground">{b.listingTitle}</td>
                 <td className="px-4 py-3 text-muted-foreground">{b.startDate}</td>
-                <td className="px-4 py-3 font-medium">€{(b as any).total ?? (b as any).basePrice ?? 0}</td>
+                <td className="px-4 py-3 font-medium">€{b.total ?? b.basePrice ?? 0}</td>
                 <td className="px-4 py-3">
                   <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusClass(b.status)}`}>
                     {statusLabel(b.status)}
@@ -171,10 +171,10 @@ export default function ProviderBookings() {
                   <span>{t("provider.bookings.total")}</span><span>€{viewBooking.total}</span>
                 </div>
               </div>
-              {(viewBooking as any).notes && (
+              {viewBooking.notes && (
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground mb-1">{t("provider.bookings.notes")}</p>
-                  <p className="text-sm">{(viewBooking as any).notes}</p>
+                  <p className="text-sm">{viewBooking.notes}</p>
                 </div>
               )}
               {viewBooking.timeline && viewBooking.timeline.length > 0 && (

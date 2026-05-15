@@ -203,6 +203,7 @@ export interface Booking {
   contactName?: string;
   contactEmail?: string;
   contactPhone?: string;
+  notes?: string;
 }
 
 export interface Notification {
@@ -315,6 +316,9 @@ export interface SupplierLocation {
   units?: Listing[];
   availableUnitCount?: number | null;
   totalUnitCount?: number | null;
+  rating?: number;
+  reviewCount?: number;
+  bestCustomerDiscount?: number | null;
 }
 
 export interface WarehouseListing extends ListingBase {
