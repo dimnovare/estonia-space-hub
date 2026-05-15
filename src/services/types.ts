@@ -199,6 +199,7 @@ export interface Booking {
   timeline: { date: string; event: string; status: BookingStatus }[];
   isReservation?: boolean;
   reservedUntil?: string;
+  hasReview?: boolean;
 }
 
 export interface Notification {
