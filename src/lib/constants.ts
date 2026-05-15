@@ -32,6 +32,9 @@ export const ORDER_STATUS_CONFIG: Record<OrderStatus, { labelKey: string; label:
 type EmailLabels = {
   greeting: string;
   intro: string;
+  from: string;
+  to: string;
+  subject: string;
   detailsHeader: string;
   orderNo: string;
   service: string;
@@ -61,6 +64,7 @@ type EmailLabels = {
 const EMAIL_LABELS: Record<string, EmailLabels> = {
   et: {
     greeting: "Tere", intro: "Ruumly platvormilt on saabunud uus tellimus.",
+    from: "Saatja", to: "Saaja", subject: "Teema",
     detailsHeader: "TELLIMUSE ANDMED", orderNo: "Tellimuse nr", service: "Teenus", type: "Tüüp",
     warehouse: "Laopind", moving: "Kolimine", trailer: "Haagise rent",
     clientHeader: "KLIENT", name: "Nimi", email: "E-post", phone: "Telefon",
@@ -74,6 +78,7 @@ const EMAIL_LABELS: Record<string, EmailLabels> = {
   },
   en: {
     greeting: "Hello", intro: "A new order has arrived from the Ruumly platform.",
+    from: "From", to: "To", subject: "Subject",
     detailsHeader: "ORDER DETAILS", orderNo: "Order no.", service: "Service", type: "Type",
     warehouse: "Warehouse", moving: "Moving", trailer: "Trailer rental",
     clientHeader: "CLIENT", name: "Name", email: "Email", phone: "Phone",
@@ -87,6 +92,7 @@ const EMAIL_LABELS: Record<string, EmailLabels> = {
   },
   ru: {
     greeting: "Здравствуйте", intro: "На платформе Ruumly поступил новый заказ.",
+    from: "От", to: "Кому", subject: "Тема",
     detailsHeader: "ДАННЫЕ ЗАКАЗА", orderNo: "Номер заказа", service: "Услуга", type: "Тип",
     warehouse: "Склад", moving: "Переезд", trailer: "Аренда прицепа",
     clientHeader: "КЛИЕНТ", name: "Имя", email: "Эл. почта", phone: "Телефон",
@@ -100,6 +106,7 @@ const EMAIL_LABELS: Record<string, EmailLabels> = {
   },
   lv: {
     greeting: "Sveiki", intro: "No Ruumly platformas saņemts jauns pasūtījums.",
+    from: "No", to: "Kam", subject: "Tēma",
     detailsHeader: "PASŪTĪJUMA DATI", orderNo: "Pasūtījuma nr.", service: "Pakalpojums", type: "Tips",
     warehouse: "Noliktava", moving: "Pārvākšanās", trailer: "Piekabes noma",
     clientHeader: "KLIENTS", name: "Vārds", email: "E-pasts", phone: "Tālrunis",
@@ -113,6 +120,7 @@ const EMAIL_LABELS: Record<string, EmailLabels> = {
   },
   lt: {
     greeting: "Sveiki", intro: "Iš Ruumly platformos gautas naujas užsakymas.",
+    from: "Nuo", to: "Kam", subject: "Tema",
     detailsHeader: "UŽSAKYMO DUOMENYS", orderNo: "Užsakymo nr.", service: "Paslauga", type: "Tipas",
     warehouse: "Sandėlis", moving: "Perkraustymas", trailer: "Priekabos nuoma",
     clientHeader: "KLIENTAS", name: "Vardas", email: "El. paštas", phone: "Telefonas",
@@ -128,6 +136,10 @@ const EMAIL_LABELS: Record<string, EmailLabels> = {
 
 export function generateOrderEmailPreview(order: Order, lang: string = "et"): string {
   const l = EMAIL_LABELS[lang] ?? EMAIL_LABELS.en;
+
+export function getEmailLabels(lang: string) {
+  return EMAIL_LABELS[lang] ?? EMAIL_LABELS.en;
+}
   const typeLabel = order.listingType === "warehouse" ? l.warehouse : order.listingType === "moving" ? l.moving : l.trailer;
   return `${l.greeting}, ${order.supplierName}!
 
