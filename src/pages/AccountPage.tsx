@@ -578,7 +578,7 @@ function AccountMessages() {
                 onClick={() => setSelectedBooking(null)}
                 className="flex items-center gap-1.5 px-3 pt-3 text-xs text-muted-foreground hover:text-foreground lg:hidden"
               >
-                <ArrowLeft className="h-3.5 w-3.5" /> Tagasi vestlustesse
+                <ArrowLeft className="h-3.5 w-3.5" /> {t("account.chat.backToList")}
               </button>
               <div className="border-b border-border p-3">
                 <p className="text-sm font-semibold">{booking?.listingTitle}</p>
@@ -604,7 +604,7 @@ function AccountMessages() {
                 ))}
               </div>
               <div className="border-t border-border p-3 flex gap-2 overflow-hidden">
-                <input value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} placeholder="Kirjuta sõnum..." className="flex-1 min-w-0 rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                <input value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} placeholder={t("account.chat.inputPlaceholder")} className="flex-1 min-w-0 rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                 <Button size="sm" onClick={sendMessage} disabled={!newMsg.trim() || sendMutation.isPending} className="bg-accent text-accent-foreground">
                   {sendMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 </Button>
