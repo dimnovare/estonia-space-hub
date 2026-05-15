@@ -1,8 +1,9 @@
 import { Link, useLocation, useSearchParams, useNavigate, stripLang } from "@/i18n/routing";
 import { Menu, X, User, LogIn, LogOut, ChevronDown, Bell, LayoutDashboard, Shield, Check } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Language } from "@/i18n/translations";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { LANGUAGES } from "@/i18n/translations";
 import { FlagIcon } from "@/components/FlagIcon";
@@ -46,6 +47,15 @@ export default function Navbar() {
     ? [...baseNavLinks, { to: "/blog", tKey: "blog.title", matchType: "" }]
     : baseNavLinks;
 
+  // Subtle scroll-state for translucent home header
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const handleLogout = () => {
     logout();
     setUserMenuOpen(false);
@@ -57,8 +67,14 @@ export default function Navbar() {
   };
 
   return (
-    <header className={`sticky top-0 z-50 border-b border-border backdrop-blur-md ${isHome ? "bg-card/80" : "bg-card/95"}`}>
-      <div className="container-wide flex h-20 lg:h-[88px] items-center justify-between">
+    <header
+      className={`sticky top-0 z-50 border-b transition-shadow backdrop-blur-md ${
+        isHome && !scrolled
+          ? "border-transparent bg-card/70"
+          : "border-border bg-card/95 shadow-sm"
+      }`}
+    >
+      <div className="container-wide flex h-14 md:h-20 lg:h-[88px] items-center justify-between">
         <Link to="/" className="flex-shrink-0 flex items-center">
           <img
             src="/ruumly-logo@1x.webp"
@@ -67,7 +83,7 @@ export default function Navbar() {
             width={179}
             height={52}
             decoding="async"
-            className="h-[42px] sm:h-[52px] lg:h-[62px] w-auto object-contain"
+            className="h-8 sm:h-[52px] lg:h-[62px] w-auto object-contain"
           />
         </Link>
 
@@ -182,81 +198,99 @@ export default function Navbar() {
 
         <div className="flex items-center gap-1 lg:hidden">
           {isAuthenticated && unreadCount > 0 && (
-            <Link to="/account?tab=notifications" aria-label={t("nav.notifications") || "Notifications"} className="relative p-2 rounded-lg hover:bg-secondary">
+            <Link to="/account?tab=notifications" aria-label={t("nav.notifications") || "Notifications"} className="relative inline-flex h-11 w-11 items-center justify-center rounded-lg hover:bg-secondary">
               <Bell className="h-5 w-5 text-muted-foreground" />
               <span className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-accent-foreground">{unreadCount}</span>
             </Link>
           )}
-          <button
-            className="p-2 rounded-lg hover:bg-secondary"
-            onClick={() => setOpen(!open)}
-            aria-label={open ? (t("nav.closeMenu") || "Close menu") : (t("nav.openMenu") || "Open menu")}
-            aria-expanded={open}
-          >
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+          <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild>
+              <button
+                className="inline-flex h-11 w-11 items-center justify-center rounded-lg hover:bg-secondary"
+                aria-label={t("nav.openMenu") || "Open menu"}
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[88vw] max-w-sm p-0 flex flex-col">
+              <SheetHeader className="px-5 py-4 border-b border-border">
+                <SheetTitle className="text-left">Menu</SheetTitle>
+              </SheetHeader>
+              <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
+                {navLinks.map((l) => {
+                  const href = getLinkHref(l);
+                  const active = isLinkActive(l, location.pathname, currentType);
+                  return (
+                    <Link
+                      key={l.tKey}
+                      to={href}
+                      onClick={() => setOpen(false)}
+                      className={`block rounded-lg px-3 py-3 text-sm font-medium ${
+                        active ? "bg-accent/10 text-accent" : "text-foreground hover:bg-secondary"
+                      }`}
+                    >
+                      {t(l.tKey)}
+                    </Link>
+                  );
+                })}
+
+                <div className="pt-3 mt-3 border-t border-border">
+                  <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {t("nav.language") || "Language"}
+                  </p>
+                  <div className="flex flex-wrap gap-1 px-1">
+                    {LANGUAGES.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => setLanguage(lang.code as Language)}
+                        className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                          language === lang.code ? "bg-accent/10 text-accent" : "text-muted-foreground hover:bg-secondary"
+                        }`}
+                        title={lang.label}
+                      >
+                        <FlagIcon lang={lang.code} className="h-4 w-6 rounded-sm" />
+                        {lang.code.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-border p-3 space-y-1.5">
+                {isAuthenticated ? (
+                  <>
+                    <Link to="/account" className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium text-foreground hover:bg-secondary" onClick={() => setOpen(false)}>
+                      <User className="h-4 w-4 text-muted-foreground" /> {t("nav.myAccount")}
+                    </Link>
+                    {(role === "provider" || role === "admin") && (
+                      <Link to="/provider/dashboard" className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium text-foreground hover:bg-secondary" onClick={() => setOpen(false)}>
+                        <LayoutDashboard className="h-4 w-4 text-muted-foreground" /> {t("nav.providerDashboard")}
+                      </Link>
+                    )}
+                    {role === "admin" && (
+                      <Link to="/admin" className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium text-foreground hover:bg-secondary" onClick={() => setOpen(false)}>
+                        <Shield className="h-4 w-4 text-muted-foreground" /> Admin
+                      </Link>
+                    )}
+                    <Button variant="outline" className="w-full text-destructive mt-1" onClick={() => { handleLogout(); setOpen(false); }}>
+                      <LogOut className="h-4 w-4 mr-1" /> {t("nav.logout")}
+                    </Button>
+                  </>
+                ) : (
+                  <div className="flex gap-2">
+                    <Link to="/login" className="flex-1" onClick={() => setOpen(false)}>
+                      <Button variant="outline" className="w-full">{t("nav.myAccount")}</Button>
+                    </Link>
+                    <Link to="/login" className="flex-1" onClick={() => setOpen(false)}>
+                      <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">{t("nav.login")}</Button>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
-
-      {open && (
-        <div className="border-t border-border bg-card px-4 pb-4 pt-2 lg:hidden">
-          <div className="mx-auto max-w-md">
-          {navLinks.map((l) => {
-            const href = getLinkHref(l);
-            const active = isLinkActive(l, location.pathname, currentType);
-            return (
-              <Link key={l.tKey} to={href} className={`block rounded-lg px-3 py-2.5 text-sm font-medium ${active ? "bg-accent/10 text-accent" : "text-foreground"}`} onClick={() => setOpen(false)}>
-                {t(l.tKey)}
-              </Link>
-            );
-          })}
-          <div className="mt-2 flex flex-wrap items-center justify-center gap-1 px-3">
-            {LANGUAGES.map((lang) => (
-              <button
-                key={lang.code}
-                onClick={() => { setLanguage(lang.code as Language); }}
-                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors ${language === lang.code ? "bg-accent/10 text-accent" : "text-muted-foreground hover:text-foreground"}`}
-                title={lang.label}
-              >
-                <FlagIcon lang={lang.code} className="h-4 w-6 rounded-sm" />
-                {lang.code.toUpperCase()}
-              </button>
-            ))}
-          </div>
-          <div className="mt-2 flex flex-col gap-1.5">
-            {isAuthenticated ? (
-              <>
-                <Link to="/account" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary" onClick={() => setOpen(false)}>
-                  <User className="h-4 w-4 text-muted-foreground" /> {t("nav.myAccount")}
-                </Link>
-                {(role === "provider" || role === "admin") && (
-                  <Link to="/provider/dashboard" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary" onClick={() => setOpen(false)}>
-                    <LayoutDashboard className="h-4 w-4 text-muted-foreground" /> {t("nav.providerDashboard")}
-                  </Link>
-                )}
-                {role === "admin" && (
-                  <Link to="/admin" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary" onClick={() => setOpen(false)}>
-                    <Shield className="h-4 w-4 text-muted-foreground" /> Admin
-                  </Link>
-                )}
-                <Button size="sm" variant="outline" className="text-destructive mt-1" onClick={() => { handleLogout(); setOpen(false); }}>
-                  <LogOut className="h-4 w-4 mr-1" /> {t("nav.logout")}
-                </Button>
-              </>
-            ) : (
-              <div className="flex gap-2">
-                <Link to="/login" className="flex-1" onClick={() => setOpen(false)}>
-                  <Button variant="outline" size="sm" className="w-full">{t("nav.myAccount")}</Button>
-                </Link>
-                <Link to="/login" className="flex-1" onClick={() => setOpen(false)}>
-                  <Button size="sm" className="w-full bg-accent text-accent-foreground">{t("nav.login")}</Button>
-                </Link>
-              </div>
-            )}
-          </div>
-          </div>
-        </div>
-      )}
     </header>
   );
 }
