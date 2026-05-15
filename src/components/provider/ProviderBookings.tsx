@@ -18,7 +18,7 @@ export default function ProviderBookings() {
   const [viewBooking, setViewBooking] = useState<Booking | null>(null);
 
   const customerName = (b: Booking) =>
-    (b as any).contactName ?? (b as any).userName ?? (b as any).customerName ?? "—";
+    b.contactName ?? b.provider ?? "—";
 
   const statusLabel = (s: string) => {
     const key = `provider.bookings.${s}`;
@@ -154,8 +154,8 @@ export default function ProviderBookings() {
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div><span className="text-xs text-muted-foreground">{t("provider.bookings.customer")}</span><p className="font-medium">{customerName(viewBooking)}</p></div>
-                <div><span className="text-xs text-muted-foreground">{t("provider.bookings.email")}</span><p className="font-medium">{(viewBooking as any).contactEmail ?? "—"}</p></div>
-                <div><span className="text-xs text-muted-foreground">{t("provider.bookings.phone")}</span><p className="font-medium">{(viewBooking as any).contactPhone ?? "—"}</p></div>
+                <div><span className="text-xs text-muted-foreground">{t("provider.bookings.email")}</span><p className="font-medium">{viewBooking.contactEmail ?? "—"}</p></div>
+                <div><span className="text-xs text-muted-foreground">{t("provider.bookings.phone")}</span><p className="font-medium">{viewBooking.contactPhone ?? "—"}</p></div>
                 <div><span className="text-xs text-muted-foreground">{t("provider.bookings.listing")}</span><p className="font-medium">{viewBooking.listingTitle}</p></div>
                 <div><span className="text-xs text-muted-foreground">{t("provider.bookings.startDate")}</span><p className="font-medium">{viewBooking.startDate}</p></div>
                 {viewBooking.endDate && <div><span className="text-xs text-muted-foreground">{t("provider.bookings.endDate")}</span><p className="font-medium">{viewBooking.endDate}</p></div>}

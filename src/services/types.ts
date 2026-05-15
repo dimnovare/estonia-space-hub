@@ -200,6 +200,9 @@ export interface Booking {
   isReservation?: boolean;
   reservedUntil?: string;
   hasReview?: boolean;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
 }
 
 export interface Notification {
