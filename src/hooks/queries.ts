@@ -245,6 +245,7 @@ export interface PlatformPricingConfig {
   defaultPartnerDiscount: number;
   extrasMarginRate: number;
   defaultVatRate: number;
+  ruumlyMinMarginRate: number;
   tiers: {
     starter: TierPricing;
     standard: TierPricing;

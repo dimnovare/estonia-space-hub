@@ -121,7 +121,7 @@ export default function BookingPage() {
   const navigate = useNavigate();
   const { data: suppliers = [] } = useSuppliers();
   const supplier = listing ? suppliers.find(s => s.id === listing.supplierId) : undefined;
-  const isRebateModel = (supplier as any)?.billingModel === "rebate" || (listing as any)?.billingModel === "rebate";
+  const isRebateModel = supplier?.billingModel === "rebate";
   const createBooking = useCreateBooking();
   const { data: pricingConfig } = usePricingConfig();
   const { data: listingExtras = [] } = useListingExtras(listingId || "");
@@ -191,12 +191,11 @@ export default function BookingPage() {
   // customerDiscountRate = max(0, partnerDiscount - ruumlyMinMargin)
   // Per-listing override wins. Otherwise compute from supplier's partnerDiscount
   // (exposed on listing if available, else platform default), minus ruumlyMinMargin.
-  const partnerDiscount = (listing as any)?.partnerDiscountRateOverride
-    ?? (listing as any)?.partnerDiscountRate
-    ?? (pricingConfig as any)?.defaultPartnerDiscount
+  const partnerDiscount = listing?.partnerDiscountRateOverride
+    ?? pricingConfig?.defaultPartnerDiscount
     ?? 0;
-  const ruumlyMinMargin = (pricingConfig as any)?.ruumlyMinMarginRate ?? 0;
-  const clientDiscount = (listing as any)?.clientDiscountRateOverride
+  const ruumlyMinMargin = pricingConfig?.ruumlyMinMarginRate ?? 0;
+  const clientDiscount = listing?.clientDiscountRateOverride
     ?? Math.max(0, partnerDiscount - ruumlyMinMargin);
 
 
@@ -752,7 +751,7 @@ export default function BookingPage() {
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-semibold">{pm.label}</span>
-                              {(pm as any).recommended && (
+                              {'recommended' in pm && pm.recommended && (
                                 <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-semibold text-accent">
                                   {t("booking.paymentRecommended")}
                                 </span>

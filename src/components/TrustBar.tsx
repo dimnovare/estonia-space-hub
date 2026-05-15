@@ -67,7 +67,7 @@ export default function TrustBar() {
         })}
       </div>
 
-      <div className="mt-4 text-center">
+      <div className="mt-4 mb-2 text-center">
         <p className="text-xs text-muted-foreground">
           {t("trustBar.trustLine")}
         </p>

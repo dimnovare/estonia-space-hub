@@ -424,7 +424,7 @@ export default function SearchPage() {
                           <div className="flex h-full w-full items-center justify-center bg-secondary">
                             {(() => {
                               const counts: Record<string, number> = {};
-                              ((loc as any).units ?? []).forEach((u: any) => {
+                              (loc.units ?? []).forEach((u) => {
                                 const tt = (u?.type || "warehouse").toLowerCase();
                                 counts[tt] = (counts[tt] ?? 0) + 1;
                               });
