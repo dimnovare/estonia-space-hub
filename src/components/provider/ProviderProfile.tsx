@@ -7,11 +7,14 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import { withSupplier } from "@/lib/withSupplier";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function ProviderProfile() {
   const { t } = useLanguage();
   const qc = useQueryClient();
   const supplierId = useImpersonatedSupplierId();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   const { data: profile, isLoading, error } = useQuery({
     queryKey: ["supplier-profile", supplierId],
@@ -107,7 +110,14 @@ export default function ProviderProfile() {
           <label className="text-xs font-medium text-muted-foreground">{t("provider.profile.contactEmail")}</label>
           <input className={inp} value={formData.email} onChange={e => setFormData(p => ({ ...p, email: e.target.value }))} />
         </div>
-        <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleSave}>{t("provider.profile.save")}</Button>
+        {!isAdmin && (
+          <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleSave}>{t("provider.profile.save")}</Button>
+        )}
+        {isAdmin && (
+          <p className="text-sm text-muted-foreground">
+            {t("provider.profile.adminReadOnly") || "Edit profile from the Admin → Partners page."}
+          </p>
+        )}
       </div>
     </div>
   );
