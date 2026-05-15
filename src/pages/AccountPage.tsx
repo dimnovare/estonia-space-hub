@@ -110,12 +110,19 @@ export default function AccountPage() {
   const tab = searchParams.get("tab") || "overview";
   const setTab = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("tab", id); return n; }, { replace: true });
   const { t } = useLanguage();
-  const { user, logout, role } = useAuth();
+  const { user, logout, role, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const sidebarLinks = useSidebarLinks();
 
   const handleLogout = () => { logout(); navigate("/"); };
-  const unreadMessages = 0;
+  const { data: unreadData } = useQuery({
+    queryKey: ["messages-unread"],
+    queryFn: () => apiClient.get<{ count: number }>("/messages/unread-count"),
+    enabled: isAuthenticated,
+    staleTime: 30_000,
+    refetchInterval: 60_000, // refresh every minute
+  });
+  const unreadMessages = unreadData?.count ?? 0;
   const { data: notifications = [] } = useNotifications();
   const unreadNotifications = notifications.filter((n: any) => !n.read).length;
 
