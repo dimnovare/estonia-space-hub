@@ -8,7 +8,7 @@ import { useBookings } from "@/hooks/useBookings";
 import { useLocations } from "@/hooks/queries";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/services/apiClient";
+import { apiClient, tokenStore } from "@/services/apiClient";
 import { toast } from "sonner";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import { withSupplier } from "@/lib/withSupplier";
@@ -115,7 +115,8 @@ export default function ProviderCalendar() {
           className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-secondary transition-colors"
           onClick={(e) => {
             e.preventDefault();
-            const token = localStorage.getItem("ruumly-auth");
+            const token = tokenStore.getAccess();
+            if (!token) { toast.error(t("toast.error")); return; }
             fetch(`${import.meta.env.VITE_API_URL || ""}/api/supplier/calendar.ics`, {
               headers: { Authorization: `Bearer ${token}` },
             })
