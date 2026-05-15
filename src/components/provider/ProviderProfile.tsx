@@ -7,6 +7,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import { withSupplier } from "@/lib/withSupplier";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function ProviderProfile() {
   const { t } = useLanguage();
