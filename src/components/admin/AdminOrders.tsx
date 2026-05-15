@@ -6,6 +6,7 @@ import { useOrders, useApproveOrder, useRejectOrder, useUpdateOrderStatus } from
 import { SkeletonList } from "@/components/SkeletonCard";
 import { ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG, generateOrderEmailPreview } from "@/lib/constants";
 import type { Order, OrderStatus } from "@/services/types";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function AdminOrders({ supplierId }: { supplierId?: string }) {
   const { t, language } = useLanguage();
