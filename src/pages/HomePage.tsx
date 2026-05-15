@@ -25,6 +25,15 @@ export default function HomePage() {
   const { t, language } = useLanguage();
   const settings = usePlatformSettings();
 
+  // Sticky mobile search CTA — appears once user scrolls past the hero search card.
+  const [showStickySearch, setShowStickySearch] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setShowStickySearch(window.scrollY > 480);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const { data: featured = [], isLoading: featuredLoading } = useFeaturedListings();
   const { data: allResult } = useAllListings();
   const allListings = allResult?.data || [];
@@ -293,7 +302,7 @@ export default function HomePage() {
 
       {/* How it works */}
       {settings.showHowItWorks && (
-      <section className="container-wide py-16 md:py-20">
+      <section className="container-wide section-y">
         <h2 className="text-center font-display text-2xl font-bold md:text-3xl">{t("how.title")}</h2>
         <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">{t("how.subtitle")}</p>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
@@ -316,7 +325,7 @@ export default function HomePage() {
       {/* Featured listings */}
       {(settings as any).showFeaturedPartners === "true" && <FeaturedPartnersStrip />}
       {settings.showFeaturedListings && (featuredLoading || featured.length > 0) && (
-      <section className="surface-sunken py-16 md:py-20">
+      <section className="surface-sunken section-y">
         <div className="container-wide">
           <div className="flex items-end justify-between">
             <div>
@@ -330,7 +339,15 @@ export default function HomePage() {
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {featuredLoading
               ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
-              : featured.map((l) => <ListingCard key={l.id} listing={l} />)
+              : featured.map((l, i) => (
+                  <div
+                    key={l.id}
+                    className="animate-slide-up opacity-0"
+                    style={{ animationDelay: `${i * 70}ms`, animationFillMode: "forwards" }}
+                  >
+                    <ListingCard listing={l} />
+                  </div>
+                ))
             }
           </div>
           <div className="mt-6 text-center md:hidden">
@@ -341,7 +358,7 @@ export default function HomePage() {
       )}
 
       {/* Why Ruumly */}
-      <section className="container-wide py-12 md:py-16">
+      <section className="container-wide section-y-sm">
         <h2 className="text-center font-display text-2xl font-bold md:text-3xl">{t("home.whyRuumly.title")}</h2>
         <div className="mx-auto mt-8 grid max-w-3xl gap-4 md:grid-cols-3">
           {[
@@ -372,7 +389,7 @@ export default function HomePage() {
 
       {/* Provider CTA */}
       {settings.showProviderCta && (
-      <section className="hero-gradient py-16 md:py-20">
+      <section className="hero-gradient section-y">
         <div className="container-wide text-center">
           <h2 className="font-display text-2xl font-bold text-primary-foreground md:text-3xl">{t("provider.title")}</h2>
           <p className="mx-auto mt-3 max-w-lg text-sm text-primary-foreground/70">{t("provider.desc")}</p>
@@ -385,7 +402,7 @@ export default function HomePage() {
 
       {/* FAQ */}
       {settings.showFaq && (
-      <section className="container-wide py-16 md:py-20">
+      <section className="container-wide section-y">
         <h2 className="text-center font-display text-2xl font-bold md:text-3xl">{t("faq.title")}</h2>
         <div className="mx-auto mt-8 max-w-2xl space-y-3">
           {faqs.map((faq, i) => (
@@ -401,6 +418,18 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+      )}
+
+      {/* Sticky mobile search CTA */}
+      {showStickySearch && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t surface-glass p-3 md:hidden">
+          <Link to="/search" className="block">
+            <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90 h-12">
+              <Search className="mr-2 h-4 w-4" />
+              {t("hero.search")}
+            </Button>
+          </Link>
+        </div>
       )}
     </div>
   );
