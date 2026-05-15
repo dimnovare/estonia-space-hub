@@ -36,7 +36,7 @@ export default function TrustBar() {
   ];
 
   return (
-    <section className="container-wide py-10 md:py-14">
+    <section className={`container-wide border-t border-border ${stats.length > 0 ? "py-10 md:py-14" : "py-5 md:py-6"}`}>
       {stats.length > 0 && (
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {stats.map((stat) => {
@@ -55,7 +55,7 @@ export default function TrustBar() {
       )}
 
       {/* Trust badges */}
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-6">
+      <div className={`${stats.length > 0 ? "mt-8" : "mt-0"} flex flex-wrap items-center justify-center gap-6`}>
         {badges.map((badge) => {
           const Icon = badge.icon;
           return (
