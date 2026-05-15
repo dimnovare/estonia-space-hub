@@ -44,7 +44,8 @@ export default function AdminPayouts({ supplierId }: { supplierId?: string }) {
     setLoading(true);
     apiClient.get<Payout[]>("/admin/payouts")
       .then(data => {
-        const arr = Array.isArray(data) ? data : (data as any).data ?? [];
+        const arr = Array.isArray(data) ? data :
+          (data as any).entries ?? (data as any).data ?? [];
         setPayouts(arr);
       })
       .catch((err: any) => toast.error(err?.message || t("admin.payouts.loadFailed")))
