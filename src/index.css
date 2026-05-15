@@ -167,6 +167,21 @@
   .font-display {
     font-family: 'Manrope', system-ui, sans-serif;
   }
+
+  .section-y {
+    @apply py-12 md:py-20;
+  }
+
+  .section-y-sm {
+    @apply py-8 md:py-12;
+  }
+
+  .surface-glass {
+    background: hsl(var(--card) / 0.85);
+    backdrop-filter: saturate(140%) blur(10px);
+    -webkit-backdrop-filter: saturate(140%) blur(10px);
+    border-color: hsl(var(--border) / 0.6);
+  }
 }
 
 @layer utilities {
@@ -186,6 +201,26 @@
   @keyframes slideUp {
     from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-shimmer {
+    position: relative;
+    overflow: hidden;
+    background: hsl(var(--muted));
+  }
+  .animate-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg,
+      transparent,
+      hsl(var(--card) / 0.55),
+      transparent);
+    animation: shimmer 1.6s infinite;
+  }
+  @keyframes shimmer {
+    100% { transform: translateX(100%); }
   }
 }
 
