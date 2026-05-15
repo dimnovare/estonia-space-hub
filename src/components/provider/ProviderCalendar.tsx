@@ -11,6 +11,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { toast } from "sonner";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
+import { withSupplier } from "@/lib/withSupplier";
 
 const localeMap: Record<string, string> = {
   et: "et-EE",
@@ -35,6 +36,12 @@ export default function ProviderCalendar() {
     queryFn: () => apiClient.get<any[]>(`/locations/${selectedLocationId}/blocked-dates`),
     enabled: !!selectedLocationId,
   });
+  const { data: supplierProfile } = useQuery({
+    queryKey: ["supplier-profile", supplierId],
+    queryFn: () => apiClient.get<any>(withSupplier("/supplier/profile", supplierId)),
+    enabled: !supplierId,
+  });
+  const hasCalendarSync = supplierId ? true : (supplierProfile?.hasCalendarSync ?? false);
   const formatLocal = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   const blockedDateStrings = blockedDatesRaw.map((b: any) => b.date?.split("T")[0]);
   const blockedDates = blockedDatesRaw.map((b: any) => {
@@ -101,7 +108,7 @@ export default function ProviderCalendar() {
       </div>
 
       <div className="flex items-center gap-2 mt-4">
-        {!supplierId && (
+        {!supplierId && hasCalendarSync && (
         <a
           href={`${import.meta.env.VITE_API_URL || ""}/api/supplier/calendar.ics`}
           download="ruumly-bookings.ics"
@@ -127,6 +134,12 @@ export default function ProviderCalendar() {
           <Download className="h-3.5 w-3.5" />
           {t("provider.calendar.export") || "Export .ics"}
         </a>
+        )}
+        {!supplierId && !hasCalendarSync && (
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <Lock className="h-3.5 w-3.5" />
+            {t("provider.calendar.upgradeForExport")}
+          </p>
         )}
 
         <button
