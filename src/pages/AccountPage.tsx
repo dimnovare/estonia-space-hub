@@ -1100,8 +1100,11 @@ function useGenerateInvoicePdf() {
 function AccountBilling() {
   const { t } = useLanguage();
   const generateInvoicePdf = useGenerateInvoicePdf();
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  useEffect(() => { invoiceService.getAll().then(setInvoices); }, []);
+  const { data: invoices = [], isLoading, isError } = useQuery({
+    queryKey: ["invoices"],
+    queryFn: () => invoiceService.getAll(),
+    staleTime: 30_000,
+  });
 
   return (
     <div>
