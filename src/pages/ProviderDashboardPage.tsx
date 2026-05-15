@@ -62,6 +62,12 @@ export default function ProviderDashboardPage() {
     retry: false,
   });
 
+  const hasAnalyticsTier =
+    user?.role === "admin" || (supplierProfile?.hasFullAnalytics ?? false);
+  const navItems = sidebarLinks.filter(
+    (l) => l.id !== "analytics" || hasAnalyticsTier
+  );
+
   const { data: notifications = [] } = useNotifications();
   const unreadCount = notifications.filter((n: any) => !n.read).length;
 
@@ -97,7 +103,7 @@ export default function ProviderDashboardPage() {
     } catch {}
   };
 
-  const currentTab = sidebarLinks.find(l => l.id === tab);
+  const currentTab = navItems.find(l => l.id === tab);
   const CurrentIcon = currentTab?.icon || LayoutDashboard;
 
   return (
@@ -109,7 +115,7 @@ export default function ProviderDashboardPage() {
           <p className="text-xs text-muted-foreground">{t("provider.panel")}</p>
         </div>
         <nav className="space-y-0.5 px-2">
-          {sidebarLinks.map((l) => {
+          {navItems.map((l) => {
             const Icon = l.icon;
             const badge = l.id === "orders" ? allOrders.filter(o => o.status === "sent" || o.status === "created").length : 0;
             return (
@@ -160,7 +166,7 @@ export default function ProviderDashboardPage() {
               <>
                 <div className="fixed inset-0 z-30" onClick={() => setMobileNavOpen(false)} />
                 <div className="absolute left-0 right-0 top-full z-40 mt-1 rounded-xl border border-border bg-card p-1 shadow-xl max-h-[60vh] overflow-y-auto">
-                  {sidebarLinks.map((l) => {
+                  {navItems.map((l) => {
                     const Icon = l.icon;
                     const badge = l.id === "orders" ? allOrders.filter(o => o.status === "sent" || o.status === "created").length : 0;
                     return (
@@ -235,7 +241,7 @@ export default function ProviderDashboardPage() {
         {tab === "bookings" && <ProviderBookings />}
         {tab === "calendar" && <ProviderCalendar />}
         {tab === "reviews" && <ProviderReviews />}
-        {tab === "analytics" && (
+        {tab === "analytics" && hasAnalyticsTier && (
           <Suspense fallback={<div className="py-16 text-center text-sm text-muted-foreground">Loading…</div>}>
             <ProviderAnalytics />
           </Suspense>
