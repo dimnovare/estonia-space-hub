@@ -1,8 +1,6 @@
 import { Building2, MapPin, CalendarCheck, Star, ShieldCheck, Tag, Lock, HeadphonesIcon } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAllListings, useBookingStats } from "@/hooks/queries";
-import { Skeleton } from "@/components/ui/skeleton";
-
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 export default function TrustBar() {
