@@ -12,19 +12,20 @@ export default function TrustBar() {
   const { data: allResult, isLoading: listingsLoading } = useAllListings();
   const { data: bookingStats, isLoading: statsLoading } = useBookingStats(showStats);
 
-  const listingCount = allResult?.total ?? allResult?.data?.length ?? 0;
+  const listingCount = allResult?.total ?? 0;
   const allListings = allResult?.data || [];
-  const cityCount = new Set(allListings.map((l: any) => l.city).filter(Boolean)).size || ESTONIAN_CITIES.length;
+  const cityCount = new Set(allListings.map((l: any) => l.city).filter(Boolean)).size;
 
-  const isLoading = listingsLoading || (showStats && statsLoading);
+  const shouldShowListings = !listingsLoading && listingCount > 0;
+  const shouldShowCities = !listingsLoading && cityCount > 0;
 
   const stats = [
-    { icon: Building2, value: listingCount, label: t("trustBar.listings") },
-    { icon: MapPin, value: cityCount, label: t("trustBar.cities") },
-    ...(showStats && (bookingStats?.totalBookings ?? 0) > 0
+    ...(shouldShowListings ? [{ icon: Building2, value: listingCount, label: t("trustBar.listings") }] : []),
+    ...(shouldShowCities ? [{ icon: MapPin, value: cityCount, label: t("trustBar.cities") }] : []),
+    ...(showStats && !statsLoading && (bookingStats?.totalBookings ?? 0) > 0
       ? [{ icon: CalendarCheck, value: bookingStats!.totalBookings, label: t("trustBar.bookings") }]
       : []),
-    ...(showStats && (bookingStats?.averageRating ?? 0) > 0
+    ...(showStats && !statsLoading && (bookingStats?.averageRating ?? 0) > 0
       ? [{ icon: Star, value: bookingStats!.averageRating!.toFixed(1), label: t("trustBar.rating") }]
       : []),
   ];
