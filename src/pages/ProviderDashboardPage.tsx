@@ -208,8 +208,8 @@ export default function ProviderDashboardPage() {
                          <button key={n.id} onClick={() => {
                            if (!n.read) markRead(n.id);
                            setShowNotifications(false);
-                           if ((n as any).actionUrl) {
-                             const url = (n as any).actionUrl as string;
+                           if (n.actionUrl) {
+                             const url = n.actionUrl;
                              if (url.startsWith("/")) navigate(url);
                            } else if (n.type === "order") {
                              setTab("orders");
