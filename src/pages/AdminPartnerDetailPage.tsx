@@ -64,7 +64,7 @@ export default function AdminPartnerDetailPage() {
     );
   }
 
-  const s = supplier as any;
+  const s = supplier;
   const previewUrl = s.slug ? `/et/partner/${s.slug}` : null;
 
   const tabLabel: Record<Tab, string> = {
