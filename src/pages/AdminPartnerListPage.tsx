@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/SEO";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { supplierService } from "@/services";
-import { queryKeys } from "@/lib/queryKeys";
+import { queryKeys } from "@/services/queryKeys";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 type Filter = "all" | "active" | "withPage";
@@ -15,7 +15,7 @@ type Filter = "all" | "active" | "withPage";
 export default function AdminPartnerListPage() {
   const { t } = useLanguage();
   const { data: suppliers = [], isLoading } = useQuery({
-    queryKey: queryKeys.suppliers.all,
+    queryKey: queryKeys.suppliers.all(),
     queryFn: supplierService.getAll,
     staleTime: 30_000,
   });

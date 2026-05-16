@@ -11,7 +11,7 @@ import { SEO } from "@/components/SEO";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { supplierService } from "@/services";
 import { apiClient } from "@/services/apiClient";
-import { queryKeys } from "@/lib/queryKeys";
+import { queryKeys } from "@/services/queryKeys";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const inp = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
@@ -38,7 +38,7 @@ export default function AdminPartnerDetailPage() {
     mutationFn: (patch: Record<string, unknown>) => supplierService.update(partnerId, patch),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-supplier", partnerId] });
-      qc.invalidateQueries({ queryKey: queryKeys.suppliers.all });
+      qc.invalidateQueries({ queryKey: queryKeys.suppliers.all() });
       toast.success("Saved");
     },
     onError: (err: any) => toast.error(err?.message ?? "Save failed"),
@@ -518,7 +518,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
       toast.success("Integration saved");
       qc.invalidateQueries({ queryKey: ["admin-supplier-integration", supplierId] });
       qc.invalidateQueries({ queryKey: ["admin-supplier", supplierId] });
-      qc.invalidateQueries({ queryKey: queryKeys.suppliers.all });
+      qc.invalidateQueries({ queryKey: queryKeys.suppliers.all() });
     },
     onError: (err: any) => toast.error(err?.message ?? "Save failed"),
   });

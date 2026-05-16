@@ -8,7 +8,7 @@ import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
 import type { Supplier } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queryKeys";
+import { queryKeys } from "@/services/queryKeys";
 import { toast } from "sonner";
 import { useNavigate } from "@/i18n/routing";
 
@@ -20,7 +20,7 @@ export default function AdminSuppliers() {
   const navigate = useNavigate();
 
   const { data: suppliers = [], isLoading } = useQuery({
-    queryKey: queryKeys.suppliers.all,
+    queryKey: queryKeys.suppliers.all(),
     queryFn: supplierService.getAll,
     staleTime: 30_000,
   });
@@ -44,7 +44,7 @@ export default function AdminSuppliers() {
   };
   const [createForm, setCreateForm] = useState(emptyCreate);
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: queryKeys.suppliers.all });
+  const invalidate = () => qc.invalidateQueries({ queryKey: queryKeys.suppliers.all() });
 
   const createMutation = useMutation({
     mutationFn: (data: Record<string, unknown>) => supplierService.create(data),
