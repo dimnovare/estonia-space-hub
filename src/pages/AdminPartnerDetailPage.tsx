@@ -592,7 +592,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
           </div>
           <div>
             <label className="text-xs font-medium">Approval mode</label>
-            <select className={inp} value={form.approvalMode} onChange={(e) => setForm({ ...form, approvalMode: e.target.value as "admin" | "auto" })}>
+            <select className={inp} value={form.approvalMode} onChange={(e) => setForm({ ...form, approvalMode: e.target.value as "auto" | "manual" })}>
               <option value="auto">Auto</option>
               <option value="manual">Manual</option>
             </select>
