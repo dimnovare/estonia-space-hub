@@ -334,8 +334,8 @@ export default function HomePage() {
       </section>
       )}
 
-      {/* Featured listings */}
-      {(settings as any).showFeaturedPartners === "true" && <FeaturedPartnersStrip />}
+      {/* Featured partners */}
+      <FeaturedPartnersStrip />
       {settings.showFeaturedListings && (featuredLoading || featured.length > 0) && (
       <section className="surface-sunken section-y">
         <div className="container-wide">

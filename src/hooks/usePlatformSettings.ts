@@ -14,6 +14,7 @@ const FALLBACK = {
   showProviderCta:       true,
   showFaq:               true,
   showMap:               true,
+  showFeaturedPartners:  false,
   heroSubtitle:          "",
   heroDiscount:          "10",
 };

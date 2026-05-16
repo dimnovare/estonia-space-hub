@@ -84,6 +84,10 @@ export interface Supplier {
   lastPolledAt?: string | null;
   lastPollStatus?: "ok" | "error" | "skipped" | null;
   nextPollAt?: string | null;
+  slug?: string | null;
+  logoUrl?: string | null;
+  rating?: number | null;
+  isPartnerPagePublished?: boolean;
 }
 
 export interface PartnerIntegrationSettings {

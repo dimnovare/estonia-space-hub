@@ -176,8 +176,8 @@ export function WarehouseDetail() {
 
   const bookingUrl = `/book?listing=${wListing.id}&type=warehouse${selectedExtras.length ? `&extras=${selectedExtras.join(",")}` : ""}`;
 
-  const discountRate = (wListing as any).clientDiscountRateOverride
-    ?? (wListing as any).clientDiscountRate
+  const discountRate = wListing.clientDiscountRateOverride
+    ?? wListing.clientDiscountRate
     ?? 0;
   const savingsInfo = getSavingsDisplay(wListing.priceFrom, discountRate);
 
@@ -373,7 +373,7 @@ export function MovingDetail() {
   if (!listing || listing.type !== "moving") return <NotFoundDetail />;
   const mListing = listing as MovingListing;
 
-  const discountRate = (mListing as any).clientDiscountRate;
+  const discountRate = mListing.clientDiscountRate ?? 0;
   const savingsInfo = getSavingsDisplay(mListing.priceFrom, discountRate);
 
   return (
@@ -507,7 +507,7 @@ export function TrailerDetail() {
   if (!listing || listing.type !== "trailer") return <NotFoundDetail />;
   const tListing = listing as TrailerListing;
 
-  const discountRate = (tListing as any).clientDiscountRate;
+  const discountRate = tListing.clientDiscountRate ?? 0;
   const savingsInfo = getSavingsDisplay(tListing.priceFrom, discountRate);
 
   return (
