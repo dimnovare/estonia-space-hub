@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { bookingService } from "@/services";
-import { queryKeys } from "@/lib/queryKeys";
+import { queryKeys } from "@/services/queryKeys";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Booking } from "@/services/types";
 import { apiClient } from "@/services/apiClient";
@@ -19,7 +19,7 @@ export function useBookings(personalOrSupplierId: boolean | string | null = fals
   const personal = personalOrSupplierId === true;
   const supplierId = typeof personalOrSupplierId === "string" ? personalOrSupplierId : null;
   return useQuery({
-    queryKey: [...queryKeys.bookings.all, personal ? "personal" : "all", supplierId ?? null],
+    queryKey: queryKeys.bookings.all({ scope: personal ? "personal" : "all", supplierId: supplierId ?? null }),
     queryFn: async () => {
       if (supplierId) {
         const res = await apiClient.get<any>(withSupplier("/bookings", supplierId));
