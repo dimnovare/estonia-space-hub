@@ -30,10 +30,10 @@ export default function AdminPage() {
   const [filterSupplierId, setFilterSupplierId] = useState<string>("");
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)]">
+    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
       <SEO title="Admin — Ruumly" description="" noindex={true} />
       <AdminSidebar activeTab={activeTab} />
-      <main className="flex-1 overflow-x-hidden p-4 sm:p-6">
+      <main className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6">
         {["locations", "orders", "payouts", "rebates"].includes(activeTab) && (
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <label className="text-sm font-medium text-muted-foreground">{t("admin.filterByPartner")}</label>
