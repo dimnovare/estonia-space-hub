@@ -246,6 +246,12 @@
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* Horizontal scroll affordance with soft fade on left/right edges */
+.fade-edges-x {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
+}
+
 /* Blog post prose styles — minimal, matches site typography */
 .blog-prose { font-size: 1rem; line-height: 1.75; }
 .blog-prose > * + * { margin-top: 1rem; }
