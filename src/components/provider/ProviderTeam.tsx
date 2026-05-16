@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { isSupplierContextRequired } from "@/lib/apiErrors";
 
 export default function ProviderTeam() {
   const { t } = useLanguage();
@@ -25,9 +26,7 @@ export default function ProviderTeam() {
   const invite = useInviteTeamMember(supplierId);
   const remove = useRemoveTeamMember(supplierId);
 
-  const needsSupplierContext =
-    (error as any)?.code === "supplier_context_required" ||
-    (error as any)?.body?.error === "supplier_context_required";
+  const needsSupplierContext = isSupplierContextRequired(error);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
