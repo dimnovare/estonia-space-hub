@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/services/apiClient";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import { withSupplier } from "@/lib/withSupplier";
+import { isSupplierContextRequired } from "@/lib/apiErrors";
 
 export default function ProviderBilling() {
   const { t, language } = useLanguage();
@@ -56,10 +57,8 @@ export default function ProviderBilling() {
   });
 
   const needsSupplierContext =
-    (supplierError as any)?.code === "supplier_context_required" ||
-    (supplierError as any)?.body?.error === "supplier_context_required" ||
-    (bankError as any)?.code === "supplier_context_required" ||
-    (bankError as any)?.body?.error === "supplier_context_required";
+    isSupplierContextRequired(supplierError) ||
+    isSupplierContextRequired(bankError);
 
   const { data: rebateInvoices = [] } = useQuery({
     queryKey: ["supplier-rebate-invoices"],

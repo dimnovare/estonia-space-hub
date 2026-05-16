@@ -14,6 +14,7 @@ export default function AdminUsers() {
   const { t } = useLanguage();
   const [users, setUsers] = useState<ServiceUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
   const [selectedUser, setSelectedUser] = useState<ServiceUser | null>(null);
   const [editUser, setEditUser] = useState<(ServiceUser & { emailVerified?: boolean; supplierId?: string }) | null>(null);
   const [filterRole, setFilterRole] = useState("all");
@@ -25,7 +26,12 @@ export default function AdminUsers() {
     queryFn: () => supplierService.getAll(),
   });
 
-  useEffect(() => { userService.getAll().then(data => { setUsers(data); setLoading(false); }); }, []);
+  useEffect(() => {
+    userService.getAll(200).then(data => {
+      setUsers(data);
+      setLoading(false);
+    });
+  }, []);
 
   useEffect(() => {
     if (selectedUser) setEditUser({ ...selectedUser });
@@ -48,7 +54,7 @@ export default function AdminUsers() {
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">{t("admin.users")}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">{users.length} {t("admin.usersTotal")}</p>
+      <p className="mt-2 text-sm text-muted-foreground">{total || users.length} {t("admin.usersTotal")}</p>
       <div className="mt-4 flex flex-wrap items-center gap-2 sm:gap-3">
         <div className="relative w-full sm:flex-1 sm:min-w-[200px] sm:w-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

@@ -24,8 +24,8 @@ export default function ListingExtrasManager({ listingId }: { listingId: string 
   const updateExtra = useUpdateListingExtra();
   const removeExtra = useRemoveListingExtra();
 
-  const partnerDiscount = (pricingConfig as any)?.defaultPartnerDiscount ?? 15;
-  const minMargin = (pricingConfig as any)?.ruumlyMinMarginRate ?? 8;
+  const partnerDiscount = pricingConfig?.defaultPartnerDiscount ?? 15;
+  const minMargin = pricingConfig?.ruumlyMinMarginRate ?? 8;
   const customerDiscount = Math.max(0, partnerDiscount - minMargin);
   const calcCustomerPrice = (publicPrice: number) =>
     Math.round(publicPrice * (1 - customerDiscount / 100) * 100) / 100;

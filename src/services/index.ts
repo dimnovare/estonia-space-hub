@@ -120,8 +120,8 @@ function normalizeUser(u: User): User {
 
 // ─── User Service ───────────────────────────────────────────────────────────────
 export const userService = {
-  async getAll(): Promise<User[]> {
-    const res = await apiClient.get<any>("/admin/users");
+  async getAll(limit = 200): Promise<User[]> {
+    const res = await apiClient.get<any>(`/admin/users?limit=${limit}`);
     const users = Array.isArray(res) ? res : res?.data ?? [];
     return users.map(normalizeUser);
   },
