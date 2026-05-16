@@ -133,7 +133,7 @@ export default function AccountPage() {
     : [];
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)]">
+    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
       <SEO title={`${t("seo.account")} — Ruumly`} description="" noindex={true} />
       <aside className="hidden w-56 shrink-0 border-r border-border bg-card lg:block">
         <div className="p-4">
@@ -168,7 +168,7 @@ export default function AccountPage() {
         </nav>
       </aside>
 
-      <main className="flex-1 p-4 sm:p-6">
+      <main className="flex-1 min-w-0 p-4 sm:p-6">
         {/* Mobile: compact dropdown navigation */}
         <div className="mb-4 lg:hidden">
           {roleDashboardLinks.length > 0 && (

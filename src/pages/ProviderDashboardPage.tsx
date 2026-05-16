@@ -107,7 +107,7 @@ export default function ProviderDashboardPage() {
   const CurrentIcon = currentTab?.icon || LayoutDashboard;
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)]">
+    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
       <SEO title={`${t("seo.providerDashboard")} — Ruumly`} description="" noindex={true} />
       <aside className="hidden w-56 shrink-0 border-r border-border bg-card lg:block">
         <div className="p-4">
@@ -128,7 +128,7 @@ export default function ProviderDashboardPage() {
         </nav>
       </aside>
 
-      <main className="flex-1 overflow-x-hidden p-4 sm:p-6">
+      <main className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6">
         {supplierId && (
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-50 px-4 py-3 dark:bg-amber-950/30">
             <div className="flex items-center gap-2 text-sm">
