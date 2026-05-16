@@ -55,9 +55,9 @@ export default function AdminPartnerDetailPage() {
 
   if (isLoading || !supplier) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)]">
+      <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
         <AdminSidebar activeTab="partners" />
-        <main className="flex flex-1 items-center justify-center">
+        <main className="flex flex-1 min-w-0 items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </main>
       </div>
@@ -77,10 +77,10 @@ export default function AdminPartnerDetailPage() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)]">
+    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
       <SEO title={`${s.name} — Ruumly Admin`} description="" noindex />
       <AdminSidebar activeTab="partners" />
-      <main className="flex-1 overflow-x-hidden p-4 sm:p-6">
+      <main className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6">
         <Link
           to="/admin/partners"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
