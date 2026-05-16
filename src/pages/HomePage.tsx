@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense, useEffect } from "react";
+import { useState, lazy, Suspense, useEffect, useRef } from "react";
 import { Link, useNavigate } from "@/i18n/routing";
 import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, MapPin, ChevronDown, ChevronUp, CheckCircle, Phone, BadgePercent, ShieldCheck, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,11 +27,23 @@ export default function HomePage() {
 
   // Sticky mobile search CTA — appears once user scrolls past the hero search card.
   const [showStickySearch, setShowStickySearch] = useState(false);
+  const [footerNear, setFooterNear] = useState(false);
+  const endSentinelRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const onScroll = () => setShowStickySearch(window.scrollY > 480);
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  useEffect(() => {
+    const el = endSentinelRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      (entries) => setFooterNear(entries[0]?.isIntersecting ?? false),
+      { rootMargin: "0px 0px -10% 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
   }, []);
 
   const { data: featured = [], isLoading: featuredLoading } = useFeaturedListings();
@@ -188,14 +200,14 @@ export default function HomePage() {
             </div>
 
             <div className="card-prominent mx-auto mt-6 max-w-2xl p-2 shadow-2xl shadow-accent/10 md:mt-8">
-              <div className="-mx-1 flex gap-1 overflow-x-auto border-b border-border px-1 pb-2 mb-2 snap-x scrollbar-hide">
+              <div className="-mx-1 flex gap-1 overflow-x-auto border-b border-border px-1 pb-2 mb-2 snap-x scrollbar-hide fade-edges-x">
                 {categories.map((cat) => {
                   const Icon = cat.icon;
                   return (
                     <button
                       key={cat.key}
                       onClick={() => setActiveCategory(cat.key)}
-                      className={`flex shrink-0 snap-start items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                      className={`flex shrink-0 snap-start items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                         activeCategory === cat.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"
                       }`}
                     >
@@ -406,8 +418,12 @@ export default function HomePage() {
         <h2 className="text-center font-display text-2xl font-bold md:text-3xl">{t("faq.title")}</h2>
         <div className="mx-auto mt-8 max-w-2xl space-y-3">
           {faqs.map((faq, i) => (
-            <div key={i} className="rounded-xl border border-border">
-              <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="flex w-full items-center justify-between p-4 text-left text-sm font-medium">
+            <div key={i} className="rounded-xl border border-border overflow-hidden">
+              <button
+                onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                aria-expanded={openFaq === i}
+                className="flex w-full items-center justify-between p-4 text-left text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset"
+              >
                 {faq.q}
                 {openFaq === i ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
               </button>
@@ -421,7 +437,8 @@ export default function HomePage() {
       )}
 
       {/* Sticky mobile search CTA */}
-      {showStickySearch && (
+      <div ref={endSentinelRef} aria-hidden="true" className="h-px" />
+      {showStickySearch && !footerNear && (
         <div
           className="fixed inset-x-0 bottom-0 z-40 border-t surface-glass p-3 md:hidden animate-slide-up"
           style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
