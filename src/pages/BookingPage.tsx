@@ -77,23 +77,24 @@ function formatDuration(start: string, end: string, t: (k: string) => string): s
   return `${months} ${months === 1 ? t("booking.month") : t("booking.months")}, ${remainDays} ${t("booking.days")}`;
 }
 
-function calculateEstimatedPrice(priceFrom: number, priceUnit: string, start: string, end: string): number {
-  const days = Math.max(1, Math.round((new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24)));
+function getDaysPerUnit(priceUnit: string): number {
   const unit = (priceUnit || "").toLowerCase().replace("€", "").trim().replace(/^\//, "");
-  if (unit.includes("day") || unit.includes("päev")) return priceFrom * days;
-  if (unit.includes("week") || unit.includes("nädal")) return Math.round(priceFrom * days / 7 * 100) / 100;
-  if (unit.includes("time") || unit.includes("kord")) return priceFrom;
-  return Math.round(priceFrom * days / 30 * 100) / 100;
+  if (unit.includes("day") || unit.includes("päev") || unit.includes("diena")) return 1;
+  if (unit.includes("week") || unit.includes("nädal") || unit.includes("savaitė")) return 7;
+  if (unit.includes("time") || unit.includes("kord") || unit.includes("kartas")) return Infinity;
+  return 30.44;
 }
 
 function computeDurationMultiplier(priceUnit: string, start: string, end: string): number {
   if (!start || !end) return 1;
-  const days = Math.max(1, Math.round((new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24)));
-  const unit = (priceUnit || "").toLowerCase().replace("€", "").trim().replace(/^\//, "");
-  if (unit.includes("day") || unit.includes("päev")) return days;
-  if (unit.includes("week") || unit.includes("nädal")) return Math.round(days / 7 * 100) / 100;
-  if (unit.includes("time") || unit.includes("kord")) return 1;
-  return Math.round(days / 30 * 100) / 100;
+  const days = Math.max(1, Math.round((new Date(end).getTime() - new Date(start).getTime()) / 86400000));
+  const daysPerUnit = getDaysPerUnit(priceUnit);
+  if (!isFinite(daysPerUnit)) return 1;
+  return Math.round(days / daysPerUnit * 100) / 100;
+}
+
+function calculateEstimatedPrice(priceFrom: number, priceUnit: string, start: string, end: string): number {
+  return Math.round(priceFrom * computeDurationMultiplier(priceUnit, start, end) * 100) / 100;
 }
 
 function todayIsoDate(): string {

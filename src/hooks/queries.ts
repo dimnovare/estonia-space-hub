@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/services/apiClient";
 import { useAuth } from "@/contexts/AuthContext";
 import { withSupplier } from "@/lib/withSupplier";
+import { queryKeys } from "@/services/queryKeys";
 
 /** Safely unwrap paginated { data: T[] } or plain T[] responses */
 function unwrapArray<T>(res: unknown): T[] {
@@ -15,7 +16,7 @@ function unwrapArray<T>(res: unknown): T[] {
 
 export function useListings(filters?: ListingFilters) {
   return useQuery({
-    queryKey: ["listings", filters],
+    queryKey: queryKeys.listings.all(filters),
     queryFn: () => listingService.search(filters),
     placeholderData: (prev) => prev,
     retry: (failureCount, error: any) => error?.status !== 429 && failureCount < 2,
@@ -24,7 +25,7 @@ export function useListings(filters?: ListingFilters) {
 
 export function useAllListings() {
   return useQuery({
-    queryKey: ["listings", "all"],
+    queryKey: queryKeys.listings.all({ limit: 200 }),
     queryFn: () => listingService.search({ limit: 200 }),
     staleTime: 5 * 60_000,
   });
@@ -39,16 +40,16 @@ export function useCities() {
 }
 
 export function useListing(id: string | undefined) {
-  return useQuery({ queryKey: ["listing", id], queryFn: () => listingService.getById(id!), enabled: !!id });
+  return useQuery({ queryKey: queryKeys.listings.byId(id ?? ""), queryFn: () => listingService.getById(id!), enabled: !!id });
 }
 
 export function useFeaturedListings() {
-  return useQuery({ queryKey: ["listings", "featured"], queryFn: async () => unwrapArray<Listing>(await listingService.getFeatured()) });
+  return useQuery({ queryKey: queryKeys.listings.featured(), queryFn: async () => unwrapArray<Listing>(await listingService.getFeatured()) });
 }
 
 export function useBookings() {
   const { isAuthenticated } = useAuth();
-  return useQuery({ queryKey: ["bookings"], queryFn: async () => unwrapArray<Booking>(await bookingService.getAll()), enabled: isAuthenticated, staleTime: 30_000 });
+  return useQuery({ queryKey: queryKeys.bookings.all(), queryFn: async () => unwrapArray<Booking>(await bookingService.getAll()), enabled: isAuthenticated, staleTime: 30_000 });
 }
 
 export function useCreateBooking() {
@@ -56,7 +57,7 @@ export function useCreateBooking() {
   return useMutation({
     mutationFn: (input: CreateBookingInput) => bookingService.create(input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["bookings"] });
+      qc.invalidateQueries({ queryKey: queryKeys.bookings.all() });
       // Toast handled by BookingPage success state
     },
     onError: (err: any) => {
@@ -69,22 +70,22 @@ export function useCreateBooking() {
 
 export function useOrders() {
   const { isAuthenticated } = useAuth();
-  return useQuery({ queryKey: ["orders"], queryFn: async () => unwrapArray<Order>(await orderService.getAll()), enabled: isAuthenticated, staleTime: 15_000 });
+  return useQuery({ queryKey: queryKeys.orders.all(), queryFn: async () => unwrapArray<Order>(await orderService.getAll()), enabled: isAuthenticated, staleTime: 15_000 });
 }
 
 export function useSuppliers() {
   const { isAuthenticated, role } = useAuth();
-  return useQuery({ queryKey: ["suppliers"], queryFn: async () => unwrapArray<Supplier>(await supplierService.getAll()), enabled: isAuthenticated && (role === "admin" || role === "provider"), staleTime: 30_000 });
+  return useQuery({ queryKey: queryKeys.suppliers.all(), queryFn: async () => unwrapArray<Supplier>(await supplierService.getAll()), enabled: isAuthenticated && (role === "admin" || role === "provider"), staleTime: 30_000 });
 }
 
 export function useUsers() {
   const { isAuthenticated, role } = useAuth();
-  return useQuery({ queryKey: ["users"], queryFn: async () => unwrapArray<User>(await userService.getAll()), enabled: isAuthenticated && role === "admin", staleTime: 30_000 });
+  return useQuery({ queryKey: queryKeys.users.all(), queryFn: async () => unwrapArray<User>(await userService.getAll()), enabled: isAuthenticated && role === "admin", staleTime: 30_000 });
 }
 
 export function useNotifications() {
   const { isAuthenticated } = useAuth();
-  return useQuery({ queryKey: ["notifications"], queryFn: async () => unwrapArray<Notification>(await notificationService.getAll()), enabled: isAuthenticated, staleTime: 30_000 });
+  return useQuery({ queryKey: queryKeys.notifications.all(), queryFn: async () => unwrapArray<Notification>(await notificationService.getAll()), enabled: isAuthenticated, staleTime: 30_000 });
 }
 
 export function useInvoices() {
@@ -194,7 +195,7 @@ export function useCreateReview() {
     mutationFn: (input: CreateReviewInput) => apiClient.post("/reviews", input),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ["reviews", variables.listingId] });
-      qc.invalidateQueries({ queryKey: ["bookings"] });
+      qc.invalidateQueries({ queryKey: queryKeys.bookings.all() });
     },
   });
 }
@@ -285,7 +286,7 @@ export interface BookingStats {
 
 export function useBookingStats(enabled: boolean = true) {
   return useQuery<BookingStats>({
-    queryKey: ["bookings", "stats"],
+    queryKey: queryKeys.bookings.stats(),
     queryFn: async () => {
       const res = await apiClient.get("/bookings/stats");
       return res as BookingStats;

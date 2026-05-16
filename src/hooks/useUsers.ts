@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { userService } from "@/services";
-import { queryKeys } from "@/lib/queryKeys";
+import { queryKeys } from "@/services/queryKeys";
 import { useAuth } from "@/contexts/AuthContext";
 import type { User } from "@/services/types";
 
@@ -12,5 +12,5 @@ function unwrap<T>(res: unknown): T[] {
 
 export function useUsers() {
   const { isAuthenticated, role } = useAuth();
-  return useQuery({ queryKey: queryKeys.users.all, queryFn: async () => unwrap<User>(await userService.getAll()), enabled: isAuthenticated && role === "admin", staleTime: 30_000 });
+  return useQuery({ queryKey: queryKeys.users.all(), queryFn: async () => unwrap<User>(await userService.getAll()), enabled: isAuthenticated && role === "admin", staleTime: 30_000 });
 }

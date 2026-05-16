@@ -35,7 +35,7 @@ export function useApproveOrder() {
   return useMutation({
     mutationFn: (id: string) => orderService.approve(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all() });
     },
   });
 }
@@ -46,7 +46,7 @@ export function useRejectOrder() {
     mutationFn: ({ id, reason }: { id: string; reason: string }) =>
       orderService.reject(id, reason),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all() });
     },
   });
 }
@@ -56,7 +56,7 @@ export function useConfirmOrder() {
   return useMutation({
     mutationFn: (id: string) => orderService.confirm(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all() });
     },
   });
 }
@@ -67,7 +67,7 @@ export function useUpdateOrderStatus() {
     mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>
       orderService.updateStatus(id, status),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all() });
       queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
       queryClient.invalidateQueries({ queryKey: ["admin-revenue"] });
     },
@@ -91,7 +91,7 @@ export function useUpdateLead() {
     mutationFn: ({ id, status, providerNotes, lastContactAt }: { id: string; status?: LeadStatus; providerNotes?: string; lastContactAt?: string }) =>
       orderService.updateLead(id, { status, providerNotes, lastContactAt }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all() });
     },
   });
 }
