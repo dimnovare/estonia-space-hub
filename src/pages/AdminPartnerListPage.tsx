@@ -50,10 +50,10 @@ export default function AdminPartnerListPage() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)]">
+    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
       <SEO title="Partners — Ruumly Admin" description="" noindex />
       <AdminSidebar activeTab="partners" />
-      <main className="flex-1 overflow-x-hidden p-4 sm:p-6">
+      <main className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="font-display text-2xl font-bold">{t("admin.partners")}</h1>
