@@ -204,6 +204,7 @@ export interface Booking {
   contactEmail?: string;
   contactPhone?: string;
   notes?: string;
+  locationId?: string | null;
 }
 
 export interface Notification {
