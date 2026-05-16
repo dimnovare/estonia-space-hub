@@ -47,6 +47,51 @@ const typeIconPaths: Record<string, string> = {
   multi: `<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" fill="none" stroke="white" stroke-width="2" stroke-linejoin="round"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" fill="none" stroke="white" stroke-width="2" stroke-linejoin="round"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" fill="none" stroke="white" stroke-width="2" stroke-linejoin="round"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4" stroke="white" stroke-width="2" stroke-linecap="round"/>`,
 };
 
+// Safe JSX equivalents of the SVG inner content above — used when rendering
+// inside React (e.g., the map legend). The raw HTML strings remain for use in
+// Leaflet divIcon HTML markup (rendered outside React's tree).
+function MarkerIcon({ type }: { type: string }) {
+  const stroke = "white";
+  const sw = 2;
+  switch (type) {
+    case "moving":
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24">
+          <rect x="1" y="6" width="12" height="12" rx="1" fill="none" stroke={stroke} strokeWidth={sw} />
+          <path d="M13 10h4l3 4v4h-4" fill="none" stroke={stroke} strokeWidth={sw} strokeLinejoin="round" />
+          <circle cx="6" cy="18" r="2" fill="none" stroke={stroke} strokeWidth={sw} />
+          <circle cx="17" cy="18" r="2" fill="none" stroke={stroke} strokeWidth={sw} />
+        </svg>
+      );
+    case "trailer":
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24">
+          <rect x="1" y="7" width="14" height="10" rx="1" fill="none" stroke={stroke} strokeWidth={sw} />
+          <path d="M15 14h5l2 3h1" fill="none" stroke={stroke} strokeWidth={sw} strokeLinejoin="round" />
+          <circle cx="6" cy="17" r="2" fill="none" stroke={stroke} strokeWidth={sw} />
+          <circle cx="18" cy="17" r="2" fill="none" stroke={stroke} strokeWidth={sw} />
+        </svg>
+      );
+    case "multi":
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24">
+          <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" fill="none" stroke={stroke} strokeWidth={sw} strokeLinejoin="round" />
+          <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" fill="none" stroke={stroke} strokeWidth={sw} strokeLinejoin="round" />
+          <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" fill="none" stroke={stroke} strokeWidth={sw} strokeLinejoin="round" />
+          <path d="M10 6h4M10 10h4M10 14h4M10 18h4" stroke={stroke} strokeWidth={sw} strokeLinecap="round" />
+        </svg>
+      );
+    case "warehouse":
+    default:
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24">
+          <rect x="4" y="10" width="16" height="12" rx="1" fill="none" stroke={stroke} strokeWidth={sw} />
+          <path d="M2 10l10-6 10 6" fill="none" stroke={stroke} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+  }
+}
+
 function createMarkerIcon(listing: Listing, isSelected: boolean) {
   const color = typeColors[listing.type] || "#1E3A5F";
   const size = isSelected ? 44 : 36;
@@ -367,13 +412,7 @@ export default function InteractiveMap({
               className="inline-flex h-6 w-6 items-center justify-center rounded-full"
               style={{ background: typeColors[type] }}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                dangerouslySetInnerHTML={{ __html: typeIconPaths[type] }}
-              />
+              <MarkerIcon type={type} />
             </span>
             {typeLabels[type]}
           </span>
