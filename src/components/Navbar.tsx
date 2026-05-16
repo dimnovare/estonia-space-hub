@@ -74,7 +74,7 @@ export default function Navbar() {
           : "border-border bg-card/95 shadow-sm"
       }`}
     >
-      <div className="container-wide flex h-14 md:h-20 lg:h-[88px] items-center justify-between">
+      <div className="container-wide flex h-14 md:h-16 lg:h-[88px] items-center justify-between">
         <Link to="/" className="flex-shrink-0 flex items-center">
           <img
             src="/ruumly-logo@1x.webp"
@@ -83,7 +83,7 @@ export default function Navbar() {
             width={179}
             height={52}
             decoding="async"
-            className="h-8 sm:h-[52px] lg:h-[62px] w-auto object-contain"
+            className="h-8 md:h-10 lg:h-[62px] w-auto object-contain"
           />
         </Link>
 
