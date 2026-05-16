@@ -64,7 +64,7 @@ export default function AdminSidebar({ activeTab, activeSection }: Props) {
         <nav className="space-y-0.5 px-2">{items.map((l) => renderItem(l))}</nav>
       </aside>
 
-      <div className="mb-4 lg:hidden relative">
+      <div className="relative px-4 pt-4 sm:px-6 lg:hidden">
         <button
           onClick={() => setMobileOpen((v) => !v)}
           className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium"
@@ -78,7 +78,7 @@ export default function AdminSidebar({ activeTab, activeSection }: Props) {
         {mobileOpen && (
           <>
             <div className="fixed inset-0 z-30" onClick={() => setMobileOpen(false)} />
-            <div className="absolute left-0 right-0 top-full z-40 mt-1 rounded-xl border border-border bg-card p-1 shadow-xl max-h-[60vh] overflow-y-auto">
+            <div className="absolute left-4 right-4 top-full z-40 mt-1 rounded-xl border border-border bg-card p-1 shadow-xl max-h-[60vh] overflow-y-auto sm:left-6 sm:right-6">
               {items.map((l) => renderItem(l, () => setMobileOpen(false)))}
             </div>
           </>
