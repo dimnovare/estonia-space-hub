@@ -34,6 +34,7 @@ interface AuthResponse {
     registeredAt: string;
     bookingsCount: number;
     supplierId?: string;
+    hasGoogleAccount?: boolean;
   };
   accessToken:  string;
   refreshToken: string;
@@ -69,8 +70,8 @@ function normalizeUser(raw: AuthResponse["user"]): AppUser {
     createdAt: raw.registeredAt,
     registeredAt: raw.registeredAt,
     bookingsCount: raw.bookingsCount,
-    hasGoogleAccount: (raw as any).hasGoogleAccount ?? false,
-    supplierId: (raw as any).supplierId || undefined,
+    hasGoogleAccount: raw.hasGoogleAccount ?? false,
+    supplierId: raw.supplierId || undefined,
   };
 }
 

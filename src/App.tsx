@@ -57,7 +57,7 @@ const AdminPartnerDetailPage = lazy(() => import("@/pages/AdminPartnerDetailPage
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: (failureCount, error: any) => {
+      retry: (failureCount, error: Error & { status?: number }) => {
         const status = error?.status;
         // Don't retry any 4xx — they will not succeed by retrying.
         if (typeof status === "number" && status >= 400 && status < 500) {
@@ -69,14 +69,14 @@ const queryClient = new QueryClient({
       staleTime: 30_000,
     },
     mutations: {
-      retry: (failureCount, error: any) => {
+      retry: (failureCount, error: Error & { status?: number }) => {
         const status = error?.status;
         if (typeof status === "number" && status >= 400 && status < 500) {
           return false;
         }
         return failureCount < 1;
       },
-      onError: (error: any) => {
+      onError: (error: Error) => {
         const lang = (typeof window !== "undefined" && localStorage.getItem("ruumly-lang")) || "et";
         const fallbackMessages: Record<string, string> = {
           et: "Midagi läks valesti",

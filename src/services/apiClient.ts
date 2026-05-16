@@ -1,5 +1,11 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
+export interface ApiError extends Error {
+  status?: number;
+  code?: string;
+  body?: unknown;
+}
+
 // ── In-memory token store ──────────────────
 // Access token: in-memory only (not persisted).
 // Refresh token: HttpOnly cookie set by backend (XSS-safe).
@@ -70,6 +76,8 @@ class ApiClient {
               "Content-Type": "application/json",
               Authorization: `Bearer ${data.accessToken}`,
             };
+            const lang = localStorage.getItem("ruumly-lang") || "et";
+            retryHeaders["Accept-Language"] = lang;
             const retry = await fetch(`${API_BASE_URL}${endpoint}`, {
               method,
               headers: retryHeaders,
@@ -88,14 +96,15 @@ class ApiClient {
         } catch {}
         tokenStore.clear();
         localStorage.removeItem("ruumly-auth");
-        window.location.href = "/login";
+        const lang = localStorage.getItem("ruumly-lang") || "et";
+        window.location.href = `/${lang}/login`;
       }
       throw new Error("Unauthorized");
     }
     if (!response.ok) {
       let message = `API error: ${response.status}`;
       let errorCode: string | undefined;
-      let errorBodyRaw: any = undefined;
+      let errorBodyRaw: unknown = undefined;
       try {
         const errorBody = await response.json();
         errorBodyRaw = errorBody;
@@ -111,10 +120,10 @@ class ApiClient {
           message = errorBody.title;
         }
       } catch {}
-      const err = new Error(message);
-      (err as any).status = response.status;
-      if (errorCode) (err as any).code = errorCode;
-      if (errorBodyRaw !== undefined) (err as any).body = errorBodyRaw;
+      const err = new Error(message) as ApiError;
+      err.status = response.status;
+      if (errorCode) err.code = errorCode;
+      if (errorBodyRaw !== undefined) err.body = errorBodyRaw;
       throw err;
     }
     // 204 No Content or empty body — return undefined safely
