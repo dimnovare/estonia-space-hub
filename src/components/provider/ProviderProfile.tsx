@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import { withSupplier } from "@/lib/withSupplier";
 import { useAuth } from "@/contexts/AuthContext";
+import { isSupplierContextRequired } from "@/lib/apiErrors";
 
 export default function ProviderProfile() {
   const { t } = useLanguage();
@@ -22,9 +23,7 @@ export default function ProviderProfile() {
     retry: false,
   });
 
-  const needsSupplierContext =
-    (error as any)?.code === "supplier_context_required" ||
-    (error as any)?.body?.error === "supplier_context_required";
+  const needsSupplierContext = isSupplierContextRequired(error);
 
   const [formData, setFormData] = useState({
     company: "",
