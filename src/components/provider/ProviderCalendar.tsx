@@ -50,7 +50,7 @@ export default function ProviderCalendar() {
   });
 
   const filteredBookings = selectedLocationId
-    ? bookings.filter(b => (b as any).locationId === selectedLocationId)
+    ? bookings.filter(b => b.locationId === selectedLocationId)
     : bookings;
 
   const bookedDates = filteredBookings
@@ -100,7 +100,7 @@ export default function ProviderCalendar() {
             <SelectValue placeholder={t("provider.calendar.allLocations")} />
           </SelectTrigger>
           <SelectContent>
-            {(locations as any[]).map((loc: any) => (
+            {locations.map((loc) => (
               <SelectItem key={loc.id} value={loc.id}>{loc.name} · {loc.city}</SelectItem>
             ))}
           </SelectContent>
@@ -207,13 +207,13 @@ export default function ProviderCalendar() {
                 <div key={b.id} className="flex items-center justify-between rounded-xl border border-border p-4">
                   <div>
                     <p className="text-sm font-medium">{b.provider}</p>
-                    <p className="text-xs text-muted-foreground">{b.listingTitle} · {(b as any).duration ?? ""}</p>
+                    <p className="text-xs text-muted-foreground">{b.listingTitle} · {b.duration ?? ""}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${b.status === "confirmed" ? "bg-success/10 text-success" : b.status === "pending" ? "bg-warning/10 text-warning" : "bg-accent/10 text-accent"}`}>
                       {b.status === "confirmed" ? t("provider.bookings.confirmed") : b.status === "pending" ? t("provider.bookings.pending") : t("provider.bookings.active")}
                     </span>
-                    <span className="text-sm font-semibold">€{(b as any).total ?? (b as any).basePrice ?? 0}</span>
+                    <span className="text-sm font-semibold">€{b.total ?? b.basePrice ?? 0}</span>
                   </div>
                 </div>
               ))}

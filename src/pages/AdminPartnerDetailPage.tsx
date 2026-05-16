@@ -334,7 +334,7 @@ function CommercialTab({ supplier, onSave, pending }: { supplier: any; onSave: (
       <div className="grid gap-4 md:grid-cols-2">
         <div>
           <label className="text-xs font-medium">Tier</label>
-          <select className={inp} value={form.tier} onChange={(e) => setForm({ ...form, tier: e.target.value as any })}>
+          <select className={inp} value={form.tier} onChange={(e) => setForm({ ...form, tier: e.target.value as "starter" | "standard" | "premium" })}>
             <option value="starter">Starter — Free</option>
             <option value="standard">Standard — €49/mo</option>
             <option value="premium">Premium — €99/mo</option>
@@ -343,7 +343,7 @@ function CommercialTab({ supplier, onSave, pending }: { supplier: any; onSave: (
         </div>
         <div>
           <label className="text-xs font-medium">Billing model</label>
-          <select className={inp} value={form.billingModel} onChange={(e) => setForm({ ...form, billingModel: e.target.value as any })}>
+          <select className={inp} value={form.billingModel} onChange={(e) => setForm({ ...form, billingModel: e.target.value as "marketplace" | "rebate" })}>
             <option value="marketplace">Marketplace (Ruumly pays out)</option>
             <option value="rebate">Rebate (customer pays partner)</option>
           </select>
@@ -488,7 +488,7 @@ function PartnerPageTab({ supplier, onSave, pending }: { supplier: any; onSave: 
           rows={6}
           className={`${inp} resize-y`}
           value={form[storyKey] as string}
-          onChange={(e) => setForm({ ...form, [storyKey]: e.target.value } as any)}
+          onChange={(e) => setForm(prev => prev ? { ...prev, [storyKey]: e.target.value } : prev)}
         />
       </div>
 
@@ -584,7 +584,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
         <div className="mt-3 grid gap-4 md:grid-cols-2">
           <div>
             <label className="text-xs font-medium">Integration type</label>
-            <select className={inp} value={form.integrationType} onChange={(e) => setForm({ ...form, integrationType: e.target.value as any })}>
+            <select className={inp} value={form.integrationType} onChange={(e) => setForm({ ...form, integrationType: e.target.value as "email" | "api" | "manual" })}>
               <option value="email">Email</option>
               <option value="api">API</option>
               <option value="manual">Manual</option>
@@ -592,7 +592,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
           </div>
           <div>
             <label className="text-xs font-medium">Approval mode</label>
-            <select className={inp} value={form.approvalMode} onChange={(e) => setForm({ ...form, approvalMode: e.target.value as any })}>
+            <select className={inp} value={form.approvalMode} onChange={(e) => setForm({ ...form, approvalMode: e.target.value as "auto" | "manual" })}>
               <option value="auto">Auto</option>
               <option value="manual">Manual</option>
             </select>
@@ -600,7 +600,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
           <div>
             <label className="text-xs font-medium">Posting mode</label>
             <select className={inp} value={form.postingMode}
-              onChange={(e) => setForm({ ...form, postingMode: e.target.value as any })}>
+              onChange={(e) => setForm({ ...form, postingMode: e.target.value as "email" | "api" | "manual" })}>
               <option value="email">Email</option>
               <option value="api">API</option>
               <option value="manual">Manual</option>
@@ -612,7 +612,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
           <div>
             <label className="text-xs font-medium">Fallback posting mode</label>
             <select className={inp} value={form.fallbackPostingMode}
-              onChange={(e) => setForm({ ...form, fallbackPostingMode: e.target.value as any })}>
+              onChange={(e) => setForm({ ...form, fallbackPostingMode: e.target.value as "email" | "api" | "manual" })}>
               <option value="email">Email</option>
               <option value="api">API</option>
               <option value="manual">Manual</option>
@@ -635,7 +635,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
               </div>
               <div>
                 <label className="text-xs font-medium">API auth type</label>
-                <select className={inp} value={form.apiAuthType} onChange={(e) => setForm({ ...form, apiAuthType: e.target.value as any })}>
+                <select className={inp} value={form.apiAuthType} onChange={(e) => setForm({ ...form, apiAuthType: e.target.value as "bearer" | "apikey" | "none" })}>
                   <option value="bearer">Bearer</option>
                   <option value="apikey">ApiKey</option>
                   <option value="none">None</option>
