@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense, useEffect } from "react";
+import { useState, lazy, Suspense, useEffect, useRef } from "react";
 import { Link, useNavigate } from "@/i18n/routing";
 import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, MapPin, ChevronDown, ChevronUp, CheckCircle, Phone, BadgePercent, ShieldCheck, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,11 +27,23 @@ export default function HomePage() {
 
   // Sticky mobile search CTA — appears once user scrolls past the hero search card.
   const [showStickySearch, setShowStickySearch] = useState(false);
+  const [footerNear, setFooterNear] = useState(false);
+  const endSentinelRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const onScroll = () => setShowStickySearch(window.scrollY > 480);
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  useEffect(() => {
+    const el = endSentinelRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      (entries) => setFooterNear(entries[0]?.isIntersecting ?? false),
+      { rootMargin: "0px 0px -10% 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
   }, []);
 
   const { data: featured = [], isLoading: featuredLoading } = useFeaturedListings();
@@ -425,7 +437,8 @@ export default function HomePage() {
       )}
 
       {/* Sticky mobile search CTA */}
-      {showStickySearch && (
+      <div ref={endSentinelRef} aria-hidden="true" className="h-px" />
+      {showStickySearch && !footerNear && (
         <div
           className="fixed inset-x-0 bottom-0 z-40 border-t surface-glass p-3 md:hidden animate-slide-up"
           style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
