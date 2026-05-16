@@ -370,7 +370,7 @@ export default function HomePage() {
             return (
               <div key={item.text} className="flex items-start gap-3 rounded-xl border border-border bg-card p-5">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10">
-                  <Icon className="h-4.5 w-4.5 text-accent" />
+                  <Icon className="h-[18px] w-[18px] text-accent" />
                 </div>
                 <p className="text-sm font-medium text-foreground">{item.text}</p>
               </div>
@@ -422,7 +422,10 @@ export default function HomePage() {
 
       {/* Sticky mobile search CTA */}
       {showStickySearch && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t surface-glass p-3 md:hidden">
+        <div
+          className="fixed inset-x-0 bottom-0 z-40 border-t surface-glass p-3 md:hidden animate-slide-up"
+          style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+        >
           <Link to="/search" className="block">
             <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90 h-12">
               <Search className="mr-2 h-4 w-4" />

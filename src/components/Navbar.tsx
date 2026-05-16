@@ -74,7 +74,7 @@ export default function Navbar() {
           : "border-border bg-card/95 shadow-sm"
       }`}
     >
-      <div className="container-wide flex h-14 md:h-20 lg:h-[88px] items-center justify-between">
+      <div className="container-wide flex h-14 md:h-16 lg:h-[88px] items-center justify-between">
         <Link to="/" className="flex-shrink-0 flex items-center">
           <img
             src="/ruumly-logo@1x.webp"
@@ -83,7 +83,7 @@ export default function Navbar() {
             width={179}
             height={52}
             decoding="async"
-            className="h-8 sm:h-[52px] lg:h-[62px] w-auto object-contain"
+            className="h-8 md:h-10 lg:h-[62px] w-auto object-contain"
           />
         </Link>
 
@@ -214,7 +214,7 @@ export default function Navbar() {
             </SheetTrigger>
             <SheetContent side="right" className="w-[88vw] max-w-sm p-0 flex flex-col">
               <SheetHeader className="px-5 py-4 border-b border-border">
-                <SheetTitle className="text-left">Menu</SheetTitle>
+                <SheetTitle className="text-left">{t("nav.menu")}</SheetTitle>
               </SheetHeader>
               <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
                 {navLinks.map((l) => {
@@ -236,7 +236,7 @@ export default function Navbar() {
 
                 <div className="pt-3 mt-3 border-t border-border">
                   <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {t("nav.language") || "Language"}
+                    {t("nav.language")}
                   </p>
                   <div className="flex flex-wrap gap-1 px-1">
                     {LANGUAGES.map((lang) => (
