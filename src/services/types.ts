@@ -218,6 +218,7 @@ export interface Notification {
   desc: string;
   time: string;
   read: boolean;
+  actionUrl?: string | null;
 }
 
 export interface Invoice {
