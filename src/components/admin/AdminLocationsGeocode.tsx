@@ -26,7 +26,7 @@ export default function GeocodeLookup({ address, lat, lng, onCoordsChange }: Pro
     setLoading(true);
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&countrycodes=ee`,
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&countrycodes=ee,lv,lt`,
         { headers: { "User-Agent": "Ruumly/1.0 (info@ruumly.eu)" } }
       );
       const data = await res.json();
