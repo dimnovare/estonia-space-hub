@@ -114,7 +114,7 @@ function normalizeBooking(b: Booking): Booking {
   return { ...b, status: lc(b.status) };
 }
 
-function normalizeUser(u: User): User {
+export function normalizeUser(u: User): User {
   return { ...u, role: lc(u.role), status: lc(u.status) as "active" | "blocked" };
 }
 
