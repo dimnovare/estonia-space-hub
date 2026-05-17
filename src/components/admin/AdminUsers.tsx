@@ -205,7 +205,7 @@ export default function AdminUsers() {
                       emailVerified: editUser.emailVerified,
                       supplierId: editUser.supplierId || null,
                     });
-                    setUsers(prev => prev.map(u => u.id === editUser.id ? { ...u, ...editUser } : u));
+                    refetch();
                     toast.success(t("admin.userUpdated") || "User updated");
                     setSelectedUser(null);
                   } catch (err: any) {
