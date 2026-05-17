@@ -739,6 +739,7 @@ type ContractTpl = { id: string; name: string; html: string; isDefault?: boolean
 
 function ContractsTab({ supplierId }: { supplierId: string }) {
   const qc = useQueryClient();
+  const { t } = useLanguage();
   const listKey = ["admin-contract-templates", supplierId];
   const { data: templates = [], isLoading } = useQuery({
     queryKey: listKey,
@@ -747,6 +748,7 @@ function ContractsTab({ supplierId }: { supplierId: string }) {
   });
 
   const [editing, setEditing] = useState<ContractTpl | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const saveMutation = useMutation({
     mutationFn: async (tpl: ContractTpl) => {
@@ -811,7 +813,7 @@ function ContractsTab({ supplierId }: { supplierId: string }) {
                 </button>
                 <button
                   className="text-muted-foreground hover:text-destructive"
-                  onClick={() => { if (window.confirm(`Delete "${tpl.name}"?`)) deleteMutation.mutate(tpl.id); }}
+                  onClick={() => setDeleteTarget({ id: tpl.id, name: tpl.name })}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
