@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "@/i18n/routing";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,8 @@ export default function PaymentReturnPage() {
   const bookingId = searchParams.get("booking") || searchParams.get("id") || invoiceId;
   const { t } = useLanguage();
   const { isAuthenticated } = useAuth();
+  const pollCount = useRef(0);
+  const [isPollTimeout, setIsPollTimeout] = useState(false);
 
   const { data: invoice } = useQuery({
     queryKey: ["invoice-status", bookingId],
@@ -22,7 +24,15 @@ export default function PaymentReturnPage() {
     enabled: !!bookingId && isAuthenticated,
     refetchInterval: (query) => {
       const s = (query.state.data as { status: string } | undefined)?.status;
-      return s === "pending" || s === "awaitingpayment" ? 3000 : false;
+      if (s === "pending" || s === "awaitingpayment") {
+        pollCount.current += 1;
+        if (pollCount.current > 40) {
+          setIsPollTimeout(true);
+          return false;
+        }
+        return 3000;
+      }
+      return false;
     },
   });
 
@@ -73,6 +83,20 @@ export default function PaymentReturnPage() {
             <p className="mt-2 text-sm text-muted-foreground">
               {t("payment.checkingStatus")}
             </p>
+            {isPollTimeout && (
+              <div className="mt-6 rounded-md border border-border bg-secondary/30 p-4 text-left">
+                <p className="text-sm font-semibold">{t("payment.delayedTitle")}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{t("payment.delayedDesc")}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Link to="/account?tab=bookings">
+                    <Button size="sm" variant="outline">{t("payment.checkAccount")}</Button>
+                  </Link>
+                  <Link to="/contact">
+                    <Button size="sm" variant="outline">{t("payment.contactSupport")}</Button>
+                  </Link>
+                </div>
+              </div>
+            )}
           </>
         ) : (
           <>
