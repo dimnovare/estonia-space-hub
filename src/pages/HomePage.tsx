@@ -141,12 +141,12 @@ export default function HomePage() {
           "@type": "WebSite",
           "name": "Ruumly",
           "url": "https://ruumly.eu",
-          "description": "Eesti laopindade ja logistikateenuste platvorm",
+          "description": t("seo.homeDescription"),
           "potentialAction": {
             "@type": "SearchAction",
             "target": {
               "@type": "EntryPoint",
-              "urlTemplate": "https://ruumly.eu/search?q={search_term_string}"
+              "urlTemplate": `https://ruumly.eu/${language}/search?q={search_term_string}`
             },
             "query-input": "required name=search_term_string"
           },

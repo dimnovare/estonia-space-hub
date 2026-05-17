@@ -27,4 +27,23 @@ export const queryKeys = {
   notifications: {
     all: () => ["notifications"] as const,
   },
+  invoices: {
+    all: () => ["invoices"] as const,
+  },
+  auditLog: {
+    all: () => ["audit-log"] as const,
+  },
+  integrations: {
+    all: () => ["integration-settings"] as const,
+  },
+  routingRules: {
+    all: () => ["routing-rules"] as const,
+  },
+  locations: {
+    all: (params?: object) => ["locations", params] as const,
+    byId: (id: string) => ["location", id] as const,
+  },
+  messages: {
+    byBooking: (bookingId: string) => ["messages", bookingId] as const,
+  },
 };

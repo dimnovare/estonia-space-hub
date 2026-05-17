@@ -6,7 +6,7 @@ import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
 
 export default function ContactPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const settings = usePlatformSettings();
   const [submitted, setSubmitted] = useState(false);
   const [name, setName] = useState("");
@@ -37,13 +37,13 @@ export default function ContactPage() {
         structuredData={{
           "@context": "https://schema.org",
           "@type": "ContactPage",
-          "name": "Ruumly kontakt",
-          "url": "https://ruumly.eu/contact",
+          "name": t("seo.contact"),
+          "url": `https://ruumly.eu/${language}/contact`,
           "mainEntity": {
             "@type": "Organization",
             "name": "Ruumly",
             "email": "info@ruumly.eu",
-            "url": "https://ruumly.eu",
+            "url": `https://ruumly.eu/${language}`,
             "address": { "@type": "PostalAddress", "addressCountry": "EE", "addressLocality": "Tallinn" }
           }
         }}

@@ -1,6 +1,7 @@
 import { Eye, Package, Users, DollarSign, TrendingUp, AlertTriangle } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
-import { useUsers, useSuppliers } from "@/hooks/queries";
+import { useSuppliers } from "@/hooks/queries";
+import { useUsers } from "@/hooks/useUsers";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { listingService, bookingService, orderService, supplierService, userService, notificationService, invoiceService, messageService, auditService, integrationSettingsService, routingRuleService, locationService, listingExtrasService } from "@/services";
-import type { ListingFilters, CreateBookingInput, Review, CreateReviewInput, Booking, Order, Supplier, User, Notification, Invoice, Message, AuditLogEntry, PartnerIntegrationSettings, OrderRoutingRule, SupplierLocation, Listing, TeamMember, SupplierListingExtra } from "@/services/types";
+import { listingService, bookingService, orderService, supplierService, notificationService, invoiceService, messageService, auditService, integrationSettingsService, routingRuleService, locationService, listingExtrasService } from "@/services";
+import type { ListingFilters, CreateBookingInput, Review, CreateReviewInput, Order, Supplier, Notification, Invoice, Message, AuditLogEntry, PartnerIntegrationSettings, OrderRoutingRule, SupplierLocation, Listing, TeamMember, SupplierListingExtra } from "@/services/types";
 import { toast } from "sonner";
 import { apiClient } from "@/services/apiClient";
 import { useAuth } from "@/contexts/AuthContext";
@@ -47,11 +47,6 @@ export function useFeaturedListings() {
   return useQuery({ queryKey: queryKeys.listings.featured(), queryFn: async () => unwrapArray<Listing>(await listingService.getFeatured()) });
 }
 
-export function useBookings() {
-  const { isAuthenticated } = useAuth();
-  return useQuery({ queryKey: queryKeys.bookings.all(), queryFn: async () => unwrapArray<Booking>(await bookingService.getAll()), enabled: isAuthenticated, staleTime: 30_000 });
-}
-
 export function useCreateBooking() {
   const qc = useQueryClient();
   return useMutation({
@@ -78,11 +73,6 @@ export function useSuppliers() {
   return useQuery({ queryKey: queryKeys.suppliers.all(), queryFn: async () => unwrapArray<Supplier>(await supplierService.getAll()), enabled: isAuthenticated && (role === "admin" || role === "provider"), staleTime: 30_000 });
 }
 
-export function useUsers() {
-  const { isAuthenticated, role } = useAuth();
-  return useQuery({ queryKey: queryKeys.users.all(), queryFn: async () => unwrapArray<User>(await userService.getAll()), enabled: isAuthenticated && role === "admin", staleTime: 30_000 });
-}
-
 export function useNotifications() {
   const { isAuthenticated } = useAuth();
   return useQuery({ queryKey: queryKeys.notifications.all(), queryFn: async () => unwrapArray<Notification>(await notificationService.getAll()), enabled: isAuthenticated, staleTime: 30_000 });
@@ -90,32 +80,32 @@ export function useNotifications() {
 
 export function useInvoices() {
   const { isAuthenticated } = useAuth();
-  return useQuery({ queryKey: ["invoices"], queryFn: async () => unwrapArray<Invoice>(await invoiceService.getAll()), enabled: isAuthenticated, staleTime: 30_000 });
+  return useQuery({ queryKey: queryKeys.invoices.all(), queryFn: async () => unwrapArray<Invoice>(await invoiceService.getAll()), enabled: isAuthenticated, staleTime: 30_000 });
 }
 
 export function useMessages(bookingId: string) {
   const { isAuthenticated } = useAuth();
-  return useQuery({ queryKey: ["messages", bookingId], queryFn: async () => unwrapArray<Message>(await messageService.getByBookingId(bookingId)), enabled: isAuthenticated && !!bookingId });
+  return useQuery({ queryKey: queryKeys.messages.byBooking(bookingId), queryFn: async () => unwrapArray<Message>(await messageService.getByBookingId(bookingId)), enabled: isAuthenticated && !!bookingId });
 }
 
 export function useAuditLog() {
   const { isAuthenticated, role } = useAuth();
-  return useQuery({ queryKey: ["audit-log"], queryFn: async () => unwrapArray<AuditLogEntry>(await auditService.getAll()), enabled: isAuthenticated && role === "admin", staleTime: 30_000 });
+  return useQuery({ queryKey: queryKeys.auditLog.all(), queryFn: async () => unwrapArray<AuditLogEntry>(await auditService.getAll()), enabled: isAuthenticated && role === "admin", staleTime: 30_000 });
 }
 
 export function useIntegrationSettings() {
   const { isAuthenticated, role } = useAuth();
-  return useQuery({ queryKey: ["integration-settings"], queryFn: async () => unwrapArray<PartnerIntegrationSettings>(await integrationSettingsService.getAll()), enabled: isAuthenticated && role === "admin", staleTime: 30_000 });
+  return useQuery({ queryKey: queryKeys.integrations.all(), queryFn: async () => unwrapArray<PartnerIntegrationSettings>(await integrationSettingsService.getAll()), enabled: isAuthenticated && role === "admin", staleTime: 30_000 });
 }
 
 export function useRoutingRules() {
   const { isAuthenticated, role } = useAuth();
-  return useQuery({ queryKey: ["routing-rules"], queryFn: async () => unwrapArray<OrderRoutingRule>(await routingRuleService.getAll()), enabled: isAuthenticated && role === "admin", staleTime: 30_000 });
+  return useQuery({ queryKey: queryKeys.routingRules.all(), queryFn: async () => unwrapArray<OrderRoutingRule>(await routingRuleService.getAll()), enabled: isAuthenticated && role === "admin", staleTime: 30_000 });
 }
 
 export function useLocations(params?: { city?: string; type?: string; supplierId?: string | null }) {
   return useQuery({
-    queryKey: ["locations", params],
+    queryKey: queryKeys.locations.all(params),
     queryFn: async () => unwrapArray<SupplierLocation>(
       await locationService.getAll({
         city: params?.city,
@@ -129,7 +119,7 @@ export function useLocations(params?: { city?: string; type?: string; supplierId
 
 export function useLocation(id: string | undefined) {
   return useQuery({
-    queryKey: ["location", id],
+    queryKey: queryKeys.locations.byId(id ?? ""),
     queryFn: () => locationService.getById(id!),
     enabled: !!id,
     staleTime: 60_000,
