@@ -15,7 +15,9 @@ export function useOrders(supplierId?: string) {
   const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: queryKeys.orders.all(supplierId ? { supplierId } : undefined),
-    queryFn: async () => unwrap<Order>(await orderService.getAll(supplierId ? { supplierId } : undefined)),
+    queryFn: async () => unwrap<Order>(
+      await orderService.getAll(supplierId ? { supplierId, limit: 200 } : { limit: 200 })
+    ),
     enabled: isAuthenticated,
     staleTime: 15_000,
   });

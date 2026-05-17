@@ -1,15 +1,18 @@
-import { useState, useEffect } from "react";
 import { Activity, RefreshCw } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
 import { auditService } from "@/services";
 import type { AuditLogEntry } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function AdminAudit() {
   const { t } = useLanguage();
-  const [logs, setLogs] = useState<AuditLogEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => { auditService.getAll().then(data => { setLogs(data); setLoading(false); }); }, []);
+  const { data: logs = [], isLoading, isError, refetch } = useQuery<AuditLogEntry[]>({
+    queryKey: ["audit-log"],
+    queryFn: () => auditService.getAll(),
+    staleTime: 30_000,
+    retry: 2,
+  });
 
   const actionColor = (a: string) => {
     if (a.includes("confirmed") || a.includes("activated") || a.includes("verified") || a.includes("founding-granted")) return "bg-success/10 text-success";
@@ -19,7 +22,13 @@ export default function AdminAudit() {
     return "bg-secondary text-muted-foreground";
   };
 
-  if (loading) return <div className="flex items-center justify-center py-20"><RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
+  if (isLoading) return <div className="flex items-center justify-center py-20"><RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
+  if (isError) return (
+    <div className="flex flex-col items-center justify-center gap-3 py-20">
+      <p className="text-sm text-muted-foreground">{t("admin.auditLoadError")}</p>
+      <Button variant="outline" size="sm" onClick={() => refetch()}>{t("common.retry")}</Button>
+    </div>
+  );
 
   return (
     <div>

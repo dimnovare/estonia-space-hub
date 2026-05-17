@@ -213,9 +213,10 @@ export const listingService = {
 
 // ─── Order Service ──────────────────────────────────────────────────────────────
 export const orderService = {
-  async getAll(params?: { supplierId?: string }): Promise<Order[]> {
-    const qs = params?.supplierId ? `?supplierId=${params.supplierId}` : "";
-    return apiClient.get<Order[]>(`/orders${qs}`);
+  async getAll(params?: { supplierId?: string; limit?: number }): Promise<Order[]> {
+    const qs = new URLSearchParams({ limit: String(params?.limit ?? 200) });
+    if (params?.supplierId) qs.set("supplierId", params.supplierId);
+    return apiClient.get<Order[]>(`/orders?${qs}`);
   },
   async getById(id: string): Promise<Order | undefined> {
     try { return await apiClient.get<Order>(`/orders/${id}`); } catch { return undefined; }

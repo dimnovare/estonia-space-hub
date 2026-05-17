@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, RefreshCw, Save } from "lucide-react";
+import { Search, RefreshCw, Save, ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -9,39 +9,41 @@ import { apiClient } from "@/services/apiClient";
 import type { User as ServiceUser } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useAdminUsers } from "@/hooks/useAdminUsers";
 
 export default function AdminUsers() {
   const { t } = useLanguage();
-  const [users, setUsers] = useState<ServiceUser[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
   const [selectedUser, setSelectedUser] = useState<ServiceUser | null>(null);
   const [editUser, setEditUser] = useState<(ServiceUser & { emailVerified?: boolean; supplierId?: string }) | null>(null);
   const [filterRole, setFilterRole] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const debouncedQ = useDebounce(searchInput, 350);
+  const [page, setPage] = useState(1);
+  const limit = 50;
+
+  useEffect(() => { setPage(1); }, [debouncedQ]);
 
   const { data: suppliers = [] } = useQuery({
     queryKey: ["suppliers"],
     queryFn: () => supplierService.getAll(),
   });
 
-  useEffect(() => {
-    userService.getAll(200).then(data => {
-      setUsers(data);
-      setLoading(false);
-    });
-  }, []);
+  const { data: usersPage, isLoading: loading, refetch } = useAdminUsers(debouncedQ || undefined, page, limit);
+  const users: ServiceUser[] = (usersPage as any)?.data ?? (Array.isArray(usersPage) ? (usersPage as any) : []);
+  const total = (usersPage as any)?.total ?? users.length;
+  const hasMore = (usersPage as any)?.hasMore ?? false;
 
   useEffect(() => {
     if (selectedUser) setEditUser({ ...selectedUser });
     else setEditUser(null);
   }, [selectedUser]);
 
+  // Server-side search via q; role/status still filtered client-side on the returned page.
   const filtered = users.filter(u => {
     if (filterRole !== "all" && u.role !== filterRole) return false;
     if (filterStatus !== "all" && u.status !== filterStatus) return false;
-    if (searchQuery && !u.name.toLowerCase().includes(searchQuery.toLowerCase()) && !u.email.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
 
@@ -54,11 +56,11 @@ export default function AdminUsers() {
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">{t("admin.users")}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">{total || users.length} {t("admin.usersTotal")}</p>
+      <p className="mt-2 text-sm text-muted-foreground">{total} {t("admin.usersTotal")}</p>
       <div className="mt-4 flex flex-wrap items-center gap-2 sm:gap-3">
         <div className="relative w-full sm:flex-1 sm:min-w-[200px] sm:w-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder={t("admin.searchUsers")} className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm" />
+          <input value={searchInput} onChange={e => setSearchInput(e.target.value)} placeholder={t("admin.searchUsers")} className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm" />
         </div>
         <select value={filterRole} onChange={e => setFilterRole(e.target.value)} className="rounded-lg border border-border bg-card px-3 py-2 text-sm">
           <option value="all">{t("admin.allRoles")}</option><option value="customer">{t("admin.customer")}</option><option value="provider">{t("admin.provider")}</option><option value="admin">{t("admin.title")}</option>
@@ -122,6 +124,21 @@ export default function AdminUsers() {
             ))}
           </tbody>
         </table>
+        </div>
+      </div>
+
+      {/* Pagination */}
+      <div className="mt-4 flex items-center justify-between gap-2">
+        <span className="text-xs text-muted-foreground">
+          {t("admin.page") || "Page"} {page}
+        </span>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" disabled={page <= 1 || loading} onClick={() => setPage(p => Math.max(1, p - 1))}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="sm" disabled={!hasMore || loading} onClick={() => setPage(p => p + 1)}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 
@@ -203,7 +220,7 @@ export default function AdminUsers() {
                       emailVerified: editUser.emailVerified,
                       supplierId: editUser.supplierId || null,
                     });
-                    setUsers(prev => prev.map(u => u.id === editUser.id ? { ...u, ...editUser } : u));
+                    refetch();
                     toast.success(t("admin.userUpdated") || "User updated");
                     setSelectedUser(null);
                   } catch (err: any) {
