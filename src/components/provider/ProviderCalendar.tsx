@@ -12,6 +12,7 @@ import { apiClient, tokenStore } from "@/services/apiClient";
 import { toast } from "sonner";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import { withSupplier } from "@/lib/withSupplier";
+import { queryKeys } from "@/services/queryKeys";
 
 const localeMap: Record<string, string> = {
   et: "et-EE",
@@ -32,12 +33,12 @@ export default function ProviderCalendar() {
   const [selectedLocationId, setSelectedLocationId] = useState<string>("");
 
   const { data: blockedDatesRaw = [] } = useQuery({
-    queryKey: ["blocked-dates", selectedLocationId],
+    queryKey: queryKeys.blockedDates.byLocation(selectedLocationId),
     queryFn: () => apiClient.get<any[]>(`/locations/${selectedLocationId}/blocked-dates`),
     enabled: !!selectedLocationId,
   });
   const { data: supplierProfile } = useQuery({
-    queryKey: ["supplier-profile", supplierId],
+    queryKey: queryKeys.supplierProfile.byId(supplierId),
     queryFn: () => apiClient.get<any>(withSupplier("/supplier/profile", supplierId)),
     enabled: !supplierId,
   });
@@ -73,7 +74,7 @@ export default function ProviderCalendar() {
       } else {
         await apiClient.post(`/locations/${selectedLocationId}/blocked-dates`, { date: dateStr });
       }
-      queryClient.invalidateQueries({ queryKey: ["blocked-dates", selectedLocationId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.blockedDates.byLocation(selectedLocationId) });
     } catch (err: any) {
       toast.error(err?.message || t("provider.listings.deleteFailed"));
     }
@@ -245,7 +246,7 @@ export default function ProviderCalendar() {
                       if (existing) {
                         try {
                           await apiClient.delete(`/locations/${selectedLocationId}/blocked-dates/${existing.id}`);
-                          queryClient.invalidateQueries({ queryKey: ["blocked-dates", selectedLocationId] });
+                          queryClient.invalidateQueries({ queryKey: queryKeys.blockedDates.byLocation(selectedLocationId) });
                         } catch (err: any) {
                           toast.error(err?.message || t("provider.listings.deleteFailed"));
                         }

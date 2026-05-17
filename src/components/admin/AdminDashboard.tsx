@@ -5,6 +5,7 @@ import { useUsers } from "@/hooks/useUsers";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
+import { queryKeys } from "@/services/queryKeys";
 
 export default function AdminDashboard() {
   const { t } = useLanguage();
@@ -13,7 +14,7 @@ export default function AdminDashboard() {
   const { data: suppliers = [] } = useSuppliers();
 
   const { data: stats } = useQuery({
-    queryKey: ["admin-stats"],
+    queryKey: queryKeys.adminStats.all(),
     queryFn: () => apiClient.get<{
       totalListings: number;
       totalOrders: number;
@@ -34,7 +35,7 @@ export default function AdminDashboard() {
   });
 
   const { data: revenue } = useQuery({
-    queryKey: ["admin-revenue"],
+    queryKey: queryKeys.adminRevenue.all(),
     queryFn: () => apiClient.get<{
       period: string;
       totalBookings: number;

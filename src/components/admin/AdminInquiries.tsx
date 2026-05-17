@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { queryKeys } from "@/services/queryKeys";
 
 interface Inquiry {
   id: number;
@@ -23,7 +24,7 @@ export default function AdminInquiries() {
   const queryClient = useQueryClient();
 
   const { data: inquiries = [], isLoading } = useQuery({
-    queryKey: ["admin-inquiries"],
+    queryKey: queryKeys.adminInquiries.all(),
     queryFn: () => apiClient.get<Inquiry[]>("/admin/inquiries"),
   });
 
@@ -34,7 +35,7 @@ export default function AdminInquiries() {
     mutationFn: ({ id, updates }: { id: number; updates: Partial<Inquiry> }) =>
       apiClient.patch<Inquiry>(`/admin/inquiries/${id}`, updates),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-inquiries"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminInquiries.all() });
       toast.success(t("toast.inquiryUpdated") || "Inquiry updated");
     },
     onError: (err: any) => toast.error(err.message || t("toast.updateFailed")),

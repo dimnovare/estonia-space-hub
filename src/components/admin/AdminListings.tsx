@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { supplierService } from "@/services";
 import { toast } from "sonner";
+import { queryKeys } from "@/services/queryKeys";
 import AdminExtrasOverrides from "./AdminExtrasOverrides";
 
 const typeIcons: Record<string, typeof Warehouse> = { warehouse: Warehouse, moving: Truck, trailer: CarFront };
@@ -21,7 +22,7 @@ export default function AdminListings() {
   const [isNew, setIsNew] = useState(false);
 
   const { data: listings = [], isLoading } = useQuery({
-    queryKey: ["admin-listings"],
+    queryKey: queryKeys.adminListings.all(),
     queryFn: () => apiClient.get<any[]>("/admin/listings"),
   });
 
@@ -31,8 +32,8 @@ export default function AdminListings() {
   });
 
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ["admin-listings"] });
-    queryClient.invalidateQueries({ queryKey: ["listings"] });
+    queryClient.invalidateQueries({ queryKey: queryKeys.adminListings.all() });
+    queryClient.invalidateQueries({ queryKey: queryKeys.listings.all() });
   };
 
   const createMutation = useMutation({

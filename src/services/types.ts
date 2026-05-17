@@ -88,6 +88,7 @@ export interface Supplier {
   logoUrl?: string | null;
   rating?: number | null;
   isPartnerPagePublished?: boolean;
+  country?: string;                    // "EE" | "LV" | "LT" — default "EE"
 }
 
 export interface PartnerIntegrationSettings {

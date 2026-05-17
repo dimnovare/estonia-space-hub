@@ -7,13 +7,14 @@ import { routingRuleService } from "@/services";
 import type { OrderRoutingRule } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
+import { queryKeys } from "@/services/queryKeys";
 
 export default function AdminRouting() {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
 
   const { data: rules = [], isLoading } = useQuery({
-    queryKey: ["routing-rules"],
+    queryKey: queryKeys.routingRules.all(),
     queryFn: () => routingRuleService.getAll(),
   });
 
@@ -24,7 +25,7 @@ export default function AdminRouting() {
   const createMutation = useMutation({
     mutationFn: (rule: any) => routingRuleService.create(rule),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["routing-rules"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.routingRules.all() });
       toast.success(t("toast.ruleAdded"));
       setEditOpen(false);
     },
@@ -35,7 +36,7 @@ export default function AdminRouting() {
     mutationFn: ({ id, updates }: { id: string; updates: any }) =>
       routingRuleService.update(id, updates),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["routing-rules"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.routingRules.all() });
       toast.success(t("toast.ruleUpdated"));
       setEditOpen(false);
     },

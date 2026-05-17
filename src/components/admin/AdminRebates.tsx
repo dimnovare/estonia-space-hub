@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, FileText, CheckCircle, Send } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { queryKeys } from "@/services/queryKeys";
 
 function getPrevMonth(): string {
   const d = new Date();
@@ -55,7 +56,7 @@ export default function AdminRebates({ supplierId }: { supplierId?: string }) {
   const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["rebate-invoices", period],
+    queryKey: queryKeys.rebateInvoices.byPeriod(period),
     queryFn: () => apiClient.get(`/admin/rebate-invoices?period=${period}`),
     staleTime: 30_000,
   });
@@ -63,7 +64,7 @@ export default function AdminRebates({ supplierId }: { supplierId?: string }) {
   const generateMut = useMutation({
     mutationFn: () => apiClient.post("/admin/rebate-invoices/generate", { period }),
     onSuccess: (result: any) => {
-      qc.invalidateQueries({ queryKey: ["rebate-invoices"] });
+      qc.invalidateQueries({ queryKey: queryKeys.rebateInvoices.all() });
       const count = typeof result?.generated === "number" ? result.generated : 0;
       if (count > 0) {
         toast.success(t("admin.rebates.generatedCount").replace("{n}", String(count)));
@@ -77,7 +78,7 @@ export default function AdminRebates({ supplierId }: { supplierId?: string }) {
   const markSentMut = useMutation({
     mutationFn: (id: string) => apiClient.patch(`/admin/rebate-invoices/${id}/mark-sent`, {}),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["rebate-invoices"] });
+      qc.invalidateQueries({ queryKey: queryKeys.rebateInvoices.all() });
       toast.success(t("admin.rebates.markedSent"));
     },
     onError: (err: any) => toast.error(err?.message || t("admin.rebates.error")),
@@ -86,7 +87,7 @@ export default function AdminRebates({ supplierId }: { supplierId?: string }) {
   const markPaidMut = useMutation({
     mutationFn: (id: string) => apiClient.patch(`/admin/rebate-invoices/${id}/mark-paid`, { reference: "" }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["rebate-invoices"] });
+      qc.invalidateQueries({ queryKey: queryKeys.rebateInvoices.all() });
       toast.success(t("admin.rebates.markedPaid"));
     },
     onError: (err: any) => toast.error(err?.message || t("admin.rebates.error")),

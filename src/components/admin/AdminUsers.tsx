@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { userService, supplierService } from "@/services";
+import { supplierService } from "@/services";
 import { apiClient } from "@/services/apiClient";
 import type { User as ServiceUser } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -14,38 +14,39 @@ import { useAdminUsers } from "@/hooks/useAdminUsers";
 
 export default function AdminUsers() {
   const { t } = useLanguage();
+  const [page, setPage] = useState(1);
+  const limit = 50;
   const [selectedUser, setSelectedUser] = useState<ServiceUser | null>(null);
   const [editUser, setEditUser] = useState<(ServiceUser & { emailVerified?: boolean; supplierId?: string }) | null>(null);
   const [filterRole, setFilterRole] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchInput, setSearchInput] = useState("");
   const debouncedQ = useDebounce(searchInput, 350);
-  const [page, setPage] = useState(1);
-  const limit = 50;
 
-  useEffect(() => { setPage(1); }, [debouncedQ]);
+  const { data: usersPage, isLoading: loading, refetch } = useAdminUsers(
+    debouncedQ || undefined, page, limit,
+    filterRole !== "all" ? filterRole : undefined,
+    filterStatus !== "all" ? filterStatus : undefined,
+  );
+  const users: ServiceUser[] = usersPage?.data ?? [];
+  const total = usersPage?.total ?? 0;
+  const hasMore = usersPage?.hasMore ?? false;
 
   const { data: suppliers = [] } = useQuery({
     queryKey: ["suppliers"],
     queryFn: () => supplierService.getAll(),
   });
 
-  const { data: usersPage, isLoading: loading, refetch } = useAdminUsers(debouncedQ || undefined, page, limit);
-  const users: ServiceUser[] = usersPage?.data ?? [];
-  const total = usersPage?.total ?? 0;
-  const hasMore = usersPage?.hasMore ?? false;
-
   useEffect(() => {
     if (selectedUser) setEditUser({ ...selectedUser });
     else setEditUser(null);
   }, [selectedUser]);
 
-  // Server-side search via q; role/status still filtered client-side on the returned page.
-  const filtered = users.filter(u => {
-    if (filterRole !== "all" && u.role !== filterRole) return false;
-    if (filterStatus !== "all" && u.status !== filterStatus) return false;
-    return true;
-  });
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedQ, filterRole, filterStatus]);
+
+  const filtered = users;
 
   const inp = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
 

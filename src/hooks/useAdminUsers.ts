@@ -3,12 +3,20 @@ import { apiClient } from "@/services/apiClient";
 import { normalizeUser } from "@/services";
 import type { User, PaginatedResponse } from "@/services/types";
 
-export function useAdminUsers(q?: string, page = 1, limit = 50) {
+export function useAdminUsers(
+  q?: string,
+  page = 1,
+  limit = 50,
+  role?: string,
+  status?: string,
+) {
   return useQuery<PaginatedResponse<User>>({
-    queryKey: ["admin-users", q ?? "", page, limit],
+    queryKey: ["admin-users", q ?? "", page, limit, role ?? "", status ?? ""],
     queryFn: async () => {
       const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
       if (q) qs.set("q", q);
+      if (role && role !== "all")   qs.set("role", role);
+      if (status && status !== "all") qs.set("status", status);
       const res = await apiClient.get<unknown>(`/admin/users?${qs}`);
 
       if (res && typeof res === "object" && "data" in res) {

@@ -6,6 +6,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { apiClient } from "@/services/apiClient";
 import { toast } from "sonner";
 import AdminAboutPage from "./AdminAboutPage";
+import { queryKeys } from "@/services/queryKeys";
 
 const DEFAULT_SETTINGS: Record<string, string> = {
   siteName:               "Ruumly",
@@ -104,7 +105,7 @@ export default function AdminSettings() {
     try {
       await apiClient.patch("/admin/settings", settings);
       toast.success(t("admin.settingsSaved"));
-      qc.invalidateQueries({ queryKey: ["platform-settings-public"] });
+      qc.invalidateQueries({ queryKey: queryKeys.platformSettings.public() });
     } catch (err: any) {
       toast.error(err.message || t("toast.saveFailed"));
     } finally {

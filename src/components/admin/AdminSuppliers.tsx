@@ -73,7 +73,7 @@ export default function AdminSuppliers() {
   const filteredRaw = suppliers.filter(s => {
     if (filter === "active" && !s.isActive) return false;
     if (filter === "inactive" && s.isActive) return false;
-    if (countryFilter !== "all" && (s as any).country !== countryFilter) return false;
+    if (countryFilter !== "all" && (s.country ?? "EE") !== countryFilter) return false;
     if (tierFilter !== "all" && (s.tier?.toLowerCase() !== tierFilter)) return false;
     return true;
   });
@@ -176,16 +176,16 @@ export default function AdminSuppliers() {
           </button>
         ))}
         <select value={countryFilter} onChange={(e) => setCountryFilter(e.target.value as any)} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs">
-          <option value="all">All countries</option>
-          <option value="EE">Estonia</option>
-          <option value="LV">Latvia</option>
-          <option value="LT">Lithuania</option>
+          <option value="all">{t("admin.allCountries")}</option>
+          <option value="EE">{t("admin.countryEE")}</option>
+          <option value="LV">{t("admin.countryLV")}</option>
+          <option value="LT">{t("admin.countryLT")}</option>
         </select>
         <select value={tierFilter} onChange={(e) => setTierFilter(e.target.value as any)} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs">
-          <option value="all">All tiers</option>
-          <option value="starter">Starter</option>
-          <option value="standard">Standard</option>
-          <option value="premium">Premium</option>
+          <option value="all">{t("admin.allTiers")}</option>
+          <option value="starter">{t("supplier.tier.starter")}</option>
+          <option value="standard">{t("supplier.tier.standard")}</option>
+          <option value="premium">{t("supplier.tier.premium")}</option>
         </select>
       </div>
       {/* Mobile cards */}

@@ -30,8 +30,12 @@ export const queryKeys = {
   invoices: {
     all: () => ["invoices"] as const,
   },
-  auditLog: {
-    all: () => ["audit-log"] as const,
+  locations: {
+    all: (params?: object) => ["locations", params] as const,
+    byId: (id: string) => ["location", id] as const,
+  },
+  messages: {
+    byBooking: (bookingId: string) => ["messages", bookingId] as const,
   },
   integrations: {
     all: () => ["integration-settings"] as const,
@@ -39,11 +43,35 @@ export const queryKeys = {
   routingRules: {
     all: () => ["routing-rules"] as const,
   },
-  locations: {
-    all: (params?: object) => ["locations", params] as const,
-    byId: (id: string) => ["location", id] as const,
+  auditLog: {
+    all: () => ["audit-log"] as const,
   },
-  messages: {
-    byBooking: (bookingId: string) => ["messages", bookingId] as const,
+  adminListings: {
+    all: () => ["admin-listings"] as const,
+  },
+  adminLocations: {
+    all: (supplierId?: string) => ["admin-locations", supplierId ?? null] as const,
+  },
+  adminInquiries: {
+    all: () => ["admin-inquiries"] as const,
+  },
+  adminStats: {
+    all: () => ["admin-stats"] as const,
+  },
+  adminRevenue: {
+    all: () => ["admin-revenue"] as const,
+  },
+  platformSettings: {
+    public: () => ["platform-settings-public"] as const,
+  },
+  rebateInvoices: {
+    byPeriod: (period: string) => ["rebate-invoices", period] as const,
+    all: () => ["rebate-invoices"] as const,
+  },
+  blockedDates: {
+    byLocation: (locationId: string) => ["blocked-dates", locationId] as const,
+  },
+  supplierProfile: {
+    byId: (supplierId: string | null) => ["supplier-profile", supplierId] as const,
   },
 };

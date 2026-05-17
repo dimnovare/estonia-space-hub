@@ -7,13 +7,14 @@ import { integrationSettingsService } from "@/services";
 import type { PartnerIntegrationSettings, ApprovalMode, PostingMode } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
+import { queryKeys } from "@/services/queryKeys";
 
 export default function AdminIntegrations() {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
 
   const { data: settings = [], isLoading } = useQuery({
-    queryKey: ["integration-settings"],
+    queryKey: queryKeys.integrations.all(),
     queryFn: () => integrationSettingsService.getAll(),
   });
 
@@ -24,7 +25,7 @@ export default function AdminIntegrations() {
     mutationFn: ({ id, updates }: { id: string; updates: any }) =>
       integrationSettingsService.update(id, updates),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["integration-settings"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.integrations.all() });
       toast.success(t("toast.integrationUpdated"));
       setEditOpen(false);
     },

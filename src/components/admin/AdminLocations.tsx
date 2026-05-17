@@ -10,6 +10,7 @@ import { locationService, supplierService } from "@/services";
 import { apiClient } from "@/services/apiClient";
 import type { SupplierLocation } from "@/services/types";
 import { toast } from "sonner";
+import { queryKeys } from "@/services/queryKeys";
 
 const inp = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
 const typeIcons: Record<string, typeof Warehouse> = { warehouse: Warehouse, Warehouse: Warehouse, moving: Truck, Moving: Truck, trailer: CarFront, Trailer: CarFront };
@@ -19,13 +20,13 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
   const qc = useQueryClient();
 
   const { data: locations = [], isLoading } = useQuery({
-    queryKey: ["admin-locations", supplierId],
+    queryKey: queryKeys.adminLocations.all(supplierId),
     queryFn: () => locationService.getAll(supplierId ? { supplierId } : undefined),
     staleTime: 30_000,
   });
 
   const { data: suppliers = [] } = useQuery({
-    queryKey: ["suppliers"],
+    queryKey: queryKeys.suppliers.all(),
     queryFn: () => supplierService.getAll(),
   });
 
@@ -72,8 +73,8 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
   const [newUnit, setNewUnit] = useState(emptyUnit);
 
   const invalidate = () => {
-    qc.invalidateQueries({ queryKey: ["admin-locations"] });
-    qc.invalidateQueries({ queryKey: ["locations"] });
+    qc.invalidateQueries({ queryKey: queryKeys.adminLocations.all() });
+    qc.invalidateQueries({ queryKey: queryKeys.locations.all() });
   };
 
   const createLocMutation = useMutation({
