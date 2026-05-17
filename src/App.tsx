@@ -1,3 +1,4 @@
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { BrowserRouter, Route, Routes, useLocation, Outlet, Navigate } from "react-router-dom";
@@ -36,7 +37,6 @@ import NotFound from "@/pages/NotFound";
 const ProviderPage = lazy(() => import("@/pages/ProviderPage"));
 import RequestDetailPage from "@/pages/RequestDetailPage";
 import VerifyEmailPage from "@/pages/VerifyEmailPage";
-import { lazy, Suspense, useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
 import { trackPageView } from "@/lib/analytics";
 import { LangParamGuard, LangRedirect } from "@/i18n/routing";
@@ -226,3 +226,4 @@ const App = () => (
 );
 
 export default App;
+
