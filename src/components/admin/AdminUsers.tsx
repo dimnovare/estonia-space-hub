@@ -31,9 +31,9 @@ export default function AdminUsers() {
   });
 
   const { data: usersPage, isLoading: loading, refetch } = useAdminUsers(debouncedQ || undefined, page, limit);
-  const users: ServiceUser[] = (usersPage as any)?.data ?? (Array.isArray(usersPage) ? (usersPage as any) : []);
-  const total = (usersPage as any)?.total ?? users.length;
-  const hasMore = (usersPage as any)?.hasMore ?? false;
+  const users: ServiceUser[] = usersPage?.data ?? [];
+  const total = usersPage?.total ?? 0;
+  const hasMore = usersPage?.hasMore ?? false;
 
   useEffect(() => {
     if (selectedUser) setEditUser({ ...selectedUser });
