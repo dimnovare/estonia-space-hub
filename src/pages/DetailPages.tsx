@@ -388,7 +388,7 @@ export function WarehouseDetail() {
 
 export function MovingDetail() {
   const { id } = useParams();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { data: pricingConfig } = usePricingConfig();
   const fp = (text: string) => fillPricing(text, pricingConfig);
   const { data: listing, isLoading } = useListing(id);
@@ -412,7 +412,7 @@ export function MovingDetail() {
         path={`/moving/${mListing.id}`}
         image={mListing.image || undefined}
         type="product"
-        structuredData={buildProductSchema(mListing)}
+        structuredData={[buildProductSchema(mListing, language), buildBreadcrumbSchema(mListing, language)]}
       />
       <nav className="mb-4 flex items-center gap-1.5 text-xs text-muted-foreground">
         <Link to="/" className="hover:text-foreground transition-colors">{t("nav.home")}</Link>
@@ -522,7 +522,7 @@ export function MovingDetail() {
 
 export function TrailerDetail() {
   const { id } = useParams();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { data: pricingConfig } = usePricingConfig();
   const fp = (text: string) => fillPricing(text, pricingConfig);
   const { data: listing, isLoading } = useListing(id);
@@ -546,7 +546,7 @@ export function TrailerDetail() {
         path={`/trailer/${tListing.id}`}
         image={tListing.image || undefined}
         type="product"
-        structuredData={buildProductSchema(tListing)}
+        structuredData={[buildProductSchema(tListing, language), buildBreadcrumbSchema(tListing, language)]}
       />
       <nav className="mb-4 flex items-center gap-1.5 text-xs text-muted-foreground">
         <Link to="/" className="hover:text-foreground transition-colors">{t("nav.home")}</Link>
