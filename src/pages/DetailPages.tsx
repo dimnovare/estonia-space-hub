@@ -16,11 +16,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
-function buildProductSchema(listing: Listing) {
+function buildProductSchema(listing: Listing, lang: string) {
   const schema: any = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: listing.title,
+    url: `https://ruumly.eu/${lang}/listing/${listing.id}`,
     description: listing.description || listing.title,
     image: listing.image || undefined,
     brand: { "@type": "Brand", name: listing.provider },
@@ -52,6 +53,33 @@ function buildProductSchema(listing: Listing) {
     };
   }
   return schema;
+}
+
+function buildBreadcrumbSchema(listing: Listing, lang: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Ruumly",
+        item: `https://ruumly.eu/${lang}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: listing.city,
+        item: `https://ruumly.eu/${lang}/search?city=${encodeURIComponent(listing.city)}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: listing.title,
+        item: `https://ruumly.eu/${lang}/listing/${listing.id}`,
+      },
+    ],
+  };
 }
 
 function PartnerBadges({ listing }: { listing: Listing }) {
