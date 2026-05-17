@@ -290,6 +290,7 @@ export default function BookingPage() {
           });
           if (result.paymentUrl) {
             window.location.href = result.paymentUrl;
+            setTimeout(() => setIsSubmitting(false), 5000);
             return;
           }
         } catch (err) {
