@@ -11,6 +11,7 @@ export default function PrivacyPage() {
         title={`${t("seo.privacy")} — Ruumly`}
         description={t("seo.privacyDesc")}
         path="/privacy"
+        noindex={true}
       />
       <div className="mx-auto max-w-3xl">
         <div className="flex items-center gap-3 mb-6">
