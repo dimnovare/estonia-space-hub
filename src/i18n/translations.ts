@@ -1972,6 +1972,20 @@ const et: Record<string, string> = {
     "admin.contract.htmlEditor": "HTML mall",
     "admin.contract.isDefault": "Määra vaikimisi",
 
+    "login.showPassword": "Näita parooli",
+    "login.hidePassword": "Peida parool",
+    "aboutPage.founders": "Asutajad",
+    "provider.profile.adminReadOnly": "Ainult administraatorid saavad seda muuta",
+    "provider.listings.active": "Aktiivne",
+    "provider.listings.deleteUnit": "Kustuta üksus",
+    "provider.listings.unitPrice": "Hind",
+    "provider.listings.unitSize": "Pindala (m²)",
+    "provider.analytics.rejectOrder": "Lükka tagasi",
+    "about.stats.cities": "Linnad",
+    "payment.delayedTitle": "Makse võib viibida",
+    "payment.delayedDesc": "Me ei saanud kinnitust mõistliku aja jooksul. Palun kontrolli oma kontot või võta ühendust toega.",
+    "payment.checkAccount": "Vaata kontot",
+    "payment.contactSupport": "Võta ühendust toega",
 };
 
 const en: Record<string, string> = {
@@ -3902,6 +3916,20 @@ const en: Record<string, string> = {
     "admin.contract.htmlEditor": "HTML template",
     "admin.contract.isDefault": "Set as default",
 
+    "login.showPassword": "Show password",
+    "login.hidePassword": "Hide password",
+    "aboutPage.founders": "Founders",
+    "provider.profile.adminReadOnly": "Only admins can edit this",
+    "provider.listings.active": "Active",
+    "provider.listings.deleteUnit": "Delete unit",
+    "provider.listings.unitPrice": "Price",
+    "provider.listings.unitSize": "Size (m²)",
+    "provider.analytics.rejectOrder": "Reject",
+    "about.stats.cities": "Cities",
+    "payment.delayedTitle": "Payment may be delayed",
+    "payment.delayedDesc": "We haven\'t received a confirmation in time. Please check your account or contact support.",
+    "payment.checkAccount": "Check account",
+    "payment.contactSupport": "Contact support",
 };
 
 const ru: Record<string, string> = {
@@ -5831,6 +5859,20 @@ const ru: Record<string, string> = {
     "admin.contract.htmlEditor": "HTML шаблон",
     "admin.contract.isDefault": "По умолчанию",
 
+    "login.showPassword": "Показать пароль",
+    "login.hidePassword": "Скрыть пароль",
+    "aboutPage.founders": "Основатели",
+    "provider.profile.adminReadOnly": "Только администраторы могут редактировать",
+    "provider.listings.active": "Активный",
+    "provider.listings.deleteUnit": "Удалить единицу",
+    "provider.listings.unitPrice": "Цена",
+    "provider.listings.unitSize": "Площадь (m²)",
+    "provider.analytics.rejectOrder": "Отклонить",
+    "about.stats.cities": "Города",
+    "payment.delayedTitle": "Платёж может задерживаться",
+    "payment.delayedDesc": "Мы не получили подтверждение вовремя. Проверьте аккаунт или свяжитесь с поддержкой.",
+    "payment.checkAccount": "Проверить аккаунт",
+    "payment.contactSupport": "Связаться с поддержкой",
 };
 
 
@@ -7704,6 +7746,15 @@ const lv: Record<string, string> = {
     "admin.contract.htmlEditor": "HTML veidne",
     "admin.contract.isDefault": "Iestatīt kā noklusējumu",
 
+    "login.showPassword": "Rādīt paroli",
+    "login.hidePassword": "Paslēpt paroli",
+    "aboutPage.founders": "Dibinātāji",
+    "provider.profile.adminReadOnly": "Tikai administratori var rediģēt",
+    "about.stats.cities": "Pilsētas",
+    "payment.delayedTitle": "Maksājums var aizkavēties",
+    "payment.delayedDesc": "Mēs nesaņēmām apstiprinājumu laikā. Lūdzu, pārbaudiet kontu vai sazinieties ar atbalstu.",
+    "payment.checkAccount": "Pārbaudīt kontu",
+    "payment.contactSupport": "Sazināties ar atbalstu",
 };
 // ── Lithuanian ──────────────────────────
 const lt: Record<string, string> = {
@@ -9575,6 +9626,14 @@ const lt: Record<string, string> = {
     "admin.contract.htmlEditor": "HTML šablonas",
     "admin.contract.isDefault": "Nustatyti kaip numatytąjį",
 
+    "login.showPassword": "Rodyti slaptažodį",
+    "login.hidePassword": "Slėpti slaptažodį",
+    "aboutPage.founders": "Įkūrėjai",
+    "provider.profile.adminReadOnly": "Tik administratoriai gali redaguoti",
+    "payment.delayedTitle": "Mokėjimas gali vėluoti",
+    "payment.delayedDesc": "Negavome patvirtinimo laiku. Patikrinkite paskyrą arba susisiekite su pagalba.",
+    "payment.checkAccount": "Patikrinti paskyrą",
+    "payment.contactSupport": "Susisiekti su pagalba",
 };
 const translations: Record<Language, Record<string, string>> = { et, en, ru, lv, lt };
 
