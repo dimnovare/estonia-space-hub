@@ -881,7 +881,7 @@ function ContractsTab({ supplierId }: { supplierId: string }) {
           <AlertDialogHeader>
             <AlertDialogTitle>{t("admin.contracts.deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("admin.contracts.deleteConfirm", { name: deleteTarget?.name ?? "" })}
+              {t("admin.contracts.deleteConfirm").replace("{name}", deleteTarget?.name ?? "")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
