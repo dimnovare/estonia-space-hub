@@ -12,7 +12,7 @@ interface SEOProps {
   type?: "website" | "article" | "product";
   image?: string;
   noindex?: boolean;
-  structuredData?: object;
+  structuredData?: object | object[];
 }
 
 const BASE_URL = "https://ruumly.eu";
