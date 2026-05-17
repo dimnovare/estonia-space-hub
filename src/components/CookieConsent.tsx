@@ -31,7 +31,9 @@ export default function CookieConsent() {
         <p className="text-sm text-muted-foreground">{t("consent.text")}</p>
         <div className="flex items-center gap-2 shrink-0">
           <Button asChild variant="ghost" size="sm">
-            <Link to="/cookies">{t("consent.readMore")}</Link>
+            <Link to="/cookies" aria-label={t("consent.cookiePolicyAriaLabel")}>
+              {t("consent.readMore")}
+            </Link>
           </Button>
           <Button size="sm" onClick={accept}>
             {t("consent.accept")}
