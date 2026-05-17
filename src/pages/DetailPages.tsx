@@ -177,7 +177,7 @@ function LoadingDetail() {
 
 export function WarehouseDetail() {
   const { id } = useParams();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { data: pricingConfig } = usePricingConfig();
   const fp = (text: string) => fillPricing(text, pricingConfig);
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
@@ -228,7 +228,7 @@ export function WarehouseDetail() {
         path={`/warehouse/${wListing.id}`}
         image={wListing.image || undefined}
         type="product"
-        structuredData={buildProductSchema(wListing)}
+        structuredData={[buildProductSchema(wListing, language), buildBreadcrumbSchema(wListing, language)]}
       />
       <nav className="mb-4 flex items-center gap-1.5 text-xs text-muted-foreground">
         <Link to="/" className="hover:text-foreground transition-colors">{t("nav.home")}</Link>
