@@ -23,7 +23,7 @@ export default function AdminExtrasOverrides({ listingId }: { listingId: string 
   return (
     <div className="rounded-lg border border-border p-3 space-y-3">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-        Lisateenuste hinnakujundus (admin)
+        {t("admin.extras.pricingTitle")}
       </p>
       <div className="space-y-2">
         {extras.map((extra) => (
@@ -31,7 +31,9 @@ export default function AdminExtrasOverrides({ listingId }: { listingId: string 
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium">{extra.label}</span>
               <span className="text-xs text-muted-foreground">
-                Avalik hind: €{extra.publicPrice} → Kliendihind: €{extra.price}
+                {t("admin.extras.priceDisplay")
+                  .replace("{public}", String(extra.publicPrice))
+                  .replace("{customer}", String(extra.price))}
               </span>
             </div>
             <div className="grid grid-cols-2 gap-2">
