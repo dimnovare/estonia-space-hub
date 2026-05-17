@@ -148,6 +148,7 @@ export default function BookingPage() {
   const [showContract, setShowContract] = useState(false);
   const [showVerifyBanner, setShowVerifyBanner] = useState(false);
   const [resendSent, setResendSent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const detailsForm = useForm<{ startDate: string; endDate: string }>({
     resolver: zodResolver(z.object({
@@ -261,6 +262,7 @@ export default function BookingPage() {
       city: listing?.city || "",
       total: pricing?.total || 0,
     });
+    setIsSubmitting(true);
     createBooking.mutateAsync({
       idempotencyKey,
       listingId: listingId!,
@@ -305,7 +307,12 @@ export default function BookingPage() {
       const msg = err?.message?.toLowerCase() || "";
       if (err?.status === 403 || (msg.includes("email") && msg.includes("verif"))) {
         setShowVerifyBanner(true);
+        setIsSubmitting(false);
+        return;
       }
+      const displayMsg = err?.message || t("error.generic");
+      toast.error(displayMsg);
+      setIsSubmitting(false);
     });
   };
 
