@@ -14,6 +14,14 @@
       ]
     }
   ],
+  "redirects": [
+    { "source": "/:lang(et|en|ru|lv|lt)/",        "destination": "/:lang",        "permanent": true },
+    { "source": "/:lang(et|en|ru|lv|lt)/:path+/", "destination": "/:lang/:path+", "permanent": true },
+    { "source": "/storage/:slug",  "destination": "/et/storage/:slug",  "permanent": true },
+    { "source": "/search",         "destination": "/et/search",         "permanent": true },
+    { "source": "/listing/:id",    "destination": "/et/listing/:id",    "permanent": true },
+    { "source": "/partner/:slug",  "destination": "/et/partner/:slug",  "permanent": true }
+  ],
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "https://api.ruumly.eu/sitemap.xml" },
     { "source": "/robots.txt", "destination": "https://api.ruumly.eu/robots.txt" },

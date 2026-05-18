@@ -34,7 +34,9 @@ export default function FeaturedPartnersStrip() {
                   {p.logoUrl ? (
                     <img src={p.logoUrl} alt={`${p.name} logo`} className="max-h-12 object-contain" loading="lazy" />
                   ) : (
-                    <div className="font-display text-lg font-bold text-foreground">{p.name}</div>
+                    <div className="font-display text-lg font-bold text-foreground">
+                      {p.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()}
+                    </div>
                   )}
                 </div>
                 <h3 className="mt-3 text-center font-semibold text-foreground">{p.name}</h3>

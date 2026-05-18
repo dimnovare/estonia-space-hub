@@ -2005,6 +2005,21 @@ const et: Record<string, string> = {
     "payment.delayedDesc": "Me ei saanud kinnitust mõistliku aja jooksul. Palun kontrolli oma kontot või võta ühendust toega.",
     "payment.checkAccount": "Vaata kontot",
     "payment.contactSupport": "Võta ühendust toega",
+
+    "admin.partner.checkActive":      "Tarnija aktiivne",
+    "admin.partner.checkPartnerPage": "Partneri leht avaldatud",
+    "admin.partner.checkListings":    "Vähemalt üks aktiivne kuulutus",
+    "admin.partner.checkIntegration": "Integratsioon seadistatud",
+    "admin.partner.checkContract":    "Lepingumall üles laaditud",
+    "admin.partner.totalOrders":      "Tellimusi kokku",
+    "admin.partner.totalRevenue":     "Käive kokku",
+    "admin.partner.activeListings":   "Aktiivseid kuulutusi",
+    "admin.partner.avgRating":        "Keskmine reiting",
+    "admin.partner.setupChecklist":   "Seadistuse kontrollnimekiri",
+    "admin.partner.noSyncActivity":   "Sünkroonimise tegevust pole.",
+    "admin.partner.recentSyncLog":    "Viimane sünkroonimine",
+    "common.showLess": "Näita vähem",
+    "common.viewAll":  "Vaata kõiki",
 };
 
 const en: Record<string, string> = {
@@ -3968,6 +3983,21 @@ const en: Record<string, string> = {
     "payment.delayedDesc": "We haven\'t received a confirmation in time. Please check your account or contact support.",
     "payment.checkAccount": "Check account",
     "payment.contactSupport": "Contact support",
+
+    "admin.partner.checkActive":      "Supplier active",
+    "admin.partner.checkPartnerPage": "Partner page published",
+    "admin.partner.checkListings":    "At least one active listing",
+    "admin.partner.checkIntegration": "Integration configured",
+    "admin.partner.checkContract":    "Contract template uploaded",
+    "admin.partner.totalOrders":      "Total orders",
+    "admin.partner.totalRevenue":     "Total revenue",
+    "admin.partner.activeListings":   "Active listings",
+    "admin.partner.avgRating":        "Avg rating",
+    "admin.partner.setupChecklist":   "Setup checklist",
+    "admin.partner.noSyncActivity":   "No sync activity yet.",
+    "admin.partner.recentSyncLog":    "Recent sync log",
+    "common.showLess": "Show less",
+    "common.viewAll":  "View all",
 };
 
 const ru: Record<string, string> = {
@@ -5930,6 +5960,21 @@ const ru: Record<string, string> = {
     "payment.delayedDesc": "Мы не получили подтверждение вовремя. Проверьте аккаунт или свяжитесь с поддержкой.",
     "payment.checkAccount": "Проверить аккаунт",
     "payment.contactSupport": "Связаться с поддержкой",
+
+    "admin.partner.checkActive":      "Поставщик активен",
+    "admin.partner.checkPartnerPage": "Страница партнёра опубликована",
+    "admin.partner.checkListings":    "Хотя бы одно активное объявление",
+    "admin.partner.checkIntegration": "Интеграция настроена",
+    "admin.partner.checkContract":    "Шаблон договора загружен",
+    "admin.partner.totalOrders":      "Всего заказов",
+    "admin.partner.totalRevenue":     "Общая выручка",
+    "admin.partner.activeListings":   "Активных объявлений",
+    "admin.partner.avgRating":        "Средний рейтинг",
+    "admin.partner.setupChecklist":   "Контрольный список настройки",
+    "admin.partner.noSyncActivity":   "Активности синхронизации нет.",
+    "admin.partner.recentSyncLog":    "Последний журнал синхронизации",
+    "common.showLess": "Скрыть",
+    "common.viewAll":  "Смотреть все",
 };
 
 
@@ -7831,6 +7876,21 @@ const lv: Record<string, string> = {
     "payment.delayedDesc": "Mēs nesaņēmām apstiprinājumu laikā. Lūdzu, pārbaudiet kontu vai sazinieties ar atbalstu.",
     "payment.checkAccount": "Pārbaudīt kontu",
     "payment.contactSupport": "Sazināties ar atbalstu",
+
+    "admin.partner.checkActive":      "Piegādātājs aktīvs",
+    "admin.partner.checkPartnerPage": "Partnera lapa publicēta",
+    "admin.partner.checkListings":    "Vismaz viens aktīvs sludinājums",
+    "admin.partner.checkIntegration": "Integrācija konfigurēta",
+    "admin.partner.checkContract":    "Līguma veidne augšupielādēta",
+    "admin.partner.totalOrders":      "Kopā pasūtījumi",
+    "admin.partner.totalRevenue":     "Kopējie ieņēmumi",
+    "admin.partner.activeListings":   "Aktīvie sludinājumi",
+    "admin.partner.avgRating":        "Vidējais vērtējums",
+    "admin.partner.setupChecklist":   "Iestatīšanas kontrolsaraksts",
+    "admin.partner.noSyncActivity":   "Sinhronizācijas aktivitātes nav.",
+    "admin.partner.recentSyncLog":    "Jaunākais sinhronizācijas žurnāls",
+    "common.showLess": "Rādīt mazāk",
+    "common.viewAll":  "Skatīt visus",
 };
 // ── Lithuanian ──────────────────────────
 const lt: Record<string, string> = {
@@ -9729,6 +9789,21 @@ const lt: Record<string, string> = {
     "payment.delayedDesc": "Negavome patvirtinimo laiku. Patikrinkite paskyrą arba susisiekite su pagalba.",
     "payment.checkAccount": "Patikrinti paskyrą",
     "payment.contactSupport": "Susisiekti su pagalba",
+
+    "admin.partner.checkActive":      "Tiekėjas aktyvus",
+    "admin.partner.checkPartnerPage": "Partnerio puslapis paskelbtas",
+    "admin.partner.checkListings":    "Bent vienas aktyvus skelbimas",
+    "admin.partner.checkIntegration": "Integracija sukonfigūruota",
+    "admin.partner.checkContract":    "Sutarties šablonas įkeltas",
+    "admin.partner.totalOrders":      "Iš viso užsakymų",
+    "admin.partner.totalRevenue":     "Bendros pajamos",
+    "admin.partner.activeListings":   "Aktyvūs skelbimai",
+    "admin.partner.avgRating":        "Vidutinis įvertinimas",
+    "admin.partner.setupChecklist":   "Sąrankos kontrolinis sąrašas",
+    "admin.partner.noSyncActivity":   "Sinchronizacijos veiklos nėra.",
+    "admin.partner.recentSyncLog":    "Paskutinis sinchronizacijos žurnalas",
+    "common.showLess": "Rodyti mažiau",
+    "common.viewAll":  "Peržiūrėti viską",
 };
 const translations: Record<Language, Record<string, string>> = { et, en, ru, lv, lt };
 

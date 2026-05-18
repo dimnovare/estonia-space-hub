@@ -219,7 +219,7 @@ export default function ProviderBilling() {
                   </Button>
                 ) : (
                   <Button variant="outline" size="sm" className="mt-3" asChild>
-                    <a href={`/contact?subject=${encodeURIComponent("Upgrade to " + plan.displayName)}`}>
+                    <a href={`/${language}/contact?subject=${encodeURIComponent("Upgrade to " + plan.displayName)}`}>
                       {plan.displayName === "Growth"
                         ? t("provider.billing.upgradeToGrowth")
                         : t("provider.billing.upgradeToBusiness")}

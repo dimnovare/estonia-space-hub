@@ -176,6 +176,7 @@ export default function AdminPartnerDetailPage() {
 
 // ─── Overview ──────────────────────────────────────────────────────────────
 function OverviewTab({ supplier: s }: { supplier: any }) {
+  const { t } = useLanguage();
   const [logOpen, setLogOpen] = useState(false);
   const { data: pollLog = [] } = useQuery({
     queryKey: ["admin-supplier-poll", s.id],
@@ -197,25 +198,25 @@ function OverviewTab({ supplier: s }: { supplier: any }) {
   );
 
   const checklist = [
-    { label: "Supplier active", done: s.isActive },
-    { label: "Partner page published", done: !!s.isPartnerPagePublished },
-    { label: "At least one active listing", done: (s.listingCount ?? 0) > 0 },
-    { label: "Integration configured", done: s.integrationType !== "manual" || (s.listingCount ?? 0) > 0 },
-    { label: "Contract template uploaded", done: contractTemplates.length > 0 },
+    { label: t("admin.partner.checkActive"),      done: s.isActive },
+    { label: t("admin.partner.checkPartnerPage"), done: !!s.isPartnerPagePublished },
+    { label: t("admin.partner.checkListings"),    done: (s.listingCount ?? 0) > 0 },
+    { label: t("admin.partner.checkIntegration"), done: s.integrationType !== "manual" || (s.listingCount ?? 0) > 0 },
+    { label: t("admin.partner.checkContract"),    done: contractTemplates.length > 0 },
   ];
 
   return (
     <div className="space-y-6">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Total orders" value={s.ordersTotal ?? 0} />
-        <Stat label="Total revenue" value={`€${(s.revenue ?? 0).toLocaleString()}`} />
-        <Stat label="Active listings" value={s.listingCount ?? 0} />
-        <Stat label="Avg rating" value={s.rating ? Number(s.rating).toFixed(1) : "—"} />
+        <Stat label={t("admin.partner.totalOrders")}   value={s.ordersTotal ?? 0} />
+        <Stat label={t("admin.partner.totalRevenue")}  value={`€${(s.revenue ?? 0).toLocaleString()}`} />
+        <Stat label={t("admin.partner.activeListings")} value={s.listingCount ?? 0} />
+        <Stat label={t("admin.partner.avgRating")}     value={s.rating ? Number(s.rating).toFixed(1) : "—"} />
       </div>
 
       {!checklist.every(c => c.done) && (
         <section className="rounded-xl border border-border bg-card p-5">
-          <h3 className="mb-3 text-sm font-semibold">Setup checklist</h3>
+          <h3 className="mb-3 text-sm font-semibold">{t("admin.partner.setupChecklist")}</h3>
           <ul className="space-y-1.5 text-sm">
             {checklist.map((c) => (
               <li key={c.label} className="flex items-center gap-2">
@@ -232,18 +233,18 @@ function OverviewTab({ supplier: s }: { supplier: any }) {
       {s.integrationType === "api" && (
         <section className="rounded-xl border border-border bg-card p-5">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold">Recent sync log</h3>
+            <h3 className="text-sm font-semibold">{t("admin.partner.recentSyncLog")}</h3>
             <button
               onClick={() => setLogOpen((v) => !v)}
               className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
             >
-              {logOpen ? "Show less" : "View all"}
+              {logOpen ? t("common.showLess") : t("common.viewAll")}
               <ChevronDown className={`h-3 w-3 transition-transform ${logOpen ? "rotate-180" : ""}`} />
             </button>
           </div>
           <div className="mt-3 space-y-1 text-xs">
             {pollLog.length === 0 ? (
-              <p className="text-muted-foreground">No sync activity yet.</p>
+              <p className="text-muted-foreground">{t("admin.partner.noSyncActivity")}</p>
             ) : (
               (logOpen ? pollLog : pollLog.slice(0, 3)).map((entry, i) => (
                 <div key={i} className="flex items-center justify-between rounded-lg border border-border px-3 py-1.5">
