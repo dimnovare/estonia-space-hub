@@ -111,17 +111,17 @@ export default function AdminPartnerDetailPage() {
               <h1 className="font-display text-2xl font-bold">{s.name}</h1>
               <div className="mt-1 flex flex-wrap items-center gap-1.5">
                 <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${s.isActive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
-                  {s.isActive ? "Active" : "Inactive"}
+                  {s.isActive ? t("common.active") : t("common.inactive")}
                 </span>
                 <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold uppercase text-muted-foreground">
                   {(s.tier ?? "starter")}
                 </span>
                 {s.isVerified && (
-                  <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">Verified</span>
+                  <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">{t("listing.badge.verified")}</span>
                 )}
                 {s.isFoundingPartner && (
                   <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-300">
-                    Founding partner
+                    {t("listing.badge.foundingPartner")}
                   </span>
                 )}
                 {s.slug && (
@@ -282,35 +282,35 @@ function ProfileTab({ supplier, onSave, pending }: { supplier: any; onSave: (p: 
     <section className="rounded-xl border border-border bg-card p-5">
       <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <label className="text-xs font-medium">Company name</label>
+          <label className="text-xs font-medium">{t("admin.profile.companyName")}</label>
           <input className={inp} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         </div>
         <div>
-          <label className="text-xs font-medium">Registry code</label>
+          <label className="text-xs font-medium">{t("admin.profile.registryCode")}</label>
           <input className={inp} value={form.registryCode} onChange={(e) => setForm({ ...form, registryCode: e.target.value })} />
         </div>
         <div>
-          <label className="text-xs font-medium">Contact name</label>
+          <label className="text-xs font-medium">{t("admin.profile.contactName")}</label>
           <input className={inp} value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} />
         </div>
         <div>
-          <label className="text-xs font-medium">Contact email</label>
+          <label className="text-xs font-medium">{t("admin.profile.contactEmail")}</label>
           <input className={inp} value={form.contactEmail} onChange={(e) => setForm({ ...form, contactEmail: e.target.value })} />
         </div>
         <div>
-          <label className="text-xs font-medium">Contact phone</label>
+          <label className="text-xs font-medium">{t("admin.profile.contactPhone")}</label>
           <input className={inp} value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })} />
         </div>
         <div>
-          <label className="text-xs font-medium">Country</label>
+          <label className="text-xs font-medium">{t("admin.profile.country")}</label>
           <select className={inp} value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })}>
-            <option value="EE">Estonia</option>
-            <option value="LV">Latvia</option>
-            <option value="LT">Lithuania</option>
+            <option value="EE">{t("admin.countryEE")}</option>
+            <option value="LV">{t("admin.countryLV")}</option>
+            <option value="LT">{t("admin.countryLT")}</option>
           </select>
         </div>
         <div className="md:col-span-2">
-          <label className="text-xs font-medium">Notes</label>
+          <label className="text-xs font-medium">{t("admin.profile.notes")}</label>
           <textarea className={`${inp} min-h-[80px] resize-y`} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
         </div>
       </div>
@@ -394,7 +394,7 @@ function CommercialTab({ supplier, onSave, pending }: { supplier: any; onSave: (
 
 // ─── Partner Page ──────────────────────────────────────────────────────────
 function PartnerPageTab({ supplier, onSave, pending }: { supplier: any; onSave: (p: any) => void; pending: boolean }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const initial = useMemo(() => ({
     slug: supplier.slug ?? "",
     isPartnerPagePublished: !!supplier.isPartnerPagePublished,
@@ -416,7 +416,7 @@ function PartnerPageTab({ supplier, onSave, pending }: { supplier: any; onSave: 
 
   const handleSave = () => {
     if (form.slug && !/^[a-z0-9-]+$/.test(form.slug)) {
-      toast.error("Slug must be lowercase letters, digits, dashes only");
+      toast.error(t("admin.partnerPage.slugValidation"));
       return;
     }
     const patch: any = { ...form };
@@ -437,55 +437,55 @@ function PartnerPageTab({ supplier, onSave, pending }: { supplier: any; onSave: 
         <div className="flex items-end gap-3">
           <div className="flex flex-1 items-center justify-between rounded-lg border border-border p-3">
             <div>
-              <div className="text-sm font-medium">Published</div>
-              <div className="text-[11px] text-muted-foreground">{form.isPartnerPagePublished ? "Visible publicly" : "Hidden"}</div>
+              <div className="text-sm font-medium">{t("admin.partnerPage.published")}</div>
+              <div className="text-[11px] text-muted-foreground">{form.isPartnerPagePublished ? t("admin.partnerPage.visiblePublicly") : t("admin.partnerPage.hidden")}</div>
             </div>
             <Switch checked={form.isPartnerPagePublished} onCheckedChange={(v) => setForm({ ...form, isPartnerPagePublished: v })} />
           </div>
           {form.slug && (
-            <a href={`/et/partner/${form.slug}`} target="_blank" rel="noopener noreferrer">
+            <a href={`/${language}/partner/${form.slug}`} target="_blank" rel="noopener noreferrer">
               <Button variant="outline" size="sm">
                 <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
-                Preview
+                {t("common.preview")}
               </Button>
             </a>
           )}
         </div>
         <div>
-          <label className="text-xs font-medium">Logo URL</label>
+          <label className="text-xs font-medium">{t("admin.partnerPage.logoUrl")}</label>
           <input className={inp} value={form.logoUrl} onChange={(e) => setForm({ ...form, logoUrl: e.target.value })} />
           {form.logoUrl && <img src={form.logoUrl} alt="" className="mt-2 h-16 rounded-lg border border-border object-contain p-1" />}
         </div>
         <div>
-          <label className="text-xs font-medium">Hero image URL</label>
+          <label className="text-xs font-medium">{t("admin.partnerPage.heroImageUrl")}</label>
           <input className={inp} value={form.heroImageUrl} onChange={(e) => setForm({ ...form, heroImageUrl: e.target.value })} />
           {form.heroImageUrl && <img src={form.heroImageUrl} alt="" className="mt-2 h-24 w-full rounded-lg border border-border object-cover" />}
         </div>
         <div className="md:col-span-2">
-          <label className="text-xs font-medium">Tagline</label>
+          <label className="text-xs font-medium">{t("admin.partnerPage.tagline")}</label>
           <input maxLength={160} className={inp} value={form.tagline} onChange={(e) => setForm({ ...form, tagline: e.target.value })} />
           <p className="mt-1 text-right text-[10px] text-muted-foreground">{form.tagline.length}/160</p>
         </div>
         <div>
-          <label className="text-xs font-medium">Founded year</label>
+          <label className="text-xs font-medium">{t("admin.partnerPage.foundedYear")}</label>
           <input type="number" className={inp} value={form.foundedYear} onChange={(e) => setForm({ ...form, foundedYear: e.target.value })} />
         </div>
         <div>
-          <label className="text-xs font-medium">Google Place ID</label>
+          <label className="text-xs font-medium">{t("admin.partnerPage.googlePlaceId")}</label>
           <input className={inp} placeholder="ChIJ..." value={form.googlePlaceId} onChange={(e) => setForm({ ...form, googlePlaceId: e.target.value })} />
         </div>
         <label className="flex items-center justify-between rounded-lg border border-border p-3">
-          <span className="text-sm">Verified</span>
+          <span className="text-sm">{t("listing.badge.verified")}</span>
           <Switch checked={form.isVerified} onCheckedChange={(v) => setForm({ ...form, isVerified: v })} />
         </label>
         <label className="flex items-center justify-between rounded-lg border border-border p-3">
-          <span className="text-sm">Founding partner</span>
+          <span className="text-sm">{t("listing.badge.foundingPartner")}</span>
           <Switch checked={form.foundingPartner} onCheckedChange={(v) => setForm({ ...form, foundingPartner: v })} />
         </label>
       </div>
 
       <div>
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Long description</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("admin.partnerPage.longDescription")}</h3>
         <div className="mt-2 inline-flex rounded-lg border border-border p-0.5">
           {(["et", "en", "ru"] as const).map((l) => (
             <button
@@ -878,15 +878,15 @@ function ContractsTab({ supplierId }: { supplierId: string }) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: listKey });
       setEditing(null);
-      toast.success("Saved");
+      toast.success(t("common.saved"));
     },
-    onError: (err: any) => toast.error(err?.message ?? "Save failed"),
+    onError: (err: any) => toast.error(err?.message ?? t("toast.saveFailed")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiClient.delete(`/admin/suppliers/${supplierId}/contracts/${id}`),
     onSuccess: () => { qc.invalidateQueries({ queryKey: listKey }); toast.success("Deleted"); },
-    onError: (err: any) => toast.error(err?.message ?? "Delete failed"),
+    onError: (err: any) => toast.error(err?.message ?? t("toast.saveFailed")),
   });
 
   const previewHtml = (html: string) => {

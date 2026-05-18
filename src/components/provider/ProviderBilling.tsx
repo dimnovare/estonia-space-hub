@@ -12,6 +12,7 @@ import { apiClient } from "@/services/apiClient";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import { withSupplier } from "@/lib/withSupplier";
 import { isSupplierContextRequired } from "@/lib/apiErrors";
+import { queryKeys } from "@/services/queryKeys";
 
 export default function ProviderBilling() {
   const { t, language } = useLanguage();
@@ -21,7 +22,7 @@ export default function ProviderBilling() {
   const supplierId = useImpersonatedSupplierId();
 
   const { data: supplierData, error: supplierError } = useQuery({
-    queryKey: ["supplier-profile-billing", supplierId],
+    queryKey: queryKeys.supplierProfile.byId(supplierId),
     queryFn: () => apiClient.get<{
       tier?: string;
       partnerDiscountRate?: number;
@@ -51,7 +52,7 @@ export default function ProviderBilling() {
   });
 
   const { data: bankDetails, isLoading: bankLoading, error: bankError } = useQuery<BankDetails>({
-    queryKey: ["bank-details", supplierId],
+    queryKey: queryKeys.bankDetails.bySupplierId(supplierId),
     queryFn: () => bankService.getBankDetails(supplierId),
     retry: false,
   });
@@ -61,7 +62,7 @@ export default function ProviderBilling() {
     isSupplierContextRequired(bankError);
 
   const { data: rebateInvoices = [] } = useQuery({
-    queryKey: ["supplier-rebate-invoices"],
+    queryKey: queryKeys.rebateInvoices.all(),
     queryFn: rebateService.getForSupplier,
     enabled: isRebate,
     staleTime: 60_000,
@@ -70,7 +71,7 @@ export default function ProviderBilling() {
   const saveBankMutation = useMutation({
     mutationFn: (data: BankDetails) => bankService.updateBankDetails(data, supplierId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["bank-details", supplierId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.bankDetails.bySupplierId(supplierId) });
       toast.success(t("toast.bankDetailsSaved"));
       setEditingBank(false);
     },

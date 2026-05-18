@@ -74,4 +74,7 @@ export const queryKeys = {
   supplierProfile: {
     byId: (supplierId: string | null) => ["supplier-profile", supplierId] as const,
   },
+  bankDetails: {
+    bySupplierId: (id: string | null) => ["bank-details", id] as const,
+  },
 };

@@ -52,6 +52,7 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
     openingHours: "",
     images: [] as string[],
     notes: "",
+    externalId: "",
   };
   const [newLoc, setNewLoc] = useState(emptyLoc);
 
@@ -140,6 +141,7 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
         openingHours: editLoc.openingHours,
         images: editLoc.images,
         notes: editLoc.notes,
+        externalId: editLoc.externalId || null,
       },
     });
   };
@@ -175,6 +177,7 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
       openingHours: selected.openingHours || "",
       images: selected.images || [],
       notes: selected.notes || "",
+      externalId: (selected as any).externalId ?? "",
     });
     setEditing(true);
   };
@@ -279,6 +282,20 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
               <div>
                 <label className="text-xs font-medium text-muted-foreground">{t("admin.locations.imageUrls")}</label>
                 <ImageUploader images={editLoc.images} onChange={imgs => setEditLoc({ ...editLoc, images: imgs })} />
+              </div>
+              <div>
+                <label className="text-xs font-medium">
+                  External ID
+                  <span className="ml-1 text-[10px] font-normal text-muted-foreground">
+                    (vendor's location ID — used for stock polling)
+                  </span>
+                </label>
+                <input
+                  className={inp}
+                  placeholder="e.g. vendor-loc-abc"
+                  value={editLoc.externalId ?? ""}
+                  onChange={(e) => setEditLoc({ ...editLoc, externalId: e.target.value })}
+                />
               </div>
               <GeocodeLookup
                 address={editLoc.address}
