@@ -49,7 +49,7 @@ export default function AdminPartnerDetailPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-supplier", partnerId] });
       qc.invalidateQueries({ queryKey: queryKeys.suppliers.all() });
-      toast.success("Saved");
+      toast.success(t("common.saved"), { duration: 4000 });
     },
     onError: (err: any) => toast.error(err?.message ?? "Save failed"),
   });
@@ -264,6 +264,7 @@ function OverviewTab({ supplier: s }: { supplier: any }) {
 
 // ─── Profile ───────────────────────────────────────────────────────────────
 function ProfileTab({ supplier, onSave, pending }: { supplier: any; onSave: (p: any) => void; pending: boolean }) {
+  const { t } = useLanguage();
   const initial = useMemo(() => ({
     name: supplier.name ?? "",
     contactName: supplier.contactName ?? "",
@@ -316,7 +317,7 @@ function ProfileTab({ supplier, onSave, pending }: { supplier: any; onSave: (p: 
       <div className="mt-4 flex justify-end">
         <Button onClick={() => onSave(form)} disabled={!dirty || pending}>
           {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-          Save changes
+          {t("common.saveChanges")}
         </Button>
       </div>
     </section>
@@ -325,6 +326,7 @@ function ProfileTab({ supplier, onSave, pending }: { supplier: any; onSave: (p: 
 
 // ─── Commercial ────────────────────────────────────────────────────────────
 function CommercialTab({ supplier, onSave, pending }: { supplier: any; onSave: (p: any) => void; pending: boolean }) {
+  const { t } = useLanguage();
   const initial = useMemo(() => ({
     tier: (supplier.tier ?? "starter") as "starter" | "standard" | "premium",
     billingModel: (supplier.billingModel ?? "marketplace") as "marketplace" | "rebate",
@@ -344,46 +346,46 @@ function CommercialTab({ supplier, onSave, pending }: { supplier: any; onSave: (
     <section className="space-y-4 rounded-xl border border-border bg-card p-5">
       <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <label className="text-xs font-medium">Tier</label>
+          <label className="text-xs font-medium">{t("admin.partner.tier")}</label>
           <select className={inp} value={form.tier} onChange={(e) => setForm({ ...form, tier: e.target.value as "starter" | "standard" | "premium" })}>
-            <option value="starter">Starter — Free</option>
-            <option value="standard">Standard — €49/mo</option>
-            <option value="premium">Premium — €99/mo</option>
+            <option value="starter">{t("admin.partner.tierStarterLabel")}</option>
+            <option value="standard">{t("admin.partner.tierStandardLabel")}</option>
+            <option value="premium">{t("admin.partner.tierPremiumLabel")}</option>
           </select>
           <p className="mt-1 text-[11px] text-muted-foreground">Monthly fee: {monthlyFee[form.tier]}</p>
         </div>
         <div>
-          <label className="text-xs font-medium">Billing model</label>
+          <label className="text-xs font-medium">{t("admin.partner.billingModel")}</label>
           <select className={inp} value={form.billingModel} onChange={(e) => setForm({ ...form, billingModel: e.target.value as "marketplace" | "rebate" })}>
-            <option value="marketplace">Marketplace (Ruumly pays out)</option>
-            <option value="rebate">Rebate (customer pays partner)</option>
+            <option value="marketplace">{t("admin.partner.billingMarketplace")}</option>
+            <option value="rebate">{t("admin.partner.billingRebate")}</option>
           </select>
         </div>
         <div>
-          <label className="text-xs font-medium">Partner discount rate (%)</label>
+          <label className="text-xs font-medium">{t("admin.partner.partnerDiscountRate")}</label>
           <input type="number" min={0} max={80} className={inp} value={form.partnerDiscountRate} onChange={(e) => setForm({ ...form, partnerDiscountRate: Number(e.target.value) })} />
         </div>
         <div>
-          <label className="text-xs font-medium">Client discount rate (%)</label>
+          <label className="text-xs font-medium">{t("admin.partner.clientDiscountRate")}</label>
           <input type="number" min={0} max={80} className={inp} value={form.clientDiscountRate} onChange={(e) => setForm({ ...form, clientDiscountRate: Number(e.target.value) })} />
         </div>
         <div>
-          <label className="text-xs font-medium">IBAN</label>
+          <label className="text-xs font-medium">{t("provider.profile.iban")}</label>
           <input className={inp} value={form.iban} onChange={(e) => setForm({ ...form, iban: e.target.value })} />
         </div>
         <div>
-          <label className="text-xs font-medium">Bank account name</label>
+          <label className="text-xs font-medium">{t("provider.profile.bankAccountName")}</label>
           <input className={inp} value={form.bankAccountName} onChange={(e) => setForm({ ...form, bankAccountName: e.target.value })} />
         </div>
         <div>
-          <label className="text-xs font-medium">Bank name</label>
+          <label className="text-xs font-medium">{t("provider.profile.bankName")}</label>
           <input className={inp} value={form.bankName} onChange={(e) => setForm({ ...form, bankName: e.target.value })} />
         </div>
       </div>
       <div className="flex justify-end">
         <Button onClick={() => onSave(form)} disabled={!dirty || pending}>
           {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-          Save changes
+          {t("common.saveChanges")}
         </Button>
       </div>
     </section>
@@ -392,6 +394,7 @@ function CommercialTab({ supplier, onSave, pending }: { supplier: any; onSave: (
 
 // ─── Partner Page ──────────────────────────────────────────────────────────
 function PartnerPageTab({ supplier, onSave, pending }: { supplier: any; onSave: (p: any) => void; pending: boolean }) {
+  const { t } = useLanguage();
   const initial = useMemo(() => ({
     slug: supplier.slug ?? "",
     isPartnerPagePublished: !!supplier.isPartnerPagePublished,
@@ -506,7 +509,7 @@ function PartnerPageTab({ supplier, onSave, pending }: { supplier: any; onSave: 
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={!dirty || pending}>
           {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-          Save changes
+          {t("common.saveChanges")}
         </Button>
       </div>
     </section>
@@ -515,6 +518,7 @@ function PartnerPageTab({ supplier, onSave, pending }: { supplier: any; onSave: 
 
 // ─── Integration ───────────────────────────────────────────────────────────
 function IntegrationTab({ supplierId }: { supplierId: string }) {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const { data: integration, isLoading } = useQuery({
     queryKey: ["admin-supplier-integration", supplierId],
@@ -545,6 +549,9 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
     fallbackPostingMode: ((integration?.fallbackPostingMode ?? "email") as string).toLowerCase() as "email" | "api" | "manual",
     pollingEnabled: !!integration?.pollingEnabled,
     pollingIntervalMinutes: typeof integration?.pollingIntervalMinutes === "number" ? integration.pollingIntervalMinutes : 60,
+    mappingProfile:     integration?.mappingProfile ?? "",
+    pollingEndpoint:    integration?.pollingEndpoint ?? "",
+    pollMappingProfile: integration?.pollMappingProfile ?? "",
   }), [integration]);
   const [form, setForm] = useState(initial);
   useEffect(() => setForm(initial), [initial]);
@@ -576,6 +583,9 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
   const handleSave = () => {
     const patch: any = { ...form };
     if (!patch.apiToken) delete patch.apiToken;
+    patch.mappingProfile     = form.mappingProfile.trim()     || null;
+    patch.pollingEndpoint    = form.pollingEndpoint.trim()    || null;
+    patch.pollMappingProfile = form.pollMappingProfile.trim() || null;
     saveMutation.mutate(patch);
   };
 
@@ -644,6 +654,25 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
                 <label className="text-xs font-medium">API endpoint</label>
                 <input className={inp} value={form.apiEndpoint} onChange={(e) => setForm({ ...form, apiEndpoint: e.target.value })} />
               </div>
+              {form.integrationType === "api" && (
+                <div className="md:col-span-2">
+                  <label className="text-xs font-medium">
+                    Stock polling endpoint
+                    <span className="ml-2 text-[10px] text-muted-foreground font-normal">
+                      (optional — falls back to API endpoint if empty)
+                    </span>
+                  </label>
+                  <input
+                    className={inp}
+                    placeholder="https://vendor.com/api/availability"
+                    value={form.pollingEndpoint}
+                    onChange={(e) => setForm({ ...form, pollingEndpoint: e.target.value })}
+                  />
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    GET endpoint for stock polling. Leave empty to use the API endpoint above.
+                  </p>
+                </div>
+              )}
               <div>
                 <label className="text-xs font-medium">API auth type</label>
                 <select className={inp} value={form.apiAuthType} onChange={(e) => setForm({ ...form, apiAuthType: e.target.value as "bearer" | "apikey" | "none" })}>
@@ -670,6 +699,86 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
         </div>
       </section>
 
+      {(form.integrationType === "api" || form.postingMode === "api") && (
+        <section className="rounded-xl border border-border bg-card p-5">
+          <h3 className="text-sm font-semibold">Order payload template</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            JSON template sent when dispatching orders to this vendor.
+            Leave empty to use the Ruumly default format.
+          </p>
+          <textarea
+            className="mt-3 w-full min-h-[160px] rounded-lg border border-border bg-background p-3 font-mono text-xs leading-relaxed focus:outline-none focus:ring-1 focus:ring-accent"
+            placeholder={'{\n  "orderRef": "{{orderId}}",\n  "start": "{{startDate}}",\n  "end": "{{endDate}}",\n  "customer": "{{customerName}}",\n  "price": {{supplierPrice}}\n}'}
+            value={form.mappingProfile}
+            onChange={(e) => setForm({ ...form, mappingProfile: e.target.value })}
+            spellCheck={false}
+          />
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {["{{orderId}}","{{listingTitle}}","{{listingType}}","{{startDate}}",
+              "{{endDate}}","{{duration}}","{{customerName}}","{{customerEmail}}",
+              "{{customerPhone}}","{{supplierPrice}}","{{extrasTotal}}",
+              "{{notes}}","{{extras}}"].map(v => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setForm(f => ({...f, mappingProfile: f.mappingProfile + v}))}
+                className="rounded bg-secondary px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {v}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {form.pollingEnabled && form.integrationType === "api" && (
+        <section className="rounded-xl border border-border bg-card p-5">
+          <h3 className="text-sm font-semibold">Availability response mapping</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Map vendor field names to Ruumly's expected names. Leave empty if the
+            vendor already uses: id, available, total.
+          </p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            {([
+              { label: "Location ID field", key: "id",        default: "id" },
+              { label: "Available units",   key: "available", default: "available" },
+              { label: "Total units",       key: "total",     default: "total" },
+            ] as const).map(({ label, key, default: def }) => {
+              let currentVal = "";
+              try { currentVal = (JSON.parse(form.pollMappingProfile || "{}") as Record<string,string>)[key] ?? ""; } catch {}
+              return (
+                <div key={key}>
+                  <label className="text-xs font-medium">{label}</label>
+                  <div className="mt-1 flex items-center gap-1.5">
+                    <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
+                      "{key}" ←
+                    </span>
+                    <input
+                      className={`flex-1 ${inp}`}
+                      placeholder={def}
+                      value={currentVal}
+                      onChange={(e) => {
+                        try {
+                          const obj: Record<string, string> = JSON.parse(form.pollMappingProfile || "{}");
+                          if (e.target.value) obj[key] = e.target.value;
+                          else delete obj[key];
+                          setForm(f => ({...f, pollMappingProfile: JSON.stringify(obj)}));
+                        } catch {
+                          setForm(f => ({...f, pollMappingProfile: JSON.stringify({ [key]: e.target.value })}));
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p className="mt-3 text-[10px] text-muted-foreground">
+            Expected vendor response: [{"{"}id_field": "loc-123", "available_field": 5, "total_field": 20{"}"}]
+          </p>
+        </section>
+      )}
+
       <section className="rounded-xl border border-border bg-card p-5">
         <h3 className="text-sm font-semibold">Connectivity monitoring</h3>
         <div className="mt-3 space-y-3">
@@ -690,9 +799,6 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
               </select>
             )}
           </div>
-          <p className="text-[11px] text-muted-foreground">
-            Currently checks connectivity only. Full availability sync coming soon.
-          </p>
           {form.integrationType === "api" && (
             <div className="flex items-center gap-3">
               <Button variant="outline" size="sm" onClick={handleTest} disabled={testing}>
@@ -738,7 +844,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={!dirty || pending}>
           {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-          Save changes
+          {t("common.saveChanges")}
         </Button>
       </div>
     </div>

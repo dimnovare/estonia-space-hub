@@ -293,8 +293,10 @@ export default function BookingPage() {
             setTimeout(() => setIsSubmitting(false), 5000);
             return;
           }
-        } catch (err) {
-          // Sentry captures this automatically via ErrorBoundary
+        } catch (err: any) {
+          console.error("Post-booking step failed:", err);
+          toast.error(err?.message || t("error.generic"));
+          setIsSubmitting(false);
         }
       }
 

@@ -18,10 +18,10 @@ interface Payout {
   supplierName: string;
   orderId: string;
   supplierAmount: number;
-  margin: number;
+  platformMargin: number;
   status: "pending" | "paid";
-  paidDate: string | null;
-  reference: string | null;
+  paidAt: string | null;
+  paymentReference: string | null;
 }
 
 interface PayoutSummary {
@@ -68,7 +68,7 @@ export default function AdminPayouts({ supplierId }: { supplierId?: string }) {
   const summary = useMemo<PayoutSummary>(() => backendSummary ?? ({
     totalPending: payouts.filter(p => p.status === "pending").reduce((s, p) => s + p.supplierAmount, 0),
     totalPaid: payouts.filter(p => p.status === "paid").reduce((s, p) => s + p.supplierAmount, 0),
-    totalMargin: payouts.reduce((s, p) => s + p.margin, 0),
+    totalMargin: payouts.reduce((s, p) => s + p.platformMargin, 0),
   }), [payouts, backendSummary]);
 
   const markAsPaid = async (id: string) => {
@@ -168,7 +168,7 @@ export default function AdminPayouts({ supplierId }: { supplierId?: string }) {
                   <td className="px-4 py-3 font-medium text-foreground">{p.supplierName}</td>
                   <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{p.orderId}</td>
                   <td className="px-4 py-3 text-right text-foreground">{p.supplierAmount.toFixed(2)}€</td>
-                  <td className="px-4 py-3 text-right text-accent font-medium">{p.margin.toFixed(2)}€</td>
+                  <td className="px-4 py-3 text-right text-accent font-medium">{p.platformMargin.toFixed(2)}€</td>
                   <td className="px-4 py-3 text-center">
                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                       p.status === "paid"
@@ -179,7 +179,7 @@ export default function AdminPayouts({ supplierId }: { supplierId?: string }) {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
-                    {p.paidDate ? new Date(p.paidDate).toLocaleDateString(locale) : "—"}
+                    {p.paidAt ? new Date(p.paidAt).toLocaleDateString(locale) : "—"}
                   </td>
                   <td className="px-4 py-3">
                     {p.status === "pending" ? (
@@ -205,7 +205,7 @@ export default function AdminPayouts({ supplierId }: { supplierId?: string }) {
                       </div>
                     ) : (
                       <span className="text-xs text-muted-foreground">
-                        {p.reference || "—"}
+                        {p.paymentReference || "—"}
                       </span>
                     )}
                   </td>
