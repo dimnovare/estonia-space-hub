@@ -110,4 +110,29 @@ export const queryKeys = {
   listingAvailability: {
     byId: (id: string) => ["listing-availability", id] as const,
   },
+  featuredPartners: {
+    all: () => ["featured-partners"] as const,
+  },
+  featureDefinitions: {
+    all: () => ["feature-definitions"] as const,
+  },
+  sizeBuckets: {
+    all: () => ["size-buckets"] as const,
+  },
+  partner: {
+    bySlug: (slug: string) => ["partner", slug] as const,
+    googleReviews: (placeId: string) => ["partner-google-reviews", placeId] as const,
+  },
+  platformSettingsPublic: {
+    all: () => ["platform-settings-public"] as const,
+  },
+  cityLocations: {
+    bySlug: (slug: string) => ["city-locations", slug] as const,
+  },
+  invoiceStatus: {
+    byId: (id: string) => ["invoice-status", id] as const,
+  },
+  supplierTeam: {
+    byId: (id: string | null) => ["supplier-team", id] as const,
+  },
 };

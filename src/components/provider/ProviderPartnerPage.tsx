@@ -94,10 +94,10 @@ export default function ProviderPartnerPage() {
     mutationFn: (patch: Record<string, unknown>) =>
       apiClient.patch<any>(withSupplier("/provider/partner-page", supplierId), patch),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["provider", "partner-page", supplierId] });
+      qc.invalidateQueries({ queryKey: queryKeys.providerPartnerPage.byId(supplierId) });
       toast.success(t("provider.partnerPage.saved"));
     },
-    onError: (err: any) => toast.error(err?.message || "Save failed"),
+    onError: (err: any) => toast.error(err?.message || t("toast.saveFailed")),
   });
 
   const handleSave = () => {

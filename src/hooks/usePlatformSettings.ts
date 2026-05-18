@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { publicSettingsService } from "@/services";
+import { queryKeys } from "@/services/queryKeys";
 
 const FALLBACK = {
   siteName:              "Ruumly",
@@ -21,7 +22,7 @@ const FALLBACK = {
 
 export function usePlatformSettings() {
   const { data, isError } = useQuery({
-    queryKey:  ["platform-settings-public"],
+    queryKey:  queryKeys.platformSettingsPublic.all(),
     queryFn:   async () => {
       const res = await publicSettingsService.getPublic();
       return res ?? FALLBACK;

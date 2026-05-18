@@ -8,6 +8,7 @@ import { trackEvent } from "@/lib/analytics";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { useAuth } from "@/contexts/AuthContext";
+import { queryKeys } from "@/services/queryKeys";
 
 export default function PaymentReturnPage() {
   const [searchParams] = useSearchParams();
@@ -19,7 +20,7 @@ export default function PaymentReturnPage() {
   const [isPollTimeout, setIsPollTimeout] = useState(false);
 
   const { data: invoice } = useQuery({
-    queryKey: ["invoice-status", bookingId],
+    queryKey: queryKeys.invoiceStatus.byId(bookingId ?? ""),
     queryFn: () => apiClient.get<{ status: string }>(`/invoices/by-booking/${bookingId}`),
     enabled: !!bookingId && isAuthenticated,
     refetchInterval: (query) => {

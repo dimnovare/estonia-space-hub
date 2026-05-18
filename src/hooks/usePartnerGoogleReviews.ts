@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { useCurrentLang } from "@/i18n/routing";
+import { queryKeys } from "@/services/queryKeys";
 
 export interface GoogleReview {
   authorName: string;
@@ -21,7 +22,7 @@ export interface GooglePlaceSummary {
 export function usePartnerGoogleReviews(slug: string | undefined, enabled: boolean) {
   const lang = useCurrentLang();
   return useQuery<GooglePlaceSummary | null>({
-    queryKey: ["partner-google-reviews", slug, lang],
+    queryKey: [...queryKeys.partner.googleReviews(slug ?? ""), lang],
     enabled: enabled && !!slug,
     queryFn: async () => {
       if (!slug) return null;

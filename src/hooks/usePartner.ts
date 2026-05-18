@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import type { PartnerProfile } from "@/types/partner";
+import { queryKeys } from "@/services/queryKeys";
 
 export function usePartner(slug: string | undefined) {
   return useQuery<PartnerProfile | null>({
-    queryKey: ["partner", slug],
+    queryKey: queryKeys.partner.bySlug(slug ?? ""),
     enabled: !!slug,
     queryFn: async () => {
       if (!slug) return null;

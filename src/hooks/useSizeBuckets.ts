@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
+import { queryKeys } from "@/services/queryKeys";
 
 export interface SizeBucket {
   code: "XS" | "S" | "M" | "L" | "XL";
@@ -9,7 +10,7 @@ export interface SizeBucket {
 
 export function useSizeBuckets() {
   return useQuery({
-    queryKey: ["size-buckets"],
+    queryKey: queryKeys.sizeBuckets.all(),
     queryFn: async () => apiClient.get<SizeBucket[]>("/listings/size-buckets"),
     staleTime: Infinity,
     gcTime: Infinity,

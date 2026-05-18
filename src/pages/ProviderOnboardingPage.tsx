@@ -12,6 +12,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { toast } from "sonner";
 import { trackEvent } from "@/lib/analytics";
+import { queryKeys } from "@/services/queryKeys";
 
 export default function ProviderOnboardingPage() {
   const [step, setStep] = useState(0);
@@ -56,7 +57,7 @@ export default function ProviderOnboardingPage() {
   ];
 
   const { data: availableCities = [] } = useQuery({
-    queryKey: ["available-cities"],
+    queryKey: queryKeys.cities.available(),
     queryFn: () => apiClient.get<{ city: string; country: string }[]>("/locations/cities"),
     staleTime: 5 * 60_000,
   });
@@ -85,7 +86,7 @@ export default function ProviderOnboardingPage() {
         serviceAreas: selectedAreas,
         notes: notes || undefined,
       });
-      await queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.users.me() });
       setSubmitted(true);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : t("onboard.error");

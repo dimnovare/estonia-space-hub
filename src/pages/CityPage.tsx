@@ -8,6 +8,7 @@ import { MapPin, Layers, Search, ArrowRight, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
+import { queryKeys } from "@/services/queryKeys";
 
 const CITY_MAP: Record<string, string> = {
   tallinn: "Tallinn",
@@ -25,7 +26,7 @@ export default function CityPage() {
   const city = CITY_MAP[slug || ""] || slug || "";
 
   const { data: locations = [], isLoading } = useQuery({
-    queryKey: ["city-locations", city],
+    queryKey: queryKeys.cityLocations.bySlug(city),
     queryFn: () => apiClient.get<any[]>(`/locations?city=${encodeURIComponent(city)}`),
     enabled: !!city,
     staleTime: 5 * 60_000,
