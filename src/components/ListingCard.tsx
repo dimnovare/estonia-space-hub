@@ -130,12 +130,11 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           </div>
         )}
 
-        {(listing as any).size && (listing as any).size > 0 && (() => {
-          const sizeVal = (listing as any).size as number;
-          const bucketCode = bucketCodeForSize(sizeBuckets, sizeVal);
+        {listing.sizeM2 && listing.sizeM2 > 0 && (() => {
+          const bucketCode = bucketCodeForSize(sizeBuckets, listing.sizeM2!);
           return (
             <p className="mt-2 text-xs text-muted-foreground tabular-nums">
-              {sizeVal} {(listing as any).sizeUnit || "m²"}
+              {listing.sizeM2} m²
               {bucketCode && <span className="ml-1">· {bucketCode}</span>}
             </p>
           );

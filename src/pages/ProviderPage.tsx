@@ -42,7 +42,7 @@ const getBusinessFeatures = (t: (k: string) => string) => [
 
 export default function ProviderPage() {
   const { t } = useLanguage();
-  const settings = usePlatformSettings() as any;
+  const settings = usePlatformSettings();
   const featuredPartners: { name: string; logoUrl: string }[] = Array.isArray(settings?.featuredPartners)
     ? settings.featuredPartners
     : [];

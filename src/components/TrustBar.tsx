@@ -5,7 +5,7 @@ import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 export default function TrustBar() {
   const { t } = useLanguage();
-  const settings = usePlatformSettings() as any;
+  const settings = usePlatformSettings();
   const showStats = String(settings.aboutPage?.showStats ?? "false") === "true";
   const { data: allResult, isLoading: listingsLoading } = useAllListings();
   const { data: bookingStats, isLoading: statsLoading } = useBookingStats(showStats);

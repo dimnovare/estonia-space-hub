@@ -5,7 +5,7 @@ import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 export default function Footer() {
   const { t } = useLanguage();
-  const settings = usePlatformSettings() as any;
+  const settings = usePlatformSettings();
   const aboutEnabled = String(settings.aboutPage?.enabled ?? "true") !== "false";
   const blogEnabled = String(settings.blog?.enabled ?? "false") === "true";
   const blogInFooter = String(settings.blog?.showInFooter ?? "true") !== "false";

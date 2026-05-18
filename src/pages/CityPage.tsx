@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { useListings } from "@/hooks/queries";
 import { useLanguage } from "@/i18n/LanguageContext";
+import type { Listing } from "@/services/types";
 import { SEO } from "@/components/SEO";
 import { MapPin, Layers, Search, ArrowRight, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,9 +36,7 @@ export default function CityPage() {
   // Fall back to top listings when no Locations exist for this city —
   // keeps CityPage useful for cities that only have standalone single-listing sites.
   const { data: listingsResult } = useListings({ city });
-  const cityListings: any[] = Array.isArray(listingsResult)
-    ? listingsResult
-    : (listingsResult as any)?.data || [];
+  const cityListings: Listing[] = listingsResult?.data ?? [];
 
   const topItems = locations.length > 0
     ? locations.slice(0, 4).map((loc: any) => ({

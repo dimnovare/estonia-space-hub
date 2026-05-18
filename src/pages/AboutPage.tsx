@@ -45,7 +45,7 @@ function FounderPhoto({ src, alt }: { src?: string | null; alt: string }) {
 
 export default function AboutPage() {
   const { t, language } = useLanguage();
-  const settings = usePlatformSettings() as any;
+  const settings = usePlatformSettings();
 
   const enabled = String(settings.aboutPage?.enabled ?? "true") !== "false";
   const showStats = String(settings.aboutPage?.showStats ?? "false") === "true";
