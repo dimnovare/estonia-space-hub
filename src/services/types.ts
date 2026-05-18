@@ -326,6 +326,7 @@ export interface SupplierLocation {
   rating?: number;
   reviewCount?: number;
   bestCustomerDiscount?: number | null;
+  externalId?: string | null;           // vendor-side ID used for stock polling
 }
 
 export interface WarehouseListing extends ListingBase {
@@ -340,7 +341,7 @@ export interface WarehouseListing extends ListingBase {
   forklift: boolean;
   shortTerm: boolean;
   longTerm: boolean;
-  features: string[];
+  features: Record<string, unknown>;    // backend: Dictionary<string, object>
 }
 
 export interface MovingListing extends ListingBase {

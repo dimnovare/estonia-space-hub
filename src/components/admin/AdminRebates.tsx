@@ -39,6 +39,17 @@ function formatPeriod(year: number, month: number): string {
   return `${year}-${String(month).padStart(2, "0")}`;
 }
 
+interface RebateInvoice {
+  id: string;
+  supplierId: string;
+  supplierName: string;
+  period: string;
+  amount: number;
+  status: "pending" | "paid";
+  issuedAt: string;
+  paidAt: string | null;
+}
+
 const statusMap: Record<string, { labelKey: string; label: string; className: string }> = {
   draft: { labelKey: "rebate.draft", label: "Draft", className: "bg-secondary text-muted-foreground" },
   sent: { labelKey: "rebate.sent", label: "Sent", className: "bg-blue-100 text-blue-700" },
@@ -57,7 +68,7 @@ export default function AdminRebates({ supplierId }: { supplierId?: string }) {
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.rebateInvoices.byPeriod(period),
-    queryFn: () => apiClient.get(`/admin/rebate-invoices?period=${period}`),
+    queryFn: () => apiClient.get<{ data: RebateInvoice[] }>(`/admin/rebate-invoices?period=${period}`),
     staleTime: 30_000,
   });
 
@@ -93,7 +104,7 @@ export default function AdminRebates({ supplierId }: { supplierId?: string }) {
     onError: (err: any) => toast.error(err?.message || t("admin.rebates.error")),
   });
 
-  const invoices: any[] = Array.isArray(data) ? data : (data as any)?.data ?? (data as any)?.items ?? [];
+  const invoices = data?.data ?? [];
 
   const inp = "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
 

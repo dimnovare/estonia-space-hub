@@ -43,12 +43,11 @@ export default function AdminPayouts({ supplierId }: { supplierId?: string }) {
 
   const fetchPayouts = () => {
     setLoading(true);
-    apiClient.get<{ entries: Payout[]; summary: PayoutSummary } | Payout[]>("/admin/payouts")
+    apiClient.get<{ entries: Payout[]; summary: PayoutSummary; total: number; page: number; limit: number; hasMore: boolean }>("/admin/payouts")
       .then(data => {
-        const arr = Array.isArray(data) ? data :
-          (data as any).entries ?? (data as any).data ?? [];
+        const arr = data.entries ?? [];
         setPayouts(arr);
-        const bs = (data as any).summary;
+        const bs = data.summary;
         if (bs) setBackendSummary(bs);
       })
       .catch((err: any) => toast.error(err?.message || t("admin.payouts.loadFailed")))

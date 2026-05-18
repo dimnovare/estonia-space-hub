@@ -1,3 +1,4 @@
+import React from "react";
 import { Eye, Package, Users, DollarSign, TrendingUp, AlertTriangle } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
 import { useSuppliers } from "@/hooks/queries";
@@ -53,7 +54,7 @@ export default function AdminDashboard() {
     staleTime: 60_000,
   });
 
-  const statCards = [
+  const statCards: { label: string; value: string; icon: React.ElementType; notes?: string }[] = [
     { label: t("admin.stats.listings"), value: stats?.totalListings?.toString() ?? "—", icon: Eye },
     { label: t("admin.stats.orders"), value: stats?.totalOrders?.toString() ?? orders.length.toString(), icon: Package },
     { label: t("admin.stats.users"), value: users.length.toString(), icon: Users },
@@ -63,7 +64,7 @@ export default function AdminDashboard() {
         ? `€${stats.totalRevenue.toLocaleString()}`
         : `€${suppliers.reduce((s, sup) => s + (sup.revenue ?? 0), 0).toLocaleString()}`,
       icon: DollarSign,
-      note: t("admin.stats.revenueAwaitingPayments"),
+      notes: t("admin.stats.revenueAwaitingPayments"),
     },
   ];
 
@@ -85,8 +86,8 @@ export default function AdminDashboard() {
                 <Icon className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="mt-2 font-display text-2xl font-bold">{s.value}</div>
-              {(s as any).note && (
-                <div className="mt-1 text-[11px] text-muted-foreground">{(s as any).note}</div>
+              {s.notes && (
+                <div className="mt-1 text-[11px] text-muted-foreground">{s.notes}</div>
               )}
             </div>
           );

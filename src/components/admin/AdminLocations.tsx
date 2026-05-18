@@ -177,7 +177,7 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
       openingHours: selected.openingHours || "",
       images: selected.images || [],
       notes: selected.notes || "",
-      externalId: (selected as any).externalId ?? "",
+      externalId: selected.externalId ?? "",
     });
     setEditing(true);
   };
