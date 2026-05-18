@@ -7,6 +7,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import { withSupplier } from "@/lib/withSupplier";
+import { queryKeys } from "@/services/queryKeys";
 import { useAuth } from "@/contexts/AuthContext";
 import { isSupplierContextRequired } from "@/lib/apiErrors";
 
@@ -18,7 +19,7 @@ export default function ProviderProfile() {
   const isAdmin = user?.role === "admin";
 
   const { data: profile, isLoading, error } = useQuery({
-    queryKey: ["supplier-profile", supplierId],
+    queryKey: queryKeys.supplierProfile.byId(supplierId),
     queryFn: () => apiClient.get<any>(withSupplier("/supplier/profile", supplierId)),
     retry: false,
   });
@@ -57,7 +58,7 @@ export default function ProviderProfile() {
         contactPhone: formData.phone,
       });
       toast.success(t("toast.profileSaved"));
-      qc.invalidateQueries({ queryKey: ["supplier-profile", supplierId] });
+      qc.invalidateQueries({ queryKey: queryKeys.supplierProfile.byId(supplierId) });
     } catch (err: any) {
       toast.error(err?.message || t("toast.saveFailed"));
     }

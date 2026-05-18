@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useSearchParams } from "@/i18n/routing";
 import { useQuery } from "@tanstack/react-query";
 import { supplierService } from "@/services";
+import { queryKeys } from "@/services/queryKeys";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
 import AdminSidebar from "@/components/admin/AdminSidebar";
@@ -24,7 +25,7 @@ export default function AdminPage() {
   const activeTab = searchParams.get("tab") || "dashboard";
   const { t } = useLanguage();
   const { data: suppliers = [] } = useQuery({
-    queryKey: ["suppliers"],
+    queryKey: queryKeys.suppliers.all(),
     queryFn: () => supplierService.getAll(),
   });
   const [filterSupplierId, setFilterSupplierId] = useState<string>("");

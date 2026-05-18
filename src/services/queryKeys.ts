@@ -31,11 +31,14 @@ export const queryKeys = {
     all: () => ["invoices"] as const,
   },
   locations: {
-    all: (params?: object) => ["locations", params] as const,
+    all: (params?: object) => params
+      ? ["locations", params] as const
+      : ["locations"] as const,
     byId: (id: string) => ["location", id] as const,
   },
   messages: {
     byBooking: (bookingId: string) => ["messages", bookingId] as const,
+    unread: () => ["messages-unread"] as const,
   },
   integrations: {
     all: () => ["integration-settings"] as const,
@@ -76,5 +79,35 @@ export const queryKeys = {
   },
   bankDetails: {
     bySupplierId: (id: string | null) => ["bank-details", id] as const,
+  },
+  adminSupplier: {
+    byId: (id: string) => ["admin-supplier", id] as const,
+  },
+  adminSupplierIntegration: {
+    byId: (id: string) => ["admin-supplier-integration", id] as const,
+  },
+  adminSupplierPoll: {
+    byId: (id: string | undefined) => ["admin-supplier-poll", id ?? null] as const,
+  },
+  adminContractTemplates: {
+    bySupplierId: (id: string) => ["admin-contract-templates", id] as const,
+  },
+  cities: {
+    available: () => ["available-cities"] as const,
+  },
+  supplierStats: {
+    byId: (id: string | null) => ["supplier-stats", id] as const,
+  },
+  supplierAnalytics: {
+    byId: (id: string | null) => ["supplier-analytics", id] as const,
+  },
+  providerPartnerPage: {
+    byId: (id: string | null) => ["provider", "partner-page", id] as const,
+  },
+  contractTemplates: {
+    byId: (id: string) => ["contract-templates", id] as const,
+  },
+  listingAvailability: {
+    byId: (id: string) => ["listing-availability", id] as const,
   },
 };

@@ -7,6 +7,7 @@ import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { withSupplier } from "@/lib/withSupplier";
+import { queryKeys } from "@/services/queryKeys";
 
 export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () => void }) {
   const { t } = useLanguage();
@@ -14,7 +15,7 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
   const { data: allOrders = [], isLoading: ordersLoading } = useOrders(supplierId ?? undefined);
   const { data: locations = [] } = useLocations(supplierId ? { supplierId } : undefined);
   const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ["supplier-stats", supplierId],
+    queryKey: queryKeys.supplierStats.byId(supplierId),
     queryFn: () => apiClient.get<{
       totalBookings:     number;
       thisMonthBookings: number;

@@ -19,6 +19,7 @@ import BookingInlineAuth from "@/components/BookingInlineAuth";
 import ReservationCountdown from "@/components/ReservationCountdown";
 import ContractSigningModal from "@/components/ContractSigningModal";
 import { trackEvent } from "@/lib/analytics";
+import { queryKeys } from "@/services/queryKeys";
 import { z } from "zod";
 import { Controller } from "react-hook-form";
 import { Calendar as CalendarComp } from "@/components/ui/calendar";
@@ -32,7 +33,7 @@ const dateFnsLocaleMap = { et, en: enUS, ru, lv, lt } as const;
 function ContractCta({ bookingId, onSign }: { bookingId: string; onSign: () => void }) {
   const { t } = useLanguage();
   const { data } = useQuery({
-    queryKey: ["contract-templates", bookingId],
+    queryKey: queryKeys.contractTemplates.byId(bookingId),
     queryFn: () => apiClient.get<any>(`/contracts/templates?bookingId=${bookingId}`),
     enabled: !!bookingId,
   });
@@ -206,7 +207,7 @@ export default function BookingPage() {
   const watchedEndDate = detailsForm.watch("endDate");
 
   const { data: availability } = useQuery({
-    queryKey: ["listing-availability", listing?.id, watchedStartDate, watchedEndDate],
+    queryKey: [...queryKeys.listingAvailability.byId(listing?.id ?? ""), watchedStartDate, watchedEndDate],
     queryFn: () => apiClient.get<{
       totalUnits: number;
       bookedCount: number;

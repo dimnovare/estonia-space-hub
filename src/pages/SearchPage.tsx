@@ -18,6 +18,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { trackEvent } from "@/lib/analytics";
 import { SizeBucketFilter } from "@/components/search/SizeBucketFilter";
 import StorageSizeCalculator from "@/components/StorageSizeCalculator";
+import { queryKeys } from "@/services/queryKeys";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
@@ -32,7 +33,7 @@ export default function SearchPage() {
 
   const { data: featureDefs = {} } = useFeatureDefinitions();
   const { data: availableCities = [] } = useQuery({
-    queryKey: ["available-cities"],
+    queryKey: queryKeys.cities.available(),
     queryFn: () => apiClient.get<{ city: string; country: string }[]>("/locations/cities"),
     staleTime: 5 * 60_000,
   });

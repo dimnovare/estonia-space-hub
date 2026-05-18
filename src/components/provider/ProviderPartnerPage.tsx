@@ -6,6 +6,7 @@ import { apiClient } from "@/services/apiClient";
 import { useAuth } from "@/contexts/AuthContext";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import { withSupplier } from "@/lib/withSupplier";
+import { queryKeys } from "@/services/queryKeys";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 
@@ -64,7 +65,7 @@ export default function ProviderPartnerPage() {
   const isAdmin = user?.role === "admin";
 
   const { data, isLoading } = useQuery({
-    queryKey: ["provider", "partner-page", supplierId],
+    queryKey: queryKeys.providerPartnerPage.byId(supplierId),
     queryFn: () => apiClient.get<any>(withSupplier("/provider/partner-page", supplierId)),
     staleTime: 30_000,
   });

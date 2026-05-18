@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import { withSupplier } from "@/lib/withSupplier";
+import { queryKeys } from "@/services/queryKeys";
 
 export default function ProviderAnalytics() {
   const { t, language } = useLanguage();
@@ -14,7 +15,7 @@ export default function ProviderAnalytics() {
   const locale = language === "et" ? "et-EE" : language === "ru" ? "ru-RU" : "en-GB";
 
   const { data: analyticsData } = useQuery({
-    queryKey: ["supplier-analytics", supplierId],
+    queryKey: queryKeys.supplierAnalytics.byId(supplierId),
     queryFn: () => apiClient.get<{
       monthly: { year: number; month: number; bookings: number; revenue: number }[];
       totalViews: number;

@@ -18,6 +18,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { trackEvent } from "@/lib/analytics";
 import { formatPriceUnit } from "@/lib/priceUnit";
+import { queryKeys } from "@/services/queryKeys";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -441,7 +442,7 @@ export default function ProviderListings() {
                     if (!confirm(t("provider.listings.deleteLocationConfirm"))) return;
                     try {
                       await apiClient.delete(`/locations/${loc.id}`);
-                      queryClient.invalidateQueries({ queryKey: ["locations"] });
+                      queryClient.invalidateQueries({ queryKey: queryKeys.locations.all() });
                       toast.success(t("provider.listings.locationDeleted"));
                     } catch (err: any) {
                       toast.error(err?.message || t("provider.listings.deleteFailed"));
@@ -548,7 +549,7 @@ export default function ProviderListings() {
                                     if (!confirm(t("provider.listings.deleteUnitConfirm") || "Delete this unit?")) return;
                                     try {
                                       await apiClient.delete(`/locations/${loc.id}/units/${unit.id}`);
-                                      queryClient.invalidateQueries({ queryKey: ["locations"] });
+                                      queryClient.invalidateQueries({ queryKey: queryKeys.locations.all() });
                                       toast.success(t("toast.unitDeleted") || "Unit deleted");
                                     } catch (err: any) {
                                       toast.error(err?.message || t("provider.listings.deleteFailed"));
@@ -720,7 +721,7 @@ function EditUnitDialog({
           ),
         }
       );
-      queryClient.invalidateQueries({ queryKey: ["locations"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.locations.all() });
       toast.success(t("toast.unitUpdated") || "Unit updated");
       onOpenChange(false);
     } catch (err: any) {

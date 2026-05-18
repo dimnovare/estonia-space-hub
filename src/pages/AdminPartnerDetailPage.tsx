@@ -39,7 +39,7 @@ export default function AdminPartnerDetailPage() {
   const qc = useQueryClient();
 
   const { data: supplier, isLoading } = useQuery({
-    queryKey: ["admin-supplier", partnerId],
+    queryKey: queryKeys.adminSupplier.byId(partnerId),
     queryFn: () => supplierService.getById(partnerId),
     enabled: !!partnerId,
   });
@@ -47,7 +47,7 @@ export default function AdminPartnerDetailPage() {
   const updateMutation = useMutation({
     mutationFn: (patch: Record<string, unknown>) => supplierService.update(partnerId, patch),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["admin-supplier", partnerId] });
+      qc.invalidateQueries({ queryKey: queryKeys.adminSupplier.byId(partnerId) });
       qc.invalidateQueries({ queryKey: queryKeys.suppliers.all() });
       toast.success(t("common.saved"), { duration: 4000 });
     },
@@ -57,7 +57,7 @@ export default function AdminPartnerDetailPage() {
   const syncMutation = useMutation({
     mutationFn: () => supplierService.syncNow(partnerId),
     onSuccess: (res) => {
-      qc.invalidateQueries({ queryKey: ["admin-supplier", partnerId] });
+      qc.invalidateQueries({ queryKey: queryKeys.adminSupplier.byId(partnerId) });
       toast.success(res?.message || `Sync OK${res?.unitsRefreshed ? ` — ${res.unitsRefreshed} units` : ""}`);
     },
     onError: (err: any) => toast.error(err?.message ?? "Sync failed"),
@@ -179,12 +179,12 @@ function OverviewTab({ supplier: s }: { supplier: any }) {
   const { t } = useLanguage();
   const [logOpen, setLogOpen] = useState(false);
   const { data: pollLog = [] } = useQuery({
-    queryKey: ["admin-supplier-poll", s.id],
+    queryKey: queryKeys.adminSupplierPoll.byId(s.id),
     queryFn: () => supplierService.getPollLog(s.id, 10),
     enabled: !!s.id,
   });
   const { data: contractTemplates = [] } = useQuery({
-    queryKey: ["admin-contract-templates", s.id],
+    queryKey: queryKeys.adminContractTemplates.bySupplierId(s.id),
     queryFn: () => apiClient.get<any[]>(`/admin/suppliers/${s.id}/contracts`),
     enabled: !!s.id,
     staleTime: 60_000,
@@ -521,7 +521,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
   const { t } = useLanguage();
   const qc = useQueryClient();
   const { data: integration, isLoading } = useQuery({
-    queryKey: ["admin-supplier-integration", supplierId],
+    queryKey: queryKeys.adminSupplierIntegration.byId(supplierId),
     queryFn: () => apiClient.get<any>(`/admin/suppliers/${supplierId}/integration`),
     enabled: !!supplierId,
   });
@@ -531,8 +531,8 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
       apiClient.patch(`/admin/suppliers/${supplierId}/integration`, patch),
     onSuccess: () => {
       toast.success("Integration saved");
-      qc.invalidateQueries({ queryKey: ["admin-supplier-integration", supplierId] });
-      qc.invalidateQueries({ queryKey: ["admin-supplier", supplierId] });
+      qc.invalidateQueries({ queryKey: queryKeys.adminSupplierIntegration.byId(supplierId) });
+      qc.invalidateQueries({ queryKey: queryKeys.adminSupplier.byId(supplierId) });
       qc.invalidateQueries({ queryKey: queryKeys.suppliers.all() });
     },
     onError: (err: any) => toast.error(err?.message ?? "Save failed"),
@@ -559,7 +559,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
 
   const [logOpen, setLogOpen] = useState(false);
   const { data: pollLog = [] } = useQuery({
-    queryKey: ["admin-supplier-poll", supplierId, "tab"],
+    queryKey: queryKeys.adminSupplierPoll.byId(supplierId),
     queryFn: () => supplierService.getPollLog(supplierId, 10),
     enabled: logOpen,
   });
@@ -857,7 +857,7 @@ type ContractTpl = { id: string; name: string; html: string; isDefault?: boolean
 function ContractsTab({ supplierId }: { supplierId: string }) {
   const qc = useQueryClient();
   const { t } = useLanguage();
-  const listKey = ["admin-contract-templates", supplierId];
+  const listKey = queryKeys.adminContractTemplates.bySupplierId(supplierId);
   const { data: templates = [], isLoading } = useQuery({
     queryKey: listKey,
     queryFn: () => apiClient.get<ContractTpl[]>(`/admin/suppliers/${supplierId}/contracts`),

@@ -2,13 +2,14 @@ import { Activity, RefreshCw } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { auditService } from "@/services";
+import { queryKeys } from "@/services/queryKeys";
 import type { AuditLogEntry } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function AdminAudit() {
   const { t } = useLanguage();
   const { data: logs = [], isLoading, isError, refetch } = useQuery<AuditLogEntry[]>({
-    queryKey: ["audit-log"],
+    queryKey: queryKeys.auditLog.all(),
     queryFn: () => auditService.getAll(),
     staleTime: 30_000,
     retry: 2,

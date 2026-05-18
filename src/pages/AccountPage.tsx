@@ -29,6 +29,7 @@ import type { Booking, BookingStatus } from "@/services/types";
 import type { Invoice, Message } from "@/services/types";
 import { SkeletonList } from "@/components/SkeletonCard";
 import { invoiceService } from "@/services";
+import { queryKeys } from "@/services/queryKeys";
 import ReservationCountdown from "@/components/ReservationCountdown";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useAllListings } from "@/hooks/queries";
@@ -116,7 +117,7 @@ export default function AccountPage() {
 
   const handleLogout = () => { logout(); navigate("/"); };
   const { data: unreadData } = useQuery({
-    queryKey: ["messages-unread"],
+    queryKey: queryKeys.messages.unread(),
     queryFn: () => apiClient.get<{ count: number }>("/messages/unread-count"),
     enabled: isAuthenticated,
     staleTime: 30_000,
@@ -283,7 +284,7 @@ function BookingCard({ booking }: { booking: Booking }) {
   const cancelMutation = useMutation({
     mutationFn: (id: string) => apiClient.patch(`/bookings/${id}/cancel`, {}),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.bookings.all() });
       setOpen(false);
       toast.success(t("toast.bookingCancelled"));
     },
@@ -504,7 +505,7 @@ function AccountMessages() {
   const [newMsg, setNewMsg] = useState("");
 
   const { data: activeMessages = [], isLoading: msgsLoading } = useQuery({
-    queryKey: ["messages", selectedBooking],
+    queryKey: queryKeys.messages.byBooking(selectedBooking ?? ""),
     queryFn: () => messageService.getByBookingId(selectedBooking!),
     enabled: !!selectedBooking,
     refetchInterval: 15_000,
@@ -514,7 +515,7 @@ function AccountMessages() {
     mutationFn: ({ bookingId, text }: { bookingId: string; text: string }) =>
       messageService.send(bookingId, text),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["messages", selectedBooking] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.messages.byBooking(selectedBooking ?? "") });
       setNewMsg("");
     },
     onError: (err: any) => {
@@ -1101,7 +1102,7 @@ function AccountBilling() {
   const { t } = useLanguage();
   const generateInvoicePdf = useGenerateInvoicePdf();
   const { data: invoices = [], isLoading, isError } = useQuery({
-    queryKey: ["invoices"],
+    queryKey: queryKeys.invoices.all(),
     queryFn: () => invoiceService.getAll(),
     staleTime: 30_000,
   });

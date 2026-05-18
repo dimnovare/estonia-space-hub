@@ -15,6 +15,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import { withSupplier } from "@/lib/withSupplier";
+import { queryKeys } from "@/services/queryKeys";
 import ProviderOverview from "@/components/provider/ProviderOverview";
 import ProviderIncomingOrders from "@/components/provider/ProviderIncomingOrders";
 import ProviderListings from "@/components/provider/ProviderListings";
@@ -55,7 +56,7 @@ export default function ProviderDashboardPage() {
   const supplierId = useImpersonatedSupplierId();
 
   const { data: supplierProfile } = useQuery<any>({
-    queryKey: ["supplier-profile", supplierId],
+    queryKey: queryKeys.supplierProfile.byId(supplierId),
     queryFn: () => apiClient.get(withSupplier("/supplier/profile", supplierId)),
     enabled: !!user && (user.role !== "admin" || !!supplierId),
     staleTime: 30_000,

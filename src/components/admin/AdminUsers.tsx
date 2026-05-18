@@ -11,6 +11,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useAdminUsers } from "@/hooks/useAdminUsers";
+import { queryKeys } from "@/services/queryKeys";
 
 export default function AdminUsers() {
   const { t } = useLanguage();
@@ -33,7 +34,7 @@ export default function AdminUsers() {
   const hasMore = usersPage?.hasMore ?? false;
 
   const { data: suppliers = [] } = useQuery({
-    queryKey: ["suppliers"],
+    queryKey: queryKeys.suppliers.all(),
     queryFn: () => supplierService.getAll(),
   });
 

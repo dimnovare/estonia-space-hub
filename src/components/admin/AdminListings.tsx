@@ -27,7 +27,7 @@ export default function AdminListings() {
   });
 
   const { data: suppliers = [] } = useQuery({
-    queryKey: ["suppliers"],
+    queryKey: queryKeys.suppliers.all(),
     queryFn: () => supplierService.getAll(),
   });
 
