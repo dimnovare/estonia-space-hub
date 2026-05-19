@@ -16,6 +16,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { trackEvent } from "@/lib/analytics";
+import { toast } from "sonner";
 import { SizeBucketFilter } from "@/components/search/SizeBucketFilter";
 import StorageSizeCalculator from "@/components/StorageSizeCalculator";
 import { queryKeys } from "@/services/queryKeys";
@@ -152,7 +153,7 @@ export default function SearchPage() {
       await apiClient.post("/auth/notify-interest", { email: notifyEmail, city: cityFilter || "any" });
       setNotifySuccess(true);
     } catch {
-      setNotifySuccess(true);
+      toast.error(t("toast.error"));
     } finally {
       setNotifyLoading(false);
     }

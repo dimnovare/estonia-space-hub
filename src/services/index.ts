@@ -505,6 +505,9 @@ export const providerService = {
   async apply(data: SupplierApplication): Promise<void> {
     await apiClient.post("/auth/apply-provider", data);
   },
+  async applyPublic(data: SupplierApplication): Promise<{ applicationId: string; message: string }> {
+    return apiClient.post("/auth/apply-provider-public", data);
+  },
 };
 
 export type {

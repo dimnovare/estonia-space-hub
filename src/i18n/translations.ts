@@ -292,6 +292,7 @@ const et: Record<string, string> = {
     "onboard.success.pending": "⏳ Ülevaatamisel",
     "onboard.success.docsNote": "Võime verificeerimise käigus paluda lisadokumente.",
     "onboard.success.back": "Tagasi avalehele",
+    "onboard.success.checkEmail": "Kontrollige oma e-posti, et kinnitada konto ja lõpetada taotlus.",
 
     // Beta badge
     "home.betaBadge": "Beta on käivitatud — liitu esimeste kasutajate hulka",
@@ -632,6 +633,7 @@ const et: Record<string, string> = {
     "admin.integrations": "Integratsioonid",
     "admin.routing": "Marsruutimine",
     "admin.inquiries": "Päringud",
+    "admin.leads": "Päringud",
     "admin.users": "Kasutajad",
     "admin.content": "Sisu",
     "admin.audit": "Tegevuslogi",
@@ -1621,6 +1623,9 @@ const et: Record<string, string> = {
     "admin.partnerDeleted": "Partner kustutatud",
     "admin.deleteFailed": "Kustutamine ebaõnnestus",
     "admin.delete": "Kustuta",
+    "admin.pendingApplications": "Ootel taotlused",
+    "admin.approve": "Kinnita",
+    "admin.approved": "Kinnitatud",
     "admin.discounts": "Allahindlused",
     "admin.partnerDiscountRate": "Partneri allahindlus (%)",
     "admin.partnerDiscountDesc": "% mida partner meile annab tema avalikust hinnast",
@@ -2100,6 +2105,11 @@ const et: Record<string, string> = {
     "common.preview":                      "Eelvaade",
     "common.active":                       "Aktiivne",
     "common.inactive":                     "Mitteaktiivne",
+    "emailVerification.title":             "Kinnitage oma e-post",
+    "emailVerification.desc":              "Enne jätkamist kinnitage oma e-posti aadress. Kontrollige oma postkasti.",
+    "emailVerification.resend":            "Saada kinnitusmeil uuesti",
+    "emailVerification.resendSuccess":     "Kinnitusmeil saadetud!",
+    "emailVerification.resendError":       "Saatmine ebaõnnestus. Proovige hiljem uuesti.",
 };
 
 const en: Record<string, string> = {
@@ -2379,6 +2389,7 @@ const en: Record<string, string> = {
     "onboard.success.pending": "⏳ Under review",
     "onboard.success.docsNote": "We may request documents during verification.",
     "onboard.success.back": "Back to home",
+    "onboard.success.checkEmail": "Check your email to verify your account and complete your application.",
 
     // Beta badge
     "home.betaBadge": "Beta is live — join the first users",
@@ -2709,6 +2720,7 @@ const en: Record<string, string> = {
     "admin.integrations": "Integrations",
     "admin.routing": "Routing",
     "admin.inquiries": "Inquiries",
+    "admin.leads": "Leads",
     "admin.users": "Users",
     "admin.content": "Content",
     "admin.audit": "Activity log",
@@ -3679,6 +3691,9 @@ const en: Record<string, string> = {
     "admin.partnerDeleted": "Partner deleted",
     "admin.deleteFailed": "Delete failed",
     "admin.delete": "Delete",
+    "admin.pendingApplications": "Pending Applications",
+    "admin.approve": "Approve",
+    "admin.approved": "Approved",
     "admin.discounts": "Discounts",
     "admin.partnerDiscountRate": "Partner discount (%)",
     "admin.partnerDiscountDesc": "% the partner gives us from their public price",
@@ -4158,6 +4173,11 @@ const en: Record<string, string> = {
     "common.preview":                      "Preview",
     "common.active":                       "Active",
     "common.inactive":                     "Inactive",
+    "emailVerification.title":             "Verify your email",
+    "emailVerification.desc":              "Please verify your email address before continuing. Check your inbox.",
+    "emailVerification.resend":            "Resend verification email",
+    "emailVerification.resendSuccess":     "Verification email sent!",
+    "emailVerification.resendError":       "Failed to send. Please try again later.",
 };
 
 const ru: Record<string, string> = {
@@ -4437,6 +4457,7 @@ const ru: Record<string, string> = {
     "onboard.success.pending": "⏳ На рассмотрении",
     "onboard.success.docsNote": "Мы можем запросить документы в процессе верификации.",
     "onboard.success.back": "На главную",
+    "onboard.success.checkEmail": "Проверьте почту, чтобы подтвердить аккаунт и завершить заявку.",
 
     // Beta badge
     "home.betaBadge": "Бета запущена — присоединяйтесь к первым пользователям",
@@ -4766,6 +4787,7 @@ const ru: Record<string, string> = {
     "admin.integrations": "Интеграции",
     "admin.routing": "Маршрутизация",
     "admin.inquiries": "Запросы",
+    "admin.leads": "Лиды",
     "admin.users": "Пользователи",
     "admin.content": "Контент",
     "admin.audit": "Журнал действий",
@@ -5736,6 +5758,9 @@ const ru: Record<string, string> = {
     "admin.partnerDeleted": "Партнёр удалён",
     "admin.deleteFailed": "Удаление не удалось",
     "admin.delete": "Удалить",
+    "admin.pendingApplications": "Ожидающие заявки",
+    "admin.approve": "Одобрить",
+    "admin.approved": "Одобрено",
     "admin.discounts": "Скидки",
     "admin.partnerDiscountRate": "Скидка партнёра (%)",
     "admin.partnerDiscountDesc": "% который партнёр даёт нам от публичной цены",
@@ -6215,6 +6240,11 @@ const ru: Record<string, string> = {
     "common.preview":                      "Предпросмотр",
     "common.active":                       "Активен",
     "common.inactive":                     "Неактивен",
+    "emailVerification.title":             "Подтвердите email",
+    "emailVerification.desc":              "Пожалуйста, подтвердите адрес электронной почты перед продолжением. Проверьте почту.",
+    "emailVerification.resend":            "Отправить письмо повторно",
+    "emailVerification.resendSuccess":     "Письмо отправлено!",
+    "emailVerification.resendError":       "Не удалось отправить. Попробуйте позже.",
 };
 
 
@@ -6449,6 +6479,9 @@ const lv: Record<string, string> = {
     "admin.degraded": "Degraded",
     "admin.delete": "Dzēst",
     "admin.deleteFailed": "Dzēst neizdevās",
+    "admin.pendingApplications": "Gaidošie pieteikumi",
+    "admin.approve": "Apstiprināt",
+    "admin.approved": "Apstiprināts",
     "admin.deletePartnerConfirm": "Dzēst partneri? To nevar atsaukt.",
     "admin.description": "Apraksts",
     "admin.discounts": "Atlaides",
@@ -6476,6 +6509,7 @@ const lv: Record<string, string> = {
     "admin.iban": "IBAN",
     "admin.inactive": "Neaktīvs",
     "admin.inquiries": "Pieprasījumi",
+    "admin.leads": "Vaicājumi",
     "admin.inquiryDetails": "Pieprasījums details",
     "admin.integration": "Integrācija",
     "admin.integrationApi": "API",
@@ -7261,6 +7295,7 @@ const lv: Record<string, string> = {
     "onboard.success.pending": "⏳ Tiek izskatīts",
     "onboard.success.status": "Pieteikuma statuss",
     "onboard.success.title": "Pieteikums iesniegts!",
+    "onboard.success.checkEmail": "Pārbaudiet e-pastu, lai apstiprinātu kontu un pabeigtu pieteikumu.",
     "onboard.title": "Pievienoties kā partneris",
     "payment.returnCta": "Skatīt bookings",
     "payment.pending": "Maksājuma pārbaude...",
@@ -8211,6 +8246,11 @@ const lv: Record<string, string> = {
     "common.preview":                      "Priekšskatījums",
     "common.active":                       "Aktīvs",
     "common.inactive":                     "Neaktīvs",
+    "emailVerification.title":             "Apstipriniet e-pastu",
+    "emailVerification.desc":              "Lūdzu, apstipriniet savu e-pasta adresi pirms turpināšanas. Pārbaudiet iesūtni.",
+    "emailVerification.resend":            "Atkārtoti nosūtīt apstiprinājuma e-pastu",
+    "emailVerification.resendSuccess":     "Apstiprinājuma e-pasts nosūtīts!",
+    "emailVerification.resendError":       "Neizdevās nosūtīt. Lūdzu, mēģiniet vēlāk.",
 };
 // ── Lithuanian ──────────────────────────
 const lt: Record<string, string> = {
@@ -8443,6 +8483,9 @@ const lt: Record<string, string> = {
     "admin.degraded": "Degraded",
     "admin.delete": "Ištrinti",
     "admin.deleteFailed": "Ištrinti nepavyko",
+    "admin.pendingApplications": "Laukiančios paraiškos",
+    "admin.approve": "Patvirtinti",
+    "admin.approved": "Patvirtinta",
     "admin.deletePartnerConfirm": "Ištrinti partner? This cannot be undone.",
     "admin.description": "Aprašymas",
     "admin.discounts": "Nuolaidos",
@@ -8470,6 +8513,7 @@ const lt: Record<string, string> = {
     "admin.iban": "IBAN",
     "admin.inactive": "Neaktyvus",
     "admin.inquiries": "Užklausos",
+    "admin.leads": "Užklausos",
     "admin.inquiryDetails": "Užklausa details",
     "admin.integration": "Integracija",
     "admin.integrationApi": "API",
@@ -9255,6 +9299,7 @@ const lt: Record<string, string> = {
     "onboard.success.pending": "⏳ Peržiūrima",
     "onboard.success.status": "Prašymo statusas",
     "onboard.success.title": "Prašymas pateiktas!",
+    "onboard.success.checkEmail": "Patikrinkite el. paštą, kad patvirtintumėte paskyrą ir užbaigtumėte paraišką.",
     "onboard.title": "Prisijungti kaip partneris",
     "payment.returnCta": "Peržiūrėti bookings",
     "payment.pending": "Mokėjimo tikrinimas...",
@@ -10204,6 +10249,11 @@ const lt: Record<string, string> = {
     "common.preview":                      "Peržiūra",
     "common.active":                       "Aktyvus",
     "common.inactive":                     "Neaktyvus",
+    "emailVerification.title":             "Patvirtinkite el. paštą",
+    "emailVerification.desc":              "Prašome patvirtinti savo el. pašto adresą prieš tęsdami. Patikrinkite pašto dėžutę.",
+    "emailVerification.resend":            "Pakartotinai siųsti patvirtinimo el. laišką",
+    "emailVerification.resendSuccess":     "Patvirtinimo el. laiškas išsiųstas!",
+    "emailVerification.resendError":       "Nepavyko išsiųsti. Bandykite vėliau.",
 };
 const translations: Record<Language, Record<string, string>> = { et, en, ru, lv, lt };
 

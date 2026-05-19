@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { authService } from "@/services";
 import { toast } from "sonner";
 import { useSearchParams, Link, useNavigate } from "@/i18n/routing";
 import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand, Info, Warehouse } from "lucide-react";
@@ -18,6 +17,7 @@ import { tokenStore, apiClient } from "@/services/apiClient";
 import BookingInlineAuth from "@/components/BookingInlineAuth";
 import ReservationCountdown from "@/components/ReservationCountdown";
 import ContractSigningModal from "@/components/ContractSigningModal";
+import { EmailVerificationGate } from "@/components/EmailVerificationGate";
 import { trackEvent } from "@/lib/analytics";
 import { queryKeys } from "@/services/queryKeys";
 import { z } from "zod";
@@ -148,7 +148,6 @@ export default function BookingPage() {
   const [createdBookingId, setCreatedBookingId] = useState<string | null>(null);
   const [showContract, setShowContract] = useState(false);
   const [showVerifyBanner, setShowVerifyBanner] = useState(false);
-  const [resendSent, setResendSent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const detailsForm = useForm<{ startDate: string; endDate: string }>({
@@ -309,7 +308,7 @@ export default function BookingPage() {
       setSubmitted(true);
     }).catch((err: any) => {
       const msg = err?.message?.toLowerCase() || "";
-      if (err?.status === 403 || (msg.includes("email") && msg.includes("verif"))) {
+      if (err?.code === "EMAIL_NOT_VERIFIED" || err?.status === 403 || (msg.includes("email") && msg.includes("verif"))) {
         setShowVerifyBanner(true);
         setIsSubmitting(false);
         return;
@@ -422,34 +421,10 @@ export default function BookingPage() {
 
       {/* Email verification banner */}
       {showVerifyBanner && (
-        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm">
-          <p className="font-semibold text-amber-800">
-            {t("booking.verifyEmailTitle")}
-          </p>
-          <p className="mt-1 text-amber-700">
-            {t("booking.verifyEmailBody")}
-          </p>
-          {!resendSent ? (
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  await authService.resendVerificationEmail();
-                  setResendSent(true);
-                } catch {
-                  toast.error(t("booking.sendFailed"));
-                }
-              }}
-              className="mt-3 text-sm font-medium text-amber-800 underline hover:text-amber-900"
-            >
-              {t("booking.resendVerification")}
-            </button>
-          ) : (
-            <p className="mt-3 text-sm font-medium text-amber-800">
-              {t("booking.resendSent")}
-            </p>
-          )}
-        </div>
+        <EmailVerificationGate
+          className="mb-6"
+          onDismiss={() => setShowVerifyBanner(false)}
+        />
       )}
 
       {/* Step indicators */}

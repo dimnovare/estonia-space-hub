@@ -165,7 +165,7 @@ function AppContent() {
               <Route path="account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
               <Route path="account/request/:id" element={<ProtectedRoute><RequestDetailPage /></ProtectedRoute>} />
               <Route path="provider/dashboard" element={<ProtectedRoute allowedRoles={["provider", "admin"]}><ProviderDashboardPage /></ProtectedRoute>} />
-              <Route path="provider/onboarding" element={<ProtectedRoute><ProviderOnboardingPage /></ProtectedRoute>} />
+              <Route path="provider/onboarding" element={<ProviderOnboardingPage />} />
             </Route>
             <Route element={<WithFooter />}>
               <Route index element={<HomePage />} />

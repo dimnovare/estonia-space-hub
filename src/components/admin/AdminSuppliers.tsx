@@ -70,6 +70,15 @@ export default function AdminSuppliers() {
     onError: (err: any) => toast.error(err.message || t("admin.deleteFailed")),
   });
 
+  const approveMutation = useMutation({
+    mutationFn: (id: string) => apiClient.post(`/admin/suppliers/${id}/approve`, {}),
+    onSuccess: () => {
+      invalidate();
+      toast.success(t("admin.approved"));
+    },
+    onError: (err: any) => toast.error(err.message || t("admin.deleteFailed")),
+  });
+
   const filteredRaw = suppliers.filter(s => {
     if (filter === "active" && !s.isActive) return false;
     if (filter === "inactive" && s.isActive) return false;
@@ -270,6 +279,52 @@ export default function AdminSuppliers() {
         </table>
         </div>
       </div>
+
+      {/* ── Pending Applications ── */}
+      {suppliers.filter(s => !s.isActive).length > 0 && (
+        <div className="mt-8">
+          <h2 className="font-display text-lg font-semibold flex items-center gap-2">
+            {t("admin.pendingApplications")}
+            <span className="rounded-full bg-warning/10 text-warning text-xs px-2 py-0.5 font-medium">
+              {suppliers.filter(s => !s.isActive).length}
+            </span>
+          </h2>
+          <div className="mt-3 rounded-xl border border-border">
+            <table className="w-full text-sm">
+              <thead className="border-b border-border bg-secondary/50">
+                <tr>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Company</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Contact</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Registry</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {suppliers.filter(s => !s.isActive).map(s => (
+                  <tr key={s.id} className="border-b border-border last:border-0">
+                    <td className="px-4 py-3 font-medium">{s.name}</td>
+                    <td className="px-4 py-3 text-xs">
+                      <div>{s.contactName}</div>
+                      <div className="text-muted-foreground">{s.contactEmail}</div>
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs">{s.registryCode}</td>
+                    <td className="px-4 py-3">
+                      <Button
+                        size="sm"
+                        className="bg-success text-success-foreground hover:bg-success/90 text-xs"
+                        onClick={() => approveMutation.mutate(s.id)}
+                        disabled={approveMutation.isPending}
+                      >
+                        {t("admin.approve")}
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* ── Supplier Detail Dialog ── */}
       <Dialog open={!!selected} onOpenChange={(o) => { if (!o) { setSelected(null); setTestResult(null); } }}>

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, Link } from "@/i18n/routing";
 import { ArrowLeft, MapPin, Clock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -5,11 +6,13 @@ import { useLocation } from "@/hooks/queries";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
 import { formatPriceUnit } from "@/lib/priceUnit";
+import { EmailVerificationGate } from "@/components/EmailVerificationGate";
 
 export default function LocationDetailPage() {
   const { id } = useParams();
   const { t } = useLanguage();
   const { data: location, isLoading, isError } = useLocation(id);
+  const [showEmailGate, setShowEmailGate] = useState(false);
 
   if (isLoading) {
     return (
@@ -108,6 +111,14 @@ export default function LocationDetailPage() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Email verification gate — shown when a booking attempt returns 403 EMAIL_NOT_VERIFIED */}
+      {showEmailGate && (
+        <EmailVerificationGate
+          className="mb-6"
+          onDismiss={() => setShowEmailGate(false)}
+        />
       )}
 
       {/* Units heading */}

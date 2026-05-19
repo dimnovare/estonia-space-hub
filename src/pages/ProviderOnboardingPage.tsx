@@ -75,18 +75,37 @@ export default function ProviderOnboardingPage() {
     setSubmitting(true);
     try {
       trackEvent("provider_signup_started", {});
-      await providerService.apply({
-        companyName,
-        registryCode,
-        contactName: effectiveContactName,
-        contactEmail: effectiveContactEmail,
-        contactPhone,
-        businessType,
-        serviceTypes: selectedServices,
-        serviceAreas: selectedAreas,
-        notes: notes || undefined,
-      });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.users.me() });
+
+      if (user) {
+        // Authenticated: use existing endpoint
+        await providerService.apply({
+          companyName,
+          registryCode,
+          contactName: effectiveContactName,
+          contactEmail: effectiveContactEmail,
+          contactPhone,
+          businessType,
+          serviceTypes: selectedServices,
+          serviceAreas: selectedAreas,
+          notes: notes || undefined,
+        });
+        await queryClient.invalidateQueries({ queryKey: queryKeys.users.me() });
+      } else {
+        // Anonymous: use public endpoint
+        await providerService.applyPublic({
+          companyName,
+          registryCode,
+          contactName: effectiveContactName,
+          contactEmail: effectiveContactEmail,
+          contactPhone,
+          businessType,
+          serviceTypes: selectedServices,
+          serviceAreas: selectedAreas,
+          notes: notes || undefined,
+        });
+        // No token invalidation for public apply
+      }
+
       setSubmitted(true);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : t("onboard.error");
@@ -105,6 +124,9 @@ export default function ProviderOnboardingPage() {
           </div>
           <h1 className="mt-4 font-display text-2xl font-bold">{t("onboard.success.title")}</h1>
           <p className="mt-2 text-sm text-muted-foreground">{t("onboard.success.desc")}</p>
+          {!user && (
+            <p className="mt-2 text-sm text-accent font-medium">{t("onboard.success.checkEmail")}</p>
+          )}
           <div className="mt-4 rounded-xl border border-border bg-secondary/30 p-4">
             <p className="text-xs text-muted-foreground">{t("onboard.success.status")}</p>
             <p className="mt-1 text-sm font-medium text-warning">{t("onboard.success.pending")}</p>

@@ -19,6 +19,7 @@ import AdminAudit from "@/components/admin/AdminAudit";
 import AdminSettings from "@/components/admin/AdminSettings";
 import AdminPayouts from "@/components/admin/AdminPayouts";
 import AdminRebates from "@/components/admin/AdminRebates";
+import AdminLeads from "@/components/admin/AdminLeads";
 
 export default function AdminPage() {
   const [searchParams] = useSearchParams();
@@ -65,6 +66,7 @@ export default function AdminPage() {
         
         {activeTab === "routing" && <AdminRouting />}
         {activeTab === "inquiries" && <AdminInquiries />}
+        {activeTab === "leads" && <AdminLeads />}
         {activeTab === "users" && <AdminUsers />}
         {activeTab === "content" && <AdminContent />}
         {activeTab === "audit" && <AdminAudit />}
