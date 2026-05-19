@@ -6,39 +6,39 @@ import { useLanguage } from "@/i18n/LanguageContext";
 type Group = "furniture" | "appliances" | "sport" | "boxes";
 
 export const STORAGE_ITEMS: { id: string; group: Group; label: string; emoji: string; m3: number }[] = [
-  { id: "sofa2", group: "furniture", label: "Sofa (2-seat)", emoji: "🛋️", m3: 1.2 },
-  { id: "sofa3", group: "furniture", label: "Sofa (3-seat)", emoji: "🛋️", m3: 1.8 },
-  { id: "armchair", group: "furniture", label: "Armchair", emoji: "🪑", m3: 0.6 },
-  { id: "bed_s", group: "furniture", label: "Single bed", emoji: "🛏️", m3: 1.1 },
-  { id: "bed_d", group: "furniture", label: "Double bed", emoji: "🛏️", m3: 1.7 },
-  { id: "wardrobe_s", group: "furniture", label: "Wardrobe (small)", emoji: "🪞", m3: 0.8 },
-  { id: "wardrobe_l", group: "furniture", label: "Wardrobe (large)", emoji: "🪞", m3: 1.5 },
-  { id: "dresser", group: "furniture", label: "Chest of drawers", emoji: "🗄️", m3: 0.4 },
-  { id: "dining_t", group: "furniture", label: "Dining table", emoji: "🪑", m3: 0.8 },
-  { id: "chair", group: "furniture", label: "Chair", emoji: "🪑", m3: 0.1 },
-  { id: "bookcase", group: "furniture", label: "Bookcase", emoji: "📚", m3: 0.4 },
-  { id: "desk", group: "furniture", label: "Desk", emoji: "🖥️", m3: 0.5 },
-  { id: "tv", group: "appliances", label: 'TV (50"+)', emoji: "📺", m3: 0.2 },
-  { id: "washer", group: "appliances", label: "Washing machine", emoji: "🫧", m3: 0.1 },
-  { id: "fridge", group: "appliances", label: "Fridge", emoji: "🧊", m3: 0.2 },
-  { id: "microwave", group: "appliances", label: "Microwave", emoji: "🍽️", m3: 0.05 },
-  { id: "bike", group: "sport", label: "Bicycle", emoji: "🚲", m3: 0.4 },
-  { id: "scooter", group: "sport", label: "E-scooter", emoji: "🛴", m3: 0.2 },
-  { id: "skis", group: "sport", label: "Ski set", emoji: "⛷️", m3: 0.3 },
-  { id: "kayak", group: "sport", label: "Kayak", emoji: "🛶", m3: 1.0 },
-  { id: "box_s", group: "boxes", label: "Box (small)", emoji: "📦", m3: 0.05 },
-  { id: "box_m", group: "boxes", label: "Box (medium)", emoji: "📦", m3: 0.1 },
-  { id: "box_l", group: "boxes", label: "Box (large)", emoji: "📦", m3: 0.2 },
-  { id: "bag_l", group: "boxes", label: "Moving bag", emoji: "🎒", m3: 0.2 },
+  { id: "sofa2",      group: "furniture",  label: "calc.items.sofa2",      emoji: "🛋️", m3: 1.2 },
+  { id: "sofa3",      group: "furniture",  label: "calc.items.sofa3",      emoji: "🛋️", m3: 1.8 },
+  { id: "armchair",   group: "furniture",  label: "calc.items.armchair",   emoji: "🪑", m3: 0.6 },
+  { id: "bed_s",      group: "furniture",  label: "calc.items.bed_s",      emoji: "🛏️", m3: 1.1 },
+  { id: "bed_d",      group: "furniture",  label: "calc.items.bed_d",      emoji: "🛏️", m3: 1.7 },
+  { id: "wardrobe_s", group: "furniture",  label: "calc.items.wardrobe_s", emoji: "🪞", m3: 0.8 },
+  { id: "wardrobe_l", group: "furniture",  label: "calc.items.wardrobe_l", emoji: "🪞", m3: 1.5 },
+  { id: "dresser",    group: "furniture",  label: "calc.items.dresser",    emoji: "🗄️", m3: 0.4 },
+  { id: "dining_t",   group: "furniture",  label: "calc.items.dining_t",   emoji: "🪑", m3: 0.8 },
+  { id: "chair",      group: "furniture",  label: "calc.items.chair",      emoji: "🪑", m3: 0.1 },
+  { id: "bookcase",   group: "furniture",  label: "calc.items.bookcase",   emoji: "📚", m3: 0.4 },
+  { id: "desk",       group: "furniture",  label: "calc.items.desk",       emoji: "🖥️", m3: 0.5 },
+  { id: "tv",         group: "appliances", label: "calc.items.tv",         emoji: "📺", m3: 0.2 },
+  { id: "washer",     group: "appliances", label: "calc.items.washer",     emoji: "🫧", m3: 0.1 },
+  { id: "fridge",     group: "appliances", label: "calc.items.fridge",     emoji: "🧊", m3: 0.2 },
+  { id: "microwave",  group: "appliances", label: "calc.items.microwave",  emoji: "🍽️", m3: 0.05 },
+  { id: "bike",       group: "sport",      label: "calc.items.bike",       emoji: "🚲", m3: 0.4 },
+  { id: "scooter",    group: "sport",      label: "calc.items.scooter",    emoji: "🛴", m3: 0.2 },
+  { id: "skis",       group: "sport",      label: "calc.items.skis",       emoji: "⛷️", m3: 0.3 },
+  { id: "kayak",      group: "sport",      label: "calc.items.kayak",      emoji: "🛶", m3: 1.0 },
+  { id: "box_s",      group: "boxes",      label: "calc.items.box_s",      emoji: "📦", m3: 0.05 },
+  { id: "box_m",      group: "boxes",      label: "calc.items.box_m",      emoji: "📦", m3: 0.1 },
+  { id: "box_l",      group: "boxes",      label: "calc.items.box_l",      emoji: "📦", m3: 0.2 },
+  { id: "bag_l",      group: "boxes",      label: "calc.items.bag_l",      emoji: "🎒", m3: 0.2 },
 ];
 
 export const SIZE_TIERS = [
-  { code: "XS", label: "XS (1–2 m²)", maxM3: 2.5, sizeM2: 1.5, minSize: 1, maxSize: 2 },
-  { code: "S", label: "S (2–4 m²)", maxM3: 8.0, sizeM2: 3, minSize: 2, maxSize: 4 },
-  { code: "M", label: "M (4–8 m²)", maxM3: 16.0, sizeM2: 6, minSize: 4, maxSize: 8 },
-  { code: "L", label: "L (8–15 m²)", maxM3: 30.0, sizeM2: 11.5, minSize: 8, maxSize: 15 },
-  { code: "XL", label: "XL (15+ m²)", maxM3: Infinity, sizeM2: 20, minSize: 15, maxSize: 999 },
-] as const;
+  { code: "XS", label: "calc.tiers.xs", maxM3: 2.5,     sizeM2: 1.5,  minSize: 1,  maxSize: 2 },
+  { code: "S",  label: "calc.tiers.s",  maxM3: 8.0,     sizeM2: 3,    minSize: 2,  maxSize: 4 },
+  { code: "M",  label: "calc.tiers.m",  maxM3: 16.0,    sizeM2: 6,    minSize: 4,  maxSize: 8 },
+  { code: "L",  label: "calc.tiers.l",  maxM3: 30.0,    sizeM2: 11.5, minSize: 8,  maxSize: 15 },
+  { code: "XL", label: "calc.tiers.xl", maxM3: Infinity, sizeM2: 20,  minSize: 15, maxSize: 999 },
+];
 
 const GROUPS: Group[] = ["furniture", "appliances", "sport", "boxes"];
 
@@ -90,7 +90,7 @@ export default function StorageSizeCalculator() {
               }`}
             >
               <span>{item.emoji}</span>
-              <span>{item.label}</span>
+              <span>{t(item.label)}</span>
               {qty > 0 && (
                 <span className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
                   {qty}
@@ -111,7 +111,7 @@ export default function StorageSizeCalculator() {
                 return (
                   <span key={id} className="flex items-center gap-1">
                     <span className="text-muted-foreground">
-                      {item.emoji} {item.label} ×{qty}
+                      {item.emoji} {t(item.label)} ×{qty}
                     </span>
                     <button
                       onClick={() =>
@@ -153,7 +153,7 @@ export default function StorageSizeCalculator() {
             <div className="mt-1 font-display text-3xl font-bold text-foreground">
               {recommendedTier.code}
             </div>
-            <div className="text-sm text-muted-foreground">{recommendedTier.label}</div>
+            <div className="text-sm text-muted-foreground">{t(recommendedTier.label)}</div>
             <p className="mt-1.5 text-xs text-muted-foreground">{t("calculator.bufferNote")}</p>
             <Link
               to={`/search?type=warehouse&minSize=${recommendedTier.minSize}&maxSize=${recommendedTier.maxSize}`}
