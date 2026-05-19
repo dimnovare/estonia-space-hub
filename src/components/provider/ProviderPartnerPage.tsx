@@ -108,7 +108,7 @@ export default function ProviderPartnerPage() {
     }
     const patch = diffPatch(initial, form);
     if (Object.keys(patch).length === 0) {
-      toast.message("No changes");
+      toast.message(t("common.noChanges"));
       return;
     }
     saveMutation.mutate(patch);

@@ -8,7 +8,7 @@ import type {
   Listing, ListingBase, ListingType, ListingFilters, PaginatedResponse, CreateBookingInput,
   SupplierLocation, PaymentResult, SupplierApplication,
   WarehouseListing, MovingListing, TrailerListing,
-  LeadStatus, LeadSummary,
+  LeadStatus, LeadSummary, RebateInvoice,
 } from "./types";
 
 // ─── Listing helpers ───────────────────────────────────────────────────────────
@@ -379,9 +379,9 @@ export const securityService = {
 
 // ─── Rebate Service ─────────────────────────────────────────────────────────
 export const rebateService = {
-  async getInvoices(period?: string): Promise<any[]> {
+  async getInvoices(period?: string): Promise<RebateInvoice[]> {
     const qs = period ? `?period=${period}` : "";
-    return apiClient.get<any[]>(`/admin/rebate-invoices${qs}`);
+    return apiClient.get<RebateInvoice[]>(`/admin/rebate-invoices${qs}`);
   },
   async generate(period: string): Promise<{ count: number; totalAmount: number }> {
     return apiClient.post<{ count: number; totalAmount: number }>("/admin/rebate-invoices/generate", { period });
@@ -392,8 +392,8 @@ export const rebateService = {
   async markPaid(id: string, reference: string): Promise<void> {
     await apiClient.patch(`/admin/rebate-invoices/${id}/paid`, { reference });
   },
-  async getForSupplier(): Promise<any[]> {
-    return apiClient.get<any[]>("/supplier/rebate-invoices");
+  async getForSupplier(): Promise<RebateInvoice[]> {
+    return apiClient.get<RebateInvoice[]>("/supplier/rebate-invoices");
   },
 };
 

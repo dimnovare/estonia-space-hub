@@ -51,7 +51,7 @@ export default function AdminPartnerDetailPage() {
       qc.invalidateQueries({ queryKey: queryKeys.suppliers.all() });
       toast.success(t("common.saved"), { duration: 4000 });
     },
-    onError: (err: any) => toast.error(err?.message ?? "Save failed"),
+    onError: (err: any) => toast.error(err?.message ?? t("toast.saveFailed")),
   });
 
   const syncMutation = useMutation({
@@ -60,7 +60,7 @@ export default function AdminPartnerDetailPage() {
       qc.invalidateQueries({ queryKey: queryKeys.adminSupplier.byId(partnerId) });
       toast.success(res?.message || `Sync OK${res?.unitsRefreshed ? ` — ${res.unitsRefreshed} units` : ""}`);
     },
-    onError: (err: any) => toast.error(err?.message ?? "Sync failed"),
+    onError: (err: any) => toast.error(err?.message ?? t("admin.integration.syncFailed")),
   });
 
   if (isLoading || !supplier) {
@@ -530,12 +530,12 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
     mutationFn: (patch: Record<string, unknown>) =>
       apiClient.patch(`/admin/suppliers/${supplierId}/integration`, patch),
     onSuccess: () => {
-      toast.success("Integration saved");
+      toast.success(t("admin.integration.saved"));
       qc.invalidateQueries({ queryKey: queryKeys.adminSupplierIntegration.byId(supplierId) });
       qc.invalidateQueries({ queryKey: queryKeys.adminSupplier.byId(supplierId) });
       qc.invalidateQueries({ queryKey: queryKeys.suppliers.all() });
     },
-    onError: (err: any) => toast.error(err?.message ?? "Save failed"),
+    onError: (err: any) => toast.error(err?.message ?? t("toast.saveFailed")),
   });
 
   const initial = useMemo(() => ({
@@ -574,7 +574,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
       const res = await supplierService.syncNow(supplierId);
       setTestResult({ ok: true, latency: Math.round(performance.now() - t0), message: res?.message });
     } catch (err: any) {
-      setTestResult({ ok: false, message: err?.message ?? "Failed" });
+      setTestResult({ ok: false, message: err?.message ?? t("common.failed") });
     } finally {
       setTesting(false);
     }
@@ -691,7 +691,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
                   onChange={(e) => setForm({ ...form, apiToken: e.target.value })}
                 />
                 <p className="mt-1 text-[10px] text-muted-foreground">
-                  {hasToken && !form.apiToken ? "Currently set ✓ — leave empty to keep." : "Leave empty to keep existing token."}
+                  {hasToken && !form.apiToken ? t("admin.integration.tokenSet") : t("admin.integration.tokenHint")}
                 </p>
               </div>
             </>
@@ -740,10 +740,10 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
           </p>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
             {([
-              { label: "Location ID field", key: "id",        default: "id" },
-              { label: "Available units",   key: "available", default: "available" },
-              { label: "Total units",       key: "total",     default: "total" },
-            ] as const).map(({ label, key, default: def }) => {
+              { label: t("admin.integration.pollFieldId"),        key: "id",        default: "id" },
+              { label: t("admin.integration.pollFieldAvailable"), key: "available", default: "available" },
+              { label: t("admin.integration.pollFieldTotal"),     key: "total",     default: "total" },
+            ]).map(({ label, key, default: def }) => {
               let currentVal = "";
               try { currentVal = (JSON.parse(form.pollMappingProfile || "{}") as Record<string,string>)[key] ?? ""; } catch {}
               return (
@@ -885,7 +885,7 @@ function ContractsTab({ supplierId }: { supplierId: string }) {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiClient.delete(`/admin/suppliers/${supplierId}/contracts/${id}`),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: listKey }); toast.success("Deleted"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: listKey }); toast.success(t("common.deleted")); },
     onError: (err: any) => toast.error(err?.message ?? t("toast.saveFailed")),
   });
 

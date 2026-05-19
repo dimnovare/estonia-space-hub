@@ -430,3 +430,16 @@ export interface CreateBookingInput {
   paymentMethod: "bank" | "card" | "later";
   notes?: string;
 }
+
+export interface RebateInvoice {
+  id: string;
+  supplierId: string;
+  supplierName: string;
+  period: string;          // "YYYY-MM"
+  amount: number;
+  status: "pending" | "sent" | "paid";
+  issuedAt: string;
+  sentAt: string | null;
+  paidAt: string | null;
+  paymentReference: string | null;
+}

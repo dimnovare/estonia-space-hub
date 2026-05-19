@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Loader2, FileText, CheckCircle, Send } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { queryKeys } from "@/services/queryKeys";
+import type { RebateInvoice } from "@/services/types";
 
 function getPrevMonth(): string {
   const d = new Date();
@@ -37,17 +38,6 @@ function parsePeriod(period: string): { year: number; month: number } {
 
 function formatPeriod(year: number, month: number): string {
   return `${year}-${String(month).padStart(2, "0")}`;
-}
-
-interface RebateInvoice {
-  id: string;
-  supplierId: string;
-  supplierName: string;
-  period: string;
-  amount: number;
-  status: "pending" | "paid";
-  issuedAt: string;
-  paidAt: string | null;
 }
 
 const statusMap: Record<string, { labelKey: string; label: string; className: string }> = {
