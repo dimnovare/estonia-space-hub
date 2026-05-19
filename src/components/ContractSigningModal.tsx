@@ -34,12 +34,10 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
 
   const tplQuery = useQuery({
     queryKey: ["contract-templates", bookingId],
-    queryFn: () => apiClient.get<Template[] | { data: Template[] }>(`/contracts/templates?bookingId=${bookingId}`),
+    queryFn: () => apiClient.get<Template[]>(`/contracts/templates?bookingId=${bookingId}`),
     enabled: !!bookingId,
   });
-  const templates: Template[] = Array.isArray(tplQuery.data)
-    ? tplQuery.data
-    : (tplQuery.data as any)?.data ?? [];
+  const templates: Template[] = tplQuery.data ?? [];
   const template = templates[0];
 
   const previewQuery = useQuery({
@@ -188,7 +186,7 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
                 <Skeleton className="h-[60vh] w-full rounded-xl" />
               ) : previewQuery.error || !template ? (
                 <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-                  {(previewQuery.error as any)?.message || "No contract template available"}
+                  {(previewQuery.error as any)?.message || t("contract.noTemplate")}
                 </p>
               ) : (
                 <iframe

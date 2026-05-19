@@ -11,6 +11,7 @@ import { usePartnerGoogleReviews } from "@/hooks/usePartnerGoogleReviews";
 import { useListings } from "@/hooks/queries";
 import ListingCard from "@/components/ListingCard";
 import type { PartnerLocation, PartnerProfile } from "@/types/partner";
+import type { SupplierLocation } from "@/services/types";
 import type { Language } from "@/i18n/translations";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
@@ -346,17 +347,18 @@ export default function PartnerPage() {
                     name: l.name,
                     address: l.address,
                     city: l.city,
-                    country: l.country,
                     lat: l.lat,
                     lng: l.lng,
                     images: l.images,
                     description: l.description ?? "",
                     openingHours: l.openingHours ?? "",
+                    isActive: true,
+                    availableUnits: l.availableUnitCount ?? 0,
                     unitCount: l.listingCount,
                     availableUnitCount: l.availableUnitCount,
                     totalUnitCount: l.totalUnitCount,
                     fullyBooked: l.availableUnitCount === 0,
-                  }) as any)}
+                  } satisfies SupplierLocation))}
                   height="h-[400px] md:h-[500px]"
                   language={language}
                   center={mapCenter}

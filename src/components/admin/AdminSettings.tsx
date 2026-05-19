@@ -64,7 +64,9 @@ export default function AdminSettings() {
       .then(data => {
         const flat: Record<string, string> = {};
         for (const [k, v] of Object.entries(data)) {
-          flat[k] = typeof v === "object" ? (v as any).value : String(v);
+          flat[k] = (v !== null && typeof v === "object" && "value" in v)
+            ? String((v as { value: unknown }).value)
+            : String(v ?? "");
         }
         setSettings(prev => ({ ...prev, ...flat }));
       })
