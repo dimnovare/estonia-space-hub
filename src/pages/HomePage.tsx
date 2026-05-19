@@ -307,7 +307,7 @@ export default function HomePage() {
       {settings.showMap && (
       <section className="container-wide mt-4 sm:mt-6 relative z-10">
         <Suspense fallback={<div className="h-[350px] rounded-xl bg-secondary flex items-center justify-center text-muted-foreground">{t("map.loading")}</div>}>
-          <InteractiveMap listings={allListings} height="h-[280px] md:h-[350px]" language={language} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} />
+          <InteractiveMap listings={allListings} height="h-[280px] md:h-[350px]" language={language} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
         </Suspense>
       </section>
       )}

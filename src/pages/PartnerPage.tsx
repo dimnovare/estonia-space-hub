@@ -363,6 +363,9 @@ export default function PartnerPage() {
                   language={language}
                   center={mapCenter}
                   zoom={mapZoom}
+                  tTypeWarehouse={t("provider.listings.typeWarehouse")}
+                  tTypeMoving={t("provider.listings.typeMoving")}
+                  tTypeTrailer={t("provider.listings.typeTrailer")}
                 />
               </Suspense>
             </div>

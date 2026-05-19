@@ -23,6 +23,9 @@ interface InteractiveMapProps {
   tVerified?: string;
   tFoundingPartner?: string;
   tViewDetails?: string;
+  tTypeWarehouse?: string;
+  tTypeMoving?: string;
+  tTypeTrailer?: string;
 }
 
 const typeColors: Record<string, string> = {
@@ -30,12 +33,6 @@ const typeColors: Record<string, string> = {
   moving: "#3B82F6",
   trailer: "#2EC4B6",
   multi: "#64748B", // slate-500, neutral for mixed-type Locations
-};
-
-const typeLabels: Record<string, string> = {
-  warehouse: "Laopind",
-  moving: "Kolimine",
-  trailer: "Haagis",
 };
 
 // Simple, clear SVG icons that match between map and legend
@@ -234,6 +231,9 @@ export default function InteractiveMap({
   tVerified = "Verified",
   tFoundingPartner = "Founding Partner",
   tViewDetails = "View →",
+  tTypeWarehouse = "Warehouse",
+  tTypeMoving    = "Moving",
+  tTypeTrailer   = "Trailer",
 }: InteractiveMapProps) {
   const defaultCenters: Record<string, [number, number]> = {
     et: [58.8, 25.5],
@@ -251,6 +251,12 @@ export default function InteractiveMap({
   };
   const effectiveCenter = center || defaultCenters[language] || defaultCenters.en;
   const effectiveZoom = zoom || defaultZooms[language] || 6;
+
+  const typeLabels: Record<string, string> = {
+    warehouse: tTypeWarehouse,
+    moving:    tTypeMoving,
+    trailer:   tTypeTrailer,
+  };
 
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
@@ -389,7 +395,7 @@ export default function InteractiveMap({
         mapInstance.current.setView(bounds[0] as L.LatLngExpression, 13);
       }
     }
-  }, [listings, locations, selectedId, onMarkerClick, onLocationClick, tUnits, tFrom, tPerMonth, tAllUnits]);
+  }, [listings, locations, selectedId, onMarkerClick, onLocationClick, tUnits, tFrom, tPerMonth, tAllUnits, tTypeWarehouse, tTypeMoving, tTypeTrailer]);
 
   // When selectedId changes externally, open that marker's popup
   useEffect(() => {

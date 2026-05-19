@@ -284,7 +284,7 @@ export function WarehouseDetail() {
           <h2 className="mt-8 font-display text-lg font-semibold">{t("detail.location")}</h2>
           <div className="mt-3">
             <Suspense fallback={<div className="h-[200px] rounded-xl bg-secondary" />}>
-              <InteractiveMap listings={[wListing]} height="h-[200px]" zoom={14} center={[wListing.lat, wListing.lng]} tViewDetails={t("listing.viewDetails")} />
+              <InteractiveMap listings={[wListing]} height="h-[200px]" zoom={14} center={[wListing.lat, wListing.lng]} tViewDetails={t("listing.viewDetails")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
             </Suspense>
           </div>
 
@@ -457,7 +457,7 @@ export function MovingDetail() {
           <h2 className="mt-8 font-display text-lg font-semibold">{t("detail.location")}</h2>
           <div className="mt-3">
             <Suspense fallback={<div className="h-[200px] rounded-xl bg-secondary" />}>
-              <InteractiveMap listings={[mListing]} height="h-[200px]" zoom={14} center={[mListing.lat, mListing.lng]} tViewDetails={t("listing.viewDetails")} />
+              <InteractiveMap listings={[mListing]} height="h-[200px]" zoom={14} center={[mListing.lat, mListing.lng]} tViewDetails={t("listing.viewDetails")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
             </Suspense>
           </div>
 
@@ -590,7 +590,7 @@ export function TrailerDetail() {
           <h2 className="mt-8 font-display text-lg font-semibold">{t("detail.location")}</h2>
           <div className="mt-3">
             <Suspense fallback={<div className="h-[200px] rounded-xl bg-secondary" />}>
-              <InteractiveMap listings={[tListing]} height="h-[200px]" zoom={14} center={[tListing.lat, tListing.lng]} tViewDetails={t("listing.viewDetails")} />
+              <InteractiveMap listings={[tListing]} height="h-[200px]" zoom={14} center={[tListing.lat, tListing.lng]} tViewDetails={t("listing.viewDetails")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
             </Suspense>
           </div>
 

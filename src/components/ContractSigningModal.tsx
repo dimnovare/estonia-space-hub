@@ -190,7 +190,7 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
                 </p>
               ) : (
                 <iframe
-                  title="Contract preview"
+                  title={t("contract.previewTitle")}
                   srcDoc={previewQuery.data || ""}
                   className="w-full h-[60vh] rounded-xl border border-border bg-white"
                   sandbox="allow-same-origin"
