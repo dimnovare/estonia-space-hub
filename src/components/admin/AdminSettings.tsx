@@ -411,7 +411,7 @@ export default function AdminSettings() {
               { key: "showProviderCta", label: t("admin.showProviderCta"), desc: t("admin.showProviderCtaDesc") },
               { key: "showFaq", label: t("admin.showFaq"), desc: t("admin.showFaqDesc") },
               { key: "showMap", label: t("admin.showMap"), desc: t("admin.showMapDesc") },
-              { key: "blog.enabled", label: "Blog enabled", desc: "Show /blog page and posts. Requires at least one post in src/content/blog/*.md." },
+              { key: "blog.enabled", label: t("admin.settings.blogEnabledLabel"), desc: t("admin.settings.blogEnabledDesc") },
               { key: "blog.showInFooter", label: t("admin.settings.blogFooterLabel"), desc: t("admin.settings.blogFooterDesc") },
             ]).map(toggle => (
               <div key={toggle.key} className="flex items-center justify-between rounded-lg border border-border p-3">

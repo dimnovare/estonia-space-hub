@@ -180,7 +180,7 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
                       variant="outline"
                       disabled={rejectOrder.isPending}
                       onClick={() => rejectOrder.mutate(
-                        { id: viewOrder.id, reason: "Admin rejected" },
+                        { id: viewOrder.id, reason: t("admin.orders.rejectedReason") },
                         { onSuccess: (updated) => setViewOrder(updated) }
                       )}
                       className="text-destructive"

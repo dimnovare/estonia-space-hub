@@ -33,7 +33,7 @@ export default function AdminIntegrations() {
   });
 
   const approvalLabel = (m: ApprovalMode) => m === "auto" ? t("admin.approvalAuto") : m === "admin" ? t("admin.approvalAdmin") : t("admin.approvalProvider");
-  const postingLabel = (m: PostingMode) => m === "api" ? "API" : m === "email" ? "Email" : "Manual";
+  const postingLabel = (m: PostingMode) => m === "api" ? "API" : m === "email" ? t("admin.postingEmail") : t("admin.postingManual");
   const approvalColor = (m: ApprovalMode) => m === "auto" ? "bg-success/10 text-success" : m === "admin" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent";
 
   const openEdit = (item: PartnerIntegrationSettings) => { setEditItem({ ...item }); setEditOpen(true); };

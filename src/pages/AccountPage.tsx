@@ -526,8 +526,9 @@ function AccountMessages() {
   const markReadMutation = useMutation({
     mutationFn: (bookingId: string) =>
       apiClient.post(`/messages/mark-read?bookingId=${bookingId}`, {}),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["messages"] });
+    onSuccess: (_, bookingId) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.messages.byBooking(bookingId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.messages.unread() });
     },
   });
 
