@@ -279,7 +279,8 @@ export const notificationService = {
 // ─── Invoice Service ────────────────────────────────────────────────────────────
 export const invoiceService = {
   async getAll(): Promise<Invoice[]> {
-    return apiClient.get<Invoice[]>("/invoices");
+    const res = await apiClient.get<{ data: Invoice[] } | Invoice[]>("/invoices");
+    return Array.isArray(res) ? res : (res as { data: Invoice[] }).data ?? [];
   },
   async getByBookingId(bookingId: string): Promise<Invoice | undefined> {
     return apiClient.get<Invoice>(`/invoices/by-booking/${bookingId}`);
