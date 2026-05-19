@@ -128,7 +128,7 @@ export default function AccountPage() {
   const unreadNotifications = notifications.filter((n: any) => !n.read).length;
 
   const roleDashboardLinks = role === "admin"
-    ? [{ to: "/admin", label: "Admin", icon: "🛡️" }]
+    ? [{ to: "/admin", label: t("nav.adminDashboard"), icon: "🛡️" }]
     : role === "provider"
     ? [{ to: "/provider/dashboard", label: t("nav.providerDashboard") || "Partneri paneel", icon: "📊" }]
     : [];
