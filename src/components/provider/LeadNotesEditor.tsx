@@ -28,7 +28,7 @@ export function LeadNotesEditor({ orderId, initial }: { orderId: string; initial
       await updateLead.mutateAsync({ id: orderId, providerNotes: value });
       toast.success(t("crm.notes.saved"));
     } catch {
-      toast.error("Error");
+      toast.error(t("toast.error"));
     }
   };
 

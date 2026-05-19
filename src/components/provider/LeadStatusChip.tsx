@@ -33,7 +33,7 @@ export function LeadStatusChip({ orderId, current, lastContactAt }: { orderId: s
     try {
       await updateLead.mutateAsync(payload);
     } catch {
-      toast.error("Error");
+      toast.error(t("toast.error"));
     }
   };
 
