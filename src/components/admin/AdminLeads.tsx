@@ -27,12 +27,12 @@ interface LeadsResponse {
   items: Lead[];
 }
 
-const STATUS_OPTIONS: { value: LeadStatus | "all"; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "new", label: "New" },
-  { value: "contacted", label: "Contacted" },
-  { value: "converted", label: "Converted" },
-  { value: "dismissed", label: "Dismissed" },
+const STATUS_OPTIONS: { value: LeadStatus | "all"; labelKey: string }[] = [
+  { value: "all",       labelKey: "admin.leads.statusAll" },
+  { value: "new",       labelKey: "admin.leads.statusNew" },
+  { value: "contacted", labelKey: "admin.leads.statusContacted" },
+  { value: "converted", labelKey: "admin.leads.statusConverted" },
+  { value: "dismissed", labelKey: "admin.leads.statusDismissed" },
 ];
 
 const STATUS_COLORS: Record<LeadStatus, string> = {
@@ -78,7 +78,7 @@ export default function AdminLeads() {
         <div>
           <h1 className="font-display text-2xl font-bold">{t("admin.leads")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {data ? `${data.total} total` : ""}
+            {data ? t("admin.leads.totalCount").replace("{count}", String(data.total)) : ""}
           </p>
         </div>
       </div>
@@ -95,7 +95,7 @@ export default function AdminLeads() {
                 : "bg-secondary text-muted-foreground hover:text-foreground"
             }`}
           >
-            {opt.label}
+            {t(opt.labelKey)}
           </button>
         ))}
       </div>
@@ -110,20 +110,20 @@ export default function AdminLeads() {
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-secondary/50">
               <tr>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Email</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">City</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Category</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Query</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Language</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Created</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.leads.colEmail")}</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.leads.colCity")}</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.leads.colCategory")}</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.leads.colQuery")}</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.leads.colLanguage")}</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.leads.colCreated")}</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.leads.colStatus")}</th>
               </tr>
             </thead>
             <tbody>
               {(data?.items ?? []).length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                    No leads found.
+                    {t("admin.leads.empty")}
                   </td>
                 </tr>
               ) : (
@@ -148,10 +148,10 @@ export default function AdminLeads() {
                         }
                         className={`rounded-full px-2 py-0.5 text-xs font-medium border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring ${STATUS_COLORS[lead.status]}`}
                       >
-                        <option value="new">New</option>
-                        <option value="contacted">Contacted</option>
-                        <option value="converted">Converted</option>
-                        <option value="dismissed">Dismissed</option>
+                        <option value="new">{t("admin.leads.statusNew")}</option>
+                        <option value="contacted">{t("admin.leads.statusContacted")}</option>
+                        <option value="converted">{t("admin.leads.statusConverted")}</option>
+                        <option value="dismissed">{t("admin.leads.statusDismissed")}</option>
                       </select>
                     </td>
                   </tr>
@@ -166,7 +166,9 @@ export default function AdminLeads() {
       {totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Page {page} of {totalPages}
+            {t("admin.leads.pagination")
+              .replace("{page}", String(page))
+              .replace("{total}", String(totalPages))}
           </p>
           <div className="flex items-center gap-2">
             <Button

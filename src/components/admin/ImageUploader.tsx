@@ -43,7 +43,7 @@ export default function ImageUploader({ images, onChange, maxImages = 10 }: Imag
         body: formData,
       });
 
-      if (!res.ok) throw new Error("Upload failed");
+      if (!res.ok) throw new Error();
       const results = await res.json();
       const newUrls = Array.isArray(results)
         ? results.map((r: any) => r.full || r.url || r)
