@@ -2,6 +2,7 @@
 
 import { apiClient } from "./apiClient";
 import { withSupplier } from "@/lib/withSupplier";
+import { unwrapPaginated } from "./unwrapPaginated";
 import type {
   User, Supplier, Order, Booking, Notification, Invoice, Message,
   AuditLogEntry, OrderStatus, PartnerIntegrationSettings, OrderRoutingRule,
@@ -122,8 +123,7 @@ export function normalizeUser(u: User): User {
 export const userService = {
   async getAll(limit = 200): Promise<User[]> {
     const res = await apiClient.get<any>(`/admin/users?limit=${limit}`);
-    const users = Array.isArray(res) ? res : res?.data ?? [];
-    return users.map(normalizeUser);
+    return unwrapPaginated<User>(res).map(normalizeUser);
   },
   async getById(id: string): Promise<User | undefined> {
     return normalizeUser(await apiClient.get<User>(`/admin/users/${id}`));
@@ -140,7 +140,7 @@ export const userService = {
 export const supplierService = {
   async getAll(): Promise<Supplier[]> {
     const res = await apiClient.get<any>("/admin/suppliers");
-    return Array.isArray(res) ? res : res?.data ?? [];
+    return unwrapPaginated<Supplier>(res);
   },
   async getById(id: string): Promise<Supplier | undefined> {
     return apiClient.get<Supplier>(`/admin/suppliers/${id}`);
@@ -176,7 +176,7 @@ export const supplierService = {
     errorMessage?: string;
   }>> {
     const res = await apiClient.get<any>(`/admin/suppliers/${id}/poll-log?limit=${limit}`);
-    return Array.isArray(res) ? res : res?.data ?? [];
+    return unwrapPaginated(res);
   },
 };
 
@@ -252,8 +252,7 @@ export const bookingService = {
   async getAll(personal = false): Promise<Booking[]> {
     const qs = personal ? "?personal=true&limit=200" : "?limit=200";
     const res = await apiClient.get<any>(`/bookings${qs}`);
-    const bookings = Array.isArray(res) ? res : res?.data ?? [];
-    return bookings.map(normalizeBooking);
+    return unwrapPaginated<Booking>(res).map(normalizeBooking);
   },
   async getById(id: string): Promise<Booking | undefined> {
     return normalizeBooking(await apiClient.get<Booking>(`/bookings/${id}`));
@@ -280,7 +279,7 @@ export const notificationService = {
 export const invoiceService = {
   async getAll(): Promise<Invoice[]> {
     const res = await apiClient.get<{ data: Invoice[] } | Invoice[]>("/invoices");
-    return Array.isArray(res) ? res : (res as { data: Invoice[] }).data ?? [];
+    return unwrapPaginated<Invoice>(res);
   },
   async getByBookingId(bookingId: string): Promise<Invoice | undefined> {
     return apiClient.get<Invoice>(`/invoices/by-booking/${bookingId}`);

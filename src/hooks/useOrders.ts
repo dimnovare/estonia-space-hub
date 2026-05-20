@@ -4,18 +4,13 @@ import { queryKeys } from "@/services/queryKeys";
 import type { Order, OrderStatus, LeadStatus, LeadSummary } from "@/services/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
-
-function unwrap<T>(res: unknown): T[] {
-  if (Array.isArray(res)) return res;
-  if (res && typeof res === "object" && "data" in res && Array.isArray((res as any).data)) return (res as any).data;
-  return [];
-}
+import { unwrapPaginated } from "@/services/unwrapPaginated";
 
 export function useOrders(supplierId?: string) {
   const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: queryKeys.orders.all(supplierId ? { supplierId } : undefined),
-    queryFn: async () => unwrap<Order>(
+    queryFn: async () => unwrapPaginated<Order>(
       await orderService.getAll(supplierId ? { supplierId, limit: 200 } : { limit: 200 })
     ),
     enabled: isAuthenticated,
