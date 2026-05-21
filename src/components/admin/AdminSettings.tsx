@@ -411,9 +411,16 @@ export default function AdminSettings() {
               { key: "showProviderCta", label: t("admin.showProviderCta"), desc: t("admin.showProviderCtaDesc") },
               { key: "showFaq", label: t("admin.showFaq"), desc: t("admin.showFaqDesc") },
               { key: "showMap", label: t("admin.showMap"), desc: t("admin.showMapDesc") },
+              { key: "__section:serviceVisibility", label: "", desc: "" },
+              { key: "showMovingService",  label: t("admin.settings.showMovingLabel"),  desc: t("admin.settings.showMovingDesc")  },
+              { key: "showTrailerService", label: t("admin.settings.showTrailerLabel"), desc: t("admin.settings.showTrailerDesc") },
               { key: "blog.enabled", label: t("admin.settings.blogEnabledLabel"), desc: t("admin.settings.blogEnabledDesc") },
               { key: "blog.showInFooter", label: t("admin.settings.blogFooterLabel"), desc: t("admin.settings.blogFooterDesc") },
-            ]).map(toggle => (
+            ]).map(toggle => toggle.key === "__section:serviceVisibility" ? (
+              <div key={toggle.key} className="pt-3 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {t("admin.settings.serviceVisibility")}
+              </div>
+            ) : (
               <div key={toggle.key} className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div>
                   <div className="text-sm font-medium">{toggle.label}</div>
