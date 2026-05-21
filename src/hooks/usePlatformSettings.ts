@@ -16,6 +16,8 @@ export interface PlatformSettings {
   showProviderCta:      boolean;
   showFaq:              boolean;
   showMap:              boolean;
+  showMovingService:    boolean;
+  showTrailerService:   boolean;
   showFeaturedPartners: boolean;
   heroSubtitle:         string;
   heroDiscount:         string;
@@ -56,6 +58,8 @@ const FALLBACK = {
   showProviderCta:       true,
   showFaq:               true,
   showMap:               true,
+  showMovingService:     true,
+  showTrailerService:    true,
   showFeaturedPartners:  false,
   heroSubtitle:          "",
   heroDiscount:          "10",
