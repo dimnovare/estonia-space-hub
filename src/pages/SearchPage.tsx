@@ -291,13 +291,17 @@ export default function SearchPage() {
       <div className={`flex-1 border-l border-border ${mobileView === "map" ? "hidden lg:block" : ""}`}>
         <div className="sticky top-16 z-10 border-b border-border bg-card px-4 py-3">
           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-            {typeFilters.length > 2 && (<>
-              {typeFilters.map((tf) => (
+            {typeFilters.length > 2 ? (
+              typeFilters.map((tf) => (
                 <button key={tf.value} onClick={() => updateFilters({ type: tf.value === "all" ? "" : tf.value })} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${activeType === tf.value ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
                   {tf.label}
                 </button>
-              ))}
-            </>)}
+              ))
+            ) : (
+              <span className="text-sm font-medium text-foreground">
+                {t("search.resultsFound").replace("{count}", String(result?.total ?? filtered.length))}
+              </span>
+            )}
             <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
               <button onClick={() => isMobile ? setDrawerOpen(true) : setShowFilters(!showFilters)} className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary">
                 <SlidersHorizontal className="h-3.5 w-3.5" />

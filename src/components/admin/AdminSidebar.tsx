@@ -2,7 +2,7 @@ import { useState, type ComponentType } from "react";
 import { Link } from "@/i18n/routing";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
-  LayoutDashboard, MessageSquare, Settings, Users, FileText,
+  LayoutDashboard, MessageSquare, Settings, Users,
   Package, Activity, ChevronDown, Route, MapPin, Banknote, Receipt,
   Building2, Inbox,
 } from "lucide-react";
@@ -22,7 +22,6 @@ function useItems(): Item[] {
     { id: "inquiries",    label: t("admin.inquiries"),    icon: MessageSquare,   href: "/admin?tab=inquiries" },
     { id: "leads",        label: t("admin.leads"),        icon: Inbox,           href: "/admin?tab=leads" },
     { id: "users",        label: t("admin.users"),        icon: Users,           href: "/admin?tab=users" },
-    { id: "content",      label: t("admin.content"),      icon: FileText,        href: "/admin?tab=content" },
     { id: "audit",        label: t("admin.audit"),        icon: Activity,        href: "/admin?tab=audit" },
     { id: "settings",     label: t("admin.settings"),     icon: Settings,        href: "/admin?tab=settings" },
   ];

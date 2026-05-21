@@ -14,7 +14,6 @@ import AdminRouting from "@/components/admin/AdminRouting";
 import AdminUsers from "@/components/admin/AdminUsers";
 import AdminLocations from "@/components/admin/AdminLocations";
 import AdminInquiries from "@/components/admin/AdminInquiries";
-import AdminContent from "@/components/admin/AdminContent";
 import AdminAudit from "@/components/admin/AdminAudit";
 import AdminSettings from "@/components/admin/AdminSettings";
 import AdminPayouts from "@/components/admin/AdminPayouts";
@@ -68,7 +67,6 @@ export default function AdminPage() {
         {activeTab === "inquiries" && <AdminInquiries />}
         {activeTab === "leads" && <AdminLeads />}
         {activeTab === "users" && <AdminUsers />}
-        {activeTab === "content" && <AdminContent />}
         {activeTab === "audit" && <AdminAudit />}
         {activeTab === "payouts" && <AdminPayouts supplierId={filterSupplierId || undefined} />}
         {activeTab === "rebates" && <AdminRebates supplierId={filterSupplierId || undefined} />}

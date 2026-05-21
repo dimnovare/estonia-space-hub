@@ -137,8 +137,8 @@ export default function HomePage() {
   return (
     <div>
       <SEO
-        title="Ruumly — Laopinnad, kolimine ja haagised Eestis"
-        description={fp("Leia ja broneeri laopindu, kolimisteenuseid ja haagiseid üle Eesti. Kuni {discount}% soodsam kui otse pakkujalt. Kiire kinnitus, kontrollitud partnerid.")}
+        title={storageOnly ? t("seo.homeStorageTitle") : t("seo.homeTitle")}
+        description={storageOnly ? t("seo.homeStorageDescription") : t("seo.homeDescription")}
         path="/"
         structuredData={{
           "@context": "https://schema.org",
