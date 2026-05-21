@@ -8,6 +8,7 @@ import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
 import { getSavingsDisplay } from "@/lib/savingsDisplay";
 import { lazy, Suspense } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import type { Listing, WarehouseListing, MovingListing, TrailerListing } from "@/services/types";
 import { SEO } from "@/components/SEO";
 import ReviewsSection from "@/components/ReviewsSection";
@@ -389,6 +390,7 @@ export function WarehouseDetail() {
 export function MovingDetail() {
   const { id } = useParams();
   const { t, language } = useLanguage();
+  const { showMovingService } = usePlatformSettings();
   const { data: pricingConfig } = usePricingConfig();
   const fp = (text: string) => fillPricing(text, pricingConfig);
   const { data: listing, isLoading } = useListing(id);
@@ -398,7 +400,7 @@ export function MovingDetail() {
   }, [listing]);
 
   if (isLoading) return <LoadingDetail />;
-  if (!listing || listing.type !== "moving") return <NotFoundDetail />;
+  if (!showMovingService || !listing || listing.type !== "moving") return <NotFoundDetail />;
   const mListing = listing as MovingListing;
 
   const discountRate = mListing.clientDiscountRate ?? 0;
@@ -523,6 +525,7 @@ export function MovingDetail() {
 export function TrailerDetail() {
   const { id } = useParams();
   const { t, language } = useLanguage();
+  const { showTrailerService } = usePlatformSettings();
   const { data: pricingConfig } = usePricingConfig();
   const fp = (text: string) => fillPricing(text, pricingConfig);
   const { data: listing, isLoading } = useListing(id);
@@ -532,7 +535,7 @@ export function TrailerDetail() {
   }, [listing]);
 
   if (isLoading) return <LoadingDetail />;
-  if (!listing || listing.type !== "trailer") return <NotFoundDetail />;
+  if (!showTrailerService || !listing || listing.type !== "trailer") return <NotFoundDetail />;
   const tListing = listing as TrailerListing;
 
   const discountRate = tListing.clientDiscountRate ?? 0;

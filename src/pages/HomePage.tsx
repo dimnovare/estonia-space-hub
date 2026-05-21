@@ -24,6 +24,7 @@ export default function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const { t, language } = useLanguage();
   const settings = usePlatformSettings();
+  const { showMovingService, showTrailerService } = settings;
 
   // Sticky mobile search CTA — appears once user scrolls past the hero search card.
   const [showStickySearch, setShowStickySearch] = useState(false);
@@ -100,10 +101,10 @@ export default function HomePage() {
   const showTrustStrip = partnerCount > 0 && cityCount > 0;
 
   const categories = [
-    { key: "all", label: t("cat.all"), icon: Search },
+    { key: "all",       label: t("cat.all"),       icon: Search    },
     { key: "warehouse", label: t("cat.warehouse"), icon: Warehouse },
-    { key: "moving", label: t("cat.moving"), icon: Truck },
-    { key: "trailer", label: t("cat.trailer"), icon: CarFront },
+    ...(showMovingService  ? [{ key: "moving",  label: t("cat.moving"),  icon: Truck    }] : []),
+    ...(showTrailerService ? [{ key: "trailer", label: t("cat.trailer"), icon: CarFront }] : []),
   ];
 
   const { data: pricingConfig } = usePricingConfig();
@@ -200,6 +201,7 @@ export default function HomePage() {
             </div>
 
             <div className="card-prominent mx-auto mt-6 max-w-2xl p-2 shadow-2xl shadow-accent/10 md:mt-8">
+              {categories.length > 2 && (
               <div className="-mx-1 flex gap-1 overflow-x-auto border-b border-border px-1 pb-2 mb-2 snap-x scrollbar-hide fade-edges-x">
                 {categories.map((cat) => {
                   const Icon = cat.icon;
@@ -217,6 +219,7 @@ export default function HomePage() {
                   );
                 })}
               </div>
+              )}
               <div className="flex flex-col gap-2 sm:flex-row">
                 <div className="relative flex-1">
                   <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

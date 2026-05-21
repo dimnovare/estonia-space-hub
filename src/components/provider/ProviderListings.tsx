@@ -18,6 +18,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { trackEvent } from "@/lib/analytics";
 import { formatPriceUnit } from "@/lib/priceUnit";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { queryKeys } from "@/services/queryKeys";
 
 import { Button } from "@/components/ui/button";
@@ -222,6 +223,7 @@ function UnitDialog({
   locationId: string;
 }) {
   const { t, language } = useLanguage();
+  const { showMovingService, showTrailerService } = usePlatformSettings();
   const addUnit = useAddUnit();
   const { data: featureDefs = {} } = useFeatureDefinitions();
   const [features, setFeatures] = useState<Record<string, boolean>>({});
@@ -292,8 +294,8 @@ function UnitDialog({
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Warehouse">{t("provider.listings.typeWarehouse")}</SelectItem>
-                    <SelectItem value="Moving">{t("provider.listings.typeMoving")}</SelectItem>
-                    <SelectItem value="Trailer">{t("provider.listings.typeTrailer")}</SelectItem>
+                    {showMovingService  && <SelectItem value="Moving">{t("provider.listings.typeMoving")}</SelectItem>}
+                    {showTrailerService && <SelectItem value="Trailer">{t("provider.listings.typeTrailer")}</SelectItem>}
                   </SelectContent>
                 </Select>
               )}
@@ -665,6 +667,7 @@ function EditUnitDialog({
   unitData: any;
 }) {
   const { t, language } = useLanguage();
+  const { showMovingService, showTrailerService } = usePlatformSettings();
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [images, setImages] = useState<string[]>(unitData?.images || []);
@@ -753,8 +756,8 @@ function EditUnitDialog({
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Warehouse">{t("provider.listings.typeWarehouse")}</SelectItem>
-                    <SelectItem value="Moving">{t("provider.listings.typeMoving")}</SelectItem>
-                    <SelectItem value="Trailer">{t("provider.listings.typeTrailer")}</SelectItem>
+                    {showMovingService  && <SelectItem value="Moving">{t("provider.listings.typeMoving")}</SelectItem>}
+                    {showTrailerService && <SelectItem value="Trailer">{t("provider.listings.typeTrailer")}</SelectItem>}
                   </SelectContent>
                 </Select>
               )}

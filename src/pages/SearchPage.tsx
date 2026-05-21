@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { SizeBucketFilter } from "@/components/search/SizeBucketFilter";
 import StorageSizeCalculator from "@/components/StorageSizeCalculator";
 import { queryKeys } from "@/services/queryKeys";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
@@ -30,6 +31,7 @@ export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
   const { t, language } = useLanguage();
+  const { showMovingService, showTrailerService } = usePlatformSettings();
   const [calcOpen, setCalcOpen] = useState(false);
 
   const { data: featureDefs = {} } = useFeatureDefinitions();
@@ -188,11 +190,20 @@ export default function SearchPage() {
   ];
 
   const typeFilters = [
-    { value: "all", label: t("search.type.all") },
+    { value: "all",       label: t("search.type.all")       },
     { value: "warehouse", label: t("search.type.warehouse") },
-    { value: "moving", label: t("search.type.moving") },
-    { value: "trailer", label: t("search.type.trailer") },
+    ...(showMovingService  ? [{ value: "moving",  label: t("search.type.moving")  }] : []),
+    ...(showTrailerService ? [{ value: "trailer", label: t("search.type.trailer") }] : []),
   ];
+
+  // Reset URL type param if that service type has been disabled
+  useEffect(() => {
+    const ct = searchParams.get("type");
+    if ((ct === "moving"  && !showMovingService) ||
+        (ct === "trailer" && !showTrailerService)) {
+      updateFilters({ type: "" });
+    }
+  }, [showMovingService, showTrailerService, searchParams]);
 
   const activeFiltersCount = Object.values(featureDefs)
     .flat()
@@ -280,11 +291,13 @@ export default function SearchPage() {
       <div className={`flex-1 border-l border-border ${mobileView === "map" ? "hidden lg:block" : ""}`}>
         <div className="sticky top-16 z-10 border-b border-border bg-card px-4 py-3">
           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-            {typeFilters.map((tf) => (
-              <button key={tf.value} onClick={() => updateFilters({ type: tf.value === "all" ? "" : tf.value })} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${activeType === tf.value ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
-                {tf.label}
-              </button>
-            ))}
+            {typeFilters.length > 2 && (<>
+              {typeFilters.map((tf) => (
+                <button key={tf.value} onClick={() => updateFilters({ type: tf.value === "all" ? "" : tf.value })} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${activeType === tf.value ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
+                  {tf.label}
+                </button>
+              ))}
+            </>)}
             <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
               <button onClick={() => isMobile ? setDrawerOpen(true) : setShowFilters(!showFilters)} className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary">
                 <SlidersHorizontal className="h-3.5 w-3.5" />

@@ -41,11 +41,16 @@ export default function Navbar() {
   const { data: notifications = [] } = useNotifications();
   const unreadCount = notifications.filter((n) => !n.read).length;
   const settings = usePlatformSettings();
+  const { showMovingService, showTrailerService } = settings;
   const blogEnabled = String(settings.blog?.enabled ?? "false") === "true";
   const blogInNav = String(settings.blog?.showInNav ?? "false") === "true";
-  const navLinks = blogEnabled && blogInNav
+  const navLinks = (blogEnabled && blogInNav
     ? [...baseNavLinks, { to: "/blog", tKey: "blog.title", matchType: "" }]
-    : baseNavLinks;
+    : baseNavLinks
+  ).filter(l =>
+    (l.matchType !== "moving"  || showMovingService) &&
+    (l.matchType !== "trailer" || showTrailerService)
+  );
 
   // Subtle scroll-state for translucent home header
   const [scrolled, setScrolled] = useState(false);

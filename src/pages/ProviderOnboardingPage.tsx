@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
 import { usePricingConfig } from "@/hooks/queries";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { fillPricing } from "@/lib/pricingPlaceholders";
 import { useAuth } from "@/contexts/AuthContext";
 import { providerService } from "@/services";
@@ -34,6 +35,7 @@ export default function ProviderOnboardingPage() {
   const queryClient = useQueryClient();
   const { data: pricingConfig } = usePricingConfig();
   const fp = (text: string) => fillPricing(text, pricingConfig);
+  const { showMovingService, showTrailerService } = usePlatformSettings();
 
   // Pre-fill from user if available
   const effectiveContactName = contactName || user?.name || "";
@@ -52,8 +54,8 @@ export default function ProviderOnboardingPage() {
 
   const serviceTypes = [
     { key: "warehouse", label: t("onboard.service.warehouse"), icon: Warehouse },
-    { key: "moving", label: t("onboard.service.moving"), icon: Truck },
-    { key: "trailer", label: t("onboard.service.trailer"), icon: CarFront },
+    ...(showMovingService  ? [{ key: "moving",  label: t("onboard.service.moving"),  icon: Truck    }] : []),
+    ...(showTrailerService ? [{ key: "trailer", label: t("onboard.service.trailer"), icon: CarFront }] : []),
   ];
 
   const { data: availableCities = [] } = useQuery({

@@ -6,6 +6,7 @@ import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 export default function Footer() {
   const { t } = useLanguage();
   const settings = usePlatformSettings();
+  const { showMovingService, showTrailerService } = settings;
   const aboutEnabled = String(settings.aboutPage?.enabled ?? "true") !== "false";
   const blogEnabled = String(settings.blog?.enabled ?? "false") === "true";
   const blogInFooter = String(settings.blog?.showInFooter ?? "true") !== "false";
@@ -20,12 +21,14 @@ export default function Footer() {
     ...(showBlog ? [{ label: t("blog.title"), to: "/blog" }] : []),
   ];
 
+  const serviceLinks = [
+    { label: t("footer.storage"), to: "/search?type=warehouse" },
+    ...(showMovingService  ? [{ label: t("footer.movingService"), to: "/search?type=moving"  }] : []),
+    ...(showTrailerService ? [{ label: t("footer.trailerRental"), to: "/search?type=trailer" }] : []),
+  ];
+
   const footerLinks = {
-    [t("footer.services")]: [
-      { label: t("footer.storage"), to: "/search?type=warehouse" },
-      { label: t("footer.movingService"), to: "/search?type=moving" },
-      { label: t("footer.trailerRental"), to: "/search?type=trailer" },
-    ],
+    [t("footer.services")]: serviceLinks,
     [t("footer.company")]: companyLinks,
     [t("footer.legal")]: [
       { label: t("footer.terms"), to: "/terms" },
