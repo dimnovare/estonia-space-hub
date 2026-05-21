@@ -88,12 +88,15 @@ export default function HomePage() {
   }, [language]);
 
   // EN fallback headline parts (used when LV/LT has no supply).
+  const storageOnly = !showMovingService && !showTrailerService;
   const useEnFallback = (language === "lv" || language === "lt") && hasLocalSupply === false;
-  const heroTitle = useEnFallback ? "Rent storage in the Baltics" : t("hero.title");
-  const heroTitleHighlight = useEnFallback ? "in 60 seconds" : t("hero.titleHighlight");
+  const heroTitle = useEnFallback
+    ? "Rent storage in Estonia"
+    : (storageOnly ? t("hero.titleStorage") : t("hero.title"));
+  const heroTitleHighlight = storageOnly ? "" : (useEnFallback ? "in 60 seconds" : t("hero.titleHighlight"));
   const heroSubtitle = useEnFallback
-    ? "Compare prices, see photos, book online. No phone calls, no site visits."
-    : (settings.heroSubtitle || t("hero.subtitle"));
+    ? "Find and book storage space across Estonia."
+    : (storageOnly ? t("hero.subtitleStorage") : (settings.heroSubtitle || t("hero.subtitle")));
 
   // Hero trust strip — partners (unique suppliers) and cities, derived from public listings
   const partnerCount = new Set(allListings.map((l: any) => l.supplierId).filter(Boolean)).size;
@@ -177,8 +180,8 @@ export default function HomePage() {
         <div className="container-wide relative">
           <div className="mx-auto max-w-3xl text-center">
             <h1 className="font-display text-3xl font-bold leading-tight tracking-tight text-primary-foreground sm:text-4xl md:text-5xl lg:text-6xl">
-              {heroTitle}{" "}
-              <span className="text-gradient">{heroTitleHighlight}</span>
+              {heroTitle}
+              {heroTitleHighlight && <>{" "}<span className="text-gradient">{heroTitleHighlight}</span></>}
             </h1>
             <p className="mt-3 text-base leading-relaxed text-primary-foreground/75 md:mt-4 md:text-xl">{heroSubtitle}</p>
 
