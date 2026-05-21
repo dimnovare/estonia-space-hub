@@ -443,6 +443,7 @@ export const locationService = {
     openingHours: string;
     images: string[];
     notes: string;
+    externalId: string | null;
   }>): Promise<SupplierLocation> {
     return apiClient.patch<SupplierLocation>(`/locations/${id}`, data);
   },
