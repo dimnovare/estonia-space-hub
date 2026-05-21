@@ -44,7 +44,7 @@ export default function ProviderPage() {
   const { t } = useLanguage();
   const settings = usePlatformSettings();
   const featuredPartners: { name: string; logoUrl: string }[] = Array.isArray(settings?.featuredPartners)
-    ? settings.featuredPartners
+    ? (settings.featuredPartners as { name: string; logoUrl: string }[])
     : [];
   const showPartners = featuredPartners.length >= 3;
 

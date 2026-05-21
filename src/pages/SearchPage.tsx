@@ -129,7 +129,7 @@ export default function SearchPage() {
         if (searchParams.get(f.key) === "true") {
           results = results.filter(l => {
             if (type !== "all" && l.type !== type) return false;
-            const feat = l.features || {};
+            const feat = (l as { features?: Record<string, unknown> }).features || {};
             return feat[f.key] === true || feat[f.key] === "true";
           });
         }

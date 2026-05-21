@@ -271,11 +271,11 @@ export function WarehouseDetail() {
             ))}
           </div>
 
-          {wListing.features.length > 0 && (
+          {Object.keys(wListing.features ?? {}).length > 0 && (
             <>
               <h2 className="mt-8 font-display text-lg font-semibold">{t("detail.includes")}</h2>
               <ul className="mt-3 space-y-2">
-                {wListing.features.map((f) => (
+                {Object.keys(wListing.features ?? {}).map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm"><Check className="h-4 w-4 text-accent" /> {f}</li>
                 ))}
               </ul>

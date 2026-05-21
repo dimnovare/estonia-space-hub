@@ -528,7 +528,7 @@ export default function ProviderListings() {
                                       description: unit.description || "",
                                       vatRate: unit.vatRate,
                                       images: unit.images || [],
-                                      features: unit.features ?? {},
+                                      features: (unit as { features?: Record<string, unknown> }).features ?? {},
                                     });
                                     setEditUnitOpen(true);
                                   }}
