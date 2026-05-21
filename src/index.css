@@ -157,7 +157,10 @@
   }
 
   .hero-gradient {
-    background: var(--gradient-hero);
+    background:
+      radial-gradient(ellipse 70% 55% at 75% -10%, hsl(174 65% 47% / 0.20), transparent 60%),
+      radial-gradient(ellipse 55% 45% at 5% 115%, hsl(186 60% 45% / 0.14), transparent 55%),
+      linear-gradient(150deg, hsl(213 56% 19%) 0%, hsl(213 46% 27%) 55%, hsl(202 44% 26%) 100%);
   }
 
   .surface-sunken {

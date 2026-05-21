@@ -11,7 +11,6 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
 import TrustBar from "@/components/TrustBar";
-import { apiClient } from "@/services/apiClient";
 import FeaturedPartnersStrip from "@/components/FeaturedPartnersStrip";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
@@ -53,50 +52,10 @@ export default function HomePage() {
   const listingCount = allResult?.total ?? 0;
   const { data: citiesFromApi = [] } = useCities();
 
-  // Supply gating for LV/LT — fall back to EN headline if no listings in country.
-  // Cached in sessionStorage to avoid re-fetching on every render.
-  const [hasLocalSupply, setHasLocalSupply] = useState<boolean | null>(() => {
-    if (language !== "lv" && language !== "lt") return true;
-    const cached = sessionStorage.getItem(`ruumly-supply-${language}`);
-    return cached === null ? null : cached === "1";
-  });
-
-  useEffect(() => {
-    if (language !== "lv" && language !== "lt") {
-      setHasLocalSupply(true);
-      return;
-    }
-    const cacheKey = `ruumly-supply-${language}`;
-    const cached = sessionStorage.getItem(cacheKey);
-    if (cached !== null) {
-      setHasLocalSupply(cached === "1");
-      return;
-    }
-    const country = language.toUpperCase();
-    apiClient
-      .get<Array<{ city: string; country: string }>>(`/locations/cities`)
-      .then((cities: any) => {
-        const list = Array.isArray(cities) ? cities : [];
-        const has = list.some((c: any) => c.country === country);
-        sessionStorage.setItem(cacheKey, has ? "1" : "0");
-        setHasLocalSupply(has);
-      })
-      .catch(() => {
-        // On error, assume supply exists to avoid hiding the localized headline incorrectly.
-        setHasLocalSupply(true);
-      });
-  }, [language]);
-
-  // EN fallback headline parts (used when LV/LT has no supply).
-  const storageOnly = !showMovingService && !showTrailerService;
-  const useEnFallback = (language === "lv" || language === "lt") && hasLocalSupply === false;
-  const heroTitle = useEnFallback
-    ? "Rent storage in Estonia"
-    : (storageOnly ? t("hero.titleStorage") : t("hero.title"));
-  const heroTitleHighlight = storageOnly ? "" : (useEnFallback ? "in 60 seconds" : t("hero.titleHighlight"));
-  const heroSubtitle = useEnFallback
-    ? "Find and book storage space across Estonia."
-    : (storageOnly ? t("hero.subtitleStorage") : (settings.heroSubtitle || t("hero.subtitle")));
+  const storageOnly        = !showMovingService && !showTrailerService;
+  const heroTitle          = storageOnly ? t("hero.titleStorage")          : t("hero.title");
+  const heroTitleHighlight = storageOnly ? t("hero.titleStorageHighlight") : t("hero.titleHighlight");
+  const heroSubtitle       = storageOnly ? t("hero.subtitleStorage")       : (settings.heroSubtitle || t("hero.subtitle"));
 
   // Hero trust strip — partners (unique suppliers) and cities, derived from public listings
   const partnerCount = new Set(allListings.map((l: any) => l.supplierId).filter(Boolean)).size;
@@ -174,9 +133,14 @@ export default function HomePage() {
         }}
       />
       <section className="hero-gradient relative overflow-hidden py-10 md:py-24">
-        <div className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: "radial-gradient(circle at 30% 50%, hsl(174 65% 47% / 0.3), transparent 60%)" }}
+        {/* subtle dot-grid texture */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.06]"
+          style={{ backgroundImage: "radial-gradient(hsl(0 0% 100%) 1px, transparent 1px)", backgroundSize: "28px 28px" }}
         />
+        {/* soft accent glow, top-right */}
+        <div aria-hidden className="pointer-events-none absolute -top-24 -right-16 h-80 w-80 rounded-full bg-accent/20 blur-3xl" />
+        {/* soft accent glow, bottom-left */}
+        <div aria-hidden className="pointer-events-none absolute -bottom-28 -left-20 h-72 w-72 rounded-full bg-accent/10 blur-3xl" />
         <div className="container-wide relative">
           <div className="mx-auto max-w-3xl text-center">
             <h1 className="font-display text-3xl font-bold leading-tight tracking-tight text-primary-foreground sm:text-4xl md:text-5xl lg:text-6xl">
@@ -185,25 +149,22 @@ export default function HomePage() {
             </h1>
             <p className="mt-3 text-base leading-relaxed text-primary-foreground/75 md:mt-4 md:text-xl">{heroSubtitle}</p>
 
-            {/* Social proof row — single inline strip with separators */}
-            <div className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-primary-foreground/75">
-              <span className="flex items-center gap-1.5">
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs text-primary-foreground/85">
+              <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 ring-1 ring-white/10 backdrop-blur-sm">
                 <CheckCircle className="h-3.5 w-3.5 text-accent" />
                 {t("trust.badge1")}
               </span>
-              <span className="text-primary-foreground/30">·</span>
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 ring-1 ring-white/10 backdrop-blur-sm">
                 <Clock className="h-3.5 w-3.5 text-accent" />
                 {t("trust.badge2")}
               </span>
-              <span className="text-primary-foreground/30">·</span>
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 ring-1 ring-white/10 backdrop-blur-sm">
                 <Shield className="h-3.5 w-3.5 text-accent" />
                 {t("trust.badge3")}
               </span>
             </div>
 
-            <div className="card-prominent mx-auto mt-6 max-w-2xl p-2 shadow-2xl shadow-accent/10 md:mt-8">
+            <div className="card-prominent mx-auto mt-7 max-w-2xl p-2 shadow-2xl shadow-primary/25 ring-1 ring-black/5 md:mt-9">
               {categories.length > 2 && (
               <div className="-mx-1 flex gap-1 overflow-x-auto border-b border-border px-1 pb-2 mb-2 snap-x scrollbar-hide fade-edges-x">
                 {categories.map((cat) => {
