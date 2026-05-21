@@ -78,8 +78,8 @@ function mapListing(api: ApiListing): Listing {
       forklift: (f.forklift as boolean) ?? false,
       shortTerm: (f.shortTerm as boolean) ?? false,
       longTerm: (f.longTerm as boolean) ?? false,
-      features: (f.features as string[]) ?? [],
-    } as WarehouseListing;
+      features: (f.features as Record<string, unknown>) ?? {},
+    } as unknown as WarehouseListing;
   }
 
   if (t === "moving") {
