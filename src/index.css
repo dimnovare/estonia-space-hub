@@ -22,9 +22,9 @@
     --muted: 210 14% 93%;
     --muted-foreground: 213 12% 46%;
 
-    /* Darkened from 47% → 35% lightness to meet WCAG AA (4.5:1) for white text
-       on bg-accent and for text-accent on tinted backgrounds. Hue/saturation preserved. */
-    --accent: 174 70% 32%;
+    /* Darkened to 174 80% 24% so white text on bg-accent and text-accent on
+       light tints (bg-accent/5) both clear WCAG AA (4.5:1). */
+    --accent: 174 80% 24%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;

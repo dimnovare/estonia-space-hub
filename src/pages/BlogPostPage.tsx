@@ -55,7 +55,7 @@ export default function BlogPostPage() {
         ))}
       </Helmet>
 
-      <main className="container-wide py-10">
+      <div className="container-wide py-10">
         <Link
           to="/blog"
           className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
@@ -100,7 +100,7 @@ export default function BlogPostPage() {
         </article>
 
         {related.length > 0 && (
-          <section className="mx-auto mt-16 max-w-[720px]">
+          <div className="mx-auto mt-16 max-w-[720px]">
             <h2 className="mb-4 text-xl font-semibold">{t("blog.relatedPosts")}</h2>
             <ul className="grid gap-4 sm:grid-cols-2">
               {related.map((p) => (
@@ -117,7 +117,7 @@ export default function BlogPostPage() {
                 </li>
               ))}
             </ul>
-          </section>
+          </div>
         )}
 
         <div className="mt-12 text-center">
@@ -128,7 +128,7 @@ export default function BlogPostPage() {
             <FileText className="h-4 w-4" /> {t("blog.allPosts")}
           </Link>
         </div>
-      </main>
+      </div>
     </>
   );
 }

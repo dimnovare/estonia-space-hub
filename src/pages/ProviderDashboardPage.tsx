@@ -129,7 +129,7 @@ export default function ProviderDashboardPage() {
         </nav>
       </aside>
 
-      <main className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6">
+      <div className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6">
         {supplierId && (
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-50 px-4 py-3 dark:bg-amber-950/30">
             <div className="flex items-center gap-2 text-sm">
@@ -260,7 +260,7 @@ export default function ProviderDashboardPage() {
         )}
         {tab === "team" && <ProviderTeam />}
         {tab === "billing" && <ProviderBilling />}
-      </main>
+      </div>
     </div>
   );
 }
