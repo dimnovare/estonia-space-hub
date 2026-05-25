@@ -6,7 +6,6 @@ export const SceneHero: React.FC = () => {
   const { fps } = useVideoConfig();
   const titleY = interpolate(spring({ frame: frame - 4, fps, config: { damping: 18, stiffness: 120 } }), [0, 1], [40, 0]);
   const titleO = interpolate(frame, [4, 22], [0, 1], { extrapolateRight: "clamp" });
-  const subO = interpolate(frame, [22, 40], [0, 1], { extrapolateRight: "clamp" });
   const lineW = interpolate(spring({ frame: frame - 30, fps, config: { damping: 200 } }), [0, 1], [0, 220]);
   const eyebrowO = interpolate(frame, [0, 14], [0, 1], { extrapolateRight: "clamp" });
 
@@ -32,9 +31,6 @@ export const SceneHero: React.FC = () => {
         <span style={{ color: TEAL }}>In 60 seconds.</span>
       </h1>
       <div style={{ width: lineW, height: 4, background: TEAL, marginTop: 36, borderRadius: 4 }} />
-      <p style={{ opacity: subO, fontSize: 30, marginTop: 28, color: "rgba(245,243,238,0.8)", maxWidth: 900, lineHeight: 1.35 }}>
-        Find verified warehouse space across the Baltics — up to 10% cheaper than direct.
-      </p>
     </AbsoluteFill>
   );
 };
