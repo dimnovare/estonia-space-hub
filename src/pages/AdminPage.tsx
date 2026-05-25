@@ -34,7 +34,7 @@ export default function AdminPage() {
     <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
       <SEO title="Admin — Ruumly" description="" noindex={true} />
       <AdminSidebar activeTab={activeTab} />
-      <main className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6">
+      <section role="region" className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6">
         {["locations", "orders", "payouts", "rebates"].includes(activeTab) && (
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <label className="text-sm font-medium text-muted-foreground">{t("admin.filterByPartner")}</label>
@@ -71,7 +71,7 @@ export default function AdminPage() {
         {activeTab === "payouts" && <AdminPayouts supplierId={filterSupplierId || undefined} />}
         {activeTab === "rebates" && <AdminRebates supplierId={filterSupplierId || undefined} />}
         {activeTab === "settings" && <AdminSettings />}
-      </main>
+      </section>
     </div>
   );
 }

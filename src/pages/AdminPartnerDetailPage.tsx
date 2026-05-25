@@ -67,9 +67,9 @@ export default function AdminPartnerDetailPage() {
     return (
       <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
         <AdminSidebar activeTab="partners" />
-        <main className="flex flex-1 min-w-0 items-center justify-center">
+        <section role="region" className="flex flex-1 min-w-0 items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </main>
+        </section>
       </div>
     );
   }
@@ -90,7 +90,7 @@ export default function AdminPartnerDetailPage() {
     <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
       <SEO title={`${s.name} — Ruumly Admin`} description="" noindex />
       <AdminSidebar activeTab="partners" />
-      <main className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6">
+      <section role="region" className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6">
         <Link
           to="/admin/partners"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
@@ -169,7 +169,7 @@ export default function AdminPartnerDetailPage() {
         {tab === "partner-page" && <PartnerPageTab supplier={s} onSave={(p) => updateMutation.mutate(p)} pending={updateMutation.isPending} />}
         {tab === "integration" && <IntegrationTab supplierId={s.id} />}
         {tab === "contracts" && <ContractsTab supplierId={s.id} />}
-      </main>
+      </section>
     </div>
   );
 }
