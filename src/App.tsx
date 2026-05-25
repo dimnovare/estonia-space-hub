@@ -153,8 +153,9 @@ function AppContent() {
     <>
       <ScrollToTop />
       <Navbar />
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
+      <main id="main-content">
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
           <Route path="/:lang" element={<LangParamGuard><Outlet /></LangParamGuard>}>
             <Route element={<NoFooter />}>
               <Route path="search" element={<SearchPage />} />
@@ -194,9 +195,10 @@ function AppContent() {
             </Route>
           </Route>
           {/* Any unprefixed path → redirect to /:lang/<same-path> */}
-          <Route path="*" element={<LangRedirect />} />
-        </Routes>
-      </Suspense>
+            <Route path="*" element={<LangRedirect />} />
+          </Routes>
+        </Suspense>
+      </main>
       <CookieConsent />
     </>
   );
