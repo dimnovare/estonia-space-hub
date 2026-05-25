@@ -147,7 +147,7 @@ export default function HomePage() {
               {heroTitle}
               {heroTitleHighlight && <>{" "}<span className="text-gradient">{heroTitleHighlight}</span></>}
             </h1>
-            <p className="mt-3 text-base leading-relaxed text-primary-foreground/75 md:mt-4 md:text-xl">{heroSubtitle}</p>
+            <p className="mt-3 min-h-[3rem] text-base leading-relaxed text-primary-foreground/75 md:mt-4 md:min-h-[3.5rem] md:text-xl">{heroSubtitle}</p>
 
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs text-primary-foreground/85">
               <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 ring-1 ring-white/10 backdrop-blur-sm">
@@ -223,13 +223,13 @@ export default function HomePage() {
               {t("hero.valueHint")}
             </p>
 
-            {showTrustStrip && (
-              <p className="mt-3 text-sm text-primary-foreground/75">
-                {t("hero.trustStrip")
-                  .replace("{partners}", String(partnerCount))
-                  .replace("{cities}", String(cityCount))}
-              </p>
-            )}
+            <p className="mt-3 min-h-[1.25rem] text-sm text-primary-foreground/75">
+              {showTrustStrip
+                ? t("hero.trustStrip")
+                    .replace("{partners}", String(partnerCount))
+                    .replace("{cities}", String(cityCount))
+                : "\u00A0"}
+            </p>
 
             <div className="mt-4">
               <Link
