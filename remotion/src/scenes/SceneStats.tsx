@@ -3,7 +3,7 @@ import { TEAL, CREAM } from "../MainVideo";
 
 const stats = [
   { v: 3, suffix: " countries", label: "Estonia · Latvia · Lithuania" },
-  { v: 10, suffix: "%", label: "cheaper than direct" },
+  { v: 100, suffix: "%", label: "verified partners" },
   { v: 60, suffix: "s", label: "average booking time" },
 ];
 
