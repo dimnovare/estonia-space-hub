@@ -47,7 +47,7 @@ export const SceneSearch: React.FC = () => {
           { city: "Tartu", size: "45 m²", price: "€159" },
           { city: "Pärnu", size: "60 m²", price: "€175" },
         ].map((r) => (
-          <div key={r.city} style={{ width: 380, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 18, padding: 24, backdropFilter: "blur(4px)" }}>
+          <div key={r.city} style={{ width: 380, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 18, padding: 24 }}>
             <div style={{ height: 140, borderRadius: 12, background: "linear-gradient(135deg, rgba(46,196,182,0.4), rgba(30,58,95,0.6))" }} />
             <div style={{ marginTop: 18, fontFamily: "Manrope, sans-serif", fontWeight: 700, fontSize: 28, color: CREAM }}>{r.city}</div>
             <div style={{ marginTop: 6, color: "rgba(245,243,238,0.7)", fontSize: 20 }}>{r.size} · from <span style={{ color: TEAL, fontWeight: 600 }}>{r.price}</span>/mo</div>
