@@ -4,31 +4,86 @@ import { TEAL, CREAM } from "../MainVideo";
 export const SceneOutro: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const logoSpring = spring({ frame, fps, config: { damping: 16, stiffness: 110 } });
-  const logoO = interpolate(frame, [0, 18], [0, 1], { extrapolateRight: "clamp" });
-  const tagO = interpolate(frame, [22, 44], [0, 1], { extrapolateRight: "clamp" });
-  const urlO = interpolate(frame, [44, 64], [0, 1], { extrapolateRight: "clamp" });
-  const lineW = interpolate(spring({ frame: frame - 44, fps, config: { damping: 200 } }), [0, 1], [0, 320]);
+  const iconSpring = spring({ frame, fps, config: { damping: 14, stiffness: 90 } });
+  const iconO = interpolate(frame, [0, 22], [0, 1], { extrapolateRight: "clamp" });
+  const wordmarkO = interpolate(frame, [28, 52], [0, 1], { extrapolateRight: "clamp" });
+  const wordmarkY = interpolate(spring({ frame: frame - 28, fps, config: { damping: 22 } }), [0, 1], [16, 0]);
+  const tagO = interpolate(frame, [60, 84], [0, 1], { extrapolateRight: "clamp" });
+  const urlO = interpolate(frame, [86, 110], [0, 1], { extrapolateRight: "clamp" });
+  const lineW = interpolate(spring({ frame: frame - 60, fps, config: { damping: 200 } }), [0, 1], [0, 280]);
+  const haloPulse = 0.55 + Math.sin(frame / 22) * 0.12;
 
   return (
     <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
+      {/* Soft teal halo behind the icon */}
       <div
         style={{
-          opacity: logoO,
-          transform: `scale(${0.85 + logoSpring * 0.15})`,
-          background: CREAM,
-          padding: "44px 80px",
-          borderRadius: 36,
-          boxShadow: "0 30px 80px rgba(0,0,0,0.35)",
+          position: "absolute",
+          width: 720,
+          height: 720,
+          borderRadius: "50%",
+          background: `radial-gradient(circle, rgba(46,196,182,${0.32 * haloPulse}) 0%, rgba(46,196,182,0.08) 35%, transparent 65%)`,
+          filter: "blur(8px)",
+          opacity: iconO,
+        }}
+      />
+      <div
+        style={{
+          opacity: iconO,
+          transform: `scale(${0.82 + iconSpring * 0.18})`,
+          position: "relative",
         }}
       >
-        <Img src={staticFile("images/ruumly-logo.png")} style={{ height: 220, display: "block" }} />
+        <Img
+          src={staticFile("images/ruumly-icon.png")}
+          style={{
+            height: 280,
+            width: 280,
+            display: "block",
+            filter: "drop-shadow(0 18px 50px rgba(46,196,182,0.55)) drop-shadow(0 6px 18px rgba(0,0,0,0.45))",
+          }}
+        />
       </div>
-      <div style={{ width: lineW, height: 3, background: TEAL, marginTop: 36, borderRadius: 3 }} />
-      <div style={{ opacity: tagO, marginTop: 28, fontSize: 32, color: "rgba(245,243,238,0.85)", letterSpacing: 0.5 }}>
-        Storage, simplified.
+      <div
+        style={{
+          opacity: wordmarkO,
+          transform: `translateY(${wordmarkY}px)`,
+          marginTop: 44,
+          fontFamily: "Manrope, sans-serif",
+          fontWeight: 800,
+          fontSize: 96,
+          letterSpacing: -2,
+          color: CREAM,
+          lineHeight: 1,
+        }}
+      >
+        ruumly
       </div>
-      <div style={{ opacity: urlO, marginTop: 56, fontFamily: "Manrope, sans-serif", fontSize: 36, color: TEAL, fontWeight: 600 }}>
+      <div style={{ width: lineW, height: 3, background: TEAL, marginTop: 28, borderRadius: 3 }} />
+      <div
+        style={{
+          opacity: tagO,
+          marginTop: 22,
+          fontSize: 28,
+          color: "rgba(245,243,238,0.78)",
+          letterSpacing: 4,
+          textTransform: "uppercase",
+          fontWeight: 500,
+        }}
+      >
+        Storage, simplified
+      </div>
+      <div
+        style={{
+          opacity: urlO,
+          marginTop: 44,
+          fontFamily: "Manrope, sans-serif",
+          fontSize: 32,
+          color: TEAL,
+          fontWeight: 600,
+          letterSpacing: 1,
+        }}
+      >
         ruumly.eu
       </div>
     </AbsoluteFill>

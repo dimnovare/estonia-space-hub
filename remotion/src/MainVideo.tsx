@@ -1,7 +1,4 @@
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate } from "remotion";
-import { TransitionSeries, springTiming, linearTiming } from "@remotion/transitions";
-import { fade } from "@remotion/transitions/fade";
-import { slide } from "@remotion/transitions/slide";
+import { AbsoluteFill, Series, useCurrentFrame, useVideoConfig, interpolate } from "remotion";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont as loadDMSans } from "@remotion/google-fonts/DMSans";
 import { SceneHero } from "./scenes/SceneHero";
@@ -50,27 +47,25 @@ export const MainVideo: React.FC = () => {
     <AbsoluteFill style={{ fontFamily: "DM Sans, sans-serif", color: CREAM }}>
       <PersistentBackground />
       <GrainOverlay />
-      <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={160}>
-          <SceneHero />
-        </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={fade()} timing={linearTiming({ durationInFrames: 18 })} />
-        <TransitionSeries.Sequence durationInFrames={170}>
-          <SceneSearch />
-        </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={slide({ direction: "from-right" })} timing={springTiming({ config: { damping: 200 }, durationInFrames: 24 })} />
-        <TransitionSeries.Sequence durationInFrames={180}>
-          <SceneFeatures />
-        </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={fade()} timing={linearTiming({ durationInFrames: 18 })} />
-        <TransitionSeries.Sequence durationInFrames={160}>
-          <SceneStats />
-        </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={fade()} timing={linearTiming({ durationInFrames: 18 })} />
-        <TransitionSeries.Sequence durationInFrames={170}>
-          <SceneOutro />
-        </TransitionSeries.Sequence>
-      </TransitionSeries>
+      <Series>
+        <Series.Sequence durationInFrames={170}><SceneWrap><SceneHero /></SceneWrap></Series.Sequence>
+        <Series.Sequence durationInFrames={180}><SceneWrap><SceneSearch /></SceneWrap></Series.Sequence>
+        <Series.Sequence durationInFrames={190}><SceneWrap><SceneFeatures /></SceneWrap></Series.Sequence>
+        <Series.Sequence durationInFrames={170}><SceneWrap><SceneStats /></SceneWrap></Series.Sequence>
+        <Series.Sequence durationInFrames={200}><SceneWrap><SceneOutro /></SceneWrap></Series.Sequence>
+      </Series>
     </AbsoluteFill>
   );
+};
+
+const SceneWrap: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const frame = useCurrentFrame();
+  const { durationInFrames } = useVideoConfig();
+  const o = interpolate(
+    frame,
+    [0, 10, durationInFrames - 10, durationInFrames],
+    [0, 1, 1, 0],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+  );
+  return <AbsoluteFill style={{ opacity: o }}>{children}</AbsoluteFill>;
 };
