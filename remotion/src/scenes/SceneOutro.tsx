@@ -1,4 +1,4 @@
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring } from "remotion";
+import { AbsoluteFill, Img, staticFile, useCurrentFrame, useVideoConfig, interpolate, spring } from "remotion";
 import { TEAL, CREAM } from "../MainVideo";
 
 export const SceneOutro: React.FC = () => {
@@ -12,9 +12,17 @@ export const SceneOutro: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
-      <div style={{ opacity: logoO, transform: `scale(${0.85 + logoSpring * 0.15})`, display: "flex", alignItems: "center", gap: 24 }}>
-        <div style={{ width: 88, height: 88, borderRadius: 22, background: TEAL, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Manrope, sans-serif", fontWeight: 800, fontSize: 56, color: "#0E2238" }}>R</div>
-        <div style={{ fontFamily: "Manrope, sans-serif", fontWeight: 800, fontSize: 140, color: CREAM, letterSpacing: -3 }}>Ruumly</div>
+      <div
+        style={{
+          opacity: logoO,
+          transform: `scale(${0.85 + logoSpring * 0.15})`,
+          background: CREAM,
+          padding: "44px 80px",
+          borderRadius: 36,
+          boxShadow: "0 30px 80px rgba(0,0,0,0.35)",
+        }}
+      >
+        <Img src={staticFile("images/ruumly-logo.png")} style={{ height: 220, display: "block" }} />
       </div>
       <div style={{ width: lineW, height: 3, background: TEAL, marginTop: 36, borderRadius: 3 }} />
       <div style={{ opacity: tagO, marginTop: 28, fontSize: 32, color: "rgba(245,243,238,0.85)", letterSpacing: 0.5 }}>
