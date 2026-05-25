@@ -55,7 +55,7 @@ export default function BlogPostPage() {
         ))}
       </Helmet>
 
-      <section role="region" className="container-wide py-10">
+      <div className="container-wide py-10">
         <Link
           to="/blog"
           className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
@@ -117,7 +117,7 @@ export default function BlogPostPage() {
                 </li>
               ))}
             </ul>
-          </section>
+          </div>
         )}
 
         <div className="mt-12 text-center">
@@ -128,7 +128,7 @@ export default function BlogPostPage() {
             <FileText className="h-4 w-4" /> {t("blog.allPosts")}
           </Link>
         </div>
-      </section>
+      </div>
     </>
   );
 }

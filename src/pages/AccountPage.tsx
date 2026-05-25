@@ -169,7 +169,7 @@ export default function AccountPage() {
         </nav>
       </aside>
 
-      <section role="region" className="flex-1 min-w-0 p-4 sm:p-6">
+      <div className="flex-1 min-w-0 p-4 sm:p-6">
         {/* Mobile: compact dropdown navigation */}
         <div className="mb-4 lg:hidden">
           {roleDashboardLinks.length > 0 && (
@@ -194,7 +194,7 @@ export default function AccountPage() {
         {tab === "security" && <AccountSecurity />}
         {tab === "billing" && <AccountBilling />}
         {tab === "help" && <AccountHelp />}
-      </section>
+      </div>
     </div>
   );
 }

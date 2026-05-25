@@ -67,9 +67,9 @@ export default function AdminPartnerDetailPage() {
     return (
       <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
         <AdminSidebar activeTab="partners" />
-        <section role="region" className="flex flex-1 min-w-0 items-center justify-center">
+        <div className="flex flex-1 min-w-0 items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </section>
+        </div>
       </div>
     );
   }
@@ -90,7 +90,7 @@ export default function AdminPartnerDetailPage() {
     <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
       <SEO title={`${s.name} — Ruumly Admin`} description="" noindex />
       <AdminSidebar activeTab="partners" />
-      <section role="region" className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6">
+      <div className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6">
         <Link
           to="/admin/partners"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
@@ -169,7 +169,7 @@ export default function AdminPartnerDetailPage() {
         {tab === "partner-page" && <PartnerPageTab supplier={s} onSave={(p) => updateMutation.mutate(p)} pending={updateMutation.isPending} />}
         {tab === "integration" && <IntegrationTab supplierId={s.id} />}
         {tab === "contracts" && <ContractsTab supplierId={s.id} />}
-      </section>
+      </div>
     </div>
   );
 }
@@ -227,7 +227,7 @@ function OverviewTab({ supplier: s }: { supplier: any }) {
               </li>
             ))}
           </ul>
-        </section>
+        </div>
       )}
 
       {s.integrationType === "api" && (
@@ -256,7 +256,7 @@ function OverviewTab({ supplier: s }: { supplier: any }) {
               ))
             )}
           </div>
-        </section>
+        </div>
       )}
     </div>
   );
@@ -320,7 +320,7 @@ function ProfileTab({ supplier, onSave, pending }: { supplier: any; onSave: (p: 
           {t("common.saveChanges")}
         </Button>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -388,7 +388,7 @@ function CommercialTab({ supplier, onSave, pending }: { supplier: any; onSave: (
           {t("common.saveChanges")}
         </Button>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -512,7 +512,7 @@ function PartnerPageTab({ supplier, onSave, pending }: { supplier: any; onSave: 
           {t("common.saveChanges")}
         </Button>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -697,7 +697,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
             </>
           )}
         </div>
-      </section>
+      </div>
 
       {(form.integrationType === "api" || form.postingMode === "api") && (
         <section className="rounded-xl border border-border bg-card p-5">
@@ -728,7 +728,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
               </button>
             ))}
           </div>
-        </section>
+        </div>
       )}
 
       {form.pollingEnabled && form.integrationType === "api" && (
@@ -776,7 +776,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
           <p className="mt-3 text-[10px] text-muted-foreground">
             Expected vendor response: [{"{"}id_field": "loc-123", "available_field": 5, "total_field": 20{"}"}]
           </p>
-        </section>
+        </div>
       )}
 
       <section className="rounded-xl border border-border bg-card p-5">
@@ -839,7 +839,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
             )}
           </div>
         </div>
-      </section>
+      </div>
 
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={!dirty || pending}>
@@ -1002,6 +1002,6 @@ function ContractsTab({ supplierId }: { supplierId: string }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </section>
+    </div>
   );
 }

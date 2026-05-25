@@ -53,7 +53,7 @@ export default function AdminPartnerListPage() {
     <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
       <SEO title="Partners — Ruumly Admin" description="" noindex />
       <AdminSidebar activeTab="partners" />
-      <section role="region" className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6">
+      <div className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="font-display text-2xl font-bold">{t("admin.partners")}</h1>
@@ -150,7 +150,7 @@ export default function AdminPartnerListPage() {
             })}
           </div>
         )}
-      </section>
+      </div>
     </div>
   );
 }

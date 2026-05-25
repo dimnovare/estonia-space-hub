@@ -44,7 +44,7 @@ export default function BlogIndexPage() {
         description={t("blog.title")}
         path="/blog"
       />
-      <section role="region" className="container-wide py-10">
+      <div className="container-wide py-10">
         <header className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t("blog.title")}</h1>
         </header>
@@ -124,7 +124,7 @@ export default function BlogIndexPage() {
             </Button>
           </nav>
         )}
-      </section>
+      </div>
     </>
   );
 }
