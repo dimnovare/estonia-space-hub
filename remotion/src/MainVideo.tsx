@@ -52,7 +52,7 @@ export const MainVideo: React.FC = () => {
         <Series.Sequence durationInFrames={180}><SceneWrap><SceneSearch /></SceneWrap></Series.Sequence>
         <Series.Sequence durationInFrames={190}><SceneWrap><SceneFeatures /></SceneWrap></Series.Sequence>
         <Series.Sequence durationInFrames={170}><SceneWrap><SceneStats /></SceneWrap></Series.Sequence>
-        <Series.Sequence durationInFrames={200}><SceneWrap><SceneOutro /></SceneWrap></Series.Sequence>
+        <Series.Sequence durationInFrames={260}><SceneWrap><SceneOutro /></SceneWrap></Series.Sequence>
       </Series>
     </AbsoluteFill>
   );
