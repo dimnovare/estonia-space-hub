@@ -4,7 +4,7 @@ import { TEAL, CREAM } from "../MainVideo";
 const items = [
   { t: "Verified partners", d: "Hand-checked Baltic operators only." },
   { t: "Instant booking", d: "Sign and pay online, no callbacks." },
-  { t: "Better pricing", d: "Up to 10% off direct partner rates." },
+  { t: "Transparent quotes", d: "Clear totals, no hidden fees." },
   { t: "All in one place", d: "Storage, moving, trailers." },
 ];
 
