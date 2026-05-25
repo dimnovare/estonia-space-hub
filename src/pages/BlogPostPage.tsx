@@ -100,7 +100,7 @@ export default function BlogPostPage() {
         </article>
 
         {related.length > 0 && (
-          <section className="mx-auto mt-16 max-w-[720px]">
+          <div className="mx-auto mt-16 max-w-[720px]">
             <h2 className="mb-4 text-xl font-semibold">{t("blog.relatedPosts")}</h2>
             <ul className="grid gap-4 sm:grid-cols-2">
               {related.map((p) => (

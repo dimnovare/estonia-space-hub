@@ -215,7 +215,7 @@ function OverviewTab({ supplier: s }: { supplier: any }) {
       </div>
 
       {!checklist.every(c => c.done) && (
-        <section className="rounded-xl border border-border bg-card p-5">
+        <div className="rounded-xl border border-border bg-card p-5">
           <h3 className="mb-3 text-sm font-semibold">{t("admin.partner.setupChecklist")}</h3>
           <ul className="space-y-1.5 text-sm">
             {checklist.map((c) => (
@@ -231,7 +231,7 @@ function OverviewTab({ supplier: s }: { supplier: any }) {
       )}
 
       {s.integrationType === "api" && (
-        <section className="rounded-xl border border-border bg-card p-5">
+        <div className="rounded-xl border border-border bg-card p-5">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold">{t("admin.partner.recentSyncLog")}</h3>
             <button
@@ -279,7 +279,7 @@ function ProfileTab({ supplier, onSave, pending }: { supplier: any; onSave: (p: 
   const dirty = JSON.stringify(form) !== JSON.stringify(initial);
 
   return (
-    <section className="rounded-xl border border-border bg-card p-5">
+    <div className="rounded-xl border border-border bg-card p-5">
       <div className="grid gap-4 md:grid-cols-2">
         <div>
           <label className="text-xs font-medium">{t("admin.profile.companyName")}</label>
@@ -343,7 +343,7 @@ function CommercialTab({ supplier, onSave, pending }: { supplier: any; onSave: (
   const monthlyFee: Record<string, string> = { starter: "€0/mo", standard: "€49/mo", premium: "€99/mo" };
 
   return (
-    <section className="space-y-4 rounded-xl border border-border bg-card p-5">
+    <div className="space-y-4 rounded-xl border border-border bg-card p-5">
       <div className="grid gap-4 md:grid-cols-2">
         <div>
           <label className="text-xs font-medium">{t("admin.partner.tier")}</label>
@@ -427,7 +427,7 @@ function PartnerPageTab({ supplier, onSave, pending }: { supplier: any; onSave: 
   const storyKey = (`longDescription${storyLang === "et" ? "Et" : storyLang === "en" ? "En" : "Ru"}`) as keyof typeof form;
 
   return (
-    <section className="space-y-6 rounded-xl border border-border bg-card p-5">
+    <div className="space-y-6 rounded-xl border border-border bg-card p-5">
       <div className="grid gap-4 md:grid-cols-2">
         <div>
           <label className="text-xs font-medium">Slug</label>
@@ -600,7 +600,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
 
   return (
     <div className="space-y-5">
-      <section className="rounded-xl border border-border bg-card p-5">
+      <div className="rounded-xl border border-border bg-card p-5">
         <h3 className="text-sm font-semibold">Order routing</h3>
         <div className="mt-3 grid gap-4 md:grid-cols-2">
           <div>
@@ -700,7 +700,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
       </div>
 
       {(form.integrationType === "api" || form.postingMode === "api") && (
-        <section className="rounded-xl border border-border bg-card p-5">
+        <div className="rounded-xl border border-border bg-card p-5">
           <h3 className="text-sm font-semibold">Order payload template</h3>
           <p className="mt-1 text-xs text-muted-foreground">
             JSON template sent when dispatching orders to this vendor.
@@ -732,7 +732,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
       )}
 
       {form.pollingEnabled && form.integrationType === "api" && (
-        <section className="rounded-xl border border-border bg-card p-5">
+        <div className="rounded-xl border border-border bg-card p-5">
           <h3 className="text-sm font-semibold">Availability response mapping</h3>
           <p className="mt-1 text-xs text-muted-foreground">
             Map vendor field names to Ruumly's expected names. Leave empty if the
@@ -779,7 +779,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
         </div>
       )}
 
-      <section className="rounded-xl border border-border bg-card p-5">
+      <div className="rounded-xl border border-border bg-card p-5">
         <h3 className="text-sm font-semibold">Connectivity monitoring</h3>
         <div className="mt-3 space-y-3">
           <div className="flex items-center gap-3 rounded-lg border border-border p-3">
@@ -895,7 +895,7 @@ function ContractsTab({ supplierId }: { supplierId: string }) {
   };
 
   return (
-    <section className="rounded-xl border border-border bg-card p-5">
+    <div className="rounded-xl border border-border bg-card p-5">
       <div className="flex items-center justify-between">
         <h3 className="flex items-center gap-1.5 text-sm font-semibold">
           <FileText className="h-4 w-4" /> Contract templates
