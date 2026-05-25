@@ -51,23 +51,23 @@ export const MainVideo: React.FC = () => {
       <PersistentBackground />
       <GrainOverlay />
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={110}>
+        <TransitionSeries.Sequence durationInFrames={160}>
           <SceneHero />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={fade()} timing={linearTiming({ durationInFrames: 18 })} />
-        <TransitionSeries.Sequence durationInFrames={120}>
+        <TransitionSeries.Sequence durationInFrames={170}>
           <SceneSearch />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={slide({ direction: "from-right" })} timing={springTiming({ config: { damping: 200 }, durationInFrames: 24 })} />
-        <TransitionSeries.Sequence durationInFrames={130}>
+        <TransitionSeries.Sequence durationInFrames={180}>
           <SceneFeatures />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={fade()} timing={linearTiming({ durationInFrames: 18 })} />
-        <TransitionSeries.Sequence durationInFrames={110}>
+        <TransitionSeries.Sequence durationInFrames={160}>
           <SceneStats />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={fade()} timing={linearTiming({ durationInFrames: 18 })} />
-        <TransitionSeries.Sequence durationInFrames={120}>
+        <TransitionSeries.Sequence durationInFrames={170}>
           <SceneOutro />
         </TransitionSeries.Sequence>
       </TransitionSeries>
