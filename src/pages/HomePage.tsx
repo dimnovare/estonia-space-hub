@@ -15,6 +15,25 @@ import FeaturedPartnersStrip from "@/components/FeaturedPartnersStrip";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
+/** Mounts children only when the wrapper scrolls near the viewport.
+ *  Keeps reserved height to avoid CLS and defers Leaflet bundle + tile fetches. */
+function DeferUntilVisible({ children, minHeightClass }: { children: React.ReactNode; minHeightClass: string }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || visible) return;
+    if (typeof IntersectionObserver === "undefined") { setVisible(true); return; }
+    const io = new IntersectionObserver(
+      (entries) => { if (entries[0]?.isIntersecting) { setVisible(true); io.disconnect(); } },
+      { rootMargin: "200px 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [visible]);
+  return <div ref={ref} className={minHeightClass}>{visible ? children : null}</div>;
+}
+
 export default function HomePage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
@@ -273,9 +292,11 @@ export default function HomePage() {
       {/* Map preview */}
       {settings.showMap && (
       <section className="container-wide mt-4 sm:mt-6 relative z-10">
-        <Suspense fallback={<div className="h-[350px] rounded-xl bg-secondary flex items-center justify-center text-muted-foreground">{t("map.loading")}</div>}>
-          <InteractiveMap listings={allListings} height="h-[280px] md:h-[350px]" language={language} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
-        </Suspense>
+        <DeferUntilVisible minHeightClass="min-h-[280px] md:min-h-[350px]">
+          <Suspense fallback={<div className="h-[280px] md:h-[350px] rounded-xl bg-secondary flex items-center justify-center text-muted-foreground">{t("map.loading")}</div>}>
+            <InteractiveMap listings={allListings} height="h-[280px] md:h-[350px]" language={language} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
+          </Suspense>
+        </DeferUntilVisible>
       </section>
       )}
 
