@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { CheckCircle, Loader2, X, Download, FileText } from "lucide-react";
+import { CheckCircle, Loader2, X, Download, FileText, ShieldCheck } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,6 +19,156 @@ interface Props {
   onClose: () => void;
 }
 
+// ─── Dokobit signing sub-component ───────────────────────────────────────────
+
+interface DokobitFlowProps {
+  bookingId: string;
+  templateId: string;
+  signerName: string;
+  signerIdCode: string;
+  signerEmail: string;
+  onSuccess: () => void;
+  onCancel: () => void;
+}
+
+function DokobitSigningFlow({
+  bookingId,
+  templateId,
+  signerName,
+  signerIdCode,
+  signerEmail,
+  onSuccess,
+  onCancel,
+}: DokobitFlowProps) {
+  const { t } = useLanguage();
+  const [signingToken, setSigningToken] = useState<string | null>(null);
+  const [status, setStatus] = useState<"idle" | "initiating" | "pending" | "completed" | "cancelled" | "error">("idle");
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const stopPolling = () => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  };
+
+  // Clean up on unmount
+  useEffect(() => () => stopPolling(), []);
+
+  const initiateMutation = useMutation({
+    mutationFn: async () => {
+      const result = await apiClient.post<{ signingUrl: string; signingToken: string }>(
+        "/contracts/dokobit/initiate",
+        {
+          bookingId,
+          contractTemplateId: templateId,
+          signerName,
+          signerIdCode,
+          signerEmail,
+        }
+      );
+      return result;
+    },
+    onSuccess: (data) => {
+      setSigningToken(data.signingToken);
+      setStatus("pending");
+      // Open Dokobit signing page in a new tab
+      window.open(data.signingUrl, "_blank", "noopener,noreferrer");
+      // Start polling
+      pollRef.current = setInterval(async () => {
+        try {
+          const statusResult = await apiClient.get<{ status: string }>(
+            `/contracts/dokobit/${data.signingToken}/status`
+          );
+          if (statusResult.status === "completed") {
+            stopPolling();
+            setStatus("completed");
+            onSuccess();
+          } else if (statusResult.status === "cancelled") {
+            stopPolling();
+            setStatus("cancelled");
+          } else if (statusResult.status === "error") {
+            stopPolling();
+            setStatus("error");
+          }
+        } catch {
+          // Network hiccup — keep polling
+        }
+      }, 3000);
+    },
+    onError: (err: unknown) => {
+      setStatus("error");
+      const message = err instanceof Error ? err.message : t("error.generic");
+      toast.error(message);
+    },
+  });
+
+  const handleInitiate = () => {
+    setStatus("initiating");
+    initiateMutation.mutate();
+  };
+
+  if (status === "idle" || status === "initiating") {
+    return (
+      <div className="flex flex-col items-center gap-4 py-6">
+        <ShieldCheck className="h-12 w-12 text-accent" />
+        <p className="text-sm text-center text-muted-foreground max-w-sm">
+          {t("contract.signWithId")}
+        </p>
+        <Button
+          onClick={handleInitiate}
+          disabled={status === "initiating"}
+          className="bg-accent text-accent-foreground hover:bg-accent/90 w-full max-w-xs"
+        >
+          {status === "initiating" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {t("contract.signWithId")}
+        </Button>
+        <Button variant="ghost" size="sm" onClick={onCancel}>
+          {t("common.cancel") || "Cancel"}
+        </Button>
+      </div>
+    );
+  }
+
+  if (status === "pending") {
+    return (
+      <div className="flex flex-col items-center gap-4 py-6">
+        <Loader2 className="h-12 w-12 text-accent animate-spin" />
+        <p className="text-sm text-center text-muted-foreground max-w-sm">
+          {t("contract.signingPending")}
+        </p>
+        <Button variant="ghost" size="sm" onClick={() => { stopPolling(); setStatus("cancelled"); }}>
+          {t("common.cancel") || "Cancel"}
+        </Button>
+      </div>
+    );
+  }
+
+  if (status === "cancelled") {
+    return (
+      <div className="flex flex-col items-center gap-4 py-6">
+        <p className="text-sm text-destructive">{t("contract.signingCancelled")}</p>
+        <Button variant="outline" onClick={() => setStatus("idle")}>{t("contract.signWithId")}</Button>
+        <Button variant="ghost" size="sm" onClick={onCancel}>{t("common.cancel") || "Cancel"}</Button>
+      </div>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <div className="flex flex-col items-center gap-4 py-6">
+        <p className="text-sm text-destructive">{t("contract.signingError")}</p>
+        <Button variant="outline" onClick={() => setStatus("idle")}>{t("contract.signWithId")}</Button>
+        <Button variant="ghost" size="sm" onClick={onCancel}>{t("common.cancel") || "Cancel"}</Button>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+// ─── Main modal ───────────────────────────────────────────────────────────────
+
 export default function ContractSigningModal({ bookingId, onComplete, onClose }: Props) {
   const { t } = useLanguage();
   const { user } = useAuth();
@@ -26,6 +176,7 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
   const [agreed, setAgreed] = useState(false);
   const [name, setName] = useState(user?.name || "");
   const [idCode, setIdCode] = useState("");
+  const [email, setEmail] = useState((user as unknown as { email?: string })?.email || "");
   const [hasSigned, setHasSigned] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -53,6 +204,16 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
     },
     enabled: !!template?.id,
   });
+
+  // Query whether Dokobit e-signing is enabled on this deployment.
+  // Falls back to false (canvas) when the backend is unreachable or the token is absent.
+  const signingMethodQuery = useQuery({
+    queryKey: ["signing-method"],
+    queryFn: () => apiClient.get<{ dokobitEnabled: boolean }>("/contracts/signing-method"),
+    staleTime: 60_000,
+    retry: 1,
+  });
+  const dokobitEnabled = signingMethodQuery.data?.dokobitEnabled === true;
 
   // Setup high-DPI canvas
   useEffect(() => {
@@ -139,9 +300,10 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
       setSubmitting(false);
       setStep(3);
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
       setSubmitting(false);
-      toast.error(err?.message || t("error.generic"));
+      const message = err instanceof Error ? err.message : t("error.generic");
+      toast.error(message);
     },
   });
 
@@ -156,7 +318,7 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
     const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     const w = window.open(url, "_blank");
-    if (w) setTimeout(() => { try { w.print(); } catch {} }, 500);
+    if (w) setTimeout(() => { try { w.print(); } catch { /* ignore */ } }, 500);
   };
 
   const stepLabel =
@@ -186,7 +348,7 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
                 <Skeleton className="h-[60vh] w-full rounded-xl" />
               ) : previewQuery.error || !template ? (
                 <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-                  {(previewQuery.error as any)?.message || t("contract.noTemplate")}
+                  {(previewQuery.error as Error | null)?.message || t("contract.noTemplate")}
                 </p>
               ) : (
                 <iframe
@@ -219,7 +381,11 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
 
           {step === 2 && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold">{t("contract.signatureTitle")}</h2>
+              <h2 className="text-lg font-semibold">
+                {dokobitEnabled ? t("contract.signWithId") : t("contract.signatureTitle")}
+              </h2>
+
+              {/* Common name + ID fields */}
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className="text-xs font-medium">{t("contract.fullName")}</label>
@@ -231,7 +397,9 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium">{t("contract.idCode")}</label>
+                  <label className="text-xs font-medium">
+                    {dokobitEnabled ? t("contract.idCodeRequired") : t("contract.idCode")}
+                  </label>
                   <input
                     className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                     maxLength={20}
@@ -241,35 +409,73 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
                   />
                 </div>
               </div>
-              <canvas
-                ref={canvasRef}
-                width={600}
-                height={180}
-                className="w-full touch-none rounded-xl border-2 border-dashed border-border bg-white cursor-crosshair"
-                onMouseDown={startDraw}
-                onMouseMove={draw}
-                onMouseUp={endDraw}
-                onMouseLeave={endDraw}
-                onTouchStart={startDraw}
-                onTouchMove={draw}
-                onTouchEnd={endDraw}
-              />
-              <div className="flex items-center justify-between">
-                <Button variant="ghost" size="sm" onClick={clearSignature}>
-                  {t("contract.clearSignature")}
-                </Button>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setStep(1)}>← {t("contract.stepReview")}</Button>
-                  <Button
-                    disabled={!name.trim() || !hasSigned || submitting}
-                    onClick={handleSign}
-                    className="bg-accent text-accent-foreground hover:bg-accent/90"
-                  >
-                    {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {t("contract.confirmSign")} →
-                  </Button>
-                </div>
-              </div>
+
+              {/* ── Dokobit path ── */}
+              {dokobitEnabled ? (
+                <>
+                  <div>
+                    <label className="text-xs font-medium">{t("contract.emailLabel")}</label>
+                    <input
+                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                      type="email"
+                      maxLength={200}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                  {name.trim() && idCode.trim() && email.trim() ? (
+                    <DokobitSigningFlow
+                      bookingId={bookingId}
+                      templateId={template?.id ?? ""}
+                      signerName={name}
+                      signerIdCode={idCode}
+                      signerEmail={email}
+                      onSuccess={() => setStep(3)}
+                      onCancel={() => setStep(1)}
+                    />
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      {t("contract.idCodeRequired")} + {t("contract.emailLabel")} {t("contract.fullName")}
+                    </p>
+                  )}
+                  <div className="flex items-center justify-between pt-2">
+                    <Button variant="outline" onClick={() => setStep(1)}>← {t("contract.stepReview")}</Button>
+                  </div>
+                </>
+              ) : (
+                /* ── Canvas fallback path (unchanged) ── */
+                <>
+                  <canvas
+                    ref={canvasRef}
+                    width={600}
+                    height={180}
+                    className="w-full touch-none rounded-xl border-2 border-dashed border-border bg-white cursor-crosshair"
+                    onMouseDown={startDraw}
+                    onMouseMove={draw}
+                    onMouseUp={endDraw}
+                    onMouseLeave={endDraw}
+                    onTouchStart={startDraw}
+                    onTouchMove={draw}
+                    onTouchEnd={endDraw}
+                  />
+                  <div className="flex items-center justify-between">
+                    <Button variant="ghost" size="sm" onClick={clearSignature}>
+                      {t("contract.clearSignature")}
+                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" onClick={() => setStep(1)}>← {t("contract.stepReview")}</Button>
+                      <Button
+                        disabled={!name.trim() || !hasSigned || submitting}
+                        onClick={handleSign}
+                        className="bg-accent text-accent-foreground hover:bg-accent/90"
+                      >
+                        {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {t("contract.confirmSign")} →
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
