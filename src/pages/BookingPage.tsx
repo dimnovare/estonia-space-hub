@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useSearchParams, Link, useNavigate } from "@/i18n/routing";
-import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand, Info, Warehouse, Lock, ShieldCheck } from "lucide-react";
+import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand, Info, Warehouse, Lock, ShieldCheck, Shield, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListing, useCreateBooking, useSuppliers, usePricingConfig, useListingExtras } from "@/hooks/queries";
 import { useQuery } from "@tanstack/react-query";
@@ -807,6 +807,25 @@ export default function BookingPage() {
               <div className="rounded-xl border border-border bg-secondary/50 p-4">
                 <h3 className="text-sm font-semibold">{t("booking.cancellation.title")}</h3>
                 <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{t("booking.cancellation.body")}</p>
+              </div>
+
+              {/* Payment & cancellation trust box */}
+              <div className="rounded-lg border border-border bg-secondary/30 p-3 space-y-2">
+                <div className="flex items-start gap-2">
+                  <Shield className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                  <span className="text-xs text-muted-foreground">{t("booking.trustPayment")}</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <FileText className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                  <span className="text-xs text-muted-foreground">{t("booking.trustContract")}</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <RefreshCw className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                  <span className="text-xs text-muted-foreground">
+                    {t("booking.trustCancellation")}{" "}
+                    <Link to="/contact" className="text-accent hover:underline">{t("booking.cancellationLink")}</Link>
+                  </span>
+                </div>
               </div>
             </div>
           )}
