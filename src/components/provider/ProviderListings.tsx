@@ -5,7 +5,7 @@ import { useLocations, useCreateLocation, useUpdateLocation, useAddUnit } from "
 import { useFeatureDefinitions } from "@/hooks/useFeatureDefinitions";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import { ESTONIAN_CITIES } from "@/lib/constants";
-import { Loader2, MapPin, Warehouse, Truck, CarFront, Plus, Pencil, ChevronDown, ChevronUp, Trash2, AlertTriangle } from "lucide-react";
+import { Loader2, MapPin, Warehouse, Truck, CarFront, Plus, Pencil, ChevronDown, ChevronUp, Trash2, AlertTriangle, Eye, EyeOff } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import ListingExtrasManager from "./ListingExtrasManager";
 import ImageUploader from "@/components/admin/ImageUploader";
@@ -453,6 +453,15 @@ export default function ProviderListings() {
                 <div className="min-w-0 flex-1">
                   <span className="text-sm font-medium">{loc.name}</span>
                   <span className="ml-2 text-xs text-muted-foreground">· {loc.city}</span>
+                  {loc.isActive ? (
+                    <span className="ml-2 inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-medium text-success">
+                      {t("admin.active")}
+                    </span>
+                  ) : (
+                    <span className="ml-2 inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                      {t("admin.inactive")}
+                    </span>
+                  )}
                 </div>
                 <button
                   type="button"
@@ -461,6 +470,23 @@ export default function ProviderListings() {
                   title={t("provider.listings.editLocation")}
                 >
                   <Pencil className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  title={loc.isActive ? t("provider.unpublishLocation") : t("provider.publishLocation")}
+                  onClick={async () => {
+                    const action = loc.isActive ? "unpublish" : "publish";
+                    try {
+                      await apiClient.patch(`/locations/${loc.id}/${action}`, {});
+                      queryClient.invalidateQueries({ queryKey: queryKeys.locations.all() });
+                      toast.success(loc.isActive ? t("provider.unpublishSuccess") : t("provider.publishSuccess"));
+                    } catch (err: any) {
+                      toast.error(err?.message || (loc.isActive ? t("provider.unpublishError") : t("provider.publishError")));
+                    }
+                  }}
+                  className={`shrink-0 rounded-md p-1.5 transition-colors ${loc.isActive ? "text-success hover:bg-success/10" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
+                >
+                  {loc.isActive ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                 </button>
                 <button
                   type="button"
