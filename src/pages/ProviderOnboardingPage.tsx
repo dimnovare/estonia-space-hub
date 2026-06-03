@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "@/i18n/routing";
-import { Check, Warehouse, Truck, CarFront, Building2, User, CheckCircle, ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
+import { Check, Warehouse, Truck, CarFront, Building2, User, CheckCircle, ArrowLeft, ArrowRight, Loader2, AlertCircle, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
@@ -29,6 +29,7 @@ export default function ProviderOnboardingPage() {
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [agreed, setAgreed] = useState(false);
   const [notes, setNotes] = useState("");
+  const [showValidation, setShowValidation] = useState(false);
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { user } = useAuth();
@@ -133,6 +134,14 @@ export default function ProviderOnboardingPage() {
             <p className="text-xs text-muted-foreground">{t("onboard.success.status")}</p>
             <p className="mt-1 text-sm font-medium text-warning">{t("onboard.success.pending")}</p>
           </div>
+          {/* What happens next */}
+          <div className="mt-4 rounded-xl border border-accent/20 bg-accent/5 p-4 text-left">
+            <p className="text-sm text-foreground">{t("onboard.whatNext")}</p>
+            <div className="mt-3 flex items-center gap-2">
+              <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+              <a href="mailto:info@ruumly.eu" className="text-sm text-accent hover:underline">info@ruumly.eu</a>
+            </div>
+          </div>
           <p className="mt-3 text-xs text-muted-foreground">{t("onboard.success.docsNote")}</p>
           <div className="mt-6 flex justify-center">
             <Button variant="outline" onClick={() => navigate("/")}>{t("onboard.success.back")}</Button>
@@ -185,15 +194,24 @@ export default function ProviderOnboardingPage() {
                   );
                 })}
               </div>
+              {showValidation && !businessType && (
+                <p className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.selectRequired")}</p>
+              )}
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.name")} *</label>
               <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={inputClass} placeholder={t("onboard.companyPlaceholder")} />
+              {showValidation && !companyName.trim() && (
+                <p className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.fieldRequired")}</p>
+              )}
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.reg")} *</label>
                 <input value={registryCode} onChange={(e) => setRegistryCode(e.target.value)} className={inputClass} placeholder="12345678" />
+                {showValidation && !registryCode.trim() && (
+                  <p className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.fieldRequired")}</p>
+                )}
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.vat")}</label>
@@ -213,6 +231,9 @@ export default function ProviderOnboardingPage() {
             <div>
               <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.phone")} *</label>
               <input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} className={inputClass} placeholder="+372" />
+              {showValidation && !contactPhone.trim() && (
+                <p className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.fieldRequired")}</p>
+              )}
             </div>
           </div>
         )}
@@ -236,6 +257,9 @@ export default function ProviderOnboardingPage() {
                   );
                 })}
               </div>
+              {showValidation && selectedServices.length === 0 && (
+                <p className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.selectRequired")}</p>
+              )}
             </div>
             <div>
               <h3 className="font-display text-base font-semibold">{t("onboard.step3.areas")}</h3>
@@ -249,6 +273,9 @@ export default function ProviderOnboardingPage() {
                   );
                 })}
               </div>
+              {showValidation && selectedAreas.length === 0 && (
+                <p className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.selectRequired")}</p>
+              )}
             </div>
           </div>
         )}
@@ -257,6 +284,46 @@ export default function ProviderOnboardingPage() {
         {step === 2 && (
           <div className="space-y-5">
             <h2 className="font-display text-lg font-semibold">{t("onboard.review.title")}</h2>
+
+            {/* Readiness meter */}
+            {(() => {
+              const checks = [
+                { label: t("onboard.step2.name"), ok: !!companyName.trim() },
+                { label: t("onboard.step2.phone"), ok: !!contactPhone.trim() },
+                { label: t("onboard.step3.types"), ok: selectedServices.length > 0 },
+                { label: t("onboard.step3.areas"), ok: selectedAreas.length > 0 },
+              ];
+              const doneCount = checks.filter(c => c.ok).length;
+              const pct = Math.round((doneCount / checks.length) * 100);
+              return (
+                <div className="rounded-xl border border-border bg-secondary/30 p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold text-muted-foreground">
+                      {doneCount} / {checks.length}
+                    </span>
+                    <span className={`text-xs font-semibold ${doneCount === checks.length ? "text-success" : "text-warning"}`}>
+                      {pct}%
+                    </span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-border overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${doneCount === checks.length ? "bg-success" : "bg-accent"}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <div className="mt-3 grid gap-1">
+                    {checks.map((c, i) => (
+                      <div key={i} className="flex items-center gap-2 text-xs">
+                        {c.ok
+                          ? <Check className="h-3.5 w-3.5 text-success shrink-0" />
+                          : <AlertCircle className="h-3.5 w-3.5 text-warning shrink-0" />}
+                        <span className={c.ok ? "text-foreground" : "text-warning"}>{c.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Summary */}
             <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-3 text-sm">
@@ -332,8 +399,15 @@ export default function ProviderOnboardingPage() {
           </Button>
           {step < steps.length - 1 ? (
             <Button
-              onClick={() => setStep((s) => s + 1)}
-              disabled={(step === 0 && !canProceedStep0) || (step === 1 && !canProceedStep1)}
+              onClick={() => {
+                const canProceed = (step === 0 && canProceedStep0) || (step === 1 && canProceedStep1);
+                if (!canProceed) {
+                  setShowValidation(true);
+                  return;
+                }
+                setShowValidation(false);
+                setStep((s) => s + 1);
+              }}
               className="bg-accent text-accent-foreground hover:bg-accent/90"
             >
               {t("onboard.next")} <ArrowRight className="ml-2 h-4 w-4" />
