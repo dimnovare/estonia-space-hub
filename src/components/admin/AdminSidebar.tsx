@@ -4,7 +4,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import {
   LayoutDashboard, MessageSquare, Settings, Users,
   Package, Activity, ChevronDown, Route, MapPin, Banknote, Receipt,
-  Building2, Inbox,
+  Building2, Inbox, Gauge,
 } from "lucide-react";
 
 type Item = { id: string; label: string; icon: ComponentType<any>; href: string };
@@ -23,6 +23,7 @@ function useItems(): Item[] {
     { id: "leads",        label: t("admin.leads"),        icon: Inbox,           href: "/admin?tab=leads" },
     { id: "users",        label: t("admin.users"),        icon: Users,           href: "/admin?tab=users" },
     { id: "audit",        label: t("admin.audit"),        icon: Activity,        href: "/admin?tab=audit" },
+    { id: "ops",          label: t("admin.ops"),          icon: Gauge,           href: "/admin?tab=ops" },
     { id: "settings",     label: t("admin.settings"),     icon: Settings,        href: "/admin?tab=settings" },
   ];
 }

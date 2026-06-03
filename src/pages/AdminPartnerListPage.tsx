@@ -99,7 +99,18 @@ export default function AdminPartnerListPage() {
         ) : filtered.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-secondary/30 p-10 text-center">
             <Building2 className="mx-auto h-12 w-12 text-muted-foreground/50" />
-            <p className="mt-3 text-sm font-medium">No partners match your filters.</p>
+            <p className="mt-3 text-sm font-medium">
+              {suppliers.length === 0
+                ? t("admin.noPartnersYet")
+                : "No partners match your filters."}
+            </p>
+            {suppliers.length === 0 && (
+              <Button asChild size="sm" className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90">
+                <Link to="/admin?tab=suppliers">
+                  {t("admin.approveApplication")}
+                </Link>
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

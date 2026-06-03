@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "@/i18n/routing";
 import { MapPin, Star, Warehouse, Truck, CarFront, Heart, ShieldCheck, BadgePercent, Award } from "lucide-react";
 import type { Listing } from "@/services/types";
@@ -6,6 +7,23 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { getSavingsDisplay } from "@/lib/savingsDisplay";
 import { useSizeBuckets, bucketCodeForSize } from "@/hooks/useSizeBuckets";
 import { formatPriceUnit } from "@/lib/priceUnit";
+
+function ImageWithFallback({ src, alt, fallback }: { src: string; alt: string; fallback: React.ReactNode }) {
+  const [errored, setErrored] = useState(false);
+  if (errored) return <>{fallback}</>;
+  return (
+    <img
+      src={src}
+      alt={alt}
+      width={400}
+      height={250}
+      loading="lazy"
+      decoding="async"
+      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+      onError={() => setErrored(true)}
+    />
+  );
+}
 
 const badgeStyles: Record<string, string> = {
   cheapest: "badge-cheapest",
@@ -46,19 +64,22 @@ export default function ListingCard({ listing }: { listing: Listing }) {
     >
       <div className="relative aspect-[4/3] sm:aspect-[16/10] overflow-hidden">
         {listing.image && listing.image.length > 0 ? (
-          <img
+          <ImageWithFallback
             src={listing.image}
             alt={`${listing.title} — ${listing.city}`}
-            width={400}
-            height={250}
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            fallback={<div className="flex h-full w-full items-center justify-center bg-secondary"><Icon className="h-10 w-10 text-muted-foreground/30" /></div>}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-secondary">
             <Icon className="h-10 w-10 text-muted-foreground/30" />
           </div>
+        )}
+        {/* Available now badge */}
+        {listing.availableNow && (
+          <span className="absolute left-3 bottom-3 inline-flex items-center gap-1 rounded-full bg-success px-2.5 py-1 text-[10px] font-bold text-success-foreground shadow-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-success-foreground animate-pulse" />
+            {t("listing.availableNow")}
+          </span>
         )}
         {listing.badge && (
           <span className={`absolute left-3 top-3 ${badgeStyles[listing.badge]}`}>

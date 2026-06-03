@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { withSupplier } from "@/lib/withSupplier";
 import { queryKeys } from "@/services/queryKeys";
+import ProviderActivationChecklist from "./ProviderActivationChecklist";
 
 export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () => void }) {
   const { t } = useLanguage();
@@ -114,6 +115,9 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
           );
         })}
       </div>
+
+      {/* Activation checklist — shown when first location exists or as fallback */}
+      <ProviderActivationChecklist locationId={locations[0]?.id} />
 
       {pendingOrders.length > 0 && (
         <>

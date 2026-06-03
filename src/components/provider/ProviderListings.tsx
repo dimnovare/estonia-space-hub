@@ -411,14 +411,38 @@ export default function ProviderListings() {
       </div>
 
       {locations.length === 0 ? (
-        <div className="flex flex-col items-center py-20 text-center">
-          <MapPin className="h-12 w-12 text-muted-foreground/20" />
-          <p className="mt-3 text-sm font-medium">
-            {t("provider.listings.noLocations")}
+        <div className="flex flex-col items-center py-16 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary">
+            <Warehouse className="h-8 w-8 text-muted-foreground/40" />
+          </div>
+          <p className="mt-4 text-base font-semibold">
+            {t("provider.noListings")}
           </p>
-          <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-            {t("provider.listings.noLocationsDesc")}
+          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+            {t("provider.noListingsDesc")}
           </p>
+          <button
+            type="button"
+            onClick={() => setLocDialogOpen(true)}
+            className="mt-5 rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground hover:bg-accent/90 transition-colors"
+          >
+            {t("provider.noListingsCta")}
+          </button>
+          {/* 3-step mini guide */}
+          <div className="mt-8 flex flex-wrap justify-center gap-4">
+            {[
+              { step: 1, label: t("provider.noListingsStep1") },
+              { step: 2, label: t("provider.noListingsStep2") },
+              { step: 3, label: t("provider.noListingsStep3") },
+            ].map(({ step, label }) => (
+              <div key={step} className="flex flex-col items-center gap-1">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-accent/30 text-sm font-bold text-accent">
+                  {step}
+                </span>
+                <span className="text-xs text-muted-foreground">{label}</span>
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="mt-6 space-y-4">

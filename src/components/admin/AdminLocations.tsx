@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { PlusCircle, MapPin, Save, Loader2, Edit, X, Warehouse, Truck, CarFront, Trash2 } from "lucide-react";
+import { PlusCircle, MapPin, Save, Loader2, Edit, X, Warehouse, Truck, CarFront, Trash2, Upload, CheckCircle, AlertCircle } from "lucide-react";
 import ImageUploader from "./ImageUploader";
 import GeocodeLookup from "./AdminLocationsGeocode";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,237 @@ import { apiClient } from "@/services/apiClient";
 import type { SupplierLocation } from "@/services/types";
 import { toast } from "sonner";
 import { queryKeys } from "@/services/queryKeys";
+
+// ── Bulk Import types ──
+interface BulkUnitRow {
+  title: string;
+  type: "Warehouse" | "Moving" | "Trailer";
+  priceFrom: number;
+  priceUnit: string;
+  sizeM2?: number;
+  quantityTotal?: number;
+  description?: string;
+}
+
+interface ParseResult {
+  rows: BulkUnitRow[];
+  errors: string[];
+}
+
+function parseBulkInput(raw: string): ParseResult {
+  const rows: BulkUnitRow[] = [];
+  const errors: string[] = [];
+  const trimmed = raw.trim();
+  if (!trimmed) return { rows, errors: ["Empty input"] };
+
+  // Try JSON first
+  if (trimmed.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (!Array.isArray(parsed)) { errors.push("JSON must be an array"); return { rows, errors }; }
+      parsed.forEach((item: any, i: number) => {
+        if (!item.title) { errors.push(`Row ${i + 1}: missing title`); return; }
+        const validTypes = ["Warehouse", "Moving", "Trailer"];
+        const type = validTypes.includes(item.type) ? item.type : "Warehouse";
+        const price = parseFloat(item.priceFrom);
+        if (isNaN(price)) { errors.push(`Row ${i + 1}: invalid priceFrom`); return; }
+        rows.push({
+          title: String(item.title),
+          type: type as BulkUnitRow["type"],
+          priceFrom: price,
+          priceUnit: item.priceUnit || "€/month",
+          sizeM2: item.sizeM2 ? parseFloat(item.sizeM2) : undefined,
+          quantityTotal: item.quantityTotal ? parseInt(item.quantityTotal) : undefined,
+          description: item.description || undefined,
+        });
+      });
+      return { rows, errors };
+    } catch {
+      errors.push("Invalid JSON");
+      return { rows, errors };
+    }
+  }
+
+  // CSV parsing
+  const lines = trimmed.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) { errors.push("CSV needs a header row + at least one data row"); return { rows, errors }; }
+
+  const sep = lines[0].includes("\t") ? "\t" : ",";
+  const headers = lines[0].split(sep).map(h => h.trim().toLowerCase());
+  const col = (name: string) => headers.indexOf(name);
+
+  for (let i = 1; i < lines.length; i++) {
+    const cells = lines[i].split(sep).map(c => c.trim());
+    const title = col("title") >= 0 ? cells[col("title")] : "";
+    if (!title) { errors.push(`Row ${i}: missing title`); continue; }
+    const rawType = col("type") >= 0 ? cells[col("type")] : "Warehouse";
+    const validTypes = ["Warehouse", "Moving", "Trailer"];
+    const type = validTypes.find(t => t.toLowerCase() === (rawType || "").toLowerCase()) || "Warehouse";
+    const priceRaw = col("pricefrom") >= 0 ? cells[col("pricefrom")] : "";
+    const price = parseFloat(priceRaw);
+    if (isNaN(price)) { errors.push(`Row ${i}: invalid priceFrom "${priceRaw}"`); continue; }
+    const priceUnit = col("priceunit") >= 0 ? cells[col("priceunit")] : "€/month";
+    const sizeRaw = col("sizem2") >= 0 ? cells[col("sizem2")] : "";
+    const qtyRaw = col("quantitytotal") >= 0 ? cells[col("quantitytotal")] : "";
+    const desc = col("description") >= 0 ? cells[col("description")] : undefined;
+    rows.push({
+      title,
+      type: type as BulkUnitRow["type"],
+      priceFrom: price,
+      priceUnit: priceUnit || "€/month",
+      sizeM2: sizeRaw ? parseFloat(sizeRaw) : undefined,
+      quantityTotal: qtyRaw ? parseInt(qtyRaw) : undefined,
+      description: desc || undefined,
+    });
+  }
+  return { rows, errors };
+}
+
+// ── Bulk Import Dialog ──
+function BulkImportDialog({ open, onOpenChange, locationId }: { open: boolean; onOpenChange: (v: boolean) => void; locationId: string }) {
+  const { t } = useLanguage();
+  const qc = useQueryClient();
+  const [raw, setRaw] = useState("");
+  const [parseResult, setParseResult] = useState<ParseResult | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ created: number; failed: number; errors?: string[] } | null>(null);
+
+  const handleParse = () => {
+    setParseResult(parseBulkInput(raw));
+    setImportResult(null);
+  };
+
+  const handleImport = async () => {
+    if (!parseResult || parseResult.rows.length === 0) return;
+    setImporting(true);
+    try {
+      const res = await apiClient.post<{ created: number; failed: number; errors?: string[] }>(
+        `/admin/locations/${locationId}/units/bulk`,
+        { units: parseResult.rows }
+      );
+      setImportResult(res);
+      if (res.created > 0) {
+        qc.invalidateQueries({ queryKey: queryKeys.adminLocations.all() });
+        qc.invalidateQueries({ queryKey: queryKeys.locations.all() });
+        toast.success(t("admin.bulkImportSuccess"));
+      }
+    } catch (err: any) {
+      // Endpoint may not exist yet — show graceful error
+      if (err?.status === 404 || err?.statusCode === 404) {
+        toast.error("Bulk import endpoint not yet deployed");
+      } else {
+        toast.error(err?.message || "Import failed");
+      }
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleClose = (v: boolean) => {
+    if (!v) { setRaw(""); setParseResult(null); setImportResult(null); }
+    onOpenChange(v);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Upload className="h-4 w-4" />
+            {t("admin.bulkImport")}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <textarea
+            className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-accent min-h-[160px]"
+            placeholder={t("admin.bulkImportPlaceholder")}
+            value={raw}
+            onChange={e => { setRaw(e.target.value); setParseResult(null); setImportResult(null); }}
+          />
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleParse} disabled={!raw.trim()}>
+              {t("admin.bulkImportParse")}
+            </Button>
+            {parseResult && parseResult.rows.length > 0 && (
+              <Button
+                size="sm"
+                className="bg-accent text-accent-foreground hover:bg-accent/90"
+                onClick={handleImport}
+                disabled={importing}
+              >
+                {importing
+                  ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  : <Upload className="mr-2 h-4 w-4" />}
+                {t("admin.bulkImportImport").replace("{n}", String(parseResult.rows.length))}
+              </Button>
+            )}
+          </div>
+
+          {/* Parse errors */}
+          {parseResult && parseResult.errors.length > 0 && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+              <p className="font-medium text-destructive flex items-center gap-1">
+                <AlertCircle className="h-4 w-4" /> {t("admin.bulkImportErrors")}
+              </p>
+              <ul className="mt-1 list-disc list-inside text-destructive/80 text-xs space-y-0.5">
+                {parseResult.errors.map((e, i) => <li key={i}>{e}</li>)}
+              </ul>
+            </div>
+          )}
+
+          {/* Preview table */}
+          {parseResult && parseResult.rows.length > 0 && (
+            <div>
+              <p className="mb-2 text-xs font-medium text-muted-foreground">
+                {t("admin.bulkImportPreview").replace("{n}", String(parseResult.rows.length))}
+              </p>
+              <div className="overflow-x-auto rounded-lg border border-border">
+                <table className="w-full text-xs">
+                  <thead className="border-b border-border bg-secondary/50">
+                    <tr>
+                      {["title", "type", "priceFrom", "priceUnit", "sizeM2", "qty"].map(h => (
+                        <th key={h} className="px-3 py-2 text-left font-medium text-muted-foreground">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parseResult.rows.map((row, i) => (
+                      <tr key={i} className="border-b border-border/50 last:border-0">
+                        <td className="px-3 py-1.5 font-medium">{row.title}</td>
+                        <td className="px-3 py-1.5 text-muted-foreground">{row.type}</td>
+                        <td className="px-3 py-1.5">€{row.priceFrom}</td>
+                        <td className="px-3 py-1.5 text-muted-foreground">{row.priceUnit}</td>
+                        <td className="px-3 py-1.5 text-muted-foreground">{row.sizeM2 ?? "—"}</td>
+                        <td className="px-3 py-1.5 text-muted-foreground">{row.quantityTotal ?? "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Import result */}
+          {importResult && (
+            <div className={`rounded-lg border p-3 text-sm ${importResult.failed === 0 ? "border-success/30 bg-success/5 text-success" : "border-warning/30 bg-warning/5 text-warning"}`}>
+              <p className="flex items-center gap-1 font-medium">
+                <CheckCircle className="h-4 w-4" />
+                {t("admin.bulkImportResult")
+                  .replace("{created}", String(importResult.created))
+                  .replace("{failed}", String(importResult.failed))}
+              </p>
+              {importResult.errors && importResult.errors.length > 0 && (
+                <ul className="mt-1 list-disc list-inside text-xs space-y-0.5 opacity-80">
+                  {importResult.errors.map((e, i) => <li key={i}>{e}</li>)}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 const inp = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
 const typeIcons: Record<string, typeof Warehouse> = { warehouse: Warehouse, Warehouse: Warehouse, moving: Truck, Moving: Truck, trailer: CarFront, Trailer: CarFront };
@@ -37,6 +268,7 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
   const [editingUnit, setEditingUnit] = useState<any>(null);
   const [editing, setEditing] = useState(false);
   const [search, setSearch] = useState("");
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
 
   const selected = locations.find((l) => l.id === selectedId);
 
@@ -351,9 +583,14 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
               <div className="rounded-xl border border-border">
                 <div className="flex items-center justify-between border-b border-border px-4 py-3">
                   <h3 className="font-medium text-sm">{t("admin.locations.units")} ({selected.units?.length ?? 0})</h3>
-                  <Button size="sm" variant="outline" onClick={() => { setNewUnit(emptyUnit); setAddUnitOpen(true); }}>
-                    <PlusCircle className="mr-1 h-3.5 w-3.5" /> {t("admin.locations.addUnit")}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="outline" onClick={() => setBulkImportOpen(true)}>
+                      <Upload className="mr-1 h-3.5 w-3.5" /> {t("admin.bulkImport")}
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => { setNewUnit(emptyUnit); setAddUnitOpen(true); }}>
+                      <PlusCircle className="mr-1 h-3.5 w-3.5" /> {t("admin.locations.addUnit")}
+                    </Button>
+                  </div>
                 </div>
                 {(!selected.units || selected.units.length === 0) ? (
                   <div className="p-6 text-center text-sm text-muted-foreground">{t("admin.locations.noUnits")}</div>
@@ -636,6 +873,15 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
           )}
         </DialogContent>
       </Dialog>
+
+      {/* ── Bulk Import Dialog ── */}
+      {selected && (
+        <BulkImportDialog
+          open={bulkImportOpen}
+          onOpenChange={setBulkImportOpen}
+          locationId={selected.id}
+        />
+      )}
     </div>
   );
 }

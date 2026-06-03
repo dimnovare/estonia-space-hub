@@ -19,6 +19,7 @@ import AdminSettings from "@/components/admin/AdminSettings";
 import AdminPayouts from "@/components/admin/AdminPayouts";
 import AdminRebates from "@/components/admin/AdminRebates";
 import AdminLeads from "@/components/admin/AdminLeads";
+import AdminOps from "@/components/admin/AdminOps";
 
 export default function AdminPage() {
   const [searchParams] = useSearchParams();
@@ -71,6 +72,7 @@ export default function AdminPage() {
         {activeTab === "payouts" && <AdminPayouts supplierId={filterSupplierId || undefined} />}
         {activeTab === "rebates" && <AdminRebates supplierId={filterSupplierId || undefined} />}
         {activeTab === "settings" && <AdminSettings />}
+        {activeTab === "ops" && <AdminOps />}
       </div>
     </div>
   );
