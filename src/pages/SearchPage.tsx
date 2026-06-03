@@ -152,8 +152,14 @@ export default function SearchPage() {
     if (!notifyEmail.includes("@")) return;
     setNotifyLoading(true);
     try {
-      await apiClient.post("/auth/notify-interest", { email: notifyEmail, city: cityFilter || "any" });
+      await apiClient.post("/auth/notify-interest", {
+        email: notifyEmail,
+        city: cityFilter,
+        category: activeType !== "all" ? activeType : undefined,
+        language,
+      });
       setNotifySuccess(true);
+      toast.success(t("search.notifySuccess"));
     } catch {
       toast.error(t("toast.error"));
     } finally {
@@ -526,28 +532,36 @@ export default function SearchPage() {
                       ))}
                     </div>
                   </div>
-                  <div className="mt-6 flex w-full items-center gap-2">
-                    <input
-                      type="email"
-                      placeholder={t("search.notifyEmail")}
-                      value={notifyEmail}
-                      onChange={(e) => setNotifyEmail(e.target.value)}
-                      className="flex-1 rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                    />
-                    <Button
-                      size="sm"
-                      className="bg-accent text-accent-foreground hover:bg-accent/90"
-                      disabled={notifyLoading}
-                      onClick={handleNotifySubmit}
-                    >
-                      {notifyLoading
-                        ? <Loader2 className="h-4 w-4 animate-spin" />
-                        : t("search.notifyMe")}
-                    </Button>
-                  </div>
-                  {notifySuccess && (
-                    <p className="mt-3 text-xs text-success font-medium">
-                      {t("search.notifySuccess")}
+                  {cityFilter ? (
+                    notifySuccess ? (
+                      <p className="mt-6 text-sm font-medium text-success">
+                        {t("search.notifySuccess")}
+                      </p>
+                    ) : (
+                      <div className="mt-6 flex w-full items-center gap-2">
+                        <input
+                          type="email"
+                          placeholder={t("search.notifyEmail")}
+                          value={notifyEmail}
+                          onChange={(e) => setNotifyEmail(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && handleNotifySubmit()}
+                          className="flex-1 rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                        />
+                        <Button
+                          size="sm"
+                          className="bg-accent text-accent-foreground hover:bg-accent/90"
+                          disabled={notifyLoading}
+                          onClick={handleNotifySubmit}
+                        >
+                          {notifyLoading
+                            ? <Loader2 className="h-4 w-4 animate-spin" />
+                            : t("search.notifyMe")}
+                        </Button>
+                      </div>
+                    )
+                  ) : (
+                    <p className="mt-6 text-xs text-muted-foreground">
+                      {t("search.notifyCity")}
                     </p>
                   )}
                 </div>
