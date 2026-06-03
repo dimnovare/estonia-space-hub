@@ -87,14 +87,14 @@ function PartnerBadges({ listing }: { listing: Listing }) {
   const { t } = useLanguage();
   if (!listing.isVerified && !listing.isFoundingPartner) return null;
   return (
-    <div className="mt-2 flex flex-wrap gap-2">
+    <div className="mt-3 flex flex-wrap gap-2">
       {listing.isVerified && (
         <span
-          className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-1 text-xs font-semibold text-success"
+          className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-sm font-semibold text-emerald-700"
           title={t("listing.badge.verifiedTooltip")}
         >
-          <ShieldCheck className="h-3.5 w-3.5" />
-          {t("listing.badge.verified")}
+          <ShieldCheck className="h-4 w-4" />
+          {t("listing.verifiedPartner")}
         </span>
       )}
       {listing.isFoundingPartner && (
@@ -131,8 +131,13 @@ function SupplierBadge({ supplierId }: { supplierId?: string }) {
           <IntIcon className="h-3 w-3" /> {intCfg.label}
         </span>
       </div>
+      {supplier.isVerified && (
+        <div className="mt-2 flex items-center gap-1.5 rounded-md bg-emerald-50 border border-emerald-200 px-2 py-1.5 text-xs font-semibold text-emerald-700">
+          <ShieldCheck className="h-3.5 w-3.5 shrink-0" /> {t("listing.verifiedPartner")}
+        </div>
+      )}
       <div className="mt-2 flex items-center gap-1 text-[10px] text-muted-foreground">
-        <CheckCircle className="h-3 w-3 text-success" /> {t("listing.verifiedPartner")} · {intCfg.description}
+        <CheckCircle className="h-3 w-3 text-success" /> {intCfg.description}
       </div>
     </div>
   );

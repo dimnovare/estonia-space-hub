@@ -132,11 +132,11 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           <div className="mt-2 flex flex-wrap gap-1.5">
             {listing.isVerified && (
               <span
-                className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success"
+                className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1 text-xs font-semibold text-emerald-700"
                 title={t("listing.badge.verifiedTooltip")}
               >
-                <ShieldCheck className="h-3 w-3" />
-                {t("listing.badge.verified")}
+                <ShieldCheck className="h-3.5 w-3.5" />
+                {t("listing.verifiedPartner")}
               </span>
             )}
             {listing.isFoundingPartner && (
