@@ -295,7 +295,7 @@ export default function BookingPage() {
           }
         } catch (err: any) {
           console.error("Post-booking step failed:", err);
-          toast.error(err?.message || t("error.generic"));
+          toast.error(err?.message || t("booking.paymentInitFailed"));
           setIsSubmitting(false);
         }
       }
@@ -820,13 +820,13 @@ export default function BookingPage() {
             ) : <div />}
             <Button
               onClick={handleNext}
-              disabled={createBooking.isPending || (step === 2 && !isAuthenticated) || (step === 0 && isUnavailable)}
+              disabled={createBooking.isPending || isSubmitting || (step === 2 && !isAuthenticated) || (step === 0 && isUnavailable)}
               className="bg-accent text-accent-foreground hover:bg-accent/90"
             >
               {step < steps.length - 1 ? (
                 <>{t("booking.next")} <ArrowRight className="ml-2 h-4 w-4" /></>
               ) : (
-                <>{createBooking.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}{t("booking.confirm")} <Check className="ml-2 h-4 w-4" /></>
+                <>{(createBooking.isPending || isSubmitting) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}{t("booking.confirm")} <Check className="ml-2 h-4 w-4" /></>
               )}
             </Button>
           </div>
@@ -899,10 +899,12 @@ export default function BookingPage() {
             )}
             <Button
               onClick={handleNext}
-              disabled={createBooking.isPending || (step === 2 && !isAuthenticated) || (step === 0 && isUnavailable)}
+              disabled={createBooking.isPending || isSubmitting || (step === 2 && !isAuthenticated) || (step === 0 && isUnavailable)}
               className="bg-accent text-accent-foreground hover:bg-accent/90 px-6"
             >
-              {step < steps.length - 1 ? t("booking.next") : t("booking.confirm")}
+              {step < steps.length - 1 ? t("booking.next") : (
+                <>{(createBooking.isPending || isSubmitting) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{t("booking.confirm")}</>
+              )}
             </Button>
           </div>
         </div>
