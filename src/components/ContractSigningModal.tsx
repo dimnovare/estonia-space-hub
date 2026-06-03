@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { CheckCircle, Loader2, X, Download, FileText, ShieldCheck } from "lucide-react";
+import { CheckCircle, Loader2, X, Download, FileText, ShieldCheck, Info } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -382,7 +382,7 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
           {step === 2 && (
             <div className="space-y-4">
               <h2 className="text-lg font-semibold">
-                {dokobitEnabled ? t("contract.signWithId") : t("contract.signatureTitle")}
+                {dokobitEnabled ? t("contract.signWithId") : t("contract.acknowledgmentTitle")}
               </h2>
 
               {/* Common name + ID fields */}
@@ -409,6 +409,14 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
                   />
                 </div>
               </div>
+
+              {/* Self-declared note — canvas path only */}
+              {!dokobitEnabled && (
+                <div className="flex items-start gap-2 rounded-lg bg-secondary/50 p-3">
+                  <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                  <p className="text-xs text-muted-foreground">{t("contract.selfDeclaredNote")}</p>
+                </div>
+              )}
 
               {/* ── Dokobit path ── */}
               {dokobitEnabled ? (
@@ -443,8 +451,9 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
                   </div>
                 </>
               ) : (
-                /* ── Canvas fallback path (unchanged) ── */
+                /* ── Canvas fallback path ── */
                 <>
+                  <p className="text-xs font-medium text-muted-foreground">{t("contract.drawAcknowledgment")}</p>
                   <canvas
                     ref={canvasRef}
                     width={600}
