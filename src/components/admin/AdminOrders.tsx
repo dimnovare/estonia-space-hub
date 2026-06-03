@@ -7,6 +7,10 @@ import { SkeletonList } from "@/components/SkeletonCard";
 import { ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG, generateOrderEmailPreview } from "@/lib/constants";
 import type { Order, OrderStatus } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/services/apiClient";
+import { queryKeys } from "@/services/queryKeys";
+import { toast } from "sonner";
 
 export default function AdminOrders({ supplierId }: { supplierId?: string }) {
   const { t, language } = useLanguage();
@@ -14,6 +18,31 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
   const updateStatus  = useUpdateOrderStatus();
   const approveOrder  = useApproveOrder();
   const rejectOrder   = useRejectOrder();
+  const queryClient   = useQueryClient();
+
+  const markPaidByWire = useMutation({
+    mutationFn: async (bookingId: string) => {
+      // Step 1: resolve the invoice ID from the booking.
+      const invoice = await apiClient.get<{ id: string; status: string }>(
+        `/invoices/by-booking/${bookingId}/status`
+      );
+      if (invoice.status === "paid") throw new Error("already_paid");
+      // Step 2: mark the invoice as paid via the admin endpoint.
+      return apiClient.post(`/admin/invoices/${invoice.id}/mark-paid`, {});
+    },
+    onSuccess: () => {
+      toast.success(t("admin.markPaidByWire"));
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all() });
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : "";
+      if (msg === "already_paid") {
+        toast.error("Invoice is already marked as paid.");
+      } else {
+        toast.error(msg || "Failed to mark invoice as paid.");
+      }
+    },
+  });
 
   const [filter, setFilter] = useState<"all" | OrderStatus>("all");
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
@@ -148,6 +177,21 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
               <div className="flex flex-wrap gap-2">
                 {viewOrder.integrationType === "email" && (
                   <Button variant="outline" size="sm" onClick={() => setEmailPreview(true)}><Mail className="mr-1 h-3.5 w-3.5" /> {t("admin.viewEmail")}</Button>
+                )}
+                {(viewOrder.status === "created" || viewOrder.status === "sending" || viewOrder.status === "sent") && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={markPaidByWire.isPending}
+                    className="text-destructive border-destructive/40 hover:bg-destructive/10"
+                    onClick={() => {
+                      if (window.confirm(t("admin.markPaidByWireConfirm"))) {
+                        markPaidByWire.mutate(viewOrder.bookingId);
+                      }
+                    }}
+                  >
+                    {markPaidByWire.isPending ? "..." : t("admin.markPaidByWire")}
+                  </Button>
                 )}
                 {(viewOrder.status === "created" || viewOrder.status === "sending") && (
                   <Button
