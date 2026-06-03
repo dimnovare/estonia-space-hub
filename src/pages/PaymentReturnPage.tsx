@@ -110,6 +110,9 @@ export default function PaymentReturnPage() {
             <p className="mt-2 text-sm text-muted-foreground">
               {t("payment.returnDesc")}
             </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t("booking.confirmationNextSteps")}
+            </p>
             <Link to="/account?tab=bookings">
               <Button className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90">
                 {t("payment.returnCta")}

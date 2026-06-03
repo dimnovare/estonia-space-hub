@@ -295,7 +295,7 @@ export default function BookingPage() {
           }
         } catch (err: any) {
           console.error("Post-booking step failed:", err);
-          toast.error(err?.message || t("booking.paymentInitFailed"));
+          toast.error(err?.message || t("booking.errorPayment"));
           setIsSubmitting(false);
         }
       }
@@ -313,7 +313,7 @@ export default function BookingPage() {
         setIsSubmitting(false);
         return;
       }
-      const displayMsg = err?.message || t("error.generic");
+      const displayMsg = err?.message || t("booking.errorGeneric");
       toast.error(displayMsg);
       setIsSubmitting(false);
     });
@@ -356,6 +356,31 @@ export default function BookingPage() {
             <p className="mt-2 text-sm text-muted-foreground">
               {phase === "done" ? t("booking.successDesc") : t("booking.phase.pleaseWait")}
             </p>
+            {phase === "done" && listing && (
+              <div className="mt-4 rounded-lg border border-border bg-secondary/40 px-4 py-3 text-left space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t("booking.service")}</span>
+                  <span className="font-medium">{listing.title}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t("booking.startDate")}</span>
+                  <span className="font-medium">{detailsForm.getValues("startDate")}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t("booking.endDate")}</span>
+                  <span className="font-medium">{detailsForm.getValues("endDate")}</span>
+                </div>
+                {pricing && (
+                  <div className="flex justify-between font-semibold border-t border-border pt-1 mt-1">
+                    <span>{t("booking.total")}</span>
+                    <span className="text-accent">{pricing.total}€</span>
+                  </div>
+                )}
+              </div>
+            )}
+            {phase === "done" && (
+              <p className="mt-3 text-xs text-muted-foreground">{t("booking.confirmationNextSteps")}</p>
+            )}
           </div>
 
           <div className="mt-8 space-y-3">
@@ -837,17 +862,22 @@ export default function BookingPage() {
                 <ArrowLeft className="mr-2 h-4 w-4" /> {t("booking.prev")}
               </Button>
             ) : <div />}
-            <Button
-              onClick={handleNext}
-              disabled={createBooking.isPending || isSubmitting || (step === 2 && !isAuthenticated) || (step === 0 && isUnavailable)}
-              className="bg-accent text-accent-foreground hover:bg-accent/90"
-            >
-              {step < steps.length - 1 ? (
-                <>{t("booking.next")} <ArrowRight className="ml-2 h-4 w-4" /></>
-              ) : (
-                <>{(createBooking.isPending || isSubmitting) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}{t("booking.confirm")} <Check className="ml-2 h-4 w-4" /></>
+            <div className="flex flex-col items-end gap-1.5">
+              <Button
+                onClick={handleNext}
+                disabled={createBooking.isPending || isSubmitting || (step === 2 && !isAuthenticated) || (step === 0 && isUnavailable)}
+                className="bg-accent text-accent-foreground hover:bg-accent/90"
+              >
+                {step < steps.length - 1 ? (
+                  <>{t("booking.next")} <ArrowRight className="ml-2 h-4 w-4" /></>
+                ) : (
+                  <>{(createBooking.isPending || isSubmitting) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}{t("booking.confirm")} <Check className="ml-2 h-4 w-4" /></>
+                )}
+              </Button>
+              {step === steps.length - 1 && (
+                <p className="text-xs text-gray-500 text-right max-w-xs">{t("booking.paymentReassurance")}</p>
               )}
-            </Button>
+            </div>
           </div>
         </div>
 
@@ -892,6 +922,10 @@ export default function BookingPage() {
 
       {/* Mobile sticky pricing bar */}
       <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border bg-card px-3 pt-2 pb-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
+        {/* Reassurance copy on final step */}
+        {step === steps.length - 1 && (
+          <p className="mb-1 text-xs text-gray-500 text-center">{t("booking.paymentReassurance")}</p>
+        )}
         {/* Pricing summary row */}
         <div className="mb-2 flex items-center justify-between text-xs">
           <div className="flex items-center gap-3">
