@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { CheckCircle, Loader2, X, Download, FileText, ShieldCheck, Info } from "lucide-react";
+import { CheckCircle, Loader2, X, Download, FileText, ShieldCheck, Info, Smartphone } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -167,6 +167,265 @@ function DokobitSigningFlow({
   return null;
 }
 
+// ─── Smart-ID / Mobile-ID signing sub-component ──────────────────────────────
+
+type SmartIdMethod = "smartid" | "mobileid";
+
+interface SmartIdFlowProps {
+  bookingId: string;
+  smartIdEnabled: boolean;
+  mobileIdEnabled: boolean;
+  onSuccess: (verifiedName: string, personalCode: string, sessionId: string, method: SmartIdMethod) => void;
+  onCancel: () => void;
+}
+
+function SmartIdSigningFlow({
+  bookingId,
+  smartIdEnabled,
+  mobileIdEnabled,
+  onSuccess,
+  onCancel,
+}: SmartIdFlowProps) {
+  const { t } = useLanguage();
+
+  // Step A: form
+  // Step B: verification code + polling
+  // Step C: terminal states handled inline via status
+  type FlowStep = "form" | "polling";
+  const [flowStep, setFlowStep] = useState<FlowStep>("form");
+  const [selectedMethod, setSelectedMethod] = useState<SmartIdMethod>(
+    smartIdEnabled ? "smartid" : "mobileid"
+  );
+  const [personalCode, setPersonalCode] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [verificationCode, setVerificationCode] = useState<string | null>(null);
+  const [pollStatus, setPollStatus] = useState<"pending" | "completed" | "failed" | "expired">("pending");
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const stopPolling = () => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  };
+
+  useEffect(() => () => stopPolling(), []);
+
+  const startMutation = useMutation({
+    mutationFn: async () => {
+      return apiClient.post<{ sessionId: string; verificationCode: string }>(
+        "/contracts/identity/start",
+        {
+          bookingId,
+          method: selectedMethod,
+          personalCode: personalCode.trim(),
+          ...(selectedMethod === "mobileid" ? { phoneNumber: phoneNumber.trim() } : {}),
+        }
+      );
+    },
+    onSuccess: (data) => {
+      setSessionId(data.sessionId);
+      setVerificationCode(data.verificationCode);
+      setPollStatus("pending");
+      setFlowStep("polling");
+
+      // Poll every 2 seconds
+      pollRef.current = setInterval(async () => {
+        try {
+          const result = await apiClient.get<{
+            status: "pending" | "completed" | "failed" | "expired";
+            verifiedName?: string;
+            personalCode?: string;
+          }>(`/contracts/identity/${data.sessionId}`);
+
+          setPollStatus(result.status);
+
+          if (result.status === "completed") {
+            stopPolling();
+            onSuccess(
+              result.verifiedName ?? "",
+              result.personalCode ?? personalCode.trim(),
+              data.sessionId,
+              selectedMethod
+            );
+          } else if (result.status === "failed" || result.status === "expired") {
+            stopPolling();
+          }
+        } catch {
+          // Network hiccup — keep polling
+        }
+      }, 2000);
+    },
+    onError: (err: unknown) => {
+      const message = err instanceof Error ? err.message : t("error.generic");
+      toast.error(message);
+    },
+  });
+
+  const handleStart = () => {
+    if (!personalCode.trim()) return;
+    if (selectedMethod === "mobileid" && !phoneNumber.trim()) return;
+    startMutation.mutate();
+  };
+
+  const handleRetry = () => {
+    stopPolling();
+    setSessionId(null);
+    setVerificationCode(null);
+    setPollStatus("pending");
+    setFlowStep("form");
+  };
+
+  // ── Step A: method selection + form ──
+  if (flowStep === "form") {
+    return (
+      <div className="flex flex-col gap-4 py-4">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="h-5 w-5 text-accent shrink-0" />
+          <p className="text-sm text-muted-foreground">{t("contract.smartId.intro")}</p>
+        </div>
+
+        {/* Method selector */}
+        <div className="flex gap-2">
+          {smartIdEnabled && (
+            <button
+              type="button"
+              onClick={() => setSelectedMethod("smartid")}
+              disabled={startMutation.isPending}
+              className={`flex-1 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-accent ${
+                selectedMethod === "smartid"
+                  ? "border-accent bg-accent/10 text-accent"
+                  : "border-border bg-card text-foreground hover:border-accent/50"
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              Smart-ID
+            </button>
+          )}
+          {mobileIdEnabled && (
+            <button
+              type="button"
+              onClick={() => setSelectedMethod("mobileid")}
+              disabled={startMutation.isPending}
+              className={`flex-1 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-accent ${
+                selectedMethod === "mobileid"
+                  ? "border-accent bg-accent/10 text-accent"
+                  : "border-border bg-card text-foreground hover:border-accent/50"
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              Mobile-ID
+            </button>
+          )}
+        </div>
+
+        {/* Personal code */}
+        <div>
+          <label className="text-xs font-medium">{t("contract.smartId.personalCode")}</label>
+          <input
+            className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50"
+            placeholder="38501010000"
+            maxLength={20}
+            value={personalCode}
+            onChange={(e) => setPersonalCode(e.target.value)}
+            disabled={startMutation.isPending}
+          />
+        </div>
+
+        {/* Phone number — Mobile-ID only */}
+        {selectedMethod === "mobileid" && (
+          <div>
+            <label className="text-xs font-medium">{t("contract.smartId.phoneNumber")}</label>
+            <input
+              className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50"
+              placeholder="+37260000000"
+              maxLength={20}
+              type="tel"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              disabled={startMutation.isPending}
+            />
+          </div>
+        )}
+
+        <div className="flex gap-2 pt-1">
+          <Button
+            onClick={handleStart}
+            disabled={
+              startMutation.isPending ||
+              !personalCode.trim() ||
+              (selectedMethod === "mobileid" && !phoneNumber.trim())
+            }
+            className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90"
+          >
+            {startMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {t("contract.smartId.startVerification")}
+          </Button>
+          <Button variant="ghost" onClick={onCancel} disabled={startMutation.isPending}>
+            {t("common.cancel") || "Cancel"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Step B / C: polling + terminal states ──
+  if (pollStatus === "completed") {
+    // Parent handles this via onSuccess callback — show brief success state
+    return (
+      <div className="flex flex-col items-center gap-3 py-6">
+        <CheckCircle className="h-10 w-10 text-accent" />
+        <p className="text-sm text-center font-medium">{t("contract.smartId.verified")}</p>
+      </div>
+    );
+  }
+
+  if (pollStatus === "failed" || pollStatus === "expired") {
+    return (
+      <div className="flex flex-col items-center gap-4 py-6">
+        <p className="text-sm text-destructive text-center">
+          {pollStatus === "expired"
+            ? t("contract.smartId.sessionExpired")
+            : t("contract.smartId.verificationFailed")}
+        </p>
+        <Button variant="outline" onClick={handleRetry}>
+          {t("contract.smartId.retry")}
+        </Button>
+        <Button variant="ghost" size="sm" onClick={onCancel}>
+          {t("common.cancel") || "Cancel"}
+        </Button>
+      </div>
+    );
+  }
+
+  // Pending — show verification code
+  return (
+    <div className="flex flex-col items-center gap-4 py-6">
+      <Smartphone className="h-10 w-10 text-accent" />
+      <p className="text-sm text-center text-muted-foreground max-w-xs">
+        {t("contract.smartId.openApp")}
+      </p>
+      {verificationCode && (
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            {t("contract.smartId.verificationCodeLabel")}
+          </span>
+          <span className="text-4xl font-bold tracking-[0.2em] tabular-nums text-accent">
+            {verificationCode}
+          </span>
+        </div>
+      )}
+      <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => { stopPolling(); setPollStatus("failed"); }}
+      >
+        {t("common.cancel") || "Cancel"}
+      </Button>
+    </div>
+  );
+}
+
 // ─── Main modal ───────────────────────────────────────────────────────────────
 
 export default function ContractSigningModal({ bookingId, onComplete, onClose }: Props) {
@@ -182,6 +441,10 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawingRef = useRef(false);
   const lastHtmlRef = useRef<string>("");
+
+  // Smart-ID / Mobile-ID verified state
+  const [verifiedSessionId, setVerifiedSessionId] = useState<string | null>(null);
+  const [verifiedMethod, setVerifiedMethod] = useState<"smartid" | "mobileid" | null>(null);
 
   const tplQuery = useQuery({
     queryKey: ["contract-templates", bookingId],
@@ -205,15 +468,23 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
     enabled: !!template?.id,
   });
 
-  // Query whether Dokobit e-signing is enabled on this deployment.
-  // Falls back to false (canvas) when the backend is unreachable or the token is absent.
+  // Query whether Dokobit or Smart-ID / Mobile-ID e-signing is enabled on this deployment.
+  // Falls back gracefully (canvas) when the backend is unreachable or flags are absent.
   const signingMethodQuery = useQuery({
     queryKey: ["signing-method"],
-    queryFn: () => apiClient.get<{ dokobitEnabled: boolean }>("/contracts/signing-method"),
+    queryFn: () =>
+      apiClient.get<{
+        dokobitEnabled: boolean;
+        smartIdEnabled: boolean;
+        mobileIdEnabled: boolean;
+      }>("/contracts/signing-method"),
     staleTime: 60_000,
     retry: 1,
   });
   const dokobitEnabled = signingMethodQuery.data?.dokobitEnabled === true;
+  const smartIdEnabled = signingMethodQuery.data?.smartIdEnabled === true;
+  const mobileIdEnabled = signingMethodQuery.data?.mobileIdEnabled === true;
+  const useSmartIdFlow = (smartIdEnabled || mobileIdEnabled) && !dokobitEnabled;
 
   // Setup high-DPI canvas
   useEffect(() => {
@@ -287,6 +558,18 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
 
   const signMutation = useMutation({
     mutationFn: async () => {
+      if (useSmartIdFlow && verifiedSessionId && verifiedMethod) {
+        // Smart-ID / Mobile-ID path — no canvas needed
+        return apiClient.post("/contracts/sign", {
+          bookingId,
+          contractTemplateId: template!.id,
+          tenantName: name,
+          tenantIdCode: idCode || null,
+          signingMethod: verifiedMethod,
+          verifiedSessionId,
+        });
+      }
+      // Canvas fallback path
       const dataUrl = canvasRef.current!.toDataURL("image/png");
       return apiClient.post("/contracts/sign", {
         bookingId,
@@ -294,6 +577,7 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
         tenantName: name,
         tenantIdCode: idCode || null,
         signatureDataUrl: dataUrl,
+        signingMethod: "canvas" as const,
       });
     },
     onSuccess: () => {
@@ -319,6 +603,19 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
     const url = URL.createObjectURL(blob);
     const w = window.open(url, "_blank");
     if (w) setTimeout(() => { try { w.print(); } catch { /* ignore */ } }, 500);
+  };
+
+  const handleSmartIdSuccess = (
+    verifiedName: string,
+    personalCode: string,
+    sid: string,
+    method: "smartid" | "mobileid"
+  ) => {
+    // Auto-populate name from verified identity
+    if (verifiedName) setName(verifiedName);
+    if (personalCode) setIdCode(personalCode);
+    setVerifiedSessionId(sid);
+    setVerifiedMethod(method);
   };
 
   const stepLabel =
@@ -382,36 +679,43 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
           {step === 2 && (
             <div className="space-y-4">
               <h2 className="text-lg font-semibold">
-                {dokobitEnabled ? t("contract.signWithId") : t("contract.acknowledgmentTitle")}
+                {dokobitEnabled
+                  ? t("contract.signWithId")
+                  : useSmartIdFlow
+                  ? t("contract.smartId.title")
+                  : t("contract.acknowledgmentTitle")}
               </h2>
 
-              {/* Common name + ID fields */}
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="text-xs font-medium">{t("contract.fullName")}</label>
-                  <input
-                    className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                    maxLength={200}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
+              {/* Common name + ID fields (shown for canvas and smart-id paths; dokobit handles its own) */}
+              {!dokobitEnabled && (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="text-xs font-medium">{t("contract.fullName")}</label>
+                    <input
+                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                      maxLength={200}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      // Read-only once Smart-ID has verified the identity
+                      readOnly={useSmartIdFlow && !!verifiedSessionId}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium">{t("contract.idCode")}</label>
+                    <input
+                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                      maxLength={20}
+                      placeholder="38501010000"
+                      value={idCode}
+                      onChange={(e) => setIdCode(e.target.value)}
+                      readOnly={useSmartIdFlow && !!verifiedSessionId}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs font-medium">
-                    {dokobitEnabled ? t("contract.idCodeRequired") : t("contract.idCode")}
-                  </label>
-                  <input
-                    className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                    maxLength={20}
-                    placeholder="38501010000"
-                    value={idCode}
-                    onChange={(e) => setIdCode(e.target.value)}
-                  />
-                </div>
-              </div>
+              )}
 
               {/* Self-declared note — canvas path only */}
-              {!dokobitEnabled && (
+              {!dokobitEnabled && !useSmartIdFlow && (
                 <div className="flex items-start gap-2 rounded-lg bg-secondary/50 p-3">
                   <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                   <p className="text-xs text-muted-foreground">{t("contract.selfDeclaredNote")}</p>
@@ -421,6 +725,30 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
               {/* ── Dokobit path ── */}
               {dokobitEnabled ? (
                 <>
+                  {/* Name + ID fields (Dokobit needs them too) */}
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="text-xs font-medium">{t("contract.fullName")}</label>
+                      <input
+                        className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                        maxLength={200}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium">
+                        {t("contract.idCodeRequired")}
+                      </label>
+                      <input
+                        className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                        maxLength={20}
+                        placeholder="38501010000"
+                        value={idCode}
+                        onChange={(e) => setIdCode(e.target.value)}
+                      />
+                    </div>
+                  </div>
                   <div>
                     <label className="text-xs font-medium">{t("contract.emailLabel")}</label>
                     <input
@@ -449,6 +777,40 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
                   <div className="flex items-center justify-between pt-2">
                     <Button variant="outline" onClick={() => setStep(1)}>← {t("contract.stepReview")}</Button>
                   </div>
+                </>
+              ) : useSmartIdFlow ? (
+                /* ── Smart-ID / Mobile-ID path ── */
+                <>
+                  {verifiedSessionId ? (
+                    // Verification done — show confirm button
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 rounded-lg bg-accent/10 border border-accent/30 p-3">
+                        <CheckCircle className="h-4 w-4 text-accent shrink-0" />
+                        <p className="text-sm font-medium text-accent">
+                          {t("contract.smartId.identityConfirmed")}
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-between pt-2">
+                        <Button variant="outline" onClick={() => setStep(1)}>← {t("contract.stepReview")}</Button>
+                        <Button
+                          disabled={!name.trim() || submitting}
+                          onClick={handleSign}
+                          className="bg-accent text-accent-foreground hover:bg-accent/90"
+                        >
+                          {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          {t("contract.confirmSign")} →
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <SmartIdSigningFlow
+                      bookingId={bookingId}
+                      smartIdEnabled={smartIdEnabled}
+                      mobileIdEnabled={mobileIdEnabled}
+                      onSuccess={handleSmartIdSuccess}
+                      onCancel={() => setStep(1)}
+                    />
+                  )}
                 </>
               ) : (
                 /* ── Canvas fallback path ── */
