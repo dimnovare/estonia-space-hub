@@ -42,7 +42,7 @@ export default function ProviderActivationChecklist({ locationId }: { locationId
   const [collapsed, setCollapsed] = useState(false);
 
   const endpoint = locationId
-    ? withSupplier(`/provider/locations/${locationId}/publish-readiness`, supplierId)
+    ? withSupplier(`/locations/${locationId}/publish-readiness`, supplierId)
     : null;
 
   const { data, isLoading, isError } = useQuery<ReadinessData>({
@@ -71,7 +71,7 @@ export default function ProviderActivationChecklist({ locationId }: { locationId
     setPublishing(true);
     try {
       await apiClient.patch(
-        withSupplier(`/provider/locations/${locationId}/publish`, supplierId),
+        withSupplier(`/locations/${locationId}/publish`, supplierId),
         {}
       );
       toast.success(t("provider.publishSuccess"));
@@ -156,11 +156,6 @@ export default function ProviderActivationChecklist({ locationId }: { locationId
             </div>
           )}
 
-          {useFallback && !isLoading && (
-            <p className="mt-3 text-xs text-muted-foreground">
-              {t("admin.ops.comingSoon")}
-            </p>
-          )}
         </div>
       )}
     </div>

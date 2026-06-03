@@ -15,14 +15,20 @@ interface StuckOrder {
   bookingId: string;
   supplierName: string;
   amount: number;
-  stuckMinutes: number;
+  stuckSinceMinutes: number;
 }
 
 interface PendingRefund {
+  invoiceId: string;
   bookingId: string;
-  supplierName: string;
   amount: number;
-  createdAt: string;
+  cancelledAt: string;
+}
+
+interface StuckData {
+  stuckOrders: StuckOrder[];
+  pendingRefunds: PendingRefund[];
+  failedWebhooks: number;
 }
 
 function StatCard({ label, value, icon: Icon, highlight }: { label: string; value: number | string; icon: React.ComponentType<any>; highlight?: boolean }) {
@@ -49,21 +55,19 @@ export default function AdminOps() {
     retry: false,
   });
 
-  const { data: stuck = [], isLoading: stuckLoading, isError: stuckError } = useQuery<StuckOrder[]>({
+  const { data: stuckData, isLoading: stuckLoading, isError: stuckError } = useQuery<StuckData>({
     queryKey: ["admin-ops-stuck"],
-    queryFn: () => apiClient.get<StuckOrder[]>("/admin/ops/stuck"),
+    queryFn: () => apiClient.get<StuckData>("/admin/ops/stuck"),
     staleTime: 30_000,
     retry: false,
   });
 
-  const { data: refunds = [], isLoading: refundsLoading, isError: refundsError } = useQuery<PendingRefund[]>({
-    queryKey: ["admin-ops-refunds"],
-    queryFn: () => apiClient.get<PendingRefund[]>("/admin/ops/pending-refunds"),
-    staleTime: 30_000,
-    retry: false,
-  });
+  const stuck = stuckData?.stuckOrders ?? [];
+  const refunds = stuckData?.pendingRefunds ?? [];
+  const refundsLoading = stuckLoading;
+  const refundsError = stuckError;
 
-  const anyEndpointMissing = healthError && stuckError && refundsError;
+  const anyEndpointMissing = healthError && stuckError;
 
   return (
     <div className="space-y-8">
@@ -136,7 +140,7 @@ export default function AdminOps() {
                         <td className="px-4 py-3">
                           <span className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning">
                             <AlertTriangle className="h-3 w-3" />
-                            {t("admin.ops.minutesAgo").replace("{n}", String(order.stuckMinutes))}
+                            {t("admin.ops.minutesAgo").replace("{n}", String(order.stuckSinceMinutes))}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -175,7 +179,7 @@ export default function AdminOps() {
                 <table className="w-full text-sm">
                   <thead className="border-b border-border bg-secondary/50">
                     <tr>
-                      {[t("admin.ops.bookingId"), t("admin.ops.supplier"), t("admin.ops.amount"), ""].map((h, i) => (
+                      {[t("admin.ops.bookingId"), t("admin.ops.amount"), t("admin.ops.cancelledAt"), ""].map((h, i) => (
                         <th key={i} className="px-4 py-2 text-left font-medium text-muted-foreground">{h}</th>
                       ))}
                     </tr>
@@ -184,8 +188,8 @@ export default function AdminOps() {
                     {refunds.map((r) => (
                       <tr key={r.bookingId} className="border-b border-border/50 last:border-0">
                         <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{r.bookingId.slice(0, 8)}…</td>
-                        <td className="px-4 py-3 font-medium">{r.supplierName}</td>
                         <td className="px-4 py-3">€{r.amount}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(r.cancelledAt).toLocaleDateString()}</td>
                         <td className="px-4 py-3">
                           <Link
                             to={`/admin?tab=orders`}

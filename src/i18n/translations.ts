@@ -2214,6 +2214,7 @@ const et: Record<string, string> = {
     "admin.ops.openOrder":                 "Ava",
     "admin.ops.pendingRefunds":            "Ootel tagasimaksed",
     "admin.ops.noPendingRefunds":          "Ootel tagasimakseid pole",
+    "admin.ops.cancelledAt":               "Tühistatud",
 };
 
 const en: Record<string, string> = {
@@ -4386,6 +4387,7 @@ const en: Record<string, string> = {
     "admin.ops.openOrder":                 "Open",
     "admin.ops.pendingRefunds":            "Pending refunds",
     "admin.ops.noPendingRefunds":          "No pending refunds",
+    "admin.ops.cancelledAt":               "Cancelled at",
 };
 
 const ru: Record<string, string> = {
@@ -6558,6 +6560,7 @@ const ru: Record<string, string> = {
     "admin.ops.openOrder":                 "Открыть",
     "admin.ops.pendingRefunds":            "Ожидающие возвраты",
     "admin.ops.noPendingRefunds":          "Ожидающих возвратов нет",
+    "admin.ops.cancelledAt":               "Отменено",
 };
 
 
@@ -8669,6 +8672,7 @@ const lv: Record<string, string> = {
     "admin.ops.openOrder":                 "Atvērt",
     "admin.ops.pendingRefunds":            "Gaidošie atmaksājumi",
     "admin.ops.noPendingRefunds":          "Gaidošu atmaksājumu nav",
+    "admin.ops.cancelledAt":               "Atcelts",
 };
 // ── Lithuanian ──────────────────────────
 const lt: Record<string, string> = {
@@ -10777,6 +10781,7 @@ const lt: Record<string, string> = {
     "admin.ops.openOrder":                 "Atidaryti",
     "admin.ops.pendingRefunds":            "Laukiami grąžinimai",
     "admin.ops.noPendingRefunds":          "Laukiamų grąžinimų nėra",
+    "admin.ops.cancelledAt":               "Atšaukta",
 };
 const translations: Record<Language, Record<string, string>> = { et, en, ru, lv, lt };
 
