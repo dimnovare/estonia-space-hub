@@ -276,10 +276,30 @@ function BookingCard({ booking }: { booking: Booking }) {
   const signedContract: any = contractQuery.data?.signedAt ? contractQuery.data : null;
   const handleViewContract = () => {
     const html = signedContract?.renderedHtml ?? "";
-    if (!html) return;
-    const blob = new Blob([html], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank");
+    if (html) {
+      const blob = new Blob([html], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      return;
+    }
+    // Fallback: call the download endpoint
+    const baseUrl = import.meta.env.VITE_API_URL || "";
+    const token = tokenStore.getAccess();
+    fetch(`${baseUrl}/api/contracts/${booking.id}/download`, {
+      credentials: "include",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }).then(async (res) => {
+      if (!res.ok) throw new Error(await res.text());
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `contract-${booking.id}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }).catch((err: any) => {
+      toast.error(err?.message || t("error.generic"));
+    });
   };
   const cancelMutation = useMutation({
     mutationFn: (id: string) => apiClient.patch(`/bookings/${id}/cancel`, {}),
