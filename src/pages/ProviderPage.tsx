@@ -2,7 +2,7 @@ import { Link } from "@/i18n/routing";
 import {
   ArrowRight,
   UserPlus, ListPlus, ShoppingCart, Check, Star, Megaphone,
-  TrendingUp, PhoneOff, Search, Wallet,
+  TrendingUp, PhoneOff, Search, Wallet, ShieldCheck, Zap, Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -120,6 +120,26 @@ export default function ProviderPage() {
             </Button>
           </div>
           <p className="mt-4 text-xs text-primary-foreground/50">{t("provPage.hero.note")}</p>
+        </div>
+      </section>
+
+      {/* ── Trust / credibility section ── */}
+      <section className="container-wide py-12 md:py-16">
+        <div className="mx-auto max-w-3xl text-center">
+          <h2 className="font-display text-2xl font-bold md:text-3xl">{t("provider.trustTitle")}</h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">{t("provider.trustSubtitle")}</p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            {[
+              { icon: ShieldCheck, label: t("provider.stat1") },
+              { icon: Zap,         label: t("provider.stat2") },
+              { icon: Clock,       label: t("provider.stat3") },
+            ].map(({ icon: Icon, label }) => (
+              <span key={label} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium">
+                <Icon className="h-4 w-4 text-accent" />
+                {label}
+              </span>
+            ))}
+          </div>
         </div>
       </section>
 

@@ -78,7 +78,15 @@ export default function Footer() {
         </div>
         <div className="mt-10 border-t border-primary-foreground/10 pt-6 text-center text-xs text-primary-foreground/75">
           <div>© {new Date().getFullYear()} Ruumly. {t("footer.rights")}</div>
-          <div className="mt-1">Ruumly · info@ruumly.eu · Tallinn, Estonia</div>
+          <div className="mt-1 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+            <span>{t("footer.legalEntity")}</span>
+            <span className="opacity-40">·</span>
+            <a href="mailto:info@ruumly.eu" className="hover:text-primary-foreground transition-colors">
+              {t("footer.supportEmail")}: info@ruumly.eu
+            </a>
+            <span className="opacity-40">·</span>
+            <span>Tallinn, Estonia</span>
+          </div>
         </div>
       </div>
     </footer>

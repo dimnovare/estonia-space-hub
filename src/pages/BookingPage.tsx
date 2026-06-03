@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useSearchParams, Link, useNavigate } from "@/i18n/routing";
-import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand, Info, Warehouse } from "lucide-react";
+import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand, Info, Warehouse, Lock, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListing, useCreateBooking, useSuppliers, usePricingConfig, useListingExtras } from "@/hooks/queries";
 import { useQuery } from "@tanstack/react-query";
@@ -766,6 +766,42 @@ export default function BookingPage() {
                 </div>
               </div>
               )}
+
+              {/* Trust signals block */}
+              <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-4">
+                {/* How it works — 3 steps */}
+                <div>
+                  <h3 className="text-sm font-semibold">{t("booking.howItWorks")}</h3>
+                  <div className="mt-3 flex items-start gap-2">
+                    {[t("booking.step1"), t("booking.step2"), t("booking.step3")].map((step, i) => (
+                      <div key={i} className="flex flex-1 flex-col items-center gap-1 text-center">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-[11px] font-bold text-accent-foreground">
+                          {i + 1}
+                        </div>
+                        <span className="text-xs font-medium">{step}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Secure payment */}
+                <div className="flex items-center gap-2 border-t border-border pt-3">
+                  <Lock className="h-4 w-4 text-success shrink-0" />
+                  <span className="text-xs text-muted-foreground">{t("booking.securePayment")}</span>
+                </div>
+                {/* Cancellation */}
+                <div className="flex items-start gap-2">
+                  <ShieldCheck className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                  <span className="text-xs text-muted-foreground">{t("booking.cancellationPolicy")}</span>
+                </div>
+                {/* Support */}
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span className="text-xs text-muted-foreground">
+                    {t("booking.questions")}{" "}
+                    <a href="mailto:info@ruumly.eu" className="text-accent hover:underline">info@ruumly.eu</a>
+                  </span>
+                </div>
+              </div>
 
               {/* Cancellation policy */}
               <div className="rounded-xl border border-border bg-secondary/50 p-4">

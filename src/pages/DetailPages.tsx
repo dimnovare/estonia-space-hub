@@ -132,7 +132,7 @@ function SupplierBadge({ supplierId }: { supplierId?: string }) {
         </span>
       </div>
       <div className="mt-2 flex items-center gap-1 text-[10px] text-muted-foreground">
-        <CheckCircle className="h-3 w-3 text-success" /> Verifitseeritud partner · {intCfg.description}
+        <CheckCircle className="h-3 w-3 text-success" /> {t("listing.verifiedPartner")} · {intCfg.description}
       </div>
     </div>
   );
