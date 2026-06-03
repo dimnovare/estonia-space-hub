@@ -132,6 +132,9 @@ export const queryKeys = {
   invoiceStatus: {
     byId: (id: string) => ["invoice-status", id] as const,
   },
+  adminMetrics: {
+    all: () => ["admin-metrics"] as const,
+  },
   supplierTeam: {
     byId: (id: string | null) => ["supplier-team", id] as const,
   },
