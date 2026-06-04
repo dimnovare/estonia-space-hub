@@ -39,6 +39,9 @@ function DokobitSigningFlow({
   const [status, setStatus] = useState<"idle" | "initiating" | "pending" | "completed" | "cancelled" | "error">("idle");
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState(false);
+  // Optional personal ID code — fills {{tenant_id_code}} in the contract body at render
+  // time. Signing still works if left blank (the verified code is captured post-sign).
+  const [idCode, setIdCode] = useState("");
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const stopPolling = () => {
@@ -54,11 +57,13 @@ function DokobitSigningFlow({
   const initiateMutation = useMutation({
     mutationFn: async () => {
       // Spec §7: POST /contracts/dokobit/initiate { bookingId, contractTemplateId? }
+      const trimmedIdCode = idCode.trim();
       return apiClient.post<{ signingUrl: string; signingToken: string }>(
         "/contracts/dokobit/initiate",
         {
           bookingId,
           ...(templateId ? { contractTemplateId: templateId } : {}),
+          ...(trimmedIdCode ? { signerIdCode: trimmedIdCode } : {}),
         }
       );
     },
@@ -219,12 +224,36 @@ function DokobitSigningFlow({
   }
 
   // ── Idle / initiating — start the flow ──
+  // Light validation only: digits, reasonable length. Never hard-blocks signing —
+  // the field is optional and the verified code is captured post-sign regardless.
+  const trimmedIdCode = idCode.trim();
+  const idCodeLooksOff =
+    trimmedIdCode.length > 0 && !/^\d{7,20}$/.test(trimmedIdCode);
+
   return (
     <div className="flex flex-col items-center gap-4 py-6">
       <ShieldCheck className="h-12 w-12 text-accent" />
       <p className="text-sm text-center text-muted-foreground max-w-sm">
         {t("contract.dokobit.intro")}
       </p>
+
+      {/* Optional personal ID code — fills {{tenant_id_code}} in the contract body. */}
+      <div className="w-full max-w-xs">
+        <label className="text-xs font-medium">{t("contract.idCodeLabel")}</label>
+        <input
+          className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50"
+          placeholder={t("contract.idCodePlaceholder")}
+          maxLength={20}
+          inputMode="numeric"
+          value={idCode}
+          onChange={(e) => setIdCode(e.target.value)}
+          disabled={status === "initiating"}
+        />
+        <p className={`mt-1 text-xs ${idCodeLooksOff ? "text-destructive" : "text-muted-foreground"}`}>
+          {t("contract.idCodeHelp")}
+        </p>
+      </div>
+
       <Button
         onClick={handleInitiate}
         disabled={status === "initiating"}
