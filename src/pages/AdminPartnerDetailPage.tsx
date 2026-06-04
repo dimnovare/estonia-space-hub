@@ -3,22 +3,13 @@ import { useParams, useSearchParams, Link } from "@/i18n/routing";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  ArrowLeft, ExternalLink, Loader2, Save, RefreshCw, ChevronDown, Plus, Pencil, Trash2, Eye, FileText, CheckCircle2, XCircle,
+  ArrowLeft, ExternalLink, Loader2, Save, RefreshCw, ChevronDown, CheckCircle2, XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { SEO } from "@/components/SEO";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import ProviderContractTemplate from "@/components/provider/ProviderContractTemplate";
 import { supplierService } from "@/services";
 import { apiClient } from "@/services/apiClient";
 import { queryKeys } from "@/services/queryKeys";
@@ -168,7 +159,7 @@ export default function AdminPartnerDetailPage() {
         {tab === "commercial" && <CommercialTab supplier={s} onSave={(p) => updateMutation.mutate(p)} pending={updateMutation.isPending} />}
         {tab === "partner-page" && <PartnerPageTab supplier={s} onSave={(p) => updateMutation.mutate(p)} pending={updateMutation.isPending} />}
         {tab === "integration" && <IntegrationTab supplierId={s.id} />}
-        {tab === "contracts" && <ContractsTab supplierId={s.id} />}
+        {tab === "contracts" && <ProviderContractTemplate supplierId={s.id} />}
       </div>
     </div>
   );
@@ -851,157 +842,3 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
   );
 }
 
-// ─── Contracts ─────────────────────────────────────────────────────────────
-type ContractTpl = { id: string; name: string; html: string; isDefault?: boolean; isActive?: boolean };
-
-function ContractsTab({ supplierId }: { supplierId: string }) {
-  const qc = useQueryClient();
-  const { t } = useLanguage();
-  const listKey = queryKeys.adminContractTemplates.bySupplierId(supplierId);
-  const { data: templates = [], isLoading } = useQuery({
-    queryKey: listKey,
-    queryFn: () => apiClient.get<ContractTpl[]>(`/admin/suppliers/${supplierId}/contracts`),
-    enabled: !!supplierId,
-  });
-
-  const [editing, setEditing] = useState<ContractTpl | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
-
-  const saveMutation = useMutation({
-    mutationFn: async (tpl: ContractTpl) => {
-      const body = { name: tpl.name, html: tpl.html, isDefault: tpl.isDefault, isActive: tpl.isActive ?? true };
-      if (tpl.id && !tpl.id.startsWith("new-")) {
-        return apiClient.patch(`/admin/suppliers/${supplierId}/contracts/${tpl.id}`, body);
-      }
-      return apiClient.post(`/admin/suppliers/${supplierId}/contracts`, body);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: listKey });
-      setEditing(null);
-      toast.success(t("common.saved"));
-    },
-    onError: (err: any) => toast.error(err?.message ?? t("toast.saveFailed")),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => apiClient.delete(`/admin/suppliers/${supplierId}/contracts/${id}`),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: listKey }); toast.success(t("common.deleted")); },
-    onError: (err: any) => toast.error(err?.message ?? t("toast.saveFailed")),
-  });
-
-  const previewHtml = (html: string) => {
-    const blob = new Blob([html], { type: "text/html" });
-    window.open(URL.createObjectURL(blob), "_blank");
-  };
-
-  return (
-    <div className="rounded-xl border border-border bg-card p-5">
-      <div className="flex items-center justify-between">
-        <h3 className="flex items-center gap-1.5 text-sm font-semibold">
-          <FileText className="h-4 w-4" /> Contract templates
-        </h3>
-        {!editing && (
-          <Button variant="outline" size="sm" onClick={() => setEditing({ id: `new-${Date.now()}`, name: "", html: "", isDefault: false, isActive: true })}>
-            <Plus className="mr-1 h-3.5 w-3.5" /> Add template
-          </Button>
-        )}
-      </div>
-
-      {!editing && (
-        <div className="mt-3 space-y-1">
-          {isLoading ? (
-            <div className="h-12 animate-pulse rounded-lg bg-secondary" />
-          ) : templates.length === 0 ? (
-            <p className="rounded-lg border border-border bg-secondary/30 p-3 text-xs text-muted-foreground">
-              No templates yet.
-            </p>
-          ) : (
-            templates.filter(tpl => tpl.isActive !== false).map((tpl) => (
-              <div key={tpl.id} className="flex items-center gap-2 rounded-lg border border-border p-2 text-sm">
-                <span className="flex-1 truncate font-medium">{tpl.name}</span>
-                {tpl.isDefault && (
-                  <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-semibold text-accent">Default</span>
-                )}
-                <button className="text-muted-foreground hover:text-foreground" onClick={() => previewHtml(tpl.html)}>
-                  <Eye className="h-4 w-4" />
-                </button>
-                <button className="text-muted-foreground hover:text-foreground" onClick={() => setEditing(tpl)}>
-                  <Pencil className="h-4 w-4" />
-                </button>
-                <button
-                  className="text-muted-foreground hover:text-destructive"
-                  onClick={() => setDeleteTarget({ id: tpl.id, name: tpl.name })}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            ))
-          )}
-        </div>
-      )}
-
-      {editing && (
-        <div className="mt-3 space-y-3 rounded-lg border border-border p-3">
-          <div>
-            <label className="text-xs font-medium">Name</label>
-            <input className={inp} value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
-          </div>
-          <div>
-            <label className="text-xs font-medium">HTML template</label>
-            <textarea
-              rows={12}
-              className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-accent"
-              value={editing.html}
-              onChange={(e) => setEditing({ ...editing, html: e.target.value })}
-            />
-            <p className="mt-1 text-[10px] text-muted-foreground">
-              Variables: {"{{tenant_name}}, {{unit_title}}, {{price}}, {{start_date}}"}
-            </p>
-          </div>
-          <label className="flex items-center gap-2 text-xs">
-            <input
-              type="checkbox"
-              checked={!!editing.isDefault}
-              onChange={(e) => setEditing({ ...editing, isDefault: e.target.checked })}
-            />
-            Set as default
-          </label>
-          <div className="flex justify-end gap-2 pt-1">
-            <Button variant="ghost" size="sm" onClick={() => previewHtml(editing.html)}>
-              <Eye className="mr-1 h-3.5 w-3.5" /> Preview
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setEditing(null)}>Cancel</Button>
-            <Button
-              size="sm"
-              disabled={!editing.name.trim() || !editing.html.trim() || saveMutation.isPending}
-              onClick={() => saveMutation.mutate(editing)}
-            >
-              {saveMutation.isPending ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Save className="mr-1 h-3.5 w-3.5" />}
-              Save
-            </Button>
-          </div>
-        </div>
-      )}
-
-      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("admin.contracts.deleteTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("admin.contracts.deleteConfirm").replace("{name}", deleteTarget?.name ?? "")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground"
-              onClick={() => { if (deleteTarget) deleteMutation.mutate(deleteTarget.id); setDeleteTarget(null); }}
-            >
-              {t("common.delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
-}

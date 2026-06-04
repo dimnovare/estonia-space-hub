@@ -46,10 +46,11 @@ interface UploadResult {
 const DOCX_MIME =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
-export default function ProviderContractTemplate() {
+export default function ProviderContractTemplate({ supplierId: supplierIdProp }: { supplierId?: string } = {}) {
   const { t } = useLanguage();
   const qc = useQueryClient();
-  const supplierId = useImpersonatedSupplierId();
+  const impersonated = useImpersonatedSupplierId();
+  const supplierId = supplierIdProp ?? impersonated;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [dragOver, setDragOver] = useState(false);

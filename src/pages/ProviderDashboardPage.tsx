@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
-import { useSearchParams, useNavigate } from "@/i18n/routing";
+import { useSearchParams, useNavigate, Link } from "@/i18n/routing";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   LayoutDashboard, List, Package, Calendar as CalendarIcon, Star, Settings, Users, CreditCard,
@@ -67,8 +67,11 @@ export default function ProviderDashboardPage() {
 
   const hasAnalyticsTier =
     user?.role === "admin" || (supplierProfile?.hasFullAnalytics ?? false);
+  const adminNoSupplier = user?.role === "admin" && !supplierId;
   const navItems = sidebarLinks.filter(
-    (l) => l.id !== "analytics" || hasAnalyticsTier
+    (l) =>
+      (l.id !== "analytics" || hasAnalyticsTier) &&
+      (l.id !== "contract" || !adminNoSupplier)
   );
 
   const { data: notifications = [] } = useNotifications();
@@ -260,7 +263,23 @@ export default function ProviderDashboardPage() {
             </div>
           </div>
         )}
-        {tab === "contract" && <ProviderContractTemplate />}
+        {tab === "contract" && (
+          adminNoSupplier ? (
+            <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-border bg-card p-10 text-center">
+              <FileText className="h-8 w-8 text-muted-foreground" />
+              <p className="max-w-md text-sm text-muted-foreground">
+                {t("provider.contract.adminNoSupplier")}
+              </p>
+              <Link to="/admin/partners">
+                <Button variant="outline" size="sm">
+                  {t("provider.contract.goToPartners")}
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <ProviderContractTemplate />
+          )
+        )}
         {tab === "team" && <ProviderTeam />}
         {tab === "billing" && <ProviderBilling />}
       </div>
