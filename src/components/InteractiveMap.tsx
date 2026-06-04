@@ -411,7 +411,7 @@ export default function InteractiveMap({
     <div className={`relative overflow-hidden rounded-xl ${height} ${className}`}>
       <div ref={mapRef} className="h-full w-full" />
       {/* Legend - uses exact same icons as map pins */}
-      <div className="absolute bottom-3 left-3 z-[1000] flex items-center gap-3 rounded-lg bg-card/95 px-3 py-2 text-xs font-medium shadow-lg backdrop-blur-sm">
+      <div className="absolute bottom-3 left-3 z-[1000] flex max-w-[calc(100%-1.5rem)] flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-card/95 px-3 py-2 text-xs font-medium shadow-lg backdrop-blur-sm">
         {(["warehouse", "moving", "trailer"] as const).map((type) => (
           <span key={type} className="flex items-center gap-1.5">
             <span
