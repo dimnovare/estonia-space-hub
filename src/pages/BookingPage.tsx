@@ -816,13 +816,12 @@ export default function BookingPage() {
                   </div>
                   {/* Visual trust badge row — official marks (see public/payment/*.svg) */}
                   <div className="flex flex-wrap items-center gap-2">
-                    <span
-                      className="inline-flex items-center rounded-md bg-[#0E1A2B] px-2.5 py-1.5 text-[13px] font-semibold tracking-tight text-white"
-                      aria-label={t("trust.securedBy")}
+                    <img
+                      src="/payment/montonio.svg"
+                      alt="Montonio"
                       title={t("trust.securedBy")}
-                    >
-                      Montonio
-                    </span>
+                      className="h-7 w-auto"
+                    />
                     <img
                       src="/payment/visa.svg"
                       alt="Visa"
