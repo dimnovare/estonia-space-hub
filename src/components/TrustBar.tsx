@@ -10,8 +10,12 @@ export default function TrustBar() {
   const { data: allResult, isLoading: listingsLoading } = useAllListings();
   const { data: bookingStats, isLoading: statsLoading } = useBookingStats(showStats);
 
-  const listingCount = allResult?.total ?? 0;
-  const allListings = allResult?.data || [];
+  // Storage-only: count only the service types we actually surface, not the
+  // server total (which includes hidden moving/trailer).
+  const allListings = (allResult?.data || []).filter((l: { type?: string }) =>
+    (settings.showMovingService  || l.type !== "moving") &&
+    (settings.showTrailerService || l.type !== "trailer"));
+  const listingCount = allListings.length;
   const cityCount = new Set(allListings.map((l: any) => l.city).filter(Boolean)).size;
 
   const shouldShowListings = !listingsLoading && listingCount > 0;
