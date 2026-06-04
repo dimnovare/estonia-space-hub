@@ -27,8 +27,8 @@ export default function HowItWorksPage() {
   const steps = [
     { icon: Search, title: t("hiw.step1"), desc: t("hiw.step1desc") },
     { icon: CalendarCheck, title: t("hiw.step2"), desc: t("hiw.step2desc") },
-    { icon: CreditCard, title: t("hiw.step3"), desc: t("hiw.step3desc") },
-    { icon: FileSignature, title: t("hiw.step4"), desc: t("hiw.step4desc") },
+    { icon: FileSignature, title: t("hiw.step3"), desc: t("hiw.step3desc") },
+    { icon: CreditCard, title: t("hiw.step4"), desc: t("hiw.step4desc") },
     { icon: KeyRound, title: t("hiw.step5"), desc: t("hiw.step5desc") },
   ];
 
