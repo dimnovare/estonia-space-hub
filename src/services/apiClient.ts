@@ -144,6 +144,83 @@ class ApiClient {
   post<T>(endpoint: string, body: unknown) { return this.request<T>(endpoint, { method: "POST", body }); }
   patch<T>(endpoint: string, body: unknown) { return this.request<T>(endpoint, { method: "PATCH", body }); }
   delete<T>(endpoint: string) { return this.request<T>(endpoint, { method: "DELETE" }); }
+
+  /**
+   * Multipart form upload (e.g. docx). Does NOT set Content-Type — the browser
+   * adds the multipart boundary. Returns parsed JSON. Refresh-on-401 is not
+   * retried here (a FormData body can't be safely replayed); caller handles 401.
+   */
+  async postForm<T>(endpoint: string, form: FormData): Promise<T> {
+    const token = this.getToken();
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    headers["Accept-Language"] = localStorage.getItem("ruumly-lang") || "et";
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: "POST",
+      headers,
+      credentials: "include",
+      body: form,
+    });
+    if (!response.ok) {
+      let message = `API error: ${response.status}`;
+      let errorBodyRaw: unknown = undefined;
+      try {
+        const errorBody = await response.json();
+        errorBodyRaw = errorBody;
+        if (errorBody?.message) message = errorBody.message;
+        else if (errorBody?.error) message = errorBody.error;
+        else if (errorBody?.title) message = errorBody.title;
+      } catch {}
+      const err = new Error(message) as ApiError;
+      err.status = response.status;
+      if (errorBodyRaw !== undefined) err.body = errorBodyRaw;
+      throw err;
+    }
+    const ct = response.headers.get("content-type") ?? "";
+    if (response.status === 204 || !ct.includes("application/json")) {
+      return undefined as unknown as T;
+    }
+    return response.json();
+  }
+
+  /**
+   * Fetch a binary response (e.g. application/pdf) as a Blob. The endpoint may
+   * also return a JSON `{ url }` — in that case the JSON is parsed and returned
+   * via the `json` field so callers can branch.
+   */
+  async fetchBinary(
+    endpoint: string,
+    config: { method?: string; body?: unknown } = {}
+  ): Promise<{ blob?: Blob; json?: { url?: string } }> {
+    const { method = "GET", body } = config;
+    const token = this.getToken();
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    headers["Accept-Language"] = localStorage.getItem("ruumly-lang") || "et";
+    if (body) headers["Content-Type"] = "application/json";
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method,
+      headers,
+      credentials: "include",
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!response.ok) {
+      let message = `API error: ${response.status}`;
+      try {
+        const errorBody = await response.json();
+        if (errorBody?.message) message = errorBody.message;
+        else if (errorBody?.error) message = errorBody.error;
+      } catch {}
+      const err = new Error(message) as ApiError;
+      err.status = response.status;
+      throw err;
+    }
+    const ct = response.headers.get("content-type") ?? "";
+    if (ct.includes("application/json")) {
+      return { json: await response.json() };
+    }
+    return { blob: await response.blob() };
+  }
 }
 
 export const apiClient = new ApiClient();

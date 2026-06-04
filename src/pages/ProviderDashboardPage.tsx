@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from "@/i18n/routing";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   LayoutDashboard, List, Package, Calendar as CalendarIcon, Star, Settings, Users, CreditCard,
-  BarChart3, Inbox, Bell, Volume2, VolumeX, ChevronDown, X
+  BarChart3, Inbox, Bell, Volume2, VolumeX, ChevronDown, X, FileText
 } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,6 +28,7 @@ import ProviderProfile from "@/components/provider/ProviderProfile";
 import ProviderTeam from "@/components/provider/ProviderTeam";
 import ProviderBilling from "@/components/provider/ProviderBilling";
 import ProviderPartnerPage from "@/components/provider/ProviderPartnerPage";
+import ProviderContractTemplate from "@/components/provider/ProviderContractTemplate";
 
 function useSidebarLinks() {
   const { t } = useLanguage();
@@ -39,6 +40,7 @@ function useSidebarLinks() {
     { id: "calendar", label: t("provider.nav.calendar"), icon: CalendarIcon },
     { id: "reviews", label: t("provider.nav.reviews"), icon: Star },
     { id: "analytics", label: t("provider.nav.analytics"), icon: BarChart3 },
+    { id: "contract", label: t("provider.nav.contractTemplate"), icon: FileText },
     { id: "profile", label: t("provider.nav.profile"), icon: Settings },
     { id: "team", label: t("provider.nav.team"), icon: Users },
     { id: "billing", label: t("provider.nav.billing"), icon: CreditCard },
@@ -258,6 +260,7 @@ export default function ProviderDashboardPage() {
             </div>
           </div>
         )}
+        {tab === "contract" && <ProviderContractTemplate />}
         {tab === "team" && <ProviderTeam />}
         {tab === "billing" && <ProviderBilling />}
       </div>

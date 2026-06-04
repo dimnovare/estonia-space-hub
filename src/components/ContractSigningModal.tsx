@@ -24,9 +24,6 @@ interface Props {
 interface DokobitFlowProps {
   bookingId: string;
   templateId: string;
-  signerName: string;
-  signerIdCode: string;
-  signerEmail: string;
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -34,15 +31,14 @@ interface DokobitFlowProps {
 function DokobitSigningFlow({
   bookingId,
   templateId,
-  signerName,
-  signerIdCode,
-  signerEmail,
   onSuccess,
   onCancel,
 }: DokobitFlowProps) {
   const { t } = useLanguage();
-  const [signingToken, setSigningToken] = useState<string | null>(null);
+  const [signingUrl, setSigningUrl] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "initiating" | "pending" | "completed" | "cancelled" | "error">("idle");
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const stopPolling = () => {
@@ -57,40 +53,37 @@ function DokobitSigningFlow({
 
   const initiateMutation = useMutation({
     mutationFn: async () => {
-      const result = await apiClient.post<{ signingUrl: string; signingToken: string }>(
+      // Spec §7: POST /contracts/dokobit/initiate { bookingId, contractTemplateId? }
+      return apiClient.post<{ signingUrl: string; signingToken: string }>(
         "/contracts/dokobit/initiate",
         {
           bookingId,
-          contractTemplateId: templateId,
-          signerName,
-          signerIdCode,
-          signerEmail,
+          ...(templateId ? { contractTemplateId: templateId } : {}),
         }
       );
-      return result;
     },
     onSuccess: (data) => {
-      setSigningToken(data.signingToken);
+      setSigningUrl(data.signingUrl);
       setStatus("pending");
-      // Open Dokobit signing page in a new tab
+      // Open Dokobit's hosted signing page in a new tab.
       window.open(data.signingUrl, "_blank", "noopener,noreferrer");
-      // Start polling
+      // Poll status as a fallback (backend postback also flips the status).
       pollRef.current = setInterval(async () => {
         try {
-          const statusResult = await apiClient.get<{ status: string }>(
+          const result = await apiClient.get<{ status: string }>(
             `/contracts/dokobit/${data.signingToken}/status`
           );
-          if (statusResult.status === "completed") {
+          if (result.status === "completed") {
             stopPolling();
             setStatus("completed");
-            onSuccess();
-          } else if (statusResult.status === "cancelled") {
+          } else if (result.status === "cancelled") {
             stopPolling();
             setStatus("cancelled");
-          } else if (statusResult.status === "error") {
+          } else if (result.status === "error") {
             stopPolling();
             setStatus("error");
           }
+          // any other status (pending/…) → keep polling
         } catch {
           // Network hiccup — keep polling
         }
@@ -105,38 +98,87 @@ function DokobitSigningFlow({
 
   const handleInitiate = () => {
     setStatus("initiating");
+    setDownloadError(false);
     initiateMutation.mutate();
   };
 
-  if (status === "idle" || status === "initiating") {
+  const handleDownloadSigned = async () => {
+    setDownloading(true);
+    setDownloadError(false);
+    try {
+      // Spec §7: GET /contracts/{bookingId}/download → { url }
+      const result = await apiClient.get<{ url: string }>(
+        `/contracts/${bookingId}/download`
+      );
+      if (result?.url) {
+        window.open(result.url, "_blank", "noopener,noreferrer");
+      } else {
+        setDownloadError(true);
+      }
+    } catch {
+      setDownloadError(true);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  // ── Completed — success state with download link ──
+  if (status === "completed") {
     return (
       <div className="flex flex-col items-center gap-4 py-6">
-        <ShieldCheck className="h-12 w-12 text-accent" />
-        <p className="text-sm text-center text-muted-foreground max-w-sm">
-          {t("contract.signWithId")}
-        </p>
+        <CheckCircle className="h-12 w-12 text-accent" />
+        <div className="text-center">
+          <p className="text-base font-semibold">{t("contract.dokobit.completedTitle")}</p>
+          <p className="mt-1 text-sm text-muted-foreground max-w-sm">
+            {t("contract.dokobit.completedDesc")}
+          </p>
+        </div>
         <Button
-          onClick={handleInitiate}
-          disabled={status === "initiating"}
+          onClick={handleDownloadSigned}
+          disabled={downloading}
+          variant="outline"
+          className="w-full max-w-xs"
+        >
+          {downloading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Download className="mr-2 h-4 w-4" />
+          )}
+          {downloading
+            ? t("contract.dokobit.preparingDownload")
+            : t("contract.dokobit.downloadSigned")}
+        </Button>
+        {downloadError && (
+          <p className="text-xs text-destructive">{t("contract.dokobit.downloadFailed")}</p>
+        )}
+        <Button
+          onClick={onSuccess}
           className="bg-accent text-accent-foreground hover:bg-accent/90 w-full max-w-xs"
         >
-          {status === "initiating" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {t("contract.signWithId")}
-        </Button>
-        <Button variant="ghost" size="sm" onClick={onCancel}>
-          {t("common.cancel") || "Cancel"}
+          {t("common.close") || "Close"}
         </Button>
       </div>
     );
   }
 
+  // ── Pending — waiting for the signature on Dokobit's page ──
   if (status === "pending") {
     return (
       <div className="flex flex-col items-center gap-4 py-6">
         <Loader2 className="h-12 w-12 text-accent animate-spin" />
         <p className="text-sm text-center text-muted-foreground max-w-sm">
-          {t("contract.signingPending")}
+          {t("contract.dokobit.openedHint")}
         </p>
+        {signingUrl && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.open(signingUrl, "_blank", "noopener,noreferrer")}
+          >
+            {t("contract.dokobit.reopen")}
+          </Button>
+        )}
+        <p className="text-xs text-muted-foreground">{t("contract.dokobit.waiting")}</p>
         <Button variant="ghost" size="sm" onClick={() => { stopPolling(); setStatus("cancelled"); }}>
           {t("common.cancel") || "Cancel"}
         </Button>
@@ -144,27 +186,58 @@ function DokobitSigningFlow({
     );
   }
 
+  // ── Cancelled ──
   if (status === "cancelled") {
     return (
       <div className="flex flex-col items-center gap-4 py-6">
-        <p className="text-sm text-destructive">{t("contract.signingCancelled")}</p>
-        <Button variant="outline" onClick={() => setStatus("idle")}>{t("contract.signWithId")}</Button>
+        <div className="text-center">
+          <p className="text-sm font-medium">{t("contract.dokobit.cancelledTitle")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("contract.dokobit.cancelledDesc")}</p>
+        </div>
+        <Button variant="outline" onClick={() => setStatus("idle")}>
+          {t("contract.dokobit.tryAgain")}
+        </Button>
         <Button variant="ghost" size="sm" onClick={onCancel}>{t("common.cancel") || "Cancel"}</Button>
       </div>
     );
   }
 
+  // ── Error ──
   if (status === "error") {
     return (
       <div className="flex flex-col items-center gap-4 py-6">
-        <p className="text-sm text-destructive">{t("contract.signingError")}</p>
-        <Button variant="outline" onClick={() => setStatus("idle")}>{t("contract.signWithId")}</Button>
+        <div className="text-center">
+          <p className="text-sm font-medium text-destructive">{t("contract.dokobit.errorTitle")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("contract.dokobit.errorDesc")}</p>
+        </div>
+        <Button variant="outline" onClick={() => setStatus("idle")}>
+          {t("contract.dokobit.tryAgain")}
+        </Button>
         <Button variant="ghost" size="sm" onClick={onCancel}>{t("common.cancel") || "Cancel"}</Button>
       </div>
     );
   }
 
-  return null;
+  // ── Idle / initiating — start the flow ──
+  return (
+    <div className="flex flex-col items-center gap-4 py-6">
+      <ShieldCheck className="h-12 w-12 text-accent" />
+      <p className="text-sm text-center text-muted-foreground max-w-sm">
+        {t("contract.dokobit.intro")}
+      </p>
+      <Button
+        onClick={handleInitiate}
+        disabled={status === "initiating"}
+        className="bg-accent text-accent-foreground hover:bg-accent/90 w-full max-w-xs"
+      >
+        {status === "initiating" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {status === "initiating" ? t("contract.dokobit.opening") : t("contract.dokobit.start")}
+      </Button>
+      <Button variant="ghost" size="sm" onClick={onCancel}>
+        {t("common.cancel") || "Cancel"}
+      </Button>
+    </div>
+  );
 }
 
 // ─── Smart-ID / Mobile-ID signing sub-component ──────────────────────────────
@@ -435,7 +508,6 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
   const [agreed, setAgreed] = useState(false);
   const [name, setName] = useState(user?.name || "");
   const [idCode, setIdCode] = useState("");
-  const [email, setEmail] = useState((user as unknown as { email?: string })?.email || "");
   const [hasSigned, setHasSigned] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -722,58 +794,18 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
                 </div>
               )}
 
-              {/* ── Dokobit path ── */}
+              {/* ── Dokobit path ──
+                  Signer identity (name / personal code) is taken from the booking
+                  and verified by Smart-ID / Mobile-ID on Dokobit's hosted page, so
+                  no form fields are collected here. */}
               {dokobitEnabled ? (
                 <>
-                  {/* Name + ID fields (Dokobit needs them too) */}
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="text-xs font-medium">{t("contract.fullName")}</label>
-                      <input
-                        className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                        maxLength={200}
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium">
-                        {t("contract.idCodeRequired")}
-                      </label>
-                      <input
-                        className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                        maxLength={20}
-                        placeholder="38501010000"
-                        value={idCode}
-                        onChange={(e) => setIdCode(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium">{t("contract.emailLabel")}</label>
-                    <input
-                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                      type="email"
-                      maxLength={200}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                  </div>
-                  {name.trim() && idCode.trim() && email.trim() ? (
-                    <DokobitSigningFlow
-                      bookingId={bookingId}
-                      templateId={template?.id ?? ""}
-                      signerName={name}
-                      signerIdCode={idCode}
-                      signerEmail={email}
-                      onSuccess={() => setStep(3)}
-                      onCancel={() => setStep(1)}
-                    />
-                  ) : (
-                    <p className="text-xs text-muted-foreground">
-                      {t("contract.idCodeRequired")} + {t("contract.emailLabel")} {t("contract.fullName")}
-                    </p>
-                  )}
+                  <DokobitSigningFlow
+                    bookingId={bookingId}
+                    templateId={template?.id ?? ""}
+                    onSuccess={() => setStep(3)}
+                    onCancel={() => setStep(1)}
+                  />
                   <div className="flex items-center justify-between pt-2">
                     <Button variant="outline" onClick={() => setStep(1)}>← {t("contract.stepReview")}</Button>
                   </div>
