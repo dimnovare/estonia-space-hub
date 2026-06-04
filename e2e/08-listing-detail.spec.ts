@@ -1,180 +1,86 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
+import { apiListing, stubCommon, stubListings, stubLoggedOut } from "./fixtures";
 
 /**
- * listing.spec.ts — Listing detail page renders title, photos section, price,
- * and the book / reserve button.
+ * 08 — Listing detail page (/et/warehouse/:id).
+ * Reconciled with the real app using the shared fixtures (correct API shapes).
+ * The WarehouseDetail component renders an <h1> with the title, a price block
+ * "al. {priceFrom}€", and a Book CTA linking to /book?listing=...&type=warehouse.
  */
 
-const LISTING_ID = 'wh-detail-001';
+const LISTING = apiListing({ id: "wh-001", title: "My Unit", priceFrom: 49 });
 
-const fakeWarehouse = {
-  id: LISTING_ID,
-  type: 'warehouse',
-  title: 'Kesklinna Laohoone',
-  description: 'Puhas, kuiv ja valvega ladu Tallinna kesklinnas.',
-  city: 'Tallinn',
-  address: 'Tartu mnt 12',
-  priceFrom: 79,
-  priceUnit: '/month',
-  availableNow: true,
-  image: 'https://placehold.co/800x400/png',
-  images: ['https://placehold.co/800x400/png', 'https://placehold.co/800x400/png'],
-  rating: 4.7,
-  reviewCount: 11,
-  provider: 'Laod OÜ',
-  supplierId: 'sup-001',
-  badge: 'best-value',
-  features: {
-    size: 18,
-    sizeUnit: 'm²',
-    heated: true,
-    indoor: true,
-    access24_7: true,
-    security: true,
-    loadingDock: false,
-    forklift: false,
-    shortTerm: true,
-    longTerm: true,
-  },
-  size: 18,
-  sizeUnit: 'm²',
-  heated: true,
-  indoor: true,
-  access24_7: true,
-  security: true,
-  loadingDock: false,
-  forklift: false,
-  shortTerm: true,
-  longTerm: true,
-};
-
-function stubAll(page: import('@playwright/test').Page) {
-  page.route('**/settings/public', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        maintenanceMode: false,
-        showMovingService: false,
-        showTrailerService: false,
-      }),
-    })
-  );
-
-  page.route('**/auth/me', (route) =>
-    route.fulfill({ status: 401, contentType: 'application/json', body: '{"message":"Unauthorized"}' })
-  );
-
-  page.route(`**/listings/${LISTING_ID}`, (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(fakeWarehouse),
-    })
-  );
-
-  // Extras — empty list
-  page.route(`**/listings/${LISTING_ID}/extras`, (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
-  );
-
-  // Suppliers
-  page.route('**/suppliers*', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify([
-        {
-          id: 'sup-001', name: 'Laod OÜ', integrationType: 'manual',
-          isActive: true, listingCount: 1, ordersTotal: 0, revenue: 0,
-          integrationHealth: 'healthy', createdAt: '2024-01-01T00:00:00Z',
-          partnerDiscountRate: 0, clientDiscountRate: 0,
-          tier: 'standard', billingModel: 'marketplace',
-        },
-      ]),
-    })
-  );
-
-  // Reviews — empty
-  page.route('**/reviews*', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: '{"data":[],"total":0}' })
-  );
-
-  // Pricing config
-  page.route('**/pricing*', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
-  );
-
-  // Locations
-  page.route('**/locations*', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
-  );
-
-  // Features
-  page.route('**/features*', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
-  );
+async function stubAll(page: import("@playwright/test").Page) {
+  await stubLoggedOut(page);
+  await stubCommon(page);
+  await stubListings(page, { items: [LISTING] });
 }
 
-test.describe('Listing detail page', () => {
-  test('renders the listing title', async ({ page }) => {
-    stubAll(page);
-    await page.goto(`/et/warehouse/${LISTING_ID}`);
-    await page.waitForLoadState('domcontentloaded');
-
-    await expect(page.locator('h1')).toContainText('Kesklinna Laohoone', { timeout: 10000 });
+test.describe("Listing detail page", () => {
+  test("renders the listing title in an h1", async ({ page }) => {
+    await stubAll(page);
+    await page.goto("/et/warehouse/wh-001");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("My Unit", {
+      timeout: 15000,
+    });
   });
 
-  test('shows the price', async ({ page }) => {
-    stubAll(page);
-    await page.goto(`/et/warehouse/${LISTING_ID}`);
-    await page.waitForLoadState('domcontentloaded');
-
-    await expect(page.locator('text=/79/')).toBeVisible({ timeout: 10000 });
+  test("shows the price (al. 49€)", async ({ page }) => {
+    await stubAll(page);
+    await page.goto("/et/warehouse/wh-001");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("My Unit", {
+      timeout: 15000,
+    });
+    await expect(page.getByText(/49\s*€/).first()).toBeVisible({ timeout: 10000 });
   });
 
-  test('photos section is present (img or placeholder)', async ({ page }) => {
-    stubAll(page);
-    await page.goto(`/et/warehouse/${LISTING_ID}`);
-    await page.waitForLoadState('domcontentloaded');
-
-    // Either a real img or the placeholder div renders
-    await expect(page.locator('text=Kesklinna Laohoone')).toBeVisible({ timeout: 10000 });
-    const img = page.locator('img').first();
-    const placeholder = page.locator('div').filter({ has: page.locator('[class*="h-\\[300px\\]"]') }).first();
-    const imgCount = await img.count();
-    const phCount = await placeholder.count();
-    expect(imgCount + phCount).toBeGreaterThan(0);
+  test("shows a photos / image section", async ({ page }) => {
+    await stubAll(page);
+    await page.goto("/et/warehouse/wh-001");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("My Unit", {
+      timeout: 15000,
+    });
+    // No images on the fixture → a placeholder block (h-[300px]) renders instead of <img>.
+    const placeholder = page.locator('[class*="h-[300px]"]').first();
+    await expect(placeholder).toBeVisible({ timeout: 10000 });
   });
 
-  test('book / reserve button is present', async ({ page }) => {
-    stubAll(page);
-    await page.goto(`/et/warehouse/${LISTING_ID}`);
-    await page.waitForLoadState('domcontentloaded');
-
-    await expect(page.locator('text=Kesklinna Laohoone')).toBeVisible({ timeout: 10000 });
-
-    const bookBtn = page.locator('a[href*="book"], button').filter({
-      hasText: /bron|book|reserv|резервир|užsak/i,
-    }).first();
-    await expect(bookBtn).toBeVisible({ timeout: 8000 });
+  test("has a Book button linking to the booking flow", async ({ page }) => {
+    await stubAll(page);
+    await page.goto("/et/warehouse/wh-001");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("My Unit", {
+      timeout: 15000,
+    });
+    const bookLink = page.locator('a[href*="/book"]').first();
+    await expect(bookLink).toBeVisible({ timeout: 10000 });
+    await expect(bookLink).toHaveAttribute("href", /listing=wh-001/);
+    await expect(bookLink).toHaveAttribute("href", /type=warehouse/);
   });
 
-  test('clicking book navigates to booking page or triggers auth', async ({ page }) => {
-    stubAll(page);
-    await page.goto(`/et/warehouse/${LISTING_ID}`);
-    await page.waitForLoadState('domcontentloaded');
+  test("clicking Book navigates to the booking page", async ({ page }) => {
+    await stubAll(page);
+    await page.goto("/et/warehouse/wh-001");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("My Unit", {
+      timeout: 15000,
+    });
+    const bookLink = page.locator('a[href*="/book"]').first();
+    await bookLink.click();
+    await page.waitForURL("**/book**", { timeout: 10000 });
+    expect(page.url()).toContain("/book");
+    expect(page.url()).toContain("listing=wh-001");
+  });
 
-    await expect(page.locator('text=Kesklinna Laohoone')).toBeVisible({ timeout: 10000 });
-
-    const bookBtn = page.locator('a[href*="book"], button').filter({
-      hasText: /bron|book|reserv|резервир|užsak/i,
-    }).first();
-    await bookBtn.click();
-    await page.waitForTimeout(500);
-
-    const url = page.url();
-    const emailInput = await page.locator('input[type="email"]').isVisible().catch(() => false);
-    expect(url.includes('/book') || url.includes('/login') || emailInput).toBe(true);
+  test("unknown listing id returning 404 renders the not-found state", async ({ page }) => {
+    await stubLoggedOut(page);
+    await stubCommon(page);
+    await stubListings(page, { items: [LISTING] });
+    // Override the single-listing route for a missing id with a 404.
+    await page.route(/\/listings\/missing-id($|\?)/, (route) =>
+      route.fulfill({ status: 404, contentType: "application/json", body: '{"message":"Not found"}' }),
+    );
+    await page.goto("/et/warehouse/missing-id");
+    // NotFoundDetail renders an h1 with the not-found heading (no listing title).
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText("My Unit")).toHaveCount(0);
   });
 });

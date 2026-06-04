@@ -1,298 +1,112 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
+import {
+  apiListing,
+  stubCommon,
+  stubListings,
+  stubBookingCreate,
+  seedAuth,
+  customerUser,
+} from "./fixtures";
 
 /**
- * contract.spec.ts — Contract signing modal:
- * - Canvas acknowledgment note visible in the modal
- * - Smart-ID / personal code input present
- * - Success state after signing (stub POST /contracts/identity/start)
+ * 10 — Contract signing.
+ * Reconciled with the real app. The ContractSigningModal (src/components/
+ * ContractSigningModal.tsx) is mounted from BookingPage *after* a booking is
+ * created, and the "sign" CTA (ContractCta) only renders when
+ * GET /contracts/templates?bookingId= returns a NON-EMPTY array.
  *
- * The ContractSigningModal is rendered inside BookingPage after a booking is
- * created when contract templates exist. We navigate to /et/book?listing=... and
- * stub all APIs so the modal is triggered.
+ * Scope (kept realistic per the brief): we drive the real 3-step booking flow to
+ * completion (logged-in customer), assert the ContractCta appears, open the
+ * modal, and assert its step-1 contents (review title, agree checkbox, continue
+ * button). We use the canvas fallback (signing-method all-false) and do not
+ * exercise the full canvas / Dokobit / Smart-ID signing flow.
  */
 
-const LISTING_ID = 'wh-contract-001';
+const LISTING = apiListing({ id: "wh-001", title: "Leping Ladu", priceFrom: 39 });
+const BOOK_URL = "/et/book?listing=wh-001&type=warehouse";
 
-const fakeUser = {
-  id: 'u-ctr-01',
-  name: 'Allkirjastaja Nimi',
-  email: 'allkirjastaja@ruumly.eu',
-  role: 'customer',
-  status: 'active',
-  registeredAt: '2024-01-01T00:00:00Z',
-  bookingsCount: 1,
-};
-
-const fakeListing = {
-  id: LISTING_ID,
-  type: 'warehouse',
-  title: 'Leping Ladu',
-  description: 'Leping.',
-  city: 'Tallinn',
-  address: 'Lepi tee 1',
-  priceFrom: 39,
-  priceUnit: '/month',
-  availableNow: true,
-  image: '',
-  images: [],
-  rating: 4.0,
-  reviewCount: 0,
-  provider: 'Test OÜ',
-  supplierId: 'sup-ctr-01',
-  badge: null,
-  features: { size: 8, sizeUnit: 'm²' },
-  size: 8,
-  sizeUnit: 'm²',
-  heated: false,
-  indoor: true,
-  access24_7: false,
-  security: false,
-  loadingDock: false,
-  forklift: false,
-  shortTerm: true,
-  longTerm: false,
-};
-
-const fakeContract = {
-  id: 'ctr-001',
-  bookingId: 'booking-ctr-001',
-  status: 'pending',
-  signedAt: null,
-  templateName: 'Laopindi leping',
-  content: 'Käesolevaga sõlmitakse leping...',
-};
-
-function stubAll(page: import('@playwright/test').Page) {
-  page.route('**/settings/public', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        maintenanceMode: false,
-        showMovingService: false,
-        showTrailerService: false,
-        smartIdEnabled: true,
-        mobileIdEnabled: true,
-      }),
-    })
-  );
-
-  page.route('**/auth/me', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(fakeUser) })
-  );
-
-  page.route(`**/listings/${LISTING_ID}`, (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(fakeListing) })
-  );
-
-  page.route(`**/listings/${LISTING_ID}/extras`, (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
-  );
-
-  page.route(`**/listings/${LISTING_ID}/availability*`, (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ totalUnits: 3, bookedCount: 0, available: 3, isAvailable: true }),
-    })
-  );
-
-  page.route('**/suppliers*', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify([{
-        id: 'sup-ctr-01', name: 'Test OÜ', integrationType: 'manual',
-        isActive: true, listingCount: 1, ordersTotal: 0, revenue: 0,
-        integrationHealth: 'healthy', createdAt: '2024-01-01T00:00:00Z',
-        partnerDiscountRate: 0, clientDiscountRate: 0,
-        tier: 'standard', billingModel: 'marketplace',
-      }]),
-    })
-  );
-
-  page.route('**/pricing*', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
-  );
-
-  page.route('**/features*', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
-  );
-
-  // Contract template EXISTS → triggers signing modal after booking
-  page.route('**/contracts/templates*', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify([{ id: 'tmpl-001', name: 'Laopindi leping' }]),
-    })
-  );
-
-  // Contract detail
-  page.route('**/contracts/ctr-001', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(fakeContract) })
-  );
-
-  // Booking creation
-  page.route('**/bookings', (route) => {
-    if (route.request().method() === 'POST') {
-      return route.fulfill({
-        status: 201,
-        contentType: 'application/json',
-        body: JSON.stringify({ id: 'booking-ctr-001', invoiceId: 'inv-ctr-001', status: 'pending' }),
-      });
-    }
-    return route.continue();
+async function stubContractEndpoints(page: import("@playwright/test").Page) {
+  const json = (body: unknown, status = 200) => ({
+    status,
+    contentType: "application/json",
+    body: JSON.stringify(body),
   });
-
-  // Smart-ID initiation → verification code displayed
-  page.route('**/contracts/identity/start', (route) => {
-    if (route.request().method() === 'POST') {
-      return route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ sessionId: 'sess-001', verificationCode: '1234' }),
-      });
-    }
-    return route.continue();
-  });
-
-  // Smart-ID polling → completed immediately
-  page.route('**/contracts/identity/sess-001', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ status: 'completed', verifiedName: 'Allkirjastaja Nimi', personalCode: '38501010000' }),
-    })
+  // Non-empty templates → ContractCta renders + modal step-1 has a template.
+  await page.route(/\/contracts\/templates/, (r) =>
+    r.fulfill(json([{ id: "tpl-1", name: "Rental contract" }])),
   );
-
-  // Contract sign
-  page.route('**/contracts/*/sign', (route) => {
-    if (route.request().method() === 'POST') {
-      return route.fulfill({ status: 200, contentType: 'application/json', body: '{"success":true}' });
-    }
-    return route.continue();
-  });
-
-  page.route('**/locations*', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+  // Contract HTML preview for the modal iframe.
+  await page.route(/\/contracts\/preview/, (r) => r.fulfill(json({ html: "<p>Contract</p>" })));
+  // Canvas fallback path (no Dokobit, no Smart-ID/Mobile-ID).
+  await page.route(/\/contracts\/signing-method/, (r) =>
+    r.fulfill(json({ dokobitEnabled: false, smartIdEnabled: false, mobileIdEnabled: false })),
   );
-
-  page.route('**/notifications*', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
-  );
-
-  page.route('**/payments/initiate', (route) => {
-    if (route.request().method() === 'POST') {
-      return route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ paymentUrl: null }),
-      });
-    }
-    return route.continue();
-  });
 }
 
-test.describe('Contract signing modal', () => {
-  test('booking page loads with contract template stub configured', async ({ page }) => {
-    stubAll(page);
-    await page.goto(`/et/book?listing=${LISTING_ID}`);
-    await page.waitForLoadState('domcontentloaded');
+async function stubAll(page: import("@playwright/test").Page) {
+  await seedAuth(page, customerUser);
+  await stubCommon(page);
+  await stubListings(page, { items: [LISTING] });
+  await stubBookingCreate(page); // POST /bookings → { id: 'booking-001', status: 'pending' }
+  await stubContractEndpoints(page);
+}
 
-    await expect(page.locator('text=Leping Ladu')).toBeVisible({ timeout: 10000 });
+/** Drive the 3-step wizard to the success screen; returns once phase=done renders. */
+async function completeBooking(page: import("@playwright/test").Page) {
+  await page.goto(BOOK_URL);
+  await expect(page.getByText("Leping Ladu").first()).toBeVisible({ timeout: 15000 });
+
+  // Step 0 → 1 (dates are pre-filled to today→tomorrow).
+  await page.getByRole("button", { name: /järgmine/i }).first().click();
+
+  // Step 1 — contact form. Name/email come from the seeded user; phone is required.
+  await expect(page.locator('input[type="tel"]').first()).toBeVisible({ timeout: 10000 });
+  await page.locator('input[type="tel"]').first().fill("+37255500000");
+  await page.getByRole("button", { name: /järgmine/i }).first().click();
+
+  // Step 2 — review + payment. Confirm the booking.
+  await expect(page.getByRole("button", { name: /kinnita/i }).first()).toBeVisible({ timeout: 10000 });
+  await page.getByRole("button", { name: /kinnita/i }).first().click();
+
+  // Success screen progresses through timed phases to "done".
+  await expect(page.getByText("Allkirjasta leping").first()).toBeVisible({ timeout: 15000 });
+}
+
+test.describe("Contract signing", () => {
+  test("ContractCta sign button appears after a booking with a template", async ({ page }) => {
+    await stubAll(page);
+    await completeBooking(page);
+    const cta = page.getByRole("button", { name: /allkirjasta leping/i }).first();
+    await expect(cta).toBeVisible();
   });
 
-  test('contracts/identity/start stub returns verificationCode', async ({ page }) => {
-    stubAll(page);
-    let captured = false;
-    page.route('**/contracts/identity/start', (route) => {
-      captured = true;
-      return route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ sessionId: 'sess-001', verificationCode: '1234' }),
-      });
-    });
+  test("opening the contract modal shows step 1 (review + agree + continue)", async ({ page }) => {
+    await stubAll(page);
+    await completeBooking(page);
 
-    await page.goto(`/et/book?listing=${LISTING_ID}`);
-    await page.waitForLoadState('domcontentloaded');
+    await page.getByRole("button", { name: /allkirjasta leping/i }).first().click();
 
-    const result = await page.evaluate(async () => {
-      const res = await fetch('/api/contracts/identity/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bookingId: 'booking-ctr-001', method: 'smartid', personalCode: '38501010000' }),
-      });
-      return res.json();
-    });
-
-    expect(captured || result?.verificationCode === '1234' || result?.sessionId === 'sess-001').toBe(true);
+    // Modal (Radix dialog) opens with the review step.
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible({ timeout: 10000 });
+    await expect(dialog.getByText("Tutvu lepinguga")).toBeVisible({ timeout: 10000 });
+    // The agree checkbox and the (initially disabled) continue-to-sign button.
+    await expect(dialog.getByRole("checkbox")).toBeVisible();
+    await expect(dialog.getByRole("button", { name: /edasi allkirjastama/i })).toBeVisible();
   });
 
-  test('contracts/sign stub returns success', async ({ page }) => {
-    stubAll(page);
-    let signCalled = false;
-    page.route('**/contracts/*/sign', (route) => {
-      signCalled = true;
-      return route.fulfill({ status: 200, contentType: 'application/json', body: '{"success":true}' });
-    });
+  test("checking agree enables continue to the signing step", async ({ page }) => {
+    await stubAll(page);
+    await completeBooking(page);
 
-    await page.goto(`/et/book?listing=${LISTING_ID}`);
-    await page.waitForLoadState('domcontentloaded');
+    await page.getByRole("button", { name: /allkirjasta leping/i }).first().click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByText("Tutvu lepinguga")).toBeVisible({ timeout: 10000 });
 
-    const result = await page.evaluate(async () => {
-      const res = await fetch('/api/contracts/ctr-001/sign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId: 'sess-001' }),
-      });
-      return res.json();
-    });
+    const continueBtn = dialog.getByRole("button", { name: /edasi allkirjastama/i });
+    await expect(continueBtn).toBeDisabled();
 
-    expect(signCalled || result?.success === true).toBe(true);
-  });
-
-  test('Smart-ID personal code input renders in the modal UI', async ({ page }) => {
-    stubAll(page);
-    await page.goto(`/et/book?listing=${LISTING_ID}`);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(1000);
-
-    // The ContractSigningModal is opened by clicking the sign CTA in BookingPage.
-    // We look for a dialog trigger or the sign button.
-    const signBtn = page.locator('button').filter({ hasText: /allkirjasta|sign|подпис|parakst|pasirašyk/i }).first();
-    if (await signBtn.count() > 0) {
-      await signBtn.click();
-      await page.waitForTimeout(500);
-      // After opening modal, the personal code input should be visible
-      const codeInput = page.locator('input[placeholder*="38501010"]').first();
-      const dialog = page.locator('[role="dialog"]').first();
-      const hasModal = (await dialog.count()) > 0 || (await codeInput.count()) > 0;
-      expect(hasModal).toBe(true);
-    } else {
-      // Modal not visible until booking completes — just confirm page rendered OK
-      await expect(page.locator('body')).toBeVisible();
-    }
-  });
-
-  test('acknowledgment note (Smart-ID intro text) is present in modal when opened', async ({ page }) => {
-    stubAll(page);
-    await page.goto(`/et/book?listing=${LISTING_ID}`);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(1000);
-
-    const signBtn = page.locator('button').filter({ hasText: /allkirjasta|sign|подпис|parakst|pasirašyk/i }).first();
-    if (await signBtn.count() > 0) {
-      await signBtn.click();
-      await page.waitForTimeout(500);
-      // The modal shows "Smart-ID" method button and an intro paragraph
-      const smartIdBtn = page.locator('button').filter({ hasText: 'Smart-ID' }).first();
-      const introPara = page.locator('[role="dialog"] p').first();
-      const hasContent = (await smartIdBtn.count()) > 0 || (await introPara.count()) > 0;
-      expect(hasContent).toBe(true);
-    } else {
-      await expect(page.locator('body')).toBeVisible();
-    }
+    await dialog.getByRole("checkbox").click();
+    await expect(continueBtn).toBeEnabled();
   });
 });
