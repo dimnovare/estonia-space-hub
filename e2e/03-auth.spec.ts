@@ -112,6 +112,8 @@ test.describe('Login page', () => {
 
     await loginReq;
     // After a successful login the app navigates to /account (away from /login).
-    await expect.poll(() => page.url(), { timeout: 5000 }).not.toContain('/login');
+    // Generous timeout: a cold Vite dev-server module transform on first /login
+    // navigation can take several seconds under load, which is not a product failure.
+    await expect.poll(() => page.url(), { timeout: 15000 }).not.toContain('/login');
   });
 });
