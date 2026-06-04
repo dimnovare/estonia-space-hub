@@ -9,17 +9,21 @@ import {
 } from "./fixtures";
 
 /**
- * 10 — Contract signing.
- * Reconciled with the real app. The ContractSigningModal (src/components/
- * ContractSigningModal.tsx) is mounted from BookingPage *after* a booking is
- * created, and the "sign" CTA (ContractCta) only renders when
- * GET /contracts/templates?bookingId= returns a NON-EMPTY array.
+ * 10 — Contract signing (sign-then-pay order).
+ * Reconciled with the real app. The booking flow was reordered to
+ * book → SIGN → pay. On step-2 Confirm, BookingPage creates the booking
+ * (Pending) and immediately opens a MANDATORY signing gate: it renders the
+ * "sign your rental agreement" screen (booking.sign.gateTitle) and mounts the
+ * ContractSigningModal (a Radix dialog) right away — controlled by `showSignGate`.
+ * The old post-payment ContractCta on the success screen was REMOVED; the modal
+ * now opens DIRECTLY after Confirm (no CTA click needed). Only after a successful
+ * sign does payment initiate.
  *
- * Scope (kept realistic per the brief): we drive the real 3-step booking flow to
- * completion (logged-in customer), assert the ContractCta appears, open the
- * modal, and assert its step-1 contents (review title, agree checkbox, continue
- * button). We use the canvas fallback (signing-method all-false) and do not
- * exercise the full canvas / Dokobit / Smart-ID signing flow.
+ * Scope (kept realistic per the brief): we drive the real 3-step booking flow
+ * (logged-in customer), click Confirm, and assert the signing gate dialog opens
+ * directly with its step-1 contents (review title, agree checkbox, continue
+ * button). We use the canvas fallback (signing-method all-false) and do NOT
+ * complete the actual sign or assert a Montonio redirect.
  */
 
 const LISTING = apiListing({ id: "wh-001", title: "Leping Ladu", priceFrom: 39 });
@@ -31,7 +35,7 @@ async function stubContractEndpoints(page: import("@playwright/test").Page) {
     contentType: "application/json",
     body: JSON.stringify(body),
   });
-  // Non-empty templates → ContractCta renders + modal step-1 has a template.
+  // Non-empty templates → modal step-1 has a template (continue is enabled once agreed).
   await page.route(/\/contracts\/templates/, (r) =>
     r.fulfill(json([{ id: "tpl-1", name: "Rental contract" }])),
   );
@@ -51,8 +55,12 @@ async function stubAll(page: import("@playwright/test").Page) {
   await stubContractEndpoints(page);
 }
 
-/** Drive the 3-step wizard to the success screen; returns once phase=done renders. */
-async function completeBooking(page: import("@playwright/test").Page) {
+/**
+ * Drive the 3-step wizard through Confirm; returns once the signing gate dialog
+ * (ContractSigningModal) is visible. In the new sign-then-pay order the modal
+ * opens directly after Confirm — there is no intermediate CTA.
+ */
+async function confirmBookingToSignGate(page: import("@playwright/test").Page) {
   await page.goto(BOOK_URL);
   await expect(page.getByText("Leping Ladu").first()).toBeVisible({ timeout: 15000 });
 
@@ -64,43 +72,38 @@ async function completeBooking(page: import("@playwright/test").Page) {
   await page.locator('input[type="tel"]').first().fill("+37255500000");
   await page.getByRole("button", { name: /järgmine/i }).first().click();
 
-  // Step 2 — review + payment. Confirm the booking.
+  // Step 2 — review + payment. Confirm the booking ("Kinnita broneering").
   await expect(page.getByRole("button", { name: /kinnita/i }).first()).toBeVisible({ timeout: 10000 });
   await page.getByRole("button", { name: /kinnita/i }).first().click();
 
-  // Success screen progresses through timed phases to "done".
-  await expect(page.getByText("Allkirjasta leping").first()).toBeVisible({ timeout: 15000 });
+  // The mandatory signing gate opens directly: the ContractSigningModal (Radix dialog).
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible({ timeout: 15000 });
+  return dialog;
 }
 
 test.describe("Contract signing", () => {
-  test("ContractCta sign button appears after a booking with a template", async ({ page }) => {
+  test("the signing gate opens after confirming the booking", async ({ page }) => {
     await stubAll(page);
-    await completeBooking(page);
-    const cta = page.getByRole("button", { name: /allkirjasta leping/i }).first();
-    await expect(cta).toBeVisible();
+    const dialog = await confirmBookingToSignGate(page);
+    await expect(dialog).toBeVisible();
+    // The gate screen heading (booking.sign.gateTitle) renders behind the modal.
+    await expect(page.getByText("Allkirjasta oma rendileping").first()).toBeVisible({ timeout: 10000 });
   });
 
-  test("opening the contract modal shows step 1 (review + agree + continue)", async ({ page }) => {
+  test("the signing modal shows step 1 (review + agree + continue)", async ({ page }) => {
     await stubAll(page);
-    await completeBooking(page);
+    const dialog = await confirmBookingToSignGate(page);
 
-    await page.getByRole("button", { name: /allkirjasta leping/i }).first().click();
-
-    // Modal (Radix dialog) opens with the review step.
-    const dialog = page.getByRole("dialog");
-    await expect(dialog).toBeVisible({ timeout: 10000 });
+    // Step 1 — review the contract, agree, continue.
     await expect(dialog.getByText("Tutvu lepinguga")).toBeVisible({ timeout: 10000 });
-    // The agree checkbox and the (initially disabled) continue-to-sign button.
     await expect(dialog.getByRole("checkbox")).toBeVisible();
     await expect(dialog.getByRole("button", { name: /edasi allkirjastama/i })).toBeVisible();
   });
 
   test("checking agree enables continue to the signing step", async ({ page }) => {
     await stubAll(page);
-    await completeBooking(page);
-
-    await page.getByRole("button", { name: /allkirjasta leping/i }).first().click();
-    const dialog = page.getByRole("dialog");
+    const dialog = await confirmBookingToSignGate(page);
     await expect(dialog.getByText("Tutvu lepinguga")).toBeVisible({ timeout: 10000 });
 
     const continueBtn = dialog.getByRole("button", { name: /edasi allkirjastama/i });
