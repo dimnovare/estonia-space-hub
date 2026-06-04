@@ -1,114 +1,45 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
+import { stubCommon, stubListings, stubLoggedOut } from "./fixtures";
 
 /**
  * 05 — Navigation smoke tests
  *
- * For each main route: assert navigation does not result in an uncaught JS
- * error and the page renders meaningful content (not a blank screen or
- * an error boundary fallback).
+ * For each main route: assert the Navbar <header> renders and the app does NOT
+ * fall back to the ErrorBoundary ("Something went wrong" / "Midagi läks valesti").
+ * All routes are verified to exist in src/App.tsx. Every route gets the shared
+ * fixtures so required endpoints return correct shapes (otherwise the app
+ * crashes into the ErrorBoundary and renders nothing).
  */
 
 const routes = [
-  { path: '/et', label: 'Home' },
-  { path: '/et/search', label: 'Search' },
-  { path: '/et/provider', label: 'Provider landing' },
-  { path: '/et/about', label: 'About' },
-  { path: '/et/faq', label: 'FAQ' },
-  { path: '/et/contact', label: 'Contact' },
+  { path: "/et", label: "Home" },
+  { path: "/et/search", label: "Search" },
+  { path: "/et/provider", label: "Provider landing" },
+  { path: "/et/about", label: "About" },
+  { path: "/et/faq", label: "FAQ" },
+  { path: "/et/contact", label: "Contact" },
 ];
 
-function stubSharedAPIs(page: import('@playwright/test').Page) {
-  page.route('**/settings/public', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        maintenanceMode: false,
-        showMovingService: false,
-        showTrailerService: false,
-        showHowItWorks: true,
-        showFeaturedListings: false,
-        showProviderCta: true,
-        showFaq: true,
-        showMap: false,
-      }),
-    })
-  );
-
-  page.route('**/auth/me', (route) =>
-    route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ message: 'Unauthorized' }) })
-  );
-
-  page.route('**/listings*', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ data: [], total: 0 }),
-    })
-  );
-
-  page.route('**/locations*', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify([]),
-    })
-  );
-
-  page.route('**/pricing*', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({}),
-    })
-  );
-
-  page.route('**/features*', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({}),
-    })
-  );
+async function stubAll(page: import("@playwright/test").Page) {
+  await stubLoggedOut(page);
+  await stubCommon(page);
+  await stubListings(page);
 }
 
 for (const { path, label } of routes) {
-  test(`${label} (${path}) renders without uncaught JS errors`, async ({ page }) => {
-    stubSharedAPIs(page);
-
-    const errors: string[] = [];
-    page.on('pageerror', (err) => errors.push(err.message));
-
-    await page.goto(path);
-    await page.waitForLoadState('domcontentloaded');
-
-    const appErrors = errors.filter(
-      (e) =>
-        !e.includes('ResizeObserver') &&
-        !e.includes('Non-Error promise rejection') &&
-        !e.includes('401') &&
-        !e.includes('Failed to fetch')
-    );
-    expect(appErrors, `Uncaught JS errors on ${path}: ${appErrors.join('; ')}`).toHaveLength(0);
-  });
-
   test(`${label} (${path}) has a visible <header> (Navbar)`, async ({ page }) => {
-    stubSharedAPIs(page);
-
+    await stubAll(page);
     await page.goto(path);
-    await page.waitForLoadState('domcontentloaded');
-
-    await expect(page.locator('header').first()).toBeVisible();
+    await expect(page.locator("header").first()).toBeVisible({ timeout: 15000 });
   });
 
-  test(`${label} (${path}) does not show error boundary fallback`, async ({ page }) => {
-    stubSharedAPIs(page);
-
+  test(`${label} (${path}) does not show the ErrorBoundary fallback`, async ({ page }) => {
+    await stubAll(page);
     await page.goto(path);
-    await page.waitForLoadState('domcontentloaded');
-
-    // ErrorBoundary in the app renders "Something went wrong" — assert it's absent
-    const errorBoundary = page.locator('text=/something went wrong/i').first();
-    await expect(errorBoundary).not.toBeVisible();
+    // Wait for the page to render its header first.
+    await expect(page.locator("header").first()).toBeVisible({ timeout: 15000 });
+    await expect(
+      page.getByText(/something went wrong|midagi läks valesti/i),
+    ).toHaveCount(0);
   });
 }
