@@ -58,8 +58,11 @@ const FALLBACK = {
   showProviderCta:       true,
   showFaq:               true,
   showMap:               true,
-  showMovingService:     true,
-  showTrailerService:    true,
+  // Storage-only launch: default these OFF so a slow/unreachable settings API
+  // never flashes or leaks the hidden Moving/Trailer verticals. Real values from
+  // /settings/public still apply once loaded.
+  showMovingService:     false,
+  showTrailerService:    false,
   showFeaturedPartners:  false,
   heroSubtitle:          "",
   heroDiscount:          "10",

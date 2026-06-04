@@ -124,6 +124,10 @@ export default function SearchPage() {
   // Client-side post-filters for dynamic feature booleans
   const filtered = useMemo(() => {
     let results = serverFiltered;
+    // Storage-only gating: never surface a disabled service type in the results,
+    // not even in the "all" view (the API returns every type regardless of flags).
+    if (!showMovingService)  results = results.filter(l => l.type !== "moving");
+    if (!showTrailerService) results = results.filter(l => l.type !== "trailer");
     Object.entries(featureDefs).forEach(([type, features]) => {
       features.forEach(f => {
         if (searchParams.get(f.key) === "true") {
@@ -136,7 +140,7 @@ export default function SearchPage() {
       });
     });
     return results;
-  }, [serverFiltered, featureDefs, searchParams]);
+  }, [serverFiltered, featureDefs, searchParams, showMovingService, showTrailerService]);
 
   // Local-only UI state
   const isMobile = useIsMobile();
@@ -305,7 +309,7 @@ export default function SearchPage() {
               ))
             ) : (
               <span className="text-sm font-medium text-foreground">
-                {t("search.resultsFound").replace("{count}", String(result?.total ?? filtered.length))}
+                {t("search.resultsFound").replace("{count}", String(filtered.length))}
               </span>
             )}
             <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
@@ -363,7 +367,7 @@ export default function SearchPage() {
                 />
                 <DrawerClose asChild>
                   <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
-                    {t("search.resultsFound").replace("{count}", String(result?.total ?? filtered.length))}
+                    {t("search.resultsFound").replace("{count}", String(filtered.length))}
                   </Button>
                 </DrawerClose>
               </div>
@@ -423,7 +427,7 @@ export default function SearchPage() {
               </div>
 
               <p className="mb-4 text-sm text-muted-foreground">
-                {t("search.resultsFound").replace("{count}", String(result?.total ?? filtered.length))}{query && ` ${t("search.forQuery")} "${query}"`}
+                {t("search.resultsFound").replace("{count}", String(filtered.length))}{query && ` ${t("search.forQuery")} "${query}"`}
               </p>
 
               {/* Location cards */}

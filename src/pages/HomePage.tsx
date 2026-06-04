@@ -65,10 +65,16 @@ export default function HomePage() {
     return () => io.disconnect();
   }, []);
 
-  const { data: featured = [], isLoading: featuredLoading } = useFeaturedListings();
+  const { data: featuredRaw = [], isLoading: featuredLoading } = useFeaturedListings();
   const { data: allResult } = useAllListings();
-  const allListings = allResult?.data || [];
-  const listingCount = allResult?.total ?? 0;
+  // Storage-only gating: never surface a disabled service type (moving/trailer)
+  // in listings, the map, featured cards, or the derived partner/city/count stats.
+  const hideDisabled = (l: { type?: string }) =>
+    (showMovingService  || l.type !== "moving") &&
+    (showTrailerService || l.type !== "trailer");
+  const allListings = (allResult?.data || []).filter(hideDisabled);
+  const featured = featuredRaw.filter(hideDisabled);
+  const listingCount = allListings.length;
   const { data: citiesFromApi = [] } = useCities();
 
   const storageOnly        = !showMovingService && !showTrailerService;
