@@ -132,6 +132,10 @@ export default function BookingPage() {
   const [showSignGate, setShowSignGate] = useState(false);
   const [signCancelled, setSignCancelled] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
+  // Signed successfully, but the payment could NOT be initiated (e.g. Montonio
+  // hiccup). Distinct from signCancelled: the contract IS signed — the remedy is
+  // to retry payment, not to sign again.
+  const [paymentFailed, setPaymentFailed] = useState(false);
   const [showVerifyBanner, setShowVerifyBanner] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -295,6 +299,7 @@ export default function BookingPage() {
   // This is the ONLY place that initiates payment — it can never run before signing.
   const proceedAfterSign = async () => {
     setShowSignGate(false);
+    setPaymentFailed(false);
     const isPayNow = !isRebateModel && paymentMethod !== "later";
 
     if (isPayNow && createdInvoiceId) {
@@ -319,11 +324,13 @@ export default function BookingPage() {
         // reach this after a successful sign — but surface it gracefully and let the
         // user re-sign rather than crash.
         if (err?.code === "CONTRACT_NOT_SIGNED") {
+          // Genuinely unsigned (should not happen post-sign) — send back to sign.
           toast.error(t("booking.sign.cancelledNote"));
           setSignCancelled(true);
         } else {
+          // Signed, but payment couldn't start — let the user retry payment, NOT re-sign.
           toast.error(err?.message || t("booking.errorPayment"));
-          setSignCancelled(true);
+          setPaymentFailed(true);
         }
       }
       return;
@@ -353,7 +360,7 @@ export default function BookingPage() {
   // ── Finalise your rental — sign gate (mandatory) → pay ──
   // One continuous sequence framed around the signing modal. Shown after the booking
   // is created (Pending) and before any Montonio redirect.
-  if (showSignGate || signCancelled || redirecting) {
+  if (showSignGate || signCancelled || redirecting || paymentFailed) {
     return (
       <div className="container-wide flex min-h-[60vh] items-center justify-center py-16">
         <div className="mx-auto max-w-lg w-full text-center">
@@ -364,6 +371,27 @@ export default function BookingPage() {
               </div>
               <h1 className="mt-4 font-display text-2xl font-bold">{t("booking.successTitle")}</h1>
               <p className="mt-2 text-sm text-muted-foreground">{t("booking.sign.redirecting")}</p>
+            </>
+          ) : paymentFailed ? (
+            <>
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
+                <CheckCircle className="h-8 w-8 text-success" />
+              </div>
+              <h1 className="mt-4 font-display text-2xl font-bold">{t("booking.sign.signedTitle")}</h1>
+              <p className="mt-3 rounded-lg border border-border bg-secondary/40 p-3 text-sm text-muted-foreground">
+                {t("booking.sign.paymentFailedNote")}
+              </p>
+              <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+                <Button
+                  onClick={() => proceedAfterSign()}
+                  className="bg-accent text-accent-foreground hover:bg-accent/90"
+                >
+                  {t("booking.sign.retryPayment")}
+                </Button>
+                <Link to="/account?tab=bookings">
+                  <Button variant="outline">{t("booking.myBookings")}</Button>
+                </Link>
+              </div>
             </>
           ) : signCancelled ? (
             <>
