@@ -1,6 +1,6 @@
 import { useState, lazy, Suspense, useEffect, useRef } from "react";
 import { Link, useNavigate } from "@/i18n/routing";
-import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, MapPin, ChevronDown, ChevronUp, CheckCircle, Phone, BadgePercent, ShieldCheck, XCircle } from "lucide-react";
+import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, MapPin, ChevronDown, ChevronUp, CheckCircle, Phone, BadgePercent, ShieldCheck, XCircle, Quote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFeaturedListings, useAllListings, usePricingConfig, useCities } from "@/hooks/queries";
@@ -376,6 +376,33 @@ export default function HomePage() {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* Testimonials / social proof */}
+      {/* TODO: replace with real partner/customer testimonials */}
+      <section className="surface-sunken section-y">
+        <div className="container-wide">
+          <h2 className="text-center font-display text-2xl font-bold md:text-3xl">{t("testimonial.title")}</h2>
+          <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">{t("testimonial.subtitle")}</p>
+          <div className="mt-10 grid gap-5 md:grid-cols-3">
+            {[
+              { quote: t("testimonial.quote1"), author: t("testimonial.author1"), role: t("testimonial.role1") },
+              { quote: t("testimonial.quote2"), author: t("testimonial.author2"), role: t("testimonial.role2") },
+              { quote: t("testimonial.quote3"), author: t("testimonial.author3"), role: t("testimonial.role3") },
+            ].map((item, i) => (
+              <figure key={i} className="card-elevated flex flex-col p-6">
+                <Quote className="h-6 w-6 text-accent/60" aria-hidden />
+                <blockquote className="mt-3 flex-1 text-sm leading-relaxed text-foreground">
+                  {item.quote}
+                </blockquote>
+                <figcaption className="mt-5 border-t border-border pt-4">
+                  <div className="text-sm font-semibold text-foreground">{item.author}</div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">{item.role}</div>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
         </div>
       </section>
 

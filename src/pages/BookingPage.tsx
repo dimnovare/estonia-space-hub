@@ -808,10 +808,29 @@ export default function BookingPage() {
                     ))}
                   </div>
                 </div>
-                {/* Secure payment */}
-                <div className="flex items-center gap-2 border-t border-border pt-3">
-                  <Lock className="h-4 w-4 text-success shrink-0" />
-                  <span className="text-xs text-muted-foreground">{t("booking.securePayment")}</span>
+                {/* Secure payment + card-scheme trust row */}
+                <div className="border-t border-border pt-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Lock className="h-4 w-4 text-success shrink-0" />
+                    <span className="text-xs text-muted-foreground">{t("booking.securePayment")}</span>
+                  </div>
+                  {/* Visual trust badge row */}
+                  {/* TODO: drop official Montonio/Visa/Mastercard SVGs here */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-[11px] font-medium text-foreground">
+                      <ShieldCheck className="h-3.5 w-3.5 text-success shrink-0" />
+                      {t("trust.securedBy")}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-[11px] font-semibold tracking-wide text-foreground">
+                      <CreditCard className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      VISA
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-[11px] font-semibold tracking-wide text-foreground">
+                      <CreditCard className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      Mastercard
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">{t("trust.cardsAccepted")}</p>
                 </div>
                 {/* Cancellation */}
                 <div className="flex items-start gap-2">
