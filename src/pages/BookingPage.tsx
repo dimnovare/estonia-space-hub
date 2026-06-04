@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { useSearchParams, Link, useNavigate } from "@/i18n/routing";
+import { useSearchParams, Link } from "@/i18n/routing";
 import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand, Info, Warehouse, Lock, ShieldCheck, Shield, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListing, useCreateBooking, useSuppliers, usePricingConfig, useListingExtras } from "@/hooks/queries";
@@ -29,25 +29,6 @@ import { et, enUS, ru, lv, lt } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 const dateFnsLocaleMap = { et, en: enUS, ru, lv, lt } as const;
-
-function ContractCta({ bookingId, onSign }: { bookingId: string; onSign: () => void }) {
-  const { t } = useLanguage();
-  const { data } = useQuery({
-    queryKey: queryKeys.contractTemplates.byId(bookingId),
-    queryFn: () => apiClient.get<any>(`/contracts/templates?bookingId=${bookingId}`),
-    enabled: !!bookingId,
-  });
-  const list: any[] = Array.isArray(data) ? data : (data?.data ?? []);
-  if (!list || list.length === 0) return null;
-  return (
-    <button
-      onClick={onSign}
-      className="mt-3 w-full rounded-xl bg-accent py-3 text-sm font-semibold text-accent-foreground hover:bg-accent/90 transition-colors"
-    >
-      {t("contract.signNow")} →
-    </button>
-  );
-}
 
 function isoToDate(iso: string): Date | undefined {
   if (!iso) return undefined;
@@ -120,7 +101,6 @@ export default function BookingPage() {
   const listingId = params.get("listing");
   const { data: listing } = useListing(listingId || "");
   const { t, language } = useLanguage();
-  const navigate = useNavigate();
   const { data: suppliers = [] } = useSuppliers();
   const supplier = listing ? suppliers.find(s => s.id === listing.supplierId) : undefined;
   const isRebateModel = supplier?.billingModel === "rebate";
@@ -146,7 +126,12 @@ export default function BookingPage() {
   const [phase, setPhase] = useState<SubmitPhase>("submitting");
   const [reservedUntil, setReservedUntil] = useState<string | null>(null);
   const [createdBookingId, setCreatedBookingId] = useState<string | null>(null);
-  const [showContract, setShowContract] = useState(false);
+  const [createdInvoiceId, setCreatedInvoiceId] = useState<string | null>(null);
+  // Mandatory sign gate (between Confirm and payment). The customer MUST sign the
+  // rental agreement before any Montonio redirect — money never moves for an unsigned lease.
+  const [showSignGate, setShowSignGate] = useState(false);
+  const [signCancelled, setSignCancelled] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   const [showVerifyBanner, setShowVerifyBanner] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -275,37 +260,24 @@ export default function BookingPage() {
       contactPhone: contactForm.getValues("phone"),
       paymentMethod: isRebateModel ? "later" : paymentMethod as "bank" | "card" | "later",
       notes: contactForm.getValues("notes"),
-    }).then(async (bookingResult: any) => {
-      const invoiceId = bookingResult?.invoiceId;
+    }).then((bookingResult: any) => {
+      const invoiceId = bookingResult?.invoiceId ?? null;
       const newBookingId = bookingResult?.id || bookingResult?.bookingId || null;
       if (newBookingId) setCreatedBookingId(newBookingId);
-
-      if (!isRebateModel && paymentMethod !== "later" && invoiceId) {
-        try {
-          const result = await paymentService.initiate({
-            invoiceId,
-            paymentMethod,
-            customerEmail: contactForm.getValues("email"),
-            locale: language,
-          });
-          if (result.paymentUrl) {
-            window.location.href = result.paymentUrl;
-            setTimeout(() => setIsSubmitting(false), 5000);
-            return;
-          }
-        } catch (err: any) {
-          console.error("Post-booking step failed:", err);
-          toast.error(err?.message || t("booking.errorPayment"));
-          setIsSubmitting(false);
-        }
-      }
+      setCreatedInvoiceId(invoiceId);
 
       if (paymentMethod === "later") {
         const expires = bookingResult?.reservedUntil
           || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
         setReservedUntil(expires);
       }
-      setSubmitted(true);
+
+      // Booking is created and held as Pending. Do NOT initiate payment yet — the
+      // customer must SIGN the rental agreement first. Open the mandatory sign gate.
+      // (Backend rejects /payments/initiate for an unsigned booking → CONTRACT_NOT_SIGNED.)
+      setIsSubmitting(false);
+      setSignCancelled(false);
+      setShowSignGate(true);
     }).catch((err: any) => {
       const msg = err?.message?.toLowerCase() || "";
       if (err?.code === "EMAIL_NOT_VERIFIED" || err?.status === 403 || (msg.includes("email") && msg.includes("verif"))) {
@@ -319,6 +291,56 @@ export default function BookingPage() {
     });
   };
 
+  // Called only after the signing modal reports a SUCCESSFUL sign (onComplete).
+  // This is the ONLY place that initiates payment — it can never run before signing.
+  const proceedAfterSign = async () => {
+    setShowSignGate(false);
+    const isPayNow = !isRebateModel && paymentMethod !== "later";
+
+    if (isPayNow && createdInvoiceId) {
+      setRedirecting(true);
+      try {
+        const result = await paymentService.initiate({
+          invoiceId: createdInvoiceId,
+          paymentMethod,
+          customerEmail: contactForm.getValues("email"),
+          locale: language,
+        });
+        if (result.paymentUrl) {
+          window.location.href = result.paymentUrl;
+          return;
+        }
+        // No paymentUrl returned — fall through to the confirmation screen.
+        setRedirecting(false);
+        setSubmitted(true);
+      } catch (err: any) {
+        setRedirecting(false);
+        // The backend guard (CONTRACT_NOT_SIGNED) should not trigger here — we only
+        // reach this after a successful sign — but surface it gracefully and let the
+        // user re-sign rather than crash.
+        if (err?.code === "CONTRACT_NOT_SIGNED") {
+          toast.error(t("booking.sign.cancelledNote"));
+          setSignCancelled(true);
+        } else {
+          toast.error(err?.message || t("booking.errorPayment"));
+          setSignCancelled(true);
+        }
+      }
+      return;
+    }
+
+    // pay-later / rebate: no Montonio — the contract is signed; invoice to follow.
+    setSubmitted(true);
+  };
+
+  // User dismissed the signing modal without completing the sign.
+  // Do NOT initiate payment. The booking stays Pending (backend auto-voids it
+  // after a short window). Offer to re-open the gate; no dead end.
+  const handleSignGateClose = () => {
+    setShowSignGate(false);
+    setSignCancelled(true);
+  };
+
   useEffect(() => {
     if (!submitted) return;
     setPhase("submitting");
@@ -327,6 +349,64 @@ export default function BookingPage() {
     const t3 = setTimeout(() => setPhase("done"), 4200);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [submitted]);
+
+  // ── Finalise your rental — sign gate (mandatory) → pay ──
+  // One continuous sequence framed around the signing modal. Shown after the booking
+  // is created (Pending) and before any Montonio redirect.
+  if (showSignGate || signCancelled || redirecting) {
+    return (
+      <div className="container-wide flex min-h-[60vh] items-center justify-center py-16">
+        <div className="mx-auto max-w-lg w-full text-center">
+          {redirecting ? (
+            <>
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent/10">
+                <Loader2 className="h-8 w-8 text-accent animate-spin" />
+              </div>
+              <h1 className="mt-4 font-display text-2xl font-bold">{t("booking.successTitle")}</h1>
+              <p className="mt-2 text-sm text-muted-foreground">{t("booking.sign.redirecting")}</p>
+            </>
+          ) : signCancelled ? (
+            <>
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                <FileText className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h1 className="mt-4 font-display text-2xl font-bold">{t("booking.sign.gateTitle")}</h1>
+              <p className="mt-3 rounded-lg border border-border bg-secondary/40 p-3 text-sm text-muted-foreground">
+                {t("booking.sign.cancelledNote")}
+              </p>
+              <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+                <Button
+                  onClick={() => { setSignCancelled(false); setShowSignGate(true); }}
+                  className="bg-accent text-accent-foreground hover:bg-accent/90"
+                >
+                  {t("contract.signNow")}
+                </Button>
+                <Link to="/account?tab=bookings">
+                  <Button variant="outline">{t("booking.myBookings")}</Button>
+                </Link>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent/10">
+                <FileText className="h-8 w-8 text-accent" />
+              </div>
+              <h1 className="mt-4 font-display text-2xl font-bold">{t("booking.sign.gateTitle")}</h1>
+              <p className="mt-2 text-sm text-muted-foreground">{t("booking.sign.gateDesc")}</p>
+            </>
+          )}
+        </div>
+
+        {showSignGate && createdBookingId && (
+          <ContractSigningModal
+            bookingId={createdBookingId}
+            onComplete={proceedAfterSign}
+            onClose={handleSignGateClose}
+          />
+        )}
+      </div>
+    );
+  }
 
   if (submitted) {
     const integrationLabel = supplier ? INTEGRATION_TYPE_CONFIG[supplier.integrationType] : null;
@@ -412,22 +492,9 @@ export default function BookingPage() {
                 <Link to="/account?tab=bookings"><Button variant="outline">{t("booking.myBookings")}</Button></Link>
                 <Link to="/search"><Button className="bg-accent text-accent-foreground hover:bg-accent/90">{t("booking.searchMore")}</Button></Link>
               </div>
-              {createdBookingId && (
-                <ContractCta
-                  bookingId={createdBookingId}
-                  onSign={() => setShowContract(true)}
-                />
-              )}
             </>
           )}
         </div>
-        {showContract && createdBookingId && (
-          <ContractSigningModal
-            bookingId={createdBookingId}
-            onComplete={() => { setShowContract(false); navigate("/account?tab=bookings"); }}
-            onClose={() => setShowContract(false)}
-          />
-        )}
       </div>
     );
   }
