@@ -814,21 +814,25 @@ export default function BookingPage() {
                     <Lock className="h-4 w-4 text-success shrink-0" />
                     <span className="text-xs text-muted-foreground">{t("booking.securePayment")}</span>
                   </div>
-                  {/* Visual trust badge row */}
-                  {/* TODO: drop official Montonio/Visa/Mastercard SVGs here */}
+                  {/* Visual trust badge row — official marks (see public/payment/*.svg) */}
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-[11px] font-medium text-foreground">
-                      <ShieldCheck className="h-3.5 w-3.5 text-success shrink-0" />
-                      {t("trust.securedBy")}
+                    <span
+                      className="inline-flex items-center rounded-md bg-[#0E1A2B] px-2.5 py-1.5"
+                      aria-label={t("trust.securedBy")}
+                      title={t("trust.securedBy")}
+                    >
+                      <img src="/payment/montonio.svg" alt="Montonio" className="h-4 w-auto" />
                     </span>
-                    <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-[11px] font-semibold tracking-wide text-foreground">
-                      <CreditCard className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      VISA
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-[11px] font-semibold tracking-wide text-foreground">
-                      <CreditCard className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      Mastercard
-                    </span>
+                    <img
+                      src="/payment/visa.svg"
+                      alt="Visa"
+                      className="h-7 w-auto rounded ring-1 ring-black/5"
+                    />
+                    <img
+                      src="/payment/mastercard.svg"
+                      alt="Mastercard"
+                      className="h-7 w-auto rounded ring-1 ring-black/5"
+                    />
                   </div>
                   <p className="text-[11px] text-muted-foreground">{t("trust.cardsAccepted")}</p>
                 </div>
