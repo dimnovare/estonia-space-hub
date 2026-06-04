@@ -5,7 +5,9 @@ export default defineConfig({
   fullyParallel: false, // booking tests must run sequentially to avoid state conflicts
   retries: process.env.CI ? 1 : 0,
   workers: 1,
-  reporter: 'list',
+  reporter: process.env.CI
+    ? [['list'], ['html', { open: 'never' }]]
+    : 'list',
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:8080',
     trace: 'on-first-retry',
@@ -14,5 +16,13 @@ export default defineConfig({
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
   ],
-  // Do NOT start webServer here — developer runs `npm run dev` separately
+  // In CI, Playwright starts the Vite dev server itself (port 8080, matching baseURL
+  // and vite.config.ts). The specs mock all API calls via page.route(), so no backend
+  // is needed. Locally, reuseExistingServer lets a developer keep `npm run dev` running.
+  webServer: {
+    command: 'npm run dev',
+    url: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:8080',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120_000,
+  },
 });
