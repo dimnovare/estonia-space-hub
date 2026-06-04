@@ -1,23 +1,22 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
+import { stubCommon, seedAuth, stubLoggedOut, adminUser } from './fixtures';
 
 /**
- * admin.spec.ts — Admin panel smoke tests:
- * - Admin login redirected correctly when authenticated as admin
- * - Dashboard renders with sidebar navigation
- * - Approve supplier button visible on suppliers tab
- * - Publish location button present on locations tab
- * - Orders page (tab) renders
+ * 11 — Admin panel smoke tests
+ *
+ * /et/admin is a ProtectedRoute allowedRoles={["admin"]}: we must seedAuth(adminUser)
+ * BEFORE goto, otherwise it redirects to /et/login. Tabs are selected via ?tab=...
+ *
+ * Real app facts:
+ *  - AdminPage tabs: dashboard | suppliers | locations | orders | ... (src/pages/AdminPage.tsx)
+ *  - AdminSidebar renders <aside><nav>...</nav></aside> with section links.
+ *  - supplierService.getAll → GET /admin/suppliers (unwrapPaginated: array OR {data}).
+ *    A supplier with isActive:false appears in a "Pending applications" table with an
+ *    Approve button (t("admin.approve") = "Kinnita").
+ *  - AdminLocations → GET /locations (SupplierLocation[]).
+ *  - AdminOrders (useOrders) → GET /orders?... (Order[]); h1 = t("admin.orders") = "Tellimused".
+ *  - AdminDashboard → GET /admin/dashboard/stats and /admin/dashboard/revenue.
  */
-
-const ADMIN_USER = {
-  id: 'admin-001',
-  name: 'Admin Kasutaja',
-  email: 'admin@ruumly.eu',
-  role: 'admin',
-  status: 'active',
-  registeredAt: '2024-01-01T00:00:00Z',
-  bookingsCount: 0,
-};
 
 const FAKE_SUPPLIER = {
   id: 'sup-admin-01',
@@ -27,7 +26,8 @@ const FAKE_SUPPLIER = {
   contactEmail: 'partner@example.com',
   contactPhone: '+37255000000',
   integrationType: 'manual',
-  isActive: false,  // pending approval
+  isActive: false, // pending approval → shows Approve button
+  country: 'EE',
   listingCount: 0,
   ordersTotal: 0,
   revenue: 0,
@@ -46,7 +46,7 @@ const FAKE_LOCATION = {
   name: 'Tallinna Ladu',
   address: 'Lao tee 1',
   city: 'Tallinn',
-  lat: 59.4370,
+  lat: 59.437,
   lng: 24.7536,
   images: [],
   description: 'Testladu',
@@ -84,215 +84,110 @@ const FAKE_ORDER = {
   notes: '',
 };
 
-function stubAdminAPIs(page: import('@playwright/test').Page) {
-  page.route('**/settings/public', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ maintenanceMode: false, showMovingService: false, showTrailerService: false }),
-    })
+const json = (route: import('@playwright/test').Route, body: unknown, status = 200) =>
+  route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
+
+/** Admin-specific endpoints layered on top of stubCommon (which handles /locations & /suppliers). */
+async function stubAdmin(page: Page): Promise<void> {
+  // GET /admin/suppliers — supplierService.getAll() (unwrapPaginated handles a bare array).
+  await page.route(/\/admin\/suppliers(\b|\?|$)/, (r) => json(r, [FAKE_SUPPLIER]));
+
+  // Dashboard widgets.
+  await page.route(/\/admin\/dashboard\/stats/, (r) =>
+    json(r, { totalListings: 1, totalOrders: 1, totalUsers: 3, totalRevenue: 49, recentInquiries: [] }),
+  );
+  await page.route(/\/admin\/dashboard\/revenue/, (r) =>
+    json(r, { period: '2026-06', totalBookings: 1, totalGmv: 49, subscriptionMrr: 0, supplierBreakdown: [] }),
   );
 
-  // Admin user authenticated
-  page.route('**/auth/me', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(ADMIN_USER) })
-  );
+  // Misc admin list endpoints — must NOT be bare arrays where the UI expects {data,total}.
+  await page.route(/\/admin\/users/, (r) => json(r, { data: [], total: 0 }));
+  await page.route(/\/admin\/audit-log/, (r) => json(r, { data: [], total: 0 }));
+  await page.route(/\/admin\/audit/, (r) => json(r, { data: [], total: 0 }));
 
-  // Suppliers list
-  page.route('**/suppliers*', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify([FAKE_SUPPLIER]),
-    })
-  );
+  // Orders list (AdminOrders / useOrders).
+  await page.route(/\/orders(\b|\?|$)/, (r) => json(r, [FAKE_ORDER]));
 
-  // Locations list
-  page.route('**/locations*', (route) => {
-    const url = route.request().url();
-    if (url.includes('/cities')) {
-      return route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify([{ city: 'Tallinn', country: 'EE' }]),
-      });
-    }
-    return route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify([FAKE_LOCATION]),
-    });
+  // Locations list — override stubCommon's empty array with our fake location.
+  await page.route(/\/locations(\b|\?|$)/, (r) => {
+    const path = new URL(r.request().url()).pathname;
+    if (/\/locations\/cities/.test(path)) return json(r, [{ city: 'Tallinn', country: 'EE' }]);
+    return json(r, [FAKE_LOCATION]);
   });
-
-  // Orders list
-  page.route('**/orders*', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify([FAKE_ORDER]),
-    })
-  );
-
-  // Admin dashboard stats
-  page.route('**/admin/dashboard/stats*', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        totalListings: 1,
-        totalOrders: 1,
-        totalUsers: 3,
-        totalRevenue: 49,
-        recentInquiries: [],
-      }),
-    })
-  );
-
-  // Admin dashboard revenue
-  page.route('**/admin/dashboard/revenue*', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        period: '2026-06',
-        totalBookings: 1,
-        totalGmv: 49,
-        subscriptionMrr: 0,
-        supplierBreakdown: [],
-      }),
-    })
-  );
-
-  // Admin users
-  page.route('**/admin/users*', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
-  );
-
-  // Admin inquiries / leads / audit
-  page.route('**/admin/inquiries*', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
-  );
-  page.route('**/admin/leads*', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
-  );
-  page.route('**/admin/audit*', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
-  );
-
-  // Payouts / rebates
-  page.route('**/admin/payouts*', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
-  );
-  page.route('**/admin/rebates*', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
-  );
-
-  // Ops checks
-  page.route('**/admin/ops*', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
-  );
-
-  // Notifications
-  page.route('**/notifications*', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
-  );
-
-  // Features / pricing
-  page.route('**/features*', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
-  );
-  page.route('**/pricing*', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
-  );
 }
 
 test.describe('Admin panel', () => {
-  test('admin user can access /et/admin without redirect to login', async ({ page }) => {
-    stubAdminAPIs(page);
-    await page.goto('/et/admin');
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(1000);
+  test.beforeEach(async ({ page }) => {
+    // Suppress the fixed cookie-consent banner so it can't intercept clicks.
+    await page.addInitScript(() => localStorage.setItem('ruumly-cookie-consent', 'true'));
+    await stubCommon(page);
+    await stubAdmin(page);
+  });
 
-    // Should NOT be redirected to login
-    expect(page.url()).not.toContain('/login');
+  test('admin user reaches /et/admin without being redirected to login', async ({ page }) => {
+    await seedAuth(page, adminUser);
+    await page.goto('/et/admin');
+
     await expect(page.locator('body')).toBeVisible();
+    expect(page.url()).not.toContain('/login');
   });
 
   test('admin sidebar / navigation is visible', async ({ page }) => {
-    stubAdminAPIs(page);
+    await seedAuth(page, adminUser);
     await page.goto('/et/admin');
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(1000);
 
-    // AdminSidebar renders nav links; at least the sidebar container or nav links exist
-    const nav = page.locator('nav, aside, [class*="sidebar"]').first();
-    const dashboardLink = page.locator('a').filter({ hasText: /dashboard|töölaud|панель|pārskata|suvestinė/i }).first();
-    const found = (await nav.count()) > 0 || (await dashboardLink.count()) > 0;
-    expect(found).toBe(true);
+    // AdminSidebar renders <aside> (desktop) wrapping a <nav> of section links.
+    const sidebarNav = page.locator('aside nav, nav').first();
+    await expect(sidebarNav).toBeVisible({ timeout: 8000 });
   });
 
-  test('suppliers tab shows partner list with approve-related action', async ({ page }) => {
-    stubAdminAPIs(page);
+  test('suppliers tab lists the pending partner with an approve action', async ({ page }) => {
+    await seedAuth(page, adminUser);
     await page.goto('/et/admin?tab=suppliers');
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(1500);
 
-    // AdminSuppliers renders a list of suppliers; the fake one (isActive: false) may show "Approve" or "Aktiveeri"
-    await expect(page.locator('text=Admin Test Partner OÜ')).toBeVisible({ timeout: 8000 });
+    // The partner name renders in several layouts (mobile card + desktop table +
+    // pending-applications table); assert a VISIBLE occurrence, not the first DOM node.
+    await expect(
+      page.locator('text=Admin Test Partner OÜ').locator('visible=true').first(),
+    ).toBeVisible({ timeout: 8000 });
 
-    // Look for any action button (activate/approve/edit)
-    const actionBtn = page.locator('button').filter({
-      hasText: /aktiveeri|activate|approve|verify|kinnita|bestätigen/i,
-    }).first();
-    const editBtn = page.locator('button').filter({ hasText: /muuda|edit|редактировать/i }).first();
-    const found = (await actionBtn.count()) > 0 || (await editBtn.count()) > 0;
-    expect(found).toBe(true);
+    // The pending (isActive:false) partner shows an Approve/Kinnita button.
+    const approveBtn = page
+      .locator('button')
+      .filter({ hasText: /kinnita|approve|одобрить|apstiprināt|patvirtinti/i })
+      .first();
+    await expect(approveBtn).toBeVisible({ timeout: 8000 });
   });
 
-  test('locations tab renders location list', async ({ page }) => {
-    stubAdminAPIs(page);
+  test('locations tab renders the location list', async ({ page }) => {
+    await seedAuth(page, adminUser);
     await page.goto('/et/admin?tab=locations');
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(1500);
 
-    // AdminLocations renders a list including FAKE_LOCATION
-    await expect(page.locator('text=Tallinna Ladu')).toBeVisible({ timeout: 8000 });
+    await expect(
+      page.locator('text=Tallinna Ladu').locator('visible=true').first(),
+    ).toBeVisible({ timeout: 8000 });
   });
 
-  test('orders tab renders order list with status filters', async ({ page }) => {
-    stubAdminAPIs(page);
+  test('orders tab renders the orders header and the fake order', async ({ page }) => {
+    await seedAuth(page, adminUser);
     await page.goto('/et/admin?tab=orders');
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(1500);
 
-    // h1 "Tellimused" / "Orders" header
-    const heading = page.locator('h1').filter({ hasText: /tellimused|orders|заказы|pasūtījumi|užsakymai/i }).first();
+    const heading = page
+      .locator('h1')
+      .filter({ hasText: /tellimused|orders|заказы|pasūtījumi|užsakymai/i })
+      .first();
     await expect(heading).toBeVisible({ timeout: 8000 });
 
-    // The fake order should be listed
-    await expect(page.locator('text=Klient Nimi')).toBeVisible({ timeout: 6000 });
+    // customerName appears in both the mobile cards and desktop table; assert a visible one.
+    await expect(
+      page.locator('text=Klient Nimi').locator('visible=true').first(),
+    ).toBeVisible({ timeout: 6000 });
   });
 
-  test('non-admin user gets redirected from /et/admin to login', async ({ page }) => {
-    page.route('**/settings/public', (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ maintenanceMode: false, showMovingService: false, showTrailerService: false }),
-      })
-    );
-    page.route('**/auth/me', (route) =>
-      route.fulfill({ status: 401, contentType: 'application/json', body: '{"message":"Unauthorized"}' })
-    );
-    page.route('**/notifications*', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
-    );
-
+  test('non-admin (logged-out) user is redirected from /et/admin to login', async ({ page }) => {
+    await stubLoggedOut(page);
     await page.goto('/et/admin');
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(1000);
 
-    // Unauthenticated users should be sent to /login
-    expect(page.url()).toContain('/login');
+    await expect.poll(() => page.url(), { timeout: 8000 }).toContain('/login');
   });
 });
