@@ -24,5 +24,14 @@ export default defineConfig({
     url: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:8080',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    env: {
+      // E2E mocks every API call via page.route(). The stubs are path-based, so the
+      // base URL must be ABSOLUTE and a DIFFERENT origin than the dev server — otherwise
+      // requests are same-origin to Vite and bypass the route stubs. CI has no .env
+      // (it's gitignored; only .env.example is committed, which Vite does not load), so
+      // VITE_API_URL would be empty → same-origin → data never loads. Pin it here so CI
+      // matches local. Nothing actually runs on :3000 during tests; stubs intercept first.
+      VITE_API_URL: 'http://localhost:3000/api',
+    },
   },
 });
