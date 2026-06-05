@@ -16,7 +16,7 @@ interface SEOProps {
 }
 
 const BASE_URL = "https://ruumly.eu";
-const DEFAULT_IMAGE = `${BASE_URL}/ruumly-logo.png`;
+const DEFAULT_IMAGE = `${BASE_URL}/ruumly-og.png`;
 const SITE_NAME = "Ruumly";
 
 const OG_LOCALE: Record<Language, string> = {
