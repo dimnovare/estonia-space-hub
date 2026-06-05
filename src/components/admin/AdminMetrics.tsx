@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@/i18n/routing";
 import { apiClient } from "@/services/apiClient";
 import { queryKeys } from "@/services/queryKeys";
 import {
@@ -42,12 +43,13 @@ interface StatCardProps {
   icon: React.ComponentType<{ className?: string }>;
   highlight?: boolean;
   highlightWhenPositive?: boolean;
+  href?: string;
 }
 
-function StatCard({ label, value, sub, icon: Icon, highlight, highlightWhenPositive }: StatCardProps) {
+function StatCard({ label, value, sub, icon: Icon, highlight, highlightWhenPositive, href }: StatCardProps) {
   const isWarning = highlight && Number(value) > 0;
   const isPositive = highlightWhenPositive && Number(value) > 0;
-  return (
+  const card = (
     <div
       className={`rounded-xl border p-5 transition-colors ${
         isWarning
@@ -79,6 +81,9 @@ function StatCard({ label, value, sub, icon: Icon, highlight, highlightWhenPosit
       {sub && <div className="mt-1 text-[11px] text-muted-foreground">{sub}</div>}
     </div>
   );
+  return href
+    ? <Link to={href} className="block transition-transform hover:-translate-y-0.5 focus:outline-none">{card}</Link>
+    : card;
 }
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
@@ -233,10 +238,12 @@ export default function AdminMetrics() {
             icon={MapPin}
           />
           <StatCard
-            label="Pending approval"
+            label="Pending partner applications"
             value={data.locations.pendingApproval}
+            sub="Click to review & approve →"
             icon={AlertTriangle}
             highlight
+            href="/admin?tab=suppliers"
           />
         </div>
       </section>

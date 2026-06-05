@@ -4,7 +4,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import {
   LayoutDashboard, MessageSquare, Settings, Users,
   Package, Activity, ChevronDown, Route, MapPin, Banknote, Receipt,
-  Building2, Inbox, Gauge, BarChart2,
+  Building2, Inbox, Gauge, BarChart2, ClipboardCheck,
 } from "lucide-react";
 
 type Item = { id: string; label: string; icon: ComponentType<any>; href: string };
@@ -14,6 +14,7 @@ function useItems(): Item[] {
   return [
     { id: "dashboard",    label: t("admin.dashboard"),    icon: LayoutDashboard, href: "/admin" },
     { id: "partners",     label: t("admin.partners"),     icon: Building2,       href: "/admin/partners" },
+    { id: "suppliers",    label: t("admin.applications"), icon: ClipboardCheck,  href: "/admin?tab=suppliers" },
     { id: "locations",    label: t("admin.locations"),    icon: MapPin,          href: "/admin?tab=locations" },
     { id: "orders",       label: t("admin.orders"),       icon: Package,         href: "/admin?tab=orders" },
     { id: "payouts",      label: t("admin.payouts"),      icon: Banknote,        href: "/admin?tab=payouts" },
