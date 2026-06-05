@@ -346,6 +346,21 @@ export const authService = {
   },
 };
 
+// ─── Contact Service ──────────────────────────────────────────────────────────────
+export interface ContactInput {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  language?: string;
+}
+
+export const contactService = {
+  async send(input: ContactInput): Promise<void> {
+    await apiClient.post("/contact", { ...input, language: input.language ?? "et" });
+  },
+};
+
 // ─── Bank Service ───────────────────────────────────────────────────────────────
 export interface BankDetails {
   iban?: string;

@@ -1,9 +1,20 @@
 import { useState } from "react";
 import { Mail, Phone, MapPin, Clock, CheckCircle } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
+import { contactService } from "@/services";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+type FieldErrors = {
+  name?: string;
+  email?: string;
+  subject?: string;
+  message?: string;
+};
 
 export default function ContactPage() {
   const { t, language } = useLanguage();
@@ -13,6 +24,41 @@ export default function ContactPage() {
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [sending, setSending] = useState(false);
+
+  const validate = (): FieldErrors => {
+    const next: FieldErrors = {};
+    if (!name.trim()) next.name = t("contact.errorName");
+    if (!email.trim()) next.email = t("contact.errorEmail");
+    else if (!EMAIL_RE.test(email.trim())) next.email = t("contact.errorEmailInvalid");
+    if (!subject.trim()) next.subject = t("contact.errorSubject");
+    if (!message.trim()) next.message = t("contact.errorMessage");
+    else if (message.trim().length < 10) next.message = t("contact.errorMessageShort");
+    return next;
+  };
+
+  const handleSubmit = async () => {
+    const validationErrors = validate();
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) return;
+
+    setSending(true);
+    try {
+      await contactService.send({
+        name: name.trim(),
+        email: email.trim(),
+        subject: subject.trim(),
+        message: message.trim(),
+        language,
+      });
+      setSubmitted(true);
+    } catch {
+      toast.error(t("toast.error"));
+    } finally {
+      setSending(false);
+    }
+  };
 
   if (submitted) {
     return (
@@ -81,23 +127,27 @@ export default function ContactPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label htmlFor="contact-name" className="mb-1 block text-sm font-medium">{t("contact.name")}</label>
-                    <input id="contact-name" type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    <input id="contact-name" type="text" value={name} onChange={(e) => { setName(e.target.value); if (errors.name) setErrors((p) => ({ ...p, name: undefined })); }} aria-invalid={!!errors.name} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name}</p>}
                   </div>
                   <div>
                     <label htmlFor="contact-email" className="mb-1 block text-sm font-medium">{t("contact.email")}</label>
-                    <input id="contact-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    <input id="contact-email" type="email" value={email} onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors((p) => ({ ...p, email: undefined })); }} aria-invalid={!!errors.email} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email}</p>}
                   </div>
                 </div>
                 <div>
                   <label htmlFor="contact-subject" className="mb-1 block text-sm font-medium">{t("contact.subject")}</label>
-                  <input id="contact-subject" type="text" value={subject} onChange={(e) => setSubject(e.target.value)} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  <input id="contact-subject" type="text" value={subject} onChange={(e) => { setSubject(e.target.value); if (errors.subject) setErrors((p) => ({ ...p, subject: undefined })); }} aria-invalid={!!errors.subject} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  {errors.subject && <p className="mt-1 text-xs text-destructive">{errors.subject}</p>}
                 </div>
                 <div>
                   <label htmlFor="contact-message" className="mb-1 block text-sm font-medium">{t("contact.message")}</label>
-                  <textarea id="contact-message" value={message} onChange={(e) => setMessage(e.target.value)} rows={5} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  <textarea id="contact-message" value={message} onChange={(e) => { setMessage(e.target.value); if (errors.message) setErrors((p) => ({ ...p, message: undefined })); }} aria-invalid={!!errors.message} rows={5} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  {errors.message && <p className="mt-1 text-xs text-destructive">{errors.message}</p>}
                 </div>
-                <Button onClick={() => setSubmitted(true)} className="w-full bg-accent text-accent-foreground hover:bg-accent/90" size="lg">
-                  {t("contact.send")}
+                <Button onClick={handleSubmit} disabled={sending} className="w-full bg-accent text-accent-foreground hover:bg-accent/90" size="lg">
+                  {sending ? t("contact.sending") : t("contact.send")}
                 </Button>
               </div>
             </div>
