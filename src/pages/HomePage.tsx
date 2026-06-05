@@ -385,8 +385,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Testimonials / social proof */}
-      {/* TODO: replace with real partner/customer testimonials */}
+      {/* Testimonials / social proof — gated behind PlatformSettings `showTestimonials`
+          (default off). The quotes are placeholders; keep hidden until real
+          partner/customer reviews exist. An admin can enable it from Settings. */}
+      {settings.showTestimonials && (
       <section className="surface-sunken section-y">
         <div className="container-wide">
           <h2 className="text-center font-display text-2xl font-bold md:text-3xl">{t("testimonial.title")}</h2>
@@ -411,6 +413,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Beta badge */}
       <section className="container-wide py-10">

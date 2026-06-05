@@ -16,6 +16,7 @@ export interface PlatformSettings {
   showProviderCta:      boolean;
   showFaq:              boolean;
   showMap:              boolean;
+  showTestimonials:     boolean;
   showMovingService:    boolean;
   showTrailerService:   boolean;
   showFeaturedPartners: boolean;
@@ -58,6 +59,7 @@ const FALLBACK = {
   showProviderCta:       true,
   showFaq:               true,
   showMap:               true,
+  showTestimonials:      false,
   // Storage-only launch: default these OFF so a slow/unreachable settings API
   // never flashes or leaks the hidden Moving/Trailer verticals. Real values from
   // /settings/public still apply once loaded.
