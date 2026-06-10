@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { computeEndDate } from "@/lib/dateUtils";
+import { calculateTotalSavings } from "@/lib/bookingSavings";
 
 describe("computeEndDate", () => {
   it("adds 1 month for '1 kuu'", () => {
@@ -31,5 +32,14 @@ describe("computeEndDate", () => {
   });
   it("returns undefined for invalid date", () => {
     expect(computeEndDate("not-a-date", "1 kuu")).toBeUndefined();
+  });
+});
+
+describe("calculateTotalSavings", () => {
+  it("never reports negative savings from rounding differences", () => {
+    expect(calculateTotalSavings([
+      { basePrice: 0.99, platformPrice: 1.00 },
+      { basePrice: 10.00, platformPrice: 9.50 },
+    ])).toBe(0.50);
   });
 });

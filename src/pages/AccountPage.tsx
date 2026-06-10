@@ -35,6 +35,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useAllListings } from "@/hooks/queries";
 import ListingCard from "@/components/ListingCard";
 import { SEO } from "@/components/SEO";
+import { calculateTotalSavings } from "@/lib/bookingSavings";
 
 function useStatusConfig() {
   const { t } = useLanguage();
@@ -232,7 +233,7 @@ function AccountOverview({ onNavigate }: { onNavigate: (tab: string) => void }) 
       <div className="mt-6 grid gap-4 grid-cols-2 sm:grid-cols-3">
         <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">{t("account.activeBookings")}</div><div className="mt-1 font-display text-2xl font-bold">{active.length}</div></div>
         <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">{t("account.pendingApproval")}</div><div className="mt-1 font-display text-2xl font-bold text-warning">{pending.length}</div></div>
-        <div className="card-elevated p-5 col-span-2 sm:col-span-1"><div className="text-sm text-muted-foreground">{t("account.totalSavings")}</div><div className="mt-1 font-display text-2xl font-bold text-accent">€{bookings.reduce((s, b) => s + (b.basePrice - b.platformPrice), 0).toFixed(2)}</div></div>
+        <div className="card-elevated p-5 col-span-2 sm:col-span-1"><div className="text-sm text-muted-foreground">{t("account.totalSavings")}</div><div className="mt-1 font-display text-2xl font-bold text-accent">€{calculateTotalSavings(bookings).toFixed(2)}</div></div>
       </div>
       {pending.length > 0 && (
         <div className="mt-6"><h2 className="font-display text-lg font-semibold">{t("account.pendingBookings")}</h2><div className="mt-3 space-y-2">{pending.map(b => <BookingCard key={b.id} booking={b} />)}</div></div>
