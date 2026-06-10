@@ -167,6 +167,19 @@ export function LangRedirect() {
   return <RouterNavigate to={target} replace />;
 }
 
+export function getLangGuardRedirect(
+  pathname: string,
+  search: string,
+  hash: string,
+  fallback: Language,
+): string {
+  const segments = pathname.split("/").filter(Boolean);
+  const routePath = segments.length === 1
+    ? pathname
+    : pathname.replace(/^\/[^/]+/, "");
+  return `/${fallback}${routePath}${search}${hash}`;
+}
+
 /**
  * Guard for the /:lang/* parent route. If the param is not a supported language,
  * redirect to the same path under the default (or stored) language.
@@ -176,9 +189,15 @@ export function LangParamGuard({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   if (isSupportedLang(params.lang)) return <>{children}</>;
   const fallback = detectStoredOrBrowserLang();
-  // Replace the leading bad segment with the fallback lang.
-  const rest = location.pathname.replace(/^\/[^/]+/, "");
-  return <RouterNavigate to={`/${fallback}${rest}${location.search}${location.hash}`} replace />;
+  return <RouterNavigate
+    to={getLangGuardRedirect(
+      location.pathname,
+      location.search,
+      location.hash,
+      fallback,
+    )}
+    replace
+  />;
 }
 
 // Convenience aliases — drop-in replacements with the SAME names as react-router-dom's
