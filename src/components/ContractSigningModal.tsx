@@ -28,6 +28,18 @@ interface DokobitFlowProps {
   onCancel: () => void;
 }
 
+export function DokobitSigningFrame({ signingUrl }: { signingUrl: string }) {
+  return (
+    <iframe
+      id="isign-gateway"
+      title="Dokobit signing"
+      src={signingUrl}
+      className="h-[65vh] min-h-[520px] w-full rounded-lg border border-border bg-white"
+      allow="publickey-credentials-get *; publickey-credentials-create *"
+    />
+  );
+}
+
 function DokobitSigningFlow({
   bookingId,
   templateId,
@@ -70,8 +82,6 @@ function DokobitSigningFlow({
     onSuccess: (data) => {
       setSigningUrl(data.signingUrl);
       setStatus("pending");
-      // Open Dokobit's hosted signing page in a new tab.
-      window.open(data.signingUrl, "_blank", "noopener,noreferrer");
       // Poll status as a fallback (backend postback also flips the status).
       pollRef.current = setInterval(async () => {
         try {
@@ -169,21 +179,15 @@ function DokobitSigningFlow({
   // ── Pending — waiting for the signature on Dokobit's page ──
   if (status === "pending") {
     return (
-      <div className="flex flex-col items-center gap-4 py-6">
-        <Loader2 className="h-12 w-12 text-accent animate-spin" />
-        <p className="text-sm text-center text-muted-foreground max-w-sm">
+      <div className="flex flex-col items-center gap-3 py-2">
+        <p className="text-sm text-center text-muted-foreground max-w-lg">
           {t("contract.dokobit.openedHint")}
         </p>
-        {signingUrl && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.open(signingUrl, "_blank", "noopener,noreferrer")}
-          >
-            {t("contract.dokobit.reopen")}
-          </Button>
-        )}
-        <p className="text-xs text-muted-foreground">{t("contract.dokobit.waiting")}</p>
+        {signingUrl && <DokobitSigningFrame signingUrl={signingUrl} />}
+        <p className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          {t("contract.dokobit.waiting")}
+        </p>
         <Button variant="ghost" size="sm" onClick={() => { stopPolling(); setStatus("cancelled"); }}>
           {t("common.cancel") || "Cancel"}
         </Button>
