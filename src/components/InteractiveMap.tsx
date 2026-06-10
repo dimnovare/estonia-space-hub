@@ -2,6 +2,8 @@ import { useEffect, useRef, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Listing, SupplierLocation } from "@/services/types";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { getVisibleServiceTypes } from "@/lib/visibleServiceTypes";
 import { getLangFromPath, DEFAULT_LANG } from "@/i18n/routing";
 
 interface InteractiveMapProps {
@@ -235,6 +237,8 @@ export default function InteractiveMap({
   tTypeMoving    = "Moving",
   tTypeTrailer   = "Trailer",
 }: InteractiveMapProps) {
+  const { showMovingService, showTrailerService } = usePlatformSettings();
+  const visibleServiceTypes = getVisibleServiceTypes(showMovingService, showTrailerService);
   const defaultCenters: Record<string, [number, number]> = {
     et: [58.8, 25.5],
     en: [57.5, 24.5],
@@ -412,7 +416,7 @@ export default function InteractiveMap({
       <div ref={mapRef} className="h-full w-full" />
       {/* Legend - uses exact same icons as map pins */}
       <div className="absolute bottom-3 left-3 z-[1000] flex max-w-[calc(100%-1.5rem)] flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-card/95 px-3 py-2 text-xs font-medium shadow-lg backdrop-blur-sm">
-        {(["warehouse", "moving", "trailer"] as const).map((type) => (
+        {visibleServiceTypes.map((type) => (
           <span key={type} className="flex items-center gap-1.5">
             <span
               className="inline-flex h-6 w-6 items-center justify-center rounded-full"
