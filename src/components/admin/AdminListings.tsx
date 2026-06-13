@@ -10,6 +10,7 @@ import { supplierService } from "@/services";
 import { toast } from "sonner";
 import { queryKeys } from "@/services/queryKeys";
 import AdminExtrasOverrides from "./AdminExtrasOverrides";
+import { GooglePlacesAutocomplete } from "./GooglePlacesAutocomplete";
 
 const typeIcons: Record<string, typeof Warehouse> = { warehouse: Warehouse, moving: Truck, trailer: CarFront };
 const inp = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
@@ -321,6 +322,19 @@ export default function AdminListings() {
           </DialogHeader>
           {editItem && (
             <div className="space-y-4">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.places.search")}</label>
+                <GooglePlacesAutocomplete
+                  onSelect={(p) => setEditItem((prev: any) => ({
+                    ...prev,
+                    title: prev?.title || p.name,
+                    address: p.address,
+                    city: p.city,
+                    lat: p.lat,
+                    lng: p.lng,
+                  }))}
+                />
+              </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground">{t("admin.title_field")}</label>
                 <input className={inp} value={editItem.title} onChange={e => setEditItem({ ...editItem, title: e.target.value })} />
