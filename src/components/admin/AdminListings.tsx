@@ -2,7 +2,7 @@ import { useState } from "react";
 import ImageUploader from "./ImageUploader";
 import { Warehouse, Truck, CarFront, Edit, Trash2, PlusCircle, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
@@ -21,10 +21,17 @@ export default function AdminListings() {
   const [editItem, setEditItem] = useState<any>(null);
   const [isNew, setIsNew] = useState(false);
 
-  const { data: listings = [], isLoading } = useQuery({
-    queryKey: queryKeys.adminListings.all(),
-    queryFn: () => apiClient.get<any[]>("/admin/listings"),
+  const [page, setPage] = useState(1);
+  const limit = 50;
+  const { data: res, isLoading } = useQuery({
+    queryKey: [...queryKeys.adminListings.all(), page],
+    queryFn: () => apiClient.get<any>(`/admin/listings?page=${page}&limit=${limit}`),
   });
+  // Tolerate both the paginated envelope and a raw array (mock / older responses).
+  const listings: any[] = Array.isArray(res) ? res : res?.data ?? [];
+  const total = Array.isArray(res) ? res.length : res?.total ?? listings.length;
+  const hasMore = Array.isArray(res) ? false : res?.hasMore ?? false;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
 
   const { data: suppliers = [] } = useQuery({
     queryKey: queryKeys.suppliers.all(),
@@ -73,7 +80,7 @@ export default function AdminListings() {
     setEditItem({
       ...l,
       price: l.priceFrom ?? l.price ?? 0,
-      status: l.isActive !== false ? "active" : "paused",
+      status: l.availableNow !== false ? "active" : "paused",
       images: l.images || [],
     });
     setIsNew(false);
@@ -143,13 +150,13 @@ export default function AdminListings() {
                   <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <span className="text-sm font-medium truncate">{l.title}</span>
                 </div>
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${l.status === "active" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>{l.status === "active" ? t("admin.active") : t("admin.paused")}</span>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${l.availableNow === true ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>{l.availableNow === true ? t("admin.active") : t("admin.paused")}</span>
               </div>
               <div className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
                 <span>{l.city} · {l.price ?? l.priceFrom}€ · {l.views ?? 0} vaatamist</span>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => openEdit(l)} className="rounded p-1 hover:bg-secondary"><Edit className="h-3.5 w-3.5 text-muted-foreground" /></button>
-                  <button onClick={() => handleDelete(l.id)} className="rounded p-1 hover:bg-secondary"><Trash2 className="h-3.5 w-3.5 text-destructive" /></button>
+                  <button aria-label={t("admin.edit")} onClick={() => openEdit(l)} className="rounded p-1 hover:bg-secondary"><Edit className="h-3.5 w-3.5 text-muted-foreground" /></button>
+                  <button aria-label={t("admin.delete")} onClick={() => handleDelete(l.id)} className="rounded p-1 hover:bg-secondary"><Trash2 className="h-3.5 w-3.5 text-destructive" /></button>
                 </div>
               </div>
             </div>
@@ -179,12 +186,12 @@ export default function AdminListings() {
                   <td className="px-4 py-3"><Icon className="h-4 w-4 text-muted-foreground" /></td>
                   <td className="px-4 py-3 text-muted-foreground">{l.city}</td>
                   <td className="px-4 py-3 text-muted-foreground">{l.price ?? l.priceFrom}€</td>
-                  <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${l.status === "active" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>{l.status === "active" ? t("admin.active") : t("admin.paused")}</span></td>
+                  <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${l.availableNow === true ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>{l.availableNow === true ? t("admin.active") : t("admin.paused")}</span></td>
                   <td className="px-4 py-3 text-muted-foreground">{l.views ?? 0}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
-                      <button onClick={() => openEdit(l)} className="rounded p-1 hover:bg-secondary"><Edit className="h-3.5 w-3.5 text-muted-foreground" /></button>
-                      <button onClick={() => handleDelete(l.id)} className="rounded p-1 hover:bg-secondary"><Trash2 className="h-3.5 w-3.5 text-destructive" /></button>
+                      <button aria-label={t("admin.edit")} onClick={() => openEdit(l)} className="rounded p-1 hover:bg-secondary"><Edit className="h-3.5 w-3.5 text-muted-foreground" /></button>
+                      <button aria-label={t("admin.delete")} onClick={() => handleDelete(l.id)} className="rounded p-1 hover:bg-secondary"><Trash2 className="h-3.5 w-3.5 text-destructive" /></button>
                     </div>
                   </td>
                 </tr>
@@ -194,9 +201,25 @@ export default function AdminListings() {
         </table>
       </div>
 
+      {/* Pagination */}
+      {total > limit && (
+        <div className="mt-4 flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">
+            {t("admin.pageOf").replace("{page}", String(page)).replace("{total}", String(totalPages))}
+          </span>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>{t("admin.prev")}</Button>
+            <Button variant="outline" size="sm" disabled={!hasMore} onClick={() => setPage((p) => p + 1)}>{t("admin.next")}</Button>
+          </div>
+        </div>
+      )}
+
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>{isNew ? t("admin.addNewListing") : t("admin.editListing")}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{isNew ? t("admin.addNewListing") : t("admin.editListing")}</DialogTitle>
+            <DialogDescription className="sr-only">{t("admin.listingDialogDescription")}</DialogDescription>
+          </DialogHeader>
           {editItem && (
             <div className="space-y-4">
               <div>
@@ -296,7 +319,7 @@ export default function AdminListings() {
 
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" onClick={() => setEditOpen(false)}>{t("admin.cancel")}</Button>
-                <Button onClick={handleSave} disabled={isMutating} className="bg-accent text-accent-foreground hover:bg-accent/90">
+                <Button onClick={handleSave} disabled={isMutating || !editItem?.supplierId} className="bg-accent text-accent-foreground hover:bg-accent/90">
                   {isMutating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                   {t("admin.save")}
                 </Button>

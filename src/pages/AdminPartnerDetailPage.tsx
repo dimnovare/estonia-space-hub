@@ -26,7 +26,7 @@ export default function AdminPartnerDetailPage() {
   const tab = (searchParams.get("tab") as Tab) || "overview";
   const setTab = (id: Tab) =>
     setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("tab", id); return n; }, { replace: true });
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const qc = useQueryClient();
 
   const { data: supplier, isLoading } = useQuery({
@@ -66,7 +66,7 @@ export default function AdminPartnerDetailPage() {
   }
 
   const s = supplier;
-  const previewUrl = s.slug ? `/et/partner/${s.slug}` : null;
+  const previewUrl = s.slug ? `/${language}/partner/${s.slug}` : null;
 
   const tabLabel: Record<Tab, string> = {
     overview: t("admin.partner.overview"),
@@ -133,7 +133,7 @@ export default function AdminPartnerDetailPage() {
             {s.integrationType === "api" && (
               <Button size="sm" variant="outline" onClick={() => syncMutation.mutate()} disabled={syncMutation.isPending}>
                 {syncMutation.isPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="mr-1.5 h-3.5 w-3.5" />}
-                Test connection
+                {t("admin.partnerDetail.routing.testConnection")}
               </Button>
             )}
           </div>

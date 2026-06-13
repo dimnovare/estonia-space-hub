@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Mail, Wifi, Hand, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useOrders, useApproveOrder, useRejectOrder, useUpdateOrderStatus } from "@/hooks/useOrders";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useOrdersPaged, useOrderStatusCounts, useApproveOrder, useRejectOrder, useUpdateOrderStatus } from "@/hooks/useOrders";
 import { SkeletonList } from "@/components/SkeletonCard";
 import { ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG, generateOrderEmailPreview } from "@/lib/constants";
 import type { Order, OrderStatus } from "@/services/types";
@@ -14,7 +14,16 @@ import { toast } from "sonner";
 
 export default function AdminOrders({ supplierId }: { supplierId?: string }) {
   const { t, language } = useLanguage();
-  const { data: orders = [], isLoading } = useOrders(supplierId);
+  const [filter, setFilter] = useState<"all" | OrderStatus>("all");
+  const [page, setPage] = useState(1);
+  const { data: counts = {} } = useOrderStatusCounts(supplierId);
+  const { data: pageData, isLoading } = useOrdersPaged({ supplierId, status: filter, page, limit: 50 });
+  // Tolerate both the paginated envelope and a raw array (mock / older responses).
+  const pd = pageData as { data?: Order[]; total?: number; limit?: number; hasMore?: boolean } | Order[] | undefined;
+  const orders: Order[] = Array.isArray(pd) ? pd : pd?.data ?? [];
+  const total = Array.isArray(pd) ? pd.length : pd?.total ?? orders.length;
+  const hasMore = Array.isArray(pd) ? false : pd?.hasMore ?? false;
+  const pageLimit = (Array.isArray(pd) ? 50 : pd?.limit) ?? 50;
   const updateStatus  = useUpdateOrderStatus();
   const approveOrder  = useApproveOrder();
   const rejectOrder   = useRejectOrder();
@@ -32,31 +41,34 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
     },
     onSuccess: () => {
       toast.success(t("admin.markPaidByWire"));
-      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.root() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all() });
     },
     onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : "";
       if (msg === "already_paid") {
-        toast.error("Invoice is already marked as paid.");
+        toast.error(t("admin.invoice.alreadyPaid"));
       } else {
-        toast.error(msg || "Failed to mark invoice as paid.");
+        toast.error(t("admin.invoice.markPaidFailed"));
       }
     },
   });
 
-  const [filter, setFilter] = useState<"all" | OrderStatus>("all");
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
   const [emailPreview, setEmailPreview] = useState(false);
 
-  const filtered = filter === "all" ? orders : orders.filter((o) => o.status === filter);
+  // Server returns only the active-status page; no client-side filtering.
+  const filtered = orders;
+  const totalPages = Math.max(1, Math.ceil(total / pageLimit));
+  const goToStatus = (f: "all" | OrderStatus) => { setFilter(f); setPage(1); };
 
   return (
     <div>
       <h1 className="font-display text-2xl font-bold">{t("admin.orders")}</h1>
       <div className="mt-4 flex gap-2 overflow-x-auto">
-        {(["all", "created", "sending", "sent", "confirmed", "rejected", "active", "completed"] as const).map((f) => (
-          <button key={f} onClick={() => setFilter(f)} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
-            {f === "all" ? `${t("admin.all")} (${orders.length})` : `${t(ORDER_STATUS_CONFIG[f].labelKey) || ORDER_STATUS_CONFIG[f].label} (${orders.filter((o) => o.status === f).length})`}
+        {(["all", "created", "sending", "sent", "confirmed", "rejected", "active", "completed", "cancelled"] as const).map((f) => (
+          <button key={f} onClick={() => goToStatus(f)} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
+            {f === "all" ? `${t("admin.all")} (${counts.all ?? 0})` : `${t(ORDER_STATUS_CONFIG[f].labelKey) || ORDER_STATUS_CONFIG[f].label} (${counts[f] ?? 0})`}
           </button>
         ))}
       </div>
@@ -128,9 +140,25 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
         </div>
       </div>
 
+      {/* Pagination */}
+      {total > pageLimit && (
+        <div className="mt-4 flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">
+            {t("admin.pageOf").replace("{page}", String(page)).replace("{total}", String(totalPages))}
+          </span>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>{t("admin.prev")}</Button>
+            <Button variant="outline" size="sm" disabled={!hasMore} onClick={() => setPage((p) => p + 1)}>{t("admin.next")}</Button>
+          </div>
+        </div>
+      )}
+
       <Dialog open={!!viewOrder} onOpenChange={() => { setViewOrder(null); setEmailPreview(false); }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>{t("admin.order")} {viewOrder?.id}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{t("admin.order")} {viewOrder?.id}</DialogTitle>
+            <DialogDescription className="sr-only">{t("admin.orderDetailDescription")}</DialogDescription>
+          </DialogHeader>
           {viewOrder && !emailPreview && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3 text-sm">

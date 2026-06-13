@@ -218,6 +218,24 @@ export const orderService = {
     if (params?.supplierId) qs.set("supplierId", params.supplierId);
     return apiClient.get<Order[]>(`/orders?${qs}`);
   },
+  // Server-side paginated + status-filtered fetch for the admin orders table.
+  // Returns the raw {data,total,page,limit,hasMore} envelope.
+  async getAllPaged(params: { supplierId?: string; status?: string; page?: number; limit?: number }): Promise<{ data: Order[]; total: number; page: number; limit: number; hasMore: boolean }> {
+    const qs = new URLSearchParams({
+      page:  String(params.page ?? 1),
+      limit: String(params.limit ?? 50),
+    });
+    if (params.supplierId) qs.set("supplierId", params.supplierId);
+    if (params.status && params.status !== "all") qs.set("status", params.status);
+    return apiClient.get(`/orders?${qs}`);
+  },
+  // Order counts by status (+ "all" total), scoped server-side to the caller.
+  async getStatusCounts(supplierId?: string): Promise<Record<string, number>> {
+    const url = supplierId
+      ? `/orders/status-counts?supplierId=${supplierId}`
+      : "/orders/status-counts";
+    return apiClient.get<Record<string, number>>(url);
+  },
   async getById(id: string): Promise<Order | undefined> {
     try { return await apiClient.get<Order>(`/orders/${id}`); } catch { return undefined; }
   },

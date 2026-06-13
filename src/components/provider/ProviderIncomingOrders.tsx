@@ -31,7 +31,13 @@ export default function ProviderIncomingOrders() {
   const [showEmail, setShowEmail] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const filtered = filter === "all" ? orders : orders.filter(o => o.status === filter);
+  // The "sent" tab badge counts both sent and created (pending) orders, so the
+  // filter must include "created" too — otherwise the list hides counted orders.
+  const filtered = filter === "all"
+    ? orders
+    : filter === "sent"
+      ? orders.filter(o => o.status === "sent" || o.status === "created")
+      : orders.filter(o => o.status === filter);
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => {

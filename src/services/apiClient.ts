@@ -61,8 +61,11 @@ class ApiClient {
         const csrf = tokenStore.getCsrf();
         try {
           const refreshHeaders: Record<string, string> = { "Content-Type": "application/json" };
-          if (!csrf) throw new Error("Session expired. Please log in again.");
-          refreshHeaders["X-CSRF-Token"] = csrf;
+          // Cookie-based refresh is accepted by the backend WITHOUT a CSRF token
+          // (needsCsrf only applies to body-sourced refresh). Send the CSRF token
+          // when we still hold it in memory, but don't block a valid cookie
+          // refresh just because a page reload cleared the in-memory token.
+          if (csrf) refreshHeaders["X-CSRF-Token"] = csrf;
           const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
             method:      "POST",
             credentials: "include",

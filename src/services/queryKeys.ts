@@ -5,8 +5,12 @@ export const queryKeys = {
     stats: () => ["bookings", "stats"] as const,
   },
   orders: {
+    root: () => ["orders"] as const,
     all: (params?: object) => ["orders", params] as const,
     byId: (id: string) => ["orders", id] as const,
+    paged: (params?: object) => ["orders", "paged", params] as const,
+    statusCounts: (supplierId?: string) =>
+      ["orders", "status-counts", supplierId ?? null] as const,
     leadSummary: (supplierId?: string) =>
       ["orders", "lead-summary", supplierId] as const,
   },

@@ -18,6 +18,29 @@ export function useOrders(supplierId?: string) {
   });
 }
 
+// Server-side paginated + status-filtered orders for the admin table. Kept
+// separate from useOrders so the six full-list consumers stay untouched.
+export function useOrdersPaged(opts: { supplierId?: string; status: string; page: number; limit?: number }) {
+  const { isAuthenticated } = useAuth();
+  return useQuery({
+    queryKey: queryKeys.orders.paged(opts),
+    queryFn: () => orderService.getAllPaged(opts),
+    enabled: isAuthenticated,
+    staleTime: 15_000,
+    placeholderData: (prev) => prev, // keep the current page visible during refetch
+  });
+}
+
+export function useOrderStatusCounts(supplierId?: string) {
+  const { isAuthenticated } = useAuth();
+  return useQuery({
+    queryKey: queryKeys.orders.statusCounts(supplierId),
+    queryFn: () => orderService.getStatusCounts(supplierId),
+    enabled: isAuthenticated,
+    staleTime: 15_000,
+  });
+}
+
 export function useOrder(id: string) {
   const { isAuthenticated } = useAuth();
   return useQuery({
@@ -32,7 +55,7 @@ export function useApproveOrder() {
   return useMutation({
     mutationFn: (id: string) => orderService.approve(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.root() });
     },
   });
 }
@@ -43,7 +66,7 @@ export function useRejectOrder() {
     mutationFn: ({ id, reason }: { id: string; reason: string }) =>
       orderService.reject(id, reason),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.root() });
     },
   });
 }
@@ -53,7 +76,7 @@ export function useConfirmOrder() {
   return useMutation({
     mutationFn: (id: string) => orderService.confirm(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.root() });
     },
   });
 }
@@ -64,7 +87,7 @@ export function useUpdateOrderStatus() {
     mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>
       orderService.updateStatus(id, status),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.root() });
       queryClient.invalidateQueries({ queryKey: queryKeys.adminStats.all() });
       queryClient.invalidateQueries({ queryKey: queryKeys.adminRevenue.all() });
     },
@@ -88,7 +111,7 @@ export function useUpdateLead() {
     mutationFn: ({ id, status, providerNotes, lastContactAt }: { id: string; status?: LeadStatus; providerNotes?: string; lastContactAt?: string }) =>
       orderService.updateLead(id, { status, providerNotes, lastContactAt }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.root() });
     },
   });
 }

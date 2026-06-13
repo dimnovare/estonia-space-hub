@@ -163,6 +163,30 @@ export default function SearchPage() {
   const [notifySuccess, setNotifySuccess] = useState(false);
   const [notifyError, setNotifyError] = useState(false);
 
+  // Incremental rendering: mount a window of cards and grow as the user scrolls,
+  // so a large result set does not mount hundreds of cards + lazy <img> up front.
+  const [visibleCount, setVisibleCount] = useState(24);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  // Reset the window whenever the result set changes (new search / filter).
+  useEffect(() => { setVisibleCount(24); }, [filtered]);
+
+  // Grow the window as the sentinel scrolls into view.
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting) setVisibleCount((c) => c + 24);
+    }, { rootMargin: "400px" });
+    io.observe(el);
+    return () => io.disconnect();
+    // Only re-create the observer on a new result set — NOT on each window grow
+    // (the functional setVisibleCount needs no current value), otherwise observe()
+    // re-fires its initial intersection and loads every batch in one burst.
+  }, [filtered]);
+
+  const shown = filtered.slice(0, visibleCount);
+
   const handleNotifySubmit = async () => {
     if (!notifyEmail.includes("@")) {
       setNotifyError(true);
@@ -294,8 +318,18 @@ export default function SearchPage() {
             <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" language={language} selectedId={selectedListingId} onMarkerClick={handleMarkerClick} onLocationClick={handleLocationClick} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
           </Suspense>
           {selectedListingId && (() => {
-            const selected = filtered.find(l => l.id === selectedListingId);
-            if (!selected) return null;
+            // A marker click sets selectedListingId to either a listing OR a
+            // location id, so resolve against both before giving up.
+            const sl = filtered.find(l => l.id === selectedListingId);
+            const loc = sl ? undefined : locations.find(l => l.id === selectedListingId);
+            if (!sl && !loc) return null;
+            const to        = sl ? `/${sl.type}/${sl.id}` : `/location/${loc!.id}`;
+            const img       = sl ? sl.image : loc!.images?.[0];
+            const cardTitle = sl ? sl.title : loc!.name;
+            const cardCity  = sl ? sl.city  : loc!.city;
+            const cardAddr  = sl ? sl.address : loc!.address;
+            const price     = sl ? sl.priceFrom : loc!.priceFrom;
+            const rating    = sl ? sl.rating : loc!.rating;
             return (
               <div className="absolute bottom-4 left-4 right-4 z-[1000]">
                 <div className="relative">
@@ -307,15 +341,17 @@ export default function SearchPage() {
                   >
                     <X className="h-4 w-4" />
                   </button>
-                  <Link to={`/${selected.type}/${selected.id}`} onClick={() => setSelectedListingId(null)}
+                  <Link to={to} onClick={() => setSelectedListingId(null)}
                     className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-lg">
-                    <img src={selected.image} alt={selected.title} className="h-16 w-20 rounded-lg object-cover shrink-0" />
+                    {img
+                      ? <img src={img} alt={cardTitle} className="h-16 w-20 rounded-lg object-cover shrink-0" />
+                      : <div className="h-16 w-20 rounded-lg bg-secondary shrink-0" />}
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{selected.title}</div>
-                      <div className="text-xs text-muted-foreground">{selected.city} · {selected.address}</div>
+                      <div className="text-sm font-medium truncate">{cardTitle}</div>
+                      <div className="text-xs text-muted-foreground truncate">{cardCity}{cardAddr ? ` · ${cardAddr}` : ""}</div>
                       <div className="mt-1 flex items-center gap-2">
-                        <span className="text-sm font-bold text-accent">{t("location.from")} {selected.priceFrom}€</span>
-                        <span className="text-xs text-muted-foreground">★ {selected.rating}</span>
+                        {price != null && <span className="text-sm font-bold text-accent">{t("location.from")} {price}€</span>}
+                        {rating != null && rating > 0 && <span className="text-xs text-muted-foreground">★ {rating}</span>}
                       </div>
                     </div>
                   </Link>
@@ -342,7 +378,7 @@ export default function SearchPage() {
               </span>
             )}
             <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-              <button onClick={() => isMobile ? setDrawerOpen(true) : setShowFilters(!showFilters)} className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary">
+              <button aria-label={t("search.filters")} onClick={() => isMobile ? setDrawerOpen(true) : setShowFilters(!showFilters)} className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary">
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t("search.filters")}</span>
                 {activeFiltersCount > 0 && (
@@ -540,12 +576,19 @@ export default function SearchPage() {
               )}
 
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
-                {filtered.map((l) => (
+                {shown.map((l) => (
                   <div key={l.id} className={`cursor-pointer rounded-xl transition-all ${selectedListingId === l.id ? "ring-2 ring-accent" : ""}`} onMouseEnter={() => setSelectedListingId(l.id)} onMouseLeave={() => setSelectedListingId(null)} onClick={() => setSelectedListingId(l.id)}>
                     <ListingCard listing={l} />
                   </div>
                 ))}
               </div>
+              {visibleCount < filtered.length && (
+                <div ref={loadMoreRef} className="mt-6 flex justify-center">
+                  <Button variant="outline" size="sm" onClick={() => setVisibleCount((c) => c + 24)}>
+                    {t("search.showMore")}
+                  </Button>
+                </div>
+              )}
               {filtered.length === 0 && locations.length === 0 && (
                 <div className="mx-auto flex max-w-md flex-col items-center rounded-2xl bg-secondary/30 px-6 py-16 text-center">
                   <Warehouse className="h-12 w-12 text-muted-foreground/50" />
