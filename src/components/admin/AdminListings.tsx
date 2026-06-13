@@ -1,6 +1,6 @@
 import { useState } from "react";
 import ImageUploader from "./ImageUploader";
-import { Warehouse, Truck, CarFront, Edit, Trash2, PlusCircle, Save, Loader2 } from "lucide-react";
+import { Warehouse, Truck, CarFront, Edit, Trash2, PlusCircle, Save, Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -20,6 +20,12 @@ export default function AdminListings() {
   const [editOpen, setEditOpen] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
   const [isNew, setIsNew] = useState(false);
+
+  // Bulk import
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkSupplierId, setBulkSupplierId] = useState("");
+  const [bulkText, setBulkText] = useState("");
+  const [bulkResult, setBulkResult] = useState<{ created: number; failed: number; results: { index: number; title: string; ok: boolean; error?: string }[] } | null>(null);
 
   const [page, setPage] = useState(1);
   const limit = 50;
@@ -41,6 +47,49 @@ export default function AdminListings() {
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.adminListings.all() });
     queryClient.invalidateQueries({ queryKey: queryKeys.listings.all() });
+  };
+
+  // Parse pasted rows: one unit per line, comma- or tab-separated columns
+  // title, type, city, price[, size, qty].
+  const parseBulk = (text: string) =>
+    text.split("\n").map(l => l.trim()).filter(Boolean).map(line => {
+      const cols = (line.includes("\t") ? line.split("\t") : line.split(",")).map(c => c.trim());
+      const [title, type, city, price, size, qty] = cols;
+      return {
+        title: title ?? "",
+        type: (type || "warehouse").toLowerCase(),
+        city: city ?? "",
+        priceFrom: parseFloat(price) || 0,
+        sizeM2: size ? parseFloat(size) : undefined,
+        quantityTotal: qty ? parseInt(qty, 10) : undefined,
+      };
+    });
+
+  const bulkImport = useMutation({
+    mutationFn: (vars: { supplierId: string; rows: unknown[] }) =>
+      apiClient.post<{ created: number; failed: number; results: { index: number; title: string; ok: boolean; error?: string }[] }>(
+        "/admin/listings/bulk", { supplierId: vars.supplierId, listings: vars.rows }),
+    onSuccess: (data) => {
+      setBulkResult(data);
+      invalidate();
+      if (data.failed === 0) toast.success(t("admin.bulkImportResult").replace("{created}", String(data.created)).replace("{failed}", String(data.failed)));
+    },
+    onError: (err: any) => toast.error(err?.message || t("toast.error")),
+  });
+
+  const runBulk = () => {
+    if (!bulkSupplierId) { toast.error(t("admin.bulkImportSupplierRequired")); return; }
+    const rows = parseBulk(bulkText);
+    if (rows.length === 0) { toast.error(t("admin.bulkImportEmpty")); return; }
+    setBulkResult(null);
+    bulkImport.mutate({ supplierId: bulkSupplierId, rows });
+  };
+
+  const openBulk = () => {
+    setBulkResult(null);
+    setBulkText("");
+    setBulkSupplierId(suppliers[0]?.id ?? "");
+    setBulkOpen(true);
   };
 
   const createMutation = useMutation({
@@ -137,7 +186,10 @@ export default function AdminListings() {
     <div>
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">{t("admin.listings")}</h1>
-        <Button onClick={openNew} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90"><PlusCircle className="mr-1 h-3.5 w-3.5" /> {t("admin.addListing")}</Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={openBulk} size="sm" variant="outline"><Upload className="mr-1 h-3.5 w-3.5" /> {t("admin.bulkImport")}</Button>
+          <Button onClick={openNew} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90"><PlusCircle className="mr-1 h-3.5 w-3.5" /> {t("admin.addListing")}</Button>
+        </div>
       </div>
       {/* Mobile cards */}
       <div className="mt-4 space-y-2 sm:hidden">
@@ -213,6 +265,53 @@ export default function AdminListings() {
           </div>
         </div>
       )}
+
+      <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t("admin.bulkImportTitle")}</DialogTitle>
+            <DialogDescription>{t("admin.bulkImportHint")}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label htmlFor="bulk-partner" className="text-xs font-medium text-muted-foreground">{t("admin.listings.partner")}</label>
+              <select id="bulk-partner" className={inp} value={bulkSupplierId} onChange={e => setBulkSupplierId(e.target.value)}>
+                <option value="">— {t("admin.listings.partner")} —</option>
+                {suppliers.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="bulk-rows" className="text-xs font-medium text-muted-foreground">{t("admin.bulkImportTitle")}</label>
+              <textarea
+                id="bulk-rows"
+                className={inp + " min-h-[140px] font-mono text-xs"}
+                value={bulkText}
+                onChange={e => setBulkText(e.target.value)}
+                placeholder={t("admin.bulkImportPlaceholder")}
+              />
+            </div>
+            {bulkResult && (
+              <div className="rounded-lg border border-border p-3 text-sm">
+                <p className="font-medium">{t("admin.bulkImportResult").replace("{created}", String(bulkResult.created)).replace("{failed}", String(bulkResult.failed))}</p>
+                {bulkResult.results.filter(r => !r.ok).length > 0 && (
+                  <ul className="mt-2 space-y-1 text-xs text-destructive">
+                    {bulkResult.results.filter(r => !r.ok).map(r => (
+                      <li key={r.index}>#{r.index + 1} {r.title || "—"}: {r.error}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setBulkOpen(false)}>{t("admin.cancel")}</Button>
+              <Button onClick={runBulk} disabled={bulkImport.isPending} className="bg-accent text-accent-foreground hover:bg-accent/90">
+                {bulkImport.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                {t("admin.bulkImportRun")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
