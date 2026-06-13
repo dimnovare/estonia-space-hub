@@ -204,18 +204,11 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <>
-              <Link to="/login">
-                <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
-                  <User className="h-4 w-4" /> {t("nav.myAccount")}
-                </Button>
-              </Link>
-              <Link to="/login">
-                <Button variant="outline" size="sm" className="gap-2">
-                  <LogIn className="h-4 w-4" /> {t("nav.login")}
-                </Button>
-              </Link>
-            </>
+            <Link to="/login">
+              <Button variant="outline" size="sm" className="gap-2">
+                <LogIn className="h-4 w-4" /> {t("nav.login")}
+              </Button>
+            </Link>
           )}
         </div>
 
@@ -302,14 +295,9 @@ export default function Navbar() {
                     </Button>
                   </>
                 ) : (
-                  <div className="flex gap-2">
-                    <Link to="/login" className="flex-1" onClick={() => setOpen(false)}>
-                      <Button variant="outline" className="w-full">{t("nav.myAccount")}</Button>
-                    </Link>
-                    <Link to="/login" className="flex-1" onClick={() => setOpen(false)}>
-                      <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">{t("nav.login")}</Button>
-                    </Link>
-                  </div>
+                  <Link to="/login" className="block" onClick={() => setOpen(false)}>
+                    <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">{t("nav.login")}</Button>
+                  </Link>
                 )}
               </div>
             </SheetContent>
