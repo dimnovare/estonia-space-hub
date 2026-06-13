@@ -85,7 +85,7 @@ export default function Footer() {
               {t("footer.supportEmail")}: info@ruumly.eu
             </a>
             <span className="opacity-40">·</span>
-            <span>Tallinn, Estonia</span>
+            <span>{t("footer.location")}</span>
           </div>
         </div>
       </div>

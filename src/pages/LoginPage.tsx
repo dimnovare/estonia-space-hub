@@ -126,7 +126,7 @@ function LoginPageInner() {
             <KeyRound className="h-8 w-8 text-accent" />
           </div>
           <h1 className="mt-4 text-center font-display text-2xl font-bold">{t("form.newPassword")}</h1>
-          <p className="mt-2 text-center text-sm text-muted-foreground">Vali uus parool oma kontole.</p>
+          <p className="mt-2 text-center text-sm text-muted-foreground">{t("form.newPasswordHint")}</p>
           <form onSubmit={handleReset} className="mt-6 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="reset-password">{t("form.newPassword")}</Label>
@@ -202,7 +202,7 @@ function LoginPageInner() {
             </div>
             <Button type="submit" className="w-full bg-accent py-5 text-accent-foreground hover:bg-accent/90" disabled={forgotLoading}>
               {forgotLoading
-                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saadame...</>
+                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t("form.sending")}</>
                 : t("login.sendReset")}
             </Button>
           </form>
@@ -273,35 +273,35 @@ function LoginPageInner() {
           <form key="register" onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="reg-name">{t("login.name")}</Label>
-              <Input id="reg-name" placeholder={t("login.namePlaceholder")} {...registerForm.register("name")} />
-              {registerForm.formState.errors.name && <p className="text-xs text-destructive">{registerForm.formState.errors.name.message}</p>}
+              <Input id="reg-name" placeholder={t("login.namePlaceholder")} {...registerForm.register("name")} aria-invalid={!!registerForm.formState.errors.name} aria-describedby={registerForm.formState.errors.name ? "reg-name-error" : undefined} />
+              {registerForm.formState.errors.name && <p id="reg-name-error" role="alert" className="text-xs text-destructive">{registerForm.formState.errors.name.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="reg-email">{t("login.email")}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="reg-email" type="email" placeholder={t("login.emailPlaceholder")} {...registerForm.register("email")} className="pl-10" />
+                <Input id="reg-email" type="email" placeholder={t("login.emailPlaceholder")} {...registerForm.register("email")} className="pl-10" aria-invalid={!!registerForm.formState.errors.email} aria-describedby={registerForm.formState.errors.email ? "reg-email-error" : undefined} />
               </div>
-              {registerForm.formState.errors.email && <p className="text-xs text-destructive">{registerForm.formState.errors.email.message}</p>}
+              {registerForm.formState.errors.email && <p id="reg-email-error" role="alert" className="text-xs text-destructive">{registerForm.formState.errors.email.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="reg-password">{t("login.password")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="reg-password" type={showPassword ? "text" : "password"} placeholder="••••••••" {...registerForm.register("password")} className="pl-10 pr-10" />
+                <Input id="reg-password" type={showPassword ? "text" : "password"} placeholder="••••••••" {...registerForm.register("password")} className="pl-10 pr-10" aria-invalid={!!registerForm.formState.errors.password} aria-describedby={registerForm.formState.errors.password ? "reg-password-error" : undefined} />
                 <button type="button" aria-label={showPassword ? t("login.hidePassword") || "Hide password" : t("login.showPassword") || "Show password"} onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              {registerForm.formState.errors.password && <p className="text-xs text-destructive">{registerForm.formState.errors.password.message}</p>}
+              {registerForm.formState.errors.password && <p id="reg-password-error" role="alert" className="text-xs text-destructive">{registerForm.formState.errors.password.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="reg-confirm">{t("login.confirmPassword")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="reg-confirm" type={showPassword ? "text" : "password"} placeholder="••••••••" {...registerForm.register("confirmPassword")} className="pl-10" />
+                <Input id="reg-confirm" type={showPassword ? "text" : "password"} placeholder="••••••••" {...registerForm.register("confirmPassword")} className="pl-10" aria-invalid={!!registerForm.formState.errors.confirmPassword} aria-describedby={registerForm.formState.errors.confirmPassword ? "reg-confirm-error" : undefined} />
               </div>
-              {registerForm.formState.errors.confirmPassword && <p className="text-xs text-destructive">{registerForm.formState.errors.confirmPassword.message}</p>}
+              {registerForm.formState.errors.confirmPassword && <p id="reg-confirm-error" role="alert" className="text-xs text-destructive">{registerForm.formState.errors.confirmPassword.message}</p>}
             </div>
             {inviteCodeRequired && (
               <div className="space-y-2">
@@ -324,20 +324,20 @@ function LoginPageInner() {
               <Label htmlFor="login-email">{t("login.email")}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="login-email" type="email" placeholder={t("login.emailPlaceholder")} {...loginForm.register("email")} className="pl-10" />
+                <Input id="login-email" type="email" placeholder={t("login.emailPlaceholder")} {...loginForm.register("email")} className="pl-10" aria-invalid={!!loginForm.formState.errors.email} aria-describedby={loginForm.formState.errors.email ? "login-email-error" : undefined} />
               </div>
-              {loginForm.formState.errors.email && <p className="text-xs text-destructive">{loginForm.formState.errors.email.message}</p>}
+              {loginForm.formState.errors.email && <p id="login-email-error" role="alert" className="text-xs text-destructive">{loginForm.formState.errors.email.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="login-password">{t("login.password")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="login-password" type={showPassword ? "text" : "password"} placeholder="••••••••" {...loginForm.register("password")} className="pl-10 pr-10" />
+                <Input id="login-password" type={showPassword ? "text" : "password"} placeholder="••••••••" {...loginForm.register("password")} className="pl-10 pr-10" aria-invalid={!!loginForm.formState.errors.password} aria-describedby={loginForm.formState.errors.password ? "login-password-error" : undefined} />
                 <button type="button" aria-label={showPassword ? t("login.hidePassword") || "Hide password" : t("login.showPassword") || "Show password"} onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              {loginForm.formState.errors.password && <p className="text-xs text-destructive">{loginForm.formState.errors.password.message}</p>}
+              {loginForm.formState.errors.password && <p id="login-password-error" role="alert" className="text-xs text-destructive">{loginForm.formState.errors.password.message}</p>}
             </div>
 
             <div className="text-right">

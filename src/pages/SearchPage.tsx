@@ -104,9 +104,16 @@ export default function SearchPage() {
   const { data: result, isLoading } = useListings(filters);
   const serverFiltered = result?.data || [];
 
+  // Storage-only gating: in the "all" view the API would otherwise return
+  // moving/trailer-only location cards. When both verticals are off, scope the
+  // query to warehouse so those cards never render.
+  const storageOnly = !showMovingService && !showTrailerService;
+  const locationsType = activeType !== "all"
+    ? activeType
+    : (storageOnly ? "warehouse" : undefined);
   const { data: locationsRaw = [] } = useLocations({
     city: cityFilter || undefined,
-    type: activeType !== "all" ? activeType : undefined,
+    type: locationsType,
   });
   // Locations are useful for browse-by-area, not for narrow filters.
   // Hide whenever a filter applies to Listings only (not to Locations),
@@ -151,9 +158,14 @@ export default function SearchPage() {
   const [notifyEmail, setNotifyEmail] = useState("");
   const [notifyLoading, setNotifyLoading] = useState(false);
   const [notifySuccess, setNotifySuccess] = useState(false);
+  const [notifyError, setNotifyError] = useState(false);
 
   const handleNotifySubmit = async () => {
-    if (!notifyEmail.includes("@")) return;
+    if (!notifyEmail.includes("@")) {
+      setNotifyError(true);
+      return;
+    }
+    setNotifyError(false);
     setNotifyLoading(true);
     try {
       await apiClient.post("/auth/notify-interest", {
@@ -279,18 +291,28 @@ export default function SearchPage() {
             if (!selected) return null;
             return (
               <div className="absolute bottom-4 left-4 right-4 z-[1000]">
-                <Link to={`/${selected.type}/${selected.id}`} onClick={() => setSelectedListingId(null)}
-                  className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-lg">
-                  <img src={selected.image} alt={selected.title} className="h-16 w-20 rounded-lg object-cover shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{selected.title}</div>
-                    <div className="text-xs text-muted-foreground">{selected.city} · {selected.address}</div>
-                    <div className="mt-1 flex items-center gap-2">
-                      <span className="text-sm font-bold text-accent">al. {selected.priceFrom}€</span>
-                      <span className="text-xs text-muted-foreground">★ {selected.rating}</span>
+                <div className="relative">
+                  <button
+                    type="button"
+                    aria-label={t("common.close")}
+                    onClick={() => setSelectedListingId(null)}
+                    className="absolute -top-2 -right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-md hover:text-foreground"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                  <Link to={`/${selected.type}/${selected.id}`} onClick={() => setSelectedListingId(null)}
+                    className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-lg">
+                    <img src={selected.image} alt={selected.title} className="h-16 w-20 rounded-lg object-cover shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate">{selected.title}</div>
+                      <div className="text-xs text-muted-foreground">{selected.city} · {selected.address}</div>
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className="text-sm font-bold text-accent">{t("location.from")} {selected.priceFrom}€</span>
+                        <span className="text-xs text-muted-foreground">★ {selected.rating}</span>
+                      </div>
                     </div>
-                  </div>
-                </Link>
+                  </Link>
+                </div>
               </div>
             );
           })()}
@@ -499,7 +521,7 @@ export default function SearchPage() {
                             </span>
                           )}
                           {loc.unitCount > 0 && loc.availableUnits > 0 && loc.availableUnits <= 3 && (
-                            <span className="text-xs font-medium text-warning">
+                            <span className="text-xs font-medium text-warning-text">
                               🔥 {t("search.unitsLeft").replace("{n}", String(loc.availableUnits))}
                             </span>
                           )}
@@ -542,25 +564,32 @@ export default function SearchPage() {
                         {t("search.notifySuccess")}
                       </p>
                     ) : (
-                      <div className="mt-6 flex w-full items-center gap-2">
-                        <input
-                          type="email"
-                          placeholder={t("search.notifyEmail")}
-                          value={notifyEmail}
-                          onChange={(e) => setNotifyEmail(e.target.value)}
-                          onKeyDown={(e) => e.key === "Enter" && handleNotifySubmit()}
-                          className="flex-1 rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                        />
-                        <Button
-                          size="sm"
-                          className="bg-accent text-accent-foreground hover:bg-accent/90"
-                          disabled={notifyLoading}
-                          onClick={handleNotifySubmit}
-                        >
-                          {notifyLoading
-                            ? <Loader2 className="h-4 w-4 animate-spin" />
-                            : t("search.notifyMe")}
-                        </Button>
+                      <div className="mt-6 w-full">
+                        <div className="flex w-full items-center gap-2">
+                          <input
+                            type="email"
+                            aria-label={t("search.notifyEmail")}
+                            aria-invalid={notifyError}
+                            placeholder={t("search.notifyEmail")}
+                            value={notifyEmail}
+                            onChange={(e) => { setNotifyEmail(e.target.value); if (notifyError) setNotifyError(false); }}
+                            onKeyDown={(e) => e.key === "Enter" && handleNotifySubmit()}
+                            className={`flex-1 rounded-lg border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent ${notifyError ? "border-destructive" : "border-border"}`}
+                          />
+                          <Button
+                            size="sm"
+                            className="bg-accent text-accent-foreground hover:bg-accent/90"
+                            disabled={notifyLoading}
+                            onClick={handleNotifySubmit}
+                          >
+                            {notifyLoading
+                              ? <Loader2 className="h-4 w-4 animate-spin" />
+                              : t("search.notifyMe")}
+                          </Button>
+                        </div>
+                        {notifyError && (
+                          <p className="mt-1.5 text-left text-xs text-destructive">{t("search.notifyEmailInvalid")}</p>
+                        )}
                       </div>
                     )
                   ) : (

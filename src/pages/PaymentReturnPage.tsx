@@ -7,22 +7,34 @@ import { SEO } from "@/components/SEO";
 import { trackEvent } from "@/lib/analytics";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
+import { invoiceService } from "@/services";
 import { useAuth } from "@/contexts/AuthContext";
 import { queryKeys } from "@/services/queryKeys";
 
 export default function PaymentReturnPage() {
   const [searchParams] = useSearchParams();
+  // Keep the booking id and invoice id strictly separate: the by-booking
+  // endpoint only accepts a booking id, so folding an invoice id into it
+  // would query the wrong record (404 / stuck spinner).
   const invoiceId = searchParams.get("invoice");
-  const bookingId = searchParams.get("booking") || searchParams.get("id") || invoiceId;
+  const bookingId = searchParams.get("booking") || searchParams.get("id");
+  const statusKey = bookingId ?? invoiceId ?? "";
   const { t } = useLanguage();
   const { isAuthenticated } = useAuth();
   const pollCount = useRef(0);
   const [isPollTimeout, setIsPollTimeout] = useState(false);
 
   const { data: invoice } = useQuery({
-    queryKey: queryKeys.invoiceStatus.byId(bookingId ?? ""),
-    queryFn: () => apiClient.get<{ status: string }>(`/invoices/by-booking/${bookingId}`),
-    enabled: !!bookingId && isAuthenticated,
+    queryKey: queryKeys.invoiceStatus.byId(statusKey),
+    queryFn: async () => {
+      // Real booking id → query by booking. Otherwise resolve the invoice by its own id.
+      if (bookingId) {
+        return apiClient.get<{ status: string }>(`/invoices/by-booking/${bookingId}/status`);
+      }
+      const inv = await invoiceService.getById(invoiceId!);
+      return inv ? { status: inv.status as string } : undefined;
+    },
+    enabled: !!statusKey && isAuthenticated,
     refetchInterval: (query) => {
       const s = (query.state.data as { status: string } | undefined)?.status;
       if (s === "pending" || s === "awaitingpayment") {
@@ -43,10 +55,10 @@ export default function PaymentReturnPage() {
   const isPaid = !!invoice && status === "paid";
 
   useEffect(() => {
-    if (bookingId && isPaid) {
-      trackEvent("booking_completed", { bookingId });
+    if (statusKey && isPaid) {
+      trackEvent("booking_completed", { bookingId: statusKey });
     }
-  }, [bookingId, isPaid]);
+  }, [statusKey, isPaid]);
 
   return (
     <div className="container-wide flex min-h-[60vh] items-center justify-center py-16">
@@ -56,7 +68,32 @@ export default function PaymentReturnPage() {
         noindex={true}
       />
       <div className="mx-auto max-w-md w-full text-center">
-        {isFailed ? (
+        {!isAuthenticated ? (
+          <>
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+              <CheckCircle className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h1 className="mt-4 font-display text-2xl font-bold">
+              {t("payment.returnTitle")}
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {t("payment.loginToCheck")}
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
+              <Link to="/login">
+                <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
+                  {t("nav.login")}
+                </Button>
+              </Link>
+              <Link to="/account?tab=bookings">
+                <Button variant="outline">{t("booking.myBookings")}</Button>
+              </Link>
+              <Link to="/contact">
+                <Button variant="outline">{t("payment.contactSupport")}</Button>
+              </Link>
+            </div>
+          </>
+        ) : isFailed ? (
           <>
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
               <XCircle className="h-8 w-8 text-destructive" />

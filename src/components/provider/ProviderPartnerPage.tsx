@@ -177,14 +177,14 @@ export default function ProviderPartnerPage() {
         </h2>
         <div className="mt-3 space-y-4">
           <div>
-            <label className="text-xs font-medium">Logo URL</label>
+            <label className="text-xs font-medium">{t("provider.partnerPage.logoUrl")}</label>
             <input className={inp} value={form.logoUrl} onChange={(e) => update({ logoUrl: e.target.value })} />
             {form.logoUrl && (
               <img src={form.logoUrl} alt="" className="mt-2 h-[60px] rounded-lg border border-border object-contain p-1" />
             )}
           </div>
           <div>
-            <label className="text-xs font-medium">Hero image URL</label>
+            <label className="text-xs font-medium">{t("provider.partnerPage.heroImageUrl")}</label>
             <input className={inp} value={form.heroImageUrl} onChange={(e) => update({ heroImageUrl: e.target.value })} />
             {form.heroImageUrl && (
               <img src={form.heroImageUrl} alt="" className="mt-2 h-[160px] w-full rounded-xl border border-border object-cover" />
@@ -192,7 +192,7 @@ export default function ProviderPartnerPage() {
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="text-xs font-medium">Website URL</label>
+              <label className="text-xs font-medium">{t("provider.partnerPage.websiteUrl")}</label>
               <input
                 className={inp}
                 placeholder="https://example.com"
@@ -201,7 +201,7 @@ export default function ProviderPartnerPage() {
               />
             </div>
             <div>
-              <label className="text-xs font-medium">Founded year</label>
+              <label className="text-xs font-medium">{t("provider.partnerPage.foundedYear")}</label>
               <input
                 type="number"
                 min={1900}

@@ -4,6 +4,7 @@ import { ArrowLeft, MapPin, Clock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "@/hooks/queries";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
 import { formatPriceUnit } from "@/lib/priceUnit";
 import { EmailVerificationGate } from "@/components/EmailVerificationGate";
@@ -11,8 +12,16 @@ import { EmailVerificationGate } from "@/components/EmailVerificationGate";
 export default function LocationDetailPage() {
   const { id } = useParams();
   const { t } = useLanguage();
+  const { showMovingService, showTrailerService } = usePlatformSettings();
   const { data: location, isLoading, isError } = useLocation(id);
   const [showEmailGate, setShowEmailGate] = useState(false);
+
+  // Storage-only gating: hide units belonging to a disabled service vertical
+  // (mirrors HomePage.tsx hideDisabled).
+  const hideDisabled = (u: { type?: string }) =>
+    (showMovingService  || u.type !== "moving") &&
+    (showTrailerService || u.type !== "trailer");
+  const visibleUnits = (location?.units ?? []).filter(hideDisabled);
 
   if (isLoading) {
     return (
@@ -140,9 +149,9 @@ export default function LocationDetailPage() {
       </p>
 
       {/* Units grid */}
-      {location.units && location.units.length > 0 ? (
+      {visibleUnits.length > 0 ? (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {location.units.map((unit) => (
+          {visibleUnits.map((unit) => (
             <div
               key={unit.id}
               className="overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-md"

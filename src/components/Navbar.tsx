@@ -61,6 +61,19 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Close the hand-rolled language / user menus on Escape (Radix-free a11y).
+  useEffect(() => {
+    if (!langOpen && !userMenuOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setLangOpen(false);
+        setUserMenuOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [langOpen, userMenuOpen]);
+
   const handleLogout = () => {
     logout();
     setUserMenuOpen(false);
@@ -108,6 +121,9 @@ export default function Navbar() {
           <div className="relative">
             <button
               onClick={() => setLangOpen(prev => !prev)}
+              aria-haspopup="menu"
+              aria-expanded={langOpen}
+              aria-label={t("nav.language")}
               className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-secondary"
             >
               <FlagIcon lang={language} />
@@ -117,10 +133,12 @@ export default function Navbar() {
             {langOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setLangOpen(false)} />
-                <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-xl border border-border bg-card py-1 shadow-lg">
+                <div role="menu" aria-label={t("nav.language")} className="absolute right-0 top-full z-50 mt-1 w-44 rounded-xl border border-border bg-card py-1 shadow-lg">
                   {LANGUAGES.map((lang) => (
                     <button
                       key={lang.code}
+                      role="menuitemradio"
+                      aria-checked={language === lang.code}
                       onClick={() => { setLanguage(lang.code as Language); setLangOpen(false); }}
                       className={`flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors ${
                         language === lang.code
@@ -147,7 +165,7 @@ export default function Navbar() {
                     <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-accent-foreground">{unreadCount}</span>
                   </Link>
                 )}
-                <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-secondary transition-colors">
+                <button onClick={() => setUserMenuOpen(!userMenuOpen)} aria-haspopup="menu" aria-expanded={userMenuOpen} aria-label={t("nav.myAccount")} className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-secondary transition-colors">
                   <div className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
                     {user?.name?.charAt(0) || "U"}
                   </div>
@@ -159,26 +177,26 @@ export default function Navbar() {
               {userMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
-                  <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-xl border border-border bg-card p-1 shadow-lg">
+                  <div role="menu" aria-label={t("nav.myAccount")} className="absolute right-0 top-full z-50 mt-1 w-56 rounded-xl border border-border bg-card p-1 shadow-lg">
                     <div className="px-3 py-2 border-b border-border mb-1">
                       <p className="text-sm font-medium">{user?.name}</p>
                       <p className="text-xs text-muted-foreground">{user?.email}</p>
                       <span className="mt-1 inline-block rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent capitalize">{role}</span>
                     </div>
-                    <Link to="/account" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-secondary">
+                    <Link to="/account" role="menuitem" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-secondary">
                       <User className="h-4 w-4 text-muted-foreground" /> {t("nav.myAccount")}
                     </Link>
                     {(role === "provider" || role === "admin") && (
-                      <Link to="/provider/dashboard" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-secondary">
+                      <Link to="/provider/dashboard" role="menuitem" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-secondary">
                         <LayoutDashboard className="h-4 w-4 text-muted-foreground" /> {t("nav.providerDashboard")}
                       </Link>
                     )}
                     {role === "admin" && (
-                      <Link to="/admin" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-secondary">
+                      <Link to="/admin" role="menuitem" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-secondary">
                         <Shield className="h-4 w-4 text-muted-foreground" /> Admin
                       </Link>
                     )}
-                    <button onClick={handleLogout} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-destructive hover:bg-destructive/10">
+                    <button onClick={handleLogout} role="menuitem" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-destructive hover:bg-destructive/10">
                       <LogOut className="h-4 w-4" /> {t("nav.logout")}
                     </button>
                   </div>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { CheckCircle, Loader2, X, Download, FileText, ShieldCheck, Info, Smartphone } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -658,7 +658,8 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
     ctx.clearRect(0, 0, c.width, c.height);
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, c.width, c.height);
-    setHasSigned(false);
+    // Keep "signed" if the user has acknowledged by typing their name (a11y path).
+    setHasSigned(name.trim().length > 0);
   };
 
   const signMutation = useMutation({
@@ -731,14 +732,17 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0">
         <div className="border-b border-border p-5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm font-semibold">
+            <DialogTitle className="flex items-center gap-2 text-sm font-semibold leading-none tracking-normal">
               <FileText className="h-4 w-4 text-accent" />
               {t("contract.signNow")}
-            </div>
+            </DialogTitle>
             <span className="text-xs text-muted-foreground">
               {`Step ${step} of 3 — ${stepLabel}`}
             </span>
           </div>
+          <DialogDescription className="sr-only">
+            {t("contract.dialogDescription")}
+          </DialogDescription>
           <Progress value={(step / 3) * 100} className="mt-3 h-1.5" />
         </div>
 
@@ -885,6 +889,8 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
                     ref={canvasRef}
                     width={600}
                     height={180}
+                    role="img"
+                    aria-label={t("contract.signatureCanvasLabel")}
                     className="w-full touch-none rounded-xl border-2 border-dashed border-border bg-white cursor-crosshair"
                     onMouseDown={startDraw}
                     onMouseMove={draw}
@@ -894,6 +900,30 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
                     onTouchMove={draw}
                     onTouchEnd={endDraw}
                   />
+                  <p className="text-xs text-muted-foreground">{t("contract.signatureCanvasHint")}</p>
+
+                  {/* Keyboard / assistive-tech accessible alternative to drawing:
+                      typing the full name acknowledges & enables Confirm. */}
+                  <div>
+                    <label htmlFor="contract-ack-name" className="text-xs font-medium">
+                      {t("contract.typeNameToSignLabel")}
+                    </label>
+                    <input
+                      id="contract-ack-name"
+                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                      maxLength={200}
+                      autoComplete="name"
+                      value={name}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setName(v);
+                        setHasSigned(v.trim().length > 0);
+                      }}
+                      placeholder={t("contract.typeNameToSignPlaceholder")}
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">{t("contract.typeNameToSignHint")}</p>
+                  </div>
+
                   <div className="flex items-center justify-between">
                     <Button variant="ghost" size="sm" onClick={clearSignature}>
                       {t("contract.clearSignature")}

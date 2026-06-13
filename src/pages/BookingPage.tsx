@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { useSearchParams, Link } from "@/i18n/routing";
-import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand, Info, Warehouse, Lock, ShieldCheck, Shield, RefreshCw } from "lucide-react";
+import { useSearchParams, Link, Navigate } from "@/i18n/routing";
+import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand, Info, Warehouse, Lock, ShieldCheck, Shield, RefreshCw, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListing, useCreateBooking, useSuppliers, usePricingConfig, useListingExtras } from "@/hooks/queries";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { useQuery } from "@tanstack/react-query";
 import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -110,6 +111,14 @@ export default function BookingPage() {
 
   const { isAuthenticated, user } = useAuth();
   const hasToken = !!tokenStore.getAccess();
+  const { showMovingService, showTrailerService } = usePlatformSettings();
+  // Storage-only gate: a hidden vertical must never reach the booking flow. The
+  // backend already 404s these, but redirect on the client too for UX/defense.
+  // (Only act once the listing has loaded — before that, type is unknown.)
+  const verticalHidden = !!listing && (
+    (listing.type === "moving" && !showMovingService) ||
+    (listing.type === "trailer" && !showTrailerService)
+  );
 
   const steps = [t("booking.detailsAndExtras"), t("booking.contactAndAuth"), t("booking.paymentAndReview")];
 
@@ -336,6 +345,15 @@ export default function BookingPage() {
       return;
     }
 
+    // Pay-now but no invoice to charge — payment was never initiated. Do NOT show
+    // success: surface the 'signed, retry payment' screen so the user can retry,
+    // rather than leaving a paid booking with no payment.
+    if (isPayNow && !createdInvoiceId) {
+      toast.error(t("booking.errorPayment"));
+      setPaymentFailed(true);
+      return;
+    }
+
     // pay-later / rebate: no Montonio — the contract is signed; invoice to follow.
     setSubmitted(true);
   };
@@ -356,6 +374,11 @@ export default function BookingPage() {
     const t3 = setTimeout(() => setPhase("done"), 4200);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [submitted]);
+
+  // Storage-only gate: bounce hidden Moving/Trailer listings back to search.
+  if (verticalHidden) {
+    return <Navigate to="/search" replace />;
+  }
 
   // ── Finalise your rental — sign gate (mandatory) → pay ──
   // One continuous sequence framed around the signing modal. Shown after the booking
@@ -491,7 +514,7 @@ export default function BookingPage() {
             )}
           </div>
 
-          <div className="mt-8 space-y-3">
+          <div className="mt-8 space-y-3" aria-live="polite">
             {[
               { label: t("booking.phase.orderCreated"), done: phase !== "submitting" },
               { label: supplier?.integrationType === "api" ? t("booking.phase.sentApi") : supplier?.integrationType === "email" ? t("booking.phase.sentEmail") : t("booking.phase.awaitingOp"), done: phase === "waiting" || phase === "done" },
@@ -500,6 +523,7 @@ export default function BookingPage() {
               <div key={i} className={`flex items-center gap-3 rounded-lg border p-3 transition-all ${s.done ? "border-success/30 bg-success/5" : "border-border"}`}>
                 {s.done ? <CheckCircle className="h-5 w-5 text-success shrink-0" /> : <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30 shrink-0" />}
                 <span className={`text-sm font-medium ${s.done ? "text-foreground" : "text-muted-foreground"}`}>{s.label}</span>
+                <span className="sr-only">{s.done ? t("booking.phase.stepDone") : t("booking.phase.stepInProgress")}</span>
               </div>
             ))}
           </div>
@@ -580,13 +604,13 @@ export default function BookingPage() {
                     )}
                     <div>
                       <div className="text-sm font-semibold">{listing.title}</div>
-                      <div className="text-xs text-muted-foreground">{listing.city} · al. {listing.priceFrom}€</div>
+                      <div className="text-xs text-muted-foreground">{listing.city} · {t("location.from")} {listing.priceFrom}€</div>
                     </div>
                   </div>
                 )}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block text-sm font-medium">{t("booking.startDate")}</label>
+                    <label htmlFor="booking-start-date" className="mb-1 block text-sm font-medium">{t("booking.startDate")}</label>
                     <Controller
                       control={detailsForm.control}
                       name="startDate"
@@ -597,6 +621,7 @@ export default function BookingPage() {
                           <Popover>
                             <PopoverTrigger asChild>
                               <button
+                                id="booking-start-date"
                                 type="button"
                                 className={cn(
                                   "w-full rounded-lg border border-border bg-card px-3 py-2 text-left text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent",
@@ -623,7 +648,7 @@ export default function BookingPage() {
                     {detailsForm.formState.errors.startDate && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.startDate.message}</p>}
                   </div>
                   <div>
-                    <label className="mb-1 block text-sm font-medium">{t("booking.endDate")}</label>
+                    <label htmlFor="booking-end-date" className="mb-1 block text-sm font-medium">{t("booking.endDate")}</label>
                     <Controller
                       control={detailsForm.control}
                       name="endDate"
@@ -635,6 +660,7 @@ export default function BookingPage() {
                           <Popover>
                             <PopoverTrigger asChild>
                               <button
+                                id="booking-end-date"
                                 type="button"
                                 className={cn(
                                   "w-full rounded-lg border border-border bg-card px-3 py-2 text-left text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent",
@@ -697,12 +723,15 @@ export default function BookingPage() {
               {/* Extras section — only shown if listing has extras */}
               {listingExtras.length > 0 && (
               <div className="space-y-4 border-t border-border pt-6">
-                <h2 className="font-display text-xl font-semibold">{t("booking.extras")}</h2>
+                <h2 id="booking-extras-heading" className="font-display text-xl font-semibold">{t("booking.extras")}</h2>
                 <p className="text-sm text-muted-foreground">{t("booking.selectExtras")}</p>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-2" role="group" aria-labelledby="booking-extras-heading">
                   {listingExtras.map((extra) => (
                     <button
                       key={extra.key}
+                      type="button"
+                      role="checkbox"
+                      aria-checked={selectedExtras.includes(extra.key)}
                       onClick={() => toggleExtra(extra.key)}
                       className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-colors ${selectedExtras.includes(extra.key) ? "border-accent bg-accent/5" : "border-border hover:border-muted-foreground"}`}
                     >
@@ -738,24 +767,24 @@ export default function BookingPage() {
               <div className="space-y-4">
                 <h2 className="font-display text-xl font-semibold">{t("booking.contact")}</h2>
                 <div>
-                  <label className="mb-1 block text-sm font-medium">{t("booking.name")}</label>
-                  <input type="text" {...contactForm.register("name")} placeholder={t("booking.placeholder.name")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent" />
-                  {contactForm.formState.errors.name && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.name.message}</p>}
+                  <label htmlFor="booking-name" className="mb-1 block text-sm font-medium">{t("booking.name")}</label>
+                  <input id="booking-name" type="text" {...contactForm.register("name")} placeholder={t("booking.placeholder.name")} aria-invalid={!!contactForm.formState.errors.name} aria-describedby={contactForm.formState.errors.name ? "booking-name-error" : undefined} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent" />
+                  {contactForm.formState.errors.name && <p id="booking-name-error" role="alert" className="mt-1 text-xs text-destructive">{contactForm.formState.errors.name.message}</p>}
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium">{t("booking.email")}</label>
-                  <input type="email" {...contactForm.register("email")} placeholder={t("booking.placeholder.email")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent" />
-                  {contactForm.formState.errors.email && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.email.message}</p>}
+                  <label htmlFor="booking-email" className="mb-1 block text-sm font-medium">{t("booking.email")}</label>
+                  <input id="booking-email" type="email" {...contactForm.register("email")} placeholder={t("booking.placeholder.email")} aria-invalid={!!contactForm.formState.errors.email} aria-describedby={contactForm.formState.errors.email ? "booking-email-error" : undefined} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent" />
+                  {contactForm.formState.errors.email && <p id="booking-email-error" role="alert" className="mt-1 text-xs text-destructive">{contactForm.formState.errors.email.message}</p>}
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium">{t("booking.phone")}</label>
-                  <input type="tel" {...contactForm.register("phone")} placeholder={t("booking.placeholder.phone")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent" />
-                  {contactForm.formState.errors.phone && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.phone.message}</p>}
+                  <label htmlFor="booking-phone" className="mb-1 block text-sm font-medium">{t("booking.phone")}</label>
+                  <input id="booking-phone" type="tel" {...contactForm.register("phone")} placeholder={t("booking.placeholder.phone")} aria-invalid={!!contactForm.formState.errors.phone} aria-describedby={contactForm.formState.errors.phone ? "booking-phone-error" : undefined} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent" />
+                  {contactForm.formState.errors.phone && <p id="booking-phone-error" role="alert" className="mt-1 text-xs text-destructive">{contactForm.formState.errors.phone.message}</p>}
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium">{t("booking.notes")}</label>
-                  <textarea {...contactForm.register("notes")} rows={3} placeholder={t("booking.placeholder.notes")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent" />
-                  {contactForm.formState.errors.notes && <p className="mt-1 text-xs text-destructive">{contactForm.formState.errors.notes.message}</p>}
+                  <label htmlFor="booking-notes" className="mb-1 block text-sm font-medium">{t("booking.notes")}</label>
+                  <textarea id="booking-notes" {...contactForm.register("notes")} rows={3} placeholder={t("booking.placeholder.notes")} aria-invalid={!!contactForm.formState.errors.notes} aria-describedby={contactForm.formState.errors.notes ? "booking-notes-error" : undefined} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-base sm:text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-accent" />
+                  {contactForm.formState.errors.notes && <p id="booking-notes-error" role="alert" className="mt-1 text-xs text-destructive">{contactForm.formState.errors.notes.message}</p>}
                 </div>
               </div>
 
@@ -841,8 +870,8 @@ export default function BookingPage() {
                 </div>
               ) : (
               <div className="space-y-4 border-t border-border pt-6">
-                <h2 className="font-display text-xl font-semibold">{t("booking.paymentMethod")}</h2>
-                <div className="space-y-3">
+                <h2 id="booking-payment-heading" className="font-display text-xl font-semibold">{t("booking.paymentMethod")}</h2>
+                <div className="space-y-3" role="radiogroup" aria-labelledby="booking-payment-heading">
                   {[
                     { id: "bank", icon: Building2, label: t("booking.bankTransfer"), desc: t("booking.bankTransferDesc"), recommended: true },
                     { id: "card", icon: CreditCard, label: t("booking.creditCard"), desc: t("booking.creditCardDesc") },
@@ -851,7 +880,7 @@ export default function BookingPage() {
                     const Icon = pm.icon;
                     return (
                       <div key={pm.id}>
-                        <button onClick={() => setPaymentMethod(pm.id)} className={`flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-colors ${paymentMethod === pm.id ? "border-accent bg-accent/5" : "border-border hover:border-muted-foreground"}`}>
+                        <button type="button" role="radio" aria-checked={paymentMethod === pm.id} onClick={() => setPaymentMethod(pm.id)} className={`flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-colors ${paymentMethod === pm.id ? "border-accent bg-accent/5" : "border-border hover:border-muted-foreground"}`}>
                           <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${paymentMethod === pm.id ? "bg-accent/10" : "bg-secondary"}`}>
                             <Icon className={`h-5 w-5 ${paymentMethod === pm.id ? "text-accent" : "text-muted-foreground"}`} />
                           </div>
@@ -875,8 +904,9 @@ export default function BookingPage() {
                             <p className="text-xs text-foreground">
                               {t("booking.payLaterExplainer")}
                             </p>
-                            <p className="text-[11px] text-muted-foreground">
-                              {t("booking.payLaterWarning")}
+                            <p className="flex items-start gap-1.5 text-xs font-medium text-destructive">
+                              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                              <span>{t("booking.payLaterWarning")}</span>
                             </p>
                           </div>
                         )}
@@ -1063,7 +1093,7 @@ export default function BookingPage() {
           </div>
           <div className="flex gap-2 shrink-0">
             {step > 0 && (
-              <Button variant="outline" size="sm" onClick={() => setStep(step - 1)}>
+              <Button variant="outline" size="sm" aria-label={t("booking.prev")} onClick={() => setStep(step - 1)}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             )}

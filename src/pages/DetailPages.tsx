@@ -664,6 +664,7 @@ function NotFoundDetail() {
   const { t } = useLanguage();
   return (
     <div className="container-wide py-20 text-center">
+      <SEO title={t("detail.notFound")} description={t("detail.notFound")} noindex />
       <h1 className="font-display text-2xl font-bold">{t("detail.notFound")}</h1>
       <Link to="/search"><Button variant="outline" className="mt-4">{t("detail.backToSearch")}</Button></Link>
     </div>

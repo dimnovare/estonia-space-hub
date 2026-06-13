@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { useListings } from "@/hooks/queries";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import type { Listing } from "@/services/types";
 import { SEO } from "@/components/SEO";
 import { MapPin, Layers, Search, ArrowRight, ChevronDown } from "lucide-react";
@@ -24,7 +25,14 @@ const CITY_MAP: Record<string, string> = {
 export default function CityPage() {
   const { slug } = useParams<{ slug: string }>();
   const { t, language } = useLanguage();
+  const { showMovingService, showTrailerService } = usePlatformSettings();
   const city = CITY_MAP[slug || ""] || slug || "";
+
+  // Storage-only gating: never emit deep links to a disabled service vertical
+  // (mirrors HomePage.tsx hideDisabled).
+  const hideDisabled = (l: { type?: string }) =>
+    (showMovingService  || l.type !== "moving") &&
+    (showTrailerService || l.type !== "trailer");
 
   const { data: locations = [], isLoading } = useQuery({
     queryKey: queryKeys.cityLocations.bySlug(city),
@@ -50,7 +58,7 @@ export default function CityPage() {
         priceFrom: loc.priceFrom,
         href: `/location/${loc.id}`,
       }))
-    : cityListings.slice(0, 4).map((l: any) => ({
+    : cityListings.filter(hideDisabled).slice(0, 4).map((l: any) => ({
         id: l.id,
         name: l.title,
         images: l.image ? [l.image] : (l.images || []),

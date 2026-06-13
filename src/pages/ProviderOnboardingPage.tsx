@@ -132,7 +132,7 @@ export default function ProviderOnboardingPage() {
           )}
           <div className="mt-4 rounded-xl border border-border bg-secondary/30 p-4">
             <p className="text-xs text-muted-foreground">{t("onboard.success.status")}</p>
-            <p className="mt-1 text-sm font-medium text-warning">{t("onboard.success.pending")}</p>
+            <p className="mt-1 text-sm font-medium text-warning-text">{t("onboard.success.pending")}</p>
           </div>
           {/* What happens next */}
           <div className="mt-4 rounded-xl border border-accent/20 bg-accent/5 p-4 text-left">
@@ -301,7 +301,7 @@ export default function ProviderOnboardingPage() {
                     <span className="text-xs font-semibold text-muted-foreground">
                       {doneCount} / {checks.length}
                     </span>
-                    <span className={`text-xs font-semibold ${doneCount === checks.length ? "text-success" : "text-warning"}`}>
+                    <span className={`text-xs font-semibold ${doneCount === checks.length ? "text-success" : "text-warning-text"}`}>
                       {pct}%
                     </span>
                   </div>
@@ -316,8 +316,8 @@ export default function ProviderOnboardingPage() {
                       <div key={i} className="flex items-center gap-2 text-xs">
                         {c.ok
                           ? <Check className="h-3.5 w-3.5 text-success shrink-0" />
-                          : <AlertCircle className="h-3.5 w-3.5 text-warning shrink-0" />}
-                        <span className={c.ok ? "text-foreground" : "text-warning"}>{c.label}</span>
+                          : <AlertCircle className="h-3.5 w-3.5 text-warning-text shrink-0" />}
+                        <span className={c.ok ? "text-foreground" : "text-warning-text"}>{c.label}</span>
                       </div>
                     ))}
                   </div>

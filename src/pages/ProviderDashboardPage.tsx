@@ -208,7 +208,7 @@ export default function ProviderDashboardPage() {
                   </div>
                   <div className="max-h-80 overflow-y-auto">
                     {notifications.length === 0 ? (
-                      <div className="p-4 text-center text-xs text-muted-foreground">Teavitusi pole</div>
+                      <div className="p-4 text-center text-xs text-muted-foreground">{t("provider.notifications.empty")}</div>
                     ) : (
                        notifications.map((n: any) => (
                          <button key={n.id} onClick={() => {

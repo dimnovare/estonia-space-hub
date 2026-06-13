@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Mail, Phone, MapPin, Clock, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,17 @@ export default function ContactPage() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [sending, setSending] = useState(false);
 
+  const nameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const subjectRef = useRef<HTMLInputElement>(null);
+  const messageRef = useRef<HTMLTextAreaElement>(null);
+  const fieldRefs: Record<keyof FieldErrors, React.RefObject<HTMLElement>> = {
+    name: nameRef,
+    email: emailRef,
+    subject: subjectRef,
+    message: messageRef,
+  };
+
   const validate = (): FieldErrors => {
     const next: FieldErrors = {};
     if (!name.trim()) next.name = t("contact.errorName");
@@ -41,7 +52,17 @@ export default function ContactPage() {
   const handleSubmit = async () => {
     const validationErrors = validate();
     setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) return;
+    if (Object.keys(validationErrors).length > 0) {
+      // Move focus to the first invalid field so keyboard/AT users land on the error.
+      const order: (keyof FieldErrors)[] = ["name", "email", "subject", "message"];
+      const firstInvalid = order.find((k) => validationErrors[k]);
+      if (firstInvalid) {
+        const el = fieldRefs[firstInvalid].current;
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+        el?.focus({ preventScroll: true });
+      }
+      return;
+    }
 
     setSending(true);
     try {
@@ -127,24 +148,24 @@ export default function ContactPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label htmlFor="contact-name" className="mb-1 block text-sm font-medium">{t("contact.name")}</label>
-                    <input id="contact-name" type="text" value={name} onChange={(e) => { setName(e.target.value); if (errors.name) setErrors((p) => ({ ...p, name: undefined })); }} aria-invalid={!!errors.name} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-                    {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name}</p>}
+                    <input ref={nameRef} id="contact-name" type="text" value={name} onChange={(e) => { setName(e.target.value); if (errors.name) setErrors((p) => ({ ...p, name: undefined })); }} aria-invalid={!!errors.name} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    {errors.name && <p role="alert" className="mt-1 text-xs text-destructive">{errors.name}</p>}
                   </div>
                   <div>
                     <label htmlFor="contact-email" className="mb-1 block text-sm font-medium">{t("contact.email")}</label>
-                    <input id="contact-email" type="email" value={email} onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors((p) => ({ ...p, email: undefined })); }} aria-invalid={!!errors.email} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-                    {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email}</p>}
+                    <input ref={emailRef} id="contact-email" type="email" value={email} onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors((p) => ({ ...p, email: undefined })); }} aria-invalid={!!errors.email} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    {errors.email && <p role="alert" className="mt-1 text-xs text-destructive">{errors.email}</p>}
                   </div>
                 </div>
                 <div>
                   <label htmlFor="contact-subject" className="mb-1 block text-sm font-medium">{t("contact.subject")}</label>
-                  <input id="contact-subject" type="text" value={subject} onChange={(e) => { setSubject(e.target.value); if (errors.subject) setErrors((p) => ({ ...p, subject: undefined })); }} aria-invalid={!!errors.subject} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-                  {errors.subject && <p className="mt-1 text-xs text-destructive">{errors.subject}</p>}
+                  <input ref={subjectRef} id="contact-subject" type="text" value={subject} onChange={(e) => { setSubject(e.target.value); if (errors.subject) setErrors((p) => ({ ...p, subject: undefined })); }} aria-invalid={!!errors.subject} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  {errors.subject && <p role="alert" className="mt-1 text-xs text-destructive">{errors.subject}</p>}
                 </div>
                 <div>
                   <label htmlFor="contact-message" className="mb-1 block text-sm font-medium">{t("contact.message")}</label>
-                  <textarea id="contact-message" value={message} onChange={(e) => { setMessage(e.target.value); if (errors.message) setErrors((p) => ({ ...p, message: undefined })); }} aria-invalid={!!errors.message} rows={5} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-                  {errors.message && <p className="mt-1 text-xs text-destructive">{errors.message}</p>}
+                  <textarea ref={messageRef} id="contact-message" value={message} onChange={(e) => { setMessage(e.target.value); if (errors.message) setErrors((p) => ({ ...p, message: undefined })); }} aria-invalid={!!errors.message} rows={5} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  {errors.message && <p role="alert" className="mt-1 text-xs text-destructive">{errors.message}</p>}
                 </div>
                 <Button onClick={handleSubmit} disabled={sending} className="w-full bg-accent text-accent-foreground hover:bg-accent/90" size="lg">
                   {sending ? t("contact.sending") : t("contact.send")}

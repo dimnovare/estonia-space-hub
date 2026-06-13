@@ -50,7 +50,7 @@ export function ReservationCountdown({ createdAt, reservedUntil, size = "lg" }: 
   return (
     <div className={`rounded-xl border-2 border-warning/40 bg-warning/10 ${padding}`}>
       <div className="flex items-start gap-3">
-        <Clock className={`${iconSize} text-warning shrink-0 mt-0.5`} />
+        <Clock className={`${iconSize} text-warning-text shrink-0 mt-0.5`} />
         <div className="flex-1">
           <p className={`font-display ${titleClass} font-bold text-foreground`}>
             {expired ? t("booking.reservation.cancelled") : t("booking.payLater")}
@@ -59,7 +59,7 @@ export function ReservationCountdown({ createdAt, reservedUntil, size = "lg" }: 
             <>
               <p className="mt-1 text-sm text-muted-foreground">
                 {t("booking.reservation.cancelsIn")}{" "}
-                <span className="font-mono font-bold text-warning tabular-nums">
+                <span className="font-mono font-bold text-warning-text tabular-nums">
                   {formatRemaining(remaining, language)}
                 </span>
               </p>

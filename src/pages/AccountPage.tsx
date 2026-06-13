@@ -40,7 +40,7 @@ import { calculateTotalSavings } from "@/lib/bookingSavings";
 function useStatusConfig() {
   const { t } = useLanguage();
   return {
-    pending: { label: t("status.pending"), color: "bg-warning/10 text-warning", icon: Clock },
+    pending: { label: t("status.pending"), color: "bg-warning/10 text-warning-text", icon: Clock },
     confirmed: { label: t("status.confirmed"), color: "bg-success/10 text-success", icon: CheckCircle },
     active: { label: t("status.active"), color: "bg-accent/10 text-accent", icon: Play },
     completed: { label: t("status.completed"), color: "bg-muted text-muted-foreground", icon: CheckCircle },
@@ -232,7 +232,7 @@ function AccountOverview({ onNavigate }: { onNavigate: (tab: string) => void }) 
 
       <div className="mt-6 grid gap-4 grid-cols-2 sm:grid-cols-3">
         <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">{t("account.activeBookings")}</div><div className="mt-1 font-display text-2xl font-bold">{active.length}</div></div>
-        <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">{t("account.pendingApproval")}</div><div className="mt-1 font-display text-2xl font-bold text-warning">{pending.length}</div></div>
+        <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">{t("account.pendingApproval")}</div><div className="mt-1 font-display text-2xl font-bold text-warning-text">{pending.length}</div></div>
         <div className="card-elevated p-5 col-span-2 sm:col-span-1"><div className="text-sm text-muted-foreground">{t("account.totalSavings")}</div><div className="mt-1 font-display text-2xl font-bold text-accent">€{calculateTotalSavings(bookings).toFixed(2)}</div></div>
       </div>
       {pending.length > 0 && (
@@ -352,7 +352,7 @@ function BookingCard({ booking }: { booking: Booking }) {
                   <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1"><Send className="h-3 w-3" /> {t("admin.status")}</p>
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${ORDER_STATUS_CONFIG[order.status].color}`}>{t(ORDER_STATUS_CONFIG[order.status].labelKey) || ORDER_STATUS_CONFIG[order.status].label}</span>
                 </div>
-                {(order.status === "sent" || order.status === "sending") && <p className="mt-1 text-xs text-warning font-medium">⏳ {t("account.waitingConfirmation")}</p>}
+                {(order.status === "sent" || order.status === "sending") && <p className="mt-1 text-xs text-warning-text font-medium">⏳ {t("account.waitingConfirmation")}</p>}
                 {order.status === "confirmed" && <p className="mt-1 text-xs text-success font-medium">✓ {t("account.providerConfirmed")}</p>}
                 {order.status === "rejected" && <p className="mt-1 text-xs text-destructive font-medium">✗ {t("account.providerRejected")}</p>}
               </div>
@@ -878,15 +878,15 @@ function AccountSecurity() {
           ) : (
             <form onSubmit={pwForm.handleSubmit(onSubmit)} className="mt-3 space-y-3">
               <div>
-                <input type="password" placeholder="Praegune parool" {...pwForm.register("currentPassword")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                <input type="password" placeholder={t("account.currentPasswordPlaceholder")} {...pwForm.register("currentPassword")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                 {pwForm.formState.errors.currentPassword && <p className="mt-1 text-xs text-destructive">{pwForm.formState.errors.currentPassword.message}</p>}
               </div>
               <div>
-                <input type="password" placeholder="Uus parool" {...pwForm.register("newPassword")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                <input type="password" placeholder={t("account.newPasswordPlaceholder")} {...pwForm.register("newPassword")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                 {pwForm.formState.errors.newPassword && <p className="mt-1 text-xs text-destructive">{pwForm.formState.errors.newPassword.message}</p>}
               </div>
               <div>
-                <input type="password" placeholder="Kinnita uus parool" {...pwForm.register("confirmPassword")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                <input type="password" placeholder={t("account.confirmPasswordPlaceholder")} {...pwForm.register("confirmPassword")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                 {pwForm.formState.errors.confirmPassword && <p className="mt-1 text-xs text-destructive">{pwForm.formState.errors.confirmPassword.message}</p>}
               </div>
               <div className="flex gap-2">
@@ -1152,7 +1152,7 @@ function AccountBilling() {
                     <p className="text-xs font-mono text-muted-foreground truncate">{inv.id}</p>
                     <p className="mt-1 text-sm font-medium leading-snug">{inv.description}</p>
                   </div>
-                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${inv.status === "paid" ? "bg-success/10 text-success" : inv.status === "pending" ? "bg-warning/10 text-warning" : "bg-destructive/10 text-destructive"}`}>
+                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${inv.status === "paid" ? "bg-success/10 text-success" : inv.status === "pending" ? "bg-warning/10 text-warning-text" : "bg-destructive/10 text-destructive"}`}>
                     {inv.status === "paid" ? t("account.invoiceStatus.paid") : inv.status === "pending" ? t("account.invoiceStatus.pending") : t("account.invoiceStatus.overdue")}
                   </span>
                 </div>
@@ -1188,7 +1188,7 @@ function AccountBilling() {
                     <td className="px-4 py-3 text-muted-foreground text-xs">{inv.description}</td>
                     <td className="px-4 py-3 font-medium">€{inv.amount}</td>
                     <td className="px-4 py-3">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inv.status === "paid" ? "bg-success/10 text-success" : inv.status === "pending" ? "bg-warning/10 text-warning" : "bg-destructive/10 text-destructive"}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inv.status === "paid" ? "bg-success/10 text-success" : inv.status === "pending" ? "bg-warning/10 text-warning-text" : "bg-destructive/10 text-destructive"}`}>
                         {inv.status === "paid" ? t("account.invoiceStatus.paid") : inv.status === "pending" ? t("account.invoiceStatus.pending") : t("account.invoiceStatus.overdue")}
                       </span>
                     </td>

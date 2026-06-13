@@ -50,6 +50,9 @@
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
+    /* Darker amber for warning *text on light surfaces* — amber-700, ~5.4:1 on
+       white (the amber-500 --warning is ~1.9:1 and fails WCAG AA as text). */
+    --warning-text: 32 95% 38%;
     --info: 210 80% 52%;
     --info-foreground: 0 0% 100%;
 
@@ -85,6 +88,8 @@
     --border: 213 20% 20%;
     --input: 213 20% 20%;
     --ring: 174 65% 47%;
+    /* On dark surfaces a lighter amber (amber-400) keeps warning text legible. */
+    --warning-text: 43 96% 56%;
   }
 }
 

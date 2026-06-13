@@ -284,6 +284,11 @@ export const invoiceService = {
   async getByBookingId(bookingId: string): Promise<Invoice | undefined> {
     return apiClient.get<Invoice>(`/invoices/by-booking/${bookingId}`);
   },
+  // No backend GET /invoices/{id} exists; resolve from the current user's invoices.
+  async getById(invoiceId: string): Promise<Invoice | undefined> {
+    const all = await invoiceService.getAll();
+    return all.find((inv) => inv.id === invoiceId);
+  },
 };
 
 // ─── Message Service ────────────────────────────────────────────────────────────

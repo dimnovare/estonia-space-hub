@@ -152,7 +152,7 @@ export default function HomePage() {
               "@type": "ContactPoint",
               "contactType": "customer support",
               "email": "info@ruumly.eu",
-              "availableLanguage": ["Estonian", "English", "Russian"]
+              "availableLanguage": ["Estonian", "English", "Russian", "Latvian", "Lithuanian"]
             }
           }
         }}
