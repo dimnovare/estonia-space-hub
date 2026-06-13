@@ -25,6 +25,8 @@ interface InteractiveMapProps {
   tVerified?: string;
   tFoundingPartner?: string;
   tViewDetails?: string;
+  tViewLocation?: string;
+  tAvailable?: string;
   tTypeWarehouse?: string;
   tTypeMoving?: string;
   tTypeTrailer?: string;
@@ -233,6 +235,8 @@ function InteractiveMap({
   tVerified = "Verified",
   tFoundingPartner = "Founding Partner",
   tViewDetails = "View →",
+  tViewLocation = "View location",
+  tAvailable = "available",
   tTypeWarehouse = "Warehouse",
   tTypeMoving    = "Moving",
   tTypeTrailer   = "Trailer",
@@ -326,7 +330,10 @@ function InteractiveMap({
 
     // Track which listing IDs are covered by locations
     const coveredListingIds = new Set<string>();
-    
+
+    // Shared image placeholder — a brand warehouse glyph, not an emoji.
+    const imgFallback = `<div style="width: 100%; height: 88px; background: #f1f5f9; border-radius: 8px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; color: #94a3b8;"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="11" rx="1"/><path d="M2 10l10-6 10 6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
+
     // Render location markers
     locations.forEach((loc) => {
       loc.units?.forEach(u => coveredListingIds.add(u.id));
@@ -336,18 +343,18 @@ function InteractiveMap({
 
       const popupHtml = `
         <div style="min-width: 200px; font-family: 'DM Sans', sans-serif;">
-          ${loc.images?.[0] ? `<img src="${loc.images[0]}" alt="${loc.name}" onerror="this.style.display='none'" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />` : '<div style="width: 100%; height: 70px; background: #f0f0f0; border-radius: 8px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 12px;">📍</div>'}
+          ${loc.images?.[0] ? `<img src="${loc.images[0]}" alt="${loc.name}" onerror="this.style.display='none'" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />` : imgFallback}
           <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #1E3A5F;">${loc.name}</div>
           ${loc.supplierName ? `<div style="font-size: 12px; color: #666; margin-bottom: 4px;">${loc.supplierName}</div>` : ''}
           <div style="font-size: 12px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
             ${loc.address}, ${loc.city}
           </div>
-          ${loc.priceFrom ? `<div style="font-weight: 700; font-size: 16px; color: #1E3A5F; margin-bottom: 4px;">${tFrom} €${loc.priceFrom}${tPerMonth}</div>` : ''}
-          <div style="display: flex; gap: 6px; margin-top: 6px;">
-            <a href="/${langPrefix}/search?${loc.supplierId ? `supplierId=${loc.supplierId}&` : ''}locationId=${loc.id}" style="flex: 1; text-align: center; font-size: 12px; color: #2EC4B6; text-decoration: none; font-weight: 600; padding: 6px 0; border: 1px solid #2EC4B6; border-radius: 6px;">${tAllUnits} (${loc.availableUnitCount != null ? loc.availableUnitCount : loc.unitCount})</a>
-            ${loc.supplierId ? '' : `<a href="/${langPrefix}/search?city=${encodeURIComponent(loc.city || '')}" style="flex: 1; text-align: center; font-size: 12px; color: white; background: #2EC4B6; text-decoration: none; font-weight: 600; padding: 6px 0; border-radius: 6px;">${tSearch} →</a>`}
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px;">
+            ${loc.priceFrom ? `<span style="font-weight: 700; font-size: 16px; color: #1E3A5F;">${tFrom} €${loc.priceFrom}${tPerMonth}</span>` : '<span></span>'}
+            <span style="font-size: 11px; color: #16A34A; background: #16A34A14; padding: 3px 8px; border-radius: 10px; font-weight: 600; white-space: nowrap;">${loc.availableUnitCount != null ? loc.availableUnitCount : loc.unitCount} ${tAvailable}</span>
           </div>
+          <a href="/${langPrefix}/location/${loc.id}" style="display: block; text-align: center; font-size: 13px; color: #fff; background: #2EC4B6; text-decoration: none; font-weight: 600; padding: 10px 0; border-radius: 8px;">${tViewLocation} →</a>
         </div>
       `;
 
@@ -376,7 +383,7 @@ function InteractiveMap({
 
       const popupHtml = `
         <div style="min-width: 200px; font-family: 'DM Sans', sans-serif;">
-          ${listing.image ? `<img src="${listing.image}" alt="${listing.title}" onerror="this.style.display='none'" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />` : '<div style="width: 100%; height: 70px; background: #f0f0f0; border-radius: 8px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 12px;">📍</div>'}
+          ${listing.image ? `<img src="${listing.image}" alt="${listing.title}" onerror="this.style.display='none'" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />` : imgFallback}
           <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #1E3A5F;">${listing.title}</div>
           ${(listing.isVerified || listing.isFoundingPartner) ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;">${listing.isVerified ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:#16A34A;background:#16A34A14;padding:2px 6px;border-radius:10px;">✓ ${tVerified}</span>` : ''}${listing.isFoundingPartner ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:#2EC4B6;background:#2EC4B614;padding:2px 6px;border-radius:10px;">★ ${tFoundingPartner}</span>` : ''}</div>` : ''}
           <div style="font-size: 12px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
@@ -387,8 +394,8 @@ function InteractiveMap({
             <span style="font-weight: 700; font-size: 16px; color: #1E3A5F;">${tFrom} ${listing.priceFrom}€</span>
             <span style="font-size: 11px; color: ${typeColor}; background: ${typeColor}10; padding: 2px 8px; border-radius: 10px; font-weight: 600;">${typeName}</span>
           </div>
-          ${listing.rating > 0 ? `<div style="font-size: 11px; color: #888; margin-top: 4px;">⭐ ${listing.rating} (${listing.reviewCount})</div>` : ''}
-          <a href="/${langPrefix}/${listing.type}/${listing.id}" style="display: block; text-align: center; margin-top: 8px; font-size: 12px; color: white; background: #2EC4B6; text-decoration: none; font-weight: 600; padding: 6px 0; border-radius: 6px;">${tViewDetails}</a>
+          ${listing.rating > 0 ? `<div style="font-size: 11px; color: #888; margin-top: 4px; display: flex; align-items: center; gap: 3px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="#f59e0b" stroke="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> ${listing.rating} (${listing.reviewCount})</div>` : ''}
+          <a href="/${langPrefix}/${listing.type}/${listing.id}" style="display: block; text-align: center; margin-top: 10px; font-size: 13px; color: #fff; background: #2EC4B6; text-decoration: none; font-weight: 600; padding: 10px 0; border-radius: 8px;">${tViewDetails}</a>
         </div>
       `;
 
@@ -418,7 +425,7 @@ function InteractiveMap({
     // selectedId intentionally excluded — selection is handled by the effect
     // below via setIcon on just the affected markers, so hovering a card does
     // not clear and rebuild every Leaflet layer.
-  }, [listings, locations, tUnits, tFrom, tPerMonth, tAllUnits, tTypeWarehouse, tTypeMoving, tTypeTrailer]);
+  }, [listings, locations, tUnits, tFrom, tPerMonth, tAllUnits, tViewLocation, tAvailable, tTypeWarehouse, tTypeMoving, tTypeTrailer]);
 
   // When selectedId changes, restyle only the previously- and newly-selected
   // markers (grow + glow), open the popup, and pan. No full layer rebuild.
