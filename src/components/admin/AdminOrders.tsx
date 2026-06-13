@@ -57,6 +57,37 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
   const [emailPreview, setEmailPreview] = useState(false);
 
+  // Cancel a booking + order and start the refund (voids the supplier payout).
+  const cancelAndRefund = useMutation({
+    mutationFn: (orderId: string) => apiClient.post(`/admin/orders/${orderId}/cancel-and-refund`, {}),
+    onSuccess: () => {
+      toast.success(t("admin.cancelAndRefundDone"));
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.root() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all() });
+      setViewOrder(null);
+    },
+    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : t("toast.error")),
+  });
+
+  // Confirm a manual bank refund completed: PendingRefund invoice -> Refunded.
+  const markRefunded = useMutation({
+    mutationFn: async (bookingId: string) => {
+      const invoice = await apiClient.get<{ id: string; status: string }>(`/invoices/by-booking/${bookingId}/status`);
+      if (invoice.status !== "pendingrefund") throw new Error("not_pending_refund");
+      return apiClient.post(`/admin/bookings/${invoice.id}/mark-refunded`, {});
+    },
+    onSuccess: () => {
+      toast.success(t("admin.markRefundedDone"));
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.root() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all() });
+      setViewOrder(null);
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : "";
+      toast.error(msg === "not_pending_refund" ? t("admin.notPendingRefund") : (msg || t("toast.error")));
+    },
+  });
+
   // Server returns only the active-status page; no client-side filtering.
   const filtered = orders;
   const totalPages = Math.max(1, Math.ceil(total / pageLimit));
@@ -205,6 +236,27 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
               <div className="flex flex-wrap gap-2">
                 {viewOrder.integrationType === "email" && (
                   <Button variant="outline" size="sm" onClick={() => setEmailPreview(true)}><Mail className="mr-1 h-3.5 w-3.5" /> {t("admin.viewEmail")}</Button>
+                )}
+                {viewOrder.status !== "cancelled" && viewOrder.status !== "completed" && viewOrder.status !== "rejected" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={cancelAndRefund.isPending}
+                    className="text-destructive border-destructive/40 hover:bg-destructive/10"
+                    onClick={() => { if (window.confirm(t("admin.cancelAndRefundConfirm"))) cancelAndRefund.mutate(viewOrder.id); }}
+                  >
+                    {cancelAndRefund.isPending ? "..." : t("admin.cancelAndRefund")}
+                  </Button>
+                )}
+                {viewOrder.status === "cancelled" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={markRefunded.isPending}
+                    onClick={() => { if (window.confirm(t("admin.markRefundedConfirm"))) markRefunded.mutate(viewOrder.bookingId); }}
+                  >
+                    {markRefunded.isPending ? "..." : t("admin.markRefunded")}
+                  </Button>
                 )}
                 {(viewOrder.status === "created" || viewOrder.status === "sending" || viewOrder.status === "sent") && (
                   <Button
