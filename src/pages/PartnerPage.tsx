@@ -95,15 +95,15 @@ function LocationCard({
           <span
             className={
               isFull
-                ? "rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-semibold text-zinc-600 ring-1 ring-zinc-200"
-                : "rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-200"
+                ? "rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-muted-foreground ring-1 ring-border"
+                : "rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-semibold text-success ring-1 ring-success/20"
             }
           >
             {availabilityLabel}
           </span>
           <Link
             to={`/search?supplierId=${partner.id}&locationId=${loc.id}`}
-            className="text-xs font-medium text-accent hover:underline"
+            className="rounded text-xs font-medium text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
           >
             {t("partner.viewUnits")}
           </Link>
@@ -386,7 +386,7 @@ export default function PartnerPage() {
                   href={googleData.mapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs hover:bg-secondary transition-colors"
+                  className="flex items-center gap-1 rounded-full border border-border px-3 py-2 sm:py-1 text-xs hover:bg-secondary transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                 >
                   <ExternalLink className="h-3 w-3" />
                   Google
@@ -464,7 +464,7 @@ export default function PartnerPage() {
             <div className="mt-6 text-center">
               <Link
                 to={`/search?supplierId=${partner.id}`}
-                className="text-sm font-medium text-accent hover:underline"
+                className="rounded text-sm font-medium text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
                 {t("partner.viewAllListings").replace("{count}", String(partner.listingCount))} →
               </Link>

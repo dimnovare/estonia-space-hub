@@ -611,7 +611,7 @@ export default function BookingPage() {
       {/* Step indicators */}
       <div className="mb-8 flex items-center gap-2">
         {steps.map((s, i) => (
-          <div key={s} className="flex items-center gap-2">
+          <div key={s} className="flex items-center gap-2" aria-current={i === step ? "step" : undefined}>
             <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${i <= step ? "bg-accent text-accent-foreground" : "bg-secondary text-muted-foreground"}`}>
               {i < step ? <Check className="h-4 w-4" /> : i + 1}
             </div>
@@ -682,7 +682,7 @@ export default function BookingPage() {
                         );
                       }}
                     />
-                    {detailsForm.formState.errors.startDate && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.startDate.message}</p>}
+                    {detailsForm.formState.errors.startDate && <p role="alert" className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.startDate.message}</p>}
                   </div>
                   <div>
                     <label htmlFor="booking-end-date" className="mb-1 block text-sm font-medium">{t("booking.endDate")}</label>
@@ -721,7 +721,7 @@ export default function BookingPage() {
                         );
                       }}
                     />
-                    {detailsForm.formState.errors.endDate && <p className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.endDate.message}</p>}
+                    {detailsForm.formState.errors.endDate && <p role="alert" className="mt-1 text-xs text-destructive">{detailsForm.formState.errors.endDate.message}</p>}
                   </div>
                 </div>
                 {detailsForm.watch("startDate") && detailsForm.watch("endDate") && new Date(detailsForm.watch("endDate")) > new Date(detailsForm.watch("startDate")) && (
@@ -746,7 +746,7 @@ export default function BookingPage() {
                   </div>
                 )}
                 {isUnavailable && availability && (
-                  <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3">
+                  <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-3">
                     <p className="text-sm font-medium text-destructive">
                       {t("booking.notAvailable")}
                     </p>
@@ -1059,7 +1059,7 @@ export default function BookingPage() {
                 )}
               </Button>
               {step === steps.length - 1 && (
-                <p className="text-xs text-gray-500 text-right max-w-xs">{t("booking.paymentReassurance")}</p>
+                <p className="text-xs text-muted-foreground text-right max-w-xs">{t("booking.paymentReassurance")}</p>
               )}
             </div>
           </div>
@@ -1108,7 +1108,7 @@ export default function BookingPage() {
       <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border bg-card px-3 pt-2 pb-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
         {/* Reassurance copy on final step */}
         {step === steps.length - 1 && (
-          <p className="mb-1 text-xs text-gray-500 text-center">{t("booking.paymentReassurance")}</p>
+          <p className="mb-1 text-xs text-muted-foreground text-center">{t("booking.paymentReassurance")}</p>
         )}
         {/* Pricing summary row */}
         <div className="mb-2 flex items-center justify-between text-xs">

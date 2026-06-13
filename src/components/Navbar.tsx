@@ -110,7 +110,7 @@ export default function Navbar() {
             const href = getLinkHref(l);
             const active = isLinkActive(l, location.pathname, currentType);
             return (
-              <Link key={l.tKey} to={href} className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${active ? "bg-accent/10 text-accent" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
+              <Link key={l.tKey} to={href} aria-current={active ? "page" : undefined} className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${active ? "bg-accent/10 text-accent" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
                 {t(l.tKey)}
               </Link>
             );
@@ -160,7 +160,7 @@ export default function Navbar() {
             <div className="relative">
               <div className="flex items-center gap-1">
                 {unreadCount > 0 && (
-                  <Link to="/account?tab=notifications" className="relative p-2">
+                  <Link to="/account?tab=notifications" aria-label={t("nav.notifications")} className="relative inline-flex items-center justify-center p-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
                     <Bell className="h-4 w-4 text-muted-foreground" />
                     <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-accent-foreground">{unreadCount}</span>
                   </Link>
@@ -248,7 +248,8 @@ export default function Navbar() {
                       key={l.tKey}
                       to={href}
                       onClick={() => setOpen(false)}
-                      className={`block rounded-lg px-3 py-3 text-sm font-medium ${
+                      aria-current={active ? "page" : undefined}
+                      className={`block rounded-lg px-3 py-3 text-sm font-medium transition-colors active:bg-secondary ${
                         active ? "bg-accent/10 text-accent" : "text-foreground hover:bg-secondary"
                       }`}
                     >
@@ -266,7 +267,8 @@ export default function Navbar() {
                       <button
                         key={lang.code}
                         onClick={() => setLanguage(lang.code as Language)}
-                        className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                        aria-pressed={language === lang.code}
+                        className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                           language === lang.code ? "bg-accent/10 text-accent" : "text-muted-foreground hover:bg-secondary"
                         }`}
                         title={lang.label}

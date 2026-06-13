@@ -69,7 +69,7 @@ export default function LocationDetailPage() {
       {/* Back */}
       <Link
         to="/search"
-        className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        className="mb-4 inline-flex items-center gap-1.5 rounded-md text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
       >
         <ArrowLeft className="h-4 w-4" />
         {t("location.backToSearch")}

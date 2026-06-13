@@ -198,7 +198,8 @@ export default function HomePage() {
                     <button
                       key={cat.key}
                       onClick={() => setActiveCategory(cat.key)}
-                      className={`flex shrink-0 snap-start items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                      aria-pressed={activeCategory === cat.key}
+                      className={`flex shrink-0 snap-start items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                         activeCategory === cat.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"
                       }`}
                     >
@@ -214,6 +215,7 @@ export default function HomePage() {
                   <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <input
                     type="text"
+                    aria-label={t("hero.searchPlaceholder")}
                     placeholder={t("hero.searchPlaceholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}

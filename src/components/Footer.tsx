@@ -67,7 +67,7 @@ export default function Footer() {
               <ul className="space-y-2">
                 {links.map((l) => (
                   <li key={l.label}>
-                    <Link to={l.to} className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors">
+                    <Link to={l.to} className="inline-block py-1 text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
                       {l.label}
                     </Link>
                   </li>
@@ -81,7 +81,7 @@ export default function Footer() {
           <div className="mt-1 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
             <span>{t("footer.legalEntity")}</span>
             <span className="opacity-40">·</span>
-            <a href="mailto:info@ruumly.eu" className="hover:text-primary-foreground transition-colors">
+            <a href="mailto:info@ruumly.eu" className="rounded hover:text-primary-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
               {t("footer.supportEmail")}: info@ruumly.eu
             </a>
             <span className="opacity-40">·</span>

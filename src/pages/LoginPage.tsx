@@ -187,7 +187,7 @@ function LoginPageInner() {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
-          <button onClick={() => setView("login")} className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+          <button onClick={() => setView("login")} className="mb-4 inline-flex items-center gap-1 rounded-md py-2 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-95">
             <ArrowLeft className="h-4 w-4" /> {t("login.backToLogin")}
           </button>
           <h1 className="font-display text-2xl font-bold">{t("login.forgotTitle")}</h1>
@@ -289,7 +289,7 @@ function LoginPageInner() {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input id="reg-password" type={showPassword ? "text" : "password"} placeholder="••••••••" {...registerForm.register("password")} className="pl-10 pr-10" aria-invalid={!!registerForm.formState.errors.password} aria-describedby={registerForm.formState.errors.password ? "reg-password-error" : undefined} />
-                <button type="button" aria-label={showPassword ? t("login.hidePassword") || "Hide password" : t("login.showPassword") || "Show password"} onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <button type="button" aria-pressed={showPassword} aria-label={showPassword ? t("login.hidePassword") : t("login.showPassword")} onClick={() => setShowPassword(!showPassword)} className="absolute right-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-95">
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
@@ -333,7 +333,7 @@ function LoginPageInner() {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input id="login-password" type={showPassword ? "text" : "password"} placeholder="••••••••" {...loginForm.register("password")} className="pl-10 pr-10" aria-invalid={!!loginForm.formState.errors.password} aria-describedby={loginForm.formState.errors.password ? "login-password-error" : undefined} />
-                <button type="button" aria-label={showPassword ? t("login.hidePassword") || "Hide password" : t("login.showPassword") || "Show password"} onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <button type="button" aria-pressed={showPassword} aria-label={showPassword ? t("login.hidePassword") : t("login.showPassword")} onClick={() => setShowPassword(!showPassword)} className="absolute right-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-95">
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
@@ -341,7 +341,7 @@ function LoginPageInner() {
             </div>
 
             <div className="text-right">
-              <button type="button" onClick={() => setView("forgot")} className="text-xs text-accent hover:underline">{t("login.forgotPassword")}</button>
+              <button type="button" onClick={() => setView("forgot")} className="inline-block rounded-md py-2 text-xs text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-95">{t("login.forgotPassword")}</button>
             </div>
 
             <Button type="submit" className="w-full bg-accent py-5 text-accent-foreground hover:bg-accent/90" disabled={loading}>
@@ -353,7 +353,7 @@ function LoginPageInner() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           {isRegister ? t("login.hasAccount") : t("login.noAccount")}{" "}
-          <button onClick={() => { setView(isRegister ? "login" : "register"); loginForm.reset(); registerForm.reset(); }} className="font-medium text-accent hover:underline">
+          <button onClick={() => { setView(isRegister ? "login" : "register"); loginForm.reset(); registerForm.reset(); }} className="rounded-md font-medium text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-95">
             {isRegister ? t("login.title") : t("login.register")}
           </button>
         </p>

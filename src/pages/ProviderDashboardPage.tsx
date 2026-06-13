@@ -125,7 +125,7 @@ export default function ProviderDashboardPage() {
             const Icon = l.icon;
             const badge = l.id === "orders" ? allOrders.filter(o => o.status === "sent" || o.status === "created").length : 0;
             return (
-              <button key={l.id} onClick={() => setTab(l.id)} className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors ${tab === l.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
+              <button key={l.id} onClick={() => setTab(l.id)} aria-current={tab === l.id ? "page" : undefined} className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${tab === l.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
                 <span className="flex items-center gap-2.5"><Icon className="h-4 w-4" />{l.label}</span>
                 {badge > 0 && <span className="flex h-5 w-5 items-center justify-center rounded-full bg-warning text-[10px] font-bold text-warning-foreground">{badge}</span>}
               </button>
@@ -164,7 +164,7 @@ export default function ProviderDashboardPage() {
 
         <div className="mb-4 flex items-center justify-between gap-3">
           <div className="flex-1 lg:hidden relative">
-            <button onClick={() => setMobileNavOpen(!mobileNavOpen)} className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium">
+            <button onClick={() => setMobileNavOpen(!mobileNavOpen)} aria-expanded={mobileNavOpen} aria-haspopup="menu" className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
               <span className="flex items-center gap-2.5"><CurrentIcon className="h-4 w-4 text-muted-foreground" />{currentTab?.label}</span>
               <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${mobileNavOpen ? "rotate-180" : ""}`} />
             </button>
@@ -176,7 +176,7 @@ export default function ProviderDashboardPage() {
                     const Icon = l.icon;
                     const badge = l.id === "orders" ? allOrders.filter(o => o.status === "sent" || o.status === "created").length : 0;
                     return (
-                      <button key={l.id} onClick={() => { setTab(l.id); setMobileNavOpen(false); }} className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${tab === l.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
+                      <button key={l.id} onClick={() => { setTab(l.id); setMobileNavOpen(false); }} aria-current={tab === l.id ? "page" : undefined} className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${tab === l.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
                         <span className="flex items-center gap-2.5"><Icon className="h-4 w-4" />{l.label}</span>
                         {badge > 0 && <span className="flex h-5 w-5 items-center justify-center rounded-full bg-warning text-[10px] font-bold text-warning-foreground">{badge}</span>}
                       </button>
@@ -188,11 +188,11 @@ export default function ProviderDashboardPage() {
           </div>
 
           <div className="ml-auto flex items-center gap-2 shrink-0">
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setSoundEnabled(!soundEnabled)} title={soundEnabled ? t("provider.notifications.soundOn") : t("provider.notifications.soundOff")}>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setSoundEnabled(!soundEnabled)} aria-pressed={soundEnabled} aria-label={soundEnabled ? t("provider.notifications.soundOn") : t("provider.notifications.soundOff")} title={soundEnabled ? t("provider.notifications.soundOn") : t("provider.notifications.soundOff")}>
               {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
             </Button>
             <div className="relative" ref={bellRef}>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 relative" onClick={() => setShowNotifications(!showNotifications)}>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 relative" onClick={() => setShowNotifications(!showNotifications)} aria-label={t("provider.notifications.title")} aria-expanded={showNotifications} aria-haspopup="dialog">
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-accent-foreground animate-pulse">
@@ -204,7 +204,7 @@ export default function ProviderDashboardPage() {
                 <div className="absolute right-0 top-10 z-50 w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-card shadow-xl">
                   <div className="flex items-center justify-between border-b border-border p-3">
                     <span className="text-sm font-semibold">{t("provider.notifications.title")}</span>
-                    <button onClick={markAllRead} disabled={unreadCount === 0} className="text-xs text-accent hover:underline disabled:opacity-50">{t("provider.notifications.markRead")}</button>
+                    <button onClick={markAllRead} disabled={unreadCount === 0} className="rounded text-xs text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:opacity-50">{t("provider.notifications.markRead")}</button>
                   </div>
                   <div className="max-h-80 overflow-y-auto">
                     {notifications.length === 0 ? (
@@ -221,7 +221,7 @@ export default function ProviderDashboardPage() {
                              setTab("orders");
                            }
                          }}
-                           className={`flex w-full items-start gap-3 p-3 text-left transition-colors hover:bg-secondary/50 ${!n.read ? "bg-accent/5" : ""}`}>
+                           className={`flex w-full items-start gap-3 p-3 text-left transition-colors hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent ${!n.read ? "bg-accent/5" : ""}`}>
                           <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${n.type === "order" ? "bg-warning/10 text-warning" : n.type === "review" ? "bg-accent/10 text-accent" : "bg-secondary text-muted-foreground"}`}>
                             {n.type === "order" ? <Package className="h-4 w-4" /> : n.type === "review" ? <Star className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
                           </div>

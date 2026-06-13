@@ -158,7 +158,7 @@ export default function AboutPage() {
                         {f.email && (
                           <a
                             href={`mailto:${f.email}`}
-                            className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+                            className="inline-flex items-center gap-1.5 rounded text-xs font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                           >
                             <Mail className="h-3.5 w-3.5" /> {f.email}
                           </a>
@@ -168,7 +168,7 @@ export default function AboutPage() {
                             href={f.linkedinUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+                            className="inline-flex items-center gap-1.5 rounded text-xs font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                           >
                             <Linkedin className="h-3.5 w-3.5" /> LinkedIn
                           </a>

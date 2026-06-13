@@ -216,7 +216,8 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
     <div className="rounded-xl border border-border bg-card">
       <button
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between p-4 text-left text-sm font-medium"
+        aria-expanded={open}
+        className="flex w-full items-center justify-between p-4 text-left text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset"
       >
         {question}
         <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />

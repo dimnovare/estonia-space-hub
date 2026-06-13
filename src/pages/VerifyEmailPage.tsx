@@ -46,7 +46,7 @@ export default function VerifyEmailPage() {
 
           {status === "success" && (
             <>
-              <CheckCircle className="mx-auto h-14 w-14 text-green-600" />
+              <CheckCircle className="mx-auto h-14 w-14 text-success" />
               <h1 className="text-2xl font-bold text-foreground">{t("verify.success")}</h1>
               <p className="text-muted-foreground">{t("verify.successSub")}</p>
               <Button asChild>

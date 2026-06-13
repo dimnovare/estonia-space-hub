@@ -83,7 +83,8 @@ export default function AdminPartnerListPage() {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`rounded-full px-3 py-1.5 text-xs font-medium ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}
+              aria-pressed={filter === f}
+              className={`rounded-full px-3 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-95 sm:py-1.5 ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}
             >
               {f === "all" ? t("admin.allPartners") : f === "active" ? (t("admin.activePartners") || "Active") : (t("admin.partnerPages") || "With partner page")}
             </button>
@@ -146,7 +147,8 @@ export default function AdminPartnerListPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="text-muted-foreground hover:text-foreground"
+                        aria-label={t("admin.openPartnerPage")}
+                        className="rounded-md p-2 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-95"
                       >
                         <ExternalLink className="h-4 w-4" />
                       </a>

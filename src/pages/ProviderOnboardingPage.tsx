@@ -167,7 +167,7 @@ export default function ProviderOnboardingPage() {
       {/* Stepper */}
       <div className="mt-6 mb-8 flex items-center gap-2">
         {steps.map((s, i) => (
-          <div key={s} className="flex items-center gap-2">
+          <div key={s} className="flex items-center gap-2" aria-current={i === step ? "step" : undefined}>
             <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${i <= step ? "bg-accent text-accent-foreground" : "bg-secondary text-muted-foreground"}`}>
               {i < step ? <Check className="h-4 w-4" /> : i + 1}
             </div>
@@ -187,7 +187,7 @@ export default function ProviderOnboardingPage() {
                 {businessTypes.map((bt) => {
                   const Icon = bt.icon;
                   return (
-                    <button key={bt.key} onClick={() => setBusinessType(bt.key)} className={`flex items-center gap-3 rounded-xl border-2 p-4 transition-colors ${businessType === bt.key ? "border-accent bg-accent/5" : "border-border hover:border-accent/50"}`}>
+                    <button key={bt.key} onClick={() => setBusinessType(bt.key)} aria-pressed={businessType === bt.key} className={`flex items-center gap-3 rounded-xl border-2 p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-95 ${businessType === bt.key ? "border-accent bg-accent/5" : "border-border hover:border-accent/50"}`}>
                       <Icon className="h-6 w-6 text-accent" />
                       <span className="text-sm font-medium">{bt.label}</span>
                     </button>
@@ -199,38 +199,38 @@ export default function ProviderOnboardingPage() {
               )}
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.name")} *</label>
-              <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={inputClass} placeholder={t("onboard.companyPlaceholder")} />
+              <label htmlFor="onboard-company" className="text-xs font-medium text-muted-foreground">{t("onboard.step2.name")} *</label>
+              <input id="onboard-company" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={inputClass} placeholder={t("onboard.companyPlaceholder")} />
               {showValidation && !companyName.trim() && (
                 <p role="alert" className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.fieldRequired")}</p>
               )}
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.reg")} *</label>
-                <input value={registryCode} onChange={(e) => setRegistryCode(e.target.value)} className={inputClass} placeholder="12345678" />
+                <label htmlFor="onboard-reg" className="text-xs font-medium text-muted-foreground">{t("onboard.step2.reg")} *</label>
+                <input id="onboard-reg" value={registryCode} onChange={(e) => setRegistryCode(e.target.value)} className={inputClass} placeholder="12345678" />
                 {showValidation && !registryCode.trim() && (
                   <p role="alert" className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.fieldRequired")}</p>
                 )}
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.vat")}</label>
-                <input className={inputClass} placeholder="EE123456789" />
+                <label htmlFor="onboard-vat" className="text-xs font-medium text-muted-foreground">{t("onboard.step2.vat")}</label>
+                <input id="onboard-vat" className={inputClass} placeholder="EE123456789" />
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.contact")} *</label>
-                <input value={effectiveContactName} onChange={(e) => setContactName(e.target.value)} className={inputClass} />
+                <label htmlFor="onboard-contact" className="text-xs font-medium text-muted-foreground">{t("onboard.step2.contact")} *</label>
+                <input id="onboard-contact" value={effectiveContactName} onChange={(e) => setContactName(e.target.value)} className={inputClass} />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.email")} *</label>
-                <input type="email" value={effectiveContactEmail} onChange={(e) => setContactEmail(e.target.value)} className={inputClass} />
+                <label htmlFor="onboard-email" className="text-xs font-medium text-muted-foreground">{t("onboard.step2.email")} *</label>
+                <input id="onboard-email" type="email" value={effectiveContactEmail} onChange={(e) => setContactEmail(e.target.value)} className={inputClass} />
               </div>
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.phone")} *</label>
-              <input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} className={inputClass} placeholder="+372" />
+              <label htmlFor="onboard-phone" className="text-xs font-medium text-muted-foreground">{t("onboard.step2.phone")} *</label>
+              <input id="onboard-phone" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} className={inputClass} placeholder="+372" />
               {showValidation && !contactPhone.trim() && (
                 <p role="alert" className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.fieldRequired")}</p>
               )}
@@ -249,7 +249,7 @@ export default function ProviderOnboardingPage() {
                   const Icon = st.icon;
                   const selected = selectedServices.includes(st.key);
                   return (
-                    <button key={st.key} onClick={() => toggleService(st.key)} className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-colors ${selected ? "border-accent bg-accent/5" : "border-border hover:border-accent/50"}`}>
+                    <button key={st.key} onClick={() => toggleService(st.key)} aria-pressed={selected} className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-95 ${selected ? "border-accent bg-accent/5" : "border-border hover:border-accent/50"}`}>
                       <Icon className={`h-8 w-8 ${selected ? "text-accent" : "text-muted-foreground"}`} />
                       <span className="text-sm font-medium">{st.label}</span>
                       {selected && <Check className="h-4 w-4 text-accent" />}
@@ -267,7 +267,7 @@ export default function ProviderOnboardingPage() {
                 {serviceAreas.map((area) => {
                   const selected = selectedAreas.includes(area);
                   return (
-                    <button key={area} onClick={() => toggleArea(area)} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${selected ? "bg-accent text-accent-foreground" : "bg-secondary text-muted-foreground hover:bg-secondary/80"}`}>
+                    <button key={area} onClick={() => toggleArea(area)} aria-pressed={selected} className={`rounded-full px-3 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-95 sm:py-1.5 ${selected ? "bg-accent text-accent-foreground" : "bg-secondary text-muted-foreground hover:bg-secondary/80"}`}>
                       {area}
                     </button>
                   );
@@ -374,8 +374,9 @@ export default function ProviderOnboardingPage() {
 
             {/* Notes */}
             <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("onboard.step5.notes")}</label>
+              <label htmlFor="onboard-notes" className="text-xs font-medium text-muted-foreground">{t("onboard.step5.notes")}</label>
               <textarea
+                id="onboard-notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className={`${inputClass} min-h-[80px] resize-y`}

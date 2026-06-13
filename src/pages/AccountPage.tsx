@@ -78,7 +78,7 @@ function MobileAccountNav({ tab, setTab, sidebarLinks, unreadMessages, unreadNot
 
   return (
     <div className="relative">
-      <button onClick={() => setOpen(!open)} className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium">
+      <button onClick={() => setOpen(!open)} aria-label={t("nav.menu")} aria-expanded={open} className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium transition-colors active:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
         <span className="flex items-center gap-2.5"><CurrentIcon className="h-4 w-4 text-muted-foreground" />{current?.label || tab}</span>
         <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
@@ -91,13 +91,13 @@ function MobileAccountNav({ tab, setTab, sidebarLinks, unreadMessages, unreadNot
               const active = tab === l.id;
               const unread = l.id === "notifications" ? unreadNotifications : l.id === "messages" ? unreadMessages : 0;
               return (
-                <button key={l.id} onClick={() => { setTab(l.id); setOpen(false); }} className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
+                <button key={l.id} onClick={() => { setTab(l.id); setOpen(false); }} aria-current={active ? "page" : undefined} className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
                   <span className="flex items-center gap-2.5"><Icon className="h-4 w-4" />{l.label}</span>
                   {unread > 0 && <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">{unread}</span>}
                 </button>
               );
             })}
-            <button onClick={() => { onLogout(); setOpen(false); }} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10">
+            <button onClick={() => { onLogout(); setOpen(false); }} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
               <LogOut className="h-4 w-4" /> {t("account.logout")}
             </button>
           </div>
@@ -129,9 +129,9 @@ export default function AccountPage() {
   const unreadNotifications = notifications.filter((n: any) => !n.read).length;
 
   const roleDashboardLinks = role === "admin"
-    ? [{ to: "/admin", label: t("nav.adminDashboard"), icon: "🛡️" }]
+    ? [{ to: "/admin", label: t("nav.adminDashboard"), icon: Shield }]
     : role === "provider"
-    ? [{ to: "/provider/dashboard", label: t("nav.providerDashboard") || "Partneri paneel", icon: "📊" }]
+    ? [{ to: "/provider/dashboard", label: t("nav.providerDashboard") || "Partneri paneel", icon: LayoutDashboard }]
     : [];
 
   return (
@@ -145,11 +145,14 @@ export default function AccountPage() {
         </div>
         {roleDashboardLinks.length > 0 && (
           <div className="px-2 mb-2">
-            {roleDashboardLinks.map(dl => (
-              <Link key={dl.to} to={dl.to} className="flex items-center gap-2 rounded-lg border border-dashed border-accent/30 bg-accent/5 px-3 py-2 text-sm font-medium text-accent hover:bg-accent/10 transition-colors">
-                <span>{dl.icon}</span> {dl.label} <ChevronRight className="ml-auto h-3.5 w-3.5" />
+            {roleDashboardLinks.map(dl => {
+              const DlIcon = dl.icon;
+              return (
+              <Link key={dl.to} to={dl.to} className="flex items-center gap-2 rounded-lg border border-dashed border-accent/30 bg-accent/5 px-3 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
+                <DlIcon className="h-4 w-4" /> {dl.label} <ChevronRight className="ml-auto h-3.5 w-3.5" />
               </Link>
-            ))}
+              );
+            })}
           </div>
         )}
         <nav className="space-y-0.5 px-2">
@@ -158,13 +161,13 @@ export default function AccountPage() {
             const active = tab === l.id;
             const unread = l.id === "notifications" ? unreadNotifications : l.id === "messages" ? unreadMessages : 0;
             return (
-              <button key={l.id} onClick={() => setTab(l.id)} className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
+              <button key={l.id} onClick={() => setTab(l.id)} aria-current={active ? "page" : undefined} className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
                 <span className="flex items-center gap-2.5"><Icon className="h-4 w-4" />{l.label}</span>
                 {unread > 0 && <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">{unread}</span>}
               </button>
             );
           })}
-          <button onClick={handleLogout} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10">
+          <button onClick={handleLogout} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
             <LogOut className="h-4 w-4" /> {t("account.logout")}
           </button>
         </nav>
@@ -175,11 +178,14 @@ export default function AccountPage() {
         <div className="mb-4 lg:hidden">
           {roleDashboardLinks.length > 0 && (
             <div className="mb-2 flex gap-2">
-              {roleDashboardLinks.map(dl => (
-                <Link key={dl.to} to={dl.to} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-dashed border-accent/30 bg-accent/5 px-3 py-2 text-xs font-medium text-accent">
-                  <span>{dl.icon}</span> {dl.label}
+              {roleDashboardLinks.map(dl => {
+                const DlIcon = dl.icon;
+                return (
+                <Link key={dl.to} to={dl.to} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-dashed border-accent/30 bg-accent/5 px-3 py-2 text-xs font-medium text-accent transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
+                  <DlIcon className="h-3.5 w-3.5" /> {dl.label}
                 </Link>
-              ))}
+                );
+              })}
             </div>
           )}
           <MobileAccountNav tab={tab} setTab={setTab} sidebarLinks={sidebarLinks} unreadMessages={unreadMessages} unreadNotifications={unreadNotifications} onLogout={handleLogout} />
@@ -242,11 +248,11 @@ function AccountOverview({ onNavigate }: { onNavigate: (tab: string) => void }) 
         <div className="mt-6"><h2 className="font-display text-lg font-semibold">{t("account.activeBookings")}</h2><div className="mt-3 space-y-2">{active.map(b => <BookingCard key={b.id} booking={b} />)}</div></div>
       )}
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
-        <button onClick={() => onNavigate("messages")} className="flex items-center justify-between rounded-xl border border-border p-4 hover:bg-secondary transition-colors">
+        <button onClick={() => onNavigate("messages")} className="flex items-center justify-between rounded-xl border border-border p-4 transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
           <span className="flex items-center gap-2 text-sm font-medium"><MessageSquare className="h-4 w-4 text-accent" /> {t("account.messages")}</span>
           <span className="text-sm text-muted-foreground">0 {t("account.unread")}</span>
         </button>
-        <button onClick={() => onNavigate("bookings")} className="flex items-center justify-between rounded-xl border border-border p-4 hover:bg-secondary transition-colors">
+        <button onClick={() => onNavigate("bookings")} className="flex items-center justify-between rounded-xl border border-border p-4 transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
           <span className="flex items-center gap-2 text-sm font-medium"><Package className="h-4 w-4 text-accent" /> {t("account.bookings")}</span>
           <span className="text-sm text-muted-foreground">{bookings.length}</span>
         </button>
@@ -316,7 +322,7 @@ function BookingCard({ booking }: { booking: Booking }) {
 
   return (
     <>
-      <button onClick={() => setOpen(true)} className="flex w-full items-center justify-between rounded-xl border border-border p-4 text-left hover:bg-secondary transition-colors">
+      <button onClick={() => setOpen(true)} className="flex w-full items-center justify-between rounded-xl border border-border p-4 text-left transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary"><Icon className="h-5 w-5 text-muted-foreground" /></div>
           <div className="min-w-0 flex-1">
@@ -352,9 +358,9 @@ function BookingCard({ booking }: { booking: Booking }) {
                   <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1"><Send className="h-3 w-3" /> {t("admin.status")}</p>
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${ORDER_STATUS_CONFIG[order.status].color}`}>{t(ORDER_STATUS_CONFIG[order.status].labelKey) || ORDER_STATUS_CONFIG[order.status].label}</span>
                 </div>
-                {(order.status === "sent" || order.status === "sending") && <p className="mt-1 text-xs text-warning-text font-medium">⏳ {t("account.waitingConfirmation")}</p>}
-                {order.status === "confirmed" && <p className="mt-1 text-xs text-success font-medium">✓ {t("account.providerConfirmed")}</p>}
-                {order.status === "rejected" && <p className="mt-1 text-xs text-destructive font-medium">✗ {t("account.providerRejected")}</p>}
+                {(order.status === "sent" || order.status === "sending") && <p className="mt-1 flex items-center gap-1 text-xs text-warning-text font-medium"><Clock className="h-3 w-3 shrink-0" /> {t("account.waitingConfirmation")}</p>}
+                {order.status === "confirmed" && <p className="mt-1 flex items-center gap-1 text-xs text-success font-medium"><CheckCircle className="h-3 w-3 shrink-0" /> {t("account.providerConfirmed")}</p>}
+                {order.status === "rejected" && <p className="mt-1 flex items-center gap-1 text-xs text-destructive font-medium"><XCircle className="h-3 w-3 shrink-0" /> {t("account.providerRejected")}</p>}
               </div>
             )}
             <div className="rounded-lg border border-border p-3">
@@ -401,8 +407,8 @@ function BookingCard({ booking }: { booking: Booking }) {
                 </p>
                 {signedContract ? (
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs text-success font-medium">
-                      ✓ {t("contract.signed")}
+                    <span className="flex items-center gap-1 text-xs text-success font-medium">
+                      <CheckCircle className="h-3 w-3 shrink-0" /> {t("contract.signed")}
                       {signedContract.signedAt ? ` · ${new Date(signedContract.signedAt).toLocaleDateString()}` : ""}
                     </span>
                     <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleViewContract(); }}>
@@ -479,7 +485,7 @@ function AccountBookings() {
       <h1 className="font-display text-2xl font-bold">{t("account.bookings")}</h1>
       <div className="mt-4 hidden sm:flex gap-2 overflow-x-auto">
         {(["all", "pending", "confirmed", "active", "completed", "cancelled"] as const).map(f => (
-          <button key={f} onClick={() => setFilter(f)} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
+          <button key={f} onClick={() => setFilter(f)} aria-pressed={filter === f} className={`shrink-0 rounded-full px-3 py-2 text-xs font-medium transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 sm:py-1.5 ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
             {f === "all" ? t("account.all") : statusConfig[f].label} ({f === "all" ? bookings.length : bookings.filter(b => b.status === f).length})
           </button>
         ))}
@@ -487,6 +493,7 @@ function AccountBookings() {
       <select
         value={filter}
         onChange={(e) => setFilter(e.target.value as BookingStatus | "all")}
+        aria-label={t("account.bookings")}
         className="mt-4 w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent sm:hidden">
         <option value="all">{t("account.all")} ({bookings.length})</option>
         <option value="pending">{statusConfig.pending.label} ({bookings.filter(b => b.status === "pending").length})</option>
@@ -589,7 +596,7 @@ function AccountMessages() {
           {conversations.length === 0 ? (
             <div className="flex flex-col items-center py-8 text-center"><MessageSquare className="h-8 w-8 text-muted-foreground/30" /><p className="mt-2 text-xs text-muted-foreground">{t("account.noMessages")}</p></div>
           ) : conversations.map(c => (
-            <button key={c.bookingId} onClick={() => handleSelectBooking(c.bookingId)} className={`flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors ${selectedBooking === c.bookingId ? "bg-accent/10" : "hover:bg-secondary/50"}`}>
+            <button key={c.bookingId} onClick={() => handleSelectBooking(c.bookingId)} aria-current={selectedBooking === c.bookingId ? "true" : undefined} className={`flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${selectedBooking === c.bookingId ? "bg-accent/10" : "hover:bg-secondary/50"}`}>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium truncate">{c.listingTitle}</p>
                 <p className="mt-0.5 text-[11px] text-muted-foreground truncate">{c.provider}</p>
@@ -606,7 +613,8 @@ function AccountMessages() {
             <div className="flex flex-col h-[calc(100vh-16rem)] lg:h-[500px]">
               <button
                 onClick={() => setSelectedBooking(null)}
-                className="flex items-center gap-1.5 px-3 pt-3 text-xs text-muted-foreground hover:text-foreground lg:hidden"
+                aria-label={t("account.chat.backToList")}
+                className="flex items-center gap-1.5 px-3 pt-3 text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 lg:hidden"
               >
                 <ArrowLeft className="h-3.5 w-3.5" /> {t("account.chat.backToList")}
               </button>
@@ -634,8 +642,8 @@ function AccountMessages() {
                 ))}
               </div>
               <div className="border-t border-border p-3 flex gap-2 overflow-hidden">
-                <input value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} placeholder={t("account.chat.inputPlaceholder")} className="flex-1 min-w-0 rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-                <Button size="sm" onClick={sendMessage} disabled={!newMsg.trim() || sendMutation.isPending} className="bg-accent text-accent-foreground">
+                <input value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} aria-label={t("account.chat.inputPlaceholder")} placeholder={t("account.chat.inputPlaceholder")} className="flex-1 min-w-0 rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                <Button size="sm" aria-label={t("common.send")} onClick={sendMessage} disabled={!newMsg.trim() || sendMutation.isPending} className="bg-accent text-accent-foreground">
                   {sendMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 </Button>
               </div>
@@ -749,7 +757,7 @@ function AccountNotifications() {
         {hasUnread && (
           <button
             onClick={() => markAll.mutate()}
-            className="text-xs text-accent hover:underline"
+            className="rounded text-xs text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
           >
             {t("account.markAllRead")}
           </button>
@@ -786,7 +794,7 @@ function AccountNotifications() {
                 {!n.read && (
                   <button
                     onClick={(e) => { e.stopPropagation(); markOne.mutate(n.id); }}
-                    className="shrink-0 rounded-lg border border-border px-2.5 py-1 text-[10px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors whitespace-nowrap"
+                    className="shrink-0 rounded-lg border border-border px-2.5 py-1 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 whitespace-nowrap"
                   >
                     {t("notifications.markRead")}
                   </button>
@@ -822,15 +830,15 @@ function AccountProfile() {
       <h1 className="font-display text-2xl font-bold">{t("account.profileSettings")}</h1>
       <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 max-w-lg space-y-4">
         <div>
-          <label className="text-xs font-medium text-muted-foreground">{t("account.name")}</label>
-          <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" {...form.register("name")} />
-          {form.formState.errors.name && <p className="mt-1 text-xs text-destructive">{form.formState.errors.name.message}</p>}
+          <label htmlFor="profile-name" className="text-xs font-medium text-muted-foreground">{t("account.name")}</label>
+          <input id="profile-name" className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" {...form.register("name")} />
+          {form.formState.errors.name && <p role="alert" className="mt-1 text-xs text-destructive">{form.formState.errors.name.message}</p>}
         </div>
-        <div><label className="text-xs font-medium text-muted-foreground">{t("account.emailLabel")}</label><input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-muted-foreground" value={user?.email || ""} disabled /></div>
+        <div><label htmlFor="profile-email" className="text-xs font-medium text-muted-foreground">{t("account.emailLabel")}</label><input id="profile-email" className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-muted-foreground" value={user?.email || ""} disabled /></div>
         <div>
-          <label className="text-xs font-medium text-muted-foreground">{t("account.phoneLabel")}</label>
-          <input className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" {...form.register("phone")} />
-          {form.formState.errors.phone && <p className="mt-1 text-xs text-destructive">{form.formState.errors.phone.message}</p>}
+          <label htmlFor="profile-phone" className="text-xs font-medium text-muted-foreground">{t("account.phoneLabel")}</label>
+          <input id="profile-phone" className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" {...form.register("phone")} />
+          {form.formState.errors.phone && <p role="alert" className="mt-1 text-xs text-destructive">{form.formState.errors.phone.message}</p>}
         </div>
         <Button type="submit" className="bg-accent text-accent-foreground hover:bg-accent/90">{t("form.save")}</Button>
       </form>
@@ -878,16 +886,16 @@ function AccountSecurity() {
           ) : (
             <form onSubmit={pwForm.handleSubmit(onSubmit)} className="mt-3 space-y-3">
               <div>
-                <input type="password" placeholder={t("account.currentPasswordPlaceholder")} {...pwForm.register("currentPassword")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-                {pwForm.formState.errors.currentPassword && <p className="mt-1 text-xs text-destructive">{pwForm.formState.errors.currentPassword.message}</p>}
+                <input type="password" aria-label={t("account.currentPasswordPlaceholder")} placeholder={t("account.currentPasswordPlaceholder")} {...pwForm.register("currentPassword")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                {pwForm.formState.errors.currentPassword && <p role="alert" className="mt-1 text-xs text-destructive">{pwForm.formState.errors.currentPassword.message}</p>}
               </div>
               <div>
-                <input type="password" placeholder={t("account.newPasswordPlaceholder")} {...pwForm.register("newPassword")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-                {pwForm.formState.errors.newPassword && <p className="mt-1 text-xs text-destructive">{pwForm.formState.errors.newPassword.message}</p>}
+                <input type="password" aria-label={t("account.newPasswordPlaceholder")} placeholder={t("account.newPasswordPlaceholder")} {...pwForm.register("newPassword")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                {pwForm.formState.errors.newPassword && <p role="alert" className="mt-1 text-xs text-destructive">{pwForm.formState.errors.newPassword.message}</p>}
               </div>
               <div>
-                <input type="password" placeholder={t("account.confirmPasswordPlaceholder")} {...pwForm.register("confirmPassword")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-                {pwForm.formState.errors.confirmPassword && <p className="mt-1 text-xs text-destructive">{pwForm.formState.errors.confirmPassword.message}</p>}
+                <input type="password" aria-label={t("account.confirmPasswordPlaceholder")} placeholder={t("account.confirmPasswordPlaceholder")} {...pwForm.register("confirmPassword")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                {pwForm.formState.errors.confirmPassword && <p role="alert" className="mt-1 text-xs text-destructive">{pwForm.formState.errors.confirmPassword.message}</p>}
               </div>
               <div className="flex gap-2">
                 <Button type="submit" size="sm" className="bg-accent text-accent-foreground" disabled={submitting}>
@@ -924,7 +932,7 @@ function AccountSecurity() {
               </div>
             </div>
             {user?.hasGoogleAccount ? (
-              <span className="rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">✓ {t("account.activeStatus")}</span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success"><CheckCircle className="h-3 w-3 shrink-0" /> {t("account.activeStatus")}</span>
             ) : (
               <p className="text-xs text-muted-foreground">{t("account.loginWithGoogle")}</p>
             )}
@@ -1134,7 +1142,7 @@ function AccountBilling() {
        <h1 className="font-display text-2xl font-bold">{t("account.billing")}</h1>
       <p className="mt-2 text-sm text-muted-foreground">{t("account.billingDesc")}</p>
       {isLoading && <div className="py-8 text-center"><Loader2 className="animate-spin mx-auto" /></div>}
-      {isError && <p className="text-sm text-destructive">{t("error.generic")}</p>}
+      {isError && <p role="alert" className="text-sm text-destructive">{t("error.generic")}</p>}
       {invoices.length === 0 ? (
         <div className="mt-6 flex flex-col items-center py-12 text-center">
           <CreditCard className="h-12 w-12 text-muted-foreground/30" />
@@ -1194,7 +1202,7 @@ function AccountBilling() {
                     </td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">{inv.issuedAt}</td>
                     <td className="px-4 py-3">
-                      <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => generateInvoicePdf(inv)}>
+                      <Button variant="ghost" size="sm" aria-label={t("contract.download")} className="h-7 px-2" onClick={() => generateInvoicePdf(inv)}>
                         <Download className="h-3.5 w-3.5" />
                       </Button>
                     </td>
@@ -1221,7 +1229,7 @@ function AccountHelp() {
       <h1 className="font-display text-2xl font-bold">{t("account.help.title")}</h1>
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
         {helpLinks.map((link) => (
-          <Link key={link.to} to={link.to} className="flex flex-col rounded-xl border border-border p-5 hover:bg-secondary transition-colors">
+          <Link key={link.to} to={link.to} className="flex flex-col rounded-xl border border-border p-5 transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
             <span className="text-sm font-medium">{link.title}</span>
             <span className="mt-1 text-xs text-muted-foreground">{link.desc}</span>
             <ChevronRight className="mt-auto pt-2 h-6 w-4 text-muted-foreground" />

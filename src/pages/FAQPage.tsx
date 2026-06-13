@@ -96,7 +96,7 @@ export default function FAQPage() {
                         onClick={() => toggleItem(key)}
                         aria-expanded={isOpen}
                         aria-controls={`panel-${key}`}
-                        className="flex w-full items-center justify-between gap-3 p-4 text-left text-sm font-medium transition-colors hover:bg-secondary/40"
+                        className="flex w-full items-center justify-between gap-3 p-4 text-left text-sm font-medium transition-colors hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                       >
                         <span>{item.q}</span>
                         <ChevronDown

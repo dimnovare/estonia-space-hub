@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { X } from "lucide-react";
 import { useSearchParams } from "@/i18n/routing";
 import { useQuery } from "@tanstack/react-query";
 import { supplierService } from "@/services";
@@ -39,8 +40,9 @@ export default function AdminPage() {
       <div className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6">
         {["locations", "orders", "payouts", "rebates"].includes(activeTab) && (
           <div className="mb-4 flex flex-wrap items-center gap-3">
-            <label className="text-sm font-medium text-muted-foreground">{t("admin.filterByPartner")}</label>
+            <label htmlFor="admin-partner-filter" className="text-sm font-medium text-muted-foreground">{t("admin.filterByPartner")}</label>
             <select
+              id="admin-partner-filter"
               value={filterSupplierId}
               onChange={(e) => setFilterSupplierId(e.target.value)}
               className="rounded-lg border border-border bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
@@ -53,9 +55,10 @@ export default function AdminPage() {
             {filterSupplierId && (
               <button
                 onClick={() => setFilterSupplierId("")}
-                className="text-xs text-muted-foreground hover:text-foreground"
+                aria-label={t("admin.clearFilter")}
+                className="inline-flex items-center gap-1 rounded-md px-2 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-95 sm:py-1"
               >
-                ✕ {t("admin.clearFilter")}
+                <X className="h-3.5 w-3.5" /> {t("admin.clearFilter")}
               </button>
             )}
           </div>

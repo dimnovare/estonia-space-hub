@@ -237,11 +237,11 @@ export function WarehouseDetail() {
         structuredData={[buildProductSchema(wListing, language), buildBreadcrumbSchema(wListing, language)]}
       />
       <nav className="mb-4 flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Link to="/" className="hover:text-foreground transition-colors">{t("nav.home")}</Link>
+        <Link to="/" className="rounded hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">{t("nav.home")}</Link>
         <span className="opacity-40">/</span>
-        <Link to="/search?type=warehouse" className="hover:text-foreground transition-colors">{t("nav.storage")}</Link>
+        <Link to="/search?type=warehouse" className="rounded hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">{t("nav.storage")}</Link>
         <span className="opacity-40">/</span>
-        <span className="text-foreground font-medium truncate max-w-[180px] sm:max-w-[280px]">{wListing.title}</span>
+        <span aria-current="page" className="text-foreground font-medium truncate max-w-[180px] sm:max-w-[280px]">{wListing.title}</span>
       </nav>
 
       <div className="grid gap-8 lg:grid-cols-3">
@@ -343,7 +343,7 @@ export function WarehouseDetail() {
                     {extraOptions.map((opt: any) => (
                       <label key={opt.id} className="flex items-center justify-between gap-2 text-sm cursor-pointer">
                         <div className="flex items-center gap-2">
-                          <input type="checkbox" className="rounded border-border" checked={selectedExtras.includes(opt.id)} onChange={() => toggleExtra(opt.id)} />
+                          <input type="checkbox" className="h-4 w-4 rounded border-border accent-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2" checked={selectedExtras.includes(opt.id)} onChange={() => toggleExtra(opt.id)} />
                           {opt.label}
                         </div>
                         <span className="flex items-center gap-1 text-xs">
@@ -362,7 +362,7 @@ export function WarehouseDetail() {
             <div className="mt-4 rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
               {t("detail.provider")}:{" "}
               {wListing.supplierSlug ? (
-                <Link to={`/partner/${wListing.supplierSlug}`} className="font-medium text-accent hover:underline">
+                <Link to={`/partner/${wListing.supplierSlug}`} className="rounded font-medium text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
                   {wListing.provider}
                 </Link>
               ) : (
@@ -422,11 +422,11 @@ export function MovingDetail() {
         structuredData={[buildProductSchema(mListing, language), buildBreadcrumbSchema(mListing, language)]}
       />
       <nav className="mb-4 flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Link to="/" className="hover:text-foreground transition-colors">{t("nav.home")}</Link>
+        <Link to="/" className="rounded hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">{t("nav.home")}</Link>
         <span className="opacity-40">/</span>
-        <Link to="/search?type=moving" className="hover:text-foreground transition-colors">{t("nav.moving")}</Link>
+        <Link to="/search?type=moving" className="rounded hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">{t("nav.moving")}</Link>
         <span className="opacity-40">/</span>
-        <span className="text-foreground font-medium truncate max-w-[180px] sm:max-w-[280px]">{mListing.title}</span>
+        <span aria-current="page" className="text-foreground font-medium truncate max-w-[180px] sm:max-w-[280px]">{mListing.title}</span>
       </nav>
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
@@ -497,7 +497,7 @@ export function MovingDetail() {
             <div className="mt-4 rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
               {t("detail.provider")}:{" "}
               {mListing.supplierSlug ? (
-                <Link to={`/partner/${mListing.supplierSlug}`} className="font-medium text-accent hover:underline">
+                <Link to={`/partner/${mListing.supplierSlug}`} className="rounded font-medium text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
                   {mListing.provider}
                 </Link>
               ) : (
@@ -557,11 +557,11 @@ export function TrailerDetail() {
         structuredData={[buildProductSchema(tListing, language), buildBreadcrumbSchema(tListing, language)]}
       />
       <nav className="mb-4 flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Link to="/" className="hover:text-foreground transition-colors">{t("nav.home")}</Link>
+        <Link to="/" className="rounded hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">{t("nav.home")}</Link>
         <span className="opacity-40">/</span>
-        <Link to="/search?type=trailer" className="hover:text-foreground transition-colors">{t("nav.trailer")}</Link>
+        <Link to="/search?type=trailer" className="rounded hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">{t("nav.trailer")}</Link>
         <span className="opacity-40">/</span>
-        <span className="text-foreground font-medium truncate max-w-[180px] sm:max-w-[280px]">{tListing.title}</span>
+        <span aria-current="page" className="text-foreground font-medium truncate max-w-[180px] sm:max-w-[280px]">{tListing.title}</span>
       </nav>
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
@@ -630,7 +630,7 @@ export function TrailerDetail() {
             <div className="mt-4 rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
               {t("detail.provider")}:{" "}
               {tListing.supplierSlug ? (
-                <Link to={`/partner/${tListing.supplierSlug}`} className="font-medium text-accent hover:underline">
+                <Link to={`/partner/${tListing.supplierSlug}`} className="rounded font-medium text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
                   {tListing.provider}
                 </Link>
               ) : (
