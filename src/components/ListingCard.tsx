@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Link } from "@/i18n/routing";
 import { MapPin, Star, Warehouse, Truck, CarFront, Heart, ShieldCheck, BadgePercent, Award } from "lucide-react";
 import type { Listing } from "@/services/types";
@@ -45,7 +45,7 @@ const typeIcons = {
   trailer: CarFront,
 };
 
-export default function ListingCard({ listing }: { listing: Listing }) {
+function ListingCard({ listing }: { listing: Listing }) {
   const Icon = typeIcons[listing.type];
   const detailPath = `/${listing.type}/${listing.id}`;
   const { t } = useLanguage();
@@ -175,3 +175,8 @@ export default function ListingCard({ listing }: { listing: Listing }) {
     </Link>
   );
 }
+
+// Memoized: SearchPage lifts hover/selection state to the page, so without this
+// every card subtree (image, favorites, size-bucket query) re-renders on each
+// hover. `listing` is referentially stable from the memoized result array.
+export default memo(ListingCard);

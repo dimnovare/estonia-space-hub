@@ -126,7 +126,10 @@ export default function SearchPage() {
     || availableNow
     || !!supplierIdFilter
     || !!locationIdFilter;
-  const locations = hasRestrictiveFilter ? [] : locationsRaw;
+  const locations = useMemo(
+    () => (hasRestrictiveFilter ? [] : locationsRaw),
+    [hasRestrictiveFilter, locationsRaw],
+  );
 
   // Client-side post-filters for dynamic feature booleans
   const filtered = useMemo(() => {
@@ -241,9 +244,13 @@ export default function SearchPage() {
     }, { replace: true });
   }
 
-  const handleMarkerClick = (listing: Listing) => {
+  // Stable so the memoized InteractiveMap is not torn down each render.
+  const handleMarkerClick = useCallback((listing: Listing) => {
     setSelectedListingId(listing.id);
-  };
+  }, []);
+  const handleLocationClick = useCallback((loc: { id: string }) => {
+    setSelectedListingId(loc.id);
+  }, []);
 
   const titleMap: Record<string, string> = {
     warehouse: t("seo.search.warehouseTitle"),
@@ -268,7 +275,7 @@ export default function SearchPage() {
       <h1 className="sr-only">{t("search.title") || "Search results"}</h1>
       <div className="hidden lg:sticky lg:top-16 lg:block lg:h-[calc(100vh-4rem)] lg:w-1/2 xl:w-[55%]">
         <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary text-muted-foreground">{t("map.loading")}</div>}>
-          <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" language={language} selectedId={selectedListingId} onMarkerClick={handleMarkerClick} onLocationClick={(loc: any) => setSelectedListingId(loc.id)} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
+          <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" language={language} selectedId={selectedListingId} onMarkerClick={handleMarkerClick} onLocationClick={handleLocationClick} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
         </Suspense>
       </div>
 
@@ -284,7 +291,7 @@ export default function SearchPage() {
       {mobileView === "map" && (
         <div className="h-[calc(100vh-8rem)] lg:hidden relative">
           <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary">{t("map.loading")}</div>}>
-            <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" language={language} selectedId={selectedListingId} onMarkerClick={handleMarkerClick} onLocationClick={(loc: any) => setSelectedListingId(loc.id)} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
+            <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" language={language} selectedId={selectedListingId} onMarkerClick={handleMarkerClick} onLocationClick={handleLocationClick} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
           </Suspense>
           {selectedListingId && (() => {
             const selected = filtered.find(l => l.id === selectedListingId);

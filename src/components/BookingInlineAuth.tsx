@@ -126,7 +126,7 @@ function BookingInlineAuthInner({ onSuccess }: BookingInlineAuthProps) {
             <div className="space-y-1.5">
               <Label htmlFor="b-reg-name" className="text-xs">{t("login.name")}</Label>
               <Input id="b-reg-name" placeholder={t("login.namePlaceholder")} {...registerForm.register("name")} />
-              {registerForm.formState.errors.name && <p className="text-xs text-destructive">{registerForm.formState.errors.name.message}</p>}
+              {registerForm.formState.errors.name && <p role="alert" className="text-xs text-destructive">{registerForm.formState.errors.name.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="b-reg-email" className="text-xs">{t("login.email")}</Label>
@@ -134,7 +134,7 @@ function BookingInlineAuthInner({ onSuccess }: BookingInlineAuthProps) {
                 <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input id="b-reg-email" type="email" placeholder={t("login.emailPlaceholder")} {...registerForm.register("email")} className="pl-10" />
               </div>
-              {registerForm.formState.errors.email && <p className="text-xs text-destructive">{registerForm.formState.errors.email.message}</p>}
+              {registerForm.formState.errors.email && <p role="alert" className="text-xs text-destructive">{registerForm.formState.errors.email.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="b-reg-password" className="text-xs">{t("login.password")}</Label>
@@ -145,7 +145,7 @@ function BookingInlineAuthInner({ onSuccess }: BookingInlineAuthProps) {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              {registerForm.formState.errors.password && <p className="text-xs text-destructive">{registerForm.formState.errors.password.message}</p>}
+              {registerForm.formState.errors.password && <p role="alert" className="text-xs text-destructive">{registerForm.formState.errors.password.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="b-reg-confirm" className="text-xs">{t("login.confirmPassword")}</Label>
@@ -153,7 +153,7 @@ function BookingInlineAuthInner({ onSuccess }: BookingInlineAuthProps) {
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input id="b-reg-confirm" type={showPassword ? "text" : "password"} placeholder="••••••••" {...registerForm.register("confirmPassword")} className="pl-10" />
               </div>
-              {registerForm.formState.errors.confirmPassword && <p className="text-xs text-destructive">{registerForm.formState.errors.confirmPassword.message}</p>}
+              {registerForm.formState.errors.confirmPassword && <p role="alert" className="text-xs text-destructive">{registerForm.formState.errors.confirmPassword.message}</p>}
             </div>
             {inviteCodeRequired && (
               <div className="space-y-1.5">
@@ -177,7 +177,7 @@ function BookingInlineAuthInner({ onSuccess }: BookingInlineAuthProps) {
                 <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input id="b-login-email" type="email" placeholder={t("login.emailPlaceholder")} {...loginForm.register("email")} className="pl-10" />
               </div>
-              {loginForm.formState.errors.email && <p className="text-xs text-destructive">{loginForm.formState.errors.email.message}</p>}
+              {loginForm.formState.errors.email && <p role="alert" className="text-xs text-destructive">{loginForm.formState.errors.email.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="b-login-password" className="text-xs">{t("login.password")}</Label>
@@ -188,7 +188,7 @@ function BookingInlineAuthInner({ onSuccess }: BookingInlineAuthProps) {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              {loginForm.formState.errors.password && <p className="text-xs text-destructive">{loginForm.formState.errors.password.message}</p>}
+              {loginForm.formState.errors.password && <p role="alert" className="text-xs text-destructive">{loginForm.formState.errors.password.message}</p>}
             </div>
             <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

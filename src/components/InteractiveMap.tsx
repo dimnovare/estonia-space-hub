@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, memo } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Listing, SupplierLocation } from "@/services/types";
@@ -214,7 +214,7 @@ function createLocationMarkerIcon(location: SupplierLocation, isSelected: boolea
   });
 }
 
-export default function InteractiveMap({
+function InteractiveMap({
   listings = [],
   locations = [],
   className = "",
@@ -268,6 +268,19 @@ export default function InteractiveMap({
   const markerMap = useRef<Map<string, L.Marker>>(new Map());
   const prevListingsKey = useRef("");
 
+  // Keep latest click handlers in refs so marker-build effect does not depend on
+  // them (parent passes fresh inline callbacks each render). Avoids tearing down
+  // and rebuilding every marker on each parent re-render (e.g. hover selection).
+  const onMarkerClickRef = useRef(onMarkerClick);
+  const onLocationClickRef = useRef(onLocationClick);
+  onMarkerClickRef.current = onMarkerClick;
+  onLocationClickRef.current = onLocationClick;
+
+  // Backing data per marker id, so a selection change can restyle just the two
+  // affected markers (setIcon) instead of clearing and rebuilding all layers.
+  const markerData = useRef<Map<string, { kind: "listing" | "location"; obj: Listing | SupplierLocation }>>(new Map());
+  const prevSelectedId = useRef<string | null>(null);
+
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return;
 
@@ -304,6 +317,7 @@ export default function InteractiveMap({
 
     markersRef.current.clearLayers();
     markerMap.current.clear();
+    markerData.current.clear();
 
     const bounds: L.LatLngExpression[] = [];
     const langPrefix = (typeof window !== "undefined"
@@ -341,11 +355,12 @@ export default function InteractiveMap({
 
       marker.on("click", () => {
         marker.openPopup();
-        if (onLocationClick) onLocationClick(loc);
+        onLocationClickRef.current?.(loc);
       });
 
       marker.addTo(markersRef.current!);
       markerMap.current.set(loc.id, marker);
+      markerData.current.set(loc.id, { kind: "location", obj: loc });
       bounds.push([loc.lat, loc.lng]);
     });
 
@@ -381,11 +396,12 @@ export default function InteractiveMap({
 
       marker.on("click", () => {
         marker.openPopup();
-        if (onMarkerClick) onMarkerClick(listing);
+        onMarkerClickRef.current?.(listing);
       });
 
       marker.addTo(markersRef.current!);
       markerMap.current.set(listing.id, marker);
+      markerData.current.set(listing.id, { kind: "listing", obj: listing });
       bounds.push([listing.lat, listing.lng]);
     });
 
@@ -399,17 +415,38 @@ export default function InteractiveMap({
         mapInstance.current.setView(bounds[0] as L.LatLngExpression, 13);
       }
     }
-  }, [listings, locations, selectedId, onMarkerClick, onLocationClick, tUnits, tFrom, tPerMonth, tAllUnits, tTypeWarehouse, tTypeMoving, tTypeTrailer]);
+    // selectedId intentionally excluded — selection is handled by the effect
+    // below via setIcon on just the affected markers, so hovering a card does
+    // not clear and rebuild every Leaflet layer.
+  }, [listings, locations, tUnits, tFrom, tPerMonth, tAllUnits, tTypeWarehouse, tTypeMoving, tTypeTrailer]);
 
-  // When selectedId changes externally, open that marker's popup
+  // When selectedId changes, restyle only the previously- and newly-selected
+  // markers (grow + glow), open the popup, and pan. No full layer rebuild.
   useEffect(() => {
-    if (!selectedId || !mapInstance.current) return;
+    if (!mapInstance.current) return;
+
+    const restyle = (id: string | null, isSelected: boolean) => {
+      if (!id) return;
+      const marker = markerMap.current.get(id);
+      const data = markerData.current.get(id);
+      if (!marker || !data) return;
+      marker.setIcon(data.kind === "location"
+        ? createLocationMarkerIcon(data.obj as SupplierLocation, isSelected, tUnits)
+        : createMarkerIcon(data.obj as Listing, isSelected));
+    };
+
+    const prev = prevSelectedId.current;
+    if (prev && prev !== selectedId) restyle(prev, false);
+    prevSelectedId.current = selectedId;
+
+    if (!selectedId) return;
+    restyle(selectedId, true);
     const marker = markerMap.current.get(selectedId);
     if (marker) {
       marker.openPopup();
       mapInstance.current.panTo(marker.getLatLng(), { animate: true });
     }
-  }, [selectedId]);
+  }, [selectedId, tUnits]);
 
   return (
     <div className={`relative overflow-hidden rounded-xl ${height} ${className}`}>
@@ -431,3 +468,5 @@ export default function InteractiveMap({
     </div>
   );
 }
+
+export default memo(InteractiveMap);

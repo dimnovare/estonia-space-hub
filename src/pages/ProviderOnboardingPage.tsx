@@ -195,14 +195,14 @@ export default function ProviderOnboardingPage() {
                 })}
               </div>
               {showValidation && !businessType && (
-                <p className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.selectRequired")}</p>
+                <p role="alert" className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.selectRequired")}</p>
               )}
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.name")} *</label>
               <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={inputClass} placeholder={t("onboard.companyPlaceholder")} />
               {showValidation && !companyName.trim() && (
-                <p className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.fieldRequired")}</p>
+                <p role="alert" className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.fieldRequired")}</p>
               )}
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -210,7 +210,7 @@ export default function ProviderOnboardingPage() {
                 <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.reg")} *</label>
                 <input value={registryCode} onChange={(e) => setRegistryCode(e.target.value)} className={inputClass} placeholder="12345678" />
                 {showValidation && !registryCode.trim() && (
-                  <p className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.fieldRequired")}</p>
+                  <p role="alert" className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.fieldRequired")}</p>
                 )}
               </div>
               <div>
@@ -232,7 +232,7 @@ export default function ProviderOnboardingPage() {
               <label className="text-xs font-medium text-muted-foreground">{t("onboard.step2.phone")} *</label>
               <input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} className={inputClass} placeholder="+372" />
               {showValidation && !contactPhone.trim() && (
-                <p className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.fieldRequired")}</p>
+                <p role="alert" className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.fieldRequired")}</p>
               )}
             </div>
           </div>
@@ -258,7 +258,7 @@ export default function ProviderOnboardingPage() {
                 })}
               </div>
               {showValidation && selectedServices.length === 0 && (
-                <p className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.selectRequired")}</p>
+                <p role="alert" className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.selectRequired")}</p>
               )}
             </div>
             <div>
@@ -274,7 +274,7 @@ export default function ProviderOnboardingPage() {
                 })}
               </div>
               {showValidation && selectedAreas.length === 0 && (
-                <p className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.selectRequired")}</p>
+                <p role="alert" className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.selectRequired")}</p>
               )}
             </div>
           </div>

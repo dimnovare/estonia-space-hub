@@ -592,65 +592,65 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
   return (
     <div className="space-y-5">
       <div className="rounded-xl border border-border bg-card p-5">
-        <h3 className="text-sm font-semibold">Order routing</h3>
+        <h3 className="text-sm font-semibold">{t("admin.partnerDetail.routing.title")}</h3>
         <div className="mt-3 grid gap-4 md:grid-cols-2">
           <div>
-            <label className="text-xs font-medium">Integration type</label>
+            <label className="text-xs font-medium">{t("admin.partnerDetail.routing.integrationType")}</label>
             <select className={inp} value={form.integrationType} onChange={(e) => setForm({ ...form, integrationType: e.target.value as "email" | "api" | "manual" })}>
-              <option value="email">Email</option>
-              <option value="api">API</option>
-              <option value="manual">Manual</option>
+              <option value="email">{t("admin.partnerDetail.routing.optionEmail")}</option>
+              <option value="api">{t("admin.partnerDetail.routing.optionApi")}</option>
+              <option value="manual">{t("admin.partnerDetail.routing.optionManual")}</option>
             </select>
           </div>
           <div>
-            <label className="text-xs font-medium">Approval mode</label>
+            <label className="text-xs font-medium">{t("admin.partnerDetail.routing.approvalMode")}</label>
             <select className={inp} value={form.approvalMode} onChange={(e) => setForm({ ...form, approvalMode: e.target.value as "auto" | "manual" })}>
-              <option value="auto">Auto</option>
-              <option value="manual">Manual</option>
+              <option value="auto">{t("admin.partnerDetail.routing.optionAuto")}</option>
+              <option value="manual">{t("admin.partnerDetail.routing.optionManual")}</option>
             </select>
           </div>
           <div>
-            <label className="text-xs font-medium">Posting mode</label>
+            <label className="text-xs font-medium">{t("admin.partnerDetail.routing.postingMode")}</label>
             <select className={inp} value={form.postingMode}
               onChange={(e) => setForm({ ...form, postingMode: e.target.value as "email" | "api" | "manual" })}>
-              <option value="email">Email</option>
-              <option value="api">API</option>
-              <option value="manual">Manual</option>
+              <option value="email">{t("admin.partnerDetail.routing.optionEmail")}</option>
+              <option value="api">{t("admin.partnerDetail.routing.optionApi")}</option>
+              <option value="manual">{t("admin.partnerDetail.routing.optionManual")}</option>
             </select>
             <p className="mt-0.5 text-[10px] text-muted-foreground">
-              Primary channel for dispatching new orders to this supplier.
+              {t("admin.partnerDetail.routing.postingModeHint")}
             </p>
           </div>
           <div>
-            <label className="text-xs font-medium">Fallback posting mode</label>
+            <label className="text-xs font-medium">{t("admin.partnerDetail.routing.fallbackPostingMode")}</label>
             <select className={inp} value={form.fallbackPostingMode}
               onChange={(e) => setForm({ ...form, fallbackPostingMode: e.target.value as "email" | "api" | "manual" })}>
-              <option value="email">Email</option>
-              <option value="api">API</option>
-              <option value="manual">Manual</option>
+              <option value="email">{t("admin.partnerDetail.routing.optionEmail")}</option>
+              <option value="api">{t("admin.partnerDetail.routing.optionApi")}</option>
+              <option value="manual">{t("admin.partnerDetail.routing.optionManual")}</option>
             </select>
             <p className="mt-0.5 text-[10px] text-muted-foreground">
-              Used when primary channel fails.
+              {t("admin.partnerDetail.routing.fallbackPostingModeHint")}
             </p>
           </div>
           {form.integrationType === "email" && (
             <div className="md:col-span-2">
-              <label className="text-xs font-medium">Recipient email</label>
+              <label className="text-xs font-medium">{t("admin.partnerDetail.routing.recipientEmail")}</label>
               <input className={inp} value={form.recipientEmail} onChange={(e) => setForm({ ...form, recipientEmail: e.target.value })} />
             </div>
           )}
           {form.integrationType === "api" && (
             <>
               <div className="md:col-span-2">
-                <label className="text-xs font-medium">API endpoint</label>
+                <label className="text-xs font-medium">{t("admin.partnerDetail.routing.apiEndpoint")}</label>
                 <input className={inp} value={form.apiEndpoint} onChange={(e) => setForm({ ...form, apiEndpoint: e.target.value })} />
               </div>
               {form.integrationType === "api" && (
                 <div className="md:col-span-2">
                   <label className="text-xs font-medium">
-                    Stock polling endpoint
+                    {t("admin.partnerDetail.routing.pollingEndpoint")}
                     <span className="ml-2 text-[10px] text-muted-foreground font-normal">
-                      (optional — falls back to API endpoint if empty)
+                      {t("admin.partnerDetail.routing.pollingEndpointOptional")}
                     </span>
                   </label>
                   <input
@@ -660,24 +660,24 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
                     onChange={(e) => setForm({ ...form, pollingEndpoint: e.target.value })}
                   />
                   <p className="mt-1 text-[10px] text-muted-foreground">
-                    GET endpoint for stock polling. Leave empty to use the API endpoint above.
+                    {t("admin.partnerDetail.routing.pollingEndpointHint")}
                   </p>
                 </div>
               )}
               <div>
-                <label className="text-xs font-medium">API auth type</label>
+                <label className="text-xs font-medium">{t("admin.partnerDetail.routing.apiAuthType")}</label>
                 <select className={inp} value={form.apiAuthType} onChange={(e) => setForm({ ...form, apiAuthType: e.target.value as "bearer" | "apikey" | "none" })}>
-                  <option value="bearer">Bearer</option>
-                  <option value="apikey">ApiKey</option>
-                  <option value="none">None</option>
+                  <option value="bearer">{t("admin.partnerDetail.routing.optionBearer")}</option>
+                  <option value="apikey">{t("admin.partnerDetail.routing.optionApiKey")}</option>
+                  <option value="none">{t("admin.partnerDetail.routing.optionNone")}</option>
                 </select>
               </div>
               <div>
-                <label className="text-xs font-medium">API token</label>
+                <label className="text-xs font-medium">{t("admin.partnerDetail.routing.apiToken")}</label>
                 <input
                   type="password"
                   className={inp}
-                  placeholder={hasToken ? "••••••" : "Enter token"}
+                  placeholder={hasToken ? "••••••" : t("admin.partnerDetail.routing.apiTokenPlaceholder")}
                   value={form.apiToken}
                   onChange={(e) => setForm({ ...form, apiToken: e.target.value })}
                 />
@@ -692,10 +692,9 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
 
       {(form.integrationType === "api" || form.postingMode === "api") && (
         <div className="rounded-xl border border-border bg-card p-5">
-          <h3 className="text-sm font-semibold">Order payload template</h3>
+          <h3 className="text-sm font-semibold">{t("admin.partnerDetail.routing.payloadTemplate")}</h3>
           <p className="mt-1 text-xs text-muted-foreground">
-            JSON template sent when dispatching orders to this vendor.
-            Leave empty to use the Ruumly default format.
+            {t("admin.partnerDetail.routing.payloadTemplateHint")}
           </p>
           <textarea
             className="mt-3 w-full min-h-[160px] rounded-lg border border-border bg-background p-3 font-mono text-xs leading-relaxed focus:outline-none focus:ring-1 focus:ring-accent"
@@ -724,10 +723,9 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
 
       {form.pollingEnabled && form.integrationType === "api" && (
         <div className="rounded-xl border border-border bg-card p-5">
-          <h3 className="text-sm font-semibold">Availability response mapping</h3>
+          <h3 className="text-sm font-semibold">{t("admin.partnerDetail.routing.availabilityMapping")}</h3>
           <p className="mt-1 text-xs text-muted-foreground">
-            Map vendor field names to Ruumly's expected names. Leave empty if the
-            vendor already uses: id, available, total.
+            {t("admin.partnerDetail.routing.availabilityMappingHint")}
           </p>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
             {([
@@ -765,28 +763,28 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
             })}
           </div>
           <p className="mt-3 text-[10px] text-muted-foreground">
-            Expected vendor response: [{"{"}id_field": "loc-123", "available_field": 5, "total_field": 20{"}"}]
+            {t("admin.partnerDetail.routing.expectedResponse")} [{"{"}id_field": "loc-123", "available_field": 5, "total_field": 20{"}"}]
           </p>
         </div>
       )}
 
       <div className="rounded-xl border border-border bg-card p-5">
-        <h3 className="text-sm font-semibold">Connectivity monitoring</h3>
+        <h3 className="text-sm font-semibold">{t("admin.partnerDetail.routing.connectivityMonitoring")}</h3>
         <div className="mt-3 space-y-3">
           <div className="flex items-center gap-3 rounded-lg border border-border p-3">
             <Switch checked={form.pollingEnabled} onCheckedChange={(v) => setForm({ ...form, pollingEnabled: v })} />
-            <span className="text-sm font-medium">Auto-sync</span>
+            <span className="text-sm font-medium">{t("admin.partnerDetail.routing.autoSync")}</span>
             {form.pollingEnabled && (
               <select
                 className="ml-auto rounded-lg border border-border bg-card px-2 py-1.5 text-xs"
                 value={String(form.pollingIntervalMinutes)}
                 onChange={(e) => setForm({ ...form, pollingIntervalMinutes: parseInt(e.target.value, 10) })}
               >
-                <option value="15">Every 15 minutes</option>
-                <option value="30">Every 30 minutes</option>
-                <option value="60">Every hour</option>
-                <option value="360">Every 6 hours</option>
-                <option value="1440">Daily</option>
+                <option value="15">{t("admin.partnerDetail.routing.every15Minutes")}</option>
+                <option value="30">{t("admin.partnerDetail.routing.every30Minutes")}</option>
+                <option value="60">{t("admin.partnerDetail.routing.everyHour")}</option>
+                <option value="360">{t("admin.partnerDetail.routing.every6Hours")}</option>
+                <option value="1440">{t("admin.partnerDetail.routing.daily")}</option>
               </select>
             )}
           </div>
@@ -794,11 +792,11 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
             <div className="flex items-center gap-3">
               <Button variant="outline" size="sm" onClick={handleTest} disabled={testing}>
                 {testing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-                Test connection
+                {t("admin.partnerDetail.routing.testConnection")}
               </Button>
               {testResult && (
                 <span className={`text-xs font-medium ${testResult.ok ? "text-success" : "text-destructive"}`}>
-                  {testResult.ok ? `OK — ${testResult.latency}ms` : `Error — ${testResult.message}`}
+                  {testResult.ok ? `${t("admin.partnerDetail.routing.testOk")} — ${testResult.latency}ms` : `${t("admin.partnerDetail.routing.testError")} — ${testResult.message}`}
                 </span>
               )}
             </div>
@@ -809,13 +807,13 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
               onClick={() => setLogOpen((v) => !v)}
               className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
             >
-              {logOpen ? "Hide" : "Show"} connection log
+              {logOpen ? t("admin.partnerDetail.routing.hideLog") : t("admin.partnerDetail.routing.showLog")}
               <ChevronDown className={`h-3 w-3 transition-transform ${logOpen ? "rotate-180" : ""}`} />
             </button>
             {logOpen && (
               <div className="mt-2 space-y-1 text-xs">
                 {pollLog.length === 0 ? (
-                  <p className="text-muted-foreground">No connection log entries yet.</p>
+                  <p className="text-muted-foreground">{t("admin.partnerDetail.routing.noLogEntries")}</p>
                 ) : (
                   pollLog.map((entry, i) => (
                     <div key={i} className="flex items-center justify-between rounded-lg border border-border px-3 py-1.5">
