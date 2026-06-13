@@ -205,10 +205,10 @@ function createLocationMarkerIcon(location: SupplierLocation, isSelected: boolea
           white-space: nowrap;
           border: 1px solid ${markerColor}20;
         ">${
-          (location.availableUnitCount != null)
-            ? `${location.availableUnitCount} ${unitLabel}`
-            : `${location.unitCount} ${unitLabel}`
-        }${location.priceFrom ? ` · €${location.priceFrom}` : ''}</div>
+          location.priceFrom != null
+            ? `${location.priceFrom}€`
+            : `${location.availableUnitCount != null ? location.availableUnitCount : location.unitCount}`
+        }</div>
       </div>
     `,
     iconSize: [size, size + 28],

@@ -58,7 +58,7 @@ export function SizeBucketFilter({ selectedCode, onChange }: Props) {
                   type="button"
                   onClick={() => onChange(isSelected ? undefined : b.code)}
                   className={cn(
-                    "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                    "rounded-full border px-3 py-2 sm:py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
                     isSelected
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-card text-foreground hover:bg-secondary",

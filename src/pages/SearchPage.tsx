@@ -303,12 +303,12 @@ export default function SearchPage() {
         </Suspense>
       </div>
 
-      <div className="flex items-center gap-2 border-b border-border bg-card p-2 lg:hidden">
-        <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileView("list"); }} className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-colors ${mobileView === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
-          <List className="h-3.5 w-3.5" /> {t("search.list")}
+      <div className="flex items-center gap-2 border-b border-border bg-card p-3 lg:hidden">
+        <button type="button" aria-pressed={mobileView === "list"} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileView("list"); }} className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-[0.98] ${mobileView === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+          <List className="h-4 w-4" /> {t("search.list")}
         </button>
-        <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileView("map"); }} className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-colors ${mobileView === "map" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
-          <MapIcon className="h-3.5 w-3.5" /> {t("search.map")}
+        <button type="button" aria-pressed={mobileView === "map"} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileView("map"); }} className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-[0.98] ${mobileView === "map" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+          <MapIcon className="h-4 w-4" /> {t("search.map")}
         </button>
       </div>
 
@@ -337,7 +337,7 @@ export default function SearchPage() {
                     type="button"
                     aria-label={t("common.close")}
                     onClick={() => setSelectedListingId(null)}
-                    className="absolute -top-2 -right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-md hover:text-foreground"
+                    className="absolute -top-2.5 -right-2.5 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-md hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -365,20 +365,20 @@ export default function SearchPage() {
       {/* Sticky filter header — always visible on mobile (even in map mode) */}
       <div className={`flex-1 border-l border-border ${mobileView === "map" ? "hidden lg:block" : ""}`}>
         <div className="sticky top-16 z-10 border-b border-border bg-card px-4 py-3">
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {typeFilters.length > 2 ? (
               typeFilters.map((tf) => (
-                <button key={tf.value} onClick={() => updateFilters({ type: tf.value === "all" ? "" : tf.value })} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${activeType === tf.value ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
+                <button key={tf.value} aria-pressed={activeType === tf.value} onClick={() => updateFilters({ type: tf.value === "all" ? "" : tf.value })} className={`rounded-full px-3 py-2 sm:py-1.5 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-95 ${activeType === tf.value ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
                   {tf.label}
                 </button>
               ))
             ) : (
-              <span className="text-sm font-medium text-foreground">
+              <span className="text-sm font-semibold text-foreground">
                 {t("search.resultsFound").replace("{count}", String(filtered.length))}
               </span>
             )}
-            <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-              <button aria-label={t("search.filters")} onClick={() => isMobile ? setDrawerOpen(true) : setShowFilters(!showFilters)} className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary">
+            <div className="ml-auto flex items-center gap-2">
+              <button aria-label={t("search.filters")} onClick={() => isMobile ? setDrawerOpen(true) : setShowFilters(!showFilters)} className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 sm:py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t("search.filters")}</span>
                 {activeFiltersCount > 0 && (
@@ -386,7 +386,7 @@ export default function SearchPage() {
                 )}
               </button>
               <div className="relative">
-                <select aria-label={t("search.sort") || "Sort results"} value={sort} onChange={(e) => updateFilters({ sort: e.target.value })} className="appearance-none rounded-lg border border-border bg-card py-1.5 pl-3 pr-7 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-accent">
+                <select aria-label={t("search.sort") || "Sort results"} value={sort} onChange={(e) => updateFilters({ sort: e.target.value })} className="appearance-none rounded-lg border border-border bg-card py-2 sm:py-1.5 pl-3 pr-7 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-accent">
                   {sortOptions.map((s) => (
                     <option key={s.value} value={s.value}>{s.label}</option>
                   ))}
@@ -506,7 +506,7 @@ export default function SearchPage() {
                       onMouseEnter={() => setSelectedListingId(loc.id)}
                       onMouseLeave={() => setSelectedListingId(null)}
                     >
-                      <div className="relative aspect-[16/10] overflow-hidden">
+                      <div className="relative aspect-[4/3] sm:aspect-[16/10] overflow-hidden">
                         {loc.images?.[0] ? (
                           <img
                             src={loc.images[0]}
@@ -602,7 +602,7 @@ export default function SearchPage() {
                     <div className="mt-2 flex flex-wrap gap-2">
                       {availableCities.slice(0, 5).map(c => (
                         <button key={c.city} onClick={() => updateFilters({ city: c.city })}
-                          className="rounded-full border border-border px-3 py-1 text-xs hover:bg-secondary">
+                          className="rounded-full border border-border px-3 py-2 text-xs transition-colors hover:bg-secondary active:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
                           {c.city}
                         </button>
                       ))}
@@ -620,9 +620,10 @@ export default function SearchPage() {
                             type="email"
                             aria-label={t("search.notifyEmail")}
                             aria-invalid={notifyError}
+                            aria-describedby={notifyError ? "notify-email-err" : undefined}
                             placeholder={t("search.notifyEmail")}
                             value={notifyEmail}
-                            onChange={(e) => { setNotifyEmail(e.target.value); if (notifyError) setNotifyError(false); }}
+                            onChange={(e) => { setNotifyEmail(e.target.value); setNotifyError(false); }}
                             onKeyDown={(e) => e.key === "Enter" && handleNotifySubmit()}
                             className={`flex-1 rounded-lg border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent ${notifyError ? "border-destructive" : "border-border"}`}
                           />
@@ -638,7 +639,7 @@ export default function SearchPage() {
                           </Button>
                         </div>
                         {notifyError && (
-                          <p className="mt-1.5 text-left text-xs text-destructive">{t("search.notifyEmailInvalid")}</p>
+                          <p id="notify-email-err" role="alert" className="mt-1.5 text-left text-xs text-destructive">{t("search.notifyEmailInvalid")}</p>
                         )}
                       </div>
                     )
@@ -659,7 +660,7 @@ export default function SearchPage() {
 
 function FilterToggle({ label, active, onChange }: { label: string; active: boolean; onChange: (v: boolean) => void }) {
   return (
-    <button onClick={() => onChange(!active)} className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${active ? "border-accent bg-accent/10 text-accent" : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"}`}>
+    <button aria-pressed={active} onClick={() => onChange(!active)} className={`rounded-full border px-3 py-2 sm:py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${active ? "border-accent bg-accent/10 text-accent" : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"}`}>
       {label}
     </button>
   );
