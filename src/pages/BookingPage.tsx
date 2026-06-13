@@ -120,7 +120,9 @@ export default function BookingPage() {
     (listing.type === "trailer" && !showTrailerService)
   );
 
-  const steps = [t("booking.detailsAndExtras"), t("booking.contactAndAuth"), t("booking.paymentAndReview")];
+  const steps = isRebateModel
+    ? [t("booking.detailsAndExtras"), t("booking.contactAndAuth")]
+    : [t("booking.detailsAndExtras"), t("booking.contactAndAuth"), t("booking.paymentAndReview")];
 
   const [step, setStep] = useState(0);
   const [idempotencyKey] = useState<string>(() =>
@@ -147,6 +149,10 @@ export default function BookingPage() {
   const [paymentFailed, setPaymentFailed] = useState(false);
   const [showVerifyBanner, setShowVerifyBanner] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // The email actually sent with the booking POST. Payment retry must use THIS,
+  // not a possibly-edited form value, so the charge matches the created booking.
+  const [sentContactEmail, setSentContactEmail] = useState<string | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   const detailsForm = useForm<{ startDate: string; endDate: string }>({
     resolver: zodResolver(z.object({
@@ -174,15 +180,24 @@ export default function BookingPage() {
   // Reset form when user changes (e.g. login during booking flow)
   useEffect(() => {
     if (user) {
+      // Only fill EMPTY fields — never clobber anything the user already typed.
       contactForm.reset({
-        name: user.name || "",
-        email: user.email || "",
-        phone: user.phone || "",
+        name: contactForm.getValues("name") || user.name || "",
+        email: contactForm.getValues("email") || user.email || "",
+        phone: contactForm.getValues("phone") || user.phone || "",
         notes: contactForm.getValues("notes") || "",
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  // Clamp the active step to the available steps. For the rebate model there is
+  // no payment step, so a stale step index (e.g. supplier data resolving after the
+  // user advanced) must never point past the last step.
+  useEffect(() => {
+    if (step > steps.length - 1) setStep(steps.length - 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [steps.length, step]);
 
   const toggleExtra = (id: string) =>
     setSelectedExtras((prev) => (prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]));
@@ -232,6 +247,16 @@ export default function BookingPage() {
     ? { total: Math.round((ourPrice + extrasTotal) * 100) / 100, extrasTotal }
     : null;
 
+  const lastStep = steps.length - 1;
+  const submitFromContact = () => {
+    // Final step is the contact step (rebate: no payment step) — require auth, then submit.
+    if (!isAuthenticated) {
+      // Auth is inline on step 1, but if they skipped somehow
+      return;
+    }
+    submitBooking();
+  };
+
   const handleNext = () => {
     if (step === 0) {
       if (isUnavailable) {
@@ -241,15 +266,16 @@ export default function BookingPage() {
       // Validate details form (date + duration), then advance
       detailsForm.handleSubmit(() => setStep(1))();
     } else if (step === 1) {
-      // Validate contact form, then advance
-      contactForm.handleSubmit(() => setStep(2))();
-    } else if (step === 2) {
-      // Final step — require auth, then submit
-      if (!isAuthenticated) {
-        // Auth is inline on step 1, but if they skipped somehow
-        return;
+      // Validate contact form. For rebate (no payment step) this is the final
+      // step → submit directly; otherwise advance to the payment/review step.
+      if (lastStep === 1) {
+        contactForm.handleSubmit(submitFromContact)();
+      } else {
+        contactForm.handleSubmit(() => setStep(2))();
       }
-      submitBooking();
+    } else if (step === 2) {
+      // Final step (non-rebate) — require auth, then submit
+      submitFromContact();
     }
   };
 
@@ -261,6 +287,7 @@ export default function BookingPage() {
       total: pricing?.total || 0,
     });
     setIsSubmitting(true);
+    const requestEmail = contactForm.getValues("email");
     createBooking.mutateAsync({
       idempotencyKey,
       listingId: listingId!,
@@ -269,11 +296,13 @@ export default function BookingPage() {
       duration: formatDuration(detailsForm.getValues("startDate"), detailsForm.getValues("endDate"), t),
       extras: selectedExtras,
       contactName: contactForm.getValues("name"),
-      contactEmail: contactForm.getValues("email"),
+      contactEmail: requestEmail,
       contactPhone: contactForm.getValues("phone"),
       paymentMethod: isRebateModel ? "later" : paymentMethod as "bank" | "card" | "later",
       notes: contactForm.getValues("notes"),
     }).then((bookingResult: any) => {
+      // Record the email actually sent so payment retry can't drift to a stale value.
+      setSentContactEmail(requestEmail);
       const invoiceId = bookingResult?.invoiceId ?? null;
       const newBookingId = bookingResult?.id || bookingResult?.bookingId || null;
       if (newBookingId) setCreatedBookingId(newBookingId);
@@ -310,14 +339,18 @@ export default function BookingPage() {
     setShowSignGate(false);
     setPaymentFailed(false);
     const isPayNow = !isRebateModel && paymentMethod !== "later";
+    // Always charge the email the booking was created with; only fall back to the
+    // form value if (somehow) none was recorded.
+    const paymentEmail = sentContactEmail || contactForm.getValues("email");
 
     if (isPayNow && createdInvoiceId) {
       setRedirecting(true);
+      setIsRetrying(true);
       try {
         const result = await paymentService.initiate({
           invoiceId: createdInvoiceId,
           paymentMethod,
-          customerEmail: contactForm.getValues("email"),
+          customerEmail: paymentEmail,
           locale: language,
         });
         if (result.paymentUrl) {
@@ -341,6 +374,8 @@ export default function BookingPage() {
           toast.error(err?.message || t("booking.errorPayment"));
           setPaymentFailed(true);
         }
+      } finally {
+        setIsRetrying(false);
       }
       return;
     }
@@ -407,8 +442,10 @@ export default function BookingPage() {
               <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
                 <Button
                   onClick={() => proceedAfterSign()}
+                  disabled={isRetrying}
                   className="bg-accent text-accent-foreground hover:bg-accent/90"
                 >
+                  {isRetrying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {t("booking.sign.retryPayment")}
                 </Button>
                 <Link to="/account?tab=bookings">
@@ -1012,7 +1049,7 @@ export default function BookingPage() {
             <div className="flex flex-col items-end gap-1.5">
               <Button
                 onClick={handleNext}
-                disabled={createBooking.isPending || isSubmitting || (step === 2 && !isAuthenticated) || (step === 0 && isUnavailable)}
+                disabled={createBooking.isPending || isSubmitting || (step === lastStep && !isAuthenticated) || (step === lastStep && showVerifyBanner) || (step === 0 && isUnavailable)}
                 className="bg-accent text-accent-foreground hover:bg-accent/90"
               >
                 {step < steps.length - 1 ? (
@@ -1099,7 +1136,7 @@ export default function BookingPage() {
             )}
             <Button
               onClick={handleNext}
-              disabled={createBooking.isPending || isSubmitting || (step === 2 && !isAuthenticated) || (step === 0 && isUnavailable)}
+              disabled={createBooking.isPending || isSubmitting || (step === lastStep && !isAuthenticated) || (step === lastStep && showVerifyBanner) || (step === 0 && isUnavailable)}
               className="bg-accent text-accent-foreground hover:bg-accent/90 px-6"
             >
               {step < steps.length - 1 ? t("booking.next") : (

@@ -8,7 +8,6 @@ import { trackEvent } from "@/lib/analytics";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { invoiceService } from "@/services";
-import { useAuth } from "@/contexts/AuthContext";
 import { queryKeys } from "@/services/queryKeys";
 
 export default function PaymentReturnPage() {
@@ -20,7 +19,6 @@ export default function PaymentReturnPage() {
   const bookingId = searchParams.get("booking") || searchParams.get("id");
   const statusKey = bookingId ?? invoiceId ?? "";
   const { t } = useLanguage();
-  const { isAuthenticated } = useAuth();
   const pollCount = useRef(0);
   const [isPollTimeout, setIsPollTimeout] = useState(false);
 
@@ -34,7 +32,9 @@ export default function PaymentReturnPage() {
       const inv = await invoiceService.getById(invoiceId!);
       return inv ? { status: inv.status as string } : undefined;
     },
-    enabled: !!statusKey && isAuthenticated,
+    // Run even when logged out: the payment redirect can drop the session, and the
+    // by-booking status endpoint is capability-gated on the bookingId GUID server-side.
+    enabled: !!statusKey,
     refetchInterval: (query) => {
       const s = (query.state.data as { status: string } | undefined)?.status;
       if (s === "pending" || s === "awaitingpayment") {
@@ -68,7 +68,7 @@ export default function PaymentReturnPage() {
         noindex={true}
       />
       <div className="mx-auto max-w-md w-full text-center">
-        {!isAuthenticated ? (
+        {!statusKey ? (
           <>
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
               <CheckCircle className="h-8 w-8 text-muted-foreground" />

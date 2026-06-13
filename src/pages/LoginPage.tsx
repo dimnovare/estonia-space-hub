@@ -234,8 +234,8 @@ function LoginPageInner() {
                   if (!credentialResponse.credential) return;
                   setLoading(true);
                   loginWithGoogle(credentialResponse.credential)
-                    .then(() => {
-                      trackEvent("user_registered", { method: "google" });
+                    .then(({ isNewUser }) => {
+                      if (isNewUser) trackEvent("user_registered", { method: "google" });
                       trackEvent("login", { method: "google" });
                       toast.success(t("login.successLogin"));
                       navigate(from, { replace: true });

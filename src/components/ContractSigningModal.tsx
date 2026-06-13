@@ -55,6 +55,7 @@ function DokobitSigningFlow({
   // time. Signing still works if left blank (the verified code is captured post-sign).
   const [idCode, setIdCode] = useState("");
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isMountedRef = useRef(true);
 
   const stopPolling = () => {
     if (pollRef.current) {
@@ -64,7 +65,7 @@ function DokobitSigningFlow({
   };
 
   // Clean up on unmount
-  useEffect(() => () => stopPolling(), []);
+  useEffect(() => () => { isMountedRef.current = false; stopPolling(); }, []);
 
   const initiateMutation = useMutation({
     mutationFn: async () => {
@@ -80,6 +81,7 @@ function DokobitSigningFlow({
       );
     },
     onSuccess: (data) => {
+      if (!isMountedRef.current) return;
       setSigningUrl(data.signingUrl);
       setStatus("pending");
       // Poll status as a fallback (backend postback also flips the status).
@@ -88,6 +90,7 @@ function DokobitSigningFlow({
           const result = await apiClient.get<{ status: string }>(
             `/contracts/dokobit/${data.signingToken}/status`
           );
+          if (!isMountedRef.current) { stopPolling(); return; }
           if (result.status === "completed") {
             stopPolling();
             setStatus("completed");

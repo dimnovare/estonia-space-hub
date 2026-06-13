@@ -39,6 +39,7 @@ interface AuthResponse {
   accessToken:  string;
   refreshToken: string;
   csrfToken?:   string;   // present from backend v2 — store in-memory for X-CSRF-Token header
+  isNewUser?:   boolean;  // true only for a brand-new Google registration (backend v3)
 }
 
 interface AuthContextType {
@@ -48,7 +49,7 @@ interface AuthContextType {
   role: UserRole;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, inviteCode?: string) => Promise<string>;
-  loginWithGoogle: (credential: string) => Promise<void>;
+  loginWithGoogle: (credential: string) => Promise<{ isNewUser: boolean }>;
   logout: () => void;
   updateProfile: (updates: Partial<AppUser>) => Promise<void>;
 }
@@ -154,6 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const res = await apiClient.post<AuthResponse>("/auth/google", { credential });
       persist(normalizeUser(res.user), res.accessToken, res.csrfToken);
+      return { isNewUser: res.isNewUser ?? false };
     } catch (err: any) {
       throw new Error(err.message || "error.googleFailed");
     }

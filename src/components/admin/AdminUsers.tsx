@@ -135,10 +135,10 @@ export default function AdminUsers() {
           {t("admin.page") || "Page"} {page}
         </span>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" disabled={page <= 1 || loading} onClick={() => setPage(p => Math.max(1, p - 1))}>
+          <Button variant="outline" size="sm" aria-label={t("admin.prev")} disabled={page <= 1 || loading} onClick={() => setPage(p => Math.max(1, p - 1))}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="sm" disabled={!hasMore || loading} onClick={() => setPage(p => p + 1)}>
+          <Button variant="outline" size="sm" aria-label={t("admin.next")} disabled={!hasMore || loading} onClick={() => setPage(p => p + 1)}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
