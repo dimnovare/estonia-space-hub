@@ -110,6 +110,45 @@ function PartnerBadges({ listing }: { listing: Listing }) {
   );
 }
 
+function BookingOrContactButton({
+  listing,
+  bookingUrl,
+  className,
+}: {
+  listing: Listing;
+  bookingUrl: string;
+  className?: string;
+}) {
+  const { t } = useLanguage();
+
+  if (listing.bookingEnabled) {
+    return (
+      <Link to={bookingUrl} className={className}>
+        <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+          {t("detail.bookNow")}
+        </Button>
+      </Link>
+    );
+  }
+
+  if (listing.supplierSlug) {
+    return (
+      <Link to={`/partner/${listing.supplierSlug}`} className={className}>
+        <Button variant="outline" className="w-full gap-2">
+          <Mail className="h-4 w-4" />
+          {t("detail.contactPartner")}
+        </Button>
+      </Link>
+    );
+  }
+
+  return (
+    <Button disabled variant="outline" className={`w-full ${className ?? ""}`}>
+      {t("detail.bookingUnavailable")}
+    </Button>
+  );
+}
+
 function SupplierBadge({ supplierId }: { supplierId?: string }) {
   const { t } = useLanguage();
   const { data: suppliers = [] } = useSuppliers();
@@ -327,11 +366,7 @@ export function WarehouseDetail() {
               </div>
             </div>
 
-            <Link to={bookingUrl}>
-              <Button className="mt-6 w-full bg-accent text-accent-foreground hover:bg-accent/90">
-                {t("detail.bookNow")}
-              </Button>
-            </Link>
+            <BookingOrContactButton listing={wListing} bookingUrl={bookingUrl} className="mt-6 block" />
             <p className="mt-2 text-center text-xs text-muted-foreground">{fp(t("detail.savingsNote"))}</p>
             <p className="mt-1 flex items-center justify-center gap-1 text-[11px] text-success"><Shield className="h-3 w-3" /> {t("booking.cancellation.short")}</p>
 
@@ -383,9 +418,7 @@ export function WarehouseDetail() {
               <span className="text-xs font-normal text-muted-foreground ml-1">/{wListing.priceUnit.replace("€/","")}</span>
             </div>
           </div>
-          <Link to={bookingUrl} className="shrink-0">
-            <Button className="bg-accent text-accent-foreground hover:bg-accent/90 px-6">{t("detail.bookNow")}</Button>
-          </Link>
+          <BookingOrContactButton listing={wListing} bookingUrl={bookingUrl} className="shrink-0" />
         </div>
       </div>
     </div>
@@ -489,9 +522,7 @@ export function MovingDetail() {
               <Info className="h-3 w-3 shrink-0" /> {t("listing.partnerPriceInfo")}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">{mListing.pricingModel === "hourly" ? t("detail.hourlyRate") : t("detail.fixedPrice")}</p>
-            <Link to={`/book?listing=${mListing.id}&type=moving`}>
-              <Button className="mt-6 w-full bg-accent text-accent-foreground hover:bg-accent/90">{t("detail.bookNow")}</Button>
-            </Link>
+            <BookingOrContactButton listing={mListing} bookingUrl={`/book?listing=${mListing.id}&type=moving`} className="mt-6 block" />
             <p className="mt-2 text-center text-xs text-muted-foreground">{fp(t("detail.savingsNote"))}</p>
             <p className="mt-1 flex items-center justify-center gap-1 text-[11px] text-success"><Shield className="h-3 w-3" /> {t("booking.cancellation.short")}</p>
             <div className="mt-4 rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
@@ -518,9 +549,7 @@ export function MovingDetail() {
               <span className="text-xs font-normal text-muted-foreground ml-1">/{mListing.priceUnit.replace("€/","")}</span>
             </div>
           </div>
-          <Link to={`/book?listing=${mListing.id}&type=moving`} className="shrink-0">
-            <Button className="bg-accent text-accent-foreground hover:bg-accent/90 px-6">{t("detail.bookNow")}</Button>
-          </Link>
+          <BookingOrContactButton listing={mListing} bookingUrl={`/book?listing=${mListing.id}&type=moving`} className="shrink-0" />
         </div>
       </div>
     </div>
@@ -622,9 +651,7 @@ export function TrailerDetail() {
             <p className="mt-2 flex items-center gap-1 text-[11px] text-muted-foreground">
               <Info className="h-3 w-3 shrink-0" /> {t("listing.partnerPriceInfo")}
             </p>
-            <Link to={`/book?listing=${tListing.id}&type=trailer`}>
-              <Button className="mt-6 w-full bg-accent text-accent-foreground hover:bg-accent/90">{t("detail.bookNow")}</Button>
-            </Link>
+            <BookingOrContactButton listing={tListing} bookingUrl={`/book?listing=${tListing.id}&type=trailer`} className="mt-6 block" />
             <p className="mt-2 text-center text-xs text-muted-foreground">{fp(t("detail.savingsNote"))}</p>
             <p className="mt-1 flex items-center justify-center gap-1 text-[11px] text-success"><Shield className="h-3 w-3" /> {t("booking.cancellation.short")}</p>
             <div className="mt-4 rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
@@ -651,9 +678,7 @@ export function TrailerDetail() {
               <span className="text-xs font-normal text-muted-foreground ml-1">/{tListing.priceUnit.replace("€/","")}</span>
             </div>
           </div>
-          <Link to={`/book?listing=${tListing.id}&type=trailer`} className="shrink-0">
-            <Button className="bg-accent text-accent-foreground hover:bg-accent/90 px-6">{t("detail.bookNow")}</Button>
-          </Link>
+          <BookingOrContactButton listing={tListing} bookingUrl={`/book?listing=${tListing.id}&type=trailer`} className="shrink-0" />
         </div>
       </div>
     </div>

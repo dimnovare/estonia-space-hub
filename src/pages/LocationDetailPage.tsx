@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, Link } from "@/i18n/routing";
-import { ArrowLeft, MapPin, Clock, Loader2 } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, Loader2, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "@/hooks/queries";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -187,11 +187,24 @@ export default function LocationDetailPage() {
                       {formatPriceUnit(unit.priceUnit, t)}
                     </span>
                   </div>
-                  <Link to={`/book?listing=${unit.id}&type=${unit.type}`}>
-                    <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                      {t("detail.bookNow")}
+                  {unit.bookingEnabled ? (
+                    <Link to={`/book?listing=${unit.id}&type=${unit.type}`}>
+                      <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
+                        {t("detail.bookNow")}
+                      </Button>
+                    </Link>
+                  ) : unit.supplierSlug ? (
+                    <Link to={`/partner/${unit.supplierSlug}`}>
+                      <Button size="sm" variant="outline" className="gap-1.5">
+                        <Mail className="h-3.5 w-3.5" />
+                        {t("detail.contactPartner")}
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Button size="sm" variant="outline" disabled>
+                      {t("detail.bookingUnavailable")}
                     </Button>
-                  </Link>
+                  )}
                 </div>
               </div>
             </div>

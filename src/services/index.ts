@@ -10,6 +10,7 @@ import type {
   SupplierLocation, PaymentResult, SupplierApplication,
   WarehouseListing, MovingListing, TrailerListing,
   LeadStatus, LeadSummary, RebateInvoice,
+  ProviderPaidFeatures, PaidFeatureRequest,
 } from "./types";
 
 // ─── Listing helpers ───────────────────────────────────────────────────────────
@@ -33,13 +34,22 @@ interface ApiListing {
   description: string;
   images: string[];
   features: Record<string, unknown>;
+  supplierId?: string;
+  supplierSlug?: string | null;
+  locationId?: string | null;
+  bookingEnabled?: boolean;
+  contractSigningEnabled?: boolean;
+  directPaymentEnabled?: boolean;
+  ruumlyPaymentEnabled?: boolean;
+  isVerified?: boolean;
+  foundingPartner?: boolean;
 }
 
 function mapListing(api: ApiListing): Listing {
   const base: Omit<Listing, keyof (WarehouseListing | MovingListing | TrailerListing)> & Record<string, unknown> = {
     id: api.id,
     type: (api.type?.toLowerCase() || "warehouse") as ListingType,
-    supplierId: (api as unknown as Record<string, unknown>).supplierId as string || "",
+    supplierId: api.supplierId || "",
     supplierSlug: api.supplierSlug ?? null,
     title: api.title || "",
     provider: api.supplierName || "",
@@ -58,7 +68,13 @@ function mapListing(api: ApiListing): Listing {
     description: api.description || "",
     sizeM2: (api.features?.sizeM2 as number) ?? undefined,
     quantityTotal: (api.features?.quantityTotal as number) ?? undefined,
-    locationId: (api as unknown as Record<string, unknown>).locationId as string | undefined,
+    locationId: api.locationId ?? undefined,
+    isVerified: api.isVerified ?? false,
+    isFoundingPartner: api.foundingPartner ?? false,
+    bookingEnabled: api.bookingEnabled ?? false,
+    contractSigningEnabled: api.contractSigningEnabled ?? false,
+    directPaymentEnabled: api.directPaymentEnabled ?? false,
+    ruumlyPaymentEnabled: api.ruumlyPaymentEnabled ?? false,
   };
 
   const f = api.features ?? {};
@@ -538,6 +554,23 @@ export const paymentService = {
     apiClient.post("/payments/initiate", data),
 };
 
+export const providerPaidFeaturesService = {
+  async getMine(supplierId?: string | null): Promise<ProviderPaidFeatures> {
+    return apiClient.get<ProviderPaidFeatures>(withSupplier("/supplier/paid-features", supplierId));
+  },
+  async request(data: {
+    paidFeatureId: string;
+    listingId?: string | null;
+    locationId?: string | null;
+    message?: string | null;
+  }, supplierId?: string | null): Promise<PaidFeatureRequest> {
+    return apiClient.post<PaidFeatureRequest>(
+      withSupplier("/supplier/paid-features/requests", supplierId),
+      data
+    );
+  },
+};
+
 // ─── Provider Service ────────────────────────────────────────────────────────
 export const providerService = {
   async apply(data: SupplierApplication): Promise<void> {
@@ -553,4 +586,5 @@ export type {
   AuditLogEntry, OrderStatus, PartnerIntegrationSettings, OrderRoutingRule,
   Listing, ListingFilters, PaginatedResponse, CreateBookingInput,
   SupplierLocation, PaymentResult, SupplierApplication,
+  ProviderPaidFeatures, PaidFeatureRequest,
 };
