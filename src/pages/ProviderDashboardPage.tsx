@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useSearchParams, useNavigate, Link } from "@/i18n/routing";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
-  LayoutDashboard, List, Package, Calendar as CalendarIcon, Star, Settings, Users, CreditCard,
+  LayoutDashboard, List, Package, Calendar as CalendarIcon, Star, Settings, Users, Sparkles,
   BarChart3, Inbox, Bell, Volume2, VolumeX, ChevronDown, X, FileText
 } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
@@ -26,9 +26,9 @@ import ProviderReviews from "@/components/provider/ProviderReviews";
 const ProviderAnalytics = lazy(() => import("@/components/provider/ProviderAnalytics"));
 import ProviderProfile from "@/components/provider/ProviderProfile";
 import ProviderTeam from "@/components/provider/ProviderTeam";
-import ProviderBilling from "@/components/provider/ProviderBilling";
 import ProviderPartnerPage from "@/components/provider/ProviderPartnerPage";
 import ProviderContractTemplate from "@/components/provider/ProviderContractTemplate";
+import ProviderBoosts from "@/components/provider/ProviderBoosts";
 
 function useSidebarLinks() {
   const { t } = useLanguage();
@@ -43,7 +43,7 @@ function useSidebarLinks() {
     { id: "contract", label: t("provider.nav.contractTemplate"), icon: FileText },
     { id: "profile", label: t("provider.nav.profile"), icon: Settings },
     { id: "team", label: t("provider.nav.team"), icon: Users },
-    { id: "billing", label: t("provider.nav.billing"), icon: CreditCard },
+    { id: "boosts", label: t("provider.nav.boosts"), icon: Sparkles },
   ];
 }
 
@@ -71,8 +71,18 @@ export default function ProviderDashboardPage() {
   const navItems = sidebarLinks.filter(
     (l) =>
       (l.id !== "analytics" || hasAnalyticsTier) &&
-      (l.id !== "contract" || !adminNoSupplier)
+      (l.id !== "contract" || !adminNoSupplier) &&
+      (l.id !== "boosts" || !adminNoSupplier)
   );
+
+  useEffect(() => {
+    if (navItems.some((item) => item.id === tab)) return;
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set("ptab", tab === "billing" ? "boosts" : "overview");
+      return next;
+    }, { replace: true });
+  }, [navItems, setSearchParams, tab]);
 
   const { data: notifications = [] } = useNotifications();
   const unreadCount = notifications.filter((n: any) => !n.read).length;
@@ -281,7 +291,7 @@ export default function ProviderDashboardPage() {
           )
         )}
         {tab === "team" && <ProviderTeam />}
-        {tab === "billing" && <ProviderBilling />}
+        {tab === "boosts" && <ProviderBoosts />}
       </div>
     </div>
   );

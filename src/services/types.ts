@@ -69,6 +69,10 @@ export interface Supplier {
   clientDiscountRate: number;
   tier: "starter" | "standard" | "premium";
   billingModel: "marketplace" | "rebate";
+  bookingEnabled?: boolean;
+  contractSigningEnabled?: boolean;
+  directPaymentEnabled?: boolean;
+  ruumlyPaymentEnabled?: boolean;
   isVerified?: boolean;
   isFoundingPartner?: boolean;
   priority?: "standard" | "high" | "critical";
@@ -284,6 +288,58 @@ export interface ListingBase {
   pricesIncludeVat?: boolean;
   isVerified?: boolean;
   isFoundingPartner?: boolean;
+  bookingEnabled?: boolean;
+  contractSigningEnabled?: boolean;
+  directPaymentEnabled?: boolean;
+  ruumlyPaymentEnabled?: boolean;
+}
+
+export interface PaidFeature {
+  id: string;
+  code: string;
+  name: string;
+  description?: string | null;
+  category: "visibility" | "trust" | "operations" | "commerce";
+  scope: "supplier" | "location" | "listing" | "platform";
+  priceAmount: number;
+  priceCurrency: string;
+  billingInterval: string;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+export interface SupplierPaidFeature {
+  id: string;
+  supplierId: string;
+  paidFeature: PaidFeature;
+  listingId?: string | null;
+  locationId?: string | null;
+  isActive: boolean;
+  startsAt: string;
+  endsAt?: string | null;
+  adminNotes?: string | null;
+}
+
+export interface PaidFeatureRequest {
+  id: string;
+  supplierId: string;
+  supplierName?: string | null;
+  paidFeature: PaidFeature;
+  listingId?: string | null;
+  locationId?: string | null;
+  requestedByUserId?: string | null;
+  reviewedByUserId?: string | null;
+  status: "new" | "approved" | "activated" | "dismissed";
+  message?: string | null;
+  adminNotes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProviderPaidFeatures {
+  catalog: PaidFeature[];
+  activeFeatures: SupplierPaidFeature[];
+  requests: PaidFeatureRequest[];
 }
 
 export interface SupplierListingExtra {
