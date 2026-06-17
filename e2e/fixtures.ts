@@ -11,6 +11,8 @@ import { Page, Route } from "@playwright/test";
  *    with `type` ("Warehouse"|"Moving"|"Trailer") and a nested `features` object.
  *  - List GET /listings?... returns the ENVELOPE { data, total, page, limit, hasMore }.
  *  - GET /listings/featured returns a BARE array.
+ *  - Listing DTOs include supplier commerce flags. E2E listing fixtures default
+ *    to bookable so the booking-path specs exercise the /book CTA.
  *  - There is NO GET /auth/me. Session bootstrap is POST /auth/refresh, fired only
  *    when localStorage["ruumly-auth"] is present. Logged-out tests need no auth stub.
  *  - Routes are language-prefixed: use /et/...
@@ -39,6 +41,10 @@ export function apiListing(over: Json = {}): Json {
     priceFrom: 49,
     priceUnit: "€/month",
     availableNow: true,
+    bookingEnabled: true,
+    contractSigningEnabled: true,
+    directPaymentEnabled: true,
+    ruumlyPaymentEnabled: true,
     rating: 0,
     reviewCount: 0,
     images: [],
