@@ -1,7 +1,11 @@
 import { useState } from "react";
-import { Mail, Zap, Hand, RefreshCw, Server, PlusCircle, Save, Loader2, Trash2, Ban, CheckCircle, Star, ShieldCheck, Flag, ExternalLink } from "lucide-react";
+import { Mail, Zap, Hand, RefreshCw, Server, PlusCircle, Save, Loader2, Trash2, Ban, CheckCircle, Star, ShieldCheck, Flag, ExternalLink, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter,
+  AlertDialogTitle, AlertDialogDescription, AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { supplierService } from "@/services";
 import { apiClient } from "@/services/apiClient";
 import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
@@ -33,6 +37,8 @@ export default function AdminSuppliers() {
   const [tierFilter, setTierFilter] = useState<"all" | "starter" | "standard" | "premium">("all");
   const [createOpen, setCreateOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Supplier | null>(null);
+  const [confirmText, setConfirmText] = useState("");
 
   // ── Create form state ──
   const emptyCreate = {
@@ -77,6 +83,19 @@ export default function AdminSuppliers() {
       toast.success(t("admin.approved"));
     },
     onError: (err: any) => toast.error(err.message || t("admin.deleteFailed")),
+  });
+
+  // Hard delete = backend "purge" (fully removes supplier + dependents). Distinct from
+  // the reversible "Remove from marketplace" hide (toggleStatus / DELETE without /purge).
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => apiClient.delete(`/admin/suppliers/${id}/purge`),
+    onSuccess: () => {
+      invalidate();
+      toast.success(t("admin.deletePartnerDone"));
+      setDeleteTarget(null);
+      setSelected(null);
+    },
+    onError: (err: any) => toast.error(err?.message || t("admin.deleteFailed")),
   });
 
   const filteredRaw = suppliers.filter(s => {
@@ -598,18 +617,13 @@ export default function AdminSuppliers() {
                     <><CheckCircle className="mr-1 h-3.5 w-3.5" /> {t("admin.partner.restoreToMarketplace")}</>
                   )}
                 </Button>
-                <Button variant="outline" size="sm" className="flex-1 text-destructive hover:bg-destructive/10" onClick={async () => {
-                  if (!confirm(t("admin.removePartnerConfirm"))) return;
-                  try {
-                    await supplierService.delete(selected.id);
-                    invalidate();
-                    setSelected(null);
-                    toast.success(t("admin.partnerRemoved"));
-                  } catch (err: any) {
-                    toast.error(err?.message || t("admin.deleteFailed"));
-                  }
-                }}>
-                  <Trash2 className="mr-1 h-3.5 w-3.5" /> {t("admin.removePartner")}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 border-destructive/30 text-destructive hover:bg-destructive/10"
+                  onClick={() => { setConfirmText(""); setDeleteTarget(selected); }}
+                >
+                  <Trash2 className="mr-1 h-3.5 w-3.5" /> {t("admin.deletePartner")}
                 </Button>
                 <Button variant="outline" size="sm" className="flex-1" onClick={() => setSelected(null)}>{t("admin.close")}</Button>
               </div>
@@ -717,6 +731,61 @@ export default function AdminSuppliers() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ── Delete Partner (irreversible) ── */}
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(o) => { if (!o && !deleteMutation.isPending) setDeleteTarget(null); }}
+      >
+        <AlertDialogContent className="rounded-[14px]">
+          <AlertDialogHeader>
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-destructive/10 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div className="space-y-2">
+                <AlertDialogTitle className="font-display text-lg font-bold text-navy-ink">
+                  {t("admin.deletePartner")}
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-sm text-muted-foreground">
+                  {t("admin.deletePartnerConfirmBody").replace("{name}", deleteTarget?.name ?? "")}
+                </AlertDialogDescription>
+              </div>
+            </div>
+          </AlertDialogHeader>
+
+          <div className="rounded-[12px] border border-destructive/20 bg-destructive/5 px-3.5 py-3">
+            <label className="text-[13px] font-semibold text-ink-2">
+              {t("admin.deletePartnerTypeName").replace("{name}", deleteTarget?.name ?? "")}
+            </label>
+            <input
+              autoFocus
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder={deleteTarget?.name ?? ""}
+              className="mt-2 w-full rounded-[10px] border border-line-2 bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-accent/30"
+            />
+          </div>
+
+          <p className="text-[11px] text-muted-foreground">{t("admin.deletePartnerHistoryNote")}</p>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>
+              {t("admin.cancel")}
+            </AlertDialogCancel>
+            <Button
+              variant="destructive"
+              disabled={deleteMutation.isPending || confirmText.trim() !== (deleteTarget?.name ?? "").trim()}
+              onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+            >
+              {deleteMutation.isPending
+                ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                : <Trash2 className="mr-2 h-4 w-4" />}
+              {t("admin.deletePartner")}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

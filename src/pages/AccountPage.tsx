@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, type ReactNode } from "react";
+import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { notificationService } from "@/services";
 import { Link, useNavigate, useSearchParams } from "@/i18n/routing";
@@ -9,8 +9,8 @@ import { toast } from "sonner";
 import {
   LayoutDashboard, Package, Heart, Search, Bell, Shield,
   HelpCircle, ChevronRight, Warehouse, Truck, CarFront, Clock, CheckCircle,
-  XCircle, Play, ArrowRight, User, Send, MessageSquare, FileText,
-  Download, ArrowLeft, Loader2, Star, Receipt, Sparkles, Trash2
+  XCircle, Play, User, Send, MessageSquare, FileText,
+  Download, ArrowLeft, Loader2, Star, Receipt, Sparkles, Trash2, Camera
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReviewDialog from "@/components/ReviewDialog";
@@ -791,21 +791,26 @@ function AccountFavorites() {
 function AccountSearches() {
   const { t } = useLanguage();
   const { savedSearches, toggleAlerts, remove } = useSavedSearches();
+  const hasSearches = savedSearches.length > 0;
 
   return (
     <div className="animate-slide-up">
+      {/* Header "New search" CTA only when searches exist — the empty state owns
+          the single CTA otherwise (avoids two buttons to the same place). */}
       <PageHead
         title={t("account.savedSearches")}
         subtitle={t("account.savedSearchesSubtitle")}
         action={
-          <Link to="/search">
-            <Button className="min-h-[44px] gap-1.5 bg-accent px-5 text-accent-foreground hover:bg-brand-greenDeep">
-              <Search className="h-4 w-4" /> {t("account.newSearch")}
-            </Button>
-          </Link>
+          hasSearches ? (
+            <Link to="/search">
+              <Button className="min-h-[44px] gap-1.5 bg-accent px-5 text-accent-foreground hover:bg-brand-greenDeep">
+                <Search className="h-4 w-4" /> {t("account.newSearch")}
+              </Button>
+            </Link>
+          ) : undefined
         }
       />
-      {savedSearches.length === 0 ? (
+      {!hasSearches ? (
         <div className="mt-6">
           <EmptyState
             icon={Search}
@@ -986,6 +991,8 @@ const PROFILE_LANGS: { value: string; label: string }[] = [
   { value: "lt", label: "Lietuvių" },
 ];
 
+const AVATAR_MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+
 function AccountProfile() {
   const { t, language, setLanguage } = useLanguage();
   const { user, updateProfile } = useAuth();
@@ -993,6 +1000,16 @@ function AccountProfile() {
     resolver: zodResolver(createProfileSchema(t)),
     defaultValues: { name: user?.name || "", phone: user?.phone || "" },
   });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Local object-URL preview shown instantly on pick; cleared once we adopt the
+  // server URL (or on unmount) to avoid leaking the blob URL.
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  useEffect(() => {
+    return () => { if (avatarPreview) URL.revokeObjectURL(avatarPreview); };
+  }, [avatarPreview]);
 
   const onSubmit = async (data: ProfileForm) => {
     try {
@@ -1003,17 +1020,90 @@ function AccountProfile() {
     }
   };
 
+  const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    // Reset the input so re-picking the same file fires onChange again.
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error(t("account.photoInvalid"));
+      return;
+    }
+    if (file.size > AVATAR_MAX_BYTES) {
+      toast.error(t("account.photoTooLarge"));
+      return;
+    }
+
+    // Instant optimistic preview.
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    setAvatarPreview(URL.createObjectURL(file));
+
+    setUploadingAvatar(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      // No avatar service helper yet — multipart via apiClient.postForm
+      // (same primitive used for docx). Backend endpoint pending (see backendNeeds).
+      const res = await apiClient.postForm<{ avatar?: string; url?: string }>("/auth/account/avatar", fd);
+      const url = res?.avatar ?? res?.url;
+      if (url) {
+        await updateProfile({ avatar: url });
+        if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+        setAvatarPreview(null);
+        toast.success(t("account.photoUploaded"));
+      } else {
+        // Endpoint accepted but returned no URL — keep the local preview.
+        toast.success(t("account.photoUploaded"));
+      }
+    } catch (err: any) {
+      // Endpoint not live yet (404/501) → keep the preview, tell the user it's pending.
+      if (err?.status === 404 || err?.status === 501 || err?.status === 405) {
+        toast.info(t("account.photoPending"));
+      } else {
+        if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+        setAvatarPreview(null);
+        toast.error(err?.message || t("error.generic"));
+      }
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const initials = (user?.name || "").trim().charAt(0).toUpperCase() || "?";
+  const avatarSrc = avatarPreview ?? user?.avatar ?? null;
 
   return (
     <div className="animate-slide-up">
       <PageHead title={t("account.profile")} />
       <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 max-w-lg space-y-5 rounded-[14px] border border-line bg-card p-6 shadow-card">
         <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-navy-ink font-display text-2xl font-extrabold text-white">{initials}</div>
-          {/* Avatar upload has no backend yet (see backendNeeds: POST /auth/account/avatar). */}
-          <Button type="button" variant="outline" size="sm" className="min-h-[40px] gap-1.5 border-line-2 bg-secondary text-ink-2 hover:border-navy-ink hover:text-navy-ink" onClick={() => toast.info(t("account.changePhotoSoon"))}>
-            <ArrowRight className="h-3.5 w-3.5 -rotate-90" /> {t("account.changePhoto")}
+          {/* Avatar: real photo when present, else navy monogram (spec §1.3). */}
+          {avatarSrc ? (
+            <img src={avatarSrc} alt={user?.name || ""} className="h-16 w-16 shrink-0 rounded-full object-cover" />
+          ) : (
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-navy-ink font-display text-2xl font-extrabold text-white">{initials}</div>
+          )}
+          {/* Real file-picker → multipart POST /auth/account/avatar (see backendNeeds). */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            className="sr-only"
+            aria-hidden="true"
+            tabIndex={-1}
+            onChange={handleAvatarFile}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={uploadingAvatar}
+            className="min-h-[40px] gap-1.5 border-line-2 bg-secondary text-ink-2 hover:border-navy-ink hover:text-navy-ink"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {uploadingAvatar
+              ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("account.photoUploading")}</>
+              : <><Camera className="h-3.5 w-3.5" /> {t("account.changePhoto")}</>}
           </Button>
         </div>
         <div className="flex flex-col gap-1.5">

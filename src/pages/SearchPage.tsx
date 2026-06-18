@@ -1,6 +1,6 @@
 import { useState, useMemo, lazy, Suspense, useCallback, useRef, useEffect } from "react";
 import { useSearchParams, Link } from "@/i18n/routing";
-import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers, Package, Warehouse, Truck, CarFront, Star, Building2, Calculator } from "lucide-react";
+import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers, Package, Warehouse, Truck, CarFront, Star, Building2, Calculator, LocateFixed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from "@/components/ui/drawer";
 import { useListings, useLocations } from "@/hooks/queries";
@@ -25,6 +25,15 @@ const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
 const VALID_SORTS: ListingFilters["sort"][] = ["best", "cheapest", "rating", "newest"];
 const VALID_SIZE_CATS: ListingFilters["sizeCategory"][] = ["XS", "S", "M", "L", "XL"];
+
+// Squared-equirectangular approximation — cheap and monotonic, which is all we
+// need to rank results by proximity to the user (no real distance reported).
+function distanceSq(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const latRad = ((aLat + bLat) / 2) * (Math.PI / 180);
+  const dLat = aLat - bLat;
+  const dLng = (aLng - bLng) * Math.cos(latRad);
+  return dLat * dLat + dLng * dLng;
+}
 
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -166,13 +175,67 @@ export default function SearchPage() {
   const [notifySuccess, setNotifySuccess] = useState(false);
   const [notifyError, setNotifyError] = useState(false);
 
+  // Geolocation ("Near me"): user coordinates + request state. When set, the map
+  // centers on the user and results are re-ranked nearest-first (client-side).
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [geoLoading, setGeoLoading] = useState(false);
+
+  const handleNearMe = useCallback(() => {
+    // Toggle off if already located.
+    if (userLocation) {
+      setUserLocation(null);
+      return;
+    }
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      toast.error(t("search.nearMe.unsupported"));
+      return;
+    }
+    setGeoLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation([pos.coords.latitude, pos.coords.longitude]);
+        setGeoLoading(false);
+        toast.success(t("search.nearMe.success"));
+        trackEvent("search_near_me", { type: activeType, city: cityFilter || "all" });
+      },
+      (err) => {
+        setGeoLoading(false);
+        // Degrade gracefully — keep all results, just inform the user.
+        toast.error(
+          err.code === err.PERMISSION_DENIED
+            ? t("search.nearMe.denied")
+            : t("search.nearMe.error"),
+        );
+      },
+      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 5 * 60_000 },
+    );
+  }, [userLocation, t, activeType, cityFilter]);
+
+  // "Near me" ordering: when the user shares their location, re-rank results
+  // nearest-first (client-side, by lat/lng). Without it, keep server order.
+  const displayListings = useMemo(() => {
+    if (!userLocation) return filtered;
+    const [uLat, uLng] = userLocation;
+    return [...filtered].sort(
+      (a, b) => distanceSq(uLat, uLng, a.lat, a.lng) - distanceSq(uLat, uLng, b.lat, b.lng),
+    );
+  }, [filtered, userLocation]);
+
+  const displayLocations = useMemo(() => {
+    if (!userLocation) return locations;
+    const [uLat, uLng] = userLocation;
+    return [...locations].sort(
+      (a, b) => distanceSq(uLat, uLng, a.lat, a.lng) - distanceSq(uLat, uLng, b.lat, b.lng),
+    );
+  }, [locations, userLocation]);
+
   // Incremental rendering: mount a window of cards and grow as the user scrolls,
   // so a large result set does not mount hundreds of cards + lazy <img> up front.
   const [visibleCount, setVisibleCount] = useState(24);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  // Reset the window whenever the result set changes (new search / filter).
-  useEffect(() => { setVisibleCount(24); }, [filtered]);
+  // Reset the window whenever the result set changes (new search / filter / reorder).
+  useEffect(() => { setVisibleCount(24); }, [displayListings]);
 
   // Grow the window as the sentinel scrolls into view.
   useEffect(() => {
@@ -186,9 +249,9 @@ export default function SearchPage() {
     // Only re-create the observer on a new result set — NOT on each window grow
     // (the functional setVisibleCount needs no current value), otherwise observe()
     // re-fires its initial intersection and loads every batch in one burst.
-  }, [filtered]);
+  }, [displayListings]);
 
-  const shown = filtered.slice(0, visibleCount);
+  const shown = displayListings.slice(0, visibleCount);
 
   const handleNotifySubmit = async () => {
     if (!notifyEmail.includes("@")) {
@@ -316,7 +379,7 @@ export default function SearchPage() {
           full-height under the 72px public nav. */}
       <div className="relative hidden lg:sticky lg:top-[72px] lg:block lg:h-[calc(100vh-72px)] lg:w-[51.2%]">
         <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary text-muted-foreground">{t("map.loading")}</div>}>
-          <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" language={language} selectedId={selectedListingId} onMarkerClick={handleMarkerClick} onLocationClick={handleLocationClick} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} tViewLocation={t("location.viewLocation")} tAvailable={t("location.available")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
+          <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" language={language} selectedId={selectedListingId} onMarkerClick={handleMarkerClick} onLocationClick={handleLocationClick} userLocation={userLocation} tYourLocation={t("search.nearMe.youAreHere")} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} tViewLocation={t("location.viewLocation")} tAvailable={t("location.available")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
         </Suspense>
         {/* Verticals overlay badge — proto badge-soft "📦 Storage · Moving · Trailers" */}
         <span className="pointer-events-none absolute bottom-4 left-4 z-[500] inline-flex items-center gap-1.5 rounded-full bg-card/90 px-3 py-1.5 text-xs font-medium text-foreground shadow-card backdrop-blur-sm">
@@ -337,7 +400,7 @@ export default function SearchPage() {
       {mobileView === "map" && (
         <div className="h-[calc(100vh-8rem)] lg:hidden relative">
           <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary">{t("map.loading")}</div>}>
-            <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" language={language} selectedId={selectedListingId} onMarkerClick={handleMarkerClick} onLocationClick={handleLocationClick} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} tViewLocation={t("location.viewLocation")} tAvailable={t("location.available")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
+            <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" language={language} selectedId={selectedListingId} onMarkerClick={handleMarkerClick} onLocationClick={handleLocationClick} userLocation={userLocation} tYourLocation={t("search.nearMe.youAreHere")} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} tViewLocation={t("location.viewLocation")} tAvailable={t("location.available")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
           </Suspense>
           {selectedListingId && (() => {
             // A marker click sets selectedListingId to either a listing OR a
@@ -443,8 +506,20 @@ export default function SearchPage() {
             />
           )}
 
-          {/* Primary inline filters: city · max price · Available now · Book online */}
+          {/* Primary inline filters: Near me · city · max price · Available now · Book online */}
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              aria-pressed={!!userLocation}
+              disabled={geoLoading}
+              onClick={handleNearMe}
+              className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-full border px-3.5 py-2 sm:py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:opacity-70 ${userLocation ? "border-navy-ink bg-navy-ink text-white" : "border-line-2 bg-card text-foreground hover:border-primary hover:text-primary"}`}
+            >
+              {geoLoading
+                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                : <LocateFixed className="h-3.5 w-3.5" />}
+              {userLocation ? t("search.nearMe.active") : t("search.nearMe")}
+            </button>
             <div className="relative">
               <select
                 aria-label={t("search.allCities")}
@@ -480,6 +555,28 @@ export default function SearchPage() {
               onChange={(v) => updateFilters({ bookable: v ? "true" : "" })}
             />
           </div>
+
+          {/* Storage-size calculator — subtle helper below the filter row, so it
+              guides the search without interrupting the result list. */}
+          {(activeType === "all" || activeType === "warehouse") && (
+            <div>
+              <button
+                type="button"
+                aria-expanded={calcOpen}
+                onClick={() => setCalcOpen(!calcOpen)}
+                className="inline-flex items-center gap-1.5 rounded text-[13px] font-medium text-brand-tealDeep transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+              >
+                <Calculator className="h-3.5 w-3.5" />
+                {t("search.sizeHelper")}
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${calcOpen ? "rotate-180" : ""}`} />
+              </button>
+              {calcOpen && (
+                <div className="mt-3 rounded-[14px] border border-line bg-card p-4 shadow-card">
+                  <StorageSizeCalculator />
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Desktop inline filters */}
           {showFilters && !isMobile && (
@@ -547,34 +644,14 @@ export default function SearchPage() {
             </div>
           ) : (
             <>
-              <div className="mb-4 rounded-xl border border-border bg-card">
-                <button
-                  onClick={() => setCalcOpen(!calcOpen)}
-                  className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium"
-                >
-                  <span className="flex items-center gap-2">
-                    <Calculator className="h-4 w-4 text-accent" />
-                    {t("calculator.bannerTitle")}
-                  </span>
-                  <ChevronDown
-                    className={`h-4 w-4 text-muted-foreground transition-transform ${calcOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
-                {calcOpen && (
-                  <div className="px-4 pb-4">
-                    <StorageSizeCalculator />
-                  </div>
-                )}
-              </div>
-
               <p className="mb-4 text-sm text-muted-foreground">
                 {t("search.resultsFound").replace("{count}", String(filtered.length))}{query && ` ${t("search.forQuery")} "${query}"`}
               </p>
 
               {/* Location cards */}
-              {locations.length > 0 && (
+              {displayLocations.length > 0 && (
                 <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
-                  {locations.map((loc) => (
+                  {displayLocations.map((loc) => (
                     <Link
                       key={loc.id}
                       to={`/location/${loc.id}`}

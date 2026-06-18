@@ -301,11 +301,11 @@ export default function ProviderOnboardingPage() {
                   </dl>
                 </div>
 
-                {/* Terms — free listing (4 bullets per content-and-i18n §2) */}
+                {/* Terms — permanently-free listing (4 bullets; term1Free reframes launch-era term1). */}
                 <div className="rounded-[14px] border border-line bg-background p-5">
                   <strong className="block font-display text-sm font-semibold text-navy-ink">{t("onboard.step5.intro")}</strong>
                   <ul className="mt-3 space-y-2.5 text-[13px] text-ink-2">
-                    {["onboard.step5.term1", "onboard.step5.term3", "onboard.step5.term4", "onboard.step5.term5"].map((key) => (
+                    {["onboard.step5.term1Free", "onboard.step5.term3", "onboard.step5.term4", "onboard.step5.term5"].map((key) => (
                       <li key={key} className="flex items-start gap-2.5">
                         <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
                         <span>{t(key)}</span>

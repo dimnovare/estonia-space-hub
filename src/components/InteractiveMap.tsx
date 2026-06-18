@@ -16,6 +16,9 @@ interface InteractiveMapProps {
   onLocationClick?: (location: SupplierLocation) => void;
   center?: [number, number];
   zoom?: number;
+  /** When set, drops a "you are here" marker and pans the map there (geolocation). */
+  userLocation?: [number, number] | null;
+  tYourLocation?: string;
   language?: string;
   tUnits?: string;
   tFrom?: string;
@@ -189,6 +192,8 @@ function InteractiveMap({
   onLocationClick,
   center,
   zoom,
+  userLocation = null,
+  tYourLocation = "Your location",
   language = "et",
   tUnits = "units",
   tFrom = "From",
@@ -247,6 +252,9 @@ function InteractiveMap({
   // affected markers (setIcon) instead of clearing and rebuilding all layers.
   const markerData = useRef<Map<string, { kind: "listing" | "location"; obj: Listing | SupplierLocation }>>(new Map());
   const prevSelectedId = useRef<string | null>(null);
+  // "You are here" geolocation marker, kept outside the data-marker layer group
+  // so it survives marker rebuilds.
+  const userMarkerRef = useRef<L.Marker | null>(null);
 
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return;
@@ -421,8 +429,64 @@ function InteractiveMap({
     }
   }, [selectedId, tUnits]);
 
+  // Drop / move a "you are here" marker when geolocation resolves, and fly to it.
+  useEffect(() => {
+    if (!mapInstance.current) return;
+
+    if (!userLocation) {
+      if (userMarkerRef.current) {
+        userMarkerRef.current.remove();
+        userMarkerRef.current = null;
+      }
+      return;
+    }
+
+    // Pulsing green dot (action-green) — distinct from the navy/teal price pins.
+    const dot = L.divIcon({
+      className: "ruumly-user-pin",
+      html: `
+        <div style="position:relative; width:18px; height:18px;">
+          <span style="position:absolute; inset:-7px; border-radius:999px;
+            background:${PIN_GREEN}1f; animation:ruumlyUserPulse 2s ease-out infinite;"></span>
+          <span style="position:absolute; inset:0; border-radius:999px;
+            background:${PIN_GREEN}; box-shadow:0 0 0 3px #fff, 0 2px 6px rgba(16,28,64,.25);"></span>
+        </div>`,
+      iconSize: [18, 18],
+      iconAnchor: [9, 9],
+    });
+
+    if (userMarkerRef.current) {
+      userMarkerRef.current.setLatLng(userLocation);
+      userMarkerRef.current.setIcon(dot);
+    } else {
+      userMarkerRef.current = L.marker(userLocation, {
+        icon: dot,
+        zIndexOffset: 2000,
+        interactive: true,
+        keyboard: false,
+      }).addTo(mapInstance.current);
+      userMarkerRef.current.bindTooltip(tYourLocation, { direction: "top", offset: [0, -10] });
+    }
+
+    mapInstance.current.flyTo(userLocation, Math.max(mapInstance.current.getZoom(), 11), {
+      animate: true,
+      duration: 0.8,
+    });
+  }, [userLocation, tYourLocation]);
+
   return (
     <div className={`relative overflow-hidden rounded-xl ${height} ${className}`}>
+      {/* Geolocation "you are here" pulse — respects prefers-reduced-motion. */}
+      <style>{`
+        @keyframes ruumlyUserPulse {
+          0%   { transform: scale(.7); opacity: .7; }
+          70%  { transform: scale(1.9); opacity: 0; }
+          100% { transform: scale(1.9); opacity: 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .ruumly-user-pin span:first-child { animation: none !important; }
+        }
+      `}</style>
       <div ref={mapRef} className="h-full w-full" />
       {/* Legend — lists the visible verticals. Swatches use teal-deep (the
           default price-pin color) so they stay consistent with the new

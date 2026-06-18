@@ -2,10 +2,8 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, FileText, CheckCircle, Send } from "lucide-react";
+import { Loader2, FileText, CheckCircle, Send, Receipt } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { queryKeys } from "@/services/queryKeys";
 import type { RebateInvoice } from "@/services/types";
@@ -26,9 +24,7 @@ function getLocalizedMonths(language: string): string[] {
   };
   const locale = localeMap[language] ?? "et-EE";
   const formatter = new Intl.DateTimeFormat(locale, { month: "long" });
-  return Array.from({ length: 12 }, (_, i) =>
-    formatter.format(new Date(2024, i, 1))
-  );
+  return Array.from({ length: 12 }, (_, i) => formatter.format(new Date(2024, i, 1)));
 }
 
 function parsePeriod(period: string): { year: number; month: number } {
@@ -42,7 +38,7 @@ function formatPeriod(year: number, month: number): string {
 
 const statusMap: Record<string, { labelKey: string; label: string; className: string }> = {
   draft: { labelKey: "rebate.draft", label: "Draft", className: "bg-secondary text-muted-foreground" },
-  sent: { labelKey: "rebate.sent", label: "Sent", className: "bg-blue-100 text-blue-700" },
+  sent: { labelKey: "rebate.sent", label: "Sent", className: "bg-info/10 text-info" },
   paid: { labelKey: "rebate.paid", label: "Paid", className: "bg-success/10 text-success" },
   overdue: { labelKey: "rebate.overdue", label: "Overdue", className: "bg-destructive/10 text-destructive" },
 };
@@ -96,46 +92,59 @@ export default function AdminRebates({ supplierId }: { supplierId?: string }) {
 
   const invoices = data?.data ?? [];
 
-  const inp = "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  const selectCls =
+    "h-11 rounded-[10px] border border-line-2 bg-card px-3.5 text-sm text-navy-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15";
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">{t("admin.rebates.title")}</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {t("admin.rebates.desc")}
-      </p>
+      {/* Page head */}
+      <div>
+        <span className="font-mono-label text-[11.5px] uppercase tracking-[0.2em] text-teal-deep">
+          {t("admin.rebates.eyebrow")}
+        </span>
+        <h1 className="mt-1 font-display text-2xl font-bold text-navy-ink md:text-[28px]">
+          {t("admin.rebates.title")}
+        </h1>
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{t("admin.rebates.desc")}</p>
+      </div>
 
-      {/* Generate section */}
-      <div className="mt-6 rounded-xl border border-border p-4">
-        <h3 className="text-sm font-semibold">{t("admin.rebates.generateTitle")}</h3>
-        <div className="mt-3 flex flex-wrap items-end gap-3">
+      {/* Generate card */}
+      <div className="mt-6 rounded-[14px] border border-border bg-card p-6 shadow-card">
+        <div className="flex items-start gap-3">
+          <div className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[14px] bg-teal/15 text-teal-deep">
+            <Receipt className="h-[22px] w-[22px]" />
+          </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground">{t("admin.rebates.period")}</label>
+            <h3 className="text-[15.5px] font-semibold text-navy-ink">{t("admin.rebates.generateTitle")}</h3>
+            <p className="mt-1 text-[13px] text-muted-foreground">{t("admin.rebates.generateHint")}</p>
+          </div>
+        </div>
+        <div className="mt-5 flex flex-wrap items-end gap-3">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[13px] font-semibold text-ink-2">{t("admin.rebates.period")}</label>
             <div className="flex items-center gap-2">
               <select
-                className={inp}
+                className={selectCls}
                 value={selectedMonth}
-                onChange={e => setPeriod(formatPeriod(selectedYear, parseInt(e.target.value)))}
+                onChange={(e) => setPeriod(formatPeriod(selectedYear, parseInt(e.target.value)))}
+                aria-label={t("admin.rebates.period")}
               >
                 {months.map((name, idx) => (
-                  <option key={idx + 1} value={idx + 1}>{name}</option>
+                  <option key={idx + 1} value={idx + 1}>
+                    {name}
+                  </option>
                 ))}
               </select>
               <select
-                className={inp}
+                className={selectCls}
                 value={selectedYear}
-                onChange={e => setPeriod(formatPeriod(parseInt(e.target.value), selectedMonth))}
+                onChange={(e) => setPeriod(formatPeriod(parseInt(e.target.value), selectedMonth))}
+                aria-label={t("admin.rebates.period")}
               >
-                {yearOptions.map(y => (
-                  <option key={y} value={y}>{y}</option>
+                {yearOptions.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
                 ))}
               </select>
             </div>
@@ -143,69 +152,115 @@ export default function AdminRebates({ supplierId }: { supplierId?: string }) {
           <Button
             onClick={() => generateMut.mutate()}
             disabled={generateMut.isPending || !period}
-            className="bg-accent text-accent-foreground hover:bg-accent/90"
+            className="h-11 gap-2 bg-accent text-accent-foreground hover:bg-accent/90"
           >
-            {generateMut.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
+            {generateMut.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <FileText className="h-4 w-4" />
+            )}
             {t("admin.rebates.generateBtn")}
           </Button>
         </div>
       </div>
 
       {/* Invoices table */}
-      <div className="mt-6 rounded-xl border border-border overflow-x-auto">
-        {invoices.length === 0 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">
-            {t("admin.rebates.noInvoices")}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : invoices.length === 0 ? (
+        <div className="mt-6 flex flex-col items-center justify-center gap-3 rounded-[14px] border border-border bg-card py-16 text-center shadow-card">
+          <div className="flex h-[54px] w-[54px] items-center justify-center rounded-2xl bg-secondary">
+            <Receipt className="h-[26px] w-[26px] text-muted-foreground" />
           </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("admin.rebates.partner")}</TableHead>
-                <TableHead>{t("admin.rebates.period")}</TableHead>
-                <TableHead className="hidden sm:table-cell">{t("admin.rebates.bookingsCount")}</TableHead>
-                <TableHead className="hidden sm:table-cell">{t("admin.rebates.totalAmount")}</TableHead>
-                <TableHead>{t("admin.rebates.rebateAmount")}</TableHead>
-                <TableHead>{t("admin.rebates.status")}</TableHead>
-                <TableHead>{t("admin.rebates.actions")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <h3 className="font-display text-lg font-semibold text-navy-ink">{t("admin.rebates.noInvoices")}</h3>
+          <p className="max-w-xs text-sm text-muted-foreground">{t("admin.rebates.emptyDesc")}</p>
+        </div>
+      ) : (
+        <div className="mt-6 overflow-x-auto rounded-[14px] border border-border bg-card shadow-card">
+          <table className="w-full text-sm">
+            <thead className="border-b border-border bg-secondary/40">
+              <tr>
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("admin.rebates.partner")}
+                </th>
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("admin.rebates.period")}
+                </th>
+                <th className="hidden px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:table-cell">
+                  {t("admin.rebates.bookingsCount")}
+                </th>
+                <th className="hidden px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:table-cell">
+                  {t("admin.rebates.totalAmount")}
+                </th>
+                <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("admin.rebates.rebateAmount")}
+                </th>
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("admin.rebates.status")}
+                </th>
+                <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("admin.rebates.actions")}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
               {invoices.map((inv: any) => {
                 const sc = statusMap[inv.status] || statusMap.draft;
                 return (
-                  <TableRow key={inv.id}>
-                    <TableCell className="font-medium">{inv.supplierName}</TableCell>
-                    <TableCell className="font-mono text-xs">{inv.period}</TableCell>
-                    <TableCell className="hidden sm:table-cell">{inv.bookingCount ?? inv.bookingsCount}</TableCell>
-                    <TableCell className="hidden sm:table-cell">€{inv.totalBookingValue ?? inv.totalValue}</TableCell>
-                    <TableCell className="font-semibold">€{inv.rebateAmount}</TableCell>
-                    <TableCell>
-                      <Badge className={sc.className}>{t(sc.labelKey) || sc.label}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
+                  <tr key={inv.id} className="border-b border-border transition-colors last:border-0 hover:bg-secondary/30">
+                    <td className="px-5 py-3.5 font-medium text-navy-ink">{inv.supplierName}</td>
+                    <td className="px-5 py-3.5 font-mono text-xs text-muted-foreground">{inv.period}</td>
+                    <td className="hidden px-5 py-3.5 text-right text-muted-foreground sm:table-cell">
+                      {inv.bookingCount ?? inv.bookingsCount}
+                    </td>
+                    <td className="hidden px-5 py-3.5 text-right text-muted-foreground sm:table-cell">
+                      €{inv.totalBookingValue ?? inv.totalValue}
+                    </td>
+                    <td className="px-5 py-3.5 text-right font-semibold text-navy-ink">
+                      €{inv.rebateAmount ?? inv.amount}
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${sc.className}`}
+                      >
+                        {t(sc.labelKey) || sc.label}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <div className="flex justify-end gap-2">
                         {inv.status === "draft" && (
-                          <Button variant="outline" size="sm" className="text-xs gap-1"
-                            onClick={() => markSentMut.mutate(inv.id)} disabled={markSentMut.isPending}>
-                            <Send className="h-3 w-3" /> {t("admin.rebates.send")}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9 gap-1.5"
+                            onClick={() => markSentMut.mutate(inv.id)}
+                            disabled={markSentMut.isPending}
+                          >
+                            <Send className="h-3.5 w-3.5" /> {t("admin.rebates.send")}
                           </Button>
                         )}
                         {inv.status === "sent" && (
-                          <Button variant="outline" size="sm" className="text-xs gap-1"
-                            onClick={() => markPaidMut.mutate(inv.id)} disabled={markPaidMut.isPending}>
-                            <CheckCircle className="h-3 w-3" /> {t("admin.rebates.markPaid")}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9 gap-1.5"
+                            onClick={() => markPaidMut.mutate(inv.id)}
+                            disabled={markPaidMut.isPending}
+                          >
+                            <CheckCircle className="h-3.5 w-3.5" /> {t("admin.rebates.markPaid")}
                           </Button>
                         )}
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 );
               })}
-            </TableBody>
-          </Table>
-        )}
-      </div>
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

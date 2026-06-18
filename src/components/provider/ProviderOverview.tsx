@@ -1,5 +1,5 @@
 import { List, Eye, Inbox, Search, AlertTriangle, MapPin, CheckCircle2, Sparkles, ArrowRight } from "lucide-react";
-import { Link } from "@/i18n/routing";
+import { useNavigate } from "@/i18n/routing";
 import { useLocations } from "@/hooks/queries";
 import { useOrders } from "@/hooks/useOrders";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -36,7 +36,11 @@ function StatusTag({ status }: { status: string }) {
 export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () => void }) {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const supplierId = useImpersonatedSupplierId();
+  // Jump to the boosts & visibility tab, preserving the impersonation context.
+  const goToBoosts = () =>
+    navigate(`/provider/dashboard?ptab=boosts${supplierId ? `&supplierId=${supplierId}` : ""}`);
   const { data: allOrders = [], isLoading: ordersLoading } = useOrders(supplierId ?? undefined);
   const { data: locations = [] } = useLocations(supplierId ? { supplierId } : undefined);
   const { data: supplierProfile } = useQuery<{ name?: string }>({
@@ -95,11 +99,14 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
 
   const fullyBookedLocations = locations.filter(loc => loc.fullyBooked);
 
+  // Profile-views / search-appearances have no metrics endpoint yet — show a neutral
+  // em-dash placeholder (never a fabricated number) until the backend exposes them.
+  const NO_METRIC = "—";
   const statCards = [
-    { label: t("provider.overview.activeListings"),    value: listingCount.toString(), sub: t("provider.overview.deltaListings").replace("{count}", "2"), icon: List },
-    { label: t("provider.overview.profileViews"),      value: "1,284",                 sub: "+18%",                                                       icon: Eye },
-    { label: t("provider.overview.newRequests"),       value: newRequestCount.toString(), sub: t("provider.overview.statUnanswered").replace("{count}", String(newRequestCount)), icon: Inbox },
-    { label: t("provider.overview.searchAppearances"), value: "3,940",                 sub: "+24%",                                                       icon: Search },
+    { label: t("provider.overview.activeListings"),    value: listingCount.toString(),    sub: t("provider.overview.deltaListings").replace("{count}", "2"),                          icon: List },
+    { label: t("provider.overview.profileViews"),      value: NO_METRIC,                  sub: t("provider.overview.statNoData"),                                                     icon: Eye },
+    { label: t("provider.overview.newRequests"),       value: newRequestCount.toString(), sub: t("provider.overview.statUnanswered").replace("{count}", String(newRequestCount)),     icon: Inbox },
+    { label: t("provider.overview.searchAppearances"), value: NO_METRIC,                  sub: t("provider.overview.statNoData"),                                                     icon: Search },
   ];
 
   return (
@@ -208,13 +215,14 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
             <p className="mt-0.5 max-w-xl text-[13.5px] text-white/75">{t("provider.overview.boostBannerBody")}</p>
           </div>
         </div>
-        <Link
-          to={`/provider/dashboard?ptab=boosts${supplierId ? `&supplierId=${supplierId}` : ""}`}
+        <button
+          type="button"
+          onClick={goToBoosts}
           className="inline-flex h-11 shrink-0 items-center gap-2 rounded-[10px] bg-white px-5 text-sm font-semibold text-navy-ink transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-navy-ink"
         >
           {t("provider.overview.exploreBoosts")}
           <ArrowRight className="h-4 w-4" />
-        </Link>
+        </button>
       </div>
     </div>
   );

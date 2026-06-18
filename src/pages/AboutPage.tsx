@@ -1,5 +1,18 @@
 import { useMemo } from "react";
-import { Mail, Linkedin, User as UserIcon } from "lucide-react";
+import {
+  Mail,
+  Linkedin,
+  User as UserIcon,
+  Boxes,
+  Truck,
+  Caravan,
+  ShieldCheck,
+  Eye,
+  Heart,
+  ArrowRight,
+} from "lucide-react";
+import { Link } from "@/i18n/routing";
+import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
@@ -23,8 +36,8 @@ function pick(field: FounderL10n | undefined, lang: string, fallback = ""): stri
 function FounderPhoto({ src, alt }: { src?: string | null; alt: string }) {
   if (!src) {
     return (
-      <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-muted">
-        <UserIcon className="h-10 w-10 text-muted-foreground/60" />
+      <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-secondary">
+        <UserIcon className="h-9 w-9 text-muted-foreground/50" />
       </div>
     );
   }
@@ -32,7 +45,7 @@ function FounderPhoto({ src, alt }: { src?: string | null; alt: string }) {
     <img
       src={src}
       alt={alt}
-      className="h-24 w-24 shrink-0 rounded-full object-cover bg-muted"
+      className="h-20 w-20 shrink-0 rounded-full bg-secondary object-cover"
       onError={(e) => {
         const img = e.currentTarget;
         const fallback = img.nextElementSibling as HTMLElement | null;
@@ -64,10 +77,32 @@ export default function AboutPage() {
 
   if (!enabled) return <NotFound />;
 
+  // Cross-vertical story — only show the verticals the platform has enabled.
+  const verticals = [
+    {
+      show: settings.showStorageService,
+      icon: Boxes,
+      title: t("about.vertical.storage"),
+      desc: t("about.vertical.storageDesc"),
+    },
+    {
+      show: settings.showMovingService,
+      icon: Truck,
+      title: t("about.vertical.moving"),
+      desc: t("about.vertical.movingDesc"),
+    },
+    {
+      show: settings.showTrailerService,
+      icon: Caravan,
+      title: t("about.vertical.trailers"),
+      desc: t("about.vertical.trailersDesc"),
+    },
+  ].filter((v) => v.show);
+
   const values = [
-    { title: t("about.value.transparency"), desc: t("about.value.transparencyDesc") },
-    { title: t("about.value.trust"), desc: t("about.value.trustDesc") },
-    { title: t("about.value.customer"), desc: t("about.value.customerDesc") },
+    { icon: Eye, title: t("about.value.transparency"), desc: t("about.value.transparencyDesc") },
+    { icon: ShieldCheck, title: t("about.value.trust"), desc: t("about.value.trustDesc") },
+    { icon: Heart, title: t("about.value.customer"), desc: t("about.value.customerDesc") },
   ];
 
   return (
@@ -77,111 +112,201 @@ export default function AboutPage() {
         description={t("seo.aboutDesc")}
         path="/about"
       />
-      <section className="hero-gradient py-16 md:py-24">
-        <div className="container-wide text-center">
-          <h1 className="font-display text-3xl font-bold text-primary-foreground md:text-5xl">
-            {t("about.hero")}
+
+      {/* Hero */}
+      <section className="surface-dark py-16 md:py-24">
+        <div className="container-wide max-w-3xl text-center motion-safe:animate-slide-up">
+          <p className="eyebrow">{t("about.eyebrow")}</p>
+          <h1 className="mt-4 font-display text-3xl font-bold text-primary-foreground md:text-5xl">
+            {t("about.heroNew")}
           </h1>
-          <p className="mx-auto mt-4 max-w-xl text-sm text-primary-foreground/70 md:text-base">
-            {t("about.heroDesc")}
+          <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-relaxed text-primary-foreground/80 md:text-base">
+            {t("about.heroDescNew")}
           </p>
         </div>
       </section>
 
+      {/* What we connect — the three verticals */}
       <section className="container-wide py-16">
-        <div className="grid gap-12 md:grid-cols-2">
-          <div>
-            <h2 className="font-display text-2xl font-bold md:text-3xl">{t("about.mission")}</h2>
-            {missionText ? (
-              missionText.split(/\n\n+/).map((para, i) => (
-                <p key={i} className="mt-4 text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
-                  {para}
-                </p>
-              ))
-            ) : (
-              <>
-                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{t("about.missionP1")}</p>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{t("about.missionP2")}</p>
-              </>
-            )}
-          </div>
-          {showStats && (
-            <div className="card-elevated flex items-center justify-center p-8 text-center">
-              <p className="text-sm text-muted-foreground italic">
-                {t("about.statsComingSoon") || "Real stats coming soon"}
-              </p>
-            </div>
-          )}
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="eyebrow">{t("about.verticalsEyebrow")}</p>
+          <h2 className="mt-2.5 font-display text-2xl font-bold text-primary md:text-3xl">
+            {t("about.verticalsTitle")}
+          </h2>
+          <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+            {t("about.verticalsSubtitle")}
+          </p>
+        </div>
+        <div className="mx-auto mt-10 grid max-w-4xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {verticals.map((v) => {
+            const Icon = v.icon;
+            return (
+              <div key={v.title} className="card-elevated p-6">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal/15">
+                  <Icon className="h-6 w-6 text-teal-deep" />
+                </div>
+                <h3 className="mt-4 font-display text-base font-semibold text-primary">{v.title}</h3>
+                <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">{v.desc}</p>
+              </div>
+            );
+          })}
         </div>
       </section>
 
+      {/* Mission */}
       <section className="surface-sunken py-16">
         <div className="container-wide">
-          <h2 className="text-center font-display text-2xl font-bold md:text-3xl">{t("about.values")}</h2>
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {values.map((v, i) => (
-              <div key={i} className="card-elevated p-6 text-center">
-                <h3 className="font-display text-lg font-semibold">{v.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{v.desc}</p>
-              </div>
-            ))}
+          <div className="grid items-start gap-10 md:grid-cols-2">
+            <div>
+              <p className="eyebrow">{t("about.missionEyebrow")}</p>
+              <h2 className="mt-2.5 font-display text-2xl font-bold text-primary md:text-3xl">
+                {t("about.mission")}
+              </h2>
+              {missionText ? (
+                missionText.split(/\n\n+/).map((para, i) => (
+                  <p
+                    key={i}
+                    className="mt-4 whitespace-pre-line text-[15px] leading-relaxed text-ink-2"
+                  >
+                    {para}
+                  </p>
+                ))
+              ) : (
+                <>
+                  <p className="mt-4 text-[15px] leading-relaxed text-ink-2">{t("about.missionP1New")}</p>
+                  <p className="mt-3 text-[15px] leading-relaxed text-ink-2">{t("about.missionP2New")}</p>
+                </>
+              )}
+            </div>
+            <div className="card-elevated p-8">
+              {showStats ? (
+                <p className="text-center text-[15px] italic text-muted-foreground">
+                  {t("about.statsComingSoon")}
+                </p>
+              ) : (
+                <ul className="space-y-4">
+                  {[
+                    t("about.missionPoint1"),
+                    t("about.missionPoint2"),
+                    t("about.missionPoint3"),
+                  ].map((point, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal/15">
+                        <ShieldCheck className="h-3.5 w-3.5 text-teal-deep" aria-hidden="true" />
+                      </span>
+                      <span className="text-[15px] leading-relaxed text-ink-2">{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         </div>
       </section>
 
-      {founders.length > 0 && (
-        <section className="container-wide py-16">
-          <h2 className="text-center font-display text-2xl font-bold md:text-3xl">
-            {t("about.team") || "Meeskond"}
+      {/* Values */}
+      <section className="container-wide py-16">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="eyebrow">{t("about.valuesEyebrow")}</p>
+          <h2 className="mt-2.5 font-display text-2xl font-bold text-primary md:text-3xl">
+            {t("about.values")}
           </h2>
-          <div className="mx-auto mt-10 grid max-w-4xl gap-6 md:grid-cols-2">
-            {founders.map((f, i) => {
-              const role = pick(f.role, language);
-              const bio = pick(f.bio, language);
-              return (
-                <article key={i} className="card-elevated flex flex-col gap-4 p-6 sm:flex-row">
-                  <div className="relative">
-                    <FounderPhoto src={f.photoUrl} alt={f.name} />
-                    <div
-                      className="hidden h-24 w-24 shrink-0 items-center justify-center rounded-full bg-muted"
-                      aria-hidden="true"
-                    >
-                      <UserIcon className="h-10 w-10 text-muted-foreground/60" />
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-display text-lg font-semibold">{f.name}</h3>
-                    {role && <p className="text-xs font-medium text-accent">{role}</p>}
-                    {bio && <p className="mt-2 text-sm text-muted-foreground">{bio}</p>}
-                    {(f.email || f.linkedinUrl) && (
-                      <div className="mt-3 flex flex-wrap gap-3">
-                        {f.email && (
-                          <a
-                            href={`mailto:${f.email}`}
-                            className="inline-flex items-center gap-1.5 rounded text-xs font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-                          >
-                            <Mail className="h-3.5 w-3.5" /> {f.email}
-                          </a>
-                        )}
-                        {f.linkedinUrl && (
-                          <a
-                            href={f.linkedinUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded text-xs font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-                          >
-                            <Linkedin className="h-3.5 w-3.5" /> LinkedIn
-                          </a>
-                        )}
+        </div>
+        <div className="mx-auto mt-10 grid max-w-4xl gap-6 md:grid-cols-3">
+          {values.map((v) => {
+            const Icon = v.icon;
+            return (
+              <div key={v.title} className="card-elevated p-6 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-navy-ink/10">
+                  <Icon className="h-6 w-6 text-navy-ink" />
+                </div>
+                <h3 className="mt-4 font-display text-base font-semibold text-primary">{v.title}</h3>
+                <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">{v.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Team */}
+      {founders.length > 0 && (
+        <section className="surface-sunken py-16">
+          <div className="container-wide">
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="eyebrow">{t("about.teamEyebrow")}</p>
+              <h2 className="mt-2.5 font-display text-2xl font-bold text-primary md:text-3xl">
+                {t("about.team")}
+              </h2>
+            </div>
+            <div className="mx-auto mt-10 grid max-w-4xl gap-6 md:grid-cols-2">
+              {founders.map((f, i) => {
+                const role = pick(f.role, language);
+                const bio = pick(f.bio, language);
+                return (
+                  <article key={i} className="card-elevated flex flex-col gap-4 p-6 sm:flex-row">
+                    <div className="relative">
+                      <FounderPhoto src={f.photoUrl} alt={f.name} />
+                      <div
+                        className="hidden h-20 w-20 shrink-0 items-center justify-center rounded-full bg-secondary"
+                        aria-hidden="true"
+                      >
+                        <UserIcon className="h-9 w-9 text-muted-foreground/50" />
                       </div>
-                    )}
-                  </div>
-                </article>
-              );
-            })}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-display text-lg font-semibold text-primary">{f.name}</h3>
+                      {role && <p className="text-xs font-medium text-teal-deep">{role}</p>}
+                      {bio && <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">{bio}</p>}
+                      {(f.email || f.linkedinUrl) && (
+                        <div className="mt-3 flex flex-wrap gap-3">
+                          {f.email && (
+                            <a
+                              href={`mailto:${f.email}`}
+                              className="inline-flex items-center gap-1.5 rounded text-xs font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                            >
+                              <Mail className="h-3.5 w-3.5" /> {f.email}
+                            </a>
+                          )}
+                          {f.linkedinUrl && (
+                            <a
+                              href={f.linkedinUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 rounded text-xs font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                            >
+                              <Linkedin className="h-3.5 w-3.5" /> LinkedIn
+                            </a>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
           </div>
         </section>
       )}
+
+      {/* CTA */}
+      <section className="container-wide py-16 text-center">
+        <h2 className="font-display text-2xl font-bold text-primary">{t("about.cta")}</h2>
+        <p className="mx-auto mt-2 max-w-md text-[15px] leading-relaxed text-muted-foreground">
+          {t("about.ctaDesc")}
+        </p>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <Link to="/search">
+            <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
+              {t("about.ctaSearch")} <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+          <Link to="/provider">
+            <Button size="lg" variant="outline">
+              {t("about.ctaProvider")}
+            </Button>
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

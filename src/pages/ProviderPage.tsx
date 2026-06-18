@@ -117,7 +117,14 @@ export default function ProviderPage() {
     { icon: Sparkles, titleKey: "provPage.step3.title", descKey: "provPage.step3.desc" },
   ];
 
-  const faqKeys = ["provPage.faq.q1", "provPage.faq.q2", "provPage.faq.q3", "provPage.faq.q4", "provPage.faq.q5"];
+  // q1's answer is reframed to "free always" (permanent) — override its answer key.
+  const faqItems: { q: string; a: string }[] = [
+    { q: "provPage.faq.q1", a: "provPage.faq.q1.aPermanent" },
+    { q: "provPage.faq.q2", a: "provPage.faq.q2.a" },
+    { q: "provPage.faq.q3", a: "provPage.faq.q3.a" },
+    { q: "provPage.faq.q4", a: "provPage.faq.q4.a" },
+    { q: "provPage.faq.q5", a: "provPage.faq.q5.a" },
+  ];
 
   return (
     <div>
@@ -132,7 +139,7 @@ export default function ProviderPage() {
         <div className="container-wide relative text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-accent to-teal-deep px-3.5 py-1.5 text-xs font-semibold text-white shadow-card">
             <Sparkles className="h-3.5 w-3.5" />
-            {t("provPage.hero.badge")}
+            {t("provPage.hero.badgePermanent")}
           </span>
           <h1 className="mx-auto mt-5 max-w-3xl font-display text-3xl font-bold leading-tight text-white md:text-5xl lg:text-[3.5rem]">
             {t("provPage.hero.titleLead")}{" "}
@@ -337,13 +344,13 @@ export default function ProviderPage() {
             <h2 className="mt-3 font-display text-2xl font-bold md:text-3xl">{t("provPage.faq.title")}</h2>
           </div>
           <Accordion type="single" collapsible className="mt-8">
-            {faqKeys.map((qKey, i) => (
+            {faqItems.map((item, i) => (
               <AccordionItem key={i} value={`faq-${i}`}>
                 <AccordionTrigger className="text-left font-display text-[15.5px] font-semibold">
-                  {t(qKey)}
+                  {t(item.q)}
                 </AccordionTrigger>
                 <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
-                  {t(`${qKey}.a`)}
+                  {t(item.a)}
                 </AccordionContent>
               </AccordionItem>
             ))}

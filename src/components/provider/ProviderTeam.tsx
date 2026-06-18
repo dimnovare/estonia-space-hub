@@ -36,7 +36,10 @@ export default function ProviderTeam() {
   const [removeTarget, setRemoveTarget] = useState<TeamMember | null>(null);
 
   const { user } = useAuth();
-  const currentIsOwner = members?.some((m) => m.isOwner && m.id === user?.id) ?? false;
+  // The account owner can manage the team; an admin (incl. when impersonating a supplier)
+  // always has full control even though their own id is not in the supplier's team list.
+  const canManage =
+    user?.role === "admin" || (members?.some((m) => m.isOwner && m.id === user?.id) ?? false);
 
   const handleInvite = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,7 +70,7 @@ export default function ProviderTeam() {
         <h1 className="font-display text-2xl font-bold text-navy-ink md:text-[28px]">{t("provider.team.title")}</h1>
         <p className="mt-2 text-sm text-muted-foreground">{t("provider.team.subtitle")}</p>
       </div>
-      {currentIsOwner && (
+      {canManage && (
         <Button className="gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setInviteOpen(true)}>
           <UserPlus className="h-4 w-4" />
           {t("provider.team.inviteMember")}
@@ -110,6 +113,15 @@ export default function ProviderTeam() {
         <div className="mt-6 flex flex-col items-center justify-center rounded-2xl bg-secondary/30 py-16 px-6 text-center">
           <Users className="h-12 w-12 text-muted-foreground/50" />
           <p className="mt-4 text-base font-semibold">{t("provider.team.empty")}</p>
+          {canManage && (
+            <Button
+              className="mt-4 gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90"
+              onClick={() => setInviteOpen(true)}
+            >
+              <UserPlus className="h-4 w-4" />
+              {t("provider.team.inviteMember")}
+            </Button>
+          )}
         </div>
       ) : (
         <div className="mt-6 overflow-x-auto rounded-[14px] border border-border bg-card shadow-[var(--shadow-card)]">
@@ -120,7 +132,7 @@ export default function ProviderTeam() {
                 <TableHead>{t("provider.team.email")}</TableHead>
                 <TableHead>{t("provider.team.role")}</TableHead>
                 <TableHead>{t("provider.team.status")}</TableHead>
-                {currentIsOwner && <TableHead className="w-[60px]" />}
+                {canManage && <TableHead className="w-[60px]" />}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -149,7 +161,7 @@ export default function ProviderTeam() {
                         </span>
                       )}
                     </TableCell>
-                    {currentIsOwner && (
+                    {canManage && (
                       <TableCell>
                         {!m.isOwner && (
                           <DropdownMenu>

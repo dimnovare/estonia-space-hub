@@ -2,16 +2,7 @@ import { Link } from "@/i18n/routing";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 // Footer lockup (00-foundations §1.2): ruumly-mark.png icon (30px) + live white
-// "Ruumly" wordmark. Payment marks are the real visa / mastercard / montonio
-// SVGs from /public/payment (spec §4.2).
-
-// Visa & Mastercard are universal; Montonio is the Baltic checkout rail Ruumly
-// uses. All three ship as monochrome-on-dark SVG chips.
-const PAYMENT_MARKS = [
-  { src: "/payment/visa.svg", label: "Visa" },
-  { src: "/payment/mastercard.svg", label: "Mastercard" },
-  { src: "/payment/montonio.svg", label: "Montonio" },
-];
+// "Ruumly" wordmark.
 
 export default function Footer() {
   const { t } = useLanguage();
@@ -108,23 +99,8 @@ export default function Footer() {
           ))}
         </div>
 
-        {/* Payment marks + support row */}
-        <div className="mt-12 flex flex-col gap-5 border-t border-white/10 pt-7 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="text-xs font-medium text-white/55">{t("footer.payments")}</span>
-            <div className="flex items-center gap-2">
-              {PAYMENT_MARKS.map((mark) => (
-                <img
-                  key={mark.label}
-                  src={mark.src}
-                  alt={mark.label}
-                  className="h-6 w-auto rounded"
-                  loading="lazy"
-                  decoding="async"
-                />
-              ))}
-            </div>
-          </div>
+        {/* Support row */}
+        <div className="mt-12 flex flex-col gap-5 border-t border-white/10 pt-7 sm:flex-row sm:items-center sm:justify-end">
           <a
             href="mailto:info@ruumly.eu"
             className="text-sm text-white/70 transition-colors hover:text-white rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
@@ -138,7 +114,7 @@ export default function Footer() {
           <span>
             © {new Date().getFullYear()} {t("footer.entity")} · {t("footer.location")}
           </span>
-          <span>{t("footer.freeListings")}</span>
+          <span>{t("footer.freeListingsAlways")}</span>
         </div>
       </div>
     </footer>

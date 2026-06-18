@@ -1,7 +1,7 @@
 import { Link, useParams } from "@/i18n/routing";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { ChevronLeft, FileText } from "lucide-react";
+import { ArrowLeft, CalendarDays, User } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { getPostBySlug, getRelatedPosts } from "@/lib/blog";
@@ -55,29 +55,44 @@ export default function BlogPostPage() {
         ))}
       </Helmet>
 
-      <div className="container-wide py-10">
+      <div className="container-wide py-12 md:py-16">
         <Link
           to="/blog"
-          className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          className="mb-8 inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-primary"
         >
-          <ChevronLeft className="h-4 w-4" /> {t("blog.backToBlog")}
+          <ArrowLeft className="h-4 w-4" /> {t("blog.backToBlog")}
         </Link>
 
-        <article className="mx-auto max-w-[720px]">
+        <article className="mx-auto max-w-[720px] animate-slide-up">
           <header className="mb-8">
-            <div className="mb-3 text-sm text-muted-foreground">
-              {dateFmt(post.publishedAt)} · {post.author}
+            <p className="eyebrow mb-3">{t("blog.eyebrow")}</p>
+            <h1 className="font-display text-3xl font-bold leading-tight tracking-tight text-navy-ink md:text-[40px]">
+              {post.title}
+            </h1>
+
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 font-mono-label text-[12px] uppercase tracking-wide text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
+                <CalendarDays className="h-3.5 w-3.5" aria-hidden />
+                {dateFmt(post.publishedAt)}
+              </span>
+              {post.author && (
+                <span className="inline-flex items-center gap-1.5">
+                  <User className="h-3.5 w-3.5" aria-hidden />
+                  {post.author}
+                </span>
+              )}
             </div>
-            <h1 className="text-3xl font-bold leading-tight md:text-4xl">{post.title}</h1>
+
             {post.excerpt && (
-              <p className="mt-4 text-lg text-muted-foreground">{post.excerpt}</p>
+              <p className="mt-5 text-[17px] leading-relaxed text-ink-2">{post.excerpt}</p>
             )}
+
             {post.tags.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-1.5">
+              <div className="mt-5 flex flex-wrap gap-1.5">
                 {post.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="rounded-full bg-secondary px-2 py-0.5 text-[11px] text-muted-foreground"
+                    className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-medium text-secondary-foreground"
                   >
                     {tag}
                   </span>
@@ -86,12 +101,22 @@ export default function BlogPostPage() {
             )}
           </header>
 
-          {post.coverImage && (
+          {post.coverImage ? (
             <img
               src={post.coverImage}
               alt={post.title}
-              className="mb-8 w-full rounded-2xl object-cover"
+              className="mb-10 aspect-[16/9] w-full rounded-lg border border-line object-cover shadow-card"
             />
+          ) : (
+            <div
+              className="photo-placeholder--soft mb-10 flex aspect-[16/9] w-full items-center justify-center rounded-lg border border-line shadow-card"
+              style={{
+                backgroundImage:
+                  "linear-gradient(135deg, hsl(var(--accent) / 0.10), hsl(var(--teal) / 0.16))",
+              }}
+            >
+              <span className="photo-placeholder__cap">{t("blog.eyebrow")}</span>
+            </div>
           )}
 
           <div className="blog-prose text-foreground">
@@ -100,17 +125,19 @@ export default function BlogPostPage() {
         </article>
 
         {related.length > 0 && (
-          <div className="mx-auto mt-16 max-w-[720px]">
-            <h2 className="mb-4 text-xl font-semibold">{t("blog.relatedPosts")}</h2>
-            <ul className="grid gap-4 sm:grid-cols-2">
+          <div className="mx-auto mt-16 max-w-[720px] border-t border-line pt-10">
+            <p className="eyebrow mb-2">{t("blog.relatedPosts")}</p>
+            <ul className="mt-4 grid gap-4 sm:grid-cols-2">
               {related.map((p) => (
                 <li key={p.slug}>
                   <Link
                     to={`/blog/${p.slug}`}
-                    className="group block rounded-xl border border-border bg-card p-4 transition-shadow hover:shadow-md"
+                    className="group flex h-full flex-col rounded-lg border border-line bg-card p-5 shadow-card transition-[box-shadow,transform] hover:-translate-y-[3px] hover:shadow-elevated"
                   >
-                    <div className="mb-1 text-xs text-muted-foreground">{dateFmt(p.publishedAt)}</div>
-                    <h3 className="text-base font-semibold leading-snug group-hover:text-accent">
+                    <div className="mb-1.5 font-mono-label text-[11px] uppercase tracking-wide text-muted-foreground">
+                      {dateFmt(p.publishedAt)}
+                    </div>
+                    <h3 className="font-display text-base font-bold leading-snug text-navy-ink transition-colors group-hover:text-primary">
                       {p.title}
                     </h3>
                   </Link>
@@ -123,9 +150,9 @@ export default function BlogPostPage() {
         <div className="mt-12 text-center">
           <Link
             to="/blog"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-primary"
           >
-            <FileText className="h-4 w-4" /> {t("blog.allPosts")}
+            <ArrowLeft className="h-4 w-4" /> {t("blog.allPosts")}
           </Link>
         </div>
       </div>

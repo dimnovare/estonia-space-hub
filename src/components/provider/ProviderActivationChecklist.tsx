@@ -1,5 +1,5 @@
 import { CheckCircle2, XCircle, Loader2, Sparkles } from "lucide-react";
-import { Link } from "@/i18n/routing";
+import { useNavigate } from "@/i18n/routing";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { withSupplier } from "@/lib/withSupplier";
@@ -37,7 +37,11 @@ export default function ProviderActivationChecklist({
   locationId?: string;
 }) {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const supplierId = useImpersonatedSupplierId();
+  // Programmatic tab switches so the query param updates even when already on the dashboard.
+  const goToTab = (ptab: "listings" | "boosts") =>
+    navigate(`/provider/dashboard?ptab=${ptab}${supplierId ? `&supplierId=${supplierId}` : ""}`);
 
   const endpoint = locationId
     ? withSupplier(`/locations/${locationId}/publish-readiness`, supplierId)
@@ -88,19 +92,21 @@ export default function ProviderActivationChecklist({
       </ul>
 
       <div className="mt-5 flex flex-wrap items-center gap-2.5">
-        <Link
-          to={`/provider/dashboard?ptab=listings${supplierId ? `&supplierId=${supplierId}` : ""}`}
+        <button
+          type="button"
+          onClick={() => goToTab("listings")}
           className="inline-flex h-9 items-center rounded-lg bg-accent px-3.5 text-[13px] font-semibold text-accent-foreground transition-colors hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
         >
           {t("provider.checklist.editListings")}
-        </Link>
-        <Link
-          to={`/provider/dashboard?ptab=boosts${supplierId ? `&supplierId=${supplierId}` : ""}`}
+        </button>
+        <button
+          type="button"
+          onClick={() => goToTab("boosts")}
           className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-line-2 px-3.5 text-[13px] font-semibold text-navy-ink transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
         >
           <Sparkles className="h-3.5 w-3.5 text-teal-deep" />
           {t("provider.checklist.exploreVisibility")}
-        </Link>
+        </button>
       </div>
     </div>
   );

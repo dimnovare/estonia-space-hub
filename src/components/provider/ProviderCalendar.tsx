@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import { Calendar as CalendarIcon, Lock, Unlock, ChevronLeft, ChevronRight, Upload, MapPin } from "lucide-react";
+import { Calendar as CalendarIcon, Lock, Unlock, ChevronLeft, ChevronRight, Upload, MapPin, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useBookings } from "@/hooks/useBookings";
-import { useLocations } from "@/hooks/queries";
+import { useLocations, useListings } from "@/hooks/queries";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
@@ -20,6 +20,9 @@ const localeMap: Record<string, string> = {
   lt: "lt-LT",
 };
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const TIMELINE_DAYS = 56; // 8-week window
+
 export default function ProviderCalendar() {
   const { t, language } = useLanguage();
   const locale = localeMap[language] || "en-GB";
@@ -27,6 +30,8 @@ export default function ProviderCalendar() {
   const supplierId = useImpersonatedSupplierId();
   const { data: bookings = [] } = useBookings(supplierId);
   const { data: locations = [] } = useLocations(supplierId ? { supplierId } : undefined);
+  const { data: listingsResp } = useListings(supplierId ? { supplierId, limit: 200 } : { limit: 200 });
+  const listings = listingsResp?.data ?? [];
 
   const today = new Date();
   const [viewMonth, setViewMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
@@ -113,6 +118,77 @@ export default function ProviderCalendar() {
   const upcoming = [...filteredBookings]
     .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
     .slice(0, 5);
+
+  // ── Timeline (Gantt) model ───────────────────────────────────────────────
+  // Window starts at the beginning of today and spans TIMELINE_DAYS forward.
+  const timelineStart = useMemo(() => {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return d;
+  }, [today]);
+  const timelineEnd = useMemo(() => new Date(timelineStart.getTime() + TIMELINE_DAYS * DAY_MS), [timelineStart]);
+
+  // Position (0..1) of a date within the window, clamped to [0,1].
+  const frac = (d: Date) => {
+    const v = (d.getTime() - timelineStart.getTime()) / (TIMELINE_DAYS * DAY_MS);
+    return Math.min(1, Math.max(0, v));
+  };
+
+  // Only the rows the provider can actually act on: their own units. When a
+  // location is selected we narrow to that location's units.
+  const timelineRows = useMemo(() => {
+    const rows = listings
+      .filter((l) => !selectedLocationId || l.locationId === selectedLocationId)
+      .map((l) => ({ id: l.id, title: l.title, city: l.city, locationId: l.locationId ?? null }));
+    return rows;
+  }, [listings, selectedLocationId]);
+
+  // Bookings that overlap the window, grouped by listingId. Active/confirmed are
+  // "occupied"; pending requests are shown lighter (still tentative).
+  const segmentsByListing = useMemo(() => {
+    const map = new Map<string, { start: Date; end: Date; status: string; title: string }[]>();
+    for (const b of bookings) {
+      if (selectedLocationId && b.locationId !== selectedLocationId) continue;
+      if (b.status === "cancelled" || b.status === "completed") continue;
+      const start = new Date(b.startDate);
+      const end = b.endDate ? new Date(b.endDate) : new Date(start.getTime() + DAY_MS);
+      if (end <= timelineStart || start >= timelineEnd) continue; // outside window
+      const arr = map.get(b.listingId) ?? [];
+      arr.push({ start, end, status: b.status, title: b.provider || b.listingTitle });
+      map.set(b.listingId, arr);
+    }
+    return map;
+  }, [bookings, selectedLocationId, timelineStart, timelineEnd]);
+
+  // Blocked-date bars (only available for the selected location).
+  const blockedSegments = useMemo(() => {
+    if (!selectedLocationId) return [] as { start: Date; end: Date }[];
+    return blockedDateStrings
+      .filter(Boolean)
+      .map((s: string) => {
+        const start = new Date(`${s}T00:00:00`);
+        return { start, end: new Date(start.getTime() + DAY_MS) };
+      })
+      .filter((seg) => seg.end > timelineStart && seg.start < timelineEnd);
+  }, [blockedDateStrings, selectedLocationId, timelineStart, timelineEnd]);
+
+  // Weekly gridline labels across the window.
+  const weekMarks = useMemo(() => {
+    const marks: { left: number; label: string }[] = [];
+    for (let i = 0; i <= TIMELINE_DAYS; i += 7) {
+      const d = new Date(timelineStart.getTime() + i * DAY_MS);
+      marks.push({
+        left: (i / TIMELINE_DAYS) * 100,
+        label: d.toLocaleDateString(locale, { day: "numeric", month: "short" }),
+      });
+    }
+    return marks;
+  }, [timelineStart, locale]);
+
+  const statusLabel = (s: string) => {
+    if (s === "pending") return t("provider.calendar.pending");
+    if (s === "active") return t("provider.calendar.active");
+    return t("provider.calendar.booked");
+  };
 
   return (
     <div>
@@ -269,6 +345,115 @@ export default function ProviderCalendar() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* ── Availability timeline (Gantt) ─────────────────────────────────── */}
+      <div className="mt-6 rounded-[14px] border border-border bg-card p-5 shadow-[var(--shadow-card)]">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="font-display text-base font-semibold text-navy-ink">{t("provider.calendar.timelineTitle")}</h3>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">{t("provider.calendar.timelineDesc")}</p>
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+            <span className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="h-2.5 w-4 rounded-[3px] bg-success" /> {t("provider.calendar.booked")}
+            </span>
+            <span className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="h-2.5 w-4 rounded-[3px] border border-success/40 bg-success/25" /> {t("provider.calendar.pending")}
+            </span>
+            <span className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="h-2.5 w-4 rounded-[3px] bg-destructive" /> {t("provider.calendar.blocked")}
+            </span>
+          </div>
+        </div>
+
+        {timelineRows.length === 0 ? (
+          <div className="mt-4 flex flex-col items-center rounded-[12px] bg-secondary/30 px-6 py-10 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-[12px] bg-secondary text-muted-foreground">
+              <LayoutGrid className="h-5 w-5" />
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">{t("provider.calendar.timelineEmpty")}</p>
+          </div>
+        ) : (
+          <div className="mt-4 overflow-x-auto">
+            <div className="min-w-[640px]">
+              {/* Week axis */}
+              <div className="grid" style={{ gridTemplateColumns: "180px 1fr" }}>
+                <div />
+                <div className="relative h-6">
+                  {weekMarks.map((m, i) => (
+                    <div
+                      key={i}
+                      className="absolute top-0 -translate-x-1/2 text-[10px] font-medium text-muted-foreground"
+                      style={{ left: `${m.left}%` }}
+                    >
+                      {m.label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Rows */}
+              <div className="divide-y divide-border border-t border-border">
+                {timelineRows.map((row) => {
+                  const segments = segmentsByListing.get(row.id) ?? [];
+                  return (
+                    <div key={row.id} className="grid items-center" style={{ gridTemplateColumns: "180px 1fr" }}>
+                      <div className="min-w-0 py-3 pr-3">
+                        <div className="truncate text-[13px] font-semibold text-navy-ink">{row.title}</div>
+                        <div className="truncate text-[11px] text-muted-foreground">{row.city}</div>
+                      </div>
+                      <div className="relative h-10">
+                        {/* Weekly gridlines */}
+                        {weekMarks.map((m, i) => (
+                          <div
+                            key={i}
+                            className="absolute top-1 bottom-1 w-px bg-border"
+                            style={{ left: `${m.left}%` }}
+                          />
+                        ))}
+                        {/* Blocked bars (selected location only) */}
+                        {blockedSegments.map((seg, i) => {
+                          const left = frac(seg.start) * 100;
+                          const width = Math.max(1.4, (frac(seg.end) - frac(seg.start)) * 100);
+                          return (
+                            <div
+                              key={`blk-${i}`}
+                              className="absolute top-1.5 bottom-1.5 rounded-[6px] bg-destructive/80"
+                              style={{ left: `${left}%`, width: `${width}%` }}
+                              title={t("provider.calendar.blocked")}
+                            />
+                          );
+                        })}
+                        {/* Booking bars */}
+                        {segments.map((seg, i) => {
+                          const left = frac(seg.start) * 100;
+                          const width = Math.max(2, (frac(seg.end) - frac(seg.start)) * 100);
+                          const pending = seg.status === "pending";
+                          return (
+                            <div
+                              key={`bk-${i}`}
+                              className={`absolute top-2 bottom-2 flex items-center overflow-hidden rounded-[6px] px-2 ${
+                                pending ? "bg-success/25 text-success" : "bg-success text-white"
+                              }`}
+                              style={{ left: `${left}%`, width: `${width}%` }}
+                              title={`${seg.title} · ${statusLabel(seg.status)}`}
+                            >
+                              <span className="truncate text-[10px] font-semibold leading-none">{seg.title}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+        {!selectedLocationId && (
+          <p className="mt-3 text-[11px] text-muted-foreground">{t("provider.calendar.timelineBlockHint")}</p>
+        )}
       </div>
     </div>
   );

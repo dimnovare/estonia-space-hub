@@ -4,10 +4,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   ArrowLeft, ExternalLink, Loader2, Save, RefreshCw, ChevronDown, CheckCircle2, XCircle, Trash2,
-  Sparkles, Eye, EyeOff, Clock,
+  Sparkles, Eye, EyeOff, Clock, AlertTriangle, ShieldCheck, Award, Star, MapPin, Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter,
+  AlertDialogTitle, AlertDialogDescription, AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { SEO } from "@/components/SEO";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import ProviderContractTemplate from "@/components/provider/ProviderContractTemplate";
@@ -30,6 +34,8 @@ export default function AdminPartnerDetailPage() {
   const { t, language } = useLanguage();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
 
   const { data: supplier, isLoading } = useQuery({
     queryKey: queryKeys.adminSupplier.byId(partnerId),
@@ -56,12 +62,16 @@ export default function AdminPartnerDetailPage() {
     onError: (err: any) => toast.error(err?.message ?? t("admin.integration.syncFailed")),
   });
 
-  const removeMutation = useMutation({
-    mutationFn: () => supplierService.delete(partnerId),
+  // Hard delete = the backend "purge" endpoint (fully removes the supplier + dependents).
+  // Plain DELETE /admin/suppliers/{id} is only a reversible marketplace hide, exposed
+  // separately on the Visibility tab.
+  const deleteMutation = useMutation({
+    mutationFn: () => apiClient.delete(`/admin/suppliers/${partnerId}/purge`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.adminSupplier.byId(partnerId) });
       qc.invalidateQueries({ queryKey: queryKeys.suppliers.all() });
-      toast.success(t("admin.partnerRemoved"));
+      setDeleteOpen(false);
+      toast.success(t("admin.deletePartnerDone"));
       navigate("/admin/partners");
     },
     onError: (err: any) => toast.error(err?.message ?? t("admin.deleteFailed")),
@@ -154,16 +164,11 @@ export default function AdminPartnerDetailPage() {
               size="sm"
               variant="outline"
               className="border-destructive/30 text-destructive hover:bg-destructive/10"
-              disabled={removeMutation.isPending}
-              onClick={() => {
-                if (!confirm(t("admin.removePartnerConfirm"))) return;
-                removeMutation.mutate();
-              }}
+              disabled={deleteMutation.isPending}
+              onClick={() => { setConfirmText(""); setDeleteOpen(true); }}
             >
-              {removeMutation.isPending
-                ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                : <Trash2 className="mr-1.5 h-3.5 w-3.5" />}
-              {t("admin.removePartner")}
+              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+              {t("admin.deletePartner")}
             </Button>
           </div>
         </header>
@@ -191,6 +196,59 @@ export default function AdminPartnerDetailPage() {
         {tab === "integration" && <IntegrationTab supplierId={s.id} />}
         {tab === "contracts" && <ProviderContractTemplate supplierId={s.id} />}
       </div>
+
+      {/* Hard-delete confirmation — irreversible, distinct from the reversible
+          "Remove from marketplace" hide on the Visibility tab. */}
+      <AlertDialog open={deleteOpen} onOpenChange={(o) => { if (!deleteMutation.isPending) setDeleteOpen(o); }}>
+        <AlertDialogContent className="rounded-[14px]">
+          <AlertDialogHeader>
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-destructive/10 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div className="space-y-2">
+                <AlertDialogTitle className="font-display text-lg font-bold text-navy-ink">
+                  {t("admin.deletePartner")}
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-sm text-muted-foreground">
+                  {t("admin.deletePartnerConfirmBody").replace("{name}", s.name)}
+                </AlertDialogDescription>
+              </div>
+            </div>
+          </AlertDialogHeader>
+
+          <div className="rounded-[12px] border border-destructive/20 bg-destructive/5 px-3.5 py-3">
+            <label className="text-[13px] font-semibold text-ink-2">
+              {t("admin.deletePartnerTypeName").replace("{name}", s.name)}
+            </label>
+            <input
+              autoFocus
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder={s.name}
+              className="mt-2 w-full rounded-[10px] border border-line-2 bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-accent/30"
+            />
+          </div>
+
+          <p className="text-[11px] text-muted-foreground">{t("admin.deletePartnerHistoryNote")}</p>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>
+              {t("admin.cancel")}
+            </AlertDialogCancel>
+            <Button
+              variant="destructive"
+              disabled={deleteMutation.isPending || confirmText.trim() !== s.name.trim()}
+              onClick={() => deleteMutation.mutate()}
+            >
+              {deleteMutation.isPending
+                ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                : <Trash2 className="mr-2 h-4 w-4" />}
+              {t("admin.deletePartner")}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -433,8 +491,10 @@ function PartnerPageTab({ supplier, onSave, pending }: { supplier: any; onSave: 
   useEffect(() => setForm(initial), [initial]);
   const dirty = JSON.stringify(form) !== JSON.stringify(initial);
 
+  const slugValid = !form.slug || /^[a-z0-9-]+$/.test(form.slug);
+
   const handleSave = () => {
-    if (form.slug && !/^[a-z0-9-]+$/.test(form.slug)) {
+    if (!slugValid) {
       toast.error(t("admin.partnerPage.slugValidation"));
       return;
     }
@@ -444,92 +504,219 @@ function PartnerPageTab({ supplier, onSave, pending }: { supplier: any; onSave: 
   };
 
   const storyKey = (`longDescription${storyLang === "et" ? "Et" : storyLang === "en" ? "En" : "Ru"}`) as keyof typeof form;
+  const previewUrl = form.slug ? `/${language}/partner/${form.slug}` : null;
+  const monogram = (supplier.name || "?").trim().charAt(0).toUpperCase();
+  const labelCls = "text-[13px] font-semibold text-ink-2";
 
   return (
-    <div className="space-y-6 rounded-xl border border-border bg-card p-5">
-      <div className="grid gap-4 md:grid-cols-2">
-        <div>
-          <label className="text-xs font-medium">Slug</label>
-          <input className={inp} value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase() })} />
-          <p className="mt-1 text-[10px] text-muted-foreground">Lowercase letters, digits, dashes only.</p>
-        </div>
-        <div className="flex items-end gap-3">
-          <div className="flex flex-1 items-center justify-between rounded-lg border border-border p-3">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
+      {/* ── Editor column ── */}
+      <div className="space-y-5">
+        {/* Publish state */}
+        <section className="rounded-[14px] border border-line bg-card p-5 shadow-[0_1px_2px_rgba(16,28,64,.05)]">
+          <div className="flex items-start justify-between gap-4">
             <div>
-              <div className="text-sm font-medium">{t("admin.partnerPage.published")}</div>
-              <div className="text-[11px] text-muted-foreground">{form.isPartnerPagePublished ? t("admin.partnerPage.visiblePublicly") : t("admin.partnerPage.hidden")}</div>
+              <h3 className="text-sm font-semibold text-navy-ink">{t("admin.partnerPage.publishHeading")}</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {form.isPartnerPagePublished ? t("admin.partnerPage.visiblePublicly") : t("admin.partnerPage.hidden")}
+              </p>
             </div>
-            <Switch checked={form.isPartnerPagePublished} onCheckedChange={(v) => setForm({ ...form, isPartnerPagePublished: v })} />
+            <Switch
+              checked={form.isPartnerPagePublished}
+              aria-label={t("admin.partnerPage.published")}
+              onCheckedChange={(v) => setForm({ ...form, isPartnerPagePublished: v })}
+            />
           </div>
-          {form.slug && (
-            <a href={`/${language}/partner/${form.slug}`} target="_blank" rel="noopener noreferrer">
+          {previewUrl && (
+            <a href={previewUrl} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block">
               <Button variant="outline" size="sm">
                 <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
-                {t("common.preview")}
+                {t("admin.partnerPage.openLivePage")}
               </Button>
             </a>
           )}
+        </section>
+
+        {/* Identity */}
+        <section className="space-y-4 rounded-[14px] border border-line bg-card p-5 shadow-[0_1px_2px_rgba(16,28,64,.05)]">
+          <h3 className="text-sm font-semibold text-navy-ink">{t("admin.partnerPage.identityHeading")}</h3>
+
+          <div>
+            <label className={labelCls}>{t("admin.partnerPage.slug")}</label>
+            <div className="mt-1.5 flex items-stretch overflow-hidden rounded-[10px] border border-line-2 focus-within:border-primary focus-within:ring-2 focus-within:ring-accent/30">
+              <span className="flex items-center bg-secondary px-3 font-mono text-xs text-muted-foreground">/partner/</span>
+              <input
+                className="w-full bg-card px-3 py-2 text-sm focus:outline-none"
+                value={form.slug}
+                onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase() })}
+              />
+            </div>
+            <p className={`mt-1 text-[11px] ${slugValid ? "text-muted-foreground" : "text-destructive"}`}>
+              {t("admin.partnerPage.slugHint")}
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className={labelCls}>{t("admin.partnerPage.logoUrl")}</label>
+              <input className={inp} value={form.logoUrl} onChange={(e) => setForm({ ...form, logoUrl: e.target.value })} />
+            </div>
+            <div>
+              <label className={labelCls}>{t("admin.partnerPage.heroImageUrl")}</label>
+              <input className={inp} value={form.heroImageUrl} onChange={(e) => setForm({ ...form, heroImageUrl: e.target.value })} />
+            </div>
+          </div>
+
+          <div>
+            <label className={labelCls}>{t("admin.partnerPage.tagline")}</label>
+            <input maxLength={160} className={inp} value={form.tagline} onChange={(e) => setForm({ ...form, tagline: e.target.value })} />
+            <p className="mt-1 text-right text-[10px] text-muted-foreground">{form.tagline.length}/160</p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className={labelCls}>{t("admin.partnerPage.foundedYear")}</label>
+              <input type="number" className={inp} value={form.foundedYear} onChange={(e) => setForm({ ...form, foundedYear: e.target.value })} />
+            </div>
+            <div>
+              <label className={labelCls}>{t("admin.partnerPage.googlePlaceId")}</label>
+              <input className={inp} placeholder="ChIJ..." value={form.googlePlaceId} onChange={(e) => setForm({ ...form, googlePlaceId: e.target.value })} />
+            </div>
+          </div>
+        </section>
+
+        {/* Badges */}
+        <section className="space-y-3 rounded-[14px] border border-line bg-card p-5 shadow-[0_1px_2px_rgba(16,28,64,.05)]">
+          <h3 className="text-sm font-semibold text-navy-ink">{t("admin.partnerPage.badgesHeading")}</h3>
+          <label className="flex items-center justify-between rounded-[10px] border border-line p-3">
+            <span className="flex items-center gap-2 text-sm text-ink-2">
+              <ShieldCheck className="h-4 w-4 text-success" />
+              {t("listing.badge.verified")}
+            </span>
+            <Switch checked={form.isVerified} onCheckedChange={(v) => setForm({ ...form, isVerified: v })} />
+          </label>
+          <label className="flex items-center justify-between rounded-[10px] border border-line p-3">
+            <span className="flex items-center gap-2 text-sm text-ink-2">
+              <Award className="h-4 w-4 text-amber-500" />
+              {t("listing.badge.foundingPartner")}
+            </span>
+            <Switch checked={form.foundingPartner} onCheckedChange={(v) => setForm({ ...form, foundingPartner: v })} />
+          </label>
+        </section>
+
+        {/* Story / long description */}
+        <section className="rounded-[14px] border border-line bg-card p-5 shadow-[0_1px_2px_rgba(16,28,64,.05)]">
+          <h3 className="text-sm font-semibold text-navy-ink">{t("admin.partnerPage.longDescription")}</h3>
+          <div className="mt-2 inline-flex rounded-[10px] bg-secondary p-0.5">
+            {(["et", "en", "ru"] as const).map((l) => (
+              <button
+                key={l}
+                type="button"
+                onClick={() => setStoryLang(l)}
+                className={`rounded-md px-3 py-1 text-xs font-semibold uppercase transition-colors ${storyLang === l ? "bg-navy-ink text-white" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
+          <textarea
+            rows={6}
+            className={`${inp} resize-y`}
+            value={form[storyKey] as string}
+            onChange={(e) => setForm(prev => prev ? { ...prev, [storyKey]: e.target.value } : prev)}
+          />
+        </section>
+
+        <div className="flex justify-end">
+          <Button onClick={handleSave} disabled={!dirty || pending || !slugValid}>
+            {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            {t("common.saveChanges")}
+          </Button>
         </div>
-        <div>
-          <label className="text-xs font-medium">{t("admin.partnerPage.logoUrl")}</label>
-          <input className={inp} value={form.logoUrl} onChange={(e) => setForm({ ...form, logoUrl: e.target.value })} />
-          {form.logoUrl && <img src={form.logoUrl} alt="" className="mt-2 h-16 rounded-lg border border-border object-contain p-1" />}
-        </div>
-        <div>
-          <label className="text-xs font-medium">{t("admin.partnerPage.heroImageUrl")}</label>
-          <input className={inp} value={form.heroImageUrl} onChange={(e) => setForm({ ...form, heroImageUrl: e.target.value })} />
-          {form.heroImageUrl && <img src={form.heroImageUrl} alt="" className="mt-2 h-24 w-full rounded-lg border border-border object-cover" />}
-        </div>
-        <div className="md:col-span-2">
-          <label className="text-xs font-medium">{t("admin.partnerPage.tagline")}</label>
-          <input maxLength={160} className={inp} value={form.tagline} onChange={(e) => setForm({ ...form, tagline: e.target.value })} />
-          <p className="mt-1 text-right text-[10px] text-muted-foreground">{form.tagline.length}/160</p>
-        </div>
-        <div>
-          <label className="text-xs font-medium">{t("admin.partnerPage.foundedYear")}</label>
-          <input type="number" className={inp} value={form.foundedYear} onChange={(e) => setForm({ ...form, foundedYear: e.target.value })} />
-        </div>
-        <div>
-          <label className="text-xs font-medium">{t("admin.partnerPage.googlePlaceId")}</label>
-          <input className={inp} placeholder="ChIJ..." value={form.googlePlaceId} onChange={(e) => setForm({ ...form, googlePlaceId: e.target.value })} />
-        </div>
-        <label className="flex items-center justify-between rounded-lg border border-border p-3">
-          <span className="text-sm">{t("listing.badge.verified")}</span>
-          <Switch checked={form.isVerified} onCheckedChange={(v) => setForm({ ...form, isVerified: v })} />
-        </label>
-        <label className="flex items-center justify-between rounded-lg border border-border p-3">
-          <span className="text-sm">{t("listing.badge.foundingPartner")}</span>
-          <Switch checked={form.foundingPartner} onCheckedChange={(v) => setForm({ ...form, foundingPartner: v })} />
-        </label>
       </div>
 
-      <div>
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("admin.partnerPage.longDescription")}</h3>
-        <div className="mt-2 inline-flex rounded-lg border border-border p-0.5">
-          {(["et", "en", "ru"] as const).map((l) => (
-            <button
-              key={l}
-              type="button"
-              onClick={() => setStoryLang(l)}
-              className={`rounded-md px-3 py-1 text-xs font-medium uppercase ${storyLang === l ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-            >
-              {l}
-            </button>
-          ))}
+      {/* ── Live preview column ── */}
+      <div className="lg:sticky lg:top-6 lg:self-start">
+        <div className="mb-2 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[.2em] text-teal-deep">
+          <Eye className="h-3.5 w-3.5" />
+          {t("admin.partnerPage.previewLabel")}
         </div>
-        <textarea
-          rows={6}
-          className={`${inp} resize-y`}
-          value={form[storyKey] as string}
-          onChange={(e) => setForm(prev => prev ? { ...prev, [storyKey]: e.target.value } : prev)}
-        />
-      </div>
+        <div className="overflow-hidden rounded-[14px] border border-line bg-card shadow-[0_4px_14px_rgba(16,28,64,.07)]">
+          {/* Navy header band — mirrors the public partner page hero */}
+          <div
+            className="relative px-6 pb-6 pt-7 text-white"
+            style={{ background: "radial-gradient(120% 120% at 78% 10%, #1B4AA8 0%, #0E2156 44%, #0B1330 100%)" }}
+          >
+            {!form.isPartnerPagePublished && (
+              <span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-white/12 px-2.5 py-1 text-[11px] font-semibold text-white/85">
+                <EyeOff className="h-3 w-3" /> {t("admin.partnerPage.hidden")}
+              </span>
+            )}
+            <div className="flex items-start gap-4">
+              {form.logoUrl ? (
+                <img src={form.logoUrl} alt="" className="h-[72px] w-[72px] shrink-0 rounded-[14px] border border-white/15 bg-white object-contain p-1.5" />
+              ) : (
+                <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-[14px] bg-white font-display text-[28px] font-extrabold text-navy-ink">
+                  {monogram}
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <h2 className="font-display text-2xl font-extrabold leading-tight tracking-[-.02em]">{supplier.name}</h2>
+                {form.tagline && <p className="mt-1.5 text-sm text-white/75">{form.tagline}</p>}
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                  {form.isVerified && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-white/12 px-2.5 py-1 text-[11px] font-semibold text-teal">
+                      <ShieldCheck className="h-3 w-3" /> {t("listing.badge.verified")}
+                    </span>
+                  )}
+                  {form.foundingPartner && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-white/12 px-2.5 py-1 text-[11px] font-semibold text-amber-300">
+                      <Award className="h-3 w-3" /> {t("listing.badge.foundingPartner")}
+                    </span>
+                  )}
+                  {typeof supplier.rating === "number" && supplier.rating > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-white/12 px-2.5 py-1 text-[11px] font-semibold text-white/90">
+                      <Star className="h-3 w-3 fill-current text-[#F2A900]" /> {Number(supplier.rating).toFixed(1)}
+                    </span>
+                  )}
+                  {form.foundedYear && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-white/12 px-2.5 py-1 text-[11px] font-semibold text-white/90">
+                      {t("admin.partnerPage.foundedYear")} {form.foundedYear}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
 
-      <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={!dirty || pending}>
-          {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-          {t("common.saveChanges")}
-        </Button>
+          {/* Body */}
+          <div className="space-y-4 p-6">
+            {previewUrl ? (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Globe className="h-3.5 w-3.5" />
+                <span className="font-mono">ruumly.eu{previewUrl}</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-xs text-warning-text">
+                <MapPin className="h-3.5 w-3.5" />
+                {t("admin.partnerPage.noSlugPreview")}
+              </div>
+            )}
+
+            <div>
+              <div className="mb-1 font-mono text-[11px] uppercase tracking-[.16em] text-muted-foreground">
+                {t("admin.partnerPage.longDescription")} · {storyLang.toUpperCase()}
+              </div>
+              {(form[storyKey] as string)?.trim() ? (
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink-2">{form[storyKey] as string}</p>
+              ) : (
+                <p className="rounded-[10px] border border-dashed border-line-2 px-4 py-6 text-center text-sm text-muted-foreground">
+                  {t("admin.partnerPage.emptyStory")}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

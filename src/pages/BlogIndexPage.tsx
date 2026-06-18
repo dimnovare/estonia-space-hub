@@ -5,7 +5,7 @@ import { getAllPosts } from "@/lib/blog";
 import { SEO } from "@/components/SEO";
 import NotFound from "@/pages/NotFound";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, FileText } from "lucide-react";
+import { ArrowRight, CalendarDays, ChevronLeft, ChevronRight, Newspaper } from "lucide-react";
 
 const PAGE_SIZE = 10;
 
@@ -39,61 +39,84 @@ export default function BlogIndexPage() {
 
   return (
     <>
-      <SEO
-        title={t("blog.title")}
-        description={t("blog.title")}
-        path="/blog"
-      />
-      <div className="container-wide py-10">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t("blog.title")}</h1>
+      <SEO title={t("blog.title")} description={t("blog.subtitle")} path="/blog" />
+
+      <div className="container-wide py-12 md:py-16">
+        <header className="mb-10 max-w-2xl animate-slide-up">
+          <p className="eyebrow mb-3">{t("blog.eyebrow")}</p>
+          <h1 className="font-display text-3xl font-bold tracking-tight text-navy-ink md:text-4xl">
+            {t("blog.title")}
+          </h1>
+          <p className="mt-3 text-[17px] leading-relaxed text-ink-2">{t("blog.subtitle")}</p>
         </header>
 
         {slice.length === 0 ? (
-          <div className="rounded-2xl bg-secondary/30 py-16 text-center">
-            <FileText className="mx-auto mb-3 h-12 w-12 opacity-50" />
-            <p className="text-base font-semibold">{t("blog.noPosts")}</p>
+          <div className="flex flex-col items-center rounded-lg border border-line bg-card px-6 py-16 text-center shadow-card">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-lg bg-secondary">
+              <Newspaper className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <h2 className="font-display text-lg font-bold text-navy-ink">{t("blog.noPosts")}</h2>
           </div>
         ) : (
-          <ul className="grid gap-6 md:grid-cols-2">
-            {slice.map((post) => (
-              <li key={post.slug}>
+          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {slice.map((post, i) => (
+              <li key={post.slug} className="animate-slide-up" style={{ animationDelay: `${Math.min(i, 6) * 40}ms` }}>
                 <Link
                   to={`/blog/${post.slug}`}
-                  className="group block h-full overflow-hidden rounded-2xl border border-border bg-card transition-shadow hover:shadow-md"
+                  className="group flex h-full flex-col overflow-hidden rounded-lg border border-line bg-card shadow-card transition-[box-shadow,transform] hover:-translate-y-[3px] hover:shadow-elevated"
                 >
-                  <div className="aspect-[16/9] w-full overflow-hidden bg-secondary/40">
+                  <div className="relative aspect-[16/9] w-full overflow-hidden">
                     {post.coverImage ? (
                       <img
                         src={post.coverImage}
                         alt={post.title}
-                        className="h-full w-full object-cover transition-transform group-hover:scale-[1.02]"
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                         loading="lazy"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center">
-                        <FileText className="h-10 w-10 opacity-40" />
+                      <div
+                        className="photo-placeholder--soft flex h-full w-full items-center justify-center"
+                        style={{
+                          backgroundImage:
+                            "linear-gradient(135deg, hsl(var(--accent) / 0.10), hsl(var(--teal) / 0.16))",
+                        }}
+                      >
+                        <span className="photo-placeholder__cap">{t("blog.eyebrow")}</span>
                       </div>
                     )}
                   </div>
-                  <div className="p-5">
-                    <div className="mb-2 text-xs text-muted-foreground">{dateFmt(post.publishedAt)}</div>
-                    <h2 className="mb-2 text-lg font-semibold leading-snug group-hover:text-accent">
+
+                  <div className="flex flex-1 flex-col p-5">
+                    <div className="mb-2 flex items-center gap-1.5 font-mono-label text-[11px] uppercase tracking-wide text-muted-foreground">
+                      <CalendarDays className="h-3.5 w-3.5" aria-hidden />
+                      {dateFmt(post.publishedAt)}
+                    </div>
+
+                    <h2 className="mb-2 font-display text-lg font-bold leading-snug text-navy-ink transition-colors group-hover:text-primary">
                       {post.title}
                     </h2>
-                    <p className="mb-3 text-sm text-muted-foreground line-clamp-3">{post.excerpt}</p>
+
+                    {post.excerpt && (
+                      <p className="mb-4 line-clamp-3 text-sm leading-relaxed text-ink-2">{post.excerpt}</p>
+                    )}
+
                     {post.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="mb-4 flex flex-wrap gap-1.5">
                         {post.tags.slice(0, 3).map((tag) => (
                           <span
                             key={tag}
-                            className="rounded-full bg-secondary px-2 py-0.5 text-[11px] text-muted-foreground"
+                            className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-medium text-secondary-foreground"
                           >
                             {tag}
                           </span>
                         ))}
                       </div>
                     )}
+
+                    <span className="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-accent">
+                      {t("blog.readMore")}
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                    </span>
                   </div>
                 </Link>
               </li>
@@ -102,24 +125,14 @@ export default function BlogIndexPage() {
         )}
 
         {totalPages > 1 && (
-          <nav className="mt-10 flex items-center justify-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={current <= 1}
-              onClick={() => goTo(current - 1)}
-            >
+          <nav className="mt-12 flex items-center justify-center gap-3" aria-label={t("blog.title")}>
+            <Button variant="outline" size="sm" disabled={current <= 1} onClick={() => goTo(current - 1)}>
               <ChevronLeft className="mr-1 h-4 w-4" /> {t("blog.prevPage")}
             </Button>
-            <span className="text-sm text-muted-foreground">
+            <span className="font-mono-label text-[12px] text-muted-foreground">
               {current} / {totalPages}
             </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={current >= totalPages}
-              onClick={() => goTo(current + 1)}
-            >
+            <Button variant="outline" size="sm" disabled={current >= totalPages} onClick={() => goTo(current + 1)}>
               {t("blog.nextPage")} <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           </nav>

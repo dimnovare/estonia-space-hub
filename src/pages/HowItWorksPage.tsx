@@ -22,7 +22,7 @@ export default function HowItWorksPage() {
   const { t } = useLanguage();
 
   const steps = [
-    { icon: Search, title: t("hiw.step1"), desc: t("hiw.step1desc") },
+    { icon: Search, title: t("hiw.step1cross"), desc: t("hiw.step1descCross") },
     { icon: CalendarCheck, title: t("hiw.step2"), desc: t("hiw.step2desc") },
     { icon: FileSignature, title: t("hiw.step3"), desc: t("hiw.step3desc") },
     { icon: CreditCard, title: t("hiw.step4"), desc: t("hiw.step4desc") },
@@ -75,9 +75,9 @@ export default function HowItWorksPage() {
             {t("hiw.subtitleNew")}
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link to="/search?type=warehouse">
+            <Link to="/search">
               <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                {t("hiw.heroSearch")} <ArrowRight className="ml-2 h-4 w-4" />
+                {t("hero.search")} <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
             <Link to="/provider">
@@ -176,7 +176,7 @@ export default function HowItWorksPage() {
                 <Store className="h-3.5 w-3.5" /> {t("hiw.partnerBadge")}
               </div>
               <h2 className="mt-4 font-display text-2xl font-bold md:text-3xl">{t("hiw.partnerTitle")}</h2>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{t("hiw.partnerDesc")}</p>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{t("hiw.partnerDescCross")}</p>
               <Link to="/provider" className="inline-block">
                 <Button className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90" size="lg">
                   {t("hiw.partnerCta")} <ArrowRight className="ml-2 h-4 w-4" />
@@ -198,11 +198,11 @@ export default function HowItWorksPage() {
       {/* Final CTA */}
       <section className="container-wide pb-20 text-center">
         <h2 className="font-display text-2xl font-bold">{t("hiw.readyCta")}</h2>
-        <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{t("hiw.readyDesc")}</p>
+        <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{t("hiw.readyDescCross")}</p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <Link to="/search?type=warehouse">
+          <Link to="/search">
             <Button className="bg-accent text-accent-foreground hover:bg-accent/90" size="lg">
-              {t("hiw.startSearch")} <ArrowRight className="ml-2 h-4 w-4" />
+              {t("hero.search")} <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
           <Link to="/faq">

@@ -13,26 +13,49 @@ import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 // The icon is the ONLY image; the word is typeset so its colour adapts to the
 // background (navy on light, white on dark). Served from /public.
 
-// Spec §7.1: exactly three public nav links — Storage (= home), How it works,
-// For partners. Moving / Trailers are reachable from Storage/search & footer.
+// Emoji flag per UI language for the language selector. Regional-indicator
+// pairs render as a flag on every modern OS/browser; pure presentation, so each
+// is marked aria-hidden and the native name carries the accessible label.
+const LANG_FLAG: Record<string, string> = {
+  en: "🇬🇧",
+  et: "🇪🇪",
+  ru: "🇷🇺",
+  lv: "🇱🇻",
+  lt: "🇱🇹",
+};
+
+// Free partner-acquisition marketplace (CLAUDE.md): all three verticals are
+// public nav links, gated by platform toggles. Storage points at /search
+// (storage results); Moving / Trailer rental at /search?type=… . Then the two
+// static links. Order: Storage, Moving, Trailer rental, How it works, For partners.
 interface NavLink {
   to: string;
   tKey: string;
-  matchHome?: boolean;
+  // "Storage" is active on the home page and storage search results.
+  matchStorage?: boolean;
+  // Moving / Trailer rental are active when /search?type= matches this value.
+  matchType?: string;
   isProviderLink?: boolean;
 }
 
-const baseNavLinks: NavLink[] = [
-  { to: "/", tKey: "nav.storage", matchHome: true },
+// SearchPage reads the vertical from ?type= (warehouse|moving|trailer), the same
+// param Footer.tsx links to — so these deep-links actually drive the filter.
+const STORAGE_LINK: NavLink = { to: "/search", tKey: "nav.storage", matchStorage: true };
+const MOVING_LINK: NavLink = { to: "/search?type=moving", tKey: "nav.moving", matchType: "moving" };
+const TRAILER_LINK: NavLink = { to: "/search?type=trailer", tKey: "nav.trailer", matchType: "trailer" };
+const STATIC_NAV_LINKS: NavLink[] = [
   { to: "/how-it-works", tKey: "nav.howItWorks" },
   { to: "/provider", tKey: "nav.forProviders", isProviderLink: true },
 ];
 
 function isLinkActive(link: NavLink, pathname: string, searchType: string | null): boolean {
   const stripped = stripLang(pathname);
-  if (link.matchHome) {
+  if (link.matchStorage) {
     // "Storage" is active on the home page and on storage search results.
-    return stripped === "/" || (stripped === "/search" && (searchType === null || searchType === "warehouse"));
+    return stripped === "/" || (stripped === "/search" && (searchType === null || searchType === "warehouse" || searchType === "all"));
+  }
+  if (link.matchType) {
+    return stripped === "/search" && searchType === link.matchType;
   }
   return stripped === link.to;
 }
@@ -58,11 +81,17 @@ export default function Navbar() {
   const { data: notifications = [] } = useNotifications();
   const unreadCount = notifications.filter((n) => !n.read).length;
   const settings = usePlatformSettings();
+  const { showMovingService, showTrailerService } = settings;
   const blogEnabled = String(settings.blog?.enabled ?? "false") === "true";
   const blogInNav = String(settings.blog?.showInNav ?? "false") === "true";
-  const navLinks: NavLink[] = blogEnabled && blogInNav
-    ? [...baseNavLinks, { to: "/blog", tKey: "blog.title" }]
-    : baseNavLinks;
+  // Storage, then the verticals enabled by admin toggles, then the static links.
+  const navLinks: NavLink[] = [
+    STORAGE_LINK,
+    ...(showMovingService ? [MOVING_LINK] : []),
+    ...(showTrailerService ? [TRAILER_LINK] : []),
+    ...STATIC_NAV_LINKS,
+    ...(blogEnabled && blogInNav ? [{ to: "/blog", tKey: "blog.title" }] : []),
+  ];
 
   const onDark = isDarkHeroRoute(location.pathname);
 
@@ -104,18 +133,18 @@ export default function Navbar() {
         <Link
           to="/"
           aria-label="Ruumly"
-          className="flex-shrink-0 flex items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+          className="flex-shrink-0 flex items-center gap-1.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
         >
           <img
             src="/ruumly-mark.png"
             alt=""
             aria-hidden="true"
-            width={34}
-            height={34}
+            width={42}
+            height={42}
             decoding="async"
-            className="h-[34px] w-[34px] object-contain"
+            className="h-[42px] w-[42px] object-contain"
           />
-          <span className={`brand-word text-[23px] ${onDark ? "brand-word--on-dark" : ""}`}>Ruumly</span>
+          <span className={`brand-word text-[26px] ${onDark ? "brand-word--on-dark" : ""}`}>Ruumly</span>
         </Link>
 
         <nav className="hidden items-center gap-1.5 min-[820px]:flex">
@@ -158,6 +187,7 @@ export default function Navbar() {
               }`}
             >
               <Globe className="h-3.5 w-3.5" />
+              <span aria-hidden="true" className="text-sm leading-none">{LANG_FLAG[language]}</span>
               <span className="uppercase">{language}</span>
               <ChevronDown className={`h-3 w-3 ${onDark ? "text-white/70" : "text-muted-foreground"}`} />
             </button>
@@ -177,6 +207,7 @@ export default function Navbar() {
                           : "text-foreground hover:bg-secondary"
                       }`}
                     >
+                      <span aria-hidden="true" className="text-base leading-none">{LANG_FLAG[lang.code]}</span>
                       <span className="font-mono-label text-[11px] uppercase text-muted-foreground">{lang.code}</span>
                       <span>{lang.label}</span>
                       {language === lang.code && <Check className="ml-auto h-3.5 w-3.5" />}
@@ -312,7 +343,7 @@ export default function Navbar() {
                         }`}
                         title={lang.label}
                       >
-                        <Globe className="h-3.5 w-3.5" />
+                        <span aria-hidden="true" className="text-base leading-none">{LANG_FLAG[lang.code]}</span>
                         {lang.code.toUpperCase()}
                       </button>
                     ))}

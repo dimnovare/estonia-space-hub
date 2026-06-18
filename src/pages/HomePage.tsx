@@ -95,22 +95,33 @@ export default function HomePage() {
     ...(showTrailerService ? [{ key: "trailer", label: t("cat.trailer"), icon: CarFront }] : []),
   ];
 
-  // "Three ways to make space" verticals — Storage always shown (emphasized),
-  // Moving / Trailers honor the admin visibility toggles.
-  const verticals = [
+  // "Three ways to make space" verticals — Storage leads (emphasized), Moving /
+  // Trailers are first-class and honor the admin visibility toggles. No price chip:
+  // we have no real prices yet. `image` is reserved for curated category imagery —
+  // when a real URL is wired here the card renders the photo instead of the gradient.
+  // `priceFrom` is an optional real "from" price (currency-formatted) that renders
+  // only once a listing price exists; left undefined until we have one.
+  const verticals: {
+    key: string;
+    icon: typeof Warehouse;
+    title: string;
+    desc: string;
+    emphasized: boolean;
+    image?: string;
+    priceFrom?: string;
+  }[] = [
     {
       key: "warehouse",
       icon: Warehouse,
       title: t("home.vertical.storage.title"),
       desc: t("home.vertical.storage.desc"),
-      price: t("home.vertical.storage.price"),
       emphasized: true,
     },
     ...(showMovingService
-      ? [{ key: "moving", icon: Truck, title: t("home.vertical.moving.title"), desc: t("home.vertical.moving.desc"), price: t("home.vertical.moving.price"), emphasized: false }]
+      ? [{ key: "moving", icon: Truck, title: t("home.vertical.moving.title"), desc: t("home.vertical.moving.desc"), emphasized: false }]
       : []),
     ...(showTrailerService
-      ? [{ key: "trailer", icon: CarFront, title: t("home.vertical.trailer.title"), desc: t("home.vertical.trailer.desc"), price: t("home.vertical.trailer.price"), emphasized: false }]
+      ? [{ key: "trailer", icon: CarFront, title: t("home.vertical.trailer.title"), desc: t("home.vertical.trailer.desc"), emphasized: false }]
       : []),
   ];
 
@@ -344,7 +355,7 @@ export default function HomePage() {
           {listingCount > 0 && (
             <div className="pointer-events-none absolute bottom-4 left-4 z-[400] inline-flex items-center gap-2 rounded-full bg-card/95 px-3.5 py-2 text-sm font-medium text-foreground shadow-elevated ring-1 ring-border backdrop-blur-sm">
               <Package className="h-4 w-4 text-teal-deep" />
-              {t("home.mapBadgeNew").replace("{count}", String(listingCount))}
+              {(storageOnly ? t("home.mapBadgeNew") : t("home.mapBadgeAll")).replace("{count}", String(listingCount))}
             </div>
           )}
         </div>
@@ -370,15 +381,53 @@ export default function HomePage() {
                 }`}
               >
                 <div
-                  className={`relative flex items-end p-5 ${v.emphasized ? "aspect-[16/9]" : "aspect-[16/11]"}`}
-                  style={{ background: "repeating-linear-gradient(135deg,#e9eef7,#e9eef7 14px,#eef2fa 14px,#eef2fa 28px)" }}
+                  className={`relative flex items-end overflow-hidden p-5 ${v.emphasized ? "aspect-[16/9]" : "aspect-[16/11]"}`}
                 >
+                  {/* Image area: render curated category imagery when a real URL is
+                      wired (v.image); until then, a soft navy/teal brand-gradient
+                      panel with the large vertical icon centered. Both keep the same
+                      box so a real photo swaps in cleanly. */}
+                  {v.image ? (
+                    <img
+                      src={v.image}
+                      alt={v.title}
+                      loading="lazy"
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div
+                      aria-hidden
+                      className="absolute inset-0"
+                      style={{ background: "radial-gradient(120% 130% at 78% 12%, hsl(var(--teal) / 0.22) 0%, hsl(var(--primary) / 0.10) 42%, hsl(var(--navy-ink) / 0.06) 100%)" }}
+                    >
+                      {/* faint dot-grid texture, masked toward lower-left */}
+                      <div
+                        className="absolute inset-0 opacity-50"
+                        style={{
+                          backgroundImage: "radial-gradient(hsl(var(--teal) / 0.18) 1px, transparent 1px)",
+                          backgroundSize: "22px 22px",
+                          maskImage: "linear-gradient(135deg, transparent, black 70%)",
+                          WebkitMaskImage: "linear-gradient(135deg, transparent, black 70%)",
+                        }}
+                      />
+                      {/* large centered vertical icon */}
+                      <Icon
+                        aria-hidden
+                        className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 text-teal-deep/45"
+                        strokeWidth={1.5}
+                      />
+                    </div>
+                  )}
+                  {/* small icon tile stays top-left for quick scanning */}
                   <div className="absolute left-4 top-4 flex h-12 w-12 items-center justify-center rounded-xl bg-card shadow-card">
                     <Icon className="h-6 w-6 text-teal-deep" />
                   </div>
-                  <span className="inline-flex items-center rounded-full bg-card/95 px-3 py-1 text-xs font-semibold text-navy-ink shadow-card ring-1 ring-border">
-                    {v.price}
-                  </span>
+                  {/* price slot: only render when a real "from" price exists */}
+                  {v.priceFrom && (
+                    <span className="relative inline-flex items-center rounded-full bg-card/95 px-3 py-1 text-xs font-semibold text-navy-ink shadow-card ring-1 ring-border">
+                      {t("home.verticals.priceFrom").replace("{price}", v.priceFrom)}
+                    </span>
+                  )}
                 </div>
                 <div className="flex flex-1 flex-col p-5">
                   <h3 className="font-display text-lg font-semibold text-foreground">{v.title}</h3>
@@ -463,7 +512,9 @@ export default function HomePage() {
         <h2 className="text-center font-display text-2xl font-bold md:text-3xl">{t("home.whyRuumly.title")}</h2>
         <div className="mx-auto mt-8 grid max-w-3xl gap-4 md:grid-cols-3">
           {[
-            { icon: Map, text: t("home.whyRuumly.savings") },
+            // Cross-vertical by default (storage + moving + trailers on one map);
+            // keep the narrower storage-only line only when other verticals are off.
+            { icon: Map, text: storageOnly ? t("home.whyRuumly.savings") : t("home.whyRuumly.savingsAll") },
             { icon: ShieldCheck, text: t("home.whyRuumly.verified") },
             { icon: CalendarCheck, text: t("home.whyRuumly.cancellation") },
           ].map((item) => {
