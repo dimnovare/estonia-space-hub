@@ -1,14 +1,89 @@
 import { useState } from "react";
-import { Download, Package, Loader2 } from "lucide-react";
+import { Download, Package, Loader2, MessageSquare, Send } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useBookings } from "@/hooks/useBookings";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { messageService } from "@/services";
+import { queryKeys } from "@/services/queryKeys";
 import type { Booking, BookingStatus } from "@/services/types";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 
 const FILTERS = ["all", "pending", "confirmed", "active", "completed", "cancelled"] as const;
 type FilterKey = typeof FILTERS[number];
+
+/**
+ * In-dialog conversation thread for a booking. Reuses the same /messages
+ * endpoints as the customer AccountPage, so the chat is genuinely two-ended:
+ * the customer writes from their account, the partner reads + replies here.
+ * Provider/admin messages render outgoing (right); customer messages incoming.
+ */
+function BookingMessages({ bookingId }: { bookingId: string }) {
+  const { t } = useLanguage();
+  const queryClient = useQueryClient();
+  const [text, setText] = useState("");
+
+  const { data: messages = [], isLoading } = useQuery({
+    queryKey: queryKeys.messages.byBooking(bookingId),
+    queryFn: () => messageService.getByBookingId(bookingId),
+    refetchInterval: 15_000,
+  });
+
+  const sendMutation = useMutation({
+    mutationFn: (body: string) => messageService.send(bookingId, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.messages.byBooking(bookingId) });
+      setText("");
+    },
+    onError: (err: any) => toast.error(err?.message || t("toast.messageFailed")),
+  });
+
+  const submit = () => {
+    const v = text.trim();
+    if (v) sendMutation.mutate(v);
+  };
+
+  return (
+    <div className="rounded-lg border border-border">
+      <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+        <MessageSquare className="h-4 w-4 text-muted-foreground" />
+        <span className="text-xs font-semibold text-muted-foreground">{t("provider.bookings.messages")}</span>
+      </div>
+      <div className="max-h-64 space-y-2 overflow-y-auto p-3">
+        {isLoading ? (
+          <div className="flex justify-center py-6"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>
+        ) : messages.length === 0 ? (
+          <p className="py-6 text-center text-xs text-muted-foreground">{t("provider.bookings.noMessages")}</p>
+        ) : messages.map(m => {
+          const outgoing = m.from === "provider" || m.from === "admin";
+          return (
+            <div key={m.id} className={`flex ${outgoing ? "justify-end" : "justify-start"}`}>
+              <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${outgoing ? "bg-navy-ink text-white" : "bg-secondary text-ink"}`}>
+                <p className="mb-0.5 text-[10px] font-semibold opacity-70">{m.senderName}</p>
+                <p className="whitespace-pre-wrap break-words">{m.text}</p>
+                <p className="mt-0.5 text-[10px] opacity-60">{m.createdAt}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex items-center gap-2 border-t border-border p-2">
+        <input
+          value={text}
+          onChange={e => setText(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }}
+          placeholder={t("provider.bookings.messagePlaceholder")}
+          className="flex-1 rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+        <Button size="sm" onClick={submit} disabled={!text.trim() || sendMutation.isPending}>
+          {sendMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export default function ProviderBookings() {
   const { t } = useLanguage();
@@ -209,6 +284,7 @@ export default function ProviderBookings() {
                   </ol>
                 </div>
               )}
+              <BookingMessages bookingId={viewBooking.id} />
             </div>
           )}
         </DialogContent>
