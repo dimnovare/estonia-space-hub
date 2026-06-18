@@ -2,14 +2,17 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@/i18n/routing";
 import { apiClient } from "@/services/apiClient";
 import { queryKeys } from "@/services/queryKeys";
+import { useLanguage } from "@/i18n/LanguageContext";
 import {
-  Loader2,
   AlertTriangle,
   BarChart2,
   CalendarCheck,
   CreditCard,
   FileSignature,
   MapPin,
+  Search,
+  Map as MapIcon,
+  Megaphone,
 } from "lucide-react";
 
 interface AdminMetricsData {
@@ -34,6 +37,12 @@ interface AdminMetricsData {
     unpublished: number;
     pendingApproval: number;
   };
+  /** Optional discovery metrics (free-acquisition model). Present only if the API returns them. */
+  discovery?: {
+    searchAppearances24h: number;
+    mapOpens24h: number;
+    leadsCaptured24h: number;
+  };
 }
 
 interface StatCardProps {
@@ -51,7 +60,7 @@ function StatCard({ label, value, sub, icon: Icon, highlight, highlightWhenPosit
   const isPositive = highlightWhenPositive && Number(value) > 0;
   const card = (
     <div
-      className={`rounded-xl border p-5 transition-colors ${
+      className={`h-full rounded-xl border p-5 shadow-card transition-colors ${
         isWarning
           ? "border-warning/30 bg-warning/5"
           : isPositive
@@ -62,33 +71,33 @@ function StatCard({ label, value, sub, icon: Icon, highlight, highlightWhenPosit
       <div className="flex items-center justify-between">
         <span className="text-sm text-muted-foreground">{label}</span>
         <Icon
-          className={`h-4 w-4 ${
+          className={`h-[18px] w-[18px] ${
             isWarning
-              ? "text-warning"
+              ? "text-warning-text"
               : isPositive
               ? "text-success"
-              : "text-muted-foreground"
+              : "text-muted-foreground/70"
           }`}
         />
       </div>
       <div
-        className={`mt-2 font-display text-2xl font-bold ${
-          isWarning ? "text-warning" : isPositive ? "text-success" : ""
+        className={`mt-2 font-display text-[30px] font-extrabold leading-none tracking-[-0.02em] ${
+          isWarning ? "text-warning-text" : isPositive ? "text-success" : "text-navy-ink"
         }`}
       >
         {value}
       </div>
-      {sub && <div className="mt-1 text-[11px] text-muted-foreground">{sub}</div>}
+      {sub && <div className="mt-1.5 text-[12.5px] text-muted-foreground">{sub}</div>}
     </div>
   );
   return href
-    ? <Link to={href} className="block transition-transform hover:-translate-y-0.5 focus:outline-none">{card}</Link>
+    ? <Link to={href} className="block rounded-xl transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">{card}</Link>
     : card;
 }
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+    <h2 className="mb-3 font-mono-label text-[11.5px] uppercase tracking-[0.2em] text-teal-deep">
       {children}
     </h2>
   );
@@ -105,6 +114,7 @@ function SkeletonGrid({ count = 4 }: { count?: number }) {
 }
 
 export default function AdminMetrics() {
+  const { t } = useLanguage();
   const { data, isLoading, isError } = useQuery<AdminMetricsData>({
     queryKey: queryKeys.adminMetrics.all(),
     queryFn: () => apiClient.get<AdminMetricsData>("/admin/metrics"),
@@ -112,13 +122,23 @@ export default function AdminMetrics() {
     retry: false,
   });
 
+  const heading = (
+    <div>
+      <span className="font-mono-label text-[11.5px] uppercase tracking-[0.2em] text-teal-deep">
+        {t("admin.health.eyebrow")}
+      </span>
+      <div className="mt-1 flex items-center gap-2">
+        <BarChart2 className="h-5 w-5 text-teal-deep" />
+        <h1 className="font-display text-2xl font-bold text-navy-ink">{t("admin.health.title")}</h1>
+      </div>
+      <p className="mt-1 text-sm text-muted-foreground">{t("admin.health.subtitle")}</p>
+    </div>
+  );
+
   if (isLoading) {
     return (
       <div className="space-y-8">
-        <div className="flex items-center gap-2">
-          <BarChart2 className="h-5 w-5 text-accent" />
-          <h1 className="font-display text-2xl font-bold">Health Metrics</h1>
-        </div>
+        {heading}
         <SkeletonGrid count={5} />
       </div>
     );
@@ -127,14 +147,11 @@ export default function AdminMetrics() {
   if (isError || !data) {
     return (
       <div className="space-y-8">
-        <div className="flex items-center gap-2">
-          <BarChart2 className="h-5 w-5 text-accent" />
-          <h1 className="font-display text-2xl font-bold">Health Metrics</h1>
-        </div>
+        {heading}
         <div className="rounded-xl border border-dashed border-border bg-secondary/30 p-10 text-center">
           <AlertTriangle className="mx-auto h-10 w-10 text-muted-foreground/40" />
           <p className="mt-3 text-sm font-medium text-muted-foreground">
-            Unable to load metrics. Ensure the backend is running.
+            {t("admin.health.loadError")}
           </p>
         </div>
       </div>
@@ -146,56 +163,81 @@ export default function AdminMetrics() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center gap-2">
-        <BarChart2 className="h-5 w-5 text-accent" />
-        <h1 className="font-display text-2xl font-bold">Health Metrics</h1>
-      </div>
+      {heading}
 
       {/* Bookings */}
       <section>
-        <SectionHeader>Bookings</SectionHeader>
+        <SectionHeader>{t("admin.health.bookings")}</SectionHeader>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <StatCard
-            label="Bookings (24h)"
+            label={t("admin.health.bookings24h")}
             value={data.bookings.last24h}
-            sub={`${data.bookings.last7d} in last 7 days`}
+            sub={t("admin.health.bookings7dSub").replace("{count}", String(data.bookings.last7d))}
             icon={CalendarCheck}
           />
           <StatCard
-            label="Pending payment"
+            label={t("admin.health.pendingPayment")}
             value={data.bookings.pendingPayment}
             icon={AlertTriangle}
             highlight
           />
           <StatCard
-            label="Confirmed / active"
+            label={t("admin.health.confirmedActive")}
             value={data.bookings.confirmed}
-            sub={`${data.bookings.cancelled} cancelled`}
+            sub={t("admin.health.cancelledSub").replace("{count}", String(data.bookings.cancelled))}
             icon={CalendarCheck}
             highlightWhenPositive
           />
         </div>
       </section>
 
+      {/* Discovery (free-acquisition model: visibility + demand capture) */}
+      {data.discovery && (
+        <section>
+          <SectionHeader>{t("admin.health.discovery")}</SectionHeader>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <StatCard
+              label={t("admin.health.searchAppearances")}
+              value={data.discovery.searchAppearances24h.toLocaleString()}
+              icon={Search}
+            />
+            <StatCard
+              label={t("admin.health.mapOpens")}
+              value={data.discovery.mapOpens24h.toLocaleString()}
+              icon={MapIcon}
+            />
+            <StatCard
+              label={t("admin.health.leadsCaptured")}
+              value={data.discovery.leadsCaptured24h.toLocaleString()}
+              icon={Megaphone}
+              href="/admin?tab=leads"
+              highlightWhenPositive
+            />
+          </div>
+        </section>
+      )}
+
       {/* Payments */}
       <section>
-        <SectionHeader>Payments</SectionHeader>
+        <SectionHeader>{t("admin.health.payments")}</SectionHeader>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <StatCard
-            label="Payment success rate (7d)"
+            label={t("admin.health.paymentSuccessRate")}
             value={successRatePct}
-            sub={`${data.payments.successLast24h} success · ${data.payments.failedLast24h} failed in last 24h`}
+            sub={t("admin.health.paymentSuccessSub")
+              .replace("{success}", String(data.payments.successLast24h))
+              .replace("{failed}", String(data.payments.failedLast24h))}
             icon={CreditCard}
             highlight={successRateWarning}
           />
           <StatCard
-            label="Successful payments (24h)"
+            label={t("admin.health.successfulPayments24h")}
             value={data.payments.successLast24h}
             icon={CreditCard}
             highlightWhenPositive
           />
           <StatCard
-            label="Failed / overdue (24h)"
+            label={t("admin.health.failedOverdue24h")}
             value={data.payments.failedLast24h}
             icon={AlertTriangle}
             highlight
@@ -205,16 +247,16 @@ export default function AdminMetrics() {
 
       {/* Contracts */}
       <section>
-        <SectionHeader>Contracts</SectionHeader>
+        <SectionHeader>{t("admin.health.contracts")}</SectionHeader>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <StatCard
-            label="Pending signature"
+            label={t("admin.health.pendingSignature")}
             value={data.contracts.pendingSignature}
             icon={FileSignature}
             highlight
           />
           <StatCard
-            label="Signed contracts"
+            label={t("admin.health.signedContracts")}
             value={data.contracts.signed}
             icon={FileSignature}
             highlightWhenPositive
@@ -224,33 +266,29 @@ export default function AdminMetrics() {
 
       {/* Locations */}
       <section>
-        <SectionHeader>Locations &amp; Partners</SectionHeader>
+        <SectionHeader>{t("admin.health.locationsPartners")}</SectionHeader>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <StatCard
-            label="Published locations"
+            label={t("admin.health.publishedLocations")}
             value={data.locations.published}
             icon={MapPin}
             highlightWhenPositive
           />
           <StatCard
-            label="Unpublished"
+            label={t("admin.health.unpublished")}
             value={data.locations.unpublished}
             icon={MapPin}
           />
           <StatCard
-            label="Pending partner applications"
+            label={t("admin.health.pendingApplications")}
             value={data.locations.pendingApproval}
-            sub="Click to review & approve →"
+            sub={t("admin.health.reviewApprove")}
             icon={AlertTriangle}
             highlight
             href="/admin?tab=suppliers"
           />
         </div>
       </section>
-
-      <p className="text-[11px] text-muted-foreground">
-        Data is live from the database · refreshes every 30 s
-      </p>
     </div>
   );
 }

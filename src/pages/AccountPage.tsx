@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { notificationService } from "@/services";
 import { Link, useNavigate, useSearchParams, localizedHref } from "@/i18n/routing";
@@ -6,11 +6,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createProfileSchema, createPasswordSchema, type ProfileForm, type PasswordForm } from "@/lib/schemas";
 import { toast } from "sonner";
-import { 
-  LayoutDashboard, Package, Heart, Search, Settings, Bell, Shield, CreditCard, 
+import {
+  LayoutDashboard, Package, Heart, Search, Bell, Shield,
   HelpCircle, ChevronRight, ChevronDown, Warehouse, Truck, CarFront, Clock, CheckCircle,
   XCircle, Play, Calendar, MapPin, LogOut, User, Send, MessageSquare, FileText,
-  Paperclip, Download, ArrowLeft, Loader2, Star
+  Download, ArrowLeft, Loader2, Star, Receipt, TrendingDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReviewDialog from "@/components/ReviewDialog";
@@ -61,7 +61,7 @@ function useSidebarLinks() {
     { id: "notifications", label: t("account.notifications"), icon: Bell },
     { id: "profile", label: t("account.profile"), icon: User },
     { id: "security", label: t("account.security"), icon: Shield },
-    { id: "billing", label: t("account.billing"), icon: CreditCard },
+    { id: "billing", label: t("account.billing"), icon: Receipt },
     { id: "help", label: t("account.help"), icon: HelpCircle },
   ];
 }
@@ -78,27 +78,28 @@ function MobileAccountNav({ tab, setTab, sidebarLinks, unreadMessages, unreadNot
 
   return (
     <div className="relative">
-      <button onClick={() => setOpen(!open)} aria-label={t("nav.menu")} aria-expanded={open} className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium transition-colors active:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
-        <span className="flex items-center gap-2.5"><CurrentIcon className="h-4 w-4 text-muted-foreground" />{current?.label || tab}</span>
+      <button onClick={() => setOpen(!open)} aria-label={t("nav.menu")} aria-expanded={open} className="flex min-h-[44px] w-full items-center justify-between rounded-[14px] border border-line bg-card px-4 py-3 text-sm font-semibold text-ink shadow-card transition-colors active:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+        <span className="flex items-center gap-2.5"><CurrentIcon className="h-[18px] w-[18px] text-teal-deep" />{current?.label || tab}</span>
         <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 right-0 top-full z-40 mt-1 rounded-xl border border-border bg-card p-1 shadow-xl max-h-[60vh] overflow-y-auto">
+          <div className="absolute left-0 right-0 top-full z-40 mt-1.5 max-h-[60vh] overflow-y-auto rounded-[14px] border border-line bg-card p-1.5 shadow-prominent">
             {sidebarLinks.map((l) => {
               const Icon = l.icon;
               const active = tab === l.id;
               const unread = l.id === "notifications" ? unreadNotifications : l.id === "messages" ? unreadMessages : 0;
               return (
-                <button key={l.id} onClick={() => { setTab(l.id); setOpen(false); }} aria-current={active ? "page" : undefined} className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
-                  <span className="flex items-center gap-2.5"><Icon className="h-4 w-4" />{l.label}</span>
-                  {unread > 0 && <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">{unread}</span>}
+                <button key={l.id} onClick={() => { setTab(l.id); setOpen(false); }} aria-current={active ? "page" : undefined} className={`flex min-h-[44px] w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${active ? "bg-navy-ink text-white" : "text-ink-2 hover:bg-secondary hover:text-ink"}`}>
+                  <span className="flex items-center gap-2.5"><Icon className={`h-[18px] w-[18px] ${active ? "text-teal" : "text-muted-foreground"}`} />{l.label}</span>
+                  {unread > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">{unread}</span>}
                 </button>
               );
             })}
-            <button onClick={() => { onLogout(); setOpen(false); }} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
-              <LogOut className="h-4 w-4" /> {t("account.logout")}
+            <div className="my-1.5 h-px bg-line" />
+            <button onClick={() => { onLogout(); setOpen(false); }} className="flex min-h-[44px] w-full items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+              <LogOut className="h-[18px] w-[18px]" /> {t("account.logout")}
             </button>
           </div>
         </>
@@ -135,45 +136,47 @@ export default function AccountPage() {
     : [];
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
+    <div className="flex min-h-[calc(100vh-4rem)] flex-col bg-background lg:flex-row">
       <SEO title={`${t("seo.account")} — Ruumly`} description="" noindex={true} />
-      <aside className="hidden w-56 shrink-0 border-r border-border bg-card lg:block">
-        <div className="p-4">
-          <p className="text-sm font-semibold">{user?.name}</p>
-          <p className="text-xs text-muted-foreground">{user?.email}</p>
-          <span className="mt-1 inline-block rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent capitalize">{role}</span>
+      <aside className="hidden w-[248px] shrink-0 border-r border-line bg-card lg:block">
+        <div className="px-7 py-6">
+          <p className="font-display text-[15px] font-bold text-navy-ink truncate">{user?.name}</p>
+          <p className="mt-0.5 truncate text-[12.5px] text-muted-foreground">{user?.email}</p>
+          <span className="mt-2.5 inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-semibold capitalize text-ink-2">{role}</span>
         </div>
         {roleDashboardLinks.length > 0 && (
-          <div className="px-2 mb-2">
+          <div className="mb-3 px-4">
             {roleDashboardLinks.map(dl => {
               const DlIcon = dl.icon;
               return (
-              <Link key={dl.to} to={dl.to} className="flex items-center gap-2 rounded-lg border border-dashed border-accent/30 bg-accent/5 px-3 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
-                <DlIcon className="h-4 w-4" /> {dl.label} <ChevronRight className="ml-auto h-3.5 w-3.5" />
+              <Link key={dl.to} to={dl.to} className="flex items-center gap-2 rounded-[10px] border border-teal-deep/25 bg-teal-deep/[0.07] px-3 py-2.5 text-sm font-semibold text-teal-deep transition-colors hover:bg-teal-deep/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+                <DlIcon className="h-[18px] w-[18px]" /> {dl.label} <ChevronRight className="ml-auto h-3.5 w-3.5" />
               </Link>
               );
             })}
           </div>
         )}
-        <nav className="space-y-0.5 px-2">
+        <p className="px-7 pb-2 font-mono text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">{t("account.sectionLabel")}</p>
+        <nav className="space-y-0.5 px-4">
           {sidebarLinks.map((l) => {
             const Icon = l.icon;
             const active = tab === l.id;
             const unread = l.id === "notifications" ? unreadNotifications : l.id === "messages" ? unreadMessages : 0;
             return (
-              <button key={l.id} onClick={() => setTab(l.id)} aria-current={active ? "page" : undefined} className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
-                <span className="flex items-center gap-2.5"><Icon className="h-4 w-4" />{l.label}</span>
-                {unread > 0 && <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">{unread}</span>}
+              <button key={l.id} onClick={() => setTab(l.id)} aria-current={active ? "page" : undefined} className={`flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${active ? "bg-navy-ink text-white" : "text-ink-2 hover:bg-secondary hover:text-ink"}`}>
+                <span className="flex items-center gap-2.5"><Icon className={`h-[18px] w-[18px] ${active ? "text-teal" : "text-muted-foreground"}`} />{l.label}</span>
+                {unread > 0 && <span className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold ${active ? "bg-teal text-navy-ink" : "bg-accent text-accent-foreground"}`}>{unread}</span>}
               </button>
             );
           })}
-          <button onClick={handleLogout} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
-            <LogOut className="h-4 w-4" /> {t("account.logout")}
+          <div className="my-2 h-px bg-line" />
+          <button onClick={handleLogout} className="flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+            <LogOut className="h-[18px] w-[18px]" /> {t("account.logout")}
           </button>
         </nav>
       </aside>
 
-      <div className="flex-1 min-w-0 p-4 sm:p-6">
+      <div className="min-w-0 flex-1 p-4 sm:p-6 lg:px-10 lg:py-9">
         {/* Mobile: compact dropdown navigation */}
         <div className="mb-4 lg:hidden">
           {roleDashboardLinks.length > 0 && (
@@ -181,7 +184,7 @@ export default function AccountPage() {
               {roleDashboardLinks.map(dl => {
                 const DlIcon = dl.icon;
                 return (
-                <Link key={dl.to} to={dl.to} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-dashed border-accent/30 bg-accent/5 px-3 py-2 text-xs font-medium text-accent transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
+                <Link key={dl.to} to={dl.to} className="flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-teal-deep/25 bg-teal-deep/[0.07] px-3 py-2 text-xs font-semibold text-teal-deep transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                   <DlIcon className="h-3.5 w-3.5" /> {dl.label}
                 </Link>
                 );
@@ -215,48 +218,90 @@ function AccountOverview({ onNavigate }: { onNavigate: (tab: string) => void }) 
   const { t } = useLanguage();
   if (isLoading) return <SkeletonList count={3} />;
   return (
-    <div>
+    <div className="animate-slide-up">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="font-display text-2xl font-bold">{t("account.welcome")}</h1>
-        <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-semibold text-accent capitalize">{role}</span>
+        <h1 className="font-display text-[28px] font-extrabold tracking-tight text-navy-ink">{t("account.welcome")}</h1>
+        <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold capitalize text-ink-2">{role}</span>
       </div>
-      <p className="mt-1 text-sm text-muted-foreground">{t("account.welcomeDesc")}</p>
+      <p className="mt-1.5 text-sm text-muted-foreground">{t("account.welcomeDesc")}</p>
 
       {/* Role dashboard shortcuts */}
       {role === "provider" && (
-        <Link to="/provider/dashboard" className="mt-4 flex items-center justify-between rounded-xl border border-accent/20 bg-accent/5 p-4 hover:bg-accent/10 transition-colors">
-          <span className="flex items-center gap-2 text-sm font-medium text-accent"><LayoutDashboard className="h-4 w-4" /> {t("nav.providerDashboard") || "Partneri paneel"}</span>
-          <ChevronRight className="h-4 w-4 text-accent" />
+        <Link to="/provider/dashboard" className="mt-5 flex items-center justify-between rounded-[14px] border border-teal-deep/20 bg-teal-deep/[0.06] p-4 shadow-card transition-colors hover:border-teal-deep/40 hover:bg-teal-deep/[0.1]">
+          <span className="flex items-center gap-2.5 text-sm font-semibold text-teal-deep"><LayoutDashboard className="h-[18px] w-[18px]" /> {t("nav.providerDashboard") || "Partneri paneel"}</span>
+          <ChevronRight className="h-4 w-4 text-teal-deep" />
         </Link>
       )}
       {role === "admin" && (
-        <Link to="/admin" className="mt-4 flex items-center justify-between rounded-xl border border-accent/20 bg-accent/5 p-4 hover:bg-accent/10 transition-colors">
-          <span className="flex items-center gap-2 text-sm font-medium text-accent"><Shield className="h-4 w-4" /> Admin</span>
-          <ChevronRight className="h-4 w-4 text-accent" />
+        <Link to="/admin" className="mt-5 flex items-center justify-between rounded-[14px] border border-teal-deep/20 bg-teal-deep/[0.06] p-4 shadow-card transition-colors hover:border-teal-deep/40 hover:bg-teal-deep/[0.1]">
+          <span className="flex items-center gap-2.5 text-sm font-semibold text-teal-deep"><Shield className="h-[18px] w-[18px]" /> Admin</span>
+          <ChevronRight className="h-4 w-4 text-teal-deep" />
         </Link>
       )}
 
-      <div className="mt-6 grid gap-4 grid-cols-2 sm:grid-cols-3">
-        <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">{t("account.activeBookings")}</div><div className="mt-1 font-display text-2xl font-bold">{active.length}</div></div>
-        <div className="card-elevated p-5"><div className="text-sm text-muted-foreground">{t("account.pendingApproval")}</div><div className="mt-1 font-display text-2xl font-bold text-warning-text">{pending.length}</div></div>
-        <div className="card-elevated p-5 col-span-2 sm:col-span-1"><div className="text-sm text-muted-foreground">{t("account.totalSavings")}</div><div className="mt-1 font-display text-2xl font-bold text-accent">€{calculateTotalSavings(bookings).toFixed(2)}</div></div>
+      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <StatCard label={t("account.activeBookings")} value={String(active.length)} icon={Package} />
+        <StatCard label={t("account.pendingApproval")} value={String(pending.length)} icon={Clock} valueClass="text-warning-text" />
+        <StatCard label={t("account.totalSavings")} value={`€${calculateTotalSavings(bookings).toFixed(2)}`} icon={TrendingDown} valueClass="text-accent" className="col-span-2 sm:col-span-1" />
       </div>
       {pending.length > 0 && (
-        <div className="mt-6"><h2 className="font-display text-lg font-semibold">{t("account.pendingBookings")}</h2><div className="mt-3 space-y-2">{pending.map(b => <BookingCard key={b.id} booking={b} />)}</div></div>
+        <div className="mt-7"><h2 className="font-display text-lg font-bold text-navy-ink">{t("account.pendingBookings")}</h2><div className="mt-3 space-y-2.5">{pending.map(b => <BookingCard key={b.id} booking={b} />)}</div></div>
       )}
       {active.length > 0 && (
-        <div className="mt-6"><h2 className="font-display text-lg font-semibold">{t("account.activeBookings")}</h2><div className="mt-3 space-y-2">{active.map(b => <BookingCard key={b.id} booking={b} />)}</div></div>
+        <div className="mt-7"><h2 className="font-display text-lg font-bold text-navy-ink">{t("account.activeBookings")}</h2><div className="mt-3 space-y-2.5">{active.map(b => <BookingCard key={b.id} booking={b} />)}</div></div>
       )}
-      <div className="mt-6 grid gap-3 sm:grid-cols-2">
-        <button onClick={() => onNavigate("messages")} className="flex items-center justify-between rounded-xl border border-border p-4 transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
-          <span className="flex items-center gap-2 text-sm font-medium"><MessageSquare className="h-4 w-4 text-accent" /> {t("account.messages")}</span>
+      <div className="mt-7 grid gap-3 sm:grid-cols-2">
+        <button onClick={() => onNavigate("messages")} className="flex min-h-[44px] items-center justify-between rounded-[14px] border border-line bg-card p-4 shadow-card transition-all hover:-translate-y-0.5 hover:border-teal-deep/40 hover:shadow-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+          <span className="flex items-center gap-2.5 text-sm font-semibold text-ink"><MessageSquare className="h-[18px] w-[18px] text-teal-deep" /> {t("account.messages")}</span>
           <span className="text-sm text-muted-foreground">0 {t("account.unread")}</span>
         </button>
-        <button onClick={() => onNavigate("bookings")} className="flex items-center justify-between rounded-xl border border-border p-4 transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
-          <span className="flex items-center gap-2 text-sm font-medium"><Package className="h-4 w-4 text-accent" /> {t("account.bookings")}</span>
+        <button onClick={() => onNavigate("bookings")} className="flex min-h-[44px] items-center justify-between rounded-[14px] border border-line bg-card p-4 shadow-card transition-all hover:-translate-y-0.5 hover:border-teal-deep/40 hover:shadow-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+          <span className="flex items-center gap-2.5 text-sm font-semibold text-ink"><Package className="h-[18px] w-[18px] text-teal-deep" /> {t("account.bookings")}</span>
           <span className="text-sm text-muted-foreground">{bookings.length}</span>
         </button>
       </div>
+    </div>
+  );
+}
+
+/* ─── Shared UI bits (new tokens) ─── */
+function StatCard({ label, value, icon: Icon, valueClass = "text-navy-ink", className = "" }: {
+  label: string; value: string; icon: typeof Package; valueClass?: string; className?: string;
+}) {
+  return (
+    <div className={`rounded-[14px] border border-line bg-card p-5 shadow-card ${className}`}>
+      <div className="flex items-start justify-between">
+        <span className="text-[13px] text-muted-foreground">{label}</span>
+        <Icon className="h-[18px] w-[18px] text-muted-foreground/70" />
+      </div>
+      <div className={`mt-2 font-display text-[30px] font-extrabold leading-none tracking-tight ${valueClass}`}>{value}</div>
+    </div>
+  );
+}
+
+function PageHead({ title, subtitle, action }: { title: string; subtitle?: string; action?: ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h1 className="font-display text-[28px] font-extrabold tracking-tight text-navy-ink">{title}</h1>
+        {subtitle && <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>}
+      </div>
+      {action}
+    </div>
+  );
+}
+
+/* Icon tile (.itile) — 46×46, radius 14 */
+function ITile({ icon: Icon, variant = "teal", className = "" }: { icon: typeof Package; variant?: "teal" | "navy" | "green" | "warn"; className?: string }) {
+  const styles = {
+    teal: "bg-teal-deep/[0.16] text-teal-deep",
+    navy: "bg-navy-ink/10 text-navy-ink",
+    green: "bg-success/10 text-success",
+    warn: "bg-warning/15 text-warning-text",
+  }[variant];
+  return (
+    <div className={`flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[14px] ${styles} ${className}`}>
+      <Icon className="h-[22px] w-[22px]" />
     </div>
   );
 }
@@ -322,17 +367,17 @@ function BookingCard({ booking }: { booking: Booking }) {
 
   return (
     <>
-      <button onClick={() => setOpen(true)} className="flex w-full items-center justify-between rounded-xl border border-border p-4 text-left transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
-        <div className="flex items-center gap-3 min-w-0 flex-1">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary"><Icon className="h-5 w-5 text-muted-foreground" /></div>
+      <button onClick={() => setOpen(true)} className="flex w-full items-center justify-between gap-2 rounded-[14px] border border-line bg-card p-4 text-left shadow-card transition-all hover:-translate-y-0.5 hover:border-teal-deep/40 hover:shadow-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+        <div className="flex min-w-0 flex-1 items-center gap-3.5">
+          <div className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[14px] bg-navy-ink/10 text-navy-ink"><Icon className="h-[22px] w-[22px]" /></div>
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-medium truncate">{booking.listingTitle}</div>
-            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground"><MapPin className="h-3 w-3 shrink-0" />{booking.city}<Calendar className="h-3 w-3 ml-1 shrink-0" />{booking.startDate}</div>
+            <div className="truncate font-display text-sm font-bold text-ink">{booking.listingTitle}</div>
+            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground"><MapPin className="h-3 w-3 shrink-0" />{booking.city}<Calendar className="ml-1 h-3 w-3 shrink-0" />{booking.startDate}</div>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
-          <span className={`flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ${status.color}`}><StatusIcon className="h-3 w-3" />{status.label}</span>
-          <span className="text-sm font-semibold">€{booking.total}</span>
+        <div className="ml-2 flex shrink-0 flex-col items-end gap-1.5">
+          <span className={`flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${status.color}`}><StatusIcon className="h-3 w-3" />{status.label}</span>
+          <span className="font-display text-sm font-bold text-navy-ink">€{booking.total}</span>
         </div>
       </button>
       <Dialog open={open} onOpenChange={setOpen}>
@@ -481,11 +526,11 @@ function AccountBookings() {
   if (isLoading) return <SkeletonList count={4} />;
 
   return (
-    <div>
-      <h1 className="font-display text-2xl font-bold">{t("account.bookings")}</h1>
-      <div className="mt-4 hidden sm:flex gap-2 overflow-x-auto">
+    <div className="animate-slide-up">
+      <PageHead title={t("account.bookings")} />
+      <div className="mt-5 hidden gap-2 overflow-x-auto sm:flex">
         {(["all", "pending", "confirmed", "active", "completed", "cancelled"] as const).map(f => (
-          <button key={f} onClick={() => setFilter(f)} aria-pressed={filter === f} className={`shrink-0 rounded-full px-3 py-2 text-xs font-medium transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 sm:py-1.5 ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
+          <button key={f} onClick={() => setFilter(f)} aria-pressed={filter === f} className={`shrink-0 rounded-full border px-3.5 py-2 text-[13px] font-semibold transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${filter === f ? "border-navy-ink bg-navy-ink text-white" : "border-line-2 bg-card text-ink-2 hover:border-navy-ink hover:text-navy-ink"}`}>
             {f === "all" ? t("account.all") : statusConfig[f].label} ({f === "all" ? bookings.length : bookings.filter(b => b.status === f).length})
           </button>
         ))}
@@ -494,7 +539,7 @@ function AccountBookings() {
         value={filter}
         onChange={(e) => setFilter(e.target.value as BookingStatus | "all")}
         aria-label={t("account.bookings")}
-        className="mt-4 w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent sm:hidden">
+        className="mt-5 w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15 sm:hidden">
         <option value="all">{t("account.all")} ({bookings.length})</option>
         <option value="pending">{statusConfig.pending.label} ({bookings.filter(b => b.status === "pending").length})</option>
         <option value="confirmed">{statusConfig.confirmed.label} ({bookings.filter(b => b.status === "confirmed").length})</option>
@@ -502,22 +547,30 @@ function AccountBookings() {
         <option value="completed">{statusConfig.completed.label} ({bookings.filter(b => b.status === "completed").length})</option>
         <option value="cancelled">{statusConfig.cancelled.label} ({bookings.filter(b => b.status === "cancelled").length})</option>
       </select>
-      <div className="mt-4 space-y-2">
+      <div className="mt-5 space-y-2.5">
         {filtered.length === 0 ? (
-          <div className="mx-auto flex max-w-sm flex-col items-center rounded-2xl bg-secondary/30 px-6 py-16 text-center">
-            <Package className="h-12 w-12 text-muted-foreground/50" />
-            <p className="mt-4 font-display text-base font-semibold">
-              {filter === "all" ? t("empty.bookings.title") : t("empty.bookings.filtered")}
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {filter === "all" ? t("empty.bookings.desc") : t("empty.bookings.filteredDesc")}
-            </p>
-            {filter === "all" && (
-              <Link to="/search"><Button className="mt-5 bg-accent text-accent-foreground">{t("empty.bookings.cta")}</Button></Link>
-            )}
-          </div>
+          <EmptyState
+            icon={Package}
+            title={filter === "all" ? t("empty.bookings.title") : t("empty.bookings.filtered")}
+            desc={filter === "all" ? t("empty.bookings.desc") : t("empty.bookings.filteredDesc")}
+            cta={filter === "all" ? <Link to="/search"><Button className="min-h-[44px] bg-accent px-6 text-accent-foreground hover:bg-brand-greenDeep">{t("empty.bookings.cta")}</Button></Link> : undefined}
+          />
         ) : filtered.map(b => <BookingCard key={b.id} booking={b} />)}
       </div>
+    </div>
+  );
+}
+
+/* Empty state — centered tile + heading + line + optional CTA */
+function EmptyState({ icon: Icon, title, desc, cta }: { icon: typeof Package; title: string; desc?: string; cta?: ReactNode }) {
+  return (
+    <div className="mx-auto flex max-w-sm flex-col items-center rounded-[18px] border border-line bg-card px-6 py-16 text-center shadow-card">
+      <div className="flex h-[54px] w-[54px] items-center justify-center rounded-2xl bg-secondary">
+        <Icon className="h-[26px] w-[26px] text-muted-foreground" />
+      </div>
+      <p className="mt-4 font-display text-lg font-bold text-navy-ink">{title}</p>
+      {desc && <p className="mt-1.5 text-sm text-muted-foreground">{desc}</p>}
+      {cta && <div className="mt-5">{cta}</div>}
     </div>
   );
 }
@@ -587,42 +640,41 @@ function AccountMessages() {
   const booking = selectedBooking ? bookings.find(b => b.id === selectedBooking) : null;
 
   return (
-    <div>
-      <h1 className="font-display text-2xl font-bold">{t("account.messages")}</h1>
-      <p className="mt-1 text-sm text-muted-foreground">{t("account.messagesDesc")}</p>
-      <div className="mt-6 grid gap-4 lg:grid-cols-[280px_1fr]">
+    <div className="animate-slide-up">
+      <PageHead title={t("account.messages")} subtitle={t("account.messagesDesc")} />
+      <div className="mt-6 grid gap-4 lg:grid-cols-[300px_1fr]">
         {/* Conversation list */}
-        <div className={`space-y-1 rounded-xl border border-border p-2 lg:block ${selectedBooking ? 'hidden' : 'block'}`}>
+        <div className={`space-y-1 rounded-[14px] border border-line bg-card p-2 shadow-card lg:block ${selectedBooking ? 'hidden' : 'block'}`}>
           {conversations.length === 0 ? (
-            <div className="flex flex-col items-center py-8 text-center"><MessageSquare className="h-8 w-8 text-muted-foreground/30" /><p className="mt-2 text-xs text-muted-foreground">{t("account.noMessages")}</p></div>
+            <div className="flex flex-col items-center py-10 text-center"><MessageSquare className="h-8 w-8 text-muted-foreground/30" /><p className="mt-2 text-xs text-muted-foreground">{t("account.noMessages")}</p></div>
           ) : conversations.map(c => (
-            <button key={c.bookingId} onClick={() => handleSelectBooking(c.bookingId)} aria-current={selectedBooking === c.bookingId ? "true" : undefined} className={`flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${selectedBooking === c.bookingId ? "bg-accent/10" : "hover:bg-secondary/50"}`}>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium truncate">{c.listingTitle}</p>
-                <p className="mt-0.5 text-[11px] text-muted-foreground truncate">{c.provider}</p>
+            <button key={c.bookingId} onClick={() => handleSelectBooking(c.bookingId)} aria-current={selectedBooking === c.bookingId ? "true" : undefined} className={`flex w-full items-start gap-3 rounded-[10px] p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${selectedBooking === c.bookingId ? "bg-secondary" : "hover:bg-secondary/60"}`}>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-display text-[13px] font-bold text-ink">{c.listingTitle}</p>
+                <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{c.provider}</p>
               </div>
             </button>
           ))}
         </div>
 
         {/* Chat area */}
-        <div className={`rounded-xl border border-border ${selectedBooking ? 'block' : 'hidden lg:block'}`}>
+        <div className={`rounded-[14px] border border-line bg-card shadow-card ${selectedBooking ? 'block' : 'hidden lg:block'}`}>
           {!selectedBooking ? (
             <div className="flex flex-col items-center justify-center py-12 sm:py-20"><MessageSquare className="h-10 w-10 text-muted-foreground/20" /><p className="mt-3 text-sm text-muted-foreground">{t("account.selectConversation")}</p></div>
           ) : (
-            <div className="flex flex-col h-[calc(100vh-16rem)] lg:h-[500px]">
+            <div className="flex h-[calc(100vh-16rem)] flex-col lg:h-[500px]">
               <button
                 onClick={() => setSelectedBooking(null)}
                 aria-label={t("account.chat.backToList")}
-                className="flex items-center gap-1.5 px-3 pt-3 text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 lg:hidden"
+                className="flex items-center gap-1.5 px-3 pt-3 text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 lg:hidden"
               >
                 <ArrowLeft className="h-3.5 w-3.5" /> {t("account.chat.backToList")}
               </button>
-              <div className="border-b border-border p-3">
-                <p className="text-sm font-semibold">{booking?.listingTitle}</p>
+              <div className="border-b border-line p-4">
+                <p className="font-display text-sm font-bold text-ink">{booking?.listingTitle}</p>
                 <p className="text-xs text-muted-foreground">{booking?.provider} · {booking?.id}</p>
               </div>
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              <div className="flex-1 space-y-3 overflow-y-auto p-4">
                 {msgsLoading ? (
                   <div className="flex justify-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -633,17 +685,17 @@ function AccountMessages() {
                   </div>
                 ) : activeMessages.map((m: any) => (
                   <div key={m.id} className={`flex ${m.from === "customer" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[75%] rounded-xl px-3 py-2 ${m.from === "customer" ? "bg-accent text-accent-foreground" : m.from === "admin" ? "bg-primary/10 text-foreground" : "bg-secondary text-foreground"}`}>
+                    <div className={`max-w-[75%] px-3.5 py-2.5 text-sm ${m.from === "customer" ? "rounded-[14px_14px_4px_14px] bg-navy-ink text-white" : m.from === "admin" ? "rounded-[14px_14px_14px_4px] bg-teal-deep/[0.12] text-ink" : "rounded-[14px_14px_14px_4px] bg-secondary text-ink"}`}>
                       <p className="text-[10px] font-medium opacity-70">{m.senderName}</p>
-                      <p className="text-xs mt-0.5">{m.text}</p>
-                      <p className="text-[9px] opacity-50 mt-1">{m.createdAt}</p>
+                      <p className="mt-0.5 text-sm">{m.text}</p>
+                      <p className="mt-1 text-[9px] opacity-50">{m.createdAt}</p>
                     </div>
                   </div>
                 ))}
               </div>
-              <div className="border-t border-border p-3 flex gap-2 overflow-hidden">
-                <input value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} aria-label={t("account.chat.inputPlaceholder")} placeholder={t("account.chat.inputPlaceholder")} className="flex-1 min-w-0 rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-                <Button size="sm" aria-label={t("common.send")} onClick={sendMessage} disabled={!newMsg.trim() || sendMutation.isPending} className="bg-accent text-accent-foreground">
+              <div className="flex gap-2 overflow-hidden border-t border-line p-3">
+                <input value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} aria-label={t("account.chat.inputPlaceholder")} placeholder={t("account.chat.inputPlaceholder")} className="min-w-0 flex-1 rounded-[10px] border border-line-2 bg-card px-3.5 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" />
+                <Button size="sm" aria-label={t("common.send")} onClick={sendMessage} disabled={!newMsg.trim() || sendMutation.isPending} className="min-h-[44px] bg-accent px-4 text-accent-foreground hover:bg-brand-greenDeep">
                   {sendMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 </Button>
               </div>
@@ -663,16 +715,16 @@ function AccountFavorites() {
   const favListings = allListings.filter(l => favorites.includes(l.id));
 
   return (
-    <div>
-      <h1 className="font-display text-2xl font-bold">{t("account.favorites.title")}</h1>
+    <div className="animate-slide-up">
+      <PageHead title={t("account.favorites.title")} subtitle={t("account.favoritesHint")} />
       {favListings.length === 0 ? (
-        <div className="py-16 text-center">
-          <Heart className="mx-auto h-12 w-12 text-muted-foreground/20" />
-          <p className="mt-4 text-sm font-medium">{t("account.favorites.empty")}</p>
-          <p className="mt-1 text-xs text-muted-foreground">{t("account.favoritesHint")}</p>
-          <Link to="/search">
-            <Button className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90">{t("account.favorites.cta")}</Button>
-          </Link>
+        <div className="mt-6">
+          <EmptyState
+            icon={Heart}
+            title={t("account.favorites.empty")}
+            desc={t("account.favoritesHint")}
+            cta={<Link to="/search"><Button className="min-h-[44px] bg-accent px-6 text-accent-foreground hover:bg-brand-greenDeep">{t("account.favorites.cta")}</Button></Link>}
+          />
         </div>
       ) : (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -688,17 +740,15 @@ function AccountFavorites() {
 function AccountSearches() {
   const { t } = useLanguage();
   return (
-    <div>
-      <h1 className="font-display text-2xl font-bold">{t("account.savedSearches")}</h1>
-      <div className="py-16 text-center">
-        <Search className="mx-auto h-10 w-10 text-muted-foreground/20 mb-3" />
-        <p className="font-display text-base font-semibold">{t("account.noSavedSearches")}</p>
-        <p className="mt-1 text-sm text-muted-foreground max-w-xs mx-auto">
-           {t("account.savedSearchesNote")}
-         </p>
-         <Link to="/search">
-           <Button variant="outline" className="mt-4">{t("account.goToSearch")}</Button>
-         </Link>
+    <div className="animate-slide-up">
+      <PageHead title={t("account.savedSearches")} subtitle={t("account.savedSearchesNote")} />
+      <div className="mt-6">
+        <EmptyState
+          icon={Search}
+          title={t("account.noSavedSearches")}
+          desc={t("account.savedSearchesNote")}
+          cta={<Link to="/search"><Button className="min-h-[44px] bg-accent px-6 text-accent-foreground hover:bg-brand-greenDeep">{t("account.goToSearch")}</Button></Link>}
+        />
       </div>
     </div>
   );
@@ -751,50 +801,49 @@ function AccountNotifications() {
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">{t("account.notifications")}</h1>
-        {hasUnread && (
+    <div className="animate-slide-up">
+      <PageHead
+        title={t("account.notifications")}
+        action={hasUnread ? (
           <button
             onClick={() => markAll.mutate()}
-            className="rounded text-xs text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+            className="min-h-[44px] rounded-[10px] px-3 text-sm font-semibold text-teal-deep transition-colors hover:bg-teal-deep/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             {t("account.markAllRead")}
           </button>
-        )}
-      </div>
+        ) : undefined}
+      />
 
       {notifications.length === 0 ? (
-        <div className="mx-auto flex max-w-sm flex-col items-center rounded-2xl bg-secondary/30 px-6 py-16 text-center">
-          <Bell className="h-12 w-12 text-muted-foreground/50" />
-          <p className="mt-4 font-display text-base font-semibold">{t("empty.notifications.title")}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{t("empty.notifications.desc")}</p>
+        <div className="mt-6">
+          <EmptyState icon={Bell} title={t("empty.notifications.title")} desc={t("empty.notifications.desc")} />
         </div>
       ) : (
-        <div className="mt-4 space-y-2">
+        <div className="mt-5 space-y-2.5">
           {notifications.map((n: any) => (
             <div
               key={n.id}
               onClick={() => handleNotificationClick(n)}
-              className={`rounded-xl border border-border p-4 transition-colors
+              className={`flex items-start gap-3.5 rounded-[14px] border border-line bg-card p-4 shadow-card transition-all
                 ${n.read ? "opacity-60" : ""}
-                ${n.actionUrl ? "cursor-pointer hover:bg-secondary/50 hover:border-accent/30" : ""}`}
+                ${n.actionUrl ? "cursor-pointer hover:-translate-y-0.5 hover:border-teal-deep/40 hover:shadow-elevated" : ""}`}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-2 min-w-0">
-                  {!n.read && (
-                    <div className="mt-1.5 h-2 w-2 rounded-full bg-accent shrink-0" />
-                  )}
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">{n.title}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{n.desc}</p>
-                    <p className="mt-1 text-[10px] text-muted-foreground">{n.time}</p>
-                  </div>
+              <div className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[12px] bg-teal-deep/[0.16] text-teal-deep">
+                <Bell className="h-[18px] w-[18px]" />
+              </div>
+              <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="flex items-center gap-2 font-display text-sm font-bold text-ink">
+                    {!n.read && <span className="h-2 w-2 shrink-0 rounded-full bg-accent" />}
+                    {n.title}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{n.desc}</p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">{n.time}</p>
                 </div>
                 {!n.read && (
                   <button
                     onClick={(e) => { e.stopPropagation(); markOne.mutate(n.id); }}
-                    className="shrink-0 rounded-lg border border-border px-2.5 py-1 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 whitespace-nowrap"
+                    className="shrink-0 whitespace-nowrap rounded-[8px] border border-line-2 px-2.5 py-1.5 text-[10px] font-semibold text-muted-foreground transition-colors hover:border-navy-ink hover:text-navy-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
                     {t("notifications.markRead")}
                   </button>
@@ -825,22 +874,34 @@ function AccountProfile() {
     }
   };
 
+  const initials = (user?.name || "").trim().charAt(0).toUpperCase() || "?";
+
   return (
-    <div>
-      <h1 className="font-display text-2xl font-bold">{t("account.profileSettings")}</h1>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 max-w-lg space-y-4">
-        <div>
-          <label htmlFor="profile-name" className="text-xs font-medium text-muted-foreground">{t("account.name")}</label>
-          <input id="profile-name" className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" {...form.register("name")} />
-          {form.formState.errors.name && <p role="alert" className="mt-1 text-xs text-destructive">{form.formState.errors.name.message}</p>}
+    <div className="animate-slide-up">
+      <PageHead title={t("account.profileSettings")} />
+      <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 max-w-lg space-y-5 rounded-[14px] border border-line bg-card p-6 shadow-card">
+        <div className="flex items-center gap-4">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-navy-ink font-display text-2xl font-extrabold text-white">{initials}</div>
+          <div className="min-w-0">
+            <p className="truncate font-display text-base font-bold text-navy-ink">{user?.name}</p>
+            <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
+          </div>
         </div>
-        <div><label htmlFor="profile-email" className="text-xs font-medium text-muted-foreground">{t("account.emailLabel")}</label><input id="profile-email" className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-muted-foreground" value={user?.email || ""} disabled /></div>
-        <div>
-          <label htmlFor="profile-phone" className="text-xs font-medium text-muted-foreground">{t("account.phoneLabel")}</label>
-          <input id="profile-phone" className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" {...form.register("phone")} />
-          {form.formState.errors.phone && <p role="alert" className="mt-1 text-xs text-destructive">{form.formState.errors.phone.message}</p>}
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="profile-name" className="text-[13px] font-semibold text-ink-2">{t("account.name")}</label>
+          <input id="profile-name" className="w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...form.register("name")} />
+          {form.formState.errors.name && <p role="alert" className="text-xs text-destructive">{form.formState.errors.name.message}</p>}
         </div>
-        <Button type="submit" className="bg-accent text-accent-foreground hover:bg-accent/90">{t("form.save")}</Button>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="profile-email" className="text-[13px] font-semibold text-ink-2">{t("account.emailLabel")}</label>
+          <input id="profile-email" className="w-full rounded-[10px] border border-line-2 bg-secondary px-3.5 py-3 text-sm text-muted-foreground" value={user?.email || ""} disabled />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="profile-phone" className="text-[13px] font-semibold text-ink-2">{t("account.phoneLabel")}</label>
+          <input id="profile-phone" className="w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...form.register("phone")} />
+          {form.formState.errors.phone && <p role="alert" className="text-xs text-destructive">{form.formState.errors.phone.message}</p>}
+        </div>
+        <Button type="submit" className="min-h-[44px] bg-accent px-6 text-accent-foreground hover:bg-brand-greenDeep">{t("form.save")}</Button>
       </form>
     </div>
   );
@@ -875,55 +936,55 @@ function AccountSecurity() {
   };
 
   return (
-    <div>
-       <h1 className="font-display text-2xl font-bold">{t("account.security")}</h1>
+    <div className="animate-slide-up">
+      <PageHead title={t("account.security")} />
       <div className="mt-6 max-w-lg space-y-4">
-        <div className="rounded-xl border border-border p-4">
-          <h3 className="text-sm font-semibold">{t("account.password")}</h3>
-          <p className="text-xs text-muted-foreground mt-1">{t("account.lastChanged")}</p>
+        <div className="rounded-[14px] border border-line bg-card p-5 shadow-card">
+          <h3 className="font-display text-sm font-bold text-ink">{t("account.password")}</h3>
+          <p className="mt-1 text-xs text-muted-foreground">{t("account.lastChanged")}</p>
           {!changingPw ? (
-            <Button variant="outline" size="sm" className="mt-3" onClick={() => setChangingPw(true)}>{t("account.changePassword")}</Button>
+            <Button variant="outline" size="sm" className="mt-3 min-h-[40px] border-line-2 text-navy-ink hover:border-navy-ink" onClick={() => setChangingPw(true)}>{t("account.changePassword")}</Button>
           ) : (
-            <form onSubmit={pwForm.handleSubmit(onSubmit)} className="mt-3 space-y-3">
+            <form onSubmit={pwForm.handleSubmit(onSubmit)} className="mt-4 space-y-3">
               <div>
-                <input type="password" aria-label={t("account.currentPasswordPlaceholder")} placeholder={t("account.currentPasswordPlaceholder")} {...pwForm.register("currentPassword")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                <input type="password" aria-label={t("account.currentPasswordPlaceholder")} placeholder={t("account.currentPasswordPlaceholder")} {...pwForm.register("currentPassword")} className="w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" />
                 {pwForm.formState.errors.currentPassword && <p role="alert" className="mt-1 text-xs text-destructive">{pwForm.formState.errors.currentPassword.message}</p>}
               </div>
               <div>
-                <input type="password" aria-label={t("account.newPasswordPlaceholder")} placeholder={t("account.newPasswordPlaceholder")} {...pwForm.register("newPassword")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                <input type="password" aria-label={t("account.newPasswordPlaceholder")} placeholder={t("account.newPasswordPlaceholder")} {...pwForm.register("newPassword")} className="w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" />
                 {pwForm.formState.errors.newPassword && <p role="alert" className="mt-1 text-xs text-destructive">{pwForm.formState.errors.newPassword.message}</p>}
               </div>
               <div>
-                <input type="password" aria-label={t("account.confirmPasswordPlaceholder")} placeholder={t("account.confirmPasswordPlaceholder")} {...pwForm.register("confirmPassword")} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                <input type="password" aria-label={t("account.confirmPasswordPlaceholder")} placeholder={t("account.confirmPasswordPlaceholder")} {...pwForm.register("confirmPassword")} className="w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" />
                 {pwForm.formState.errors.confirmPassword && <p role="alert" className="mt-1 text-xs text-destructive">{pwForm.formState.errors.confirmPassword.message}</p>}
               </div>
               <div className="flex gap-2">
-                <Button type="submit" size="sm" className="bg-accent text-accent-foreground" disabled={submitting}>
+                <Button type="submit" size="sm" className="min-h-[40px] bg-accent text-accent-foreground hover:bg-brand-greenDeep" disabled={submitting}>
                   {submitting
                     ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t("account.saving")}</>
                     : t("form.save")}
                 </Button>
-                <Button variant="outline" size="sm" type="button" onClick={() => { setChangingPw(false); pwForm.reset(); }}>{t("form.cancel")}</Button>
+                <Button variant="outline" size="sm" type="button" className="min-h-[40px] border-line-2 text-navy-ink hover:border-navy-ink" onClick={() => { setChangingPw(false); pwForm.reset(); }}>{t("form.cancel")}</Button>
               </div>
             </form>
           )}
         </div>
-        <div className="rounded-xl border border-border p-4">
-          <div className="flex items-center justify-between">
+        <div className="rounded-[14px] border border-line bg-card p-5 shadow-card">
+          <div className="flex items-center justify-between gap-3">
             <div>
-               <h3 className="text-sm font-semibold">{t("account.twoFactor")}</h3>
-               <p className="text-xs text-muted-foreground mt-1">{t("account.comingSoonLong")}</p>
+               <h3 className="font-display text-sm font-bold text-ink">{t("account.twoFactor")}</h3>
+               <p className="mt-1 text-xs text-muted-foreground">{t("account.comingSoonLong")}</p>
              </div>
-             <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground">{t("account.comingSoon")}</span>
+             <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-semibold text-ink-2">{t("account.comingSoon")}</span>
           </div>
         </div>
-        <div className="rounded-xl border border-border p-4">
-           <h3 className="text-sm font-semibold">{t("account.connectedAccounts")}</h3>
-          <div className="mt-3 flex items-center justify-between">
+        <div className="rounded-[14px] border border-line bg-card p-5 shadow-card">
+           <h3 className="font-display text-sm font-bold text-ink">{t("account.connectedAccounts")}</h3>
+          <div className="mt-3 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-xs font-bold text-muted-foreground">G</div>
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-xs font-bold text-ink-2">G</div>
               <div>
-                <p className="text-sm font-medium">Google</p>
+                <p className="font-display text-sm font-bold text-ink">Google</p>
                 {user?.hasGoogleAccount ? (
                   <p className="text-xs text-success">{t("account.connected")}</p>
                 ) : (
@@ -932,9 +993,9 @@ function AccountSecurity() {
               </div>
             </div>
             {user?.hasGoogleAccount ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success"><CheckCircle className="h-3 w-3 shrink-0" /> {t("account.activeStatus")}</span>
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success/10 px-2.5 py-1 text-xs font-semibold text-success"><CheckCircle className="h-3 w-3 shrink-0" /> {t("account.activeStatus")}</span>
             ) : (
-              <p className="text-xs text-muted-foreground">{t("account.loginWithGoogle")}</p>
+              <p className="shrink-0 text-xs text-muted-foreground">{t("account.loginWithGoogle")}</p>
             )}
           </div>
         </div>
@@ -997,23 +1058,23 @@ function DataPrivacySection() {
 
   return (
     <>
-      <div className="rounded-xl border border-border p-4 space-y-4">
-        <h3 className="text-sm font-semibold">{t("account.dataPrivacy")}</h3>
+      <div className="space-y-4 rounded-[14px] border border-line bg-card p-5 shadow-card">
+        <h3 className="font-display text-sm font-bold text-ink">{t("account.dataPrivacy")}</h3>
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm">{t("account.downloadData")}</p>
+            <p className="text-sm text-ink">{t("account.downloadData")}</p>
           </div>
-          <Button variant="outline" size="sm" className="gap-1" onClick={handleExport} disabled={exporting}>
+          <Button variant="outline" size="sm" className="min-h-[40px] gap-1 border-line-2 text-navy-ink hover:border-navy-ink" onClick={handleExport} disabled={exporting}>
             {exporting ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("account.downloadingData")}</> : <><Download className="h-3.5 w-3.5" /> {t("account.downloadData")}</>}
           </Button>
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3 border-t border-line pt-4">
           <div>
-            <p className="text-sm text-destructive font-medium">{t("account.deleteAccount")}</p>
+            <p className="text-sm font-semibold text-destructive">{t("account.deleteAccount")}</p>
           </div>
-          <Button variant="destructive" size="sm" onClick={() => setShowDeleteDialog(true)}>
+          <Button variant="destructive" size="sm" className="min-h-[40px]" onClick={() => setShowDeleteDialog(true)}>
             {t("account.deleteAccount")}
           </Button>
         </div>
@@ -1057,7 +1118,7 @@ function useGenerateInvoicePdf() {
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color: #111; background: #fff; padding: 48px; max-width: 700px; margin: 0 auto; }
     .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 48px; }
-    .logo { font-size: 26px; font-weight: 800; color: #0d9488; }
+    .logo { font-size: 26px; font-weight: 800; color: #173B8D; }
     .invoice-meta { text-align: right; }
     .invoice-meta h1 { font-size: 22px; font-weight: 700; color: #111; margin-bottom: 4px; }
     .invoice-meta p { font-size: 13px; color: #666; }
@@ -1138,38 +1199,42 @@ function AccountBilling() {
   });
 
   return (
-    <div>
-       <h1 className="font-display text-2xl font-bold">{t("account.billing")}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">{t("account.billingDesc")}</p>
-      {isLoading && <div className="py-8 text-center"><Loader2 className="animate-spin mx-auto" /></div>}
-      {isError && <p role="alert" className="text-sm text-destructive">{t("error.generic")}</p>}
+    <div className="animate-slide-up">
+      <PageHead title={t("account.billing")} subtitle={t("account.billingOptionalDesc")} />
+      <div className="mt-5 flex items-start gap-3.5 rounded-[14px] border border-line bg-card p-4 shadow-card">
+        <ITile icon={Receipt} variant="teal" />
+        <div>
+          <p className="font-display text-sm font-bold text-ink">{t("account.billingOptionalTitle")}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{t("account.billingOptionalNote")}</p>
+        </div>
+      </div>
+      {isLoading && <div className="py-8 text-center"><Loader2 className="mx-auto animate-spin text-muted-foreground" /></div>}
+      {isError && <p role="alert" className="mt-4 text-sm text-destructive">{t("error.generic")}</p>}
       {invoices.length === 0 ? (
-        <div className="mt-6 flex flex-col items-center py-12 text-center">
-          <CreditCard className="h-12 w-12 text-muted-foreground/30" />
-          <p className="mt-3 text-sm font-medium">{t("account.noBillingInfo")}</p>
-          <p className="mt-1 text-xs text-muted-foreground">{t("account.invoicesAfterBooking")}</p>
+        <div className="mt-6">
+          <EmptyState icon={Receipt} title={t("account.noBillingInfo")} desc={t("account.invoicesForToolsNote")} />
         </div>
       ) : (
         <>
           {/* Mobile cards */}
           <div className="mt-6 space-y-3 sm:hidden">
             {invoices.map(inv => (
-              <div key={inv.id} className="rounded-xl border border-border p-4">
+              <div key={inv.id} className="rounded-[14px] border border-line bg-card p-4 shadow-card">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-xs font-mono text-muted-foreground truncate">{inv.id}</p>
-                    <p className="mt-1 text-sm font-medium leading-snug">{inv.description}</p>
+                    <p className="truncate font-mono text-xs text-muted-foreground">{inv.id}</p>
+                    <p className="mt-1 text-sm font-semibold leading-snug text-ink">{inv.description}</p>
                   </div>
-                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${inv.status === "paid" ? "bg-success/10 text-success" : inv.status === "pending" ? "bg-warning/10 text-warning-text" : "bg-destructive/10 text-destructive"}`}>
+                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${inv.status === "paid" ? "bg-success/10 text-success" : inv.status === "pending" ? "bg-warning/15 text-warning-text" : "bg-destructive/10 text-destructive"}`}>
                     {inv.status === "paid" ? t("account.invoiceStatus.paid") : inv.status === "pending" ? t("account.invoiceStatus.pending") : t("account.invoiceStatus.overdue")}
                   </span>
                 </div>
-                <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                <div className="mt-3 flex items-center justify-between border-t border-line pt-3">
                   <div>
-                    <p className="font-display text-lg font-bold">€{inv.amount}</p>
+                    <p className="font-display text-lg font-extrabold text-navy-ink">€{inv.amount}</p>
                     <p className="text-xs text-muted-foreground">{inv.issuedAt}</p>
                   </div>
-                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => generateInvoicePdf(inv)}>
+                  <Button variant="outline" size="sm" className="min-h-[40px] gap-1.5 border-line-2 text-navy-ink hover:border-navy-ink" onClick={() => generateInvoicePdf(inv)}>
                     <Download className="h-3.5 w-3.5" /> PDF
                   </Button>
                 </div>
@@ -1177,32 +1242,32 @@ function AccountBilling() {
             ))}
           </div>
           {/* Desktop table */}
-          <div className="mt-6 hidden sm:block overflow-x-auto rounded-xl border border-border">
+          <div className="mt-6 hidden overflow-x-auto rounded-[14px] border border-line bg-card shadow-card sm:block">
             <table className="w-full text-sm">
-              <thead className="border-b border-border bg-secondary/50">
+              <thead className="border-b border-line bg-secondary/60">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("billing.invoiceNr")}</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("billing.description")}</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("billing.amount")}</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("billing.status")}</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("billing.date")}</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground"></th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">{t("billing.invoiceNr")}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">{t("billing.description")}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">{t("billing.amount")}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">{t("billing.status")}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">{t("billing.date")}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground"></th>
                 </tr>
               </thead>
               <tbody>
                 {invoices.map(inv => (
-                  <tr key={inv.id} className="border-b border-border last:border-0">
-                    <td className="px-4 py-3 font-mono text-xs">{inv.id}</td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs">{inv.description}</td>
-                    <td className="px-4 py-3 font-medium">€{inv.amount}</td>
-                    <td className="px-4 py-3">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inv.status === "paid" ? "bg-success/10 text-success" : inv.status === "pending" ? "bg-warning/10 text-warning-text" : "bg-destructive/10 text-destructive"}`}>
+                  <tr key={inv.id} className="border-b border-line transition-colors last:border-0 hover:bg-secondary/40">
+                    <td className="px-4 py-3.5 font-mono text-xs text-muted-foreground">{inv.id}</td>
+                    <td className="px-4 py-3.5 text-xs text-ink-2">{inv.description}</td>
+                    <td className="px-4 py-3.5 font-semibold text-navy-ink">€{inv.amount}</td>
+                    <td className="px-4 py-3.5">
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${inv.status === "paid" ? "bg-success/10 text-success" : inv.status === "pending" ? "bg-warning/15 text-warning-text" : "bg-destructive/10 text-destructive"}`}>
                         {inv.status === "paid" ? t("account.invoiceStatus.paid") : inv.status === "pending" ? t("account.invoiceStatus.pending") : t("account.invoiceStatus.overdue")}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs">{inv.issuedAt}</td>
-                    <td className="px-4 py-3">
-                      <Button variant="ghost" size="sm" aria-label={t("contract.download")} className="h-7 px-2" onClick={() => generateInvoicePdf(inv)}>
+                    <td className="px-4 py-3.5 text-xs text-muted-foreground">{inv.issuedAt}</td>
+                    <td className="px-4 py-3.5">
+                      <Button variant="ghost" size="sm" aria-label={t("contract.download")} className="h-8 px-2 text-muted-foreground hover:text-navy-ink" onClick={() => generateInvoicePdf(inv)}>
                         <Download className="h-3.5 w-3.5" />
                       </Button>
                     </td>
@@ -1220,21 +1285,25 @@ function AccountBilling() {
 function AccountHelp() {
   const { t } = useLanguage();
   const helpLinks = [
-    { to: "/faq", title: t("account.help.faq"), desc: t("account.help.faqDesc") },
-    { to: "/contact", title: t("account.help.contact"), desc: t("account.help.contactDesc") },
-    { to: "/how-it-works", title: t("account.help.howItWorks"), desc: t("account.help.howItWorksDesc") },
+    { to: "/faq", title: t("account.help.faq"), desc: t("account.help.faqDesc"), icon: HelpCircle },
+    { to: "/contact", title: t("account.help.contact"), desc: t("account.help.contactDesc"), icon: MessageSquare },
+    { to: "/how-it-works", title: t("account.help.howItWorks"), desc: t("account.help.howItWorksDesc"), icon: LayoutDashboard },
   ];
   return (
-    <div>
-      <h1 className="font-display text-2xl font-bold">{t("account.help.title")}</h1>
-      <div className="mt-6 grid gap-3 sm:grid-cols-3">
-        {helpLinks.map((link) => (
-          <Link key={link.to} to={link.to} className="flex flex-col rounded-xl border border-border p-5 transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
-            <span className="text-sm font-medium">{link.title}</span>
+    <div className="animate-slide-up">
+      <PageHead title={t("account.help.title")} />
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        {helpLinks.map((link) => {
+          const Icon = link.icon;
+          return (
+          <Link key={link.to} to={link.to} className="flex flex-col rounded-[14px] border border-line bg-card p-5 shadow-card transition-all hover:-translate-y-0.5 hover:border-teal-deep/40 hover:shadow-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+            <ITile icon={Icon} variant="teal" className="mb-3" />
+            <span className="font-display text-sm font-bold text-ink">{link.title}</span>
             <span className="mt-1 text-xs text-muted-foreground">{link.desc}</span>
-            <ChevronRight className="mt-auto pt-2 h-6 w-4 text-muted-foreground" />
+            <ChevronRight className="mt-3 h-4 w-4 text-teal-deep" />
           </Link>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

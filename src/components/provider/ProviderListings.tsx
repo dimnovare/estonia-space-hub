@@ -5,7 +5,7 @@ import { useLocations, useCreateLocation, useUpdateLocation, useAddUnit } from "
 import { useFeatureDefinitions } from "@/hooks/useFeatureDefinitions";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import { ESTONIAN_CITIES } from "@/lib/constants";
-import { Loader2, MapPin, Warehouse, Truck, CarFront, Plus, Pencil, ChevronDown, ChevronUp, Trash2, AlertTriangle, Eye, EyeOff } from "lucide-react";
+import { Loader2, MapPin, Warehouse, Truck, CarFront, Plus, Pencil, ChevronDown, ChevronUp, Trash2, AlertTriangle, Eye, EyeOff, Upload } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import ListingExtrasManager from "./ListingExtrasManager";
 import ImageUploader from "@/components/admin/ImageUploader";
@@ -31,6 +31,12 @@ const TYPE_ICON: Record<string, LucideIcon> = {
   warehouse: Warehouse, Warehouse: Warehouse,
   moving: Truck, Moving: Truck,
   trailer: CarFront, Trailer: CarFront,
+};
+
+const TYPE_LABEL_KEY: Record<string, string> = {
+  warehouse: "provider.listings.typeWarehouse", Warehouse: "provider.listings.typeWarehouse",
+  moving: "provider.listings.typeMoving", Moving: "provider.listings.typeMoving",
+  trailer: "provider.listings.typeTrailer", Trailer: "provider.listings.typeTrailer",
 };
 
 // ── Schemas ──
@@ -400,10 +406,15 @@ export default function ProviderListings() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">
-          {t("provider.listings.title")}
-        </h1>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl font-bold">
+            {t("provider.listings.title")}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("provider.listings.subtitle")}
+          </p>
+        </div>
         <Button size="sm" onClick={() => setLocDialogOpen(true)}>
           <Plus className="mr-1 h-4 w-4" />
           {t("provider.listings.addLocation")}
@@ -526,9 +537,12 @@ export default function ProviderListings() {
                     <thead>
                       <tr className="border-b border-border text-left text-muted-foreground">
                         <th className="pb-2 pr-4 font-medium">{t("provider.listings.unitTitle")}</th>
+                        <th className="pb-2 pr-4 font-medium">{t("provider.listings.unitType")}</th>
                         <th className="pb-2 pr-4 font-medium">{t("admin.locations.sizeM2")}</th>
                         <th className="pb-2 pr-4 font-medium">{t("admin.locations.quantity")}</th>
+                        <th className="pb-2 pr-4 font-medium">{t("provider.listings.colAvailable")}</th>
                         <th className="pb-2 pr-4 font-medium">{t("listing.price")}</th>
+                        <th className="pb-2 pr-4 font-medium">{t("provider.listings.colBooking")}</th>
                         <th className="pb-2 font-medium" />
                       </tr>
                     </thead>
@@ -539,9 +553,12 @@ export default function ProviderListings() {
                         return (
                           <tr key={unit.id} className="border-b border-border/50 last:border-0">
                             <td className="py-2 pr-4">
-                              <span className="flex items-center gap-1.5">
-                                <UIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                                {unit.title}
+                              <span className="font-medium text-foreground">{unit.title}</span>
+                            </td>
+                            <td className="py-2 pr-4">
+                              <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                                <UIcon className="h-3.5 w-3.5 text-teal-deep" />
+                                {t(TYPE_LABEL_KEY[unit.type] || "provider.listings.typeWarehouse")}
                               </span>
                             </td>
                             <td className="py-2 pr-4 text-muted-foreground">
@@ -556,10 +573,32 @@ export default function ProviderListings() {
                               )}
                             </td>
                             <td className="py-2 pr-4">
+                              {unit.availableNow ? (
+                                <span className="inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success">
+                                  {t("provider.listings.available")}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center rounded-full bg-warning/10 px-2 py-0.5 text-[11px] font-medium text-warning">
+                                  {t("provider.listings.unavailable")}
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-2 pr-4">
                               €{unit.priceFrom}
                               <span className="text-muted-foreground">
                                 {formatPriceUnit(unit.priceUnit, t)}
                               </span>
+                            </td>
+                            <td className="py-2 pr-4">
+                              {unit.bookingEnabled ? (
+                                <span className="inline-flex items-center rounded-full bg-teal/15 px-2 py-0.5 text-[11px] font-medium text-teal-deep">
+                                  {t("provider.listings.bookingOnline")}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                                  {t("provider.listings.bookingRequest")}
+                                </span>
+                              )}
                             </td>
                             <td className="py-2">
                               <div className="flex items-center gap-0.5">
@@ -632,7 +671,7 @@ export default function ProviderListings() {
                 </p>
               )}
 
-              <div className="mt-3 border-t border-border/50 pt-3">
+              <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/50 pt-3">
                 <Button
                   variant="outline"
                   size="sm"
@@ -640,6 +679,19 @@ export default function ProviderListings() {
                 >
                   <Plus className="mr-1 h-3.5 w-3.5" />
                   {t("provider.listings.addUnit")}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground"
+                  title={t("provider.listings.bulkImportHint")}
+                  onClick={() => toast.info(t("provider.listings.bulkImportHint"))}
+                >
+                  <Upload className="mr-1 h-3.5 w-3.5" />
+                  {t("provider.listings.bulkImport")}
+                  <span className="ml-2 inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                    {t("provider.listings.workflowTool")}
+                  </span>
                 </Button>
               </div>
             </div>

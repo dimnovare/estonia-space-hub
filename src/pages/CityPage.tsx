@@ -96,16 +96,19 @@ export default function CityPage() {
       />
 
       {/* Hero */}
-      <section className="bg-gradient-to-b from-secondary/50 to-background px-4 py-16 text-center">
-        <h1 className="font-display text-3xl font-bold sm:text-4xl">
+      <section className="surface-dark px-4 py-16 text-center sm:py-20">
+        <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal">
+          {t("cityPage.heroEyebrow")}
+        </p>
+        <h1 className="mt-3 font-display text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
           {t("cityPage.heroTitle").replace("{city}", city)}
         </h1>
-        <p className="mx-auto mt-3 max-w-lg text-sm text-muted-foreground">
+        <p className="mx-auto mt-3 max-w-lg text-sm text-white/80">
           {t("cityPage.heroDesc").replace("{city}", city)}
         </p>
         <Link to={`/search?city=${encodeURIComponent(city)}`}>
-          <Button className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90">
-            <Search className="mr-2 h-4 w-4" />
+          <Button className="mt-6 h-11 gap-2 bg-accent px-6 font-semibold text-accent-foreground hover:bg-accent/90">
+            <Search className="h-4 w-4" />
             {t("cityPage.searchCta").replace("{city}", city)}
           </Button>
         </Link>
@@ -116,7 +119,10 @@ export default function CityPage() {
         <p className="mx-auto mb-8 max-w-3xl text-sm leading-relaxed text-muted-foreground">
           {introText}
         </p>
-        <h2 className="font-display text-xl font-bold">
+        <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">
+          {t("cityPage.topEyebrow")}
+        </p>
+        <h2 className="mt-1.5 font-display text-xl font-bold">
           {t("cityPage.topTitle").replace("{city}", city)}
         </h2>
 
@@ -163,7 +169,7 @@ export default function CityPage() {
                   </p>
                   {loc.priceFrom != null && (
                     <div className="mt-3 border-t border-border pt-3">
-                      <span className="font-display text-lg font-bold text-foreground">{t("location.from")} €{loc.priceFrom}</span>
+                      <span className="font-display text-lg font-extrabold text-navy-ink">{t("location.from")} €{loc.priceFrom}</span>
                       <span className="text-xs text-muted-foreground"> / {t("location.perMonth")}</span>
                     </div>
                   )}
@@ -177,17 +183,20 @@ export default function CityPage() {
 
         <div className="mt-8 text-center">
           <Link to={`/search?city=${encodeURIComponent(city)}`}>
-            <Button variant="outline">
-              {t("cityPage.viewAll").replace("{city}", city)} <ArrowRight className="ml-2 h-4 w-4" />
+            <Button variant="outline" className="h-11 gap-2 px-5 font-semibold">
+              {t("cityPage.viewAll").replace("{city}", city)} <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
         </div>
       </section>
 
       {/* FAQ */}
-      <section className="border-t border-border bg-secondary/20 px-4 py-12">
+      <section className="border-t border-border bg-secondary/30 px-4 py-12">
         <div className="container-wide max-w-2xl">
-          <h2 className="font-display text-xl font-bold text-center">{t("cityPage.faqTitle")}</h2>
+          <p className="text-center font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">
+            {t("cityPage.faqEyebrow")}
+          </p>
+          <h2 className="mt-1.5 text-center font-display text-xl font-bold">{t("cityPage.faqTitle")}</h2>
           <div className="mt-6 space-y-3">
             {faqs.map((faq, i) => (
               <FaqItem key={i} question={faq.q} answer={faq.a} />
@@ -197,11 +206,11 @@ export default function CityPage() {
       </section>
 
       {/* CTA */}
-      <section className="container-wide py-12 text-center">
-        <h2 className="font-display text-xl font-bold">{t("cityPage.ctaTitle")}</h2>
-        <p className="mt-2 text-sm text-muted-foreground">{t("cityPage.ctaDesc")}</p>
+      <section className="container-wide py-14 text-center">
+        <h2 className="font-display text-2xl font-bold">{t("cityPage.ctaTitle")}</h2>
+        <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{t("cityPage.ctaDesc")}</p>
         <Link to={`/search?city=${encodeURIComponent(city)}`}>
-          <Button className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90">
+          <Button className="mt-5 h-11 px-6 font-semibold bg-accent text-accent-foreground hover:bg-accent/90">
             {t("cityPage.searchCta").replace("{city}", city)}
           </Button>
         </Link>

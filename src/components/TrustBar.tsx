@@ -59,12 +59,12 @@ export default function TrustBar() {
       )}
 
       {/* Trust badges */}
-      <div className={`${stats.length > 0 ? "mt-8" : "mt-0"} flex flex-wrap items-center justify-center gap-6`}>
+      <div className={`${stats.length > 0 ? "mt-8" : "mt-0"} flex flex-wrap items-center justify-center gap-x-6 gap-y-3`}>
         {badges.map((badge) => {
           const Icon = badge.icon;
           return (
-            <span key={badge.label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Icon className="h-3.5 w-3.5 text-accent" />
+            <span key={badge.label} className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <Icon className="h-[18px] w-[18px] text-teal-deep" />
               {badge.label}
             </span>
           );

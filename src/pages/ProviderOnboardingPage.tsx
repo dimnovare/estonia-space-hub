@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "@/i18n/routing";
-import { Check, Warehouse, Truck, CarFront, Building2, User, CheckCircle, ArrowLeft, ArrowRight, Loader2, AlertCircle, Mail } from "lucide-react";
+import { Check, Warehouse, Truck, CarFront, Building2, User, CheckCircle, ArrowLeft, ArrowRight, Loader2, AlertCircle, Mail, Sparkles, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
@@ -68,7 +68,7 @@ export default function ProviderOnboardingPage() {
   const toggleService = (key: string) => setSelectedServices((p) => p.includes(key) ? p.filter((s) => s !== key) : [...p, key]);
   const toggleArea = (key: string) => setSelectedAreas((p) => p.includes(key) ? p.filter((a) => a !== key) : [...p, key]);
 
-  const inputClass = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
+  const inputClass = "mt-1.5 w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15";
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -118,20 +118,24 @@ export default function ProviderOnboardingPage() {
     return (
       <div className="container-wide flex min-h-[60vh] items-center justify-center py-16">
         <div className="mx-auto max-w-md text-center">
+          <span className="mx-auto mb-4 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-accent to-teal-deep px-3 py-1 text-xs font-display font-semibold text-white shadow-card">
+            <Sparkles className="h-3.5 w-3.5" />
+            {t("onboard.badge.free")}
+          </span>
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
             <CheckCircle className="h-8 w-8 text-success" />
           </div>
-          <h1 className="mt-4 font-display text-2xl font-bold">{t("onboard.success.title")}</h1>
+          <h1 className="mt-4 font-display text-2xl font-bold text-navy-ink">{t("onboard.success.title")}</h1>
           <p className="mt-2 text-sm text-muted-foreground">{t("onboard.success.desc")}</p>
           {!user && (
             <p className="mt-2 text-sm text-accent font-medium">{t("onboard.success.checkEmail")}</p>
           )}
-          <div className="mt-4 rounded-xl border border-border bg-secondary/30 p-4">
+          <div className="mt-4 rounded-[14px] border border-line bg-card p-4 shadow-card">
             <p className="text-xs text-muted-foreground">{t("onboard.success.status")}</p>
             <p className="mt-1 text-sm font-medium text-warning-text">{t("onboard.success.pending")}</p>
           </div>
           {/* What happens next */}
-          <div className="mt-4 rounded-xl border border-accent/20 bg-accent/5 p-4 text-left">
+          <div className="mt-4 rounded-[14px] border border-accent/20 bg-accent/5 p-4 text-left">
             <p className="text-sm text-foreground">{t("onboard.whatNext")}</p>
             <div className="mt-3 flex items-center gap-2">
               <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -157,17 +161,23 @@ export default function ProviderOnboardingPage() {
         description={t("seo.providerOnboardingDesc")}
         path="/provider/onboarding"
       />
-      <h1 className="font-display text-2xl font-bold">{t("onboard.title")}</h1>
-      <p className="mt-1 text-sm text-muted-foreground">{t("onboard.subtitle")}</p>
+      <div className="max-w-2xl">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-accent to-teal-deep px-3 py-1 text-xs font-display font-semibold text-white shadow-card">
+          <Sparkles className="h-3.5 w-3.5" />
+          {t("onboard.badge.free")}
+        </span>
+        <h1 className="mt-3.5 font-display text-3xl font-extrabold tracking-tight text-navy-ink">{t("onboard.title")}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{t("onboard.subtitle")}</p>
+      </div>
 
       {/* Stepper */}
-      <div className="mt-6 mb-8 flex items-center gap-2">
+      <div className="mt-7 mb-8 flex items-center gap-2">
         {steps.map((s, i) => (
           <div key={s} className="flex items-center gap-2" aria-current={i === step ? "step" : undefined}>
-            <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${i <= step ? "bg-accent text-accent-foreground" : "bg-secondary text-muted-foreground"}`}>
+            <div className={`flex h-8 w-8 items-center justify-center rounded-full font-display text-xs font-bold transition-colors ${i < step ? "bg-accent text-white" : i === step ? "bg-navy-ink text-white" : "bg-secondary text-muted-foreground"}`}>
               {i < step ? <Check className="h-4 w-4" /> : i + 1}
             </div>
-            <span className={`hidden text-sm font-medium sm:inline ${i <= step ? "text-foreground" : "text-muted-foreground"}`}>{s}</span>
+            <span className={`hidden text-sm font-medium sm:inline ${i <= step ? "text-navy-ink" : "text-muted-foreground"}`}>{s}</span>
             {i < steps.length - 1 && <div className="h-px w-4 bg-border sm:w-6" />}
           </div>
         ))}
@@ -178,14 +188,17 @@ export default function ProviderOnboardingPage() {
         {step === 0 && (
           <div className="space-y-6">
             <div>
-              <h2 className="font-display text-lg font-semibold">{t("onboard.step1.title")}</h2>
+              <h2 className="font-display text-lg font-semibold text-navy-ink">{t("onboard.step1.title")}</h2>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {businessTypes.map((bt) => {
                   const Icon = bt.icon;
+                  const selected = businessType === bt.key;
                   return (
-                    <button key={bt.key} onClick={() => setBusinessType(bt.key)} aria-pressed={businessType === bt.key} className={`flex items-center gap-3 rounded-xl border-2 p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-95 ${businessType === bt.key ? "border-accent bg-accent/5" : "border-border hover:border-accent/50"}`}>
-                      <Icon className="h-6 w-6 text-accent" />
-                      <span className="text-sm font-medium">{bt.label}</span>
+                    <button key={bt.key} onClick={() => setBusinessType(bt.key)} aria-pressed={selected} className={`flex items-center gap-3 rounded-[14px] border bg-card p-4 text-left shadow-card transition-all hover:-translate-y-0.5 hover:shadow-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:translate-y-px ${selected ? "border-accent bg-accent/5" : "border-line hover:border-accent/50"}`}>
+                      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] ${selected ? "bg-accent/10 text-accent" : "bg-secondary text-primary"}`}>
+                        <Icon className="h-[22px] w-[22px]" />
+                      </span>
+                      <span className="font-display text-sm font-semibold text-navy-ink">{bt.label}</span>
                     </button>
                   );
                 })}
@@ -195,7 +208,7 @@ export default function ProviderOnboardingPage() {
               )}
             </div>
             <div>
-              <label htmlFor="onboard-company" className="text-xs font-medium text-muted-foreground">{t("onboard.step2.name")} *</label>
+              <label htmlFor="onboard-company" className="text-[13px] font-semibold text-ink-2">{t("onboard.step2.name")} *</label>
               <input id="onboard-company" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={inputClass} placeholder={t("onboard.companyPlaceholder")} />
               {showValidation && !companyName.trim() && (
                 <p role="alert" className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.fieldRequired")}</p>
@@ -203,29 +216,29 @@ export default function ProviderOnboardingPage() {
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="onboard-reg" className="text-xs font-medium text-muted-foreground">{t("onboard.step2.reg")} *</label>
+                <label htmlFor="onboard-reg" className="text-[13px] font-semibold text-ink-2">{t("onboard.step2.reg")} *</label>
                 <input id="onboard-reg" value={registryCode} onChange={(e) => setRegistryCode(e.target.value)} className={inputClass} placeholder="12345678" />
                 {showValidation && !registryCode.trim() && (
                   <p role="alert" className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.fieldRequired")}</p>
                 )}
               </div>
               <div>
-                <label htmlFor="onboard-vat" className="text-xs font-medium text-muted-foreground">{t("onboard.step2.vat")}</label>
+                <label htmlFor="onboard-vat" className="text-[13px] font-semibold text-ink-2">{t("onboard.step2.vat")}</label>
                 <input id="onboard-vat" className={inputClass} placeholder="EE123456789" />
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="onboard-contact" className="text-xs font-medium text-muted-foreground">{t("onboard.step2.contact")} *</label>
+                <label htmlFor="onboard-contact" className="text-[13px] font-semibold text-ink-2">{t("onboard.step2.contact")} *</label>
                 <input id="onboard-contact" value={effectiveContactName} onChange={(e) => setContactName(e.target.value)} className={inputClass} />
               </div>
               <div>
-                <label htmlFor="onboard-email" className="text-xs font-medium text-muted-foreground">{t("onboard.step2.email")} *</label>
+                <label htmlFor="onboard-email" className="text-[13px] font-semibold text-ink-2">{t("onboard.step2.email")} *</label>
                 <input id="onboard-email" type="email" value={effectiveContactEmail} onChange={(e) => setContactEmail(e.target.value)} className={inputClass} />
               </div>
             </div>
             <div>
-              <label htmlFor="onboard-phone" className="text-xs font-medium text-muted-foreground">{t("onboard.step2.phone")} *</label>
+              <label htmlFor="onboard-phone" className="text-[13px] font-semibold text-ink-2">{t("onboard.step2.phone")} *</label>
               <input id="onboard-phone" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} className={inputClass} placeholder="+372" />
               {showValidation && !contactPhone.trim() && (
                 <p role="alert" className="mt-1 flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5" />{t("onboard.fieldRequired")}</p>
@@ -238,17 +251,21 @@ export default function ProviderOnboardingPage() {
         {step === 1 && (
           <div className="space-y-6">
             <div>
-              <h2 className="font-display text-lg font-semibold">{t("onboard.step3.types")}</h2>
+              <h2 className="font-display text-lg font-semibold text-navy-ink">{t("onboard.step3.types")}</h2>
               <p className="text-xs text-muted-foreground mt-1">{t("onboard.step3.typesHint")}</p>
               <div className="mt-3 grid gap-3 sm:grid-cols-3">
                 {serviceTypes.map((st) => {
                   const Icon = st.icon;
                   const selected = selectedServices.includes(st.key);
                   return (
-                    <button key={st.key} onClick={() => toggleService(st.key)} aria-pressed={selected} className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-95 ${selected ? "border-accent bg-accent/5" : "border-border hover:border-accent/50"}`}>
-                      <Icon className={`h-8 w-8 ${selected ? "text-accent" : "text-muted-foreground"}`} />
-                      <span className="text-sm font-medium">{st.label}</span>
-                      {selected && <Check className="h-4 w-4 text-accent" />}
+                    <button key={st.key} onClick={() => toggleService(st.key)} aria-pressed={selected} className={`flex flex-col items-center gap-3 rounded-[14px] border bg-card p-4 text-center shadow-card transition-all hover:-translate-y-0.5 hover:shadow-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:translate-y-px ${selected ? "border-accent bg-accent/5" : "border-line hover:border-accent/50"}`}>
+                      <span className={`flex h-11 w-11 items-center justify-center rounded-[14px] ${selected ? "bg-accent/10 text-accent" : "bg-teal/15 text-teal-deep"}`}>
+                        <Icon className="h-[22px] w-[22px]" />
+                      </span>
+                      <span className="font-display text-sm font-semibold text-navy-ink">{st.label}</span>
+                      {selected
+                        ? <CheckCircle className="h-4 w-4 text-accent" />
+                        : <span className="h-4 w-4 rounded-full border border-line-2" aria-hidden="true" />}
                     </button>
                   );
                 })}
@@ -258,12 +275,12 @@ export default function ProviderOnboardingPage() {
               )}
             </div>
             <div>
-              <h3 className="font-display text-base font-semibold">{t("onboard.step3.areas")}</h3>
+              <h3 className="font-display text-base font-semibold text-navy-ink">{t("onboard.step3.areas")}</h3>
               <div className="mt-3 flex flex-wrap gap-2">
                 {serviceAreas.map((area) => {
                   const selected = selectedAreas.includes(area);
                   return (
-                    <button key={area} onClick={() => toggleArea(area)} aria-pressed={selected} className={`rounded-full px-3 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-95 sm:py-1.5 ${selected ? "bg-accent text-accent-foreground" : "bg-secondary text-muted-foreground hover:bg-secondary/80"}`}>
+                    <button key={area} onClick={() => toggleArea(area)} aria-pressed={selected} className={`min-h-[44px] rounded-full border px-3.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:translate-y-px ${selected ? "border-navy-ink bg-navy-ink text-white" : "border-line-2 bg-card text-ink-2 hover:border-primary hover:text-primary"}`}>
                       {area}
                     </button>
                   );
@@ -279,7 +296,18 @@ export default function ProviderOnboardingPage() {
         {/* Step 2: Review + Submit */}
         {step === 2 && (
           <div className="space-y-5">
-            <h2 className="font-display text-lg font-semibold">{t("onboard.review.title")}</h2>
+            <h2 className="font-display text-lg font-semibold text-navy-ink">{t("onboard.review.title")}</h2>
+
+            {/* Free-listing reassurance */}
+            <div className="flex items-start gap-3 rounded-[14px] border border-accent/20 bg-accent/5 p-4">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] bg-accent/10 text-accent">
+                <ShieldCheck className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="font-display text-sm font-semibold text-navy-ink">{t("onboard.review.freeTitle")}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{t("onboard.review.freeDesc")}</p>
+              </div>
+            </div>
 
             {/* Readiness meter */}
             {(() => {
@@ -292,7 +320,7 @@ export default function ProviderOnboardingPage() {
               const doneCount = checks.filter(c => c.ok).length;
               const pct = Math.round((doneCount / checks.length) * 100);
               return (
-                <div className="rounded-xl border border-border bg-secondary/30 p-4">
+                <div className="rounded-[14px] border border-line bg-card p-4 shadow-card">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-semibold text-muted-foreground">
                       {doneCount} / {checks.length}
@@ -322,7 +350,7 @@ export default function ProviderOnboardingPage() {
             })()}
 
             {/* Summary */}
-            <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-3 text-sm">
+            <div className="rounded-[14px] border border-line bg-card p-4 space-y-3 text-sm shadow-card">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t("onboard.step2.name")}</span>
                 <span className="font-medium">{companyName}</span>
@@ -356,21 +384,22 @@ export default function ProviderOnboardingPage() {
               </div>
             </div>
 
-            {/* Terms */}
-            <div className="rounded-xl border border-border bg-secondary/30 p-4 text-sm text-muted-foreground max-h-48 overflow-y-auto">
-              <p>{t("onboard.step5.intro")}</p>
-              <ul className="mt-2 list-disc list-inside space-y-1">
-                <li>{t("onboard.step5.term1")}</li>
-                <li>{t("onboard.step5.term2")}</li>
-                <li>{t("onboard.step5.term3")}</li>
-                <li>{t("onboard.step5.term4")}</li>
-                <li>{t("onboard.step5.term5")}</li>
+            {/* Terms — free listing */}
+            <div className="rounded-[14px] border border-line bg-card p-5 shadow-card">
+              <p className="font-display text-sm font-semibold text-navy-ink">{t("onboard.step5.intro")}</p>
+              <ul className="mt-3 space-y-2.5 text-[13px] text-ink-2">
+                {["onboard.step5.term1", "onboard.step5.term2", "onboard.step5.term3", "onboard.step5.term4", "onboard.step5.term5"].map((key) => (
+                  <li key={key} className="flex items-start gap-2.5">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                    <span>{t(key)}</span>
+                  </li>
+                ))}
               </ul>
             </div>
 
             {/* Notes */}
             <div>
-              <label htmlFor="onboard-notes" className="text-xs font-medium text-muted-foreground">{t("onboard.step5.notes")}</label>
+              <label htmlFor="onboard-notes" className="text-[13px] font-semibold text-ink-2">{t("onboard.step5.notes")}</label>
               <textarea
                 id="onboard-notes"
                 value={notes}
@@ -382,9 +411,9 @@ export default function ProviderOnboardingPage() {
             </div>
 
             {/* Agree */}
-            <label className="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-border text-accent focus:ring-accent" />
-              <span className="text-sm">{t("onboard.step5.agree")}</span>
+            <label className="flex cursor-pointer items-start gap-3 rounded-[14px] border border-line bg-card p-4 shadow-card">
+              <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 h-[18px] w-[18px] rounded border-line-2 text-accent accent-brand-green focus-visible:ring-2 focus-visible:ring-accent" />
+              <span className="text-sm text-ink-2">{t("onboard.step5.agree")}</span>
             </label>
           </div>
         )}

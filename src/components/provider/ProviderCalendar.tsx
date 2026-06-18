@@ -89,16 +89,19 @@ export default function ProviderCalendar() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">{t("provider.calendar.title")}</h1>
-      <p className="mt-1 text-sm text-muted-foreground">{t("provider.calendar.desc")}</p>
+      <p className="font-mono-label text-[11px] font-medium uppercase tracking-[0.2em] text-teal-deep">
+        {t("provider.calendar.eyebrow")}
+      </p>
+      <h1 className="mt-1.5 font-display text-2xl font-bold text-navy-ink md:text-[28px]">{t("provider.calendar.title")}</h1>
+      <p className="mt-2 text-sm text-muted-foreground">{t("provider.calendar.desc")}</p>
 
-      <div className="mt-4">
-        <label className="text-xs font-medium text-muted-foreground mb-1 block">
-          <MapPin className="inline h-3.5 w-3.5 mr-1" />
+      <div className="mt-5">
+        <label className="mb-1.5 block text-[13px] font-semibold text-ink-2">
+          <MapPin className="mr-1 inline h-3.5 w-3.5 text-teal-deep" />
           {t("provider.calendar.selectLocation")}
         </label>
         <Select value={selectedLocationId} onValueChange={setSelectedLocationId}>
-          <SelectTrigger className="w-full max-w-xs">
+          <SelectTrigger className="h-11 w-full max-w-xs rounded-[10px] border-input">
             <SelectValue placeholder={t("provider.calendar.allLocations")} />
           </SelectTrigger>
           <SelectContent>
@@ -114,7 +117,7 @@ export default function ProviderCalendar() {
         <a
           href={`${import.meta.env.VITE_API_URL || ""}/api/supplier/calendar.ics`}
           download="ruumly-bookings.ics"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-secondary transition-colors"
+          className="inline-flex h-11 items-center gap-1.5 rounded-[10px] border border-input bg-background px-3.5 text-[13px] font-medium text-navy-ink transition-colors hover:border-primary hover:text-primary"
           onClick={(e) => {
             e.preventDefault();
             const token = tokenStore.getAccess();
@@ -139,22 +142,22 @@ export default function ProviderCalendar() {
         </a>
         )}
         {!supplierId && !hasCalendarSync && (
-          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <Lock className="h-3.5 w-3.5" />
-              {t("provider.calendar.exportNeedsEnablement")}
+          <div className="flex w-full flex-wrap items-center gap-x-3 gap-y-1.5 rounded-[10px] border border-border bg-secondary/40 px-3.5 py-2.5 text-[13px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5">
+              <Lock className="h-3.5 w-3.5 text-teal-deep" />
+              {t("provider.calendar.syncOptional")}
             </span>
             <Link
               to={`/provider/dashboard?ptab=boosts${supplierId ? `&supplierId=${supplierId}` : ""}`}
-              className="font-medium text-accent hover:underline"
+              className="font-semibold text-teal-deep hover:underline"
             >
-              {t("provider.calendar.requestSync")}
+              {t("provider.calendar.requestSync")} →
             </Link>
           </div>
         )}
 
         <button
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-secondary transition-colors text-muted-foreground cursor-not-allowed opacity-50"
+          className="inline-flex h-11 cursor-not-allowed items-center gap-1.5 rounded-[10px] border border-input bg-secondary px-3.5 text-[13px] font-medium text-muted-foreground opacity-60"
           disabled
           title={t("provider.calendar.importComingSoon") || "Coming soon"}
         >
@@ -164,7 +167,7 @@ export default function ProviderCalendar() {
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[auto_1fr]">
-        <div className="card-elevated p-4">
+        <div className="rounded-[14px] border border-border bg-card p-4 shadow-[var(--shadow-card)]">
           <Calendar
             mode="single"
             selected={date}
@@ -172,21 +175,21 @@ export default function ProviderCalendar() {
             className="pointer-events-auto"
             modifiers={{ booked: bookedDates, blocked: blockedDates }}
             modifiersClassNames={{
-              booked: "bg-accent/20 text-accent font-bold",
+              booked: "bg-success/15 text-success font-bold",
               blocked: "bg-destructive/15 text-destructive line-through",
             }}
           />
-          <div className="mt-3 space-y-1 px-1">
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 px-1">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="h-3 w-3 rounded-sm bg-accent/20" /> {t("provider.calendar.booked")}
+              <span className="h-2.5 w-2.5 rounded-[3px] bg-success" /> {t("provider.calendar.booked")}
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="h-3 w-3 rounded-sm bg-destructive/15" /> {t("provider.calendar.blocked")}
+              <span className="h-2.5 w-2.5 rounded-[3px] bg-destructive" /> {t("provider.calendar.blocked")}
             </div>
           </div>
         </div>
-        <div>
-          <h3 className="text-sm font-semibold">
+        <div className="rounded-[14px] border border-border bg-card p-5 shadow-[var(--shadow-card)]">
+          <h3 className="font-display text-base font-semibold text-navy-ink">
             {date ? date.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : t("provider.calendar.selectDate")}
           </h3>
 
@@ -212,18 +215,18 @@ export default function ProviderCalendar() {
 
           {selectedBookings.length > 0 && (
             <div className="mt-4 space-y-2">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("provider.calendar.bookings")}</h4>
+              <h4 className="font-mono-label text-[11px] font-medium uppercase tracking-[0.15em] text-muted-foreground">{t("provider.calendar.bookings")}</h4>
               {selectedBookings.map(b => (
-                <div key={b.id} className="flex items-center justify-between rounded-xl border border-border p-4">
+                <div key={b.id} className="flex items-center justify-between rounded-[10px] border border-border bg-secondary/30 p-4">
                   <div>
-                    <p className="text-sm font-medium">{b.provider}</p>
+                    <p className="text-sm font-semibold text-navy-ink">{b.provider}</p>
                     <p className="text-xs text-muted-foreground">{b.listingTitle} · {b.duration ?? ""}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${b.status === "confirmed" ? "bg-success/10 text-success" : b.status === "pending" ? "bg-warning/10 text-warning" : "bg-accent/10 text-accent"}`}>
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${b.status === "confirmed" ? "bg-success/10 text-success" : b.status === "pending" ? "bg-warning/10 text-warning" : "bg-accent/10 text-accent"}`}>
                       {b.status === "confirmed" ? t("provider.bookings.confirmed") : b.status === "pending" ? t("provider.bookings.pending") : t("provider.bookings.active")}
                     </span>
-                    <span className="text-sm font-semibold">€{b.total ?? b.basePrice ?? 0}</span>
+                    <span className="font-display text-sm font-bold text-navy-ink">€{b.total ?? b.basePrice ?? 0}</span>
                   </div>
                 </div>
               ))}
@@ -239,7 +242,7 @@ export default function ProviderCalendar() {
           )}
 
           <div className="mt-6">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">{t("provider.calendar.blockedDates")}</h4>
+            <h4 className="font-mono-label text-[11px] font-medium uppercase tracking-[0.15em] text-muted-foreground mb-3">{t("provider.calendar.blockedDates")}</h4>
             {blockedDates.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 {!selectedLocationId ? t("provider.calendar.selectLocationFirst") : t("provider.calendar.noBlocked")}
@@ -270,14 +273,14 @@ export default function ProviderCalendar() {
           </div>
 
           <div className="mt-6">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">{t("provider.calendar.upcomingBookings")}</h4>
+            <h4 className="font-mono-label text-[11px] font-medium uppercase tracking-[0.15em] text-muted-foreground mb-3">{t("provider.calendar.upcomingBookings")}</h4>
             <div className="space-y-2">
               {filteredBookings.length === 0 ? (
                 <p className="text-sm text-muted-foreground">{t("provider.calendar.noBookingsYet")}</p>
               ) : filteredBookings.map(b => (
-                <div key={b.id} className="flex items-center justify-between rounded-lg border border-border p-3 text-sm">
+                <div key={b.id} className="flex items-center justify-between rounded-[10px] border border-border p-3 text-sm">
                   <div>
-                    <span className="font-medium">{b.provider}</span>
+                    <span className="font-semibold text-navy-ink">{b.provider}</span>
                     <span className="text-muted-foreground"> · {b.listingTitle}</span>
                   </div>
                   <span className="text-muted-foreground">{b.startDate}</span>

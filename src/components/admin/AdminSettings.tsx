@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Globe, ToggleLeft, Save, Loader2, Percent, Plus, Trash2 } from "lucide-react";
+import {
+  Globe, ToggleLeft, Save, Loader2, Plus, Trash2, Eye, SlidersHorizontal,
+  Warehouse, Truck, CarFront,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { apiClient } from "@/services/apiClient";
@@ -15,21 +18,7 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   openHours:              "E–R 10–17",
   defaultLanguage:        "et",
   currency:               "EUR",
-  ruumlyMinMarginRate:    "8",
-  defaultPartnerDiscount: "20",
   defaultVatRate:         "24",
-  "tier.starter.monthlyFee":        "19",
-  "tier.starter.maxLocations":      "1",
-  "tier.starter.maxActiveUnits":    "3",
-  "tier.starter.maxExtras":         "2",
-  "tier.standard.monthlyFee":       "49",
-  "tier.standard.maxLocations":     "2",
-  "tier.standard.maxActiveUnits":   "10",
-  "tier.standard.maxExtras":        "5",
-  "tier.premium.monthlyFee":        "99",
-  "tier.premium.maxLocations":      "5",
-  "tier.premium.maxActiveUnits":    "30",
-  "tier.premium.maxExtras":         "999",
   emailNotifications:     "true",
   maintenanceMode:        "false",
   autoApproveListings:    "false",
@@ -41,6 +30,9 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   showFaq:                "true",
   showMap:                "true",
   showTestimonials:       "false",
+  showStorageService:     "true",
+  showMovingService:      "true",
+  showTrailerService:     "true",
   "aboutPage.enabled":     "true",
   "aboutPage.showStats":   "false",
   "aboutPage.founders":    "[]",
@@ -87,9 +79,17 @@ export default function AdminSettings() {
     "showProviderCta",
     "showFaq",
     "showMap",
+    "showStorageService",
+    "showMovingService",
+    "showTrailerService",
     "blog.enabled",
     "blog.showInFooter",
   ]);
+
+  const isOn = (key: string) => {
+    const current = settings[key];
+    return current === undefined ? DEFAULT_TRUE_KEYS.has(key) : current === "true";
+  };
 
   const setBool = (key: string) =>
     setSettings(prev => {
@@ -116,7 +116,7 @@ export default function AdminSettings() {
     }
   };
 
-  const inp = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
+  const inp = "mt-1 w-full rounded-[10px] border border-input bg-card px-3.5 py-2.5 text-sm focus:outline-none focus:border-navy-ink focus:ring-2 focus:ring-navy-ink/15";
 
   if (loading) return (
     <div className="flex items-center justify-center py-20">
@@ -124,41 +124,110 @@ export default function AdminSettings() {
     </div>
   );
 
-  const ruumlyMargin = parseFloat(settings.ruumlyMinMarginRate || "8");
-  const partnerD = parseFloat(settings.defaultPartnerDiscount || "20");
-  const customerD = Math.max(0, partnerD - ruumlyMargin);
+  const serviceToggles = [
+    { key: "showStorageService", label: t("admin.settings.showStorageLabel"), desc: t("admin.settings.showStorageDesc"), Icon: Warehouse },
+    { key: "showMovingService",  label: t("admin.settings.showMovingLabel"),  desc: t("admin.settings.showMovingDesc"),  Icon: Truck },
+    { key: "showTrailerService", label: t("admin.settings.showTrailerLabel"), desc: t("admin.settings.showTrailerDesc"), Icon: CarFront },
+  ];
+
+  const homepageToggles = [
+    { key: "showFeaturedListings", label: t("admin.showFeaturedListings"), desc: t("admin.showFeaturedListingsDesc") },
+    { key: "showHowItWorks", label: t("admin.showHowItWorks"), desc: t("admin.showHowItWorksDesc") },
+    { key: "showProviderCta", label: t("admin.showProviderCta"), desc: t("admin.showProviderCtaDesc") },
+    { key: "showFaq", label: t("admin.showFaq"), desc: t("admin.showFaqDesc") },
+    { key: "showMap", label: t("admin.showMap"), desc: t("admin.showMapDesc") },
+    { key: "showTestimonials", label: t("admin.showTestimonials"), desc: t("admin.showTestimonialsDesc") },
+  ];
+
+  const platformToggles = [
+    { key: "emailNotifications", label: t("admin.emailNotifications"), desc: t("admin.emailNotificationsDesc") },
+    { key: "maintenanceMode", label: t("admin.maintenanceMode"), desc: t("admin.maintenanceModeDesc") },
+    { key: "autoApproveListings", label: t("admin.autoApprove"), desc: t("admin.autoApproveDesc") },
+    { key: "inviteCodeRequired", label: t("admin.inviteCodeRequired"), desc: t("admin.inviteCodeRequiredDesc") },
+    { key: "blog.enabled", label: t("admin.settings.blogEnabledLabel"), desc: t("admin.settings.blogEnabledDesc") },
+    { key: "blog.showInFooter", label: t("admin.settings.blogFooterLabel"), desc: t("admin.settings.blogFooterDesc") },
+  ];
+
+  const Toggle = ({ k }: { k: string }) => (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={isOn(k)}
+      onClick={() => setBool(k)}
+      className={`relative inline-flex h-6 w-[42px] shrink-0 cursor-pointer rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${isOn(k) ? "bg-accent" : "bg-input"}`}
+    >
+      <span className={`pointer-events-none mt-0.5 inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform duration-200 ${isOn(k) ? "translate-x-[1.15rem]" : "translate-x-0.5"}`} />
+    </button>
+  );
+
+  const ToggleRow = ({ k, label, desc }: { k: string; label: string; desc: string }) => (
+    <div className="flex items-center justify-between gap-4 rounded-[10px] border border-border p-3">
+      <div className="min-w-0">
+        <div className="text-sm font-medium text-foreground">{label}</div>
+        <div className="text-xs text-muted-foreground">{desc}</div>
+      </div>
+      <Toggle k={k} />
+    </div>
+  );
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">{t("admin.settingsTitle")}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">{t("admin.settingsDesc")}</p>
+      <span className="font-mono-label text-[11.5px] uppercase tracking-[0.2em] text-teal-deep">
+        {t("admin.settings.eyebrow")}
+      </span>
+      <h1 className="mt-1 font-display text-2xl font-bold text-navy-ink">{t("admin.settingsTitle")}</h1>
+      <p className="mt-2 text-sm text-muted-foreground">{t("admin.settings.subtitle")}</p>
 
       <div className="mt-6 space-y-6">
-        {/* General */}
-        <div className="rounded-xl border border-border p-5">
-          <h3 className="flex items-center gap-2 font-display text-base font-semibold">
-            <Globe className="h-4 w-4 text-accent" /> {t("admin.generalSettings")}
+        {/* Public service visibility */}
+        <div className="rounded-xl border border-border bg-card p-5 shadow-card">
+          <h3 className="flex items-center gap-2 font-display text-base font-semibold text-navy-ink">
+            <Eye className="h-4 w-4 text-teal-deep" /> {t("admin.settings.serviceVisibilityTitle")}
+          </h3>
+          <p className="mt-1.5 text-sm text-muted-foreground">{t("admin.settings.serviceVisibilityDesc")}</p>
+          <div className="mt-4 space-y-2.5">
+            {serviceToggles.map(({ key, label, desc, Icon }) => (
+              <div key={key} className="flex items-center justify-between gap-4 rounded-[10px] border border-border p-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[14px] bg-teal/15 text-teal-deep">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="font-display text-sm font-semibold text-foreground">{label}</div>
+                    <div className="text-xs text-muted-foreground">{desc}</div>
+                  </div>
+                </div>
+                <Toggle k={key} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* General + platform defaults */}
+        <div className="rounded-xl border border-border bg-card p-5 shadow-card">
+          <h3 className="flex items-center gap-2 font-display text-base font-semibold text-navy-ink">
+            <Globe className="h-4 w-4 text-teal-deep" /> {t("admin.generalSettings")}
           </h3>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("admin.siteName")}</label>
+              <label className="text-xs font-medium text-ink-2">{t("admin.siteName")}</label>
               <input className={inp} value={settings.siteName} onChange={e => set("siteName", e.target.value)} />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("admin.email")}</label>
+              <label className="text-xs font-medium text-ink-2">{t("admin.email")}</label>
               <input className={inp} value={settings.siteEmail} onChange={e => set("siteEmail", e.target.value)} />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("admin.phone")}</label>
+              <label className="text-xs font-medium text-ink-2">{t("admin.phone")}</label>
               <input className={inp} value={settings.sitePhone} onChange={e => set("sitePhone", e.target.value)} />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("admin.supportAvailability")}</label>
+              <label className="text-xs font-medium text-ink-2">{t("admin.supportAvailability")}</label>
               <input className={inp} value={settings.openHours} onChange={e => set("openHours", e.target.value)} placeholder="E–R 10–17" />
               <p className="mt-0.5 text-[10px] text-muted-foreground">{t("admin.supportHoursExample")}</p>
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("admin.defaultLanguage")}</label>
+              <label className="text-xs font-medium text-ink-2">{t("admin.defaultLanguage")}</label>
               <select className={inp} value={settings.defaultLanguage} onChange={e => set("defaultLanguage", e.target.value)}>
                 <option value="et">Eesti</option>
                 <option value="en">English</option>
@@ -167,79 +236,9 @@ export default function AdminSettings() {
                 <option value="lt">Lietuvių</option>
               </select>
             </div>
-          </div>
-        </div>
-
-        {/* Pricing */}
-        <div className="rounded-xl border border-border p-5">
-          <h3 className="flex items-center gap-2 font-display text-base font-semibold">
-            <Percent className="h-4 w-4 text-accent" />
-            {t("admin.pricingTitle")}
-          </h3>
-          <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
-            {t("admin.pricingDesc")}
-          </p>
-
-          {/* How it works visual */}
-          <div className="mt-4 rounded-lg bg-secondary p-4">
-            <p className="text-xs font-semibold text-foreground mb-3">
-              {t("admin.pricingHowTitle")}
-            </p>
-            <div className="grid gap-3 text-center text-xs sm:grid-cols-3">
-              <div className="rounded-lg bg-card border border-border p-3">
-                <div className="text-base font-bold text-foreground">100€</div>
-                <div className="text-muted-foreground mt-0.5">{t("admin.pricingPublicPrice")}</div>
-              </div>
-              <div className="rounded-lg bg-card border border-border p-3">
-                <div className="text-base font-bold text-success">{100 - partnerD}€</div>
-                <div className="text-muted-foreground mt-0.5">
-                  {t("admin.pricingPartnerGets")}
-                  <br />({t("admin.pricingPartnerDiscount")}: {partnerD}%)
-                </div>
-              </div>
-              <div className="rounded-lg bg-card border border-border p-3">
-                <div className="text-base font-bold text-accent">{100 - customerD}€</div>
-                <div className="text-muted-foreground mt-0.5">
-                  {t("admin.pricingClientPays")}
-                  <br />({customerD}% {t("admin.pricingClientDiscount")})
-                </div>
-              </div>
-            </div>
-            <div className="mt-3 text-center text-xs">
-              <span className="font-semibold text-success">
-                {t("admin.pricingOurMargin")}: {ruumlyMargin}€ {t("admin.pricingPerHundred")} ({ruumlyMargin}%)
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-4 grid gap-4 sm:grid-cols-3">
             <div>
-              <label className="text-xs font-medium text-muted-foreground">
-                {t("admin.ruumlyMinMargin")}
-              </label>
-              <input type="number" min="1" max="50" className={inp}
-                value={settings.ruumlyMinMarginRate}
-                onChange={e => set("ruumlyMinMarginRate", e.target.value)} />
-              <p className="mt-0.5 text-[10px] text-muted-foreground">
-                {t("admin.ruumlyMinMarginDesc")}
-              </p>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">
-                {t("admin.defaultPartnerDiscount")}
-              </label>
-              <input type="number" min="0" max="80" className={inp}
-                value={settings.defaultPartnerDiscount}
-                onChange={e => set("defaultPartnerDiscount", e.target.value)} />
-              <p className="mt-0.5 text-[10px] text-muted-foreground">{t("admin.defaultPartnerDiscountDesc")}</p>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">
-                {t("admin.defaultVatRate")}
-              </label>
-              <select className={inp}
-                value={settings.defaultVatRate}
-                onChange={e => set("defaultVatRate", e.target.value)}>
+              <label className="text-xs font-medium text-ink-2">{t("admin.defaultVatRate")}</label>
+              <select className={inp} value={settings.defaultVatRate} onChange={e => set("defaultVatRate", e.target.value)}>
                 <option value="24">24% ({t("provider.listings.vatStandard")})</option>
                 <option value="13">13% ({t("provider.listings.vatReduced")})</option>
                 <option value="9">9% ({t("provider.listings.vatReduced")})</option>
@@ -248,69 +247,21 @@ export default function AdminSettings() {
               <p className="mt-0.5 text-[10px] text-muted-foreground">{t("admin.defaultVatRateDesc")}</p>
             </div>
           </div>
+        </div>
 
-          {/* ── Tier Configuration ── */}
-          <div className="mt-6 pt-5 border-t border-border">
-            <p className="text-xs font-semibold text-foreground mb-1">{t("admin.tierConfig")}</p>
-            <p className="text-xs text-muted-foreground mb-4">
-              {t("admin.tierConfigDesc")}
-            </p>
-            <div className="grid gap-4 sm:grid-cols-3">
-              {(["starter", "standard", "premium"] as const).map(tier => (
-                <div key={tier} className={`rounded-lg border p-4 ${tier === "starter" ? "border-accent/30 bg-accent/5" : "border-border bg-card"}`}>
-                  <p className="text-sm font-semibold text-foreground capitalize mb-3">
-                    {tier === "starter"
-                      ? t("admin.partner.featureSet.starter")
-                      : tier === "standard"
-                        ? t("admin.partner.featureSet.standard")
-                        : t("admin.partner.featureSet.premium")}
-                  </p>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-[10px] font-medium text-muted-foreground">{t("admin.tierMonthlyFee")}</label>
-                      <input type="number" min="0" className={inp}
-                        value={settings[`tier.${tier}.monthlyFee`]}
-                        onChange={e => set(`tier.${tier}.monthlyFee`, e.target.value)} />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-medium text-muted-foreground">{t("admin.tierMaxLocations")}</label>
-                      <input type="number" min="1" className={inp}
-                        value={settings[`tier.${tier}.maxLocations`]}
-                        onChange={e => set(`tier.${tier}.maxLocations`, e.target.value)} />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-medium text-muted-foreground">{t("admin.tierMaxUnits") || "Max active units"}</label>
-                      <input type="number" min="1" className={inp}
-                        value={settings[`tier.${tier}.maxActiveUnits`]}
-                        onChange={e => set(`tier.${tier}.maxActiveUnits`, e.target.value)} />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-medium text-muted-foreground">{t("admin.tierMaxExtras") || "Max extras per unit"}</label>
-                      <input type="number" min="0" className={inp}
-                        value={settings[`tier.${tier}.maxExtras`]}
-                        onChange={e => set(`tier.${tier}.maxExtras`, e.target.value)} />
-                      {tier === "premium" && (
-                        <p className="mt-0.5 text-[10px] text-muted-foreground">{t("admin.tierUnlimited")}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ── Feature Definitions ── */}
-          <div className="mt-6 pt-5 border-t border-border">
-            <p className="text-xs font-semibold text-foreground mb-1">{t("admin.featureDefinitions") || "Feature Definitions"}</p>
-            <p className="text-xs text-muted-foreground mb-3">
-              {t("admin.featureDefinitionsDesc") || "Configure which features are available for each listing type."}
-            </p>
+        {/* Listing feature definitions (search facets, not pricing) */}
+        <div className="rounded-xl border border-border bg-card p-5 shadow-card">
+          <h3 className="flex items-center gap-2 font-display text-base font-semibold text-navy-ink">
+            <SlidersHorizontal className="h-4 w-4 text-teal-deep" /> {t("admin.featureDefinitions")}
+          </h3>
+          <p className="mt-1.5 text-sm text-muted-foreground">{t("admin.featureDefinitionsDesc")}</p>
+          <div className="mt-4">
             {["warehouse", "moving", "trailer"].map(type => {
               let features: any[] = [];
               try { features = JSON.parse(settings[`features.${type}`] || "[]"); } catch {}
               return (
-                <div key={type} className="mb-6">
-                  <div className="flex items-center justify-between mb-2">
+                <div key={type} className="mb-6 last:mb-0">
+                  <div className="mb-2 flex items-center justify-between">
                     <h4 className="text-sm font-semibold capitalize">{t(`cat.${type}`) || type}</h4>
                     <Button size="sm" variant="outline" onClick={() => {
                       const newFeature = {
@@ -322,18 +273,18 @@ export default function AdminSettings() {
                       const updated = [...features, newFeature];
                       set(`features.${type}`, JSON.stringify(updated));
                     }}>
-                      <Plus className="h-3.5 w-3.5 mr-1" /> Add feature
+                      <Plus className="mr-1 h-3.5 w-3.5" /> {t("admin.addFeature")}
                     </Button>
                   </div>
                   {features.map((f: any, i: number) => (
-                    <div key={f.key} className="rounded-lg border border-border p-3 mb-2">
+                    <div key={f.key} className="mb-2 rounded-[10px] border border-border p-3">
                       <div className="grid gap-2 sm:grid-cols-3">
-                        <input className={inp} value={f.key} placeholder="Key (e.g. heated)"
+                        <input className={inp} value={f.key} placeholder={t("admin.featureKeyPlaceholder")}
                           onChange={e => {
                             const u = [...features]; u[i] = { ...u[i], key: e.target.value };
                             set(`features.${type}`, JSON.stringify(u));
                           }} />
-                        <input className={inp} value={f.labels?.en || ""} placeholder="English label"
+                        <input className={inp} value={f.labels?.en || ""} placeholder={t("admin.featureEnLabelPlaceholder")}
                           onChange={e => {
                             const u = [...features];
                             u[i] = { ...u[i], labels: { ...u[i].labels, en: e.target.value } };
@@ -346,12 +297,12 @@ export default function AdminSettings() {
                                 const u = [...features]; u[i] = { ...u[i], showInSearch: e.target.checked };
                                 set(`features.${type}`, JSON.stringify(u));
                               }} />
-                            Show in search
+                            {t("admin.featureShowInSearch")}
                           </label>
                           <button onClick={() => {
                             const u = features.filter((_: any, j: number) => j !== i);
                             set(`features.${type}`, JSON.stringify(u));
-                          }} className="text-destructive hover:bg-destructive/10 rounded p-1">
+                          }} className="rounded p-1 text-destructive hover:bg-destructive/10" aria-label={t("admin.featureRemove")}>
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
@@ -374,91 +325,36 @@ export default function AdminSettings() {
               );
             })}
           </div>
+        </div>
 
-          {/* ── Extras Pricing ── */}
-          <div className="mt-6 pt-5 border-t border-border">
-            <p className="text-xs font-semibold text-foreground mb-1">{t("admin.extrasPricingTitle")}</p>
-            <p className="text-xs text-muted-foreground mb-3">
-              {t("admin.extrasPricingDesc")}
-            </p>
-            <div className="rounded-lg bg-secondary p-3 text-xs">
-              <span className="text-muted-foreground">{t("admin.settings.publicPrice")} </span>
-              <span className="font-semibold text-foreground">20€</span>
-              <span className="text-muted-foreground"> → {t("admin.settings.partnerGets")} </span>
-              <span className="font-semibold text-foreground">17€</span>
-              <span className="text-muted-foreground"> → {t("admin.settings.clientPays")} </span>
-              <span className="font-semibold text-accent">18.60€</span>
-              <span className="text-muted-foreground"> → {t("admin.settings.ruumlyGets")} </span>
-              <span className="font-semibold text-success">1.60€</span>
-            </div>
-          </div>
-
-          <div className="mt-3 rounded-lg bg-accent/5 border border-accent/20 p-3">
-            <p className="text-xs text-accent">
-              💡 {t("admin.pricingOverrideHint")}
-            </p>
+        {/* Homepage sections */}
+        <div className="rounded-xl border border-border bg-card p-5 shadow-card">
+          <h3 className="flex items-center gap-2 font-display text-base font-semibold text-navy-ink">
+            <ToggleLeft className="h-4 w-4 text-teal-deep" /> {t("admin.settings.homepageSectionsTitle")}
+          </h3>
+          <p className="mt-1.5 text-sm text-muted-foreground">{t("admin.settings.homepageSectionsDesc")}</p>
+          <div className="mt-4 space-y-3">
+            {homepageToggles.map(tg => <ToggleRow key={tg.key} k={tg.key} label={tg.label} desc={tg.desc} />)}
           </div>
         </div>
 
-        {/* Toggles */}
-        <div className="rounded-xl border border-border p-5">
-          <h3 className="flex items-center gap-2 font-display text-base font-semibold">
-            <ToggleLeft className="h-4 w-4 text-accent" /> {t("admin.toggles")}
+        {/* Platform defaults */}
+        <div className="rounded-xl border border-border bg-card p-5 shadow-card">
+          <h3 className="flex items-center gap-2 font-display text-base font-semibold text-navy-ink">
+            <ToggleLeft className="h-4 w-4 text-teal-deep" /> {t("admin.settings.platformDefaultsTitle")}
           </h3>
           <div className="mt-4 space-y-3">
-            {([
-              { key: "emailNotifications", label: t("admin.emailNotifications"), desc: t("admin.emailNotificationsDesc") },
-              { key: "maintenanceMode", label: t("admin.maintenanceMode"), desc: t("admin.maintenanceModeDesc") },
-              { key: "autoApproveListings", label: t("admin.autoApprove"), desc: t("admin.autoApproveDesc") },
-              { key: "inviteCodeRequired", label: t("admin.inviteCodeRequired"), desc: t("admin.inviteCodeRequiredDesc") },
-              { key: "showFeaturedListings", label: t("admin.showFeaturedListings"), desc: t("admin.showFeaturedListingsDesc") },
-              { key: "showHowItWorks", label: t("admin.showHowItWorks"), desc: t("admin.showHowItWorksDesc") },
-              { key: "showProviderCta", label: t("admin.showProviderCta"), desc: t("admin.showProviderCtaDesc") },
-              { key: "showFaq", label: t("admin.showFaq"), desc: t("admin.showFaqDesc") },
-              { key: "showMap", label: t("admin.showMap"), desc: t("admin.showMapDesc") },
-              { key: "showTestimonials", label: t("admin.showTestimonials"), desc: t("admin.showTestimonialsDesc") },
-              { key: "__section:serviceVisibility", label: "", desc: "" },
-              { key: "showMovingService",  label: t("admin.settings.showMovingLabel"),  desc: t("admin.settings.showMovingDesc")  },
-              { key: "showTrailerService", label: t("admin.settings.showTrailerLabel"), desc: t("admin.settings.showTrailerDesc") },
-              { key: "blog.enabled", label: t("admin.settings.blogEnabledLabel"), desc: t("admin.settings.blogEnabledDesc") },
-              { key: "blog.showInFooter", label: t("admin.settings.blogFooterLabel"), desc: t("admin.settings.blogFooterDesc") },
-            ]).map(toggle => toggle.key === "__section:serviceVisibility" ? (
-              <div key={toggle.key} className="pt-3 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {t("admin.settings.serviceVisibility")}
-              </div>
-            ) : (
-              <div key={toggle.key} className="flex items-center justify-between rounded-lg border border-border p-3">
-                <div>
-                  <div className="text-sm font-medium">{toggle.label}</div>
-                  <div className="text-xs text-muted-foreground">{toggle.desc}</div>
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={settings[toggle.key] === "true"}
-                  onClick={() => setBool(toggle.key)}
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${settings[toggle.key] === "true" ? "bg-accent" : "bg-muted"}`}
-                >
-                  <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform duration-200 ${settings[toggle.key] === "true" ? "translate-x-[1.3rem]" : "translate-x-0.5"} mt-0.5`} />
-                </button>
-              </div>
-            ))}
+            {platformToggles.map(tg => <ToggleRow key={tg.key} k={tg.key} label={tg.label} desc={tg.desc} />)}
           </div>
-        </div>
 
-        {settings.inviteCodeRequired === "true" && (
-          <div className="rounded-xl border border-border p-5">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">
-                {t("admin.inviteCode")}
-              </label>
+          {settings.inviteCodeRequired === "true" && (
+            <div className="mt-4 rounded-[10px] border border-border p-3">
+              <label className="text-xs font-medium text-ink-2">{t("admin.inviteCode")}</label>
               <input className={inp} value={settings.inviteCode} onChange={e => set("inviteCode", e.target.value)} placeholder="RUUMLY2026" />
-              <p className="mt-0.5 text-[10px] text-muted-foreground">
-                {t("admin.inviteCodeDesc")}
-              </p>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">{t("admin.inviteCodeDesc")}</p>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         <AdminAboutPage settings={settings} set={set} setBool={setBool} />
 

@@ -83,8 +83,11 @@ export default function ProviderIncomingOrders() {
 
   return (
     <div>
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="font-display text-xl sm:text-2xl font-bold">{t("provider.orders.title")}</h1>
+      <div className="flex items-start justify-between flex-wrap gap-2">
+        <div>
+          <h1 className="font-display text-xl sm:text-2xl font-bold">{t("provider.orders.title")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t("provider.orders.subtitle")}</p>
+        </div>
         <Button variant="outline" size="sm" className="gap-1" onClick={exportCSV}>
           <Download className="h-3.5 w-3.5" /> <span className="hidden sm:inline">{t("provider.orders.exportCsv").replace(" CSV", "")}</span> CSV
         </Button>

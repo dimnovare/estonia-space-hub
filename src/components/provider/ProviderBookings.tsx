@@ -54,32 +54,53 @@ export default function ProviderBookings() {
 
   if (bookings.length === 0) return (
     <div>
-      <h1 className="font-display text-2xl font-bold">{t("provider.bookings.title")}</h1>
-      <div className="py-12 text-center text-sm text-muted-foreground">
-        <Package className="mx-auto h-8 w-8 text-muted-foreground/20 mb-3" />
-        <p className="font-medium">{t("provider.bookings.noBookingsTitle")}</p>
-        <p className="mt-1 text-xs">{t("provider.bookings.noBookingsDesc")}</p>
+      <p className="font-mono-label text-[11px] font-medium uppercase tracking-[0.2em] text-teal-deep">
+        {t("provider.bookings.eyebrow")}
+      </p>
+      <h1 className="mt-1.5 font-display text-2xl font-bold text-navy-ink md:text-[28px]">{t("provider.bookings.title")}</h1>
+      <div className="mt-10 flex flex-col items-center py-12 text-center">
+        <div className="flex h-[54px] w-[54px] items-center justify-center rounded-[14px] bg-secondary">
+          <Package className="h-6 w-6 text-muted-foreground" />
+        </div>
+        <p className="mt-4 font-display text-lg font-semibold text-navy-ink">{t("provider.bookings.noBookingsTitle")}</p>
+        <p className="mt-1 max-w-sm text-sm text-muted-foreground">{t("provider.bookings.noBookingsDesc")}</p>
       </div>
     </div>
   );
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">{t("provider.bookings.title")}</h1>
-        <Button variant="outline" size="sm" className="gap-1" onClick={exportCSV}>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="font-mono-label text-[11px] font-medium uppercase tracking-[0.2em] text-teal-deep">
+            {t("provider.bookings.eyebrow")}
+          </p>
+          <h1 className="mt-1.5 font-display text-2xl font-bold text-navy-ink md:text-[28px]">{t("provider.bookings.title")}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{t("provider.bookings.subtitle")}</p>
+        </div>
+        <Button
+          size="sm"
+          className="h-11 shrink-0 gap-1.5 border border-input bg-background text-navy-ink hover:border-primary hover:text-primary"
+          onClick={exportCSV}
+        >
           <Download className="h-3.5 w-3.5" /> {t("provider.bookings.exportCsv")}
         </Button>
       </div>
-      <div className="mt-4 flex gap-2 overflow-x-auto">
+      <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
         {FILTERS.map((f) => {
           const count = f === "all" ? bookings.length : bookings.filter(b => b.status === (f as BookingStatus)).length;
           const label = f === "all" ? t("provider.bookings.all") : statusLabel(f);
+          const isActive = filter === f;
           return (
             <button
               key={f}
+              aria-pressed={isActive}
               onClick={() => setFilter(f)}
-              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}
+              className={`shrink-0 rounded-full border px-3.5 py-2 text-[13px] font-medium transition-colors ${
+                isActive
+                  ? "border-navy-ink bg-navy-ink text-white"
+                  : "border-line-2 bg-card text-muted-foreground hover:border-primary hover:text-primary"
+              }`}
             >
               {label} ({count})
             </button>
@@ -91,29 +112,29 @@ export default function ProviderBookings() {
           <button
             key={b.id}
             onClick={() => setViewBooking(b)}
-            className="w-full rounded-xl border border-border p-3 text-left hover:bg-secondary/50 transition-colors"
+            className="w-full rounded-[14px] border border-border bg-card p-4 text-left shadow-[var(--shadow-card)] transition-colors hover:bg-secondary/50"
           >
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">{customerName(b)}</span>
-              <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusClass(b.status)}`}>
+              <span className="text-sm font-medium text-navy-ink">{customerName(b)}</span>
+              <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusClass(b.status)}`}>
                 {statusLabel(b.status)}
               </span>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">{b.listingTitle} · {b.startDate} · {b.duration ?? ""}</p>
-            <p className="mt-1 text-sm font-semibold">€{b.total ?? b.basePrice ?? 0}</p>
+            <p className="mt-1.5 font-display text-sm font-bold text-navy-ink">€{b.total ?? b.basePrice ?? 0}</p>
           </button>
         ))}
       </div>
-      <div className="mt-6 hidden rounded-xl border border-border sm:block">
+      <div className="mt-6 hidden overflow-x-auto rounded-[14px] border border-border bg-card shadow-[var(--shadow-card)] sm:block">
         <table className="w-full text-sm">
-          <thead className="border-b border-border bg-secondary/50">
+          <thead className="border-b border-border">
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("provider.bookings.id")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("provider.bookings.client")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("provider.bookings.listing")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("provider.bookings.date")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("provider.bookings.amount")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("provider.bookings.status")}</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">{t("provider.bookings.id")}</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">{t("provider.bookings.client")}</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">{t("provider.bookings.listing")}</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">{t("provider.bookings.date")}</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">{t("provider.bookings.amount")}</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">{t("provider.bookings.status")}</th>
             </tr>
           </thead>
           <tbody>
@@ -121,15 +142,15 @@ export default function ProviderBookings() {
               <tr
                 key={b.id}
                 onClick={() => setViewBooking(b)}
-                className="border-b border-border last:border-0 cursor-pointer hover:bg-secondary/50 transition-colors"
+                className="cursor-pointer border-b border-border transition-colors last:border-0 hover:bg-secondary/60"
               >
-                <td className="px-4 py-3 text-xs font-mono text-muted-foreground">{b.id}</td>
-                <td className="px-4 py-3 font-medium">{customerName(b)}</td>
-                <td className="px-4 py-3 text-muted-foreground">{b.listingTitle}</td>
-                <td className="px-4 py-3 text-muted-foreground">{b.startDate}</td>
-                <td className="px-4 py-3 font-medium">€{b.total ?? b.basePrice ?? 0}</td>
-                <td className="px-4 py-3">
-                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusClass(b.status)}`}>
+                <td className="px-4 py-4 font-mono text-xs text-muted-foreground">{b.id}</td>
+                <td className="px-4 py-4 font-medium text-navy-ink">{customerName(b)}</td>
+                <td className="px-4 py-4 text-muted-foreground">{b.listingTitle}</td>
+                <td className="px-4 py-4 text-muted-foreground">{b.startDate}</td>
+                <td className="px-4 py-4 font-display font-bold text-navy-ink">€{b.total ?? b.basePrice ?? 0}</td>
+                <td className="px-4 py-4">
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusClass(b.status)}`}>
                     {statusLabel(b.status)}
                   </span>
                 </td>
@@ -163,7 +184,7 @@ export default function ProviderBookings() {
               </div>
               <div className="rounded-lg border border-border p-3 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">{t("provider.bookings.basePrice")}</span><span>€{viewBooking.basePrice}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">{t("provider.bookings.platformPrice")}</span><span>€{viewBooking.platformPrice}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("provider.bookings.onlinePrice")}</span><span>€{viewBooking.platformPrice}</span></div>
                 {viewBooking.extrasTotal > 0 && (
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("provider.bookings.extras")}</span><span>€{viewBooking.extrasTotal}</span></div>
                 )}

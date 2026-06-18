@@ -23,7 +23,8 @@ export default function FeaturedPartnersStrip() {
     <section className="surface-sunken py-12 md:py-16">
       <div className="container-wide">
         <div className="mb-6 text-center">
-          <h2 className="font-display text-2xl font-bold md:text-3xl">{t("featuredPartners.title")}</h2>
+          <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">{t("featuredPartners.eyebrow")}</p>
+          <h2 className="mt-2.5 font-display text-2xl font-bold md:text-3xl">{t("featuredPartners.title")}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{t("featuredPartners.subtitle")}</p>
         </div>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -56,7 +57,7 @@ export default function FeaturedPartnersStrip() {
                 </div>
               </>
             );
-            const className = "card-elevated block p-4 transition-shadow hover:shadow-lg";
+            const className = "card-elevated block p-4 transition-transform hover:-translate-y-0.5";
             return p.slug ? (
               <Link key={p.id} to={`/partner/${p.slug}`} className={className}>{inner}</Link>
             ) : (

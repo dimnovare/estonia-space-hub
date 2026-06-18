@@ -20,7 +20,7 @@ export function SizeBucketFilter({ selectedCode, onChange }: Props) {
   if (isLoading) {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-xs font-medium text-muted-foreground">
+        <span className="font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-brand-tealDeep">
           {t("search.size.label")}
         </span>
         <div className="h-7 w-64 animate-pulse rounded-full bg-secondary/40" />
@@ -45,7 +45,7 @@ export function SizeBucketFilter({ selectedCode, onChange }: Props) {
   return (
     <TooltipProvider delayDuration={200}>
       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-        <span className="text-xs font-medium text-muted-foreground">
+        <span className="font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-brand-tealDeep">
           {t("search.size.label")}
         </span>
         {buckets.map((b: SizeBucket) => {
@@ -58,10 +58,10 @@ export function SizeBucketFilter({ selectedCode, onChange }: Props) {
                   type="button"
                   onClick={() => onChange(isSelected ? undefined : b.code)}
                   className={cn(
-                    "rounded-full border px-3 py-2 sm:py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
+                    "min-h-[36px] rounded-full border px-3.5 py-2 sm:py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
                     isSelected
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card text-foreground hover:bg-secondary",
+                      ? "border-navy-ink bg-navy-ink text-white"
+                      : "border-line-2 bg-card text-foreground hover:border-primary hover:text-primary",
                   )}
                   aria-pressed={isSelected}
                 >

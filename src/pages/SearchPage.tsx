@@ -2,7 +2,6 @@ import { useState, useMemo, lazy, Suspense, useCallback, useRef, useEffect } fro
 import { useSearchParams, Link } from "@/i18n/routing";
 import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers, Warehouse, Truck, CarFront, Star, Building2, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from "@/components/ui/drawer";
 import { useListings, useLocations } from "@/hooks/queries";
 import { useQuery } from "@tanstack/react-query";
@@ -138,6 +137,10 @@ export default function SearchPage() {
     // not even in the "all" view (the API returns every type regardless of flags).
     if (!showMovingService)  results = results.filter(l => l.type !== "moving");
     if (!showTrailerService) results = results.filter(l => l.type !== "trailer");
+    // "Book online" filter — only listings the partner has enabled for booking.
+    if (searchParams.get("bookable") === "true") {
+      results = results.filter(l => !!l.bookingEnabled);
+    }
     Object.entries(featureDefs).forEach(([type, features]) => {
       features.forEach(f => {
         if (searchParams.get(f.key) === "true") {
@@ -239,11 +242,18 @@ export default function SearchPage() {
   ];
 
   const typeFilters = [
-    { value: "all",       label: t("search.type.all")       },
-    { value: "warehouse", label: t("search.type.warehouse") },
-    ...(showMovingService  ? [{ value: "moving",  label: t("search.type.moving")  }] : []),
-    ...(showTrailerService ? [{ value: "trailer", label: t("search.type.trailer") }] : []),
+    { value: "all",       label: t("search.type.all"),       Icon: Layers   },
+    { value: "warehouse", label: t("search.type.warehouse"), Icon: Warehouse },
+    ...(showMovingService  ? [{ value: "moving",  label: t("search.type.moving"),  Icon: Truck    }] : []),
+    ...(showTrailerService ? [{ value: "trailer", label: t("search.type.trailer"), Icon: CarFront }] : []),
   ];
+
+  // Map overlay badge: list the publicly visible verticals (honors admin toggles).
+  const mapVerticalsLabel = [
+    t("search.type.warehouse"),
+    showMovingService  ? t("search.type.moving")  : null,
+    showTrailerService ? t("search.type.trailer") : null,
+  ].filter(Boolean).join(" · ");
 
   // Reset URL type param if that service type has been disabled
   useEffect(() => {
@@ -258,7 +268,8 @@ export default function SearchPage() {
     .flat()
     .filter(f => searchParams.get(f.key) === "true").length
     + (availableNow ? 1 : 0) + (cityFilter ? 1 : 0) + (priceMax ? 1 : 0)
-    + (sizeCategory ? 1 : 0) + (minSize || maxSize ? 1 : 0);
+    + (sizeCategory ? 1 : 0) + (minSize || maxSize ? 1 : 0)
+    + (searchParams.get("bookable") === "true" ? 1 : 0);
 
   function clearAll() {
     setSearchParams(prev => {
@@ -297,10 +308,15 @@ export default function SearchPage() {
         path="/search"
       />
       <h1 className="sr-only">{t("search.title") || "Search results"}</h1>
-      <div className="hidden lg:sticky lg:top-16 lg:block lg:h-[calc(100vh-4rem)] lg:w-1/2 xl:w-[55%]">
+      <div className="relative hidden lg:sticky lg:top-16 lg:block lg:h-[calc(100vh-4rem)] lg:w-1/2 xl:w-[55%]">
         <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary text-muted-foreground">{t("map.loading")}</div>}>
           <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" language={language} selectedId={selectedListingId} onMarkerClick={handleMarkerClick} onLocationClick={handleLocationClick} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} tViewLocation={t("location.viewLocation")} tAvailable={t("location.available")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
         </Suspense>
+        {/* Verticals overlay badge (proto: "Storage · Moving · Trailers") */}
+        <span className="pointer-events-none absolute bottom-4 left-4 z-[500] inline-flex items-center gap-1.5 rounded-full bg-card/90 px-3 py-1.5 text-xs font-medium text-foreground shadow-card backdrop-blur-sm">
+          <Layers className="h-3.5 w-3.5 text-brand-tealDeep" />
+          {mapVerticalsLabel}
+        </span>
       </div>
 
       <div className="flex items-center gap-2 border-b border-border bg-card p-3 lg:hidden">
@@ -364,21 +380,20 @@ export default function SearchPage() {
 
       {/* Sticky filter header — always visible on mobile (even in map mode) */}
       <div className={`flex-1 border-l border-border ${mobileView === "map" ? "hidden lg:block" : ""}`}>
-        <div className="sticky top-16 z-10 border-b border-border bg-card px-4 py-3">
+        <div className="sticky top-16 z-10 space-y-3 border-b border-border bg-card px-4 py-3">
+          {/* Result count + filters/sort */}
           <div className="flex flex-wrap items-center gap-2">
-            {typeFilters.length > 2 ? (
-              typeFilters.map((tf) => (
-                <button key={tf.value} aria-pressed={activeType === tf.value} onClick={() => updateFilters({ type: tf.value === "all" ? "" : tf.value })} className={`rounded-full px-3 py-2 sm:py-1.5 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-95 ${activeType === tf.value ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
-                  {tf.label}
-                </button>
-              ))
-            ) : (
-              <span className="text-sm font-semibold text-foreground">
-                {t("search.resultsFound").replace("{count}", String(filtered.length))}
+            <div className="flex flex-col">
+              <span className="font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-brand-tealDeep">
+                {t("search.eyebrow")}
               </span>
-            )}
+              <span className="font-display text-sm font-semibold text-foreground">
+                <span className="font-extrabold text-primary">{filtered.length}</span>{" "}
+                <span className="font-normal text-muted-foreground">{t("search.resultsAcross")}</span>
+              </span>
+            </div>
             <div className="ml-auto flex items-center gap-2">
-              <button aria-label={t("search.filters")} onClick={() => isMobile ? setDrawerOpen(true) : setShowFilters(!showFilters)} className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 sm:py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+              <button aria-label={t("search.filters")} onClick={() => isMobile ? setDrawerOpen(true) : setShowFilters(!showFilters)} className="flex min-h-[36px] items-center gap-1.5 rounded-lg border border-line-2 px-3 py-2 sm:py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t("search.filters")}</span>
                 {activeFiltersCount > 0 && (
@@ -386,7 +401,7 @@ export default function SearchPage() {
                 )}
               </button>
               <div className="relative">
-                <select aria-label={t("search.sort") || "Sort results"} value={sort} onChange={(e) => updateFilters({ sort: e.target.value })} className="appearance-none rounded-lg border border-border bg-card py-2 sm:py-1.5 pl-3 pr-7 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-accent">
+                <select aria-label={t("search.sort") || "Sort results"} value={sort} onChange={(e) => updateFilters({ sort: e.target.value })} className="min-h-[36px] appearance-none rounded-lg border border-line-2 bg-card py-2 sm:py-1.5 pl-3 pr-7 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-accent">
                   {sortOptions.map((s) => (
                     <option key={s.value} value={s.value}>{s.label}</option>
                   ))}
@@ -396,14 +411,69 @@ export default function SearchPage() {
             </div>
           </div>
 
+          {/* Vertical chips — active = navy-ink (chip spec) */}
+          <div className="-mx-1 flex flex-nowrap gap-2 overflow-x-auto px-1 pb-0.5 sm:flex-wrap sm:overflow-visible">
+            {typeFilters.map((tf) => {
+              const isActive = activeType === tf.value;
+              return (
+                <button
+                  key={tf.value}
+                  aria-pressed={isActive}
+                  onClick={() => updateFilters({ type: tf.value === "all" ? "" : tf.value })}
+                  className={`inline-flex min-h-[36px] shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 sm:py-1.5 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-95 ${isActive ? "border-navy-ink bg-navy-ink text-white" : "border-line-2 bg-card text-foreground hover:border-primary hover:text-primary"}`}
+                >
+                  {tf.Icon && <tf.Icon className="h-3.5 w-3.5" />}
+                  {tf.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Size buckets (storage scope) */}
           {(activeType === "all" || activeType === "warehouse") && (
-            <div className="mt-2">
-              <SizeBucketFilter
-                selectedCode={sizeCategory}
-                onChange={(code) => updateFilters({ sizeCategory: code ?? "" })}
-              />
-            </div>
+            <SizeBucketFilter
+              selectedCode={sizeCategory}
+              onChange={(code) => updateFilters({ sizeCategory: code ?? "" })}
+            />
           )}
+
+          {/* Primary inline filters: city · max price · Available now · Book online */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative">
+              <select
+                aria-label={t("search.allCities")}
+                value={cityFilter || "all"}
+                onChange={(e) => updateFilters({ city: e.target.value === "all" ? "" : e.target.value })}
+                className="min-h-[36px] appearance-none rounded-full border border-line-2 bg-card py-2 sm:py-1.5 pl-3.5 pr-8 text-[13px] font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+              >
+                <option value="all">{t("search.allCities")}</option>
+                {availableCities.map((c) => (
+                  <option key={`${c.country}-${c.city}`} value={c.city}>{c.city}</option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+            </div>
+            <input
+              aria-label={t("search.maxPrice")}
+              type="number"
+              min="0"
+              inputMode="numeric"
+              placeholder={t("search.maxPrice")}
+              value={priceMax}
+              onChange={(e) => updateFilters({ priceMax: e.target.value })}
+              className="min-h-[36px] w-28 rounded-full border border-line-2 bg-card px-3.5 py-2 sm:py-1.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+            <FilterToggle
+              label={t("search.availableNow")}
+              active={availableNow}
+              onChange={(v) => updateFilters({ availableNow: v ? "true" : "" })}
+            />
+            <FilterToggle
+              label={t("search.bookOnline")}
+              active={searchParams.get("bookable") === "true"}
+              onChange={(v) => updateFilters({ bookable: v ? "true" : "" })}
+            />
+          </div>
 
           {/* Desktop inline filters */}
           {showFilters && !isMobile && (
@@ -590,63 +660,72 @@ export default function SearchPage() {
                 </div>
               )}
               {filtered.length === 0 && locations.length === 0 && (
-                <div className="mx-auto flex max-w-md flex-col items-center rounded-2xl bg-secondary/30 px-6 py-16 text-center">
-                  <Warehouse className="h-12 w-12 text-muted-foreground/50" />
-                  <p className="mt-4 font-display text-lg font-semibold">{t("empty.search.title")}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{t("empty.search.desc")}</p>
-                  <Button variant="outline" size="sm" className="mt-5" onClick={clearAll}>
-                    {t("empty.search.clearFilters")}
-                  </Button>
-                  <div className="mt-4">
-                    <p className="text-sm text-muted-foreground">{t("search.tryNearby")}</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {availableCities.slice(0, 5).map(c => (
-                        <button key={c.city} onClick={() => updateFilters({ city: c.city })}
-                          className="rounded-full border border-border px-3 py-2 text-xs transition-colors hover:bg-secondary active:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
-                          {c.city}
-                        </button>
-                      ))}
-                    </div>
+                <div className="mx-auto flex max-w-md flex-col items-center rounded-[18px] border border-line bg-card px-6 py-12 text-center shadow-card">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
+                    <Warehouse className="h-6 w-6 text-muted-foreground" />
                   </div>
-                  {cityFilter ? (
-                    notifySuccess ? (
-                      <p className="mt-6 text-sm font-medium text-success">
-                        {t("search.notifySuccess")}
-                      </p>
-                    ) : (
-                      <div className="mt-6 w-full">
-                        <div className="flex w-full items-center gap-2">
-                          <input
-                            type="email"
-                            aria-label={t("search.notifyEmail")}
-                            aria-invalid={notifyError}
-                            aria-describedby={notifyError ? "notify-email-err" : undefined}
-                            placeholder={t("search.notifyEmail")}
-                            value={notifyEmail}
-                            onChange={(e) => { setNotifyEmail(e.target.value); setNotifyError(false); }}
-                            onKeyDown={(e) => e.key === "Enter" && handleNotifySubmit()}
-                            className={`flex-1 rounded-lg border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent ${notifyError ? "border-destructive" : "border-border"}`}
-                          />
-                          <Button
-                            size="sm"
-                            className="bg-accent text-accent-foreground hover:bg-accent/90"
-                            disabled={notifyLoading}
-                            onClick={handleNotifySubmit}
-                          >
-                            {notifyLoading
-                              ? <Loader2 className="h-4 w-4 animate-spin" />
-                              : t("search.notifyMe")}
-                          </Button>
-                        </div>
-                        {notifyError && (
-                          <p id="notify-email-err" role="alert" className="mt-1.5 text-left text-xs text-destructive">{t("search.notifyEmailInvalid")}</p>
-                        )}
-                      </div>
-                    )
-                  ) : (
-                    <p className="mt-6 text-xs text-muted-foreground">
-                      {t("search.notifyCity")}
+                  <h3 className="mt-4 font-display text-lg font-semibold text-foreground">{t("empty.search.title")}</h3>
+                  <p className="mt-1.5 text-sm text-muted-foreground">{t("search.empty.notifyDesc")}</p>
+
+                  {/* Demand-lead capture — primary action of the empty state */}
+                  {notifySuccess ? (
+                    <p className="mt-6 inline-flex items-center gap-2 rounded-full bg-success/10 px-4 py-2 text-sm font-medium text-success">
+                      {t("search.notifySuccess")}
                     </p>
+                  ) : (
+                    <div className="mt-6 w-full">
+                      <div className="flex w-full flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+                        <input
+                          type="email"
+                          aria-label={t("search.notifyEmail")}
+                          aria-invalid={notifyError}
+                          aria-describedby={notifyError ? "notify-email-err" : undefined}
+                          placeholder={t("search.notifyEmail")}
+                          value={notifyEmail}
+                          onChange={(e) => { setNotifyEmail(e.target.value); setNotifyError(false); }}
+                          onKeyDown={(e) => e.key === "Enter" && handleNotifySubmit()}
+                          className={`min-h-[44px] flex-1 rounded-[10px] border bg-card px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent ${notifyError ? "border-destructive" : "border-line-2"}`}
+                        />
+                        <Button
+                          className="min-h-[44px] bg-accent px-5 font-display text-accent-foreground hover:bg-accent/90"
+                          disabled={notifyLoading}
+                          onClick={handleNotifySubmit}
+                        >
+                          {notifyLoading
+                            ? <Loader2 className="h-4 w-4 animate-spin" />
+                            : t("search.notifyMe")}
+                        </Button>
+                      </div>
+                      {notifyError && (
+                        <p id="notify-email-err" role="alert" className="mt-1.5 text-left text-xs text-destructive">{t("search.notifyEmailInvalid")}</p>
+                      )}
+                      {!cityFilter && (
+                        <p className="mt-2 text-xs text-muted-foreground">{t("search.notifyCity")}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Secondary: try nearby cities + clear filters */}
+                  {availableCities.length > 0 && (
+                    <div className="mt-6 w-full border-t border-line pt-5">
+                      <p className="text-sm text-muted-foreground">{t("search.tryNearby")}</p>
+                      <div className="mt-2.5 flex flex-wrap justify-center gap-2">
+                        {availableCities.slice(0, 5).map(c => (
+                          <button key={c.city} onClick={() => updateFilters({ city: c.city })}
+                            className="min-h-[36px] rounded-full border border-line-2 bg-card px-3.5 py-2 text-[13px] font-medium text-foreground transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                            {c.city}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {activeFiltersCount > 0 && (
+                    <button
+                      onClick={clearAll}
+                      className="mt-5 text-sm font-medium text-brand-tealDeep transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:rounded"
+                    >
+                      {t("empty.search.clearFilters")}
+                    </button>
                   )}
                 </div>
               )}
@@ -660,7 +739,7 @@ export default function SearchPage() {
 
 function FilterToggle({ label, active, onChange }: { label: string; active: boolean; onChange: (v: boolean) => void }) {
   return (
-    <button aria-pressed={active} onClick={() => onChange(!active)} className={`rounded-full border px-3 py-2 sm:py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${active ? "border-accent bg-accent/10 text-accent" : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"}`}>
+    <button aria-pressed={active} onClick={() => onChange(!active)} className={`inline-flex min-h-[36px] items-center rounded-full border px-3.5 py-2 sm:py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${active ? "border-navy-ink bg-navy-ink text-white" : "border-line-2 bg-card text-foreground hover:border-primary hover:text-primary"}`}>
       {label}
     </button>
   );
@@ -680,27 +759,11 @@ interface FilterContentProps {
 }
 
 function FilterContent({
-  t, language, cityFilter, priceMax, availableNow, activeType,
-  featureDefs, activeFiltersCount, updateFilters, clearAll, availableCities, searchParams,
+  t, language, activeType,
+  featureDefs, activeFiltersCount, updateFilters, clearAll, searchParams,
 }: FilterContentProps) {
   return (
     <>
-      <div className="flex flex-wrap gap-2">
-        <Select value={cityFilter || "all"} onValueChange={(v) => updateFilters({ city: v === "all" ? "" : v })}>
-          <SelectTrigger className="w-full sm:w-[160px] shrink-0">
-            <SelectValue placeholder={t("search.allCities")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t("search.allCities")}</SelectItem>
-            {availableCities.map((c) => (
-              <SelectItem key={`${c.country}-${c.city}`} value={c.city}>{c.city}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <input aria-label={t("search.maxPrice")} type="number" placeholder={t("search.maxPrice")} value={priceMax} onChange={(e) => updateFilters({ priceMax: e.target.value })} className="w-24 sm:w-28 rounded-full border border-border bg-card px-3 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-accent" />
-        <FilterToggle label={t("search.availableNow")} active={availableNow} onChange={(v) => updateFilters({ availableNow: v ? "true" : "" })} />
-      </div>
-
       {(activeType === "all" || activeType === "warehouse") && (
         <div className="space-y-2">
           <h4 className="text-sm font-medium">{t("filters.size.advanced")}</h4>

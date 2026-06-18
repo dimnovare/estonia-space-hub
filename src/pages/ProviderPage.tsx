@@ -1,8 +1,8 @@
 import { Link } from "@/i18n/routing";
 import {
   ArrowRight,
-  UserPlus, ListPlus, ShoppingCart, Check, Star, Megaphone,
-  TrendingUp, PhoneOff, Search, Wallet, ShieldCheck, Zap, Clock,
+  UserPlus, Box, Sparkles, Check, Globe, Map, ShieldCheck,
+  BarChart3, SlidersHorizontal, Megaphone, Settings, Boxes, Truck, Container,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -15,76 +15,101 @@ import {
 } from "@/components/ui/accordion";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
-const getFreeFeatures = (t: (k: string) => string) => [
-  t("provPage.free.f1"),
-  t("provPage.free.f2"),
-  t("provPage.free.f3"),
-  t("provPage.free.f4"),
-  t("provPage.free.f5"),
+/* ── Optional-feature catalog (seed content lifted from prototype DATA.catalog) ──
+   Discoverable + clearly secondary. NOT a plans table. Free items show a "Free" tag.
+   Visible name/desc come from t() keys; price/scope are short tokens kept inline. */
+type CatalogItem = { id: string; nameKey: string; descKey: string; price: string; unitKey?: string; scopeKey: string; free?: boolean };
+type CatalogGroup = { id: string; titleKey: string; icon: typeof Sparkles; tile: "teal" | "navy"; items: CatalogItem[] };
+
+const getCatalog = (): CatalogGroup[] => [
+  {
+    id: "visibility", titleKey: "provPage.cat.visibility", icon: Sparkles, tile: "teal",
+    items: [
+      { id: "featured_search", nameKey: "provPage.feat.featuredSearch.name", descKey: "provPage.feat.featuredSearch.desc", price: "€29", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.listing" },
+      { id: "featured_map", nameKey: "provPage.feat.featuredMap.name", descKey: "provPage.feat.featuredMap.desc", price: "€24", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.location" },
+      { id: "homepage", nameKey: "provPage.feat.homepage.name", descKey: "provPage.feat.homepage.desc", price: "€79", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.supplier" },
+      { id: "city_pages", nameKey: "provPage.feat.cityPages.name", descKey: "provPage.feat.cityPages.desc", price: "€39", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.location" },
+      { id: "highlight_card", nameKey: "provPage.feat.highlightCard.name", descKey: "provPage.feat.highlightCard.desc", price: "€19", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.listing" },
+      { id: "badge_available", nameKey: "provPage.feat.badgeAvailable.name", descKey: "provPage.feat.badgeAvailable.desc", price: "€12", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.listing" },
+    ],
+  },
+  {
+    id: "trust", titleKey: "provPage.cat.trust", icon: ShieldCheck, tile: "navy",
+    items: [
+      { id: "verified_badge", nameKey: "provPage.feat.verifiedBadge.name", descKey: "provPage.feat.verifiedBadge.desc", price: "€0", scopeKey: "provPage.scope.supplier", free: true },
+      { id: "reviewed_profile", nameKey: "provPage.feat.reviewedProfile.name", descKey: "provPage.feat.reviewedProfile.desc", price: "€59", unitKey: "provPage.unit.oneTime", scopeKey: "provPage.scope.supplier" },
+      { id: "photo_review", nameKey: "provPage.feat.photoReview.name", descKey: "provPage.feat.photoReview.desc", price: "€39", unitKey: "provPage.unit.oneTime", scopeKey: "provPage.scope.listing" },
+      { id: "review_campaign", nameKey: "provPage.feat.reviewCampaign.name", descKey: "provPage.feat.reviewCampaign.desc", price: "€29", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.supplier" },
+      { id: "response_badge", nameKey: "provPage.feat.responseBadge.name", descKey: "provPage.feat.responseBadge.desc", price: "€12", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.supplier" },
+    ],
+  },
+  {
+    id: "leadgen", titleKey: "provPage.cat.leadgen", icon: Megaphone, tile: "teal",
+    items: [
+      { id: "lead_fields", nameKey: "provPage.feat.leadFields.name", descKey: "provPage.feat.leadFields.desc", price: "€15", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.supplier" },
+      { id: "priority_lead", nameKey: "provPage.feat.priorityLead.name", descKey: "provPage.feat.priorityLead.desc", price: "€19", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.supplier" },
+      { id: "lead_export", nameKey: "provPage.feat.leadExport.name", descKey: "provPage.feat.leadExport.desc", price: "€9", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.supplier" },
+      { id: "call_tracking", nameKey: "provPage.feat.callTracking.name", descKey: "provPage.feat.callTracking.desc", price: "€24", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.supplier" },
+      { id: "sponsored_landing", nameKey: "provPage.feat.sponsoredLanding.name", descKey: "provPage.feat.sponsoredLanding.desc", price: "€89", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.supplier" },
+      { id: "newsletter", nameKey: "provPage.feat.newsletter.name", descKey: "provPage.feat.newsletter.desc", price: "€49", unitKey: "provPage.unit.placement", scopeKey: "provPage.scope.supplier" },
+    ],
+  },
+  {
+    id: "operations", titleKey: "provPage.cat.operations", icon: Settings, tile: "navy",
+    items: [
+      { id: "places_prefill", nameKey: "provPage.feat.placesPrefill.name", descKey: "provPage.feat.placesPrefill.desc", price: "€0", scopeKey: "provPage.scope.location", free: true },
+      { id: "booking_enable", nameKey: "provPage.feat.bookingEnable.name", descKey: "provPage.feat.bookingEnable.desc", price: "€0", unitKey: "provPage.unit.optional", scopeKey: "provPage.scope.listing", free: true },
+      { id: "payments", nameKey: "provPage.feat.payments.name", descKey: "provPage.feat.payments.desc", price: "€0", unitKey: "provPage.unit.optional", scopeKey: "provPage.scope.supplier", free: true },
+      { id: "calendar_sync", nameKey: "provPage.feat.calendarSync.name", descKey: "provPage.feat.calendarSync.desc", price: "€15", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.supplier" },
+      { id: "contracts", nameKey: "provPage.feat.contracts.name", descKey: "provPage.feat.contracts.desc", price: "€19", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.supplier" },
+      { id: "analytics_export", nameKey: "provPage.feat.analyticsExport.name", descKey: "provPage.feat.analyticsExport.desc", price: "€19", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.supplier" },
+    ],
+  },
 ];
-const getGrowthFeatures = (t: (k: string) => string) => [
-  t("provPage.growth.f1"),
-  t("provPage.growth.f2"),
-  t("provPage.growth.f3"),
-  t("provPage.growth.f4"),
-  t("provPage.growth.f5"),
-  t("provPage.growth.f6"),
-];
-const getBusinessFeatures = (t: (k: string) => string) => [
-  t("provPage.business.f1"),
-  t("provPage.business.f2"),
-  t("provPage.business.f3"),
-  t("provPage.business.f4"),
-  t("provPage.business.f5"),
-  t("provPage.business.f6"),
-  t("provPage.business.f7"),
-];
+
+/* ── Built-for-each-vertical feature notes (DATA.verticalFeatures) ── */
+const getVerticals = (showMoving: boolean, showTrailer: boolean) => [
+  {
+    key: "storage", icon: Boxes, labelKey: "provPage.vertical.storage", show: true,
+    featureKeys: ["provPage.vfeat.storage1", "provPage.vfeat.storage2", "provPage.vfeat.storage3", "provPage.vfeat.storage4"],
+  },
+  {
+    key: "moving", icon: Truck, labelKey: "provPage.vertical.moving", show: showMoving,
+    featureKeys: ["provPage.vfeat.moving1", "provPage.vfeat.moving2", "provPage.vfeat.moving3", "provPage.vfeat.moving4"],
+  },
+  {
+    key: "trailer", icon: Container, labelKey: "provPage.vertical.trailer", show: showTrailer,
+    featureKeys: ["provPage.vfeat.trailer1", "provPage.vfeat.trailer2", "provPage.vfeat.trailer3", "provPage.vfeat.trailer4"],
+  },
+].filter((v) => v.show);
+
+const tileClass: Record<"teal" | "navy", string> = {
+  teal: "bg-teal/[0.16] text-teal-deep",
+  navy: "bg-primary/10 text-primary",
+};
 
 export default function ProviderPage() {
   const { t } = useLanguage();
   const settings = usePlatformSettings();
-  const featuredPartners: { name: string; logoUrl: string }[] = Array.isArray(settings?.featuredPartners)
-    ? (settings.featuredPartners as { name: string; logoUrl: string }[])
-    : [];
-  const showPartners = featuredPartners.length >= 3;
 
-  const partnerOptions = [
-    {
-      key: "free",
-      name: t("provPage.tier.freeName"),
-      price: t("provPage.tier.freePrice"),
-      highlightBadge: t("provPage.tier.freeBadge"),
-      highlight: false,
-      features: getFreeFeatures(t),
-    },
-    {
-      key: "growth",
-      name: t("provPage.growth.name"),
-      price: t("provPage.tier.visibilityPrice"),
-      highlightBadge: t("provPage.tier.mostPopular"),
-      highlight: true,
-      features: getGrowthFeatures(t),
-    },
-    {
-      key: "business",
-      name: t("provPage.business.name"),
-      price: t("provPage.tier.toolsPrice"),
-      highlightBadge: t("provPage.tier.seriousOperators"),
-      highlight: false,
-      features: getBusinessFeatures(t),
-    },
+  const showMoving = settings?.showMovingService !== false;
+  const showTrailer = settings?.showTrailerService !== false;
+
+  const catalog = getCatalog();
+  const verticals = getVerticals(showMoving, showTrailer);
+
+  // "We do the marketing. You run your space." value cards
+  const valueCards = [
+    { icon: BarChart3,        titleKey: "provPage.value1.title", descKey: "provPage.value1.desc" },
+    { icon: SlidersHorizontal, titleKey: "provPage.value2.title", descKey: "provPage.value2.desc" },
+    { icon: Globe,            titleKey: "provPage.value3.title", descKey: "provPage.value3.desc" },
   ];
 
-  const outcomes = [
-    { icon: TrendingUp, titleKey: "provPage.outcome1.title", descKey: "provPage.outcome1.desc" },
-    { icon: PhoneOff,   titleKey: "provPage.outcome2.title", descKey: "provPage.outcome2.desc" },
-    { icon: Search,     titleKey: "provPage.outcome3.title", descKey: "provPage.outcome3.desc" },
-  ];
-
-  const pricingSteps = [
-    { icon: UserPlus, titleKey: "provPage.pricingHow.step1.title", descKey: "provPage.pricingHow.step1.desc" },
-    { icon: Wallet,   titleKey: "provPage.pricingHow.step2.title", descKey: "provPage.pricingHow.step2.desc" },
-    { icon: Star,     titleKey: "provPage.pricingHow.step3.title", descKey: "provPage.pricingHow.step3.desc" },
+  // "How free partnership works" steps
+  const steps = [
+    { icon: UserPlus, titleKey: "provPage.step1.title", descKey: "provPage.step1.desc" },
+    { icon: Box,      titleKey: "provPage.step2.title", descKey: "provPage.step2.desc" },
+    { icon: Sparkles, titleKey: "provPage.step3.title", descKey: "provPage.step3.desc" },
   ];
 
   const faqKeys = ["provPage.faq.q1", "provPage.faq.q2", "provPage.faq.q3", "provPage.faq.q4", "provPage.faq.q5"];
@@ -97,231 +122,227 @@ export default function ProviderPage() {
         path="/provider"
       />
 
-      {/* ── Hero ── */}
-      <section className="hero-gradient py-20 md:py-32">
-        <div className="container-wide text-center">
-          <h1 className="mx-auto max-w-3xl font-display text-3xl font-bold leading-tight text-primary-foreground md:text-5xl lg:text-6xl">
-            {t("provPage.hero.title")}
+      {/* ── Hero (navy) ── */}
+      <section className="surface-dark relative overflow-hidden py-20 md:py-28">
+        <div className="container-wide relative text-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-accent to-teal-deep px-3.5 py-1.5 text-xs font-semibold text-white shadow-card">
+            <Sparkles className="h-3.5 w-3.5" />
+            {t("provPage.hero.badge")}
+          </span>
+          <h1 className="mx-auto mt-5 max-w-3xl font-display text-3xl font-bold leading-tight text-white md:text-5xl lg:text-[3.5rem]">
+            {t("provPage.hero.titleLead")}{" "}
+            <span className="text-teal">{t("provPage.hero.titleAccent")}</span>
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-primary-foreground/75 md:text-lg">
+          <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-white/80 md:text-lg">
             {t("provPage.hero.subtitle")}
           </p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Link to="/provider/onboarding">
-              <Button size="lg" className="bg-accent px-8 text-accent-foreground hover:bg-accent/90">
-                {t("provPage.hero.cta")} <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-            <Button size="lg" variant="outline" className="border-primary-foreground text-primary-foreground bg-transparent hover:bg-primary-foreground/10" asChild>
-              <Link to="/contact">{t("provPage.hero.ctaSecondary")}</Link>
+            <Button size="lg" className="bg-accent px-8 text-accent-foreground shadow-elevated hover:bg-brand-greenDeep" asChild>
+              <Link to="/provider/onboarding">
+                {t("provPage.hero.ctaPrimary")} <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+            <Button size="lg" className="bg-white px-8 text-navy-ink hover:bg-secondary" asChild>
+              <Link to="/provider/dashboard">{t("provPage.hero.ctaSecondary")}</Link>
             </Button>
           </div>
-          <p className="mt-4 text-xs text-primary-foreground/50">{t("provPage.hero.note")}</p>
+          <p className="mt-5 text-xs text-white/55">{t("provPage.hero.reassurance")}</p>
         </div>
       </section>
 
-      {/* ── Trust / credibility section ── */}
-      <section className="container-wide py-12 md:py-16">
-        <div className="mx-auto max-w-3xl text-center">
-          <h2 className="font-display text-2xl font-bold md:text-3xl">{t("provider.trustTitle")}</h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">{t("provider.trustSubtitle")}</p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            {[
-              { icon: ShieldCheck, label: t("provider.stat1") },
-              { icon: Zap,         label: t("provider.stat2") },
-              { icon: Clock,       label: t("provider.stat3") },
-            ].map(({ icon: Icon, label }) => (
-              <span key={label} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium">
-                <Icon className="h-4 w-4 text-accent" />
-                {label}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Outcome cards ── */}
-      <section className="container-wide py-16 md:py-20">
-        <div className="grid gap-4 md:grid-cols-3 md:gap-6">
-          {outcomes.map((o, i) => {
-            const Icon = o.icon;
-            return (
-              <div key={i} className="card-elevated p-6 md:p-7 text-center md:text-left">
-                <div className="mx-auto md:mx-0 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10">
-                  <Icon className="h-7 w-7 text-accent" />
-                </div>
-                <h3 className="mt-4 font-display text-lg font-semibold">{t(o.titleKey)}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t(o.descKey)}</p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ── The deal (marketing promise) ── */}
-      <section className="surface-sunken py-16 md:py-24">
-        <div className="container-wide mx-auto max-w-3xl">
-          <div className="flex items-center justify-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10">
-              <Megaphone className="h-7 w-7 text-accent" />
-            </div>
-          </div>
-          <h2 className="mt-5 text-center font-display text-2xl font-bold md:text-3xl">
-            {t("provPage.deal.title")}
-          </h2>
-          <div className="mt-6 space-y-4 text-sm leading-relaxed text-muted-foreground md:text-base">
-            <p>{t("provPage.deal.body1")}</p>
-            <p>{t("provPage.deal.body2")}</p>
-            <p className="font-medium text-foreground">{t("provPage.deal.body3")}</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── How partner launch works ── */}
-      <section className="container-wide py-16 md:py-20">
-        <h2 className="text-center font-display text-2xl font-bold md:text-3xl">
-          {t("provPage.pricingHow.title")}
-        </h2>
-        <div className="mt-10 grid gap-4 md:grid-cols-3 md:gap-6">
-          {pricingSteps.map((s, i) => {
-            const Icon = s.icon;
-            return (
-              <div key={i} className="card-elevated p-6 text-center">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10">
-                  <Icon className="h-6 w-6 text-accent" />
-                </div>
-                <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{i + 1}</p>
-                <h3 className="mt-1 font-display text-base font-semibold">{t(s.titleKey)}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{t(s.descKey)}</p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ── Featured partners ── */}
-      {showPartners && (
-        <section className="container-wide py-12 md:py-16">
-          <h2 className="text-center font-display text-xl font-semibold md:text-2xl text-muted-foreground">
-            {t("provPage.partners.title")}
-          </h2>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-10 gap-y-6 opacity-80">
-            {featuredPartners.map((p) => (
-              <img
-                key={p.name}
-                src={p.logoUrl}
-                alt={p.name}
-                loading="lazy"
-                className="h-8 md:h-10 w-auto object-contain grayscale"
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ── Partner options ── */}
-      <section className="surface-sunken py-16 md:py-24">
-        <div className="container-wide">
-        <h2 className="text-center font-display text-2xl font-bold md:text-3xl">
-          {t("provPage.pricing.titleNew")}
-        </h2>
-        <p className="mx-auto mt-3 max-w-xl text-center text-sm text-muted-foreground">
-          {t("provPage.pricing.introNew")}
-        </p>
-
-        <div className="mt-10 grid items-stretch gap-6 md:grid-cols-3">
-          {partnerOptions.map((option) => (
-            <div
-              key={option.key}
-              className={`relative flex flex-col overflow-hidden rounded-2xl border p-6 ${
-                option.highlight
-                  ? "border-accent bg-accent/5 ring-2 ring-accent/20"
-                  : "border-border bg-card"
-              }`}
-            >
-              {option.highlightBadge && option.highlight && (
-                <span className="absolute right-3 top-3 rounded-full bg-accent px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-foreground">
-                  {option.highlightBadge}
-                </span>
-              )}
-              <h3 className="font-display text-xl font-bold">{option.name}</h3>
-              <p className="mt-2 text-sm font-semibold text-foreground">{option.price}</p>
-              {option.key === "free" && (
-                <p className="mt-3 rounded-lg bg-success/10 px-3 py-2 text-[11px] font-medium leading-relaxed text-success">
-                  {option.highlightBadge}
-                </p>
-              )}
-              {option.key !== "free" && option.highlightBadge && !option.highlight && (
-                <span className="mt-3 inline-block rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  {option.highlightBadge}
-                </span>
-              )}
-              <ul className="mt-5 space-y-2">
-                {option.features.map((feat) => (
-                  <li key={feat} className="flex items-start gap-2 text-sm">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-                    <span>{feat}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link to="/provider/onboarding" className="mt-auto pt-6 block">
-                <Button
-                  className={`w-full ${
-                    option.highlight
-                      ? "bg-accent text-accent-foreground hover:bg-accent/90"
-                      : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                  }`}
-                >
-                  {t("provPage.options.request")}
-                </Button>
-              </Link>
-            </div>
+      {/* ── Trust strip ── */}
+      <section className="container-wide py-10 md:py-14">
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          {[
+            { icon: Check, label: t("provPage.trust.listings") },
+            { icon: Map, label: t("provider.stat2") },
+            { icon: Globe, label: t("provPage.trust.google") },
+            { icon: ShieldCheck, label: t("provPage.trust.verified") },
+          ].map(({ icon: Icon, label }) => (
+            <span key={label} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium shadow-card">
+              <Icon className="h-4 w-4 text-teal-deep" />
+              {label}
+            </span>
           ))}
         </div>
+      </section>
+
+      {/* ── Value: We do the marketing ── */}
+      <section className="container-wide py-12 md:py-20">
+        <div className="mx-auto max-w-2xl text-center">
+          <span className="font-mono-label text-xs uppercase tracking-[0.2em] text-teal-deep">
+            {t("provPage.value.eyebrow")}
+          </span>
+          <h2 className="mt-3 font-display text-2xl font-bold md:text-3xl">{t("provPage.value.title")}</h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">{t("provPage.value.subtitle")}</p>
+        </div>
+        <div className="mt-10 grid gap-4 md:grid-cols-3 md:gap-6">
+          {valueCards.map((c) => {
+            const Icon = c.icon;
+            return (
+              <div key={c.titleKey} className="card-elevated p-6 md:p-7">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal/[0.16]">
+                  <Icon className="h-6 w-6 text-teal-deep" />
+                </div>
+                <h3 className="mt-4 font-display text-lg font-semibold">{t(c.titleKey)}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t(c.descKey)}</p>
+              </div>
+            );
+          })}
         </div>
       </section>
 
-      {/* ── Marketing promise tagline ── */}
-      <section className="container-wide py-12 md:py-16">
-        <div className="mx-auto max-w-2xl rounded-2xl border border-accent/30 bg-accent/5 p-6 text-center">
-          <p className="font-display text-lg font-semibold md:text-xl">
-            {t("provPage.marketingPromise.title")}
+      {/* ── How free partnership works ── */}
+      <section className="surface-sunken border-y border-border py-12 md:py-20">
+        <div className="container-wide">
+          <div className="mx-auto max-w-2xl text-center">
+            <span className="font-mono-label text-xs uppercase tracking-[0.2em] text-teal-deep">
+              {t("provPage.how.eyebrow")}
+            </span>
+            <h2 className="mt-3 font-display text-2xl font-bold md:text-3xl">{t("provPage.how.title")}</h2>
+          </div>
+          <div className="mt-10 grid gap-4 md:grid-cols-3 md:gap-6">
+            {steps.map((s, i) => {
+              const Icon = s.icon;
+              return (
+                <div key={s.titleKey} className="card-elevated p-6 text-center">
+                  <div className="relative mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-teal/[0.16]">
+                    <Icon className="h-6 w-6 text-teal-deep" />
+                    <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-navy-ink font-mono-label text-xs font-bold text-white">
+                      {i + 1}
+                    </span>
+                  </div>
+                  <h3 className="mt-4 font-display text-base font-semibold">{t(s.titleKey)}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t(s.descKey)}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Optional features catalog (secondary, never a plans table) ── */}
+      <section className="container-wide py-12 md:py-20">
+        <div className="mx-auto max-w-2xl text-center">
+          <span className="font-mono-label text-xs uppercase tracking-[0.2em] text-teal-deep">
+            {t("provPage.optional.eyebrow")}
+          </span>
+          <h2 className="mt-3 font-display text-2xl font-bold md:text-3xl">{t("provPage.optional.title")}</h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">{t("provPage.optional.subtitle")}</p>
+        </div>
+
+        <div className="mt-10 space-y-10">
+          {catalog.map((group) => {
+            const GroupIcon = group.icon;
+            return (
+              <div key={group.id}>
+                <div className="mb-5 flex items-center gap-3">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${tileClass[group.tile]}`}>
+                    <GroupIcon className="h-5 w-5" />
+                  </div>
+                  <h3 className="font-display text-lg font-bold md:text-xl">{t(group.titleKey)}</h3>
+                  <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                    {group.items.length}
+                  </span>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {group.items.map((it) => (
+                    <div
+                      key={it.id}
+                      className="group flex flex-col gap-3 rounded-[14px] border border-border bg-card p-5 shadow-card transition-all hover:-translate-y-0.5 hover:border-teal"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="font-display text-[15.5px] font-semibold leading-snug">{t(it.nameKey)}</h4>
+                        {it.free && (
+                          <span className="inline-flex shrink-0 items-center rounded-full bg-gradient-to-r from-accent to-teal-deep px-2.5 py-0.5 text-xs font-semibold text-white">
+                            {t("provPage.tag.free")}
+                          </span>
+                        )}
+                      </div>
+                      <p className="flex-1 text-[13px] leading-relaxed text-muted-foreground">{t(it.descKey)}</p>
+                      <div className="mt-auto flex items-center justify-between gap-2">
+                        <span className="font-display text-base font-bold text-navy-ink">
+                          {it.price}
+                          {it.unitKey && <span className="ml-1 text-xs font-medium text-muted-foreground">{t(it.unitKey)}</span>}
+                        </span>
+                        <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                          {t(it.scopeKey)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── Built for each vertical ── */}
+        <div className="mt-12 rounded-[14px] border border-border bg-secondary/60 p-6 md:p-8">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="font-display text-lg font-semibold">{t("provPage.vertical.title")}</h3>
+            <span className="text-sm text-muted-foreground">{t("provPage.vertical.subtitle")}</span>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {verticals.map((v) => {
+              const Icon = v.icon;
+              return (
+                <div key={v.key} className="rounded-[14px] border border-border bg-card p-5 shadow-card">
+                  <div className="mb-3 flex items-center gap-2">
+                    <Icon className="h-5 w-5 text-teal-deep" />
+                    <strong className="font-display text-base">{t(v.labelKey)}</strong>
+                  </div>
+                  <ul className="space-y-2.5">
+                    {v.featureKeys.map((fk) => (
+                      <li key={fk} className="flex items-start gap-2 text-[13.5px] text-muted-foreground">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                        <span>{t(fk)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Closing CTA (green→teal gradient) ── */}
+      <section className="container-wide pb-12 md:pb-16">
+        <div className="mx-auto rounded-[18px] bg-gradient-to-br from-accent to-teal-deep p-10 text-center text-white shadow-prominent md:p-14">
+          <h2 className="font-display text-2xl font-bold text-white md:text-3xl">{t("provPage.closing.title")}</h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-white/90 md:text-base">
+            {t("provPage.closing.subtitle")}
           </p>
+          <Button size="lg" className="mt-7 bg-white px-8 text-navy-ink hover:bg-secondary" asChild>
+            <Link to="/provider/onboarding">
+              {t("provPage.closing.cta")} <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
         </div>
       </section>
 
-      {/* ── FAQ ── */}
-      <section className="surface-sunken py-16 md:py-24">
+      {/* ── Partner FAQ ── */}
+      <section className="surface-sunken border-t border-border py-12 md:py-20">
         <div className="container-wide mx-auto max-w-2xl">
-          <h2 className="text-center font-display text-2xl font-bold md:text-3xl">
-            {t("provPage.faq.title")}
-          </h2>
+          <div className="text-center">
+            <span className="font-mono-label text-xs uppercase tracking-[0.2em] text-teal-deep">
+              {t("provPage.faq.eyebrow")}
+            </span>
+            <h2 className="mt-3 font-display text-2xl font-bold md:text-3xl">{t("provPage.faq.title")}</h2>
+          </div>
           <Accordion type="single" collapsible className="mt-8">
             {faqKeys.map((qKey, i) => (
               <AccordionItem key={i} value={`faq-${i}`}>
-                <AccordionTrigger className="text-left text-sm font-medium">
+                <AccordionTrigger className="text-left font-display text-[15.5px] font-semibold">
                   {t(qKey)}
                 </AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
+                <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
                   {t(`${qKey}.a`)}
                 </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
-        </div>
-      </section>
-
-      {/* ── Bottom CTA ── */}
-      <section className="py-16 md:py-24">
-        <div className="container-wide text-center">
-          <h2 className="font-display text-2xl font-bold md:text-3xl">{t("provPage.bottomCta.title")}</h2>
-          <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground">{t("provPage.bottomCta.subtitle")}</p>
-          <Link to="/provider/onboarding">
-            <Button size="lg" className="mt-6 bg-accent px-8 text-accent-foreground hover:bg-accent/90">
-              {t("provPage.hero.cta")} <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
-          <p className="mt-3 text-xs text-muted-foreground">{t("provPage.hero.note")}</p>
         </div>
       </section>
     </div>

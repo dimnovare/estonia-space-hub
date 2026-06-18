@@ -84,16 +84,25 @@ export default function Navbar() {
     return link.to;
   };
 
+  // On the home hero (before scroll) the nav sits over the navy gradient:
+  // transparent bar, white links, translucent controls. Once scrolled — or on
+  // any other route — it becomes the blurred white sticky bar (72px) per spec.
+  const onDark = isHome && !scrolled;
+
   return (
     <header
-      className={`sticky top-0 z-50 border-b transition-shadow backdrop-blur-md ${
-        isHome && !scrolled
-          ? "border-transparent bg-card/70"
-          : "border-border bg-card/95 shadow-sm"
+      className={`sticky top-0 z-50 border-b transition-[background-color,box-shadow,border-color] duration-200 backdrop-blur-md ${
+        onDark
+          ? "border-transparent bg-transparent"
+          : "border-border bg-card/[0.86] shadow-card"
       }`}
     >
-      <div className="container-wide flex h-14 md:h-16 lg:h-[88px] items-center justify-between">
-        <Link to="/" className="flex-shrink-0 flex items-center">
+      <div className="container-wide flex h-16 lg:h-[72px] items-center justify-between">
+        <Link
+          to="/"
+          aria-label="Ruumly"
+          className="flex-shrink-0 flex items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+        >
           <img
             src="/ruumly-logo@1x.webp"
             srcSet="/ruumly-logo@1x.webp 1x, /ruumly-logo.webp 2x"
@@ -101,7 +110,8 @@ export default function Navbar() {
             width={179}
             height={52}
             decoding="async"
-            className="h-8 md:h-10 lg:h-[62px] w-auto object-contain"
+            className="h-8 lg:h-9 w-auto object-contain transition-[filter] duration-200"
+            style={onDark ? { filter: "brightness(0) invert(1)" } : undefined}
           />
         </Link>
 
@@ -110,7 +120,20 @@ export default function Navbar() {
             const href = getLinkHref(l);
             const active = isLinkActive(l, location.pathname, currentType);
             return (
-              <Link key={l.tKey} to={href} aria-current={active ? "page" : undefined} className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${active ? "bg-accent/10 text-accent" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
+              <Link
+                key={l.tKey}
+                to={href}
+                aria-current={active ? "page" : undefined}
+                className={`rounded-lg px-3.5 py-2 text-[14.5px] font-medium font-display transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+                  onDark
+                    ? active
+                      ? "bg-white/15 text-white"
+                      : "text-white/75 hover:bg-white/10 hover:text-white"
+                    : active
+                      ? "bg-secondary text-navy-ink"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                }`}
+              >
                 {t(l.tKey)}
               </Link>
             );
@@ -124,11 +147,15 @@ export default function Navbar() {
               aria-haspopup="menu"
               aria-expanded={langOpen}
               aria-label={t("nav.language")}
-              className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-secondary"
+              className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                onDark
+                  ? "border-white/25 bg-white/10 text-white hover:bg-white/20"
+                  : "border-border bg-card text-foreground hover:bg-secondary"
+              }`}
             >
               <FlagIcon lang={language} />
               <span className="uppercase">{language}</span>
-              <ChevronDown className="h-3 w-3 text-muted-foreground" />
+              <ChevronDown className={`h-3 w-3 ${onDark ? "text-white/70" : "text-muted-foreground"}`} />
             </button>
             {langOpen && (
               <>
@@ -161,16 +188,16 @@ export default function Navbar() {
               <div className="flex items-center gap-1">
                 {unreadCount > 0 && (
                   <Link to="/account?tab=notifications" aria-label={t("nav.notifications")} className="relative inline-flex items-center justify-center p-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
-                    <Bell className="h-4 w-4 text-muted-foreground" />
+                    <Bell className={`h-4 w-4 ${onDark ? "text-white/80" : "text-muted-foreground"}`} />
                     <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-accent-foreground">{unreadCount}</span>
                   </Link>
                 )}
-                <button onClick={() => setUserMenuOpen(!userMenuOpen)} aria-haspopup="menu" aria-expanded={userMenuOpen} aria-label={t("nav.myAccount")} className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-secondary transition-colors">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
+                <button onClick={() => setUserMenuOpen(!userMenuOpen)} aria-haspopup="menu" aria-expanded={userMenuOpen} aria-label={t("nav.myAccount")} className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${onDark ? "hover:bg-white/10" : "hover:bg-secondary"}`}>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-xs font-bold font-display text-accent-foreground">
                     {user?.name?.charAt(0) || "U"}
                   </div>
-                  <span className="hidden lg:inline text-muted-foreground">{user?.name?.split(" ")[0]}</span>
-                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className={`hidden lg:inline font-display ${onDark ? "text-white" : "text-foreground"}`}>{user?.name?.split(" ")[0]}</span>
+                  <ChevronDown className={`h-3.5 w-3.5 ${onDark ? "text-white/70" : "text-muted-foreground"}`} />
                 </button>
               </div>
 
@@ -204,25 +231,30 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <Link to="/login">
-              <Button variant="outline" size="sm" className="gap-2">
-                <LogIn className="h-4 w-4" /> {t("nav.login")}
-              </Button>
+            <Link
+              to="/login"
+              className={`inline-flex h-11 items-center gap-2 rounded-lg px-5 text-[14.5px] font-semibold font-display transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent ${
+                onDark
+                  ? "bg-white text-navy-ink hover:bg-secondary"
+                  : "bg-primary text-primary-foreground hover:bg-navy-ink"
+              }`}
+            >
+              <LogIn className="h-4 w-4" /> {t("nav.signIn")}
             </Link>
           )}
         </div>
 
         <div className="flex items-center gap-1 lg:hidden">
           {isAuthenticated && unreadCount > 0 && (
-            <Link to="/account?tab=notifications" aria-label={t("nav.notifications") || "Notifications"} className="relative inline-flex h-11 w-11 items-center justify-center rounded-lg hover:bg-secondary">
-              <Bell className="h-5 w-5 text-muted-foreground" />
+            <Link to="/account?tab=notifications" aria-label={t("nav.notifications") || "Notifications"} className={`relative inline-flex h-11 w-11 items-center justify-center rounded-lg ${onDark ? "hover:bg-white/10" : "hover:bg-secondary"}`}>
+              <Bell className={`h-5 w-5 ${onDark ? "text-white/85" : "text-muted-foreground"}`} />
               <span className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-accent-foreground">{unreadCount}</span>
             </Link>
           )}
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <button
-                className="inline-flex h-11 w-11 items-center justify-center rounded-lg hover:bg-secondary"
+                className={`inline-flex h-11 w-11 items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${onDark ? "text-white hover:bg-white/10" : "text-foreground hover:bg-secondary"}`}
                 aria-label={t("nav.openMenu") || "Open menu"}
               >
                 <Menu className="h-5 w-5" />
@@ -296,7 +328,9 @@ export default function Navbar() {
                   </>
                 ) : (
                   <Link to="/login" className="block" onClick={() => setOpen(false)}>
-                    <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">{t("nav.login")}</Button>
+                    <Button className="w-full h-11 font-display bg-primary text-primary-foreground hover:bg-navy-ink">
+                      <LogIn className="h-4 w-4 mr-1.5" /> {t("nav.signIn")}
+                    </Button>
                   </Link>
                 )}
               </div>

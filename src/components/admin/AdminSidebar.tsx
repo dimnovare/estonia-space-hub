@@ -4,7 +4,8 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import {
   LayoutDashboard, MessageSquare, Settings, Users,
   Package, Activity, ChevronDown, Route, MapPin, Banknote, Receipt,
-  Building2, Inbox, Gauge, BarChart2, ClipboardCheck,
+  Building2, Inbox, Gauge, BarChart2, ClipboardCheck, Sparkles, Zap,
+  ArrowLeft,
 } from "lucide-react";
 
 type Item = { id: string; label: string; icon: ComponentType<any>; href: string };
@@ -15,6 +16,8 @@ function useItems(): Item[] {
     { id: "dashboard",    label: t("admin.dashboard"),    icon: LayoutDashboard, href: "/admin" },
     { id: "partners",     label: t("admin.partners"),     icon: Building2,       href: "/admin/partners" },
     { id: "suppliers",    label: t("admin.applications"), icon: ClipboardCheck,  href: "/admin?tab=suppliers" },
+    { id: "catalog",      label: t("admin.featureCatalog"), icon: Sparkles,      href: "/admin?tab=catalog" },
+    { id: "requests",     label: t("admin.featureRequests"), icon: Zap,          href: "/admin?tab=requests" },
     { id: "locations",    label: t("admin.locations"),    icon: MapPin,          href: "/admin?tab=locations" },
     { id: "orders",       label: t("admin.orders"),       icon: Package,         href: "/admin?tab=orders" },
     { id: "payouts",      label: t("admin.payouts"),      icon: Banknote,        href: "/admin?tab=payouts" },
@@ -25,7 +28,7 @@ function useItems(): Item[] {
     { id: "users",        label: t("admin.users"),        icon: Users,           href: "/admin?tab=users" },
     { id: "audit",        label: t("admin.audit"),        icon: Activity,        href: "/admin?tab=audit" },
     { id: "ops",          label: t("admin.ops"),          icon: Gauge,           href: "/admin?tab=ops" },
-    { id: "metrics",      label: "Health",                icon: BarChart2,       href: "/admin?tab=metrics" },
+    { id: "metrics",      label: t("admin.health"),       icon: BarChart2,       href: "/admin?tab=metrics" },
     { id: "settings",     label: t("admin.settings"),     icon: Settings,        href: "/admin?tab=settings" },
   ];
 }
@@ -45,12 +48,15 @@ export default function AdminSidebar({ activeTab, activeSection }: Props) {
   const renderItem = (l: Item, onClick?: () => void) => {
     const Icon = l.icon;
     const isActive = l.id === active;
-    const cls = `flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-      isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+    const cls = `flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ${
+      isActive
+        ? "bg-navy-ink text-white"
+        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
     }`;
     return (
-      <Link key={l.id} to={l.href} onClick={onClick} className={cls}>
-        <Icon className="h-4 w-4" />{l.label}
+      <Link key={l.id} to={l.href} onClick={onClick} className={cls} aria-current={isActive ? "page" : undefined}>
+        <Icon className={`h-[18px] w-[18px] shrink-0 ${isActive ? "text-teal" : "text-muted-foreground/80"}`} />
+        {l.label}
       </Link>
     );
   };
@@ -60,20 +66,39 @@ export default function AdminSidebar({ activeTab, activeSection }: Props) {
 
   return (
     <>
-      <aside className="hidden w-56 shrink-0 border-r border-border bg-card lg:block">
-        <div className="p-4">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("admin.title")}</h2>
+      {/* Desktop white sidebar */}
+      <aside className="hidden w-[248px] shrink-0 border-r border-border bg-card lg:block">
+        <div className="px-5 pb-3 pt-6">
+          <div className="font-display text-[15px] font-bold text-navy-ink">{t("admin.title")}</div>
+          <div className="text-[12.5px] text-muted-foreground">{t("admin.roleCaption")}</div>
         </div>
-        <nav className="space-y-0.5 px-2">{items.map((l) => renderItem(l))}</nav>
+        <div className="px-5 pb-2 pt-1">
+          <span className="font-mono-label text-[11px] uppercase tracking-[0.18em] text-muted-foreground/70">
+            {t("admin.navCaption")}
+          </span>
+        </div>
+        <nav className="space-y-0.5 px-3 pb-4">{items.map((l) => renderItem(l))}</nav>
+        <div className="mx-3 my-2 border-t border-border" />
+        <div className="px-3 pb-6">
+          <Link
+            to="/"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <ArrowLeft className="h-[18px] w-[18px] shrink-0 text-muted-foreground/80" />
+            {t("admin.backToSite")}
+          </Link>
+        </div>
       </aside>
 
+      {/* Mobile dropdown tab bar */}
       <div className="relative px-4 pt-4 sm:px-6 lg:hidden">
         <button
           onClick={() => setMobileOpen((v) => !v)}
-          className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium"
+          aria-expanded={mobileOpen}
+          className="flex min-h-[44px] w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium shadow-card"
         >
           <span className="flex items-center gap-2.5">
-            <CurrentIcon className="h-4 w-4 text-muted-foreground" />
+            <CurrentIcon className="h-4 w-4 text-teal-deep" />
             {current.label}
           </span>
           <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${mobileOpen ? "rotate-180" : ""}`} />
@@ -81,7 +106,7 @@ export default function AdminSidebar({ activeTab, activeSection }: Props) {
         {mobileOpen && (
           <>
             <div className="fixed inset-0 z-30" onClick={() => setMobileOpen(false)} />
-            <div className="absolute left-4 right-4 top-full z-40 mt-1 rounded-xl border border-border bg-card p-1 shadow-xl max-h-[60vh] overflow-y-auto sm:left-6 sm:right-6">
+            <div className="absolute left-4 right-4 top-full z-40 mt-1 max-h-[60vh] overflow-y-auto rounded-xl border border-border bg-card p-1 shadow-prominent sm:left-6 sm:right-6">
               {items.map((l) => renderItem(l, () => setMobileOpen(false)))}
             </div>
           </>

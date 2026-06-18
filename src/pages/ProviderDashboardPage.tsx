@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, Link } from "@/i18n/routing";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   LayoutDashboard, List, Package, Calendar as CalendarIcon, Star, Settings, Users, Sparkles,
-  BarChart3, Inbox, Bell, Volume2, VolumeX, ChevronDown, X, FileText, AlertTriangle
+  BarChart3, Inbox, Bell, Volume2, VolumeX, ChevronDown, X, FileText, AlertTriangle, LogOut
 } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
 import { useAuth } from "@/contexts/AuthContext";
@@ -127,8 +127,8 @@ export default function ProviderDashboardPage() {
     <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
       <SEO title={`${t("seo.providerDashboard")} — Ruumly`} description="" noindex={true} />
       <aside className="hidden w-56 shrink-0 border-r border-border bg-card lg:block">
-        <div className="p-4">
-          <p className="text-sm font-semibold">{supplierProfile?.name || user?.company || user?.name}</p>
+        <div className="px-4 pb-3 pt-5">
+          <p className="text-[15px] font-bold text-navy-ink">{supplierProfile?.name || user?.company || user?.name}</p>
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
             <p className="text-xs text-muted-foreground">{t("provider.panel")}</p>
             {supplierInactive && (
@@ -138,17 +138,28 @@ export default function ProviderDashboardPage() {
             )}
           </div>
         </div>
+        <p className="px-4 pb-1.5 font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground/80">
+          {t("provider.nav.sectionManage")}
+        </p>
         <nav className="space-y-0.5 px-2">
           {navItems.map((l) => {
             const Icon = l.icon;
+            const isActive = tab === l.id;
             const badge = l.id === "orders" ? allOrders.filter(o => o.status === "sent" || o.status === "created").length : 0;
             return (
-              <button key={l.id} onClick={() => setTab(l.id)} aria-current={tab === l.id ? "page" : undefined} className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${tab === l.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
-                <span className="flex items-center gap-2.5"><Icon className="h-4 w-4" />{l.label}</span>
+              <button key={l.id} onClick={() => setTab(l.id)} aria-current={isActive ? "page" : undefined} className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${isActive ? "bg-navy-ink text-white" : "text-muted-foreground hover:bg-secondary hover:text-navy-ink"}`}>
+                <span className="flex items-center gap-2.5"><Icon className={`h-4 w-4 ${isActive ? "text-teal" : ""}`} />{l.label}</span>
                 {badge > 0 && <span className="flex h-5 w-5 items-center justify-center rounded-full bg-warning text-[10px] font-bold text-warning-foreground">{badge}</span>}
               </button>
             );
           })}
+        </nav>
+        <div className="mx-2 my-3 border-t border-border" />
+        <nav className="px-2 pb-4">
+          <Link to="/" className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-navy-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
+            <LogOut className="h-4 w-4" />
+            {t("provider.nav.backToSite")}
+          </Link>
         </nav>
       </aside>
 
@@ -208,10 +219,11 @@ export default function ProviderDashboardPage() {
                 <div className="absolute left-0 right-0 top-full z-40 mt-1 rounded-xl border border-border bg-card p-1 shadow-xl max-h-[60vh] overflow-y-auto">
                   {navItems.map((l) => {
                     const Icon = l.icon;
+                    const isActive = tab === l.id;
                     const badge = l.id === "orders" ? allOrders.filter(o => o.status === "sent" || o.status === "created").length : 0;
                     return (
-                      <button key={l.id} onClick={() => { setTab(l.id); setMobileNavOpen(false); }} aria-current={tab === l.id ? "page" : undefined} className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${tab === l.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
-                        <span className="flex items-center gap-2.5"><Icon className="h-4 w-4" />{l.label}</span>
+                      <button key={l.id} onClick={() => { setTab(l.id); setMobileNavOpen(false); }} aria-current={isActive ? "page" : undefined} className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${isActive ? "bg-navy-ink text-white" : "text-muted-foreground hover:bg-secondary hover:text-navy-ink"}`}>
+                        <span className="flex items-center gap-2.5"><Icon className={`h-4 w-4 ${isActive ? "text-teal" : ""}`} />{l.label}</span>
                         {badge > 0 && <span className="flex h-5 w-5 items-center justify-center rounded-full bg-warning text-[10px] font-bold text-warning-foreground">{badge}</span>}
                       </button>
                     );

@@ -17,6 +17,7 @@ export interface PlatformSettings {
   showFaq:              boolean;
   showMap:              boolean;
   showTestimonials:     boolean;
+  showStorageService:   boolean;
   showMovingService:    boolean;
   showTrailerService:   boolean;
   showFeaturedPartners: boolean;
@@ -60,12 +61,14 @@ const FALLBACK = {
   showFaq:               true,
   showMap:               true,
   showTestimonials:      false,
-  // Storage-only launch: default these OFF so a slow/unreachable settings API
-  // never flashes or leaks the hidden Moving/Trailer verticals. Real values from
-  // /settings/public still apply once loaded.
-  showMovingService:     false,
-  showTrailerService:    false,
-  showFeaturedPartners:  false,
+  // Free partner-acquisition marketplace: all three verticals (Storage, Moving,
+  // Trailers) launch publicly and are admin-toggleable. Default these ON so a
+  // slow/unreachable settings API never hides a vertical that should be visible.
+  // Real values from /settings/public still apply once loaded.
+  showStorageService:    true,
+  showMovingService:     true,
+  showTrailerService:    true,
+  showFeaturedPartners:  true,
   heroSubtitle:          "",
   heroDiscount:          "10",
 };

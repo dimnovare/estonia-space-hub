@@ -60,7 +60,7 @@ test.describe('Provider onboarding', () => {
     await page.goto('/et/provider/onboarding');
     await expect(page.locator('h1')).toBeVisible();
 
-    const bizTypeButtons = page.locator('button[class*="rounded-xl"][class*="border-2"]');
+    const bizTypeButtons = page.locator('button[aria-pressed]');
     expect(await bizTypeButtons.count()).toBeGreaterThanOrEqual(2);
   });
 
@@ -69,7 +69,7 @@ test.describe('Provider onboarding', () => {
     await expect(page.locator('h1')).toBeVisible();
 
     // Select a business type but leave companyName/registryCode/phone empty.
-    const bizTypeButtons = page.locator('button[class*="rounded-xl"][class*="border-2"]');
+    const bizTypeButtons = page.locator('button[aria-pressed]');
     await bizTypeButtons.first().click();
 
     const nextBtn = page.locator('button').filter({ hasText: NEXT }).first();
@@ -88,7 +88,7 @@ test.describe('Provider onboarding', () => {
     await page.goto('/et/provider/onboarding');
     await expect(page.locator('h1')).toBeVisible();
 
-    await page.locator('button[class*="rounded-xl"][class*="border-2"]').first().click();
+    await page.locator('button[aria-pressed]').first().click();
 
     const inputs = page.locator('input');
     await inputs.nth(0).fill('Test OÜ');          // companyName
@@ -104,7 +104,7 @@ test.describe('Provider onboarding', () => {
     // Now on step 1: the services section heading t("onboard.step3.types") is shown.
     await expect(page.locator('h2')).toBeVisible();
     // Step-1 service-type buttons (warehouse, ...) render as flex-col bordered tiles.
-    const serviceButtons = page.locator('button[class*="rounded-xl"][class*="border-2"]');
+    const serviceButtons = page.locator('button[aria-pressed]');
     expect(await serviceButtons.count()).toBeGreaterThanOrEqual(1);
     // The step-0 company-name input (index 0) should no longer be the same form —
     // step 1 has no <input> named like the company field; confirm we left step 0

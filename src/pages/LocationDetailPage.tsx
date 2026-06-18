@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, Link } from "@/i18n/routing";
-import { ArrowLeft, MapPin, Clock, Loader2, Mail } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, Loader2, Zap, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "@/hooks/queries";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -15,6 +15,13 @@ export default function LocationDetailPage() {
   const { showMovingService, showTrailerService } = usePlatformSettings();
   const { data: location, isLoading, isError } = useLocation(id);
   const [showEmailGate, setShowEmailGate] = useState(false);
+
+  const typeLabel = (type?: string) =>
+    type === "moving"
+      ? t("provider.listings.typeMoving")
+      : type === "trailer"
+        ? t("provider.listings.typeTrailer")
+        : t("provider.listings.typeWarehouse");
 
   // Storage-only gating: hide units belonging to a disabled service vertical
   // (mirrors HomePage.tsx hideDisabled).
@@ -77,15 +84,19 @@ export default function LocationDetailPage() {
 
       {/* Header */}
       <div className="mb-6">
-        <p className="text-sm text-muted-foreground">{location.supplierName}</p>
-        <h1 className="mt-1 font-display text-2xl font-bold md:text-3xl">{location.name}</h1>
-        <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-          <span className="flex items-center gap-1">
+        {location.supplierName && (
+          <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">
+            {location.supplierName}
+          </p>
+        )}
+        <h1 className="mt-1.5 font-display text-2xl font-extrabold tracking-tight md:text-[30px]">{location.name}</h1>
+        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+          <span className="flex items-center gap-1.5">
             <MapPin className="h-4 w-4" />
             {location.address}, {location.city}
           </span>
           {location.openingHours && (
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1.5">
               <Clock className="h-4 w-4" />
               {location.openingHours}
             </span>
@@ -131,7 +142,7 @@ export default function LocationDetailPage() {
       )}
 
       {/* Units heading */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <h2 className="font-display text-xl font-bold">{t("location.allUnits")}</h2>
         {location.fullyBooked && (
           <span className="rounded-full bg-destructive/90 px-2.5 py-1 text-[11px] font-semibold text-white">
@@ -154,33 +165,36 @@ export default function LocationDetailPage() {
           {visibleUnits.map((unit) => (
             <div
               key={unit.id}
-              className="overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-md"
+              className="card-elevated flex flex-col overflow-hidden"
             >
-              {unit.images?.[0] && (
+              {unit.images?.[0] ? (
                 <img
                   src={unit.images[0]}
                   alt={unit.title}
                   className="h-36 w-full object-cover"
                   loading="lazy"
                 />
+              ) : (
+                <div className="flex h-36 w-full items-center justify-center bg-secondary">
+                  <MapPin className="h-7 w-7 text-muted-foreground/30" />
+                </div>
               )}
-              <div className="p-4">
-                <h3 className="font-sans text-sm font-semibold text-foreground">
+              <div className="flex flex-1 flex-col p-4">
+                <span className="mb-1.5 inline-flex w-fit items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-semibold text-ink-2">
+                  {typeLabel(unit.type)}
+                </span>
+                <h3 className="font-display text-[15px] font-semibold text-foreground">
                   {unit.title}
                 </h3>
-                {unit.sizeM2 && (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {unit.sizeM2} m²
-                  </p>
-                )}
-                {unit.quantityTotal && unit.quantityTotal > 1 && (
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {unit.quantityTotal} {t("location.units")}
-                  </p>
-                )}
-                <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                  {unit.sizeM2 && <span>{unit.sizeM2} m²</span>}
+                  {unit.quantityTotal && unit.quantityTotal > 1 && (
+                    <span>· {unit.quantityTotal} {t("location.units")}</span>
+                  )}
+                </div>
+                <div className="mt-auto flex items-center justify-between gap-2 border-t border-border pt-3">
                   <div className="flex items-baseline gap-1">
-                    <span className="font-display text-lg font-bold text-foreground">
+                    <span className="font-display text-lg font-extrabold text-navy-ink">
                       €{unit.priceFrom}
                     </span>
                     <span className="text-xs text-muted-foreground">
@@ -189,19 +203,20 @@ export default function LocationDetailPage() {
                   </div>
                   {unit.bookingEnabled ? (
                     <Link to={`/book?listing=${unit.id}&type=${unit.type}`}>
-                      <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                        {t("detail.bookNow")}
+                      <Button size="sm" className="h-11 gap-1.5 bg-accent font-semibold text-accent-foreground hover:bg-accent/90">
+                        <Zap className="h-3.5 w-3.5" />
+                        {t("detail.bookOnline")}
                       </Button>
                     </Link>
                   ) : unit.supplierSlug ? (
                     <Link to={`/partner/${unit.supplierSlug}`}>
-                      <Button size="sm" variant="outline" className="gap-1.5">
-                        <Mail className="h-3.5 w-3.5" />
-                        {t("detail.contactPartner")}
+                      <Button size="sm" className="h-11 gap-1.5 bg-primary font-semibold text-primary-foreground hover:bg-navy-ink">
+                        <MessageSquare className="h-3.5 w-3.5" />
+                        {t("detail.sendRequest")}
                       </Button>
                     </Link>
                   ) : (
-                    <Button size="sm" variant="outline" disabled>
+                    <Button size="sm" variant="outline" disabled className="h-11">
                       {t("detail.bookingUnavailable")}
                     </Button>
                   )}

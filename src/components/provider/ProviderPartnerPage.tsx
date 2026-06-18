@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, Globe, Loader2, Save } from "lucide-react";
+import { ExternalLink, Globe, Loader2, Save, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiClient } from "@/services/apiClient";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,7 +11,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 
 const inp =
-  "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
+  "mt-1.5 w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-sm text-foreground transition-shadow placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15";
 
 type Lang = "et" | "en" | "ru" | "lv" | "lt";
 
@@ -103,7 +103,7 @@ export default function ProviderPartnerPage() {
   const handleSave = () => {
     if (!initial || !form) return;
     if (form.websiteUrl && !/^https:\/\//.test(form.websiteUrl)) {
-      toast.error("Website URL must start with https://");
+      toast.error(t("provider.partnerPage.httpsError"));
       return;
     }
     const patch = diffPatch(initial, form);
@@ -148,17 +148,36 @@ export default function ProviderPartnerPage() {
 
   return (
     <div className="space-y-6">
+      {/* Page-head */}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">
+            {t("provider.partnerPage.eyebrow")}
+          </p>
+          <h1 className="mt-2 font-display text-[28px] font-extrabold text-navy-ink">
+            {t("provider.partnerPage.heading")}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t("provider.partnerPage.subtitle")}</p>
+        </div>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-accent to-teal-deep px-3 py-1.5 text-xs font-semibold text-white shadow-card">
+          {t("provider.partnerPage.freeBadge")}
+        </span>
+      </div>
+
       {/* Status banner */}
       {!slug ? (
-        <div className="rounded-xl border border-blue-500/40 bg-blue-50 p-4 text-sm text-blue-900 dark:bg-blue-950/30 dark:text-blue-100">
+        <div className="rounded-[14px] border border-info/30 bg-info/10 p-4 text-sm text-foreground">
           {t("provider.partnerPage.notSetup")}
         </div>
       ) : isPublished ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-success/40 bg-success/10 p-4 text-sm">
-          <span className="font-medium">{t("provider.partnerPage.liveStatus")} ✓</span>
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[14px] border border-success/30 bg-success/10 p-4 text-sm">
+          <span className="inline-flex items-center gap-1.5 font-semibold text-success">
+            <CheckCircle2 className="h-4 w-4" />
+            {t("provider.partnerPage.liveStatus")}
+          </span>
           {previewUrl && (
             <a href={previewUrl} target="_blank" rel="noopener noreferrer">
-              <Button size="sm" variant="outline">
+              <Button size="sm" variant="outline" className="min-h-[40px]">
                 <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
                 {t("provider.partnerPage.viewPage")}
               </Button>
@@ -166,33 +185,33 @@ export default function ProviderPartnerPage() {
           )}
         </div>
       ) : (
-        <div className="rounded-xl border border-amber-500/40 bg-amber-50 p-4 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
+        <div className="rounded-[14px] border border-warning/30 bg-warning/10 p-4 text-sm text-foreground">
           {t("provider.partnerPage.pendingStatus")}
         </div>
       )}
 
-      <section className="rounded-xl border border-border bg-card p-5">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <section className="rounded-[14px] border border-line bg-card p-6 shadow-card">
+        <h2 className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">
           {t("provider.partnerPage.branding")}
         </h2>
-        <div className="mt-3 space-y-4">
+        <div className="mt-4 space-y-4">
           <div>
-            <label className="text-xs font-medium">{t("provider.partnerPage.logoUrl")}</label>
+            <label className="text-[13px] font-semibold text-ink-2">{t("provider.partnerPage.logoUrl")}</label>
             <input className={inp} value={form.logoUrl} onChange={(e) => update({ logoUrl: e.target.value })} />
             {form.logoUrl && (
-              <img src={form.logoUrl} alt="" className="mt-2 h-[60px] rounded-lg border border-border object-contain p-1" />
+              <img src={form.logoUrl} alt="" className="mt-2 h-[60px] rounded-[10px] border border-line object-contain p-1" />
             )}
           </div>
           <div>
-            <label className="text-xs font-medium">{t("provider.partnerPage.heroImageUrl")}</label>
+            <label className="text-[13px] font-semibold text-ink-2">{t("provider.partnerPage.heroImageUrl")}</label>
             <input className={inp} value={form.heroImageUrl} onChange={(e) => update({ heroImageUrl: e.target.value })} />
             {form.heroImageUrl && (
-              <img src={form.heroImageUrl} alt="" className="mt-2 h-[160px] w-full rounded-xl border border-border object-cover" />
+              <img src={form.heroImageUrl} alt="" className="mt-2 h-[160px] w-full rounded-[14px] border border-line object-cover" />
             )}
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="text-xs font-medium">{t("provider.partnerPage.websiteUrl")}</label>
+              <label className="text-[13px] font-semibold text-ink-2">{t("provider.partnerPage.websiteUrl")}</label>
               <input
                 className={inp}
                 placeholder="https://example.com"
@@ -201,7 +220,7 @@ export default function ProviderPartnerPage() {
               />
             </div>
             <div>
-              <label className="text-xs font-medium">{t("provider.partnerPage.foundedYear")}</label>
+              <label className="text-[13px] font-semibold text-ink-2">{t("provider.partnerPage.foundedYear")}</label>
               <input
                 type="number"
                 min={1900}
@@ -215,28 +234,31 @@ export default function ProviderPartnerPage() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-border bg-card p-5">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tagline</h2>
+      <section className="rounded-[14px] border border-line bg-card p-6 shadow-card">
+        <h2 className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">
+          {t("provider.partnerPage.tagline")}
+        </h2>
         <input
           className={inp}
           maxLength={160}
           value={form.tagline}
           onChange={(e) => update({ tagline: e.target.value })}
         />
-        <p className="mt-1 text-right text-[10px] text-muted-foreground">{form.tagline.length}/160</p>
+        <p className="mt-1.5 text-right text-[11px] text-muted-foreground">{form.tagline.length}/160</p>
       </section>
 
-      <section className="rounded-xl border border-border bg-card p-5">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <section className="rounded-[14px] border border-line bg-card p-6 shadow-card">
+        <h2 className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">
           {t("provider.partnerPage.story")}
         </h2>
-        <div className="mt-2 inline-flex rounded-lg border border-border p-0.5">
+        <div className="mt-3 inline-flex rounded-[10px] border border-line-2 p-0.5">
           {(["et", "en", "ru", "lv", "lt"] as Lang[]).map((l) => (
             <button
               key={l}
               type="button"
+              aria-pressed={storyLang === l}
               onClick={() => setStoryLang(l)}
-              className={`rounded-md px-3 py-1 text-xs font-medium uppercase ${storyLang === l ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              className={`min-h-[36px] rounded-md px-3 text-xs font-semibold uppercase transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${storyLang === l ? "bg-navy-ink text-white" : "text-muted-foreground hover:text-navy-ink"}`}
             >
               {l}
             </button>
@@ -244,15 +266,15 @@ export default function ProviderPartnerPage() {
         </div>
         <textarea
           rows={6}
-          className={`${inp} resize-y`}
+          className={`${inp} min-h-[96px] resize-y`}
           value={form[storyKey] as string}
           onChange={(e) => update({ [storyKey]: e.target.value } as Partial<FormValues>)}
         />
-        <p className="mt-1 text-[11px] text-muted-foreground">{t("provider.partnerPage.storyHint")}</p>
+        <p className="mt-1.5 text-[11px] text-muted-foreground">{t("provider.partnerPage.storyHint")}</p>
       </section>
 
-      <section className="rounded-xl border border-border bg-card p-5">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <section className="rounded-[14px] border border-line bg-card p-6 shadow-card">
+        <h2 className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">
           {t("provider.partnerPage.googlePlaceId")}
         </h2>
         <input
@@ -261,19 +283,23 @@ export default function ProviderPartnerPage() {
           value={form.googlePlaceId}
           onChange={(e) => update({ googlePlaceId: e.target.value })}
         />
-        <p className="mt-1 text-[11px] text-muted-foreground">{t("provider.partnerPage.googlePlaceHint")}</p>
+        <p className="mt-1.5 text-[11px] text-muted-foreground">{t("provider.partnerPage.googlePlaceHint")}</p>
         <a
           href="https://developers.google.com/maps/documentation/places/web-service/place-id"
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-1 inline-flex items-center gap-1 text-[11px] text-accent hover:underline"
+          className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-accent hover:underline"
         >
-          <ExternalLink className="h-3 w-3" /> Place ID Finder
+          <ExternalLink className="h-3 w-3" /> {t("provider.partnerPage.placeIdFinder")}
         </a>
       </section>
 
       <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={saveMutation.isPending}>
+        <Button
+          onClick={handleSave}
+          disabled={saveMutation.isPending}
+          className="min-h-[44px] bg-accent text-accent-foreground hover:bg-brand-greenDeep"
+        >
           {saveMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
           {t("provider.partnerPage.save")}
         </Button>

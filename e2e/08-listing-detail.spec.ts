@@ -40,8 +40,8 @@ test.describe("Listing detail page", () => {
     await expect(page.getByRole("heading", { level: 1 })).toContainText("My Unit", {
       timeout: 15000,
     });
-    // No images on the fixture → a placeholder block (h-[300px]) renders instead of <img>.
-    const placeholder = page.locator('[class*="h-[300px]"]').first();
+    // No images on the fixture → a striped placeholder tile renders instead of <img>.
+    const placeholder = page.locator('[class*="h-[280px]"]').first();
     await expect(placeholder).toBeVisible({ timeout: 10000 });
   });
 

@@ -167,7 +167,7 @@ export default function AdminSuppliers() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold">{t("admin.suppliers")}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{t("admin.integrationDesc")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("admin.partners.freeListingDesc")}</p>
         </div>
         <Button onClick={() => { setCreateForm(emptyCreate); setCreateOpen(true); }} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
           <PlusCircle className="mr-1 h-3.5 w-3.5" /> {t("admin.addPartner")}
@@ -176,8 +176,8 @@ export default function AdminSuppliers() {
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="card-elevated p-4"><div className="text-sm text-muted-foreground">{t("admin.totalPartners")}</div><div className="mt-1 font-display text-2xl font-bold">{suppliers.length}</div></div>
         <div className="card-elevated p-4"><div className="text-sm text-muted-foreground">{t("admin.activePartners")}</div><div className="mt-1 font-display text-2xl font-bold text-success">{suppliers.filter(s => s.isActive).length}</div></div>
-        <div className="card-elevated p-4"><div className="text-sm text-muted-foreground">{t("admin.apiIntegrations")}</div><div className="mt-1 font-display text-2xl font-bold">{suppliers.filter(s => s.integrationType === "api").length}</div></div>
-        <div className="card-elevated p-4"><div className="text-sm text-muted-foreground">{t("admin.totalRevenue")}</div><div className="mt-1 font-display text-2xl font-bold">€{suppliers.reduce((s, sup) => s + sup.revenue, 0).toLocaleString()}</div></div>
+        <div className="card-elevated p-4"><div className="text-sm text-muted-foreground">{t("admin.publishedPages")}</div><div className="mt-1 font-display text-2xl font-bold">{suppliers.filter(s => s.isPartnerPagePublished).length}</div></div>
+        <div className="card-elevated p-4"><div className="text-sm text-muted-foreground">{t("admin.optionalFeatureMrr")}</div><div className="mt-1 font-display text-2xl font-bold">€{suppliers.reduce((s, sup) => s + sup.revenue, 0).toLocaleString()}</div></div>
       </div>
       <div className="mt-6 flex flex-wrap items-center gap-2">
         {(["all", "active", "inactive"] as const).map(f => (
@@ -411,19 +411,14 @@ export default function AdminSuppliers() {
                   </p>
                 </div>
 
-                {/* Effective pricing */}
-                {selected.effectivePricing && (
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-lg bg-secondary/40 p-3">
-                      <p className="text-xs text-muted-foreground">{t("admin.subBenefits.effectiveCommission")}</p>
-                      <p className="mt-1 font-display text-lg font-bold">{selected.effectivePricing.effectiveCommissionRate ?? 0}%</p>
-                    </div>
-                    <div className="rounded-lg bg-secondary/40 p-3">
-                      <p className="text-xs text-muted-foreground">{t("admin.subBenefits.effectiveMonthlyFee")}</p>
-                      <p className="mt-1 font-display text-lg font-bold">€{selected.effectivePricing.effectiveMonthlyFee ?? 0}</p>
-                    </div>
-                  </div>
-                )}
+                {/* Free-listing reminder — partners pay nothing to list */}
+                <div className="rounded-lg border border-accent/20 bg-accent/5 p-3">
+                  <p className="flex items-center gap-1.5 text-xs font-semibold text-accent">
+                    <Star className="h-3.5 w-3.5" />
+                    {t("admin.partner.freeListingTitle")}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">{t("admin.partner.freeListingNote")}</p>
+                </div>
 
                 {/* Toggles + priority */}
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -562,23 +557,14 @@ export default function AdminSuppliers() {
                   </div>
                 </div>
                 {(selected.partnerDiscountRate > 0 || selected.clientDiscountRate > 0) && (
-                  <div className="mt-3 rounded-lg bg-accent/5 border border-accent/20 p-3 text-xs">
-                    <p className="font-semibold text-accent mb-1">{t("admin.marginPreview")}</p>
+                  <div className="mt-3 rounded-lg bg-secondary/40 border border-border p-3 text-xs">
+                    <p className="font-semibold text-foreground mb-1">{t("admin.partner.internalDiscounts")}</p>
                     <p className="text-muted-foreground">
                       {t("admin.partnerDiscountLabel")}: <strong>{selected.partnerDiscountRate}%</strong>
                       {" · "}
                       {t("admin.clientDiscountLabel")}: <strong>{selected.clientDiscountRate}%</strong>
-                      {" · "}
-                      {t("admin.ruumlyMargin")}: <strong className="text-success">
-                        {Math.max(0, (selected.partnerDiscountRate || 0) - (selected.clientDiscountRate || 0))}%
-                      </strong>
                     </p>
-                    <p className="mt-1 text-muted-foreground">
-                      {t("admin.marginExample")
-                        .replace("{partnerNet}", String(100 - (selected.partnerDiscountRate || 0)))
-                        .replace("{clientPays}", String(100 - (selected.clientDiscountRate || 0)))
-                        .replace("{margin}", String(Math.max(0, (selected.partnerDiscountRate || 0) - (selected.clientDiscountRate || 0))))}
-                    </p>
+                    <p className="mt-1 text-muted-foreground">{t("admin.partner.internalDiscountsNote")}</p>
                   </div>
                 )}
               </div>
@@ -611,9 +597,9 @@ export default function AdminSuppliers() {
                 </Button>
                 <Button variant="outline" size="sm" className="flex-1" onClick={() => toggleStatus(selected.id)}>
                   {selected.isActive ? (
-                    <><Ban className="mr-1 h-3.5 w-3.5" /> {t("admin.deactivate") || "Deactivate"}</>
+                    <><Ban className="mr-1 h-3.5 w-3.5" /> {t("admin.partner.removeFromMarketplace")}</>
                   ) : (
-                    <><CheckCircle className="mr-1 h-3.5 w-3.5" /> {t("admin.activate")}</>
+                    <><CheckCircle className="mr-1 h-3.5 w-3.5" /> {t("admin.partner.restoreToMarketplace")}</>
                   )}
                 </Button>
                 <Button variant="outline" size="sm" className="flex-1 text-destructive hover:bg-destructive/10" onClick={async () => {

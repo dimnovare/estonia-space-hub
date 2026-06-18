@@ -11,6 +11,7 @@ import {
   Lock,
   ArrowRight,
   Store,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -62,9 +63,12 @@ export default function HowItWorksPage() {
       />
 
       {/* Hero */}
-      <section className="hero-gradient py-16 md:py-24">
-        <div className="container-wide text-center">
-          <h1 className="font-display text-3xl font-bold text-primary-foreground md:text-5xl">
+      <section className="surface-dark py-16 md:py-24">
+        <div className="container-wide text-center motion-safe:animate-slide-up">
+          <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal">
+            {t("hiw.eyebrow")}
+          </p>
+          <h1 className="mt-4 font-display text-3xl font-bold text-primary-foreground md:text-5xl">
             {t("hiw.title")}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-sm text-primary-foreground/80 md:text-base">
@@ -79,8 +83,7 @@ export default function HowItWorksPage() {
             <Link to="/provider">
               <Button
                 size="lg"
-                variant="outline"
-                className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"
+                className="bg-white text-navy-ink hover:bg-secondary"
               >
                 {t("hiw.heroList")}
               </Button>
@@ -92,7 +95,10 @@ export default function HowItWorksPage() {
       {/* Step-by-step journey */}
       <section className="container-wide py-16">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="font-display text-2xl font-bold md:text-3xl">{t("hiw.stepsTitle")}</h2>
+          <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">
+            {t("hiw.stepsEyebrow")}
+          </p>
+          <h2 className="mt-2.5 font-display text-2xl font-bold md:text-3xl">{t("hiw.stepsTitle")}</h2>
           <p className="mt-2 text-sm text-muted-foreground">{t("hiw.stepsSubtitle")}</p>
         </div>
 
@@ -101,8 +107,8 @@ export default function HowItWorksPage() {
             const Icon = s.icon;
             return (
               <li key={i} className="card-elevated flex items-start gap-5 p-6">
-                <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-accent/10">
-                  <Icon className="h-7 w-7 text-accent" />
+                <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-navy/10">
+                  <Icon className="h-7 w-7 text-navy" />
                   <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
                     {i + 1}
                   </span>
@@ -115,6 +121,12 @@ export default function HowItWorksPage() {
             );
           })}
         </ol>
+
+        {/* Partner's choice note — booking & payment are optional, set by the partner */}
+        <div className="mx-auto mt-6 flex max-w-3xl items-start gap-3 rounded-xl bg-secondary/60 p-4">
+          <Info className="mt-0.5 h-5 w-5 shrink-0 text-teal-deep" aria-hidden="true" />
+          <p className="text-sm text-muted-foreground">{t("hiw.partnerChoiceNote")}</p>
+        </div>
       </section>
 
       {/* Storage size calculator */}
@@ -132,7 +144,10 @@ export default function HowItWorksPage() {
       <section className="surface-sunken py-16">
         <div className="container-wide">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="font-display text-2xl font-bold">{t("hiw.whyTitle")}</h2>
+            <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">
+              {t("hiw.whyEyebrow")}
+            </p>
+            <h2 className="mt-2.5 font-display text-2xl font-bold">{t("hiw.whyTitle")}</h2>
             <p className="mt-2 text-sm text-muted-foreground">{t("hiw.whySubtitle")}</p>
           </div>
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -140,8 +155,8 @@ export default function HowItWorksPage() {
               const Icon = f.icon;
               return (
                 <div key={i} className="card-elevated p-6 text-center">
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10">
-                    <Icon className="h-6 w-6 text-accent" />
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-teal/15">
+                    <Icon className="h-6 w-6 text-teal-deep" />
                   </div>
                   <h3 className="mt-4 font-display text-base font-semibold">{f.title}</h3>
                   <p className="mt-2 text-sm text-muted-foreground">{f.desc}</p>
@@ -152,12 +167,12 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      {/* List your space — partners */}
+      {/* List your space — partners (free listing, optional tools) */}
       <section className="container-wide py-16">
         <div className="card-elevated overflow-hidden">
           <div className="grid items-center gap-8 p-8 md:grid-cols-2 md:p-12">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
+              <div className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-navy-ink">
                 <Store className="h-3.5 w-3.5" /> {t("hiw.partnerBadge")}
               </div>
               <h2 className="mt-4 font-display text-2xl font-bold md:text-3xl">{t("hiw.partnerTitle")}</h2>
@@ -171,7 +186,7 @@ export default function HowItWorksPage() {
             <ul className="space-y-3">
               {partnerBullets.map((b, i) => (
                 <li key={i} className="flex items-start gap-3 rounded-xl bg-secondary/50 p-4">
-                  <BadgeCheck className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
+                  <BadgeCheck className="mt-0.5 h-5 w-5 shrink-0 text-teal-deep" aria-hidden="true" />
                   <span className="text-sm">{b}</span>
                 </li>
               ))}

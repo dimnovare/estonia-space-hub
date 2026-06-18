@@ -1,4 +1,5 @@
-import { List, Package, Eye, DollarSign, Inbox, AlertTriangle, MapPin } from "lucide-react";
+import { List, Eye, Inbox, Search, AlertTriangle, MapPin, CheckCircle2, Sparkles, ArrowRight } from "lucide-react";
+import { Link } from "@/i18n/routing";
 import { useLocations } from "@/hooks/queries";
 import { useOrders } from "@/hooks/useOrders";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -31,9 +32,8 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
   const isLoading = ordersLoading || statsLoading;
   const pendingOrders = allOrders.filter(o => o.status === "sent" || o.status === "created");
 
-  const bookingsThisMonth = stats?.thisMonthBookings ?? 0;
-  const revenueThisMonth  = stats?.thisMonthRevenue  ?? 0;
   const listingCount      = stats?.totalUnits        ?? 0;
+  const newRequestCount   = pendingOrders.length;
 
   if (isLoading) {
     return (
@@ -95,22 +95,37 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
         </div>
       )}
 
-      <h1 className="font-display text-2xl font-bold">{t("provider.overview.title")}</h1>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl font-bold">{t("provider.overview.title")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t("provider.overview.subtitle")}</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-xs font-semibold text-success">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            {t("provider.overview.activePartner")}
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-accent to-teal px-3 py-1 text-xs font-semibold text-white">
+            <Sparkles className="h-3.5 w-3.5" />
+            {t("provider.overview.freeListings")}
+          </span>
+        </div>
+      </div>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: t("provider.overview.listings"), value: listingCount.toString(), icon: List },
-          { label: t("provider.overview.bookingsMonth"), value: bookingsThisMonth.toString(), icon: Package },
-          { label: t("provider.overview.viewsMonth"), value: "—", icon: Eye },
-          { label: t("provider.overview.revenueMonth"), value: `€${revenueThisMonth.toLocaleString()}`, icon: DollarSign },
+          { label: t("provider.overview.activeListings"), value: listingCount.toString(), icon: List },
+          { label: t("provider.overview.profileViews"), value: "—", icon: Eye },
+          { label: t("provider.overview.newRequests"), value: newRequestCount.toString(), icon: Inbox },
+          { label: t("provider.overview.searchAppearances"), value: "—", icon: Search },
         ].map((s, i) => {
           const Icon = s.icon;
           return (
-            <div key={i} className="card-elevated p-5">
+            <div key={i} className="rounded-[14px] border border-border bg-card p-6 shadow-card">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">{s.label}</span>
-                <Icon className="h-4 w-4 text-muted-foreground" />
+                <span className="text-[13px] text-muted-foreground">{s.label}</span>
+                <Icon className="h-[18px] w-[18px] text-muted-foreground" />
               </div>
-              <div className="mt-2 font-display text-2xl font-bold">{s.value}</div>
+              <div className="mt-2 font-display text-3xl font-extrabold tracking-tight text-primary">{s.value}</div>
             </div>
           );
         })}
@@ -145,6 +160,25 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
         </>
       )}
 
+      {/* Optional visibility boosts banner */}
+      <div className="surface-dark mt-6 flex flex-wrap items-center justify-between gap-4 rounded-[14px] p-6 text-white">
+        <div className="flex items-center gap-4">
+          <span className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[14px] bg-teal/20 text-teal">
+            <Sparkles className="h-[22px] w-[22px]" />
+          </span>
+          <div>
+            <strong className="font-display text-base font-bold">{t("provider.overview.boostBannerTitle")}</strong>
+            <p className="mt-0.5 max-w-xl text-[13.5px] text-white/75">{t("provider.overview.boostBannerBody")}</p>
+          </div>
+        </div>
+        <Link
+          to={`/provider/dashboard?ptab=boosts${supplierId ? `&supplierId=${supplierId}` : ""}`}
+          className="inline-flex h-11 shrink-0 items-center gap-2 rounded-[10px] bg-white px-5 text-sm font-semibold text-primary transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
+        >
+          {t("provider.overview.exploreBoosts")}
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
     </div>
   );
 }

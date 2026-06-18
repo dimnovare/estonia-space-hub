@@ -1,6 +1,6 @@
 import { useState, lazy, Suspense, useEffect, useRef } from "react";
 import { Link, useNavigate } from "@/i18n/routing";
-import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, MapPin, ChevronDown, ChevronUp, CheckCircle, Phone, Map, ShieldCheck, CalendarCheck, Quote } from "lucide-react";
+import { Search, Warehouse, Truck, CarFront, ArrowRight, MapPin, ChevronDown, ChevronUp, CheckCircle, Phone, Map, ShieldCheck, CalendarCheck, Quote, Sparkles, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFeaturedListings, useAllListings, useCities } from "@/hooks/queries";
@@ -93,6 +93,31 @@ export default function HomePage() {
     ...(showTrailerService ? [{ key: "trailer", label: t("cat.trailer"), icon: CarFront }] : []),
   ];
 
+  // "Three ways to make space" verticals — Storage always shown (emphasized),
+  // Moving / Trailers honor the admin visibility toggles.
+  const verticals = [
+    {
+      key: "warehouse",
+      icon: Warehouse,
+      title: t("home.vertical.storage.title"),
+      desc: t("home.vertical.storage.desc"),
+      emphasized: true,
+    },
+    ...(showMovingService
+      ? [{ key: "moving", icon: Truck, title: t("home.vertical.moving.title"), desc: t("home.vertical.moving.desc"), emphasized: false }]
+      : []),
+    ...(showTrailerService
+      ? [{ key: "trailer", icon: CarFront, title: t("home.vertical.trailer.title"), desc: t("home.vertical.trailer.desc"), emphasized: false }]
+      : []),
+  ];
+
+  // Popular-search chips below the hero search bar (honor vertical toggles).
+  const popularChips = [
+    { label: t("home.popular.storageTallinn"), params: "type=warehouse&city=Tallinn" },
+    ...(showTrailerService ? [{ label: t("home.popular.trailer"), params: "type=trailer" }] : []),
+    ...(showMovingService  ? [{ label: t("home.popular.movers"),  params: "type=moving"  }] : []),
+  ];
+
   const howItWorks = [
     { icon: Search, title: t("how.step1"), desc: t("how.step1desc") },
     { icon: CheckCircle, title: t("how.step2"), desc: t("how.step2desc") },
@@ -164,26 +189,17 @@ export default function HomePage() {
         <div aria-hidden className="pointer-events-none absolute -bottom-28 -left-20 h-72 w-72 rounded-full bg-accent/10 blur-3xl" />
         <div className="container-wide relative">
           <div className="mx-auto max-w-3xl text-center">
+            {!storageOnly && (
+              <span className="mb-5 inline-flex items-center gap-1.5 rounded-full bg-teal/15 px-3.5 py-1.5 text-xs font-medium text-teal ring-1 ring-teal/25 backdrop-blur-sm">
+                <MapPin className="h-3.5 w-3.5" />
+                {t("home.heroPill")}
+              </span>
+            )}
             <h1 className="font-display text-3xl font-bold leading-tight tracking-tight text-primary-foreground sm:text-4xl md:text-5xl lg:text-6xl">
               {heroTitle}
               {heroTitleHighlight && <>{" "}<span className="text-gradient">{heroTitleHighlight}</span></>}
             </h1>
             <p className="mt-3 min-h-[3rem] text-base leading-relaxed text-primary-foreground/75 md:mt-4 md:min-h-[3.5rem] md:text-xl">{heroSubtitle}</p>
-
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs text-primary-foreground/85">
-              <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 ring-1 ring-white/10 backdrop-blur-sm">
-                <CheckCircle className="h-3.5 w-3.5 text-accent" />
-                {t("trust.badge1")}
-              </span>
-              <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 ring-1 ring-white/10 backdrop-blur-sm">
-                <Clock className="h-3.5 w-3.5 text-accent" />
-                {t("trust.badge2")}
-              </span>
-              <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 ring-1 ring-white/10 backdrop-blur-sm">
-                <Shield className="h-3.5 w-3.5 text-accent" />
-                {t("trust.badge3")}
-              </span>
-            </div>
 
             <div className="card-prominent mx-auto mt-7 max-w-2xl p-2 shadow-2xl shadow-primary/25 ring-1 ring-black/5 md:mt-9">
               {categories.length > 2 && (
@@ -246,6 +262,20 @@ export default function HomePage() {
               {t("hero.valueHint")}
             </p>
 
+            {/* Popular-search chips */}
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-sm">
+              <span className="text-primary-foreground/55">{t("home.popular.label")}</span>
+              {popularChips.map((chip) => (
+                <Link
+                  key={chip.label}
+                  to={`/search?${chip.params}`}
+                  className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-primary-foreground backdrop-blur-sm transition-colors hover:border-white/40 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                >
+                  {chip.label}
+                </Link>
+              ))}
+            </div>
+
             <p className="mt-3 min-h-[1.25rem] text-sm text-primary-foreground/75">
               {showTrustStrip
                 ? t("hero.trustStrip")
@@ -296,26 +326,76 @@ export default function HomePage() {
       {/* Map preview */}
       {settings.showMap && (
       <section className="container-wide mt-4 sm:mt-6 relative z-10">
-        <DeferUntilVisible minHeightClass="min-h-[280px] md:min-h-[350px]">
-          <Suspense fallback={<div className="h-[280px] md:h-[350px] rounded-xl bg-secondary flex items-center justify-center text-muted-foreground">{t("map.loading")}</div>}>
-            <InteractiveMap listings={allListings} height="h-[280px] md:h-[350px]" language={language} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
-          </Suspense>
-        </DeferUntilVisible>
+        <div className="relative overflow-hidden rounded-2xl shadow-card">
+          <DeferUntilVisible minHeightClass="min-h-[280px] md:min-h-[350px]">
+            <Suspense fallback={<div className="h-[280px] md:h-[350px] rounded-xl bg-secondary flex items-center justify-center text-muted-foreground">{t("map.loading")}</div>}>
+              <InteractiveMap listings={allListings} height="h-[280px] md:h-[350px]" language={language} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
+            </Suspense>
+          </DeferUntilVisible>
+          {listingCount > 0 && (
+            <div className="pointer-events-none absolute bottom-4 left-4 z-[400] inline-flex items-center gap-2 rounded-full bg-card/95 px-3.5 py-2 text-sm font-medium text-foreground shadow-elevated ring-1 ring-border backdrop-blur-sm">
+              <Package className="h-4 w-4 text-teal-deep" />
+              {t("home.mapBadge").replace("{count}", String(listingCount))}
+            </div>
+          )}
+        </div>
       </section>
       )}
 
+      {/* Three ways to make space — verticals */}
+      <section className="container-wide section-y">
+        <div className="text-center">
+          <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">{t("home.verticals.eyebrow")}</p>
+          <h2 className="mt-2.5 font-display text-2xl font-bold md:text-3xl">{t("home.verticals.title")}</h2>
+          <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">{t("home.verticals.subtitle")}</p>
+        </div>
+        <div className={`mt-10 grid gap-5 ${verticals.length === 3 ? "md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]" : verticals.length === 2 ? "md:grid-cols-2" : "md:grid-cols-1"}`}>
+          {verticals.map((v) => {
+            const Icon = v.icon;
+            return (
+              <Link
+                key={v.key}
+                to={`/search?type=${v.key}`}
+                className={`card-elevated group flex flex-col overflow-hidden p-0 transition-transform hover:-translate-y-0.5 ${
+                  v.emphasized ? "lg:row-span-1" : ""
+                }`}
+              >
+                <div className={`relative flex items-end bg-secondary p-5 ${v.emphasized ? "aspect-[16/9]" : "aspect-[16/10]"}`}>
+                  <div className="absolute left-4 top-4 flex h-12 w-12 items-center justify-center rounded-xl bg-card shadow-card">
+                    <Icon className="h-6 w-6 text-teal-deep" />
+                  </div>
+                </div>
+                <div className="flex flex-1 flex-col p-5">
+                  <h3 className="font-display text-lg font-semibold text-foreground">{v.title}</h3>
+                  <p className="mt-1.5 flex-1 text-sm text-muted-foreground">{v.desc}</p>
+                  <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-accent">
+                    {t("home.verticals.browse")}
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
       {/* How it works */}
       {settings.showHowItWorks && (
-      <section className="container-wide section-y">
-        <h2 className="text-center font-display text-2xl font-bold md:text-3xl">{t("how.title")}</h2>
+      <section className="surface-sunken section-y">
+        <div className="container-wide">
+        <p className="text-center font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">{t("how.eyebrow")}</p>
+        <h2 className="mt-2.5 text-center font-display text-2xl font-bold md:text-3xl">{t("how.title")}</h2>
         <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">{t("how.subtitle")}</p>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {howItWorks.map((step, i) => {
             const Icon = step.icon;
             return (
               <div key={i} className="card-elevated p-6 text-center">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10">
-                  <Icon className="h-6 w-6 text-accent" />
+                <div className="relative mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-teal/15">
+                  <Icon className="h-6 w-6 text-teal-deep" />
+                  <span className="absolute -right-2 -top-2 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-navy-ink font-mono text-[11px] font-bold text-primary-foreground">
+                    {i + 1}
+                  </span>
                 </div>
                 <h3 className="mt-4 font-display text-lg font-semibold">{step.title}</h3>
                 <p className="mt-2 text-sm text-muted-foreground">{step.desc}</p>
@@ -323,17 +403,19 @@ export default function HomePage() {
             );
           })}
         </div>
+        </div>
       </section>
       )}
 
       {/* Featured partners */}
       <FeaturedPartnersStrip />
       {settings.showFeaturedListings && (featuredLoading || featured.length > 0) && (
-      <section className="surface-sunken section-y">
+      <section className="section-y">
         <div className="container-wide">
           <div className="flex items-end justify-between">
             <div>
-              <h2 className="font-display text-2xl font-bold md:text-3xl">{t("featured.title")}</h2>
+              <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">{t("featured.eyebrow")}</p>
+              <h2 className="mt-2.5 font-display text-2xl font-bold md:text-3xl">{t("featured.title")}</h2>
               <p className="mt-1 text-sm text-muted-foreground">{t("featured.subtitle")}</p>
             </div>
             <Link to="/search" className="hidden items-center gap-1 text-sm font-medium text-accent hover:underline md:flex">
@@ -421,15 +503,36 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Provider CTA */}
+      {/* Partner CTA band — "List for free" */}
       {settings.showProviderCta && (
-      <section className="hero-gradient section-y">
-        <div className="container-wide text-center">
-          <h2 className="font-display text-2xl font-bold text-primary-foreground md:text-3xl">{t("provider.title")}</h2>
-          <p className="mx-auto mt-3 max-w-lg text-sm text-primary-foreground/70">{t("provider.desc")}</p>
-          <Link to="/provider">
-            <Button className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90">{t("provider.cta")}</Button>
-          </Link>
+      <section className="container-wide section-y">
+        <div className="surface-dark relative overflow-hidden rounded-3xl px-6 py-14 text-center shadow-prominent md:px-12 md:py-16">
+          <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.06]"
+            style={{ backgroundImage: "radial-gradient(hsl(0 0% 100%) 1px, transparent 1px)", backgroundSize: "28px 28px" }}
+          />
+          <div aria-hidden className="pointer-events-none absolute -top-20 -right-10 h-72 w-72 rounded-full bg-teal/20 blur-3xl" />
+          <div className="relative mx-auto max-w-2xl">
+            <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-accent to-teal-deep px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm">
+              <Sparkles className="h-3.5 w-3.5" />
+              {t("home.partnerCta.badge")}
+            </span>
+            <h2 className="font-display text-2xl font-bold text-primary-foreground md:text-3xl">{t("home.partnerCta.title")}</h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm text-primary-foreground/80 md:text-base">{t("home.partnerCta.desc")}</p>
+            <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Link to="/provider">
+                <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
+                  {t("home.partnerCta.primary")}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+              <Link to="/how-it-works">
+                <Button size="lg" variant="outline" className="border-white/25 bg-white/10 text-primary-foreground hover:bg-white/20">
+                  {t("home.partnerCta.secondary")}
+                </Button>
+              </Link>
+            </div>
+            <p className="mt-5 text-xs text-primary-foreground/60">{t("home.partnerCta.reassurance")}</p>
+          </div>
         </div>
       </section>
       )}
@@ -437,7 +540,8 @@ export default function HomePage() {
       {/* FAQ */}
       {settings.showFaq && (
       <section className="container-wide section-y">
-        <h2 className="text-center font-display text-2xl font-bold md:text-3xl">{t("faq.title")}</h2>
+        <p className="text-center font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">{t("faq.eyebrow")}</p>
+        <h2 className="mt-2.5 text-center font-display text-2xl font-bold md:text-3xl">{t("faq.title")}</h2>
         <div className="mx-auto mt-8 max-w-2xl space-y-3">
           {faqs.map((faq, i) => (
             <div key={i} className="rounded-xl border border-border overflow-hidden">

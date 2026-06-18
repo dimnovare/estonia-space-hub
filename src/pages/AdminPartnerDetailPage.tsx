@@ -4,21 +4,22 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   ArrowLeft, ExternalLink, Loader2, Save, RefreshCw, ChevronDown, CheckCircle2, XCircle, Trash2,
+  Sparkles, Eye, EyeOff, Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { SEO } from "@/components/SEO";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import ProviderContractTemplate from "@/components/provider/ProviderContractTemplate";
-import { supplierService } from "@/services";
+import { supplierService, providerPaidFeaturesService } from "@/services";
 import { apiClient } from "@/services/apiClient";
 import { queryKeys } from "@/services/queryKeys";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const inp = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
 
-type Tab = "overview" | "profile" | "commercial" | "partner-page" | "integration" | "contracts";
-const TABS: Tab[] = ["overview", "profile", "commercial", "partner-page", "integration", "contracts"];
+type Tab = "overview" | "profile" | "commercial" | "partner-page" | "visibility" | "integration" | "contracts";
+const TABS: Tab[] = ["overview", "profile", "commercial", "partner-page", "visibility", "integration", "contracts"];
 
 export default function AdminPartnerDetailPage() {
   const { partnerId = "" } = useParams<{ partnerId: string }>();
@@ -85,6 +86,7 @@ export default function AdminPartnerDetailPage() {
     profile: t("admin.partner.profile"),
     commercial: t("admin.partner.commercial"),
     "partner-page": t("admin.partner.partnerPage"),
+    visibility: t("admin.partner.visibility"),
     integration: t("admin.partner.integration"),
     contracts: t("admin.partner.contracts"),
   };
@@ -185,6 +187,7 @@ export default function AdminPartnerDetailPage() {
         {tab === "profile" && <ProfileTab supplier={s} onSave={(p) => updateMutation.mutate(p)} pending={updateMutation.isPending} />}
         {tab === "commercial" && <CommercialTab supplier={s} onSave={(p) => updateMutation.mutate(p)} pending={updateMutation.isPending} />}
         {tab === "partner-page" && <PartnerPageTab supplier={s} onSave={(p) => updateMutation.mutate(p)} pending={updateMutation.isPending} />}
+        {tab === "visibility" && <VisibilityTab supplier={s} onSave={(p) => updateMutation.mutate(p)} pending={updateMutation.isPending} />}
         {tab === "integration" && <IntegrationTab supplierId={s.id} />}
         {tab === "contracts" && <ProviderContractTemplate supplierId={s.id} />}
       </div>
@@ -528,6 +531,125 @@ function PartnerPageTab({ supplier, onSave, pending }: { supplier: any; onSave: 
           {t("common.saveChanges")}
         </Button>
       </div>
+    </div>
+  );
+}
+
+// ─── Visibility ────────────────────────────────────────────────────────────
+function VisibilityTab({ supplier: s, onSave, pending }: { supplier: any; onSave: (p: any) => void; pending: boolean }) {
+  const { t } = useLanguage();
+  const published = !!s.isPartnerPagePublished;
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin", "partner", s.id, "paid-features"],
+    queryFn: () => providerPaidFeaturesService.getMine(s.id),
+    enabled: !!s.id,
+  });
+
+  const active = data?.activeFeatures ?? [];
+  const pendingRequests = (data?.requests ?? []).filter((r) => r.status === "new");
+
+  const scopeLabel = (listingId?: string | null, locationId?: string | null, scope?: string) => {
+    if (listingId) return t("admin.partner.scope.listing");
+    if (locationId) return t("admin.partner.scope.location");
+    return t(`admin.partner.scope.${scope ?? "supplier"}`);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Marketplace visibility — reversible hide of page, locations & listings */}
+      <div className="rounded-xl border border-border bg-card p-5">
+        <h3 className="text-sm font-semibold text-navy-ink">{t("admin.partner.marketplaceVisibility")}</h3>
+        <p className="mt-1 text-xs text-muted-foreground">{t("admin.partner.marketplaceVisibilityDesc")}</p>
+        <div className="mt-4 flex items-center justify-between rounded-lg border border-border p-4">
+          <div className="flex items-start gap-3">
+            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] ${published ? "bg-success/10 text-success" : "bg-secondary text-muted-foreground"}`}>
+              {published ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+            </div>
+            <div>
+              <div className="text-sm font-medium text-navy-ink">
+                {published ? t("admin.partner.visibleInMarketplace") : t("admin.partner.hiddenFromMarketplace")}
+              </div>
+              <div className="text-[11px] text-muted-foreground">{t("admin.partner.marketplaceVisibilityHint")}</div>
+            </div>
+          </div>
+          <Switch
+            checked={published}
+            disabled={pending}
+            aria-label={t("admin.partner.marketplaceVisibility")}
+            onCheckedChange={(v) => onSave({ isPartnerPagePublished: v })}
+          />
+        </div>
+      </div>
+
+      {/* Active optional features (scoped) */}
+      <div className="rounded-xl border border-border bg-card p-5">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-teal-deep" />
+          <h3 className="text-sm font-semibold text-navy-ink">{t("admin.partner.activeFeatures")}</h3>
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">{t("admin.partner.activeFeaturesDesc")}</p>
+
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : active.length === 0 ? (
+          <p className="mt-4 rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+            {t("admin.partner.noActiveFeatures")}
+          </p>
+        ) : (
+          <ul className="mt-4 space-y-2">
+            {active.map((f) => (
+              <li key={f.id} className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                  <div>
+                    <div className="text-sm font-medium text-navy-ink">{f.paidFeature.name}</div>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                      <span className="rounded-full bg-secondary px-2 py-0.5 font-medium">
+                        {scopeLabel(f.listingId, f.locationId, f.paidFeature.scope)}
+                      </span>
+                      {f.endsAt && (
+                        <span>{t("admin.partner.featureUntil").replace("{date}", new Date(f.endsAt).toLocaleDateString())}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <span className="inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-semibold text-success">
+                  {t("admin.partner.featureActive")}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Pending feature requests for this partner */}
+      {pendingRequests.length > 0 && (
+        <div className="rounded-xl border border-border bg-card p-5">
+          <h3 className="text-sm font-semibold text-navy-ink">{t("admin.partner.pendingFeatureRequests")}</h3>
+          <p className="mt-1 text-xs text-muted-foreground">{t("admin.partner.pendingFeatureRequestsDesc")}</p>
+          <ul className="mt-4 space-y-2">
+            {pendingRequests.map((r) => (
+              <li key={r.id} className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
+                <div className="flex items-start gap-3">
+                  <Clock className="mt-0.5 h-4 w-4 shrink-0 text-warning-text" />
+                  <div>
+                    <div className="text-sm font-medium text-navy-ink">{r.paidFeature.name}</div>
+                    <div className="mt-0.5 text-[11px] text-muted-foreground">
+                      {scopeLabel(r.listingId, r.locationId, r.paidFeature.scope)}
+                    </div>
+                  </div>
+                </div>
+                <Link to="/admin?tab=requests" className="text-xs font-semibold text-accent hover:underline">
+                  {t("admin.partner.reviewRequest")}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
