@@ -15,14 +15,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
-import { usePricingConfig } from "@/hooks/queries";
-import { fillPricing } from "@/lib/pricingPlaceholders";
 import StorageSizeCalculator from "@/components/StorageSizeCalculator";
 
 export default function HowItWorksPage() {
   const { t } = useLanguage();
-  const { data: pricingConfig } = usePricingConfig();
-  const fp = (text: string) => fillPricing(text, pricingConfig);
 
   const steps = [
     { icon: Search, title: t("hiw.step1"), desc: t("hiw.step1desc") },
@@ -165,7 +161,7 @@ export default function HowItWorksPage() {
                 <Store className="h-3.5 w-3.5" /> {t("hiw.partnerBadge")}
               </div>
               <h2 className="mt-4 font-display text-2xl font-bold md:text-3xl">{t("hiw.partnerTitle")}</h2>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{fp(t("hiw.partnerDesc"))}</p>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{t("hiw.partnerDesc")}</p>
               <Link to="/provider" className="inline-block">
                 <Button className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90" size="lg">
                   {t("hiw.partnerCta")} <ArrowRight className="ml-2 h-4 w-4" />

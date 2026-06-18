@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "@/i18n/routing";
 import { MapPin, Star, Check, ArrowLeft, Calendar, Shield, BadgePercent, Zap, Mail, Hand, Building2, CheckCircle, Loader2, Info, ShieldCheck, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useListing, useSuppliers, usePricingConfig, useListingExtras } from "@/hooks/queries";
-import { fillPricing } from "@/lib/pricingPlaceholders";
+import { useListing, useSuppliers, useListingExtras } from "@/hooks/queries";
 import { INTEGRATION_TYPE_CONFIG } from "@/lib/constants";
 import { getSavingsDisplay } from "@/lib/savingsDisplay";
 import { lazy, Suspense } from "react";
@@ -223,8 +222,6 @@ function LoadingDetail() {
 export function WarehouseDetail() {
   const { id } = useParams();
   const { t, language } = useLanguage();
-  const { data: pricingConfig } = usePricingConfig();
-  const fp = (text: string) => fillPricing(text, pricingConfig);
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
   const { data: listing, isLoading } = useListing(id);
   const { data: apiExtras = [] } = useListingExtras(listing?.id || "");
@@ -367,7 +364,7 @@ export function WarehouseDetail() {
             </div>
 
             <BookingOrContactButton listing={wListing} bookingUrl={bookingUrl} className="mt-6 block" />
-            <p className="mt-2 text-center text-xs text-muted-foreground">{fp(t("detail.savingsNote"))}</p>
+            <p className="mt-2 text-center text-xs text-muted-foreground">{t("detail.savingsNote")}</p>
             <p className="mt-1 flex items-center justify-center gap-1 text-[11px] text-success"><Shield className="h-3 w-3" /> {t("booking.cancellation.short")}</p>
 
             <div className="mt-6 border-t border-border pt-4">
@@ -429,8 +426,6 @@ export function MovingDetail() {
   const { id } = useParams();
   const { t, language } = useLanguage();
   const { showMovingService } = usePlatformSettings();
-  const { data: pricingConfig } = usePricingConfig();
-  const fp = (text: string) => fillPricing(text, pricingConfig);
   const { data: listing, isLoading } = useListing(id);
 
   useEffect(() => {
@@ -523,7 +518,7 @@ export function MovingDetail() {
             </p>
             <p className="mt-1 text-xs text-muted-foreground">{mListing.pricingModel === "hourly" ? t("detail.hourlyRate") : t("detail.fixedPrice")}</p>
             <BookingOrContactButton listing={mListing} bookingUrl={`/book?listing=${mListing.id}&type=moving`} className="mt-6 block" />
-            <p className="mt-2 text-center text-xs text-muted-foreground">{fp(t("detail.savingsNote"))}</p>
+            <p className="mt-2 text-center text-xs text-muted-foreground">{t("detail.savingsNote")}</p>
             <p className="mt-1 flex items-center justify-center gap-1 text-[11px] text-success"><Shield className="h-3 w-3" /> {t("booking.cancellation.short")}</p>
             <div className="mt-4 rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
               {t("detail.provider")}:{" "}
@@ -560,8 +555,6 @@ export function TrailerDetail() {
   const { id } = useParams();
   const { t, language } = useLanguage();
   const { showTrailerService } = usePlatformSettings();
-  const { data: pricingConfig } = usePricingConfig();
-  const fp = (text: string) => fillPricing(text, pricingConfig);
   const { data: listing, isLoading } = useListing(id);
 
   useEffect(() => {
@@ -652,7 +645,7 @@ export function TrailerDetail() {
               <Info className="h-3 w-3 shrink-0" /> {t("listing.partnerPriceInfo")}
             </p>
             <BookingOrContactButton listing={tListing} bookingUrl={`/book?listing=${tListing.id}&type=trailer`} className="mt-6 block" />
-            <p className="mt-2 text-center text-xs text-muted-foreground">{fp(t("detail.savingsNote"))}</p>
+            <p className="mt-2 text-center text-xs text-muted-foreground">{t("detail.savingsNote")}</p>
             <p className="mt-1 flex items-center justify-center gap-1 text-[11px] text-success"><Shield className="h-3 w-3" /> {t("booking.cancellation.short")}</p>
             <div className="mt-4 rounded-lg bg-secondary p-3 text-xs text-muted-foreground">
               {t("detail.provider")}:{" "}

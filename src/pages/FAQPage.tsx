@@ -4,14 +4,10 @@ import { Link } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
-import { usePricingConfig } from "@/hooks/queries";
-import { fillPricing } from "@/lib/pricingPlaceholders";
 
 export default function FAQPage() {
   const [openKey, setOpenKey] = useState<string | null>(null);
   const { t } = useLanguage();
-  const { data: pricingConfig } = usePricingConfig();
-  const fp = (text: string) => fillPricing(text, pricingConfig);
 
   const toggleItem = (key: string) => {
     setOpenKey((prev) => (prev === key ? null : key));
@@ -21,9 +17,9 @@ export default function FAQPage() {
     {
       title: t("faq.general"),
       items: [
-        { q: t("faq.whatIsRuumly"), a: fp(t("faq.whatIsRuumlyA")) },
+        { q: t("faq.whatIsRuumly"), a: t("faq.whatIsRuumlyA") },
         { q: t("faq.whatStorage"), a: t("faq.whatStorageA") },
-        { q: t("faq.isFree"), a: fp(t("faq.isFreeA")) },
+        { q: t("faq.isFree"), a: t("faq.isFreeA") },
         { q: t("faq.whichCities"), a: t("faq.whichCitiesA") },
       ],
     },
@@ -32,8 +28,8 @@ export default function FAQPage() {
       items: [
         { q: t("faq.howToBook"), a: t("faq.howToBookA") },
         { q: t("faq.isSecure"), a: t("faq.isSecureA") },
-        { q: t("faq.isCheaper"), a: fp(t("faq.isCheaperA")) },
-        { q: t("faq.whatFees"), a: fp(t("faq.whatFeesA")) },
+        { q: t("faq.isCheaper"), a: t("faq.isCheaperA") },
+        { q: t("faq.whatFees"), a: t("faq.whatFeesA") },
         { q: t("faq.howFast"), a: t("faq.howFastA") },
       ],
     },
@@ -50,7 +46,7 @@ export default function FAQPage() {
       items: [
         { q: t("faq.howToJoin"), a: t("faq.howToJoinA") },
         { q: t("faq.howPaid"), a: t("faq.howPaidA") },
-        { q: t("faq.joinCost"), a: fp(t("faq.joinCostA")) },
+        { q: t("faq.joinCost"), a: t("faq.joinCostA") },
         { q: t("faq.canEditPrices"), a: t("faq.canEditPricesA") },
       ],
     },

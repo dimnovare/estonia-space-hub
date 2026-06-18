@@ -53,7 +53,6 @@ export default function ProviderPage() {
       key: "free",
       name: t("provPage.tier.freeName"),
       price: t("provPage.tier.freePrice"),
-      commission: t("provPage.tier.commission12"),
       highlightBadge: t("provPage.tier.freeBadge"),
       highlight: false,
       features: getFreeFeatures(t),
@@ -61,8 +60,7 @@ export default function ProviderPage() {
     {
       key: "growth",
       name: t("provPage.growth.name"),
-      price: t("provPage.tier.commission8"),
-      commission: "",
+      price: t("provPage.tier.visibilityPrice"),
       highlightBadge: t("provPage.tier.mostPopular"),
       highlight: true,
       features: getGrowthFeatures(t),
@@ -70,8 +68,7 @@ export default function ProviderPage() {
     {
       key: "business",
       name: t("provPage.business.name"),
-      price: t("provPage.tier.commission6"),
-      commission: "",
+      price: t("provPage.tier.toolsPrice"),
       highlightBadge: t("provPage.tier.seriousOperators"),
       highlight: false,
       features: getBusinessFeatures(t),
@@ -180,7 +177,7 @@ export default function ProviderPage() {
         </div>
       </section>
 
-      {/* ── How pricing works ── */}
+      {/* ── How partner launch works ── */}
       <section className="container-wide py-16 md:py-20">
         <h2 className="text-center font-display text-2xl font-bold md:text-3xl">
           {t("provPage.pricingHow.title")}
@@ -222,7 +219,7 @@ export default function ProviderPage() {
         </section>
       )}
 
-      {/* ── Pricing tiers ── */}
+      {/* ── Partner options ── */}
       <section className="surface-sunken py-16 md:py-24">
         <div className="container-wide">
         <h2 className="text-center font-display text-2xl font-bold md:text-3xl">
@@ -249,9 +246,6 @@ export default function ProviderPage() {
               )}
               <h3 className="font-display text-xl font-bold">{tier.name}</h3>
               <p className="mt-2 text-sm font-semibold text-foreground">{tier.price}</p>
-              {tier.commission && (
-                <p className="mt-1 text-xs text-muted-foreground">{tier.commission}</p>
-              )}
               {tier.key === "free" && (
                 <p className="mt-3 rounded-lg bg-success/10 px-3 py-2 text-[11px] font-medium leading-relaxed text-success">
                   {tier.highlightBadge}

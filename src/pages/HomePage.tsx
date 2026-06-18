@@ -1,10 +1,9 @@
 import { useState, lazy, Suspense, useEffect, useRef } from "react";
 import { Link, useNavigate } from "@/i18n/routing";
-import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, MapPin, ChevronDown, ChevronUp, CheckCircle, Phone, BadgePercent, ShieldCheck, XCircle, Quote } from "lucide-react";
+import { Search, Warehouse, Truck, CarFront, ArrowRight, Shield, Clock, MapPin, ChevronDown, ChevronUp, CheckCircle, Phone, Map, ShieldCheck, CalendarCheck, Quote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useFeaturedListings, useAllListings, usePricingConfig, useCities } from "@/hooks/queries";
-import { fillPricing } from "@/lib/pricingPlaceholders";
+import { useFeaturedListings, useAllListings, useCities } from "@/hooks/queries";
 import ListingCard from "@/components/ListingCard";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -94,18 +93,15 @@ export default function HomePage() {
     ...(showTrailerService ? [{ key: "trailer", label: t("cat.trailer"), icon: CarFront }] : []),
   ];
 
-  const { data: pricingConfig } = usePricingConfig();
-  const fp = (text: string) => fillPricing(text, pricingConfig);
-
   const howItWorks = [
     { icon: Search, title: t("how.step1"), desc: t("how.step1desc") },
     { icon: CheckCircle, title: t("how.step2"), desc: t("how.step2desc") },
-    { icon: ArrowRight, title: t("how.step3"), desc: fp(t("how.step3desc")) },
+    { icon: ArrowRight, title: t("how.step3"), desc: t("how.step3desc") },
   ];
 
   const faqs = [
     { q: t("homeFaq.q1"), a: t("homeFaq.a1") },
-    { q: t("homeFaq.q2"), a: fp(t("homeFaq.a2")) },
+    { q: t("homeFaq.q2"), a: t("homeFaq.a2") },
     { q: t("homeFaq.q3"), a: t("homeFaq.a3") },
     { q: t("homeFaq.q4"), a: t("homeFaq.a4") },
   ];
@@ -129,7 +125,7 @@ export default function HomePage() {
           "@type": "WebSite",
           "name": "Ruumly",
           "url": "https://ruumly.eu",
-          "description": t("seo.homeDescription"),
+          "description": storageOnly ? t("seo.homeStorageDescription") : t("seo.homeDescription"),
           "potentialAction": {
             "@type": "SearchAction",
             "target": {
@@ -370,9 +366,9 @@ export default function HomePage() {
         <h2 className="text-center font-display text-2xl font-bold md:text-3xl">{t("home.whyRuumly.title")}</h2>
         <div className="mx-auto mt-8 grid max-w-3xl gap-4 md:grid-cols-3">
           {[
-            { icon: BadgePercent, text: fp(t("home.whyRuumly.savings")) },
+            { icon: Map, text: t("home.whyRuumly.savings") },
             { icon: ShieldCheck, text: t("home.whyRuumly.verified") },
-            { icon: XCircle, text: t("home.whyRuumly.cancellation") },
+            { icon: CalendarCheck, text: t("home.whyRuumly.cancellation") },
           ].map((item) => {
             const Icon = item.icon;
             return (
