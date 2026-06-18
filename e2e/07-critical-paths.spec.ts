@@ -44,28 +44,27 @@ test.describe("Critical customer path: search → detail → book", () => {
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Testkeskuse Ladu", {
       timeout: 15000,
     });
-    await expect(page.getByText(/49\s*€/).first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/€\s*49/).first()).toBeVisible({ timeout: 10000 });
   });
 
-  test("detail page has a Book button linking to the booking flow", async ({ page }) => {
+  test("detail page has a Book online CTA button", async ({ page }) => {
     await stubAll(page);
     await page.goto("/et/warehouse/wh-001");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Testkeskuse Ladu", {
       timeout: 15000,
     });
-    const bookLink = page.locator('a[href*="/book"]').first();
-    await expect(bookLink).toBeVisible({ timeout: 10000 });
+    const bookBtn = page.getByRole("button", { name: /broneeri|book online/i }).first();
+    await expect(bookBtn).toBeVisible({ timeout: 10000 });
   });
 
-  test("full flow: search → card → detail → Book navigates to /book", async ({ page }) => {
+  test("full flow: search → card → detail → Book opens the booking modal", async ({ page }) => {
     await stubAll(page);
     await page.goto("/et/search");
     await page.getByText("Testkeskuse Ladu").first().click();
     await page.waitForURL("**/et/warehouse/wh-001", { timeout: 10000 });
-    const bookLink = page.locator('a[href*="/book"]').first();
-    await expect(bookLink).toBeVisible({ timeout: 10000 });
-    await bookLink.click();
-    await page.waitForURL("**/book**", { timeout: 10000 });
-    expect(page.url()).toContain("/book");
+    const bookBtn = page.getByRole("button", { name: /broneeri|book online/i }).first();
+    await expect(bookBtn).toBeVisible({ timeout: 10000 });
+    await bookBtn.click();
+    await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10000 });
   });
 });

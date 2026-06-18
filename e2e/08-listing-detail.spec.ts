@@ -31,7 +31,7 @@ test.describe("Listing detail page", () => {
     await expect(page.getByRole("heading", { level: 1 })).toContainText("My Unit", {
       timeout: 15000,
     });
-    await expect(page.getByText(/49\s*€/).first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/€\s*49/).first()).toBeVisible({ timeout: 10000 });
   });
 
   test("shows a photos / image section", async ({ page }) => {
@@ -41,33 +41,31 @@ test.describe("Listing detail page", () => {
       timeout: 15000,
     });
     // No images on the fixture → a striped placeholder tile renders instead of <img>.
-    const placeholder = page.locator('[class*="h-[280px]"]').first();
+    const placeholder = page.locator('[class*="aspect-[16/11]"]').first();
     await expect(placeholder).toBeVisible({ timeout: 10000 });
   });
 
-  test("has a Book button linking to the booking flow", async ({ page }) => {
+  test("has a Book online button (opens the booking modal)", async ({ page }) => {
     await stubAll(page);
     await page.goto("/et/warehouse/wh-001");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("My Unit", {
       timeout: 15000,
     });
-    const bookLink = page.locator('a[href*="/book"]').first();
-    await expect(bookLink).toBeVisible({ timeout: 10000 });
-    await expect(bookLink).toHaveAttribute("href", /listing=wh-001/);
-    await expect(bookLink).toHaveAttribute("href", /type=warehouse/);
+    // Bookable listing → sidebar shows a "Book online" CTA button (was an <a href="/book">,
+    // the redesign opens an in-page Confirm-booking modal instead).
+    const bookBtn = page.getByRole("button", { name: /broneeri|book online/i }).first();
+    await expect(bookBtn).toBeVisible({ timeout: 10000 });
   });
 
-  test("clicking Book navigates to the booking page", async ({ page }) => {
+  test("clicking Book online opens the confirm-booking modal", async ({ page }) => {
     await stubAll(page);
     await page.goto("/et/warehouse/wh-001");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("My Unit", {
       timeout: 15000,
     });
-    const bookLink = page.locator('a[href*="/book"]').first();
-    await bookLink.click();
-    await page.waitForURL("**/book**", { timeout: 10000 });
-    expect(page.url()).toContain("/book");
-    expect(page.url()).toContain("listing=wh-001");
+    const bookBtn = page.getByRole("button", { name: /broneeri|book online/i }).first();
+    await bookBtn.click();
+    await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10000 });
   });
 
   test("unknown listing id returning 404 renders the not-found state", async ({ page }) => {
