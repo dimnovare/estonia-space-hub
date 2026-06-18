@@ -4,68 +4,77 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 213 35% 17%;
+    /* Ruumly redesign tokens — navy (brand/structure) + green (action) + teal (accent).
+       HSL triplets mirror design-system/tokens.css. */
+    --background: 222 39% 97%;       /* #F4F6FB */
+    --foreground: 226 40% 13%;       /* #141A2E */
 
     --card: 0 0% 100%;
-    --card-foreground: 213 35% 17%;
+    --card-foreground: 226 40% 13%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 213 35% 17%;
+    --popover-foreground: 226 40% 13%;
 
-    --primary: 213 52% 24%;
-    --primary-foreground: 210 20% 98%;
+    /* Navy = brand/structure (headings, links, dark/secondary CTAs) */
+    --primary: 222 72% 32%;          /* #173B8D */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 18% 95%;
-    --secondary-foreground: 213 35% 17%;
+    --secondary: 222 35% 95%;        /* #EEF1F8 */
+    --secondary-foreground: 224 72% 20%;
 
-    --muted: 210 14% 93%;
-    --muted-foreground: 213 12% 46%;
+    --muted: 222 33% 93%;            /* #E6EAF3 */
+    --muted-foreground: 223 15% 49%; /* #6B7691 */
 
-    /* Darkened to 174 80% 24% so white text on bg-accent and text-accent on
-       light tints (bg-accent/5) both clear WCAG AA (4.5:1). */
-    --accent: 174 80% 24%;
+    /* Green = PRIMARY ACTION color (CTA buttons + focus ring) */
+    --accent: 170 88% 32%;           /* #0A9881 */
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 3 67% 54%;        /* #D8453C */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 14% 90%;
-    --input: 210 14% 90%;
-    --ring: 213 52% 24%;
+    --border: 222 33% 91%;           /* #E6EAF3 */
+    --input: 224 35% 89%;            /* #D8DEEC */
+    --ring: 170 88% 32%;             /* green focus ring */
 
-    --radius: 0.625rem;
+    --radius: 0.875rem;              /* 14px cards */
 
-    --sidebar-background: 213 35% 17%;
-    --sidebar-foreground: 210 14% 90%;
-    --sidebar-primary: 174 65% 47%;
+    /* Dashboard sidebars are WHITE in the new design; active item = navy-ink bg + teal icon */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 218 27% 31%;
+    --sidebar-primary: 224 72% 20%;          /* navy-ink active bg */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 213 28% 22%;
-    --sidebar-accent-foreground: 210 14% 90%;
-    --sidebar-border: 213 24% 26%;
-    --sidebar-ring: 174 65% 47%;
+    --sidebar-accent: 184 56% 57%;           /* teal icon on active */
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 222 33% 93%;
+    --sidebar-ring: 170 88% 32%;
+
+    /* Raw brand palette (HSL) for direct use */
+    --teal: 184 56% 57%;             /* #51CDD4 */
+    --teal-deep: 183 70% 40%;        /* #1FA6AE */
+    --navy-ink: 224 72% 20%;         /* #0E2156 */
+    --navy-deep: 227 63% 12%;        /* #0B1330 */
 
     /* Custom tokens */
-    --success: 152 60% 40%;
+    --success: 162 83% 34%;          /* #0F9D6E */
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
+    --warning: 33 83% 43%;           /* #C97A12 */
     --warning-foreground: 0 0% 100%;
-    /* Darker amber for warning *text on light surfaces* — amber-700, ~5.4:1 on
-       white (the amber-500 --warning is ~1.9:1 and fails WCAG AA as text). */
+    /* Amber that reads as TEXT on light surfaces (≈5:1 on white). */
     --warning-text: 32 95% 38%;
-    --info: 210 80% 52%;
+    --info: 215 67% 51%;             /* #2F77D6 */
     --info-foreground: 0 0% 100%;
 
     --surface-elevated: 0 0% 100%;
-    --surface-sunken: 210 14% 96%;
+    --surface-sunken: 222 35% 95%;   /* #EEF1F8 */
 
-    --shadow-card: 0 1px 3px 0 hsl(213 35% 17% / 0.04), 0 1px 2px -1px hsl(213 35% 17% / 0.04);
-    --shadow-elevated: 0 4px 6px -1px hsl(213 35% 17% / 0.06), 0 2px 4px -2px hsl(213 35% 17% / 0.04);
-    --shadow-prominent: 0 10px 15px -3px hsl(213 35% 17% / 0.08), 0 4px 6px -4px hsl(213 35% 17% / 0.04);
+    /* Low, cool navy-tinted shadows (rgba 16,28,64) */
+    --shadow-card: 0 1px 2px rgba(16,28,64,.05), 0 1px 3px rgba(16,28,64,.04);
+    --shadow-elevated: 0 4px 14px rgba(16,28,64,.07), 0 2px 6px rgba(16,28,64,.04);
+    --shadow-prominent: 0 18px 48px rgba(16,28,64,.14), 0 6px 18px rgba(16,28,64,.08);
 
-    --gradient-hero: linear-gradient(135deg, hsl(213 52% 24%), hsl(213 42% 32%));
-    --gradient-accent: linear-gradient(135deg, hsl(174 65% 47%), hsl(174 70% 40%));
-    --gradient-surface: linear-gradient(180deg, hsl(210 20% 98%), hsl(210 14% 96%));
+    --gradient-hero: radial-gradient(120% 120% at 78% 10%, #1B4AA8 0%, #0E2156 44%, #0B1330 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(170 88% 32%), hsl(183 70% 40%));
+    --gradient-surface: linear-gradient(180deg, hsl(222 39% 97%), hsl(222 35% 95%));
   }
 
   .dark {
@@ -105,7 +114,9 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Manrope', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 }
 
@@ -162,10 +173,12 @@
   }
 
   .hero-gradient {
-    background:
-      radial-gradient(ellipse 70% 55% at 75% -10%, hsl(174 65% 47% / 0.20), transparent 60%),
-      radial-gradient(ellipse 55% 45% at 5% 115%, hsl(186 60% 45% / 0.14), transparent 55%),
-      linear-gradient(150deg, hsl(213 56% 19%) 0%, hsl(213 46% 27%) 55%, hsl(202 44% 26%) 100%);
+    background: radial-gradient(120% 120% at 78% 10%, #1B4AA8 0%, #0E2156 44%, #0B1330 100%);
+  }
+
+  .surface-dark {
+    background: radial-gradient(120% 120% at 78% 10%, #1B4AA8 0%, #0E2156 44%, #0B1330 100%);
+    color: #fff;
   }
 
   .surface-sunken {
@@ -173,7 +186,11 @@
   }
 
   .font-display {
-    font-family: 'Manrope', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+
+  .font-mono-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
   }
 
   .section-y {

@@ -21,10 +21,15 @@ Single test file: `npx vitest run src/path/to/file.test.tsx`
 
 ## Current focus
 
-Storage-only launch. Moving/Trailer are hidden behind platform setting flags
-(`showMovingService` / `showTrailerService`). Always use `usePlatformSettings()`
-for service-type-dependent UI; never hardcode Moving/Trailer visibility.
-Read `docs/ROADMAP.md` before proposing features.
+**Free partner-acquisition marketplace** — all three verticals public: Storage,
+Moving, Trailers. `showMovingService` / `showTrailerService` default **visible**
+and are admin-toggleable (no longer "hidden launch" flags). Always use
+`usePlatformSettings()` for service-type-dependent UI; never hardcode visibility.
+Listing is **free**; monetization = optional paid features/boosts
+(`PaidFeature` / `ProviderBoosts`) — **never** mandatory plans/commission in any
+public or partner-facing UI. Booking/payment/contract infra stays, enabled
+optionally per partner/listing. Design system per the redesign handoff
+(navy `#173B8D` / green `#0A9881` / teal `#51CDD4`; Plus Jakarta Sans headings).
 
 ## Routing — language-prefixed URLs
 

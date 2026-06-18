@@ -15,7 +15,8 @@ export default {
     extend: {
       fontFamily: {
         sans: ["'DM Sans'", "system-ui", "sans-serif"],
-        display: ["'Manrope'", "system-ui", "sans-serif"],
+        display: ["'Plus Jakarta Sans'", "system-ui", "sans-serif"],
+        mono: ["'JetBrains Mono'", "ui-monospace", "monospace"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -74,12 +75,33 @@ export default {
           DEFAULT: "hsl(var(--info))",
           foreground: "hsl(var(--info-foreground))",
         },
+        teal: { DEFAULT: "hsl(var(--teal))", deep: "hsl(var(--teal-deep))" },
+        navy: { ink: "hsl(var(--navy-ink))", deep: "hsl(var(--navy-deep))" },
+        brand: {
+          navy: "#173B8D",
+          navyInk: "#0E2156",
+          navyDeep: "#0B1330",
+          teal: "#51CDD4",
+          tealDeep: "#1FA6AE",
+          green: "#0A9881",
+          greenDeep: "#067A68",
+        },
+        ink: { DEFAULT: "#141A2E", 2: "#3A4661" },
+        line: { DEFAULT: "#E6EAF3", 2: "#D8DEEC" },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xl: "18px",
+        "2xl": "24px",
       },
+      boxShadow: {
+        card: "0 1px 2px rgba(16,28,64,.05), 0 1px 3px rgba(16,28,64,.04)",
+        elevated: "0 4px 14px rgba(16,28,64,.07), 0 2px 6px rgba(16,28,64,.04)",
+        prominent: "0 18px 48px rgba(16,28,64,.14), 0 6px 18px rgba(16,28,64,.08)",
+      },
+      maxWidth: { content: "1240px" },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
