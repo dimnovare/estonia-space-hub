@@ -65,7 +65,7 @@ export default function AdminBoosts() {
 
   const declineMutation = useMutation({
     mutationFn: (id: string) =>
-      apiClient.patch(`/admin/paid-features/requests/${id}`, { status: "dismissed" }),
+      apiClient.post(`/admin/paid-features/requests/${id}/decline`, { adminNotes: "" }),
     onSuccess: () => {
       invalidate();
       toast.success(t("admin.boosts.declined"));

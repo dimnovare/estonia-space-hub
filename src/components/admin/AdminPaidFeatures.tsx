@@ -59,7 +59,7 @@ export default function AdminPaidFeatures() {
 
   const saveMutation = useMutation({
     mutationFn: (patch: EditState) =>
-      apiClient.patch(`/admin/paid-features/${patch.id}`, {
+      apiClient.patch(`/admin/paid-features/catalog/${patch.id}`, {
         name: patch.name,
         description: patch.description,
         category: patch.category,
@@ -79,7 +79,7 @@ export default function AdminPaidFeatures() {
 
   const toggleActive = useMutation({
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
-      apiClient.patch(`/admin/paid-features/${id}`, { isActive }),
+      apiClient.patch(`/admin/paid-features/catalog/${id}`, { isActive }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "paid-features", "catalog"] });
     },

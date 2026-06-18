@@ -17,9 +17,13 @@ export function useSizeBuckets() {
   });
 }
 
-/** Format a bucket as "3.7–7.4 m²" for display alongside the code. */
-export function formatBucketRange(b: SizeBucket): string {
-  if (b.minM2 === null && b.maxM2 !== null) return `kuni ${b.maxM2} m²`;
+/**
+ * Format a bucket as "3.7–7.4 m²" for display alongside the code.
+ * `upTo` is the localized "up to" word for the open-min bucket (e.g. "kuni"/"up to").
+ * Defaults to "≤" so a missing translation still renders something language-neutral.
+ */
+export function formatBucketRange(b: SizeBucket, upTo = "≤"): string {
+  if (b.minM2 === null && b.maxM2 !== null) return `${upTo} ${b.maxM2} m²`;
   if (b.minM2 !== null && b.maxM2 === null) return `${b.minM2}+ m²`;
   return `${b.minM2}–${b.maxM2} m²`;
 }
