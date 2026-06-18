@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle, Clock, Sparkles } from "lucide-react";
 import { toast } from "sonner";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { providerPaidFeaturesService } from "@/services";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
+import { useLocations } from "@/hooks/queries";
 
 function formatPrice(amount: number, currency: string, interval: string, manualLabel: string) {
   if (amount <= 0) return manualLabel;
@@ -17,6 +18,8 @@ export default function ProviderBoosts() {
   const { t } = useLanguage();
   const supplierId = useImpersonatedSupplierId();
   const queryClient = useQueryClient();
+  const [targets, setTargets] = useState<Record<string, string>>({});
+  const { data: locations = [] } = useLocations(supplierId ? { supplierId } : undefined);
 
   const { data, isLoading } = useQuery({
     queryKey: ["provider-paid-features", supplierId],
@@ -24,8 +27,8 @@ export default function ProviderBoosts() {
   });
 
   const requestMutation = useMutation({
-    mutationFn: (paidFeatureId: string) =>
-      providerPaidFeaturesService.request({ paidFeatureId }, supplierId),
+    mutationFn: ({ paidFeatureId, listingId, locationId }: { paidFeatureId: string; listingId?: string; locationId?: string }) =>
+      providerPaidFeaturesService.request({ paidFeatureId, listingId, locationId }, supplierId),
     onSuccess: () => {
       toast.success(t("provider.boosts.requestSent"));
       queryClient.invalidateQueries({ queryKey: ["provider-paid-features", supplierId] });
@@ -33,16 +36,42 @@ export default function ProviderBoosts() {
     onError: () => toast.error(t("toast.error")),
   });
 
-  const activeFeatureIds = useMemo(
-    () => new Set((data?.activeFeatures ?? []).map((f) => f.paidFeature.id)),
+  const targetKey = (paidFeatureId: string, listingId?: string | null, locationId?: string | null) =>
+    `${paidFeatureId}:${listingId ?? ""}:${locationId ?? ""}`;
+
+  const units = useMemo(
+    () => locations.flatMap((loc) => (loc.units ?? []).map((unit) => ({
+      id: unit.id,
+      label: `${loc.name} · ${unit.title}`,
+    }))),
+    [locations]
+  );
+
+  const locationLabels = useMemo(
+    () => new Map(locations.map((loc) => [loc.id, `${loc.name} · ${loc.city}`])),
+    [locations]
+  );
+  const unitLabels = useMemo(
+    () => new Map(units.map((unit) => [unit.id, unit.label])),
+    [units]
+  );
+
+  const activeFeatureKeys = useMemo(
+    () => new Set((data?.activeFeatures ?? []).map((f) => targetKey(f.paidFeature.id, f.listingId, f.locationId))),
     [data?.activeFeatures]
   );
-  const pendingFeatureIds = useMemo(
+  const pendingFeatureKeys = useMemo(
     () => new Set((data?.requests ?? [])
       .filter((r) => r.status === "new")
-      .map((r) => r.paidFeature.id)),
+      .map((r) => targetKey(r.paidFeature.id, r.listingId, r.locationId))),
     [data?.requests]
   );
+
+  const targetLabel = (listingId?: string | null, locationId?: string | null) => {
+    if (listingId) return unitLabels.get(listingId) ?? t("provider.boosts.scope.listing");
+    if (locationId) return locationLabels.get(locationId) ?? t("provider.boosts.scope.location");
+    return t("provider.boosts.scope.supplier");
+  };
 
   if (isLoading) {
     return <div className="py-12 text-center text-sm text-muted-foreground">{t("provider.boosts.loading")}</div>;
@@ -72,6 +101,9 @@ export default function ProviderBoosts() {
                   <div>
                     <p className="font-medium">{feature.paidFeature.name}</p>
                     <p className="mt-1 text-xs text-muted-foreground">{feature.paidFeature.description}</p>
+                    <p className="mt-1 text-[11px] font-medium text-muted-foreground">
+                      {targetLabel(feature.listingId, feature.locationId)}
+                    </p>
                     {feature.endsAt && (
                       <p className="mt-2 text-xs text-muted-foreground">
                         {t("provider.boosts.activeUntil").replace("{date}", new Date(feature.endsAt).toLocaleDateString())}
@@ -93,7 +125,9 @@ export default function ProviderBoosts() {
               <div key={request.id} className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
                 <div>
                   <p className="text-sm font-medium">{request.paidFeature.name}</p>
-                  <p className="text-xs text-muted-foreground">{t(`provider.boosts.status.${request.status}`)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t(`provider.boosts.status.${request.status}`)} · {targetLabel(request.listingId, request.locationId)}
+                  </p>
                 </div>
                 <Clock className="h-4 w-4 text-muted-foreground" />
               </div>
@@ -106,8 +140,14 @@ export default function ProviderBoosts() {
         <h2 className="text-sm font-semibold">{t("provider.boosts.catalog")}</h2>
         <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {catalog.map((feature) => {
-            const isActiveFeature = activeFeatureIds.has(feature.id);
-            const isPending = pendingFeatureIds.has(feature.id);
+            const selectedTarget = targets[feature.id] ?? "";
+            const listingId = feature.scope === "listing" ? selectedTarget || undefined : undefined;
+            const locationId = feature.scope === "location" ? selectedTarget || undefined : undefined;
+            const scopedKey = targetKey(feature.id, listingId, locationId);
+            const requiresTarget = feature.scope === "listing" || feature.scope === "location";
+            const isActiveFeature = activeFeatureKeys.has(scopedKey);
+            const isPending = pendingFeatureKeys.has(scopedKey);
+            const missingTarget = requiresTarget && !selectedTarget;
             return (
               <div key={feature.id} className="flex min-h-[180px] flex-col rounded-lg border border-border bg-card p-4">
                 <div className="flex items-start justify-between gap-3">
@@ -115,11 +155,44 @@ export default function ProviderBoosts() {
                     <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium uppercase text-muted-foreground">
                       {t(`provider.boosts.category.${feature.category}`)}
                     </span>
+                    <span className="ml-1 rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium uppercase text-accent">
+                      {t(`provider.boosts.scope.${feature.scope}`)}
+                    </span>
                     <h3 className="mt-3 font-semibold">{feature.name}</h3>
                   </div>
                   <Sparkles className="h-5 w-5 text-accent" />
                 </div>
                 <p className="mt-2 flex-1 text-sm text-muted-foreground">{feature.description}</p>
+                {feature.scope === "location" && (
+                  <label className="mt-4 block text-xs">
+                    <span className="font-medium text-muted-foreground">{t("provider.boosts.chooseLocation")}</span>
+                    <select
+                      className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                      value={selectedTarget}
+                      onChange={(e) => setTargets((prev) => ({ ...prev, [feature.id]: e.target.value }))}
+                    >
+                      <option value="">{t("provider.boosts.pickTarget")}</option>
+                      {locations.map((loc) => (
+                        <option key={loc.id} value={loc.id}>{loc.name} · {loc.city}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                {feature.scope === "listing" && (
+                  <label className="mt-4 block text-xs">
+                    <span className="font-medium text-muted-foreground">{t("provider.boosts.chooseUnit")}</span>
+                    <select
+                      className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                      value={selectedTarget}
+                      onChange={(e) => setTargets((prev) => ({ ...prev, [feature.id]: e.target.value }))}
+                    >
+                      <option value="">{t("provider.boosts.pickTarget")}</option>
+                      {units.map((unit) => (
+                        <option key={unit.id} value={unit.id}>{unit.label}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
                 <div className="mt-4 flex items-center justify-between gap-3">
                   <span className="text-sm font-semibold">
                     {formatPrice(feature.priceAmount, feature.priceCurrency, feature.billingInterval, t("provider.boosts.manual"))}
@@ -127,10 +200,12 @@ export default function ProviderBoosts() {
                   <Button
                     size="sm"
                     variant={isActiveFeature ? "secondary" : "default"}
-                    disabled={isActiveFeature || isPending || requestMutation.isPending}
-                    onClick={() => requestMutation.mutate(feature.id)}
+                    disabled={missingTarget || isActiveFeature || isPending || requestMutation.isPending}
+                    onClick={() => requestMutation.mutate({ paidFeatureId: feature.id, listingId, locationId })}
                   >
-                    {isActiveFeature
+                    {missingTarget
+                      ? t("provider.boosts.pickTarget")
+                      : isActiveFeature
                       ? t("provider.boosts.enabled")
                       : isPending
                         ? t("provider.boosts.pending")

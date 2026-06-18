@@ -259,7 +259,11 @@ export default function AdminSettings() {
               {(["starter", "standard", "premium"] as const).map(tier => (
                 <div key={tier} className={`rounded-lg border p-4 ${tier === "starter" ? "border-accent/30 bg-accent/5" : "border-border bg-card"}`}>
                   <p className="text-sm font-semibold text-foreground capitalize mb-3">
-                    {`${tier === "starter" ? t("provPage.starter.name") : tier === "standard" ? t("provPage.growth.name") : t("provPage.business.name")} (€${settings[`tier.${tier}.monthlyFee`] || "—"})`}
+                    {tier === "starter"
+                      ? t("admin.partner.featureSet.starter")
+                      : tier === "standard"
+                        ? t("admin.partner.featureSet.standard")
+                        : t("admin.partner.featureSet.premium")}
                   </p>
                   <div className="space-y-3">
                     <div>

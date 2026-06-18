@@ -48,7 +48,7 @@ export default function ProviderPage() {
     : [];
   const showPartners = featuredPartners.length >= 3;
 
-  const tiers = [
+  const partnerOptions = [
     {
       key: "free",
       name: t("provPage.tier.freeName"),
@@ -230,34 +230,34 @@ export default function ProviderPage() {
         </p>
 
         <div className="mt-10 grid items-stretch gap-6 md:grid-cols-3">
-          {tiers.map((tier) => (
+          {partnerOptions.map((option) => (
             <div
-              key={tier.key}
+              key={option.key}
               className={`relative flex flex-col overflow-hidden rounded-2xl border p-6 ${
-                tier.highlight
+                option.highlight
                   ? "border-accent bg-accent/5 ring-2 ring-accent/20"
                   : "border-border bg-card"
               }`}
             >
-              {tier.highlightBadge && tier.highlight && (
+              {option.highlightBadge && option.highlight && (
                 <span className="absolute right-3 top-3 rounded-full bg-accent px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-foreground">
-                  {tier.highlightBadge}
+                  {option.highlightBadge}
                 </span>
               )}
-              <h3 className="font-display text-xl font-bold">{tier.name}</h3>
-              <p className="mt-2 text-sm font-semibold text-foreground">{tier.price}</p>
-              {tier.key === "free" && (
+              <h3 className="font-display text-xl font-bold">{option.name}</h3>
+              <p className="mt-2 text-sm font-semibold text-foreground">{option.price}</p>
+              {option.key === "free" && (
                 <p className="mt-3 rounded-lg bg-success/10 px-3 py-2 text-[11px] font-medium leading-relaxed text-success">
-                  {tier.highlightBadge}
+                  {option.highlightBadge}
                 </p>
               )}
-              {tier.key !== "free" && tier.highlightBadge && !tier.highlight && (
+              {option.key !== "free" && option.highlightBadge && !option.highlight && (
                 <span className="mt-3 inline-block rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  {tier.highlightBadge}
+                  {option.highlightBadge}
                 </span>
               )}
               <ul className="mt-5 space-y-2">
-                {tier.features.map((feat) => (
+                {option.features.map((feat) => (
                   <li key={feat} className="flex items-start gap-2 text-sm">
                     <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                     <span>{feat}</span>
@@ -267,12 +267,12 @@ export default function ProviderPage() {
               <Link to="/provider/onboarding" className="mt-auto pt-6 block">
                 <Button
                   className={`w-full ${
-                    tier.highlight
+                    option.highlight
                       ? "bg-accent text-accent-foreground hover:bg-accent/90"
                       : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                   }`}
                 >
-                  {t("provPage.tier.choosePlan")}
+                  {t("provPage.options.request")}
                 </Button>
               </Link>
             </div>

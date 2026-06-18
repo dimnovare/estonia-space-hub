@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, Link } from "@/i18n/routing";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   LayoutDashboard, List, Package, Calendar as CalendarIcon, Star, Settings, Users, Sparkles,
-  BarChart3, Inbox, Bell, Volume2, VolumeX, ChevronDown, X, FileText
+  BarChart3, Inbox, Bell, Volume2, VolumeX, ChevronDown, X, FileText, AlertTriangle
 } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
 import { useAuth } from "@/contexts/AuthContext";
@@ -68,6 +68,7 @@ export default function ProviderDashboardPage() {
   const hasAnalyticsTier =
     user?.role === "admin" || (supplierProfile?.hasFullAnalytics ?? false);
   const adminNoSupplier = user?.role === "admin" && !supplierId;
+  const supplierInactive = supplierProfile?.isActive === false;
   const navItems = sidebarLinks.filter(
     (l) =>
       (l.id !== "analytics" || hasAnalyticsTier) &&
@@ -128,7 +129,14 @@ export default function ProviderDashboardPage() {
       <aside className="hidden w-56 shrink-0 border-r border-border bg-card lg:block">
         <div className="p-4">
           <p className="text-sm font-semibold">{supplierProfile?.name || user?.company || user?.name}</p>
-          <p className="text-xs text-muted-foreground">{t("provider.panel")}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <p className="text-xs text-muted-foreground">{t("provider.panel")}</p>
+            {supplierInactive && (
+              <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+                {t("provider.inactive.badge")}
+              </span>
+            )}
+          </div>
         </div>
         <nav className="space-y-0.5 px-2">
           {navItems.map((l) => {
@@ -155,8 +163,8 @@ export default function ProviderDashboardPage() {
                 {supplierProfile?.name ?? "…"}
               </span>
               {supplierProfile?.tier && (
-                <span className="rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-medium uppercase text-amber-900 dark:bg-amber-800 dark:text-amber-100">
-                  {supplierProfile.tier}
+                <span className="rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-medium text-amber-900 dark:bg-amber-800 dark:text-amber-100">
+                  {t("admin.partner.featureSetBadge").replace("{value}", t(`admin.partner.featureSet.${String(supplierProfile.tier).toLowerCase()}`))}
                 </span>
               )}
             </div>
@@ -169,6 +177,22 @@ export default function ProviderDashboardPage() {
               <X className="h-3.5 w-3.5" />
               {t("admin.impersonation.exit")}
             </Button>
+          </div>
+        )}
+
+        {supplierInactive && (
+          <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+              <div>
+                <p className="text-sm font-semibold text-destructive">
+                  {t("provider.inactive.title")}
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  {t("provider.inactive.body")}
+                </p>
+              </div>
+            </div>
           </div>
         )}
 

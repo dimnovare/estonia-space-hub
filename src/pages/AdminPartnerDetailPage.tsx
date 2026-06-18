@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useSearchParams, Link } from "@/i18n/routing";
+import { useNavigate, useParams, useSearchParams, Link } from "@/i18n/routing";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  ArrowLeft, ExternalLink, Loader2, Save, RefreshCw, ChevronDown, CheckCircle2, XCircle,
+  ArrowLeft, ExternalLink, Loader2, Save, RefreshCw, ChevronDown, CheckCircle2, XCircle, Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -28,6 +28,7 @@ export default function AdminPartnerDetailPage() {
     setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("tab", id); return n; }, { replace: true });
   const { t, language } = useLanguage();
   const qc = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: supplier, isLoading } = useQuery({
     queryKey: queryKeys.adminSupplier.byId(partnerId),
@@ -52,6 +53,17 @@ export default function AdminPartnerDetailPage() {
       toast.success(res?.message || `Sync OK${res?.unitsRefreshed ? ` — ${res.unitsRefreshed} units` : ""}`);
     },
     onError: (err: any) => toast.error(err?.message ?? t("admin.integration.syncFailed")),
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: () => supplierService.delete(partnerId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.adminSupplier.byId(partnerId) });
+      qc.invalidateQueries({ queryKey: queryKeys.suppliers.all() });
+      toast.success(t("admin.partnerRemoved"));
+      navigate("/admin/partners");
+    },
+    onError: (err: any) => toast.error(err?.message ?? t("admin.deleteFailed")),
   });
 
   if (isLoading || !supplier) {
@@ -104,8 +116,8 @@ export default function AdminPartnerDetailPage() {
                 <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${s.isActive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
                   {s.isActive ? t("common.active") : t("common.inactive")}
                 </span>
-                <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold uppercase text-muted-foreground">
-                  {(s.tier ?? "starter")}
+                <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                  {t("admin.partner.featureSetBadge").replace("{value}", t(`admin.partner.featureSet.${(s.tier ?? "starter").toLowerCase()}`))}
                 </span>
                 {s.isVerified && (
                   <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">{t("listing.badge.verified")}</span>
@@ -136,6 +148,21 @@ export default function AdminPartnerDetailPage() {
                 {t("admin.partnerDetail.routing.testConnection")}
               </Button>
             )}
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-destructive/30 text-destructive hover:bg-destructive/10"
+              disabled={removeMutation.isPending}
+              onClick={() => {
+                if (!confirm(t("admin.removePartnerConfirm"))) return;
+                removeMutation.mutate();
+              }}
+            >
+              {removeMutation.isPending
+                ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                : <Trash2 className="mr-1.5 h-3.5 w-3.5" />}
+              {t("admin.removePartner")}
+            </Button>
           </div>
         </header>
 
@@ -331,19 +358,17 @@ function CommercialTab({ supplier, onSave, pending }: { supplier: any; onSave: (
   useEffect(() => setForm(initial), [initial]);
   const dirty = JSON.stringify(form) !== JSON.stringify(initial);
 
-  const monthlyFee: Record<string, string> = { starter: "€0/mo", standard: "€49/mo", premium: "€99/mo" };
-
   return (
     <div className="space-y-4 rounded-xl border border-border bg-card p-5">
       <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <label className="text-xs font-medium">{t("admin.partner.tier")}</label>
+          <label className="text-xs font-medium">{t("admin.partner.featureSet")}</label>
           <select className={inp} value={form.tier} onChange={(e) => setForm({ ...form, tier: e.target.value as "starter" | "standard" | "premium" })}>
-            <option value="starter">{t("admin.partner.tierStarterLabel")}</option>
-            <option value="standard">{t("admin.partner.tierStandardLabel")}</option>
-            <option value="premium">{t("admin.partner.tierPremiumLabel")}</option>
+            <option value="starter">{t("admin.partner.featureSet.starter")}</option>
+            <option value="standard">{t("admin.partner.featureSet.standard")}</option>
+            <option value="premium">{t("admin.partner.featureSet.premium")}</option>
           </select>
-          <p className="mt-1 text-[11px] text-muted-foreground">Monthly fee: {monthlyFee[form.tier]}</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">{t("admin.partner.featureSetHint")}</p>
         </div>
         <div>
           <label className="text-xs font-medium">{t("admin.partner.billingModel")}</label>

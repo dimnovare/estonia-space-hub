@@ -28,7 +28,7 @@ export default function AdminSuppliers() {
   const [selected, setSelected] = useState<Supplier | null>(null);
   const [testingId, setTestingId] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<{ success: boolean; latency: number } | null>(null);
-  const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
+  const [filter, setFilter] = useState<"all" | "active" | "inactive">("active");
   const [countryFilter, setCountryFilter] = useState<"all" | "EE" | "LV" | "LT">("all");
   const [tierFilter, setTierFilter] = useState<"all" | "starter" | "standard" | "premium">("all");
   const [createOpen, setCreateOpen] = useState(false);
@@ -90,6 +90,7 @@ export default function AdminSuppliers() {
     if (a.isActive === b.isActive) return 0;
     return a.isActive ? -1 : 1;
   });
+  const pendingApplications = suppliers.filter(s => !s.isActive && !s.onboardingStartedAt);
 
   const toggleStatus = async (id: string) => {
     const sup = suppliers.find(s => s.id === id);
@@ -191,10 +192,10 @@ export default function AdminSuppliers() {
           <option value="LT">{t("admin.countryLT")}</option>
         </select>
         <select value={tierFilter} onChange={(e) => setTierFilter(e.target.value as any)} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs">
-          <option value="all">{t("admin.allTiers")}</option>
-          <option value="starter">{t("supplier.tier.starter")}</option>
-          <option value="standard">{t("supplier.tier.standard")}</option>
-          <option value="premium">{t("supplier.tier.premium")}</option>
+          <option value="all">{t("admin.allFeatureSets")}</option>
+          <option value="starter">{t("admin.partner.featureSet.starter")}</option>
+          <option value="standard">{t("admin.partner.featureSet.standard")}</option>
+          <option value="premium">{t("admin.partner.featureSet.premium")}</option>
         </select>
       </div>
       {/* Mobile cards */}
@@ -281,26 +282,26 @@ export default function AdminSuppliers() {
       </div>
 
       {/* ── Pending Applications ── */}
-      {suppliers.filter(s => !s.isActive).length > 0 && (
+      {pendingApplications.length > 0 && (
         <div className="mt-8">
           <h2 className="font-display text-lg font-semibold flex items-center gap-2">
             {t("admin.pendingApplications")}
             <span className="rounded-full bg-warning/10 text-warning text-xs px-2 py-0.5 font-medium">
-              {suppliers.filter(s => !s.isActive).length}
+              {pendingApplications.length}
             </span>
           </h2>
           <div className="mt-3 rounded-xl border border-border">
             <table className="w-full text-sm">
               <thead className="border-b border-border bg-secondary/50">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Company</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Contact</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Registry</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Action</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.company")}</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.contact")}</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.registryCode")}</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.actions")}</th>
                 </tr>
               </thead>
               <tbody>
-                {suppliers.filter(s => !s.isActive).map(s => (
+                {pendingApplications.map(s => (
                   <tr key={s.id} className="border-b border-border last:border-0">
                     <td className="px-4 py-3 font-medium">{s.name}</td>
                     <td className="px-4 py-3 text-xs">
@@ -362,17 +363,18 @@ export default function AdminSuppliers() {
                 </div>
               </div>
 
-              {/* Tier + Billing model */}
+              {/* Feature set + payout model */}
               <div className="rounded-xl border border-border p-4 space-y-3">
-                <h3 className="text-sm font-semibold mb-3">{t("admin.tierAndBilling")}</h3>
+                <h3 className="text-sm font-semibold mb-3">{t("admin.partner.capabilities")}</h3>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground">{t("admin.tier")}</label>
+                    <label className="text-xs font-medium text-muted-foreground">{t("admin.partner.featureSet")}</label>
                     <select className={inp} value={(selected.tier ?? "starter").toLowerCase()} onChange={(e) => setSelected({ ...selected, tier: e.target.value as "starter" | "standard" | "premium" })}>
-                      <option value="starter">Free (€0/{t("provPage.tier.perMonth") || "mo"})</option>
-                      <option value="standard">Growth (€49/{t("provPage.tier.perMonth") || "mo"})</option>
-                      <option value="premium">Business (€99/{t("provPage.tier.perMonth") || "mo"})</option>
+                      <option value="starter">{t("admin.partner.featureSet.starter")}</option>
+                      <option value="standard">{t("admin.partner.featureSet.standard")}</option>
+                      <option value="premium">{t("admin.partner.featureSet.premium")}</option>
                     </select>
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">{t("admin.partner.featureSetHint")}</p>
                   </div>
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">{t("admin.billingModel")}</label>
@@ -389,7 +391,7 @@ export default function AdminSuppliers() {
                 </div>
               </div>
 
-              {/* ── Subscription & Benefits ── */}
+              {/* ── Marketplace options ── */}
               <div className="rounded-xl border border-border p-4 space-y-4">
                 <h3 className="flex items-center gap-2 text-sm font-semibold">
                   <Star className="h-4 w-4 text-accent" /> {t("admin.subBenefits.title")}
@@ -615,17 +617,17 @@ export default function AdminSuppliers() {
                   )}
                 </Button>
                 <Button variant="outline" size="sm" className="flex-1 text-destructive hover:bg-destructive/10" onClick={async () => {
-                  if (!confirm(t("admin.deletePartnerConfirm"))) return;
+                  if (!confirm(t("admin.removePartnerConfirm"))) return;
                   try {
                     await supplierService.delete(selected.id);
                     invalidate();
                     setSelected(null);
-                    toast.success(t("admin.partnerDeleted"));
+                    toast.success(t("admin.partnerRemoved"));
                   } catch (err: any) {
                     toast.error(err?.message || t("admin.deleteFailed"));
                   }
                 }}>
-                  <Trash2 className="mr-1 h-3.5 w-3.5" /> {t("admin.delete")}
+                  <Trash2 className="mr-1 h-3.5 w-3.5" /> {t("admin.removePartner")}
                 </Button>
                 <Button variant="outline" size="sm" className="flex-1" onClick={() => setSelected(null)}>{t("admin.close")}</Button>
               </div>
@@ -671,11 +673,11 @@ export default function AdminSuppliers() {
                 </select>
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">{t("admin.tier")}</label>
+                <label className="text-xs font-medium text-muted-foreground">{t("admin.partner.featureSet")}</label>
                 <select className={inp} value={createForm.tier} onChange={(e) => setCreateForm({ ...createForm, tier: e.target.value })}>
-                  <option value="starter">{t("admin.tierStarter")}</option>
-                  <option value="standard">{t("admin.tierStandard")}</option>
-                  <option value="premium">{t("admin.tierPremium")}</option>
+                  <option value="starter">{t("admin.partner.featureSet.starter")}</option>
+                  <option value="standard">{t("admin.partner.featureSet.standard")}</option>
+                  <option value="premium">{t("admin.partner.featureSet.premium")}</option>
                 </select>
               </div>
             </div>

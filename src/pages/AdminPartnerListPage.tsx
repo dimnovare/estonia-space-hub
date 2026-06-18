@@ -40,13 +40,17 @@ export default function AdminPartnerListPage() {
       : v === "standard"
         ? "bg-primary/10 text-primary"
         : "bg-secondary text-muted-foreground";
-    return <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${cls}`}>{v}</span>;
+    return (
+      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${cls}`}>
+        {t("admin.partner.featureSetBadge").replace("{value}", t(`admin.partner.featureSet.${v}`))}
+      </span>
+    );
   };
 
   const pageStatus = (s: any) => {
-    if (!s.slug) return <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">No page</span>;
-    if (s.isPartnerPagePublished) return <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">Published</span>;
-    return <span className="rounded-full bg-warning/10 px-2 py-0.5 text-[10px] font-semibold text-warning">Draft</span>;
+    if (!s.slug) return <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">{t("admin.partner.pageNone")}</span>;
+    if (s.isPartnerPagePublished) return <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">{t("admin.partner.pagePublished")}</span>;
+    return <span className="rounded-full bg-warning/10 px-2 py-0.5 text-[10px] font-semibold text-warning">{t("admin.partner.pageDraft")}</span>;
   };
 
   return (
@@ -75,7 +79,7 @@ export default function AdminPartnerListPage() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search partners…"
+              placeholder={t("admin.searchPartners")}
               className="pl-9"
             />
           </div>
@@ -86,7 +90,7 @@ export default function AdminPartnerListPage() {
               aria-pressed={filter === f}
               className={`rounded-full px-3 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-95 sm:py-1.5 ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}
             >
-              {f === "all" ? t("admin.allPartners") : f === "active" ? (t("admin.activePartners") || "Active") : (t("admin.partnerPages") || "With partner page")}
+              {f === "all" ? t("admin.allPartners") : f === "active" ? t("admin.activePartners") : t("admin.partnerPages")}
             </button>
           ))}
         </div>
@@ -103,7 +107,7 @@ export default function AdminPartnerListPage() {
             <p className="mt-3 text-sm font-medium">
               {suppliers.length === 0
                 ? t("admin.noPartnersYet")
-                : "No partners match your filters."}
+                : t("admin.noPartnerMatches")}
             </p>
             {suppliers.length === 0 && (
               <Button asChild size="sm" className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90">
@@ -155,8 +159,8 @@ export default function AdminPartnerListPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span><strong className="text-foreground">{s.listingCount ?? 0}</strong> listings</span>
-                    <span><strong className="text-foreground">{s.ordersTotal ?? 0}</strong> orders</span>
+                    <span><strong className="text-foreground">{s.listingCount ?? 0}</strong> {t("admin.listingsLabel")}</span>
+                    <span><strong className="text-foreground">{s.ordersTotal ?? 0}</strong> {t("admin.ordersLabel")}</span>
                   </div>
                 </Link>
               );

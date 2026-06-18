@@ -15,8 +15,7 @@ import { isSupplierContextRequired } from "@/lib/apiErrors";
 import { queryKeys } from "@/services/queryKeys";
 
 export default function ProviderBilling() {
-  const { t, language } = useLanguage();
-  const locale = language === "et" ? "et-EE" : language === "ru" ? "ru-RU" : "en-GB";
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [editingBank, setEditingBank] = useState(false);
   const supplierId = useImpersonatedSupplierId();
@@ -42,9 +41,6 @@ export default function ProviderBilling() {
 
   const isRebate = supplierData?.billingModel === "rebate";
   const tierKey = (supplierData?.tier ?? "Starter").toLowerCase();
-  const isFreeTier = tierKey === "starter" || tierKey === "free";
-  const isInOnboarding = !!supplierData?.isInOnboarding;
-  const onboardingDaysRemaining = supplierData?.onboardingDaysRemaining ?? 0;
   const isFoundingPartner = !!supplierData?.isFoundingPartner;
 
   const [bankForm, setBankForm] = useState({
@@ -132,55 +128,29 @@ export default function ProviderBilling() {
         </div>
       )}
 
-      {/* Onboarding status */}
-      {isInOnboarding ? (
-        <div className="mt-6 rounded-xl border border-success/30 bg-success/5 p-4">
-          <p className="text-sm font-semibold text-success">
-            {t("provider.billing.onboardingActive").replace("{n}", String(onboardingDaysRemaining))}
-          </p>
-          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-success/10">
-            <div
-              className="h-full bg-success transition-all"
-              style={{ width: `${Math.min(100, Math.max(0, ((90 - onboardingDaysRemaining) / 90) * 100))}%` }}
-            />
-          </div>
-        </div>
-      ) : isFreeTier ? (
-        <div className="mt-6 rounded-xl border border-border bg-secondary/30 px-4 py-3">
-          <p className="text-xs text-muted-foreground">{t("provider.billing.onboardingExpired")}</p>
-        </div>
-      ) : null}
-
-      {/* Plan summary */}
+      {/* Marketplace access summary */}
       <div className="mt-6 rounded-xl border border-border p-5">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-medium text-muted-foreground">{t("provider.billing.currentPlan")}</p>
             <div className="mt-0.5 flex items-center gap-2">
-              <p className="font-display text-lg font-bold">{
-                ({ Starter: t("provPage.starter.name"), Free: t("provPage.starter.name"), Standard: t("provPage.growth.name"), Growth: t("provPage.growth.name"), Premium: t("provPage.business.name"), Business: t("provPage.business.name") } as Record<string, string>)[supplierData?.tier ?? "Starter"] || supplierData?.tier || "Free"
-              }</p>
+              <p className="font-display text-lg font-bold">
+                {t(`admin.partner.featureSet.${tierKey === "free" ? "starter" : tierKey}`)}
+              </p>
               {isRebate && (
                 <span className="rounded-full bg-amber-100 text-amber-700 px-2 py-0.5 text-[10px] font-medium">{t("provider.billing.rebate")}</span>
               )}
             </div>
-            {!isFreeTier && supplierData?.subscriptionEndsAt && (
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                {t("provider.billing.validUntil")}{" "}
-                {new Date(supplierData.subscriptionEndsAt).toLocaleDateString(locale)}
-              </p>
-            )}
-          </div>
-          <div className="text-right">
-            <span className="font-display text-2xl font-bold">€{supplierData?.monthlyFee ?? 0}</span>
-            <span className="text-sm text-muted-foreground">/{t("provider.billing.month")}</span>
+            <p className="mt-1 max-w-xl text-xs text-muted-foreground">
+              {t("provider.billing.featureSetDesc")}
+            </p>
           </div>
         </div>
         <div className="mt-4 grid grid-cols-3 gap-3 border-t border-border pt-4">
           <div className="text-center">
-            <p className="font-display text-lg font-bold">{supplierData?.partnerDiscountRate ?? 0}%</p>
+            <p className="font-display text-lg font-bold">{isRebate ? t("provider.billing.direct") : t("provider.billing.ruumly")}</p>
             <p className="text-xs text-muted-foreground">
-              {isRebate ? t("provider.billing.rebateRate") : t("provider.billing.partnerDiscount")}
+              {t("provider.billing.payoutModel")}
             </p>
           </div>
           <div className="text-center">
@@ -194,43 +164,15 @@ export default function ProviderBilling() {
         </div>
       </div>
 
-      {/* Change plan */}
+      {/* Optional marketplace features */}
       <div className="mt-6 rounded-xl border border-border p-5">
         <h3 className="text-sm font-semibold">{t("provider.billing.changePlan")}</h3>
         <p className="mt-1 text-xs text-muted-foreground">{t("provider.billing.contactToUpgrade")}</p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          {[
-            { tier: "Starter", fee: 0, commission: 12, displayName: "Free" },
-            { tier: "Standard", fee: 49, commission: 8, displayName: "Growth" },
-            { tier: "Premium", fee: 99, commission: 6, displayName: "Business" },
-          ].map(plan => {
-            const isCurrent = supplierData?.tier?.toLowerCase() === plan.tier.toLowerCase();
-            return (
-              <div key={plan.tier} className={`rounded-lg border p-4 text-center ${isCurrent ? "border-accent bg-accent/5" : "border-border"}`}>
-                <p className="text-sm font-semibold">{plan.displayName}</p>
-                <p className="mt-1 font-display text-xl font-bold">€{plan.fee}<span className="text-sm font-normal text-muted-foreground">/{t("provider.billing.month")}</span></p>
-                <p className="mt-1 text-[11px] text-muted-foreground">{plan.commission}% {t("provider.billing.partnerDiscount")} · {t("provider.billing.unlimited")}</p>
-                {isCurrent ? (
-                  <span className="mt-3 inline-block rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
-                    {t("provider.billing.currentPlan")}
-                  </span>
-                ) : plan.fee === 0 ? (
-                  <Button variant="outline" size="sm" className="mt-3" disabled>
-                    {t("provider.billing.downgrade")}
-                  </Button>
-                ) : (
-                  <Button variant="outline" size="sm" className="mt-3" asChild>
-                    <a href={`/${language}/contact?subject=${encodeURIComponent("Upgrade to " + plan.displayName)}`}>
-                      {plan.displayName === "Growth"
-                        ? t("provider.billing.upgradeToGrowth")
-                        : t("provider.billing.upgradeToBusiness")}
-                    </a>
-                  </Button>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        <Button variant="outline" size="sm" className="mt-4" asChild>
+          <Link to="/provider/dashboard?ptab=boosts">
+            {t("provider.billing.viewOptionalFeatures")}
+          </Link>
+        </Button>
       </div>
 
       {/* Payout / Rebate summary cards */}

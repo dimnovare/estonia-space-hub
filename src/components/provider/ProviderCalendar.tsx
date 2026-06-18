@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import { withSupplier } from "@/lib/withSupplier";
 import { queryKeys } from "@/services/queryKeys";
+import { Link } from "@/i18n/routing";
 
 const localeMap: Record<string, string> = {
   et: "et-EE",
@@ -108,7 +109,7 @@ export default function ProviderCalendar() {
         </Select>
       </div>
 
-      <div className="flex items-center gap-2 mt-4">
+      <div className="mt-4 flex flex-wrap items-center gap-2">
         {!supplierId && hasCalendarSync && (
         <a
           href={`${import.meta.env.VITE_API_URL || ""}/api/supplier/calendar.ics`}
@@ -138,10 +139,18 @@ export default function ProviderCalendar() {
         </a>
         )}
         {!supplierId && !hasCalendarSync && (
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <Lock className="h-3.5 w-3.5" />
-            {t("provider.calendar.upgradeForExport")}
-          </p>
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1">
+              <Lock className="h-3.5 w-3.5" />
+              {t("provider.calendar.exportNeedsEnablement")}
+            </span>
+            <Link
+              to={`/provider/dashboard?ptab=boosts${supplierId ? `&supplierId=${supplierId}` : ""}`}
+              className="font-medium text-accent hover:underline"
+            >
+              {t("provider.calendar.requestSync")}
+            </Link>
+          </div>
         )}
 
         <button
