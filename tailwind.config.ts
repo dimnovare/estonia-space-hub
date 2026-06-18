@@ -90,9 +90,10 @@ export default {
         line: { DEFAULT: "#E6EAF3", 2: "#D8DEEC" },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        // 00-foundations §5: cards 14px (lg), buttons & inputs 10px (md), small chips 8px (sm).
+        lg: "var(--radius)",                  // 14px — cards
+        md: "calc(var(--radius) - 4px)",      // 10px — buttons, inputs, nav links, chips
+        sm: "calc(var(--radius) - 6px)",      // 8px  — sm buttons, small pills
         xl: "18px",
         "2xl": "24px",
       },

@@ -58,7 +58,16 @@ export default function AdminDashboard() {
     staleTime: 60_000,
   });
 
+  const { data: featureRequests = [] } = useQuery({
+    queryKey: ["admin", "paid-features", "requests", "new"],
+    queryFn: () =>
+      apiClient.get<Array<{ id: string; status: string }>>("/admin/paid-features/requests?status=new"),
+    staleTime: 60_000,
+  });
+
   const activePartners = suppliers.filter((s) => s.isActive).length;
+  const pendingApplications = suppliers.filter((s) => !s.isActive).length;
+  const pendingFeatureRequests = featureRequests.length;
   const optionalFeatureRevenue = revenue ? `€${revenue.subscriptionMrr.toLocaleString()}` : "—";
 
   // Primary marketplace-health stats (free-listing model: visibility + demand, optional features)
@@ -75,8 +84,8 @@ export default function AdminDashboard() {
   ];
 
   const secondaryStats: { label: string; value: string; icon: React.ElementType; href?: string; sub?: string }[] = [
-    { label: t("admin.stats.pendingApplications"), value: "—", icon: Inbox, href: "/admin?tab=suppliers", sub: t("admin.stats.reviewArrow") },
-    { label: t("admin.stats.featureRequests"), value: "—", icon: Zap, href: "/admin?tab=requests" },
+    { label: t("admin.stats.pendingApplications"), value: pendingApplications.toString(), icon: Inbox, href: "/admin?tab=suppliers", sub: t("admin.stats.reviewArrow") },
+    { label: t("admin.stats.featureRequests"), value: pendingFeatureRequests.toString(), icon: Zap, href: "/admin?tab=requests", sub: pendingFeatureRequests > 0 ? t("admin.stats.pendingLabel") : undefined },
     { label: t("admin.stats.searchAppearances"), value: revenue ? revenue.totalBookings.toLocaleString() : "—", icon: Search },
     { label: t("admin.stats.mapViews"), value: stats?.totalUsers?.toLocaleString() ?? users.length.toLocaleString(), icon: Map },
   ];
@@ -208,14 +217,14 @@ export default function AdminDashboard() {
             <AttentionRow
               tone="warn"
               icon={<Inbox className="h-[18px] w-[18px]" />}
-              title={t("admin.overview.attnApplicationsTitle")}
+              title={`${pendingApplications} ${t("admin.overview.attnApplicationsTitle")}`}
               desc={t("admin.overview.attnApplicationsDesc")}
               href="/admin?tab=suppliers"
             />
             <AttentionRow
               tone="teal"
               icon={<Zap className="h-[18px] w-[18px]" />}
-              title={t("admin.overview.attnRequestsTitle")}
+              title={`${pendingFeatureRequests} ${t("admin.overview.attnRequestsTitle")}`}
               desc={t("admin.overview.attnRequestsDesc")}
               href="/admin?tab=requests"
             />

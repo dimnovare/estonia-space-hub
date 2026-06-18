@@ -5,7 +5,7 @@ import { useLocations, useCreateLocation, useUpdateLocation, useAddUnit } from "
 import { useFeatureDefinitions } from "@/hooks/useFeatureDefinitions";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import { ESTONIAN_CITIES } from "@/lib/constants";
-import { Loader2, MapPin, Warehouse, Truck, CarFront, Plus, Pencil, ChevronDown, ChevronUp, Trash2, AlertTriangle, Eye, EyeOff, Upload } from "lucide-react";
+import { Loader2, MapPin, Warehouse, Truck, CarFront, Plus, Pencil, ChevronDown, ChevronUp, Trash2, Eye, EyeOff, Upload } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import ListingExtrasManager from "./ListingExtrasManager";
 import ImageUploader from "@/components/admin/ImageUploader";
@@ -457,134 +457,148 @@ export default function ProviderListings() {
         </div>
       ) : (
         <div className="mt-6 space-y-4">
-          {locations.map((loc) => (
-            <div key={loc.id} className="rounded-xl border border-border p-4">
-              <div className="flex items-center gap-3">
-                <MapPin className="h-5 w-5 shrink-0 text-muted-foreground" />
-                <div className="min-w-0 flex-1">
-                  <span className="text-sm font-medium">{loc.name}</span>
-                  <span className="ml-2 text-xs text-muted-foreground">· {loc.city}</span>
-                  {loc.isActive ? (
-                    <span className="ml-2 inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-medium text-success">
-                      {t("admin.active")}
-                    </span>
-                  ) : (
-                    <span className="ml-2 inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                      {t("admin.inactive")}
+          {locations.map((loc) => {
+            const locViews = (loc as { viewCount?: number }).viewCount;
+            return (
+            <div key={loc.id} className="overflow-hidden rounded-[14px] border border-border bg-card shadow-card">
+              {/* Location card header — teal pin tile + name + Published tag + sub; right views + Edit */}
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-5">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[14px] bg-teal/15 text-teal-deep">
+                    <MapPin className="h-[22px] w-[22px]" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-display text-[15.5px] font-bold text-navy-ink">{loc.name}</span>
+                      {loc.isActive ? (
+                        <span className="inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-semibold text-success">
+                          {t("provider.listings.published")}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                          {t("admin.inactive")}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-0.5 truncate text-[13px] text-muted-foreground">
+                      {loc.address ? `${loc.address}, ${loc.city}` : loc.city} · {loc.unitCount} {t("location.units")}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  {typeof locViews === "number" && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                      <Eye className="h-3.5 w-3.5" />
+                      {locViews.toLocaleString()} {t("provider.listings.views")}
                     </span>
                   )}
+                  <Button variant="outline" size="sm" onClick={() => setEditLoc(loc)}>
+                    {t("admin.edit")}
+                  </Button>
+                  <button
+                    type="button"
+                    title={loc.isActive ? t("provider.unpublishLocation") : t("provider.publishLocation")}
+                    onClick={async () => {
+                      const action = loc.isActive ? "unpublish" : "publish";
+                      try {
+                        await apiClient.patch(`/locations/${loc.id}/${action}`, {});
+                        queryClient.invalidateQueries({ queryKey: queryKeys.locations.all() });
+                        toast.success(loc.isActive ? t("provider.unpublishSuccess") : t("provider.publishSuccess"));
+                      } catch (err: any) {
+                        toast.error(err?.message || (loc.isActive ? t("provider.unpublishError") : t("provider.publishError")));
+                      }
+                    }}
+                    className={`shrink-0 rounded-md p-1.5 transition-colors ${loc.isActive ? "text-success hover:bg-success/10" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
+                  >
+                    {loc.isActive ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!confirm(t("provider.listings.deleteLocationConfirm"))) return;
+                      try {
+                        await apiClient.delete(`/locations/${loc.id}`);
+                        queryClient.invalidateQueries({ queryKey: queryKeys.locations.all() });
+                        toast.success(t("provider.listings.locationDeleted"));
+                      } catch (err: any) {
+                        toast.error(err?.message || t("provider.listings.deleteFailed"));
+                      }
+                    }}
+                    className="shrink-0 rounded-md p-1.5 text-destructive transition-colors hover:bg-destructive/10"
+                    title={t("admin.delete")}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setEditLoc(loc)}
-                  className="shrink-0 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                  title={t("provider.listings.editLocation")}
-                >
-                  <Pencil className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  title={loc.isActive ? t("provider.unpublishLocation") : t("provider.publishLocation")}
-                  onClick={async () => {
-                    const action = loc.isActive ? "unpublish" : "publish";
-                    try {
-                      await apiClient.patch(`/locations/${loc.id}/${action}`, {});
-                      queryClient.invalidateQueries({ queryKey: queryKeys.locations.all() });
-                      toast.success(loc.isActive ? t("provider.unpublishSuccess") : t("provider.publishSuccess"));
-                    } catch (err: any) {
-                      toast.error(err?.message || (loc.isActive ? t("provider.unpublishError") : t("provider.publishError")));
-                    }
-                  }}
-                  className={`shrink-0 rounded-md p-1.5 transition-colors ${loc.isActive ? "text-success hover:bg-success/10" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
-                >
-                  {loc.isActive ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                </button>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    if (!confirm(t("provider.listings.deleteLocationConfirm"))) return;
-                    try {
-                      await apiClient.delete(`/locations/${loc.id}`);
-                      queryClient.invalidateQueries({ queryKey: queryKeys.locations.all() });
-                      toast.success(t("provider.listings.locationDeleted"));
-                    } catch (err: any) {
-                      toast.error(err?.message || t("provider.listings.deleteFailed"));
-                    }
-                  }}
-                  className="shrink-0 rounded-md p-1.5 text-destructive transition-colors hover:bg-destructive/10"
-                  title={t("admin.delete")}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-                <span className="shrink-0 rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-                  {loc.unitCount} {t("location.units")}
-                </span>
-                {loc.fullyBooked ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2.5 py-0.5 text-[11px] font-medium text-destructive">
-                    <AlertTriangle className="h-3 w-3" />
-                    {t("provider.listings.fullyBooked")}
-                  </span>
+              </div>
+
+              {/* Striped 16/10 photo placeholder — swap target for uploaded location/unit photos */}
+              <div className="px-5 pt-5">
+                {loc.images && loc.images.length > 0 ? (
+                  <div
+                    className="aspect-[16/10] w-full max-w-sm overflow-hidden rounded-[10px] bg-cover bg-center"
+                    style={{ backgroundImage: `url(${loc.images[0]})` }}
+                  />
                 ) : (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-0.5 text-[11px] font-medium text-success">
-                    {loc.availableUnits ?? loc.units?.length ?? 0} {t("location.available")}
-                  </span>
+                  <div
+                    className="flex aspect-[16/10] w-full max-w-sm items-center justify-center rounded-[10px]"
+                    style={{ background: "repeating-linear-gradient(135deg,#e9eef7,#e9eef7 12px,#eef2fa 12px,#eef2fa 24px)" }}
+                  >
+                    <span className="font-mono-label text-[11px] uppercase tracking-wide" style={{ color: "#97A0B6" }}>
+                      {t("provider.listings.photoCaption")}
+                    </span>
+                  </div>
                 )}
               </div>
 
+              <div className="px-5 pb-2">
+
               {loc.units && loc.units.length > 0 ? (
                 <div className="mt-3 overflow-x-auto">
-                  <table className="w-full text-xs">
+                  <table className="w-full text-[13px]">
                     <thead>
                       <tr className="border-b border-border text-left text-muted-foreground">
-                        <th className="pb-2 pr-4 font-medium">{t("provider.listings.unitTitle")}</th>
-                        <th className="pb-2 pr-4 font-medium">{t("provider.listings.unitType")}</th>
-                        <th className="pb-2 pr-4 font-medium">{t("admin.locations.sizeM2")}</th>
-                        <th className="pb-2 pr-4 font-medium">{t("admin.locations.quantity")}</th>
-                        <th className="pb-2 pr-4 font-medium">{t("provider.listings.colAvailable")}</th>
-                        <th className="pb-2 pr-4 font-medium">{t("listing.price")}</th>
-                        <th className="pb-2 pr-4 font-medium">{t("provider.listings.colBooking")}</th>
-                        <th className="pb-2 font-medium" />
+                        <th className="pb-2.5 pr-4 text-xs font-medium">{t("provider.listings.unitTitle")}</th>
+                        <th className="pb-2.5 pr-4 text-xs font-medium">{t("provider.listings.unitType")}</th>
+                        <th className="pb-2.5 pr-4 text-xs font-medium">{t("admin.locations.sizeM2")}</th>
+                        <th className="pb-2.5 pr-4 text-xs font-medium">{t("provider.listings.colAvailable")}</th>
+                        <th className="pb-2.5 pr-4 text-xs font-medium">{t("listing.price")}</th>
+                        <th className="pb-2.5 pr-4 text-xs font-medium">{t("provider.listings.colBooking")}</th>
+                        <th className="pb-2.5 text-xs font-medium" />
                       </tr>
                     </thead>
                     <tbody>
                       {loc.units.map((unit) => {
                         const UIcon = TYPE_ICON[unit.type] || Warehouse;
                         const isExpanded = expandedUnit === unit.id;
+                        const qty = unit.quantityTotal ?? 1;
                         return (
                           <tr key={unit.id} className="border-b border-border/50 last:border-0">
-                            <td className="py-2 pr-4">
-                              <span className="font-medium text-foreground">{unit.title}</span>
+                            <td className="py-2.5 pr-4">
+                              <span className="font-semibold text-foreground">{unit.title}</span>
                             </td>
-                            <td className="py-2 pr-4">
+                            <td className="py-2.5 pr-4">
                               <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                                 <UIcon className="h-3.5 w-3.5 text-teal-deep" />
                                 {t(TYPE_LABEL_KEY[unit.type] || "provider.listings.typeWarehouse")}
                               </span>
                             </td>
-                            <td className="py-2 pr-4 text-muted-foreground">
+                            <td className="py-2.5 pr-4 text-muted-foreground">
                               {unit.sizeM2 ? `${unit.sizeM2} m²` : "—"}
                             </td>
-                            <td className="py-2 pr-4 text-muted-foreground">
-                              {unit.quantityTotal ?? 1}
-                              {loc.fullyBooked && (
-                                <span className="ml-1.5 text-[10px] text-destructive font-medium">
-                                  ({t("provider.listings.booked")})
-                                </span>
-                              )}
-                            </td>
-                            <td className="py-2 pr-4">
+                            <td className="py-2.5 pr-4">
                               {unit.availableNow ? (
                                 <span className="inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success">
                                   {t("provider.listings.available")}
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center rounded-full bg-warning/10 px-2 py-0.5 text-[11px] font-medium text-warning">
-                                  {t("provider.listings.unavailable")}
+                                  {t("provider.listings.nLeft").replace("{count}", String(qty))}
                                 </span>
                               )}
                             </td>
-                            <td className="py-2 pr-4">
-                              €{unit.priceFrom}
+                            <td className="py-2.5 pr-4">
+                              <span className="font-semibold text-foreground">€{unit.priceFrom}</span>
                               <span className="text-muted-foreground">
                                 {formatPriceUnit(unit.priceUnit, t)}
                               </span>
@@ -670,32 +684,31 @@ export default function ProviderListings() {
                   {t("provider.listings.noUnitsYet")}
                 </p>
               )}
+              </div>
 
-              <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/50 pt-3">
-                <Button
-                  variant="outline"
-                  size="sm"
+              {/* Card footer — soft-sm Add unit + Bulk import (Workflow tool, not plan-gated) */}
+              <div className="flex flex-wrap items-center gap-2 p-5 pt-3">
+                <button
+                  type="button"
                   onClick={() => setUnitDialogLocId(loc.id)}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-secondary px-3.5 text-[13px] font-semibold text-navy-ink transition-colors hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                 >
-                  <Plus className="mr-1 h-3.5 w-3.5" />
+                  <Plus className="h-3.5 w-3.5" />
                   {t("provider.listings.addUnit")}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground"
+                </button>
+                <button
+                  type="button"
                   title={t("provider.listings.bulkImportHint")}
                   onClick={() => toast.info(t("provider.listings.bulkImportHint"))}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-secondary px-3.5 text-[13px] font-semibold text-navy-ink transition-colors hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                 >
-                  <Upload className="mr-1 h-3.5 w-3.5" />
+                  <Upload className="h-3.5 w-3.5" />
                   {t("provider.listings.bulkImport")}
-                  <span className="ml-2 inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                    {t("provider.listings.workflowTool")}
-                  </span>
-                </Button>
+                </button>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

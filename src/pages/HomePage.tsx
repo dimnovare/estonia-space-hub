@@ -1,6 +1,6 @@
 import { useState, lazy, Suspense, useEffect, useRef } from "react";
 import { Link, useNavigate } from "@/i18n/routing";
-import { Search, Warehouse, Truck, CarFront, ArrowRight, MapPin, ChevronDown, ChevronUp, CheckCircle, Phone, Map, ShieldCheck, CalendarCheck, Quote, Sparkles, Package } from "lucide-react";
+import { Search, Warehouse, Truck, CarFront, ArrowRight, MapPin, ChevronDown, ChevronUp, CheckCircle, Phone, Map, ShieldCheck, CalendarCheck, Quote, Sparkles, Package, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFeaturedListings, useAllListings, useCities } from "@/hooks/queries";
@@ -77,9 +77,11 @@ export default function HomePage() {
   const { data: citiesFromApi = [] } = useCities();
 
   const storageOnly        = !showMovingService && !showTrailerService;
-  const heroTitle          = storageOnly ? t("hero.titleStorage")          : t("hero.title");
-  const heroTitleHighlight = storageOnly ? t("hero.titleStorageHighlight") : t("hero.titleHighlight");
-  const heroSubtitle       = storageOnly ? t("hero.subtitleStorage")       : (settings.heroSubtitle || t("hero.subtitle"));
+  // Spec hero copy (content-and-i18n §2): "Find space near you, / contact or book in minutes"
+  // with the second line in teal. Storage-only keeps the narrower fallback headline.
+  const heroTitle          = storageOnly ? t("hero.titleStorage")          : t("home.hero.title");
+  const heroTitleHighlight = storageOnly ? t("hero.titleStorageHighlight") : t("home.hero.titleHighlight");
+  const heroSubtitle       = storageOnly ? t("hero.subtitleStorage")       : (settings.heroSubtitle || t("home.hero.subtitle"));
 
   // Hero trust strip — partners (unique suppliers) and cities, derived from public listings
   const partnerCount = new Set(allListings.map((l: any) => l.supplierId).filter(Boolean)).size;
@@ -101,13 +103,14 @@ export default function HomePage() {
       icon: Warehouse,
       title: t("home.vertical.storage.title"),
       desc: t("home.vertical.storage.desc"),
+      price: t("home.vertical.storage.price"),
       emphasized: true,
     },
     ...(showMovingService
-      ? [{ key: "moving", icon: Truck, title: t("home.vertical.moving.title"), desc: t("home.vertical.moving.desc"), emphasized: false }]
+      ? [{ key: "moving", icon: Truck, title: t("home.vertical.moving.title"), desc: t("home.vertical.moving.desc"), price: t("home.vertical.moving.price"), emphasized: false }]
       : []),
     ...(showTrailerService
-      ? [{ key: "trailer", icon: CarFront, title: t("home.vertical.trailer.title"), desc: t("home.vertical.trailer.desc"), emphasized: false }]
+      ? [{ key: "trailer", icon: CarFront, title: t("home.vertical.trailer.title"), desc: t("home.vertical.trailer.desc"), price: t("home.vertical.trailer.price"), emphasized: false }]
       : []),
   ];
 
@@ -118,17 +121,21 @@ export default function HomePage() {
     ...(showMovingService  ? [{ label: t("home.popular.movers"),  params: "type=moving"  }] : []),
   ];
 
+  // Spec "How Ruumly works" — 3 steps: Search & compare / Choose or request /
+  // Get access & move in (01-public §E). Home-specific copy & icons.
   const howItWorks = [
-    { icon: Search, title: t("how.step1"), desc: t("how.step1desc") },
-    { icon: CheckCircle, title: t("how.step2"), desc: t("how.step2desc") },
-    { icon: ArrowRight, title: t("how.step3"), desc: t("how.step3desc") },
+    { icon: Search,      title: t("home.how.step1.title"), desc: t("home.how.step1.desc") },
+    { icon: CheckCircle, title: t("home.how.step2.title"), desc: t("home.how.step2.desc") },
+    { icon: KeyRound,    title: t("home.how.step3.title"), desc: t("home.how.step3.desc") },
   ];
 
+  // Spec home FAQ (01-public §H) — 4 partner-relevant questions, last = "How do I
+  // become a partner?". Reuses existing q1/q2 + the partner Q; q3 = "Is it free for customers?".
   const faqs = [
-    { q: t("homeFaq.q1"), a: t("homeFaq.a1") },
-    { q: t("homeFaq.q2"), a: t("homeFaq.a2") },
-    { q: t("homeFaq.q3"), a: t("homeFaq.a3") },
-    { q: t("homeFaq.q4"), a: t("homeFaq.a4") },
+    { q: t("home.faq.work.q"),    a: t("home.faq.work.a") },
+    { q: t("home.faq.online.q"),  a: t("home.faq.online.a") },
+    { q: t("home.faq.free.q"),    a: t("home.faq.free.a") },
+    { q: t("home.faq.partner.q"), a: t("home.faq.partner.a") },
   ];
 
   const handleSearch = () => {
@@ -197,7 +204,9 @@ export default function HomePage() {
             )}
             <h1 className="font-display text-3xl font-bold leading-tight tracking-tight text-primary-foreground sm:text-4xl md:text-5xl lg:text-6xl">
               {heroTitle}
-              {heroTitleHighlight && <>{" "}<span className="text-gradient">{heroTitleHighlight}</span></>}
+              {/* Spec: highlighted hero line is SOLID teal #51CDD4 — the green→teal
+                  gradient is reserved for Free/Optional tags only (foundations §2.1). */}
+              {heroTitleHighlight && <>{" "}<span className="text-teal">{heroTitleHighlight}</span></>}
             </h1>
             <p className="mt-3 min-h-[3rem] text-base leading-relaxed text-primary-foreground/75 md:mt-4 md:min-h-[3.5rem] md:text-xl">{heroSubtitle}</p>
 
@@ -227,8 +236,8 @@ export default function HomePage() {
                   <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <input
                     type="text"
-                    aria-label={t("hero.searchPlaceholder")}
-                    placeholder={t("hero.searchPlaceholder")}
+                    aria-label={t("home.hero.searchPlaceholder")}
+                    placeholder={t("home.hero.searchPlaceholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -335,7 +344,7 @@ export default function HomePage() {
           {listingCount > 0 && (
             <div className="pointer-events-none absolute bottom-4 left-4 z-[400] inline-flex items-center gap-2 rounded-full bg-card/95 px-3.5 py-2 text-sm font-medium text-foreground shadow-elevated ring-1 ring-border backdrop-blur-sm">
               <Package className="h-4 w-4 text-teal-deep" />
-              {t("home.mapBadge").replace("{count}", String(listingCount))}
+              {t("home.mapBadgeNew").replace("{count}", String(listingCount))}
             </div>
           )}
         </div>
@@ -346,7 +355,7 @@ export default function HomePage() {
       <section className="container-wide section-y">
         <div className="text-center">
           <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">{t("home.verticals.eyebrow")}</p>
-          <h2 className="mt-2.5 font-display text-2xl font-bold md:text-3xl">{t("home.verticals.title")}</h2>
+          <h2 className="mt-2.5 font-display text-2xl font-bold md:text-3xl">{t("home.verticals.titleNew")}</h2>
           <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">{t("home.verticals.subtitle")}</p>
         </div>
         <div className={`mt-10 grid gap-5 ${verticals.length === 3 ? "md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]" : verticals.length === 2 ? "md:grid-cols-2" : "md:grid-cols-1"}`}>
@@ -360,10 +369,16 @@ export default function HomePage() {
                   v.emphasized ? "lg:row-span-1" : ""
                 }`}
               >
-                <div className={`relative flex items-end bg-secondary p-5 ${v.emphasized ? "aspect-[16/9]" : "aspect-[16/10]"}`}>
+                <div
+                  className={`relative flex items-end p-5 ${v.emphasized ? "aspect-[16/9]" : "aspect-[16/11]"}`}
+                  style={{ background: "repeating-linear-gradient(135deg,#e9eef7,#e9eef7 14px,#eef2fa 14px,#eef2fa 28px)" }}
+                >
                   <div className="absolute left-4 top-4 flex h-12 w-12 items-center justify-center rounded-xl bg-card shadow-card">
                     <Icon className="h-6 w-6 text-teal-deep" />
                   </div>
+                  <span className="inline-flex items-center rounded-full bg-card/95 px-3 py-1 text-xs font-semibold text-navy-ink shadow-card ring-1 ring-border">
+                    {v.price}
+                  </span>
                 </div>
                 <div className="flex flex-1 flex-col p-5">
                   <h3 className="font-display text-lg font-semibold text-foreground">{v.title}</h3>
@@ -383,9 +398,9 @@ export default function HomePage() {
       {settings.showHowItWorks && (
       <section className="surface-sunken section-y">
         <div className="container-wide">
-        <p className="text-center font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">{t("how.eyebrow")}</p>
-        <h2 className="mt-2.5 text-center font-display text-2xl font-bold md:text-3xl">{t("how.title")}</h2>
-        <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">{t("how.subtitle")}</p>
+        <p className="text-center font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">{t("home.how.eyebrow")}</p>
+        <h2 className="mt-2.5 text-center font-display text-2xl font-bold md:text-3xl">{t("home.how.title")}</h2>
+        <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">{t("home.how.subtitle")}</p>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {howItWorks.map((step, i) => {
             const Icon = step.icon;
@@ -422,10 +437,10 @@ export default function HomePage() {
               {t("featured.viewAll")} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {featuredLoading
-              ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
-              : featured.map((l, i) => (
+              ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
+              : featured.slice(0, 3).map((l, i) => (
                   <div
                     key={l.id}
                     className="animate-slide-up opacity-0"
@@ -540,8 +555,8 @@ export default function HomePage() {
       {/* FAQ */}
       {settings.showFaq && (
       <section className="container-wide section-y">
-        <p className="text-center font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">{t("faq.eyebrow")}</p>
-        <h2 className="mt-2.5 text-center font-display text-2xl font-bold md:text-3xl">{t("faq.title")}</h2>
+        <p className="text-center font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">{t("home.faq.eyebrow")}</p>
+        <h2 className="mt-2.5 text-center font-display text-2xl font-bold md:text-3xl">{t("home.faq.title")}</h2>
         <div className="mx-auto mt-8 max-w-2xl space-y-3">
           {faqs.map((faq, i) => (
             <div key={i} className="rounded-xl border border-border overflow-hidden">

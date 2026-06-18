@@ -32,25 +32,75 @@ interface InteractiveMapProps {
   tTypeTrailer?: string;
 }
 
+// 00-foundations §2 + §4.3 — map price-bubble pin palette.
+// Pins are navy-ink pills with a white bold price. Non-featured pins sit at
+// teal-deep; the hovered/selected pin turns action-green; featured pins are
+// rendered larger / highlighted (the paid "Featured on map" boost).
+const PIN_NAVY_INK = "#0E2156"; // featured base
+const PIN_TEAL_DEEP = "#1FA6AE"; // non-featured base
+const PIN_GREEN = "#0A9881"; // hover / selected
+const PIN_GREY = "#97A0B6"; // fully-booked location
+
+// Legend swatch colors (kept type-keyed so the legend still reads per vertical).
 const typeColors: Record<string, string> = {
-  warehouse: "#1E3A5F",
-  moving: "#3B82F6",
-  trailer: "#2EC4B6",
-  multi: "#64748B", // slate-500, neutral for mixed-type Locations
+  warehouse: PIN_NAVY_INK,
+  moving: PIN_TEAL_DEEP,
+  trailer: PIN_TEAL_DEEP,
+  multi: PIN_TEAL_DEEP,
 };
 
-// Simple, clear SVG icons that match between map and legend
-const typeIconPaths: Record<string, string> = {
-  warehouse: `<rect x="4" y="10" width="16" height="12" rx="1" fill="none" stroke="white" stroke-width="2"/><path d="M2 10l10-6 10 6" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`,
-  moving: `<rect x="1" y="6" width="12" height="12" rx="1" fill="none" stroke="white" stroke-width="2"/><path d="M13 10h4l3 4v4h-4" fill="none" stroke="white" stroke-width="2" stroke-linejoin="round"/><circle cx="6" cy="18" r="2" fill="none" stroke="white" stroke-width="2"/><circle cx="17" cy="18" r="2" fill="none" stroke="white" stroke-width="2"/>`,
-  trailer: `<rect x="1" y="7" width="14" height="10" rx="1" fill="none" stroke="white" stroke-width="2"/><path d="M15 14h5l2 3h1" fill="none" stroke="white" stroke-width="2" stroke-linejoin="round"/><circle cx="6" cy="17" r="2" fill="none" stroke="white" stroke-width="2"/><circle cx="18" cy="17" r="2" fill="none" stroke="white" stroke-width="2"/>`,
-  // lucide Building2 paths
-  multi: `<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" fill="none" stroke="white" stroke-width="2" stroke-linejoin="round"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" fill="none" stroke="white" stroke-width="2" stroke-linejoin="round"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" fill="none" stroke="white" stroke-width="2" stroke-linejoin="round"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4" stroke="white" stroke-width="2" stroke-linecap="round"/>`,
-};
+// A listing is "featured" when it has the promoted boost or is a founding partner.
+function isFeaturedListing(l: Listing): boolean {
+  return l.badge === "promoted" || !!l.isFoundingPartner;
+}
 
-// Safe JSX equivalents of the SVG inner content above — used when rendering
-// inside React (e.g., the map legend). The raw HTML strings remain for use in
-// Leaflet divIcon HTML markup (rendered outside React's tree).
+/**
+ * Render a price-bubble pin as a Leaflet divIcon.
+ * - navy-ink (featured) / teal-deep (default) / green (selected) pill
+ * - white bold price (Plus Jakarta 700, 12px), radius 999, shadow
+ * - featured pins are larger and lifted on top (zIndexOffset handled by caller)
+ */
+function priceBubbleIcon(label: string, opts: { featured: boolean; selected: boolean }) {
+  const { featured, selected } = opts;
+  const bg = selected ? PIN_GREEN : featured ? PIN_NAVY_INK : PIN_TEAL_DEEP;
+  const fontSize = featured ? 13 : 12;
+  const padV = featured ? 6 : 5;
+  const padH = featured ? 12 : 10;
+  const scale = selected ? 1.06 : 1;
+  const ring = featured ? "0 0 0 2px rgba(255,255,255,.9)" : "0 0 0 1.5px rgba(255,255,255,.85)";
+  // Approximate pixel size so Leaflet anchors the bubble by its center-bottom.
+  const w = Math.round(label.length * (fontSize * 0.62) + padH * 2 + 4);
+  const h = fontSize + padV * 2 + 2;
+
+  return L.divIcon({
+    className: "ruumly-price-pin",
+    html: `
+      <div style="
+        display:inline-flex; align-items:center; justify-content:center;
+        background:${bg};
+        color:#fff;
+        font-family:'Plus Jakarta Sans', sans-serif;
+        font-weight:700;
+        font-size:${fontSize}px;
+        line-height:1;
+        padding:${padV}px ${padH}px;
+        border-radius:999px;
+        white-space:nowrap;
+        box-shadow:${ring}, 0 4px 14px rgba(16,28,64,.18), 0 2px 6px rgba(16,28,64,.12);
+        transform:scale(${scale});
+        transform-origin:center bottom;
+        transition:transform .16s ease, background .16s ease;
+        cursor:pointer;
+      ">${label}</div>
+    `,
+    iconSize: [w, h],
+    iconAnchor: [w / 2, h],
+  });
+}
+
+// Per-vertical glyphs rendered inside React (the map legend swatches).
+// Map pins themselves are uniform price-bubble pills (see priceBubbleIcon),
+// so these glyphs are only used to decorate the legend labels.
 function MarkerIcon({ type }: { type: string }) {
   const stroke = "white";
   const sw = 2;
@@ -94,126 +144,39 @@ function MarkerIcon({ type }: { type: string }) {
 }
 
 function createMarkerIcon(listing: Listing, isSelected: boolean) {
-  const color = typeColors[listing.type] || "#1E3A5F";
-  const size = isSelected ? 44 : 36;
-  const iconPath = typeIconPaths[listing.type] || typeIconPaths.warehouse;
-
-  return L.divIcon({
-    className: "custom-marker",
-    html: `
-      <div style="
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        cursor: pointer;
-        filter: ${isSelected ? 'drop-shadow(0 0 8px rgba(46, 196, 182, 0.5))' : 'none'};
-      ">
-        <div style="
-          width: ${size}px;
-          height: ${size}px;
-          border-radius: 50% 50% 50% 0;
-          transform: rotate(-45deg);
-          background: ${color};
-          border: 3px solid ${isSelected ? '#2EC4B6' : 'white'};
-          box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.2s ease;
-        ">
-          <div style="transform: rotate(45deg); display: flex; align-items: center; justify-content: center;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">${iconPath}</svg>
-          </div>
-        </div>
-        <div style="
-          margin-top: 6px;
-          background: white;
-          padding: 2px 8px;
-          border-radius: 12px;
-          font-size: 11px;
-          font-weight: 700;
-          color: ${color};
-          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-          white-space: nowrap;
-          border: 1px solid ${color}20;
-        ">${listing.priceFrom}€</div>
-      </div>
-    `,
-    iconSize: [size, size + 28],
-    iconAnchor: [size / 2, size],
+  return priceBubbleIcon(`€${listing.priceFrom}`, {
+    featured: isFeaturedListing(listing),
+    selected: isSelected,
   });
 }
 
-function createLocationMarkerIcon(location: SupplierLocation, isSelected: boolean, unitLabel = "units") {
-  const size = isSelected ? 44 : 36;
+function createLocationMarkerIcon(location: SupplierLocation, isSelected: boolean, _unitLabel = "units") {
+  const label = location.priceFrom != null
+    ? `€${location.priceFrom}`
+    : `${location.availableUnitCount != null ? location.availableUnitCount : location.unitCount}`;
+  // A location reads as featured if it surfaces any promoted / founding-partner unit.
+  const featured = (location.units ?? []).some((u) => isFeaturedListing(u));
 
-  // Derive icon: if Location has multiple distinct types, use neutral "multi" icon.
-  // Otherwise use the single type's icon.
-  const typeCounts: Record<string, number> = {};
-  (location.units ?? []).forEach((u: any) => {
-    const t = (u?.type || "warehouse").toLowerCase();
-    typeCounts[t] = (typeCounts[t] ?? 0) + 1;
-  });
-  const distinctTypes = Object.keys(typeCounts);
-  let resolvedType = "warehouse";
-  if (distinctTypes.length > 1) {
-    resolvedType = "multi";
-  } else if (distinctTypes.length === 1) {
-    resolvedType = distinctTypes[0];
+  if (location.fullyBooked) {
+    // Muted grey pill — still a price bubble, just visibly de-emphasised.
+    return L.divIcon({
+      className: "ruumly-price-pin",
+      html: `
+        <div style="
+          display:inline-flex; align-items:center; justify-content:center;
+          background:${PIN_GREY}; color:#fff;
+          font-family:'Plus Jakarta Sans', sans-serif; font-weight:700;
+          font-size:12px; line-height:1; padding:5px 10px; border-radius:999px;
+          white-space:nowrap;
+          box-shadow:0 0 0 1.5px rgba(255,255,255,.85), 0 4px 14px rgba(16,28,64,.16);
+          cursor:pointer;
+        ">${label}</div>`,
+      iconSize: [Math.round(label.length * 7.4 + 24), 24],
+      iconAnchor: [Math.round((label.length * 7.4 + 24) / 2), 24],
+    });
   }
-  const iconPath = typeIconPaths[resolvedType] ?? typeIconPaths.warehouse;
-  const markerColor = location.fullyBooked
-    ? "#888888"
-    : (typeColors[resolvedType] ?? "#1E3A5F");
 
-  return L.divIcon({
-    className: "custom-marker",
-    html: `
-      <div style="
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        cursor: pointer;
-        filter: ${isSelected ? 'drop-shadow(0 0 8px rgba(46, 196, 182, 0.5))' : 'none'};
-      ">
-        <div style="
-          width: ${size}px;
-          height: ${size}px;
-          border-radius: 50% 50% 50% 0;
-          transform: rotate(-45deg);
-          background: ${markerColor};
-          border: 3px solid ${isSelected ? '#2EC4B6' : 'white'};
-          box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.2s ease;
-        ">
-          <div style="transform: rotate(45deg); display: flex; align-items: center; justify-content: center;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">${iconPath}</svg>
-          </div>
-        </div>
-        <div style="
-          margin-top: 6px;
-          background: white;
-          padding: 2px 8px;
-          border-radius: 12px;
-          font-size: 11px;
-          font-weight: 700;
-          color: ${markerColor};
-          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-          white-space: nowrap;
-          border: 1px solid ${markerColor}20;
-        ">${
-          location.priceFrom != null
-            ? `${location.priceFrom}€`
-            : `${location.availableUnitCount != null ? location.availableUnitCount : location.unitCount}`
-        }</div>
-      </div>
-    `,
-    iconSize: [size, size + 28],
-    iconAnchor: [size / 2, size],
-  });
+  return priceBubbleIcon(label, { featured, selected: isSelected });
 }
 
 function InteractiveMap({
@@ -339,7 +302,9 @@ function InteractiveMap({
       loc.units?.forEach(u => coveredListingIds.add(u.id));
       
       const icon = createLocationMarkerIcon(loc, loc.id === selectedId, tUnits);
-      const marker = L.marker([loc.lat, loc.lng], { icon });
+      // Featured pins lift on top of the cluster (paid "Featured on map" boost).
+      const locFeatured = (loc.units ?? []).some((u) => isFeaturedListing(u));
+      const marker = L.marker([loc.lat, loc.lng], { icon, zIndexOffset: locFeatured ? 1000 : 0 });
 
       const popupHtml = `
         <div style="min-width: 200px; font-family: 'DM Sans', sans-serif;">
@@ -376,7 +341,8 @@ function InteractiveMap({
       if (coveredListingIds.has(listing.id)) return;
       
       const icon = createMarkerIcon(listing, listing.id === selectedId);
-      const marker = L.marker([listing.lat, listing.lng], { icon });
+      // Featured pins lift on top (paid "Featured on map" boost).
+      const marker = L.marker([listing.lat, listing.lng], { icon, zIndexOffset: isFeaturedListing(listing) ? 1000 : 0 });
 
       const typeName = typeLabels[listing.type] || listing.type;
       const typeColor = typeColors[listing.type];
@@ -458,13 +424,15 @@ function InteractiveMap({
   return (
     <div className={`relative overflow-hidden rounded-xl ${height} ${className}`}>
       <div ref={mapRef} className="h-full w-full" />
-      {/* Legend - uses exact same icons as map pins */}
+      {/* Legend — lists the visible verticals. Swatches use teal-deep (the
+          default price-pin color) so they stay consistent with the new
+          price-bubble pins (which are color-coded by featured state, not type). */}
       <div className="absolute bottom-3 left-3 z-[1000] flex max-w-[calc(100%-1.5rem)] flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-card/95 px-3 py-2 text-xs font-medium shadow-lg backdrop-blur-sm">
         {visibleServiceTypes.map((type) => (
           <span key={type} className="flex items-center gap-1.5">
             <span
               className="inline-flex h-6 w-6 items-center justify-center rounded-full"
-              style={{ background: typeColors[type] }}
+              style={{ background: PIN_TEAL_DEEP }}
             >
               <MarkerIcon type={type} />
             </span>

@@ -7,7 +7,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import type { Booking, BookingStatus } from "@/services/types";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 
-const FILTERS = ["all", "pending", "reserved", "confirmed", "active", "completed", "cancelled"] as const;
+const FILTERS = ["all", "pending", "confirmed", "active", "completed", "cancelled"] as const;
 type FilterKey = typeof FILTERS[number];
 
 export default function ProviderBookings() {
@@ -42,7 +42,7 @@ export default function ProviderBookings() {
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = `broneeringud_${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    a.href = url; a.download = `ruumly-bookings-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
     URL.revokeObjectURL(url);
   };
 
@@ -54,10 +54,8 @@ export default function ProviderBookings() {
 
   if (bookings.length === 0) return (
     <div>
-      <p className="font-mono-label text-[11px] font-medium uppercase tracking-[0.2em] text-teal-deep">
-        {t("provider.bookings.eyebrow")}
-      </p>
-      <h1 className="mt-1.5 font-display text-2xl font-bold text-navy-ink md:text-[28px]">{t("provider.bookings.title")}</h1>
+      <h1 className="font-display text-2xl font-bold text-navy-ink md:text-[28px]">{t("provider.bookings.title")}</h1>
+      <p className="mt-2 text-sm text-muted-foreground">{t("provider.bookings.subtitle")}</p>
       <div className="mt-10 flex flex-col items-center py-12 text-center">
         <div className="flex h-[54px] w-[54px] items-center justify-center rounded-[14px] bg-secondary">
           <Package className="h-6 w-6 text-muted-foreground" />
@@ -72,10 +70,7 @@ export default function ProviderBookings() {
     <div>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="font-mono-label text-[11px] font-medium uppercase tracking-[0.2em] text-teal-deep">
-            {t("provider.bookings.eyebrow")}
-          </p>
-          <h1 className="mt-1.5 font-display text-2xl font-bold text-navy-ink md:text-[28px]">{t("provider.bookings.title")}</h1>
+          <h1 className="font-display text-2xl font-bold text-navy-ink md:text-[28px]">{t("provider.bookings.title")}</h1>
           <p className="mt-2 text-sm text-muted-foreground">{t("provider.bookings.subtitle")}</p>
         </div>
         <Button

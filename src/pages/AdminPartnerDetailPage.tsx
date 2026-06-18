@@ -377,7 +377,7 @@ function CommercialTab({ supplier, onSave, pending }: { supplier: any; onSave: (
           <label className="text-xs font-medium">{t("admin.partner.billingModel")}</label>
           <select className={inp} value={form.billingModel} onChange={(e) => setForm({ ...form, billingModel: e.target.value as "marketplace" | "rebate" })}>
             <option value="marketplace">{t("admin.partner.billingMarketplace")}</option>
-            <option value="rebate">{t("admin.partner.billingRebate")}</option>
+            <option value="rebate">{t("admin.partner.billingDirect")}</option>
           </select>
         </div>
         <div>
@@ -538,21 +538,49 @@ function PartnerPageTab({ supplier, onSave, pending }: { supplier: any; onSave: 
 // ─── Visibility ────────────────────────────────────────────────────────────
 function VisibilityTab({ supplier: s, onSave, pending }: { supplier: any; onSave: (p: any) => void; pending: boolean }) {
   const { t } = useLanguage();
+  const qc = useQueryClient();
   const published = !!s.isPartnerPagePublished;
 
+  const featuresKey = ["admin", "partner", s.id, "paid-features"];
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "partner", s.id, "paid-features"],
+    queryKey: featuresKey,
     queryFn: () => providerPaidFeaturesService.getMine(s.id),
     enabled: !!s.id,
   });
 
+  const catalog = (data?.catalog ?? []).filter((f) => f.isActive);
   const active = data?.activeFeatures ?? [];
   const pendingRequests = (data?.requests ?? []).filter((r) => r.status === "new");
+  const activeByFeatureId = new Map(active.map((a) => [a.paidFeature.id, a]));
+
+  // Track which feature is mid-mutation so we can show a spinner / disable just that row.
+  const [busyFeatureId, setBusyFeatureId] = useState<string | null>(null);
+
+  const toggleFeature = useMutation({
+    mutationFn: ({ paidFeatureId, on }: { paidFeatureId: string; on: boolean }) =>
+      on
+        ? apiClient.post(`/admin/suppliers/${s.id}/paid-features`, { paidFeatureId })
+        : apiClient.delete(`/admin/suppliers/${s.id}/paid-features/${paidFeatureId}`),
+    onMutate: ({ paidFeatureId }) => setBusyFeatureId(paidFeatureId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: featuresKey });
+      toast.success(t("common.saved"));
+    },
+    onError: (err: any) => toast.error(err?.message ?? t("toast.saveFailed")),
+    onSettled: () => setBusyFeatureId(null),
+  });
 
   const scopeLabel = (listingId?: string | null, locationId?: string | null, scope?: string) => {
     if (listingId) return t("admin.partner.scope.listing");
     if (locationId) return t("admin.partner.scope.location");
     return t(`admin.partner.scope.${scope ?? "supplier"}`);
+  };
+
+  const priceLabel = (amount: number, currency: string, interval: string) => {
+    if (amount <= 0) return t("admin.partner.feature.free");
+    const suffix = interval === "monthly" ? t("admin.partner.feature.perMonth")
+      : interval === "yearly" ? t("admin.partner.feature.perYear") : "";
+    return `${amount.toFixed(0)} ${currency}${suffix}`;
   };
 
   return (
@@ -582,45 +610,56 @@ function VisibilityTab({ supplier: s, onSave, pending }: { supplier: any; onSave
         </div>
       </div>
 
-      {/* Active optional features (scoped) */}
+      {/* Active optional features (scoped, editable) */}
       <div className="rounded-xl border border-border bg-card p-5">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-teal-deep" />
           <h3 className="text-sm font-semibold text-navy-ink">{t("admin.partner.activeFeatures")}</h3>
         </div>
-        <p className="mt-1 text-xs text-muted-foreground">{t("admin.partner.activeFeaturesDesc")}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{t("admin.partner.activeFeaturesEditDesc")}</p>
 
         {isLoading ? (
           <div className="flex justify-center py-8">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
-        ) : active.length === 0 ? (
+        ) : catalog.length === 0 ? (
           <p className="mt-4 rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
-            {t("admin.partner.noActiveFeatures")}
+            {t("admin.partner.noCatalogFeatures")}
           </p>
         ) : (
-          <ul className="mt-4 space-y-2">
-            {active.map((f) => (
-              <li key={f.id} className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-                  <div>
-                    <div className="text-sm font-medium text-navy-ink">{f.paidFeature.name}</div>
+          <ul className="mt-4 divide-y divide-border">
+            {catalog.map((f) => {
+              const activation = activeByFeatureId.get(f.id);
+              const isOn = !!activation;
+              const busy = busyFeatureId === f.id;
+              return (
+                <li key={f.id} className="flex items-center justify-between gap-4 py-3">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-navy-ink">{f.name}</div>
                     <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-                      <span className="rounded-full bg-secondary px-2 py-0.5 font-medium">
-                        {scopeLabel(f.listingId, f.locationId, f.paidFeature.scope)}
+                      <span className="font-medium text-ink-2">
+                        {priceLabel(f.priceAmount, f.priceCurrency, f.billingInterval)}
                       </span>
-                      {f.endsAt && (
-                        <span>{t("admin.partner.featureUntil").replace("{date}", new Date(f.endsAt).toLocaleDateString())}</span>
+                      <span className="rounded-full bg-secondary px-2 py-0.5 font-medium">
+                        {scopeLabel(activation?.listingId, activation?.locationId, f.scope)}
+                      </span>
+                      {activation?.endsAt && (
+                        <span>{t("admin.partner.featureUntil").replace("{date}", new Date(activation.endsAt).toLocaleDateString())}</span>
                       )}
                     </div>
                   </div>
-                </div>
-                <span className="inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-semibold text-success">
-                  {t("admin.partner.featureActive")}
-                </span>
-              </li>
-            ))}
+                  <div className="flex items-center gap-2">
+                    {busy && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                    <Switch
+                      checked={isOn}
+                      disabled={busy || toggleFeature.isPending}
+                      aria-label={t("admin.partner.toggleFeatureAria").replace("{name}", f.name)}
+                      onCheckedChange={(v) => toggleFeature.mutate({ paidFeatureId: f.id, on: v })}
+                    />
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

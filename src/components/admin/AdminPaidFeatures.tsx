@@ -46,10 +46,44 @@ interface EditState {
   isActive: boolean;
 }
 
+interface CreateState {
+  code: string;
+  name: string;
+  description: string;
+  category: Category;
+  scope: Scope;
+  priceAmount: number;
+  priceCurrency: string;
+  billingInterval: string;
+  isActive: boolean;
+}
+
+const EMPTY_CREATE: CreateState = {
+  code: "",
+  name: "",
+  description: "",
+  category: "visibility",
+  scope: "supplier",
+  priceAmount: 0,
+  priceCurrency: "EUR",
+  billingInterval: "monthly",
+  isActive: true,
+};
+
+function slugifyCode(name: string) {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 60);
+}
+
 export default function AdminPaidFeatures() {
   const { t } = useLanguage();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<EditState | null>(null);
+  const [creating, setCreating] = useState<CreateState | null>(null);
 
   const { data: catalog = [], isLoading } = useQuery({
     queryKey: ["admin", "paid-features", "catalog"],
@@ -73,6 +107,27 @@ export default function AdminPaidFeatures() {
       qc.invalidateQueries({ queryKey: ["admin", "paid-features", "catalog"] });
       toast.success(t("common.saved"));
       setEditing(null);
+    },
+    onError: (err: any) => toast.error(err?.message ?? t("toast.error")),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (patch: CreateState) =>
+      apiClient.post("/admin/paid-features/catalog", {
+        code: patch.code.trim() || slugifyCode(patch.name),
+        name: patch.name,
+        description: patch.description,
+        category: patch.category,
+        scope: patch.scope,
+        priceAmount: patch.priceAmount,
+        priceCurrency: patch.priceCurrency,
+        billingInterval: patch.billingInterval,
+        isActive: patch.isActive,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "paid-features", "catalog"] });
+      toast.success(t("admin.paidFeatures.created"));
+      setCreating(null);
     },
     onError: (err: any) => toast.error(err?.message ?? t("toast.error")),
   });
@@ -118,9 +173,7 @@ export default function AdminPaidFeatures() {
         <Button
           size="sm"
           className="h-11 bg-accent text-accent-foreground hover:bg-accent/90"
-          onClick={() =>
-            toast.message(t("admin.paidFeatures.addHint"))
-          }
+          onClick={() => setCreating({ ...EMPTY_CREATE })}
         >
           <PlusCircle className="mr-1.5 h-4 w-4" /> {t("admin.paidFeatures.add")}
         </Button>
@@ -355,6 +408,130 @@ export default function AdminPaidFeatures() {
                       ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       : <Save className="mr-2 h-4 w-4" />}
                     {t("common.saveChanges")}
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Create modal */}
+      <Dialog open={!!creating} onOpenChange={(open) => !open && setCreating(null)}>
+        <DialogContent className="max-w-[520px]">
+          {creating && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="font-display text-lg text-navy-ink">
+                  {t("admin.paidFeatures.createTitle")}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-[13px] font-semibold text-ink-2">{t("admin.paidFeatures.fieldName")}</label>
+                  <input
+                    className={inp}
+                    value={creating.name}
+                    onChange={(e) => setCreating({ ...creating, name: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="text-[13px] font-semibold text-ink-2">{t("admin.paidFeatures.fieldCode")}</label>
+                  <input
+                    className={`${inp} font-mono`}
+                    placeholder={creating.name ? slugifyCode(creating.name) : "feature_code"}
+                    value={creating.code}
+                    onChange={(e) => setCreating({ ...creating, code: e.target.value })}
+                  />
+                  <p className="mt-1 text-[11px] text-muted-foreground">{t("admin.paidFeatures.fieldCodeHint")}</p>
+                </div>
+                <div>
+                  <label className="text-[13px] font-semibold text-ink-2">{t("admin.paidFeatures.fieldDescription")}</label>
+                  <textarea
+                    className={`${inp} min-h-[80px] resize-y`}
+                    value={creating.description}
+                    onChange={(e) => setCreating({ ...creating, description: e.target.value })}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[13px] font-semibold text-ink-2">{t("admin.paidFeatures.fieldCategory")}</label>
+                    <select
+                      className={inp}
+                      value={creating.category}
+                      onChange={(e) => setCreating({ ...creating, category: e.target.value as Category })}
+                    >
+                      {CATEGORY_ORDER.map((c) => (
+                        <option key={c} value={c}>{t(`admin.paidFeatures.category.${c}`)}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[13px] font-semibold text-ink-2">{t("admin.paidFeatures.fieldScope")}</label>
+                    <select
+                      className={inp}
+                      value={creating.scope}
+                      onChange={(e) => setCreating({ ...creating, scope: e.target.value as Scope })}
+                    >
+                      {SCOPES.map((s) => (
+                        <option key={s} value={s}>{t(`admin.paidFeatures.scope.${s}`)}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-[13px] font-semibold text-ink-2">{t("admin.paidFeatures.fieldPrice")}</label>
+                    <input
+                      type="number"
+                      min={0}
+                      className={inp}
+                      value={creating.priceAmount}
+                      onChange={(e) => setCreating({ ...creating, priceAmount: Number(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[13px] font-semibold text-ink-2">{t("admin.paidFeatures.fieldCurrency")}</label>
+                    <input
+                      className={inp}
+                      value={creating.priceCurrency}
+                      onChange={(e) => setCreating({ ...creating, priceCurrency: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[13px] font-semibold text-ink-2">{t("admin.paidFeatures.fieldInterval")}</label>
+                    <select
+                      className={inp}
+                      value={creating.billingInterval}
+                      onChange={(e) => setCreating({ ...creating, billingInterval: e.target.value })}
+                    >
+                      <option value="monthly">{t("admin.paidFeatures.intervalMonthly")}</option>
+                      <option value="yearly">{t("admin.paidFeatures.intervalYearly")}</option>
+                      <option value="once">{t("admin.paidFeatures.intervalOnce")}</option>
+                    </select>
+                  </div>
+                </div>
+                <label className="flex items-center justify-between rounded-[10px] border border-border p-3">
+                  <div>
+                    <div className="text-sm font-medium text-navy-ink">{t("admin.paidFeatures.fieldAvailable")}</div>
+                    <div className="text-[11px] text-muted-foreground">{t("admin.paidFeatures.fieldAvailableHint")}</div>
+                  </div>
+                  <Switch
+                    checked={creating.isActive}
+                    onCheckedChange={(v) => setCreating({ ...creating, isActive: v })}
+                  />
+                </label>
+                <div className="flex justify-end gap-2 pt-1">
+                  <Button variant="outline" onClick={() => setCreating(null)}>{t("common.cancel")}</Button>
+                  <Button
+                    className="bg-accent text-accent-foreground hover:bg-accent/90"
+                    disabled={createMutation.isPending || !creating.name.trim()}
+                    onClick={() => createMutation.mutate(creating)}
+                  >
+                    {createMutation.isPending
+                      ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      : <PlusCircle className="mr-2 h-4 w-4" />}
+                    {t("admin.paidFeatures.add")}
                   </Button>
                 </div>
               </div>

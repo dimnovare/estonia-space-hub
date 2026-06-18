@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle, Clock, Sparkles, Zap, ShieldCheck, ArrowRight } from "lucide-react";
+import { CheckCircle, Clock, Sparkles, Zap, ShieldCheck, ArrowRight, TrendingUp, Megaphone, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -13,6 +13,20 @@ function formatPrice(amount: number, currency: string, interval: string, manualL
   if (amount <= 0) return manualLabel;
   const suffix = interval === "monthly" ? "/mo" : "";
   return `${amount.toFixed(0)} ${currency}${suffix}`;
+}
+
+// Each catalog category gets its own icon tile, matching the For-partners catalog.
+const CATEGORY_VISUALS: Record<string, { icon: typeof Sparkles; tint: string }> = {
+  visibility: { icon: Sparkles, tint: "bg-teal/15 text-teal-deep" },
+  leadgen: { icon: Megaphone, tint: "bg-warning/15 text-warning-text" },
+  lead: { icon: Megaphone, tint: "bg-warning/15 text-warning-text" },
+  trust: { icon: ShieldCheck, tint: "bg-success/10 text-success" },
+  operations: { icon: Settings2, tint: "bg-primary/10 text-primary" },
+  ops: { icon: Settings2, tint: "bg-primary/10 text-primary" },
+  analytics: { icon: TrendingUp, tint: "bg-accent/10 text-accent" },
+};
+function categoryVisual(category: string) {
+  return CATEGORY_VISUALS[category.toLowerCase()] ?? { icon: Sparkles, tint: "bg-teal/15 text-teal-deep" };
 }
 
 export default function ProviderBoosts() {
@@ -40,8 +54,6 @@ export default function ProviderBoosts() {
     onError: () => toast.error(t("toast.error")),
   });
 
-  const targetKey = (paidFeatureId: string, listingId?: string | null, locationId?: string | null) =>
-    `${paidFeatureId}:${listingId ?? ""}:${locationId ?? ""}`;
 
   const units = useMemo(
     () => locations.flatMap((loc) => (loc.units ?? []).map((unit) => ({
@@ -60,14 +72,14 @@ export default function ProviderBoosts() {
     [units]
   );
 
-  const activeFeatureKeys = useMemo(
-    () => new Set((data?.activeFeatures ?? []).map((f) => targetKey(f.paidFeature.id, f.listingId, f.locationId))),
+  const activeFeatureIds = useMemo(
+    () => new Set((data?.activeFeatures ?? []).map((f) => f.paidFeature.id)),
     [data?.activeFeatures]
   );
-  const pendingFeatureKeys = useMemo(
+  const pendingFeatureIds = useMemo(
     () => new Set((data?.requests ?? [])
       .filter((r) => r.status === "new")
-      .map((r) => targetKey(r.paidFeature.id, r.listingId, r.locationId))),
+      .map((r) => r.paidFeature.id)),
     [data?.requests]
   );
 
@@ -96,10 +108,23 @@ export default function ProviderBoosts() {
 
   const modalFeature = catalog.find((f) => f.id === modalFeatureId) ?? null;
 
+  // The "Apply to" select stores a composite value: "unit:<id>", "loc:<id>" or
+  // "account". A default is derived per feature scope so a request can always be
+  // sent (no dead state).
+  const defaultScopeValue = (feature: (typeof catalog)[number]) => {
+    if (feature.scope === "listing" && units[0]) return `unit:${units[0].id}`;
+    if (feature.scope === "location" && locations[0]) return `loc:${locations[0].id}`;
+    return "account";
+  };
+  const scopeValueOf = (feature: (typeof catalog)[number]) =>
+    targets[feature.id] ?? defaultScopeValue(feature);
+
   const submitRequest = (feature: (typeof catalog)[number]) => {
-    const selectedTarget = targets[feature.id] ?? "";
-    const listingId = feature.scope === "listing" ? selectedTarget || undefined : undefined;
-    const locationId = feature.scope === "location" ? selectedTarget || undefined : undefined;
+    const value = scopeValueOf(feature);
+    let listingId: string | undefined;
+    let locationId: string | undefined;
+    if (value.startsWith("unit:")) listingId = value.slice(5);
+    else if (value.startsWith("loc:")) locationId = value.slice(4);
     requestMutation.mutate({ paidFeatureId: feature.id, listingId, locationId });
   };
 
@@ -107,10 +132,7 @@ export default function ProviderBoosts() {
     <div className="space-y-8">
       {/* Page head — free / optional framing */}
       <div>
-        <p className="font-mono-label text-[11px] font-medium uppercase tracking-[0.2em] text-teal-deep">
-          {t("provider.boosts.eyebrow")}
-        </p>
-        <div className="mt-1.5 flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <h1 className="font-display text-2xl font-bold text-navy-ink md:text-[28px]">{t("provider.boosts.title")}</h1>
           <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-accent to-teal-deep px-2.5 py-0.5 text-xs font-semibold text-white">
             {t("provider.boosts.optionalBadge")}
@@ -122,7 +144,7 @@ export default function ProviderBoosts() {
       </div>
 
       {/* Active-boosts summary */}
-      <section className="rounded-[14px] border border-border bg-secondary/40 p-5 shadow-[var(--shadow-card)]">
+      <section className="rounded-[14px] border border-border bg-[#F4F6FB] p-5 shadow-[var(--shadow-card)]">
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] bg-teal/15 text-teal-deep">
             <Zap className="h-5 w-5" />
@@ -137,12 +159,24 @@ export default function ProviderBoosts() {
                 : t("provider.boosts.activeSummaryEmpty")}
             </p>
           </div>
+          {active.length > 0 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="shrink-0 text-xs"
+              onClick={() => {
+                document.getElementById("active-boosts")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+            >
+              {t("provider.boosts.manageActive")}
+            </Button>
+          )}
         </div>
       </section>
 
       {/* Active features list */}
       {active.length > 0 && (
-        <section>
+        <section id="active-boosts" className="scroll-mt-24">
           <h2 className="font-display text-base font-semibold text-navy-ink">{t("provider.boosts.active")}</h2>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
             {active.map((feature) => (
@@ -194,11 +228,14 @@ export default function ProviderBoosts() {
       {/* Catalog grouped by category */}
       <section className="space-y-8">
         <h2 className="font-display text-base font-semibold text-navy-ink">{t("provider.boosts.catalog")}</h2>
-        {categoryOrder.map((category) => (
+        {categoryOrder.map((category) => {
+          const visual = categoryVisual(category);
+          const CatIcon = visual.icon;
+          return (
           <div key={category}>
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-[12px] bg-teal/15 text-teal-deep">
-                <Sparkles className="h-4 w-4" />
+              <div className={`flex h-9 w-9 items-center justify-center rounded-[12px] ${visual.tint}`}>
+                <CatIcon className="h-4 w-4" />
               </div>
               <h3 className="font-display text-lg font-semibold text-navy-ink">
                 {t(`provider.boosts.category.${category}`)}
@@ -206,12 +243,8 @@ export default function ProviderBoosts() {
             </div>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {grouped[category].map((feature) => {
-                const selectedTarget = targets[feature.id] ?? "";
-                const listingId = feature.scope === "listing" ? selectedTarget || undefined : undefined;
-                const locationId = feature.scope === "location" ? selectedTarget || undefined : undefined;
-                const scopedKey = targetKey(feature.id, listingId, locationId);
-                const isActiveFeature = activeFeatureKeys.has(scopedKey);
-                const isPending = pendingFeatureKeys.has(scopedKey);
+                const isActiveFeature = activeFeatureIds.has(feature.id);
+                const isPending = pendingFeatureIds.has(feature.id);
                 const free = isFree(feature);
                 return (
                   <div
@@ -270,7 +303,8 @@ export default function ProviderBoosts() {
               })}
             </div>
           </div>
-        ))}
+          );
+        })}
       </section>
 
       {/* Request modal — scope select + note + reassurance */}
@@ -297,36 +331,25 @@ export default function ProviderBoosts() {
                   </div>
                 </div>
 
-                {modalFeature.scope === "location" && (
-                  <label className="block">
-                    <span className="text-[13px] font-semibold text-ink-2">{t("provider.boosts.chooseLocation")}</span>
-                    <select
-                      className="mt-1.5 w-full rounded-[10px] border border-input bg-background px-3.5 py-3 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
-                      value={targets[modalFeature.id] ?? ""}
-                      onChange={(e) => setTargets((prev) => ({ ...prev, [modalFeature.id]: e.target.value }))}
-                    >
-                      <option value="">{t("provider.boosts.pickTarget")}</option>
-                      {locations.map((loc) => (
-                        <option key={loc.id} value={loc.id}>{loc.name} · {loc.city}</option>
-                      ))}
-                    </select>
-                  </label>
-                )}
-                {modalFeature.scope === "listing" && (
-                  <label className="block">
-                    <span className="text-[13px] font-semibold text-ink-2">{t("provider.boosts.chooseUnit")}</span>
-                    <select
-                      className="mt-1.5 w-full rounded-[10px] border border-input bg-background px-3.5 py-3 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
-                      value={targets[modalFeature.id] ?? ""}
-                      onChange={(e) => setTargets((prev) => ({ ...prev, [modalFeature.id]: e.target.value }))}
-                    >
-                      <option value="">{t("provider.boosts.pickTarget")}</option>
-                      {units.map((unit) => (
-                        <option key={unit.id} value={unit.id}>{unit.label}</option>
-                      ))}
-                    </select>
-                  </label>
-                )}
+                {/* Apply to — always present scope select */}
+                <label className="block">
+                  <span className="text-[13px] font-semibold text-ink-2">{t("provider.boosts.applyTo")}</span>
+                  <select
+                    className="mt-1.5 w-full rounded-[10px] border border-input bg-background px-3.5 py-3 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                    value={scopeValueOf(modalFeature)}
+                    onChange={(e) => setTargets((prev) => ({ ...prev, [modalFeature.id]: e.target.value }))}
+                  >
+                    {locations.map((loc) => (
+                      <option key={loc.id} value={`loc:${loc.id}`}>
+                        {t("provider.boosts.allUnitsOf").replace("{location}", loc.name)}
+                      </option>
+                    ))}
+                    {units.map((unit) => (
+                      <option key={unit.id} value={`unit:${unit.id}`}>{unit.label}</option>
+                    ))}
+                    <option value="account">{t("provider.boosts.wholeAccount")}</option>
+                  </select>
+                </label>
 
                 <label className="block">
                   <span className="text-[13px] font-semibold text-ink-2">{t("provider.boosts.noteLabel")}</span>
@@ -345,20 +368,11 @@ export default function ProviderBoosts() {
 
                 <Button
                   className="h-11 w-full bg-accent text-accent-foreground hover:bg-accent/90"
-                  disabled={
-                    requestMutation.isPending ||
-                    ((modalFeature.scope === "listing" || modalFeature.scope === "location") && !(targets[modalFeature.id] ?? ""))
-                  }
+                  disabled={requestMutation.isPending}
                   onClick={() => submitRequest(modalFeature)}
                 >
-                  {(modalFeature.scope === "listing" || modalFeature.scope === "location") && !(targets[modalFeature.id] ?? "")
-                    ? t("provider.boosts.pickTarget")
-                    : (
-                      <>
-                        {t("provider.boosts.sendRequest")}
-                        <ArrowRight className="h-4 w-4" />
-                      </>
-                    )}
+                  {t("provider.boosts.sendRequest")}
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
             </>

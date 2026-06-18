@@ -1,16 +1,16 @@
 import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { notificationService } from "@/services";
-import { Link, useNavigate, useSearchParams, localizedHref } from "@/i18n/routing";
+import { Link, useNavigate, useSearchParams } from "@/i18n/routing";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createProfileSchema, createPasswordSchema, type ProfileForm, type PasswordForm } from "@/lib/schemas";
 import { toast } from "sonner";
 import {
   LayoutDashboard, Package, Heart, Search, Bell, Shield,
-  HelpCircle, ChevronRight, ChevronDown, Warehouse, Truck, CarFront, Clock, CheckCircle,
-  XCircle, Play, Calendar, MapPin, LogOut, User, Send, MessageSquare, FileText,
-  Download, ArrowLeft, Loader2, Star, Receipt, TrendingDown
+  HelpCircle, ChevronRight, Warehouse, Truck, CarFront, Clock, CheckCircle,
+  XCircle, Play, ArrowRight, User, Send, MessageSquare, FileText,
+  Download, ArrowLeft, Loader2, Star, Receipt, Sparkles, Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReviewDialog from "@/components/ReviewDialog";
@@ -35,7 +35,6 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useAllListings } from "@/hooks/queries";
 import ListingCard from "@/components/ListingCard";
 import { SEO } from "@/components/SEO";
-import { calculateTotalSavings } from "@/lib/bookingSavings";
 
 function useStatusConfig() {
   const { t } = useLanguage();
@@ -49,6 +48,51 @@ function useStatusConfig() {
 }
 
 const typeIcons = { warehouse: Warehouse, moving: Truck, trailer: CarFront };
+
+/* ─── Saved searches ───
+   No backend endpoint exists yet (see backendNeeds: GET/POST/DELETE
+   /saved-searches). Persisted to localStorage per browser so the feature is
+   live, not a dead stub. When an API lands, swap the read/write helpers and
+   keep this hook's surface identical. */
+type SavedSearch = { id: string; label: string; query: string; results?: number; new?: number; alerts: boolean };
+const SAVED_SEARCH_KEY = "ruumly-saved-searches";
+
+function readSavedSearches(): SavedSearch[] {
+  try {
+    const raw = localStorage.getItem(SAVED_SEARCH_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function useSavedSearches() {
+  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>(readSavedSearches);
+
+  useEffect(() => {
+    const sync = () => setSavedSearches(readSavedSearches());
+    window.addEventListener("ruumly-saved-searches-changed", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("ruumly-saved-searches-changed", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+
+  const persist = useCallback((next: SavedSearch[]) => {
+    setSavedSearches(next);
+    try { localStorage.setItem(SAVED_SEARCH_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+    window.dispatchEvent(new Event("ruumly-saved-searches-changed"));
+  }, []);
+
+  const toggleAlerts = useCallback((id: string) => {
+    persist(readSavedSearches().map(s => s.id === id ? { ...s, alerts: !s.alerts } : s));
+  }, [persist]);
+
+  const remove = useCallback((id: string) => {
+    persist(readSavedSearches().filter(s => s.id !== id));
+  }, [persist]);
+
+  return { savedSearches, toggleAlerts, remove };
+}
 
 function useSidebarLinks() {
   const { t } = useLanguage();
@@ -66,44 +110,26 @@ function useSidebarLinks() {
   ];
 }
 
-function MobileAccountNav({ tab, setTab, sidebarLinks, unreadMessages, unreadNotifications, onLogout }: {
+/* Mobile (<1080px): sticky horizontal-scroll pill tab bar per dashboard-shell spec §7.3.
+   Identity + caption hidden; links become inline pills, active = navy-ink. */
+function MobileAccountNav({ tab, setTab, sidebarLinks, unreadMessages, unreadNotifications }: {
   tab: string; setTab: (t: string) => void;
   sidebarLinks: { id: string; label: string; icon: typeof LayoutDashboard }[];
-  unreadMessages: number; unreadNotifications: number; onLogout: () => void;
+  unreadMessages: number; unreadNotifications: number;
 }) {
-  const [open, setOpen] = useState(false);
-  const { t } = useLanguage();
-  const current = sidebarLinks.find(l => l.id === tab);
-  const CurrentIcon = current?.icon || LayoutDashboard;
-
   return (
-    <div className="relative">
-      <button onClick={() => setOpen(!open)} aria-label={t("nav.menu")} aria-expanded={open} className="flex min-h-[44px] w-full items-center justify-between rounded-[14px] border border-line bg-card px-4 py-3 text-sm font-semibold text-ink shadow-card transition-colors active:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
-        <span className="flex items-center gap-2.5"><CurrentIcon className="h-[18px] w-[18px] text-teal-deep" />{current?.label || tab}</span>
-        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 right-0 top-full z-40 mt-1.5 max-h-[60vh] overflow-y-auto rounded-[14px] border border-line bg-card p-1.5 shadow-prominent">
-            {sidebarLinks.map((l) => {
-              const Icon = l.icon;
-              const active = tab === l.id;
-              const unread = l.id === "notifications" ? unreadNotifications : l.id === "messages" ? unreadMessages : 0;
-              return (
-                <button key={l.id} onClick={() => { setTab(l.id); setOpen(false); }} aria-current={active ? "page" : undefined} className={`flex min-h-[44px] w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${active ? "bg-navy-ink text-white" : "text-ink-2 hover:bg-secondary hover:text-ink"}`}>
-                  <span className="flex items-center gap-2.5"><Icon className={`h-[18px] w-[18px] ${active ? "text-teal" : "text-muted-foreground"}`} />{l.label}</span>
-                  {unread > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">{unread}</span>}
-                </button>
-              );
-            })}
-            <div className="my-1.5 h-px bg-line" />
-            <button onClick={() => { onLogout(); setOpen(false); }} className="flex min-h-[44px] w-full items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
-              <LogOut className="h-[18px] w-[18px]" /> {t("account.logout")}
-            </button>
-          </div>
-        </>
-      )}
+    <div className="sticky top-16 z-20 -mx-4 flex gap-2 overflow-x-auto border-b border-line bg-background/95 px-4 py-2.5 backdrop-blur-sm sm:-mx-6 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {sidebarLinks.map((l) => {
+        const Icon = l.icon;
+        const active = tab === l.id;
+        const unread = l.id === "notifications" ? unreadNotifications : l.id === "messages" ? unreadMessages : 0;
+        return (
+          <button key={l.id} onClick={() => setTab(l.id)} aria-current={active ? "page" : undefined} className={`flex min-h-[40px] shrink-0 items-center gap-2 rounded-full border px-3.5 py-2 text-[13px] font-semibold transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${active ? "border-navy-ink bg-navy-ink text-white" : "border-line-2 bg-card text-ink-2 hover:border-navy-ink hover:text-navy-ink"}`}>
+            <Icon className={`h-[16px] w-[16px] ${active ? "text-teal" : "text-muted-foreground"}`} />{l.label}
+            {unread > 0 && <span className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold ${active ? "bg-teal text-navy-ink" : "bg-accent text-accent-foreground"}`}>{unread}</span>}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -113,11 +139,9 @@ export default function AccountPage() {
   const tab = searchParams.get("tab") || "overview";
   const setTab = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("tab", id); return n; }, { replace: true });
   const { t } = useLanguage();
-  const { user, logout, role, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const sidebarLinks = useSidebarLinks();
 
-  const handleLogout = () => { logout(); navigate("/"); };
   const { data: unreadData } = useQuery({
     queryKey: queryKeys.messages.unread(),
     queryFn: () => apiClient.get<{ count: number }>("/messages/unread-count"),
@@ -129,34 +153,16 @@ export default function AccountPage() {
   const { data: notifications = [] } = useNotifications();
   const unreadNotifications = notifications.filter((n: any) => !n.read).length;
 
-  const roleDashboardLinks = role === "admin"
-    ? [{ to: "/admin", label: t("nav.adminDashboard"), icon: Shield }]
-    : role === "provider"
-    ? [{ to: "/provider/dashboard", label: t("nav.providerDashboard") || "Partneri paneel", icon: LayoutDashboard }]
-    : [];
-
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] flex-col bg-background lg:flex-row">
+    <div className="flex min-h-[calc(100vh-72px)] flex-col bg-background lg:flex-row">
       <SEO title={`${t("seo.account")} — Ruumly`} description="" noindex={true} />
+      {/* Dashboard shell sidebar — 248px, identity (name + email) only, mono ACCOUNT caption, Back to site (00-foundations §7.3) */}
       <aside className="hidden w-[248px] shrink-0 border-r border-line bg-card lg:block">
-        <div className="px-7 py-6">
-          <p className="font-display text-[15px] font-bold text-navy-ink truncate">{user?.name}</p>
+        <div className="px-7 pb-5 pt-7">
+          <p className="truncate font-display text-[15px] font-bold text-navy-ink">{user?.name}</p>
           <p className="mt-0.5 truncate text-[12.5px] text-muted-foreground">{user?.email}</p>
-          <span className="mt-2.5 inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-semibold capitalize text-ink-2">{role}</span>
         </div>
-        {roleDashboardLinks.length > 0 && (
-          <div className="mb-3 px-4">
-            {roleDashboardLinks.map(dl => {
-              const DlIcon = dl.icon;
-              return (
-              <Link key={dl.to} to={dl.to} className="flex items-center gap-2 rounded-[10px] border border-teal-deep/25 bg-teal-deep/[0.07] px-3 py-2.5 text-sm font-semibold text-teal-deep transition-colors hover:bg-teal-deep/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
-                <DlIcon className="h-[18px] w-[18px]" /> {dl.label} <ChevronRight className="ml-auto h-3.5 w-3.5" />
-              </Link>
-              );
-            })}
-          </div>
-        )}
-        <p className="px-7 pb-2 font-mono text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">{t("account.sectionLabel")}</p>
+        <p className="px-7 pb-2 font-mono text-[11.5px] font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("account.sectionLabel")}</p>
         <nav className="space-y-0.5 px-4">
           {sidebarLinks.map((l) => {
             const Icon = l.icon;
@@ -170,32 +176,20 @@ export default function AccountPage() {
             );
           })}
           <div className="my-2 h-px bg-line" />
-          <button onClick={handleLogout} className="flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
-            <LogOut className="h-[18px] w-[18px]" /> {t("account.logout")}
-          </button>
+          <Link to="/" className="flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-sm font-medium text-ink-2 transition-colors hover:bg-secondary hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+            <ArrowLeft className="h-[18px] w-[18px] text-muted-foreground" /> {t("account.backToSite")}
+          </Link>
         </nav>
       </aside>
 
       <div className="min-w-0 flex-1 p-4 sm:p-6 lg:px-10 lg:py-9">
-        {/* Mobile: compact dropdown navigation */}
+        {/* Mobile (<1080px / lg): sticky horizontal pill tab bar */}
         <div className="mb-4 lg:hidden">
-          {roleDashboardLinks.length > 0 && (
-            <div className="mb-2 flex gap-2">
-              {roleDashboardLinks.map(dl => {
-                const DlIcon = dl.icon;
-                return (
-                <Link key={dl.to} to={dl.to} className="flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-teal-deep/25 bg-teal-deep/[0.07] px-3 py-2 text-xs font-semibold text-teal-deep transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
-                  <DlIcon className="h-3.5 w-3.5" /> {dl.label}
-                </Link>
-                );
-              })}
-            </div>
-          )}
-          <MobileAccountNav tab={tab} setTab={setTab} sidebarLinks={sidebarLinks} unreadMessages={unreadMessages} unreadNotifications={unreadNotifications} onLogout={handleLogout} />
+          <MobileAccountNav tab={tab} setTab={setTab} sidebarLinks={sidebarLinks} unreadMessages={unreadMessages} unreadNotifications={unreadNotifications} />
         </div>
 
         {tab === "overview" && <AccountOverview onNavigate={setTab} />}
-        {tab === "bookings" && <AccountBookings />}
+        {tab === "bookings" && <AccountBookings onNavigate={setTab} />}
         {tab === "favorites" && <AccountFavorites />}
         {tab === "searches" && <AccountSearches />}
         {tab === "messages" && <AccountMessages />}
@@ -211,56 +205,96 @@ export default function AccountPage() {
 
 function AccountOverview({ onNavigate }: { onNavigate: (tab: string) => void }) {
   const { data: bookings = [], isLoading } = useBookings(true);
+  const { user } = useAuth();
+  const { savedSearches } = useSavedSearches();
+  const { count: favCount } = useFavorites();
+  const { t } = useLanguage();
+
   const active = bookings.filter(b => b.status === "confirmed" || b.status === "active");
   const pending = bookings.filter(b => b.status === "pending");
-  const { role } = useAuth();
+  // "Open requests" = bookings still awaiting a partner reply.
+  const openRequests = pending.length;
+  const current = active[0] ?? pending[0] ?? null;
+  const firstName = (user?.name || "").trim().split(/\s+/)[0] || "";
 
-  const { t } = useLanguage();
   if (isLoading) return <SkeletonList count={3} />;
   return (
     <div className="animate-slide-up">
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="font-display text-[28px] font-extrabold tracking-tight text-navy-ink">{t("account.welcome")}</h1>
-        <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold capitalize text-ink-2">{role}</span>
-      </div>
-      <p className="mt-1.5 text-sm text-muted-foreground">{t("account.welcomeDesc")}</p>
-
-      {/* Role dashboard shortcuts */}
-      {role === "provider" && (
-        <Link to="/provider/dashboard" className="mt-5 flex items-center justify-between rounded-[14px] border border-teal-deep/20 bg-teal-deep/[0.06] p-4 shadow-card transition-colors hover:border-teal-deep/40 hover:bg-teal-deep/[0.1]">
-          <span className="flex items-center gap-2.5 text-sm font-semibold text-teal-deep"><LayoutDashboard className="h-[18px] w-[18px]" /> {t("nav.providerDashboard") || "Partneri paneel"}</span>
-          <ChevronRight className="h-4 w-4 text-teal-deep" />
-        </Link>
-      )}
-      {role === "admin" && (
-        <Link to="/admin" className="mt-5 flex items-center justify-between rounded-[14px] border border-teal-deep/20 bg-teal-deep/[0.06] p-4 shadow-card transition-colors hover:border-teal-deep/40 hover:bg-teal-deep/[0.1]">
-          <span className="flex items-center gap-2.5 text-sm font-semibold text-teal-deep"><Shield className="h-[18px] w-[18px]" /> Admin</span>
-          <ChevronRight className="h-4 w-4 text-teal-deep" />
-        </Link>
-      )}
+      <h1 className="font-display text-[28px] font-extrabold tracking-tight text-navy-ink">{t("account.greeting").replace("{name}", firstName).trim()}</h1>
+      <p className="mt-1.5 text-sm text-muted-foreground">{t("account.overviewSubtitle")}</p>
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
         <StatCard label={t("account.activeBookings")} value={String(active.length)} icon={Package} />
-        <StatCard label={t("account.pendingApproval")} value={String(pending.length)} icon={Clock} valueClass="text-warning-text" />
-        <StatCard label={t("account.totalSavings")} value={`€${calculateTotalSavings(bookings).toFixed(2)}`} icon={TrendingDown} valueClass="text-accent" className="col-span-2 sm:col-span-1" />
+        <StatCard label={t("account.openRequests")} value={String(openRequests)} icon={MessageSquare} />
+        <StatCard label={t("account.savedSpaces")} value={String(favCount)} icon={Heart} className="col-span-2 sm:col-span-1" />
       </div>
-      {pending.length > 0 && (
-        <div className="mt-7"><h2 className="font-display text-lg font-bold text-navy-ink">{t("account.pendingBookings")}</h2><div className="mt-3 space-y-2.5">{pending.map(b => <BookingCard key={b.id} booking={b} />)}</div></div>
-      )}
-      {active.length > 0 && (
-        <div className="mt-7"><h2 className="font-display text-lg font-bold text-navy-ink">{t("account.activeBookings")}</h2><div className="mt-3 space-y-2.5">{active.map(b => <BookingCard key={b.id} booking={b} />)}</div></div>
-      )}
-      <div className="mt-7 grid gap-3 sm:grid-cols-2">
-        <button onClick={() => onNavigate("messages")} className="flex min-h-[44px] items-center justify-between rounded-[14px] border border-line bg-card p-4 shadow-card transition-all hover:-translate-y-0.5 hover:border-teal-deep/40 hover:shadow-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
-          <span className="flex items-center gap-2.5 text-sm font-semibold text-ink"><MessageSquare className="h-[18px] w-[18px] text-teal-deep" /> {t("account.messages")}</span>
-          <span className="text-sm text-muted-foreground">0 {t("account.unread")}</span>
-        </button>
-        <button onClick={() => onNavigate("bookings")} className="flex min-h-[44px] items-center justify-between rounded-[14px] border border-line bg-card p-4 shadow-card transition-all hover:-translate-y-0.5 hover:border-teal-deep/40 hover:shadow-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
-          <span className="flex items-center gap-2.5 text-sm font-semibold text-ink"><Package className="h-[18px] w-[18px] text-teal-deep" /> {t("account.bookings")}</span>
-          <span className="text-sm text-muted-foreground">{bookings.length}</span>
-        </button>
+
+      <div className="mt-6 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+        {/* Current booking */}
+        <div className="rounded-[14px] border border-line bg-card p-6 shadow-card">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-display text-base font-bold text-navy-ink">{t("account.currentBooking")}</h2>
+            <button onClick={() => onNavigate("bookings")} className="rounded-[8px] px-2.5 py-1.5 text-[13px] font-semibold text-navy-ink transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">{t("account.allBookings")}</button>
+          </div>
+          {current ? (
+            <CurrentBookingRow booking={current} onNavigate={onNavigate} />
+          ) : (
+            <div className="mt-4 flex flex-col items-start gap-2">
+              <p className="text-sm text-muted-foreground">{t("account.noCurrentBooking")}</p>
+              <Link to="/search" className="text-[13px] font-semibold text-teal-deep hover:underline">{t("account.findSpace")} →</Link>
+            </div>
+          )}
+        </div>
+
+        {/* Continue exploring */}
+        <div className="rounded-[14px] border border-line bg-card p-6 shadow-card">
+          <h2 className="font-display text-base font-bold text-navy-ink">{t("account.continueExploring")}</h2>
+          <div className="mt-3.5 flex flex-col gap-2.5">
+            <Link to="/search" className="flex items-center justify-between rounded-[10px] border border-line px-3 py-3 transition-colors hover:border-teal-deep/40 hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+              <span className="flex items-center gap-2.5 text-sm font-medium text-ink"><Search className="h-[18px] w-[18px] text-teal-deep" /> {t("account.searchNearYou")}</span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
+            <button onClick={() => onNavigate("favorites")} className="flex w-full items-center justify-between rounded-[10px] border border-line px-3 py-3 text-left transition-colors hover:border-teal-deep/40 hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+              <span className="flex items-center gap-2.5 text-sm font-medium text-ink"><Heart className="h-[18px] w-[18px] text-teal-deep" /> {t("account.savedSpacesLink").replace("{count}", String(favCount))}</span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </button>
+            {savedSearches.length > 0 && (
+              <button onClick={() => onNavigate("searches")} className="flex w-full items-center justify-between rounded-[10px] border border-line px-3 py-3 text-left transition-colors hover:border-teal-deep/40 hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+                <span className="flex items-center gap-2.5 text-sm font-medium text-ink"><Search className="h-[18px] w-[18px] text-teal-deep" /> {t("account.savedSearchesLink").replace("{count}", String(savedSearches.length))}</span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
+  );
+}
+
+/* Current booking row inside the overview card: navy tile + title + meta + status, hr, next payment. */
+function CurrentBookingRow({ booking, onNavigate }: { booking: Booking; onNavigate: (tab: string) => void }) {
+  const { t } = useLanguage();
+  const statusConfig = useStatusConfig();
+  const Icon = typeIcons[booking.listingType];
+  const status = statusConfig[booking.status];
+  const StatusIcon = status.icon;
+  // "since" = booking start date.
+  return (
+    <>
+      <div className="mt-4 flex items-center gap-3.5">
+        <div className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[14px] bg-navy-ink/10 text-navy-ink"><Icon className="h-[22px] w-[22px]" /></div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-display text-sm font-bold text-ink">{booking.listingTitle}</p>
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">{booking.provider} · {booking.city} · {t("account.since")} {booking.startDate}</p>
+        </div>
+        <span className={`flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${status.color}`}><StatusIcon className="h-3 w-3" />{status.label}</span>
+      </div>
+      <hr className="my-4 border-line" />
+      <div className="flex items-center justify-between gap-3">
+        <button onClick={() => onNavigate("bookings")} className="text-[13px] text-muted-foreground hover:text-ink">{t("account.nextPayment")}</button>
+        <span className="font-display text-sm font-bold text-navy-ink">€{booking.total}</span>
+      </div>
+    </>
   );
 }
 
@@ -306,7 +340,7 @@ function ITile({ icon: Icon, variant = "teal", className = "" }: { icon: typeof 
   );
 }
 
-function BookingCard({ booking }: { booking: Booking }) {
+function BookingCard({ booking, onMessage }: { booking: Booking; onMessage?: () => void }) {
   const { t } = useLanguage();
   const statusConfig = useStatusConfig();
   const [open, setOpen] = useState(false);
@@ -367,19 +401,21 @@ function BookingCard({ booking }: { booking: Booking }) {
 
   return (
     <>
-      <button onClick={() => setOpen(true)} className="flex w-full items-center justify-between gap-2 rounded-[14px] border border-line bg-card p-4 text-left shadow-card transition-all hover:-translate-y-0.5 hover:border-teal-deep/40 hover:shadow-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+      {/* Spec booking row: navy tile + title + meta (provider · city · €/mo · since date); right status tag + View + Message */}
+      <div className="flex flex-col gap-3 rounded-[14px] border border-line bg-card p-4 shadow-card transition-all hover:border-teal-deep/40 hover:shadow-elevated sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 flex-1 items-center gap-3.5">
           <div className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[14px] bg-navy-ink/10 text-navy-ink"><Icon className="h-[22px] w-[22px]" /></div>
           <div className="min-w-0 flex-1">
             <div className="truncate font-display text-sm font-bold text-ink">{booking.listingTitle}</div>
-            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground"><MapPin className="h-3 w-3 shrink-0" />{booking.city}<Calendar className="ml-1 h-3 w-3 shrink-0" />{booking.startDate}</div>
+            <div className="mt-0.5 truncate text-xs text-muted-foreground">{booking.provider} · {booking.city} · €{booking.total}{t("account.perMonthShort")} · {t("account.since")} {booking.startDate}</div>
           </div>
         </div>
-        <div className="ml-2 flex shrink-0 flex-col items-end gap-1.5">
+        <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
           <span className={`flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${status.color}`}><StatusIcon className="h-3 w-3" />{status.label}</span>
-          <span className="font-display text-sm font-bold text-navy-ink">€{booking.total}</span>
+          <Button variant="outline" size="sm" className="min-h-[36px] border-line-2 text-navy-ink hover:border-navy-ink" onClick={() => setOpen(true)}>{t("account.view")}</Button>
+          <Button variant="outline" size="sm" className="min-h-[36px] gap-1.5 border-line-2 bg-secondary text-ink-2 hover:border-navy-ink hover:text-navy-ink" onClick={() => onMessage?.()}><MessageSquare className="h-3.5 w-3.5" /> {t("account.message")}</Button>
         </div>
-      </button>
+      </div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="pr-8">{booking.listingTitle}</DialogTitle></DialogHeader>
@@ -409,9 +445,8 @@ function BookingCard({ booking }: { booking: Booking }) {
               </div>
             )}
             <div className="rounded-lg border border-border p-3">
-              <div className="flex justify-between text-sm"><span className="text-muted-foreground">{t("booking.publicPrice")}</span><span className="line-through">€{booking.basePrice}</span></div>
-              <div className="flex justify-between text-sm font-medium"><span>{t("booking.ruumlyPrice")}</span><span className="text-accent">€{booking.platformPrice}</span></div>
-              {booking.extrasTotal > 0 && <div className="flex justify-between text-sm"><span className="text-muted-foreground">{t("booking.extras")}</span><span>€{booking.extrasTotal}</span></div>}
+              <div className="flex justify-between text-sm"><span className="text-muted-foreground">{t("account.monthlyPrice")}</span><span>€{booking.platformPrice}</span></div>
+              {booking.extrasTotal > 0 && <div className="mt-1 flex justify-between text-sm"><span className="text-muted-foreground">{t("booking.extras")}</span><span>€{booking.extrasTotal}</span></div>}
               <div className="mt-2 flex justify-between border-t border-border pt-2 text-sm font-bold"><span>{t("booking.total")}</span><span>€{booking.total}</span></div>
             </div>
             <div>
@@ -516,37 +551,39 @@ function BookingCard({ booking }: { booking: Booking }) {
   );
 }
 
-function AccountBookings() {
+// Spec segments: All · Active · Completed · Cancelled.
+// "Active" groups every live booking (pending + confirmed + active).
+const BOOKING_SEGMENTS = ["all", "active", "completed", "cancelled"] as const;
+type BookingSegment = (typeof BOOKING_SEGMENTS)[number];
+const inSegment = (status: BookingStatus, seg: BookingSegment): boolean =>
+  seg === "all" ? true
+  : seg === "active" ? status === "pending" || status === "confirmed" || status === "active"
+  : status === seg;
+
+function AccountBookings({ onNavigate }: { onNavigate: (tab: string) => void }) {
   const { t } = useLanguage();
-  const statusConfig = useStatusConfig();
-  const [filter, setFilter] = useState<"all" | BookingStatus>("all");
+  const [filter, setFilter] = useState<BookingSegment>("all");
   const { data: bookings = [], isLoading } = useBookings(true);
-  const filtered = filter === "all" ? bookings : bookings.filter(b => b.status === filter);
+  const filtered = bookings.filter(b => inSegment(b.status, filter));
+  const segLabel: Record<BookingSegment, string> = {
+    all: t("account.all"),
+    active: t("status.active"),
+    completed: t("status.completed"),
+    cancelled: t("status.cancelled"),
+  };
 
   if (isLoading) return <SkeletonList count={4} />;
 
   return (
     <div className="animate-slide-up">
       <PageHead title={t("account.bookings")} />
-      <div className="mt-5 hidden gap-2 overflow-x-auto sm:flex">
-        {(["all", "pending", "confirmed", "active", "completed", "cancelled"] as const).map(f => (
+      <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
+        {BOOKING_SEGMENTS.map(f => (
           <button key={f} onClick={() => setFilter(f)} aria-pressed={filter === f} className={`shrink-0 rounded-full border px-3.5 py-2 text-[13px] font-semibold transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${filter === f ? "border-navy-ink bg-navy-ink text-white" : "border-line-2 bg-card text-ink-2 hover:border-navy-ink hover:text-navy-ink"}`}>
-            {f === "all" ? t("account.all") : statusConfig[f].label} ({f === "all" ? bookings.length : bookings.filter(b => b.status === f).length})
+            {segLabel[f]} ({bookings.filter(b => inSegment(b.status, f)).length})
           </button>
         ))}
       </div>
-      <select
-        value={filter}
-        onChange={(e) => setFilter(e.target.value as BookingStatus | "all")}
-        aria-label={t("account.bookings")}
-        className="mt-5 w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15 sm:hidden">
-        <option value="all">{t("account.all")} ({bookings.length})</option>
-        <option value="pending">{statusConfig.pending.label} ({bookings.filter(b => b.status === "pending").length})</option>
-        <option value="confirmed">{statusConfig.confirmed.label} ({bookings.filter(b => b.status === "confirmed").length})</option>
-        <option value="active">{statusConfig.active.label} ({bookings.filter(b => b.status === "active").length})</option>
-        <option value="completed">{statusConfig.completed.label} ({bookings.filter(b => b.status === "completed").length})</option>
-        <option value="cancelled">{statusConfig.cancelled.label} ({bookings.filter(b => b.status === "cancelled").length})</option>
-      </select>
       <div className="mt-5 space-y-2.5">
         {filtered.length === 0 ? (
           <EmptyState
@@ -555,7 +592,7 @@ function AccountBookings() {
             desc={filter === "all" ? t("empty.bookings.desc") : t("empty.bookings.filteredDesc")}
             cta={filter === "all" ? <Link to="/search"><Button className="min-h-[44px] bg-accent px-6 text-accent-foreground hover:bg-brand-greenDeep">{t("empty.bookings.cta")}</Button></Link> : undefined}
           />
-        ) : filtered.map(b => <BookingCard key={b.id} booking={b} />)}
+        ) : filtered.map(b => <BookingCard key={b.id} booking={b} onMessage={() => onNavigate("messages")} />)}
       </div>
     </div>
   );
@@ -638,27 +675,40 @@ function AccountMessages() {
   }));
 
   const booking = selectedBooking ? bookings.find(b => b.id === selectedBooking) : null;
+  // Preview of the last message in the open thread (per-conversation previews/
+  // unread flags need a backend conversations endpoint — see backendNeeds).
+  const lastMessage = activeMessages.length ? activeMessages[activeMessages.length - 1]?.text : "";
 
   return (
     <div className="animate-slide-up">
       <PageHead title={t("account.messages")} subtitle={t("account.messagesDesc")} />
-      <div className="mt-6 grid gap-4 lg:grid-cols-[300px_1fr]">
+      {/* Two-pane: 300px list | thread; stacks under 880px (md) */}
+      <div className="mt-6 grid gap-4 md:grid-cols-[300px_1fr]">
         {/* Conversation list */}
-        <div className={`space-y-1 rounded-[14px] border border-line bg-card p-2 shadow-card lg:block ${selectedBooking ? 'hidden' : 'block'}`}>
+        <div className={`rounded-[14px] border border-line bg-card p-2 shadow-card md:block ${selectedBooking ? 'hidden' : 'block'}`}>
           {conversations.length === 0 ? (
             <div className="flex flex-col items-center py-10 text-center"><MessageSquare className="h-8 w-8 text-muted-foreground/30" /><p className="mt-2 text-xs text-muted-foreground">{t("account.noMessages")}</p></div>
-          ) : conversations.map(c => (
-            <button key={c.bookingId} onClick={() => handleSelectBooking(c.bookingId)} aria-current={selectedBooking === c.bookingId ? "true" : undefined} className={`flex w-full items-start gap-3 rounded-[10px] p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${selectedBooking === c.bookingId ? "bg-secondary" : "hover:bg-secondary/60"}`}>
+          ) : conversations.map(c => {
+            const isActive = selectedBooking === c.bookingId;
+            const mono = (c.provider || "?").trim().charAt(0).toUpperCase();
+            const preview = isActive && lastMessage ? lastMessage : c.listingTitle;
+            return (
+            <button key={c.bookingId} onClick={() => handleSelectBooking(c.bookingId)} aria-current={isActive ? "true" : undefined} className={`flex w-full items-start gap-3 rounded-[10px] p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${isActive ? "bg-background" : "hover:bg-secondary/60"}`}>
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy-ink font-display text-xs font-bold text-white">{mono}</div>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-display text-[13px] font-bold text-ink">{c.listingTitle}</p>
-                <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{c.provider}</p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="truncate font-display text-[13px] font-bold text-ink">{c.provider}</p>
+                </div>
+                <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{c.listingTitle}</p>
+                <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{preview}</p>
               </div>
             </button>
-          ))}
+            );
+          })}
         </div>
 
         {/* Chat area */}
-        <div className={`rounded-[14px] border border-line bg-card shadow-card ${selectedBooking ? 'block' : 'hidden lg:block'}`}>
+        <div className={`rounded-[14px] border border-line bg-card shadow-card ${selectedBooking ? 'block' : 'hidden md:block'}`}>
           {!selectedBooking ? (
             <div className="flex flex-col items-center justify-center py-12 sm:py-20"><MessageSquare className="h-10 w-10 text-muted-foreground/20" /><p className="mt-3 text-sm text-muted-foreground">{t("account.selectConversation")}</p></div>
           ) : (
@@ -666,13 +716,13 @@ function AccountMessages() {
               <button
                 onClick={() => setSelectedBooking(null)}
                 aria-label={t("account.chat.backToList")}
-                className="flex items-center gap-1.5 px-3 pt-3 text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 lg:hidden"
+                className="flex items-center gap-1.5 px-3 pt-3 text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:hidden"
               >
                 <ArrowLeft className="h-3.5 w-3.5" /> {t("account.chat.backToList")}
               </button>
               <div className="border-b border-line p-4">
-                <p className="font-display text-sm font-bold text-ink">{booking?.listingTitle}</p>
-                <p className="text-xs text-muted-foreground">{booking?.provider} · {booking?.id}</p>
+                <p className="font-display text-sm font-bold text-ink">{booking?.provider}</p>
+                <p className="text-xs text-muted-foreground">{booking?.listingTitle}</p>
               </div>
               <div className="flex-1 space-y-3 overflow-y-auto p-4">
                 {msgsLoading ? (
@@ -709,14 +759,14 @@ function AccountMessages() {
 
 function AccountFavorites() {
   const { t } = useLanguage();
-  const { favorites, toggle } = useFavorites();
+  const { favorites } = useFavorites();
   const { data: allResult } = useAllListings();
   const allListings = allResult?.data || [];
   const favListings = allListings.filter(l => favorites.includes(l.id));
 
   return (
     <div className="animate-slide-up">
-      <PageHead title={t("account.favorites.title")} subtitle={t("account.favoritesHint")} />
+      <PageHead title={t("account.favorites.title")} subtitle={t("account.favoritesSubtitle")} />
       {favListings.length === 0 ? (
         <div className="mt-6">
           <EmptyState
@@ -727,7 +777,8 @@ function AccountFavorites() {
           />
         </div>
       ) : (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        // Spec: grid repeat(3,1fr) of listing cards.
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {favListings.map(listing => (
             <ListingCard key={listing.id} listing={listing} />
           ))}
@@ -739,19 +790,86 @@ function AccountFavorites() {
 
 function AccountSearches() {
   const { t } = useLanguage();
+  const { savedSearches, toggleAlerts, remove } = useSavedSearches();
+
   return (
     <div className="animate-slide-up">
-      <PageHead title={t("account.savedSearches")} subtitle={t("account.savedSearchesNote")} />
-      <div className="mt-6">
-        <EmptyState
-          icon={Search}
-          title={t("account.noSavedSearches")}
-          desc={t("account.savedSearchesNote")}
-          cta={<Link to="/search"><Button className="min-h-[44px] bg-accent px-6 text-accent-foreground hover:bg-brand-greenDeep">{t("account.goToSearch")}</Button></Link>}
-        />
-      </div>
+      <PageHead
+        title={t("account.savedSearches")}
+        subtitle={t("account.savedSearchesSubtitle")}
+        action={
+          <Link to="/search">
+            <Button className="min-h-[44px] gap-1.5 bg-accent px-5 text-accent-foreground hover:bg-brand-greenDeep">
+              <Search className="h-4 w-4" /> {t("account.newSearch")}
+            </Button>
+          </Link>
+        }
+      />
+      {savedSearches.length === 0 ? (
+        <div className="mt-6">
+          <EmptyState
+            icon={Search}
+            title={t("account.noSavedSearches")}
+            desc={t("account.savedSearchesEmptyDesc")}
+            cta={<Link to="/search"><Button className="min-h-[44px] bg-accent px-6 text-accent-foreground hover:bg-brand-greenDeep">{t("account.goToSearch")}</Button></Link>}
+          />
+        </div>
+      ) : (
+        <div className="mt-6 flex flex-col gap-3">
+          {savedSearches.map(s => (
+            <div key={s.id} className="flex flex-col gap-3 rounded-[14px] border border-line bg-card p-4 shadow-card sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-[12px] bg-teal-deep/[0.16] text-teal-deep"><Search className="h-[20px] w-[20px]" /></div>
+                <div className="min-w-0">
+                  <p className="truncate font-display text-sm font-bold text-ink">{s.label}</p>
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                    {t("account.searchResults").replace("{count}", String(s.results ?? 0))}
+                    {s.new ? ` · ${t("account.searchNew").replace("{count}", String(s.new))}` : ""}
+                  </p>
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-3 self-end sm:self-auto">
+                <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+                  {t("account.alerts")}
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={s.alerts}
+                    aria-label={t("account.alerts")}
+                    onClick={() => toggleAlerts(s.id)}
+                    className={`relative h-6 w-[42px] shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${s.alerts ? "bg-accent" : "bg-line-2"}`}
+                  >
+                    <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${s.alerts ? "translate-x-[19px]" : "translate-x-0.5"}`} />
+                  </button>
+                </label>
+                <Link to={`/search${s.query ? `?${s.query}` : ""}`}>
+                  <Button variant="outline" size="sm" className="min-h-[36px] border-line-2 text-navy-ink hover:border-navy-ink">{t("account.open")}</Button>
+                </Link>
+                <button
+                  onClick={() => remove(s.id)}
+                  aria-label={t("account.removeSearch")}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
+}
+
+// Per-type icon tile for notifications (spec: green check-circle booking,
+// teal message reply, navy sparkles price drop). Falls back to bell.
+function notificationVisual(n: { type?: string; actionUrl?: string | null }) {
+  switch (n.type) {
+    case "booking": return { Icon: CheckCircle, tile: "bg-success/10 text-success" };
+    case "alert": return { Icon: Sparkles, tile: "bg-navy-ink/10 text-navy-ink" };
+    case "system": return { Icon: MessageSquare, tile: "bg-teal-deep/[0.16] text-teal-deep" };
+    default: return { Icon: Bell, tile: "bg-teal-deep/[0.16] text-teal-deep" };
+  }
 }
 
 function AccountNotifications() {
@@ -820,7 +938,9 @@ function AccountNotifications() {
         </div>
       ) : (
         <div className="mt-5 space-y-2.5">
-          {notifications.map((n: any) => (
+          {notifications.map((n: any) => {
+            const { Icon: NIcon, tile } = notificationVisual(n);
+            return (
             <div
               key={n.id}
               onClick={() => handleNotificationClick(n)}
@@ -828,8 +948,8 @@ function AccountNotifications() {
                 ${n.read ? "opacity-60" : ""}
                 ${n.actionUrl ? "cursor-pointer hover:-translate-y-0.5 hover:border-teal-deep/40 hover:shadow-elevated" : ""}`}
             >
-              <div className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[12px] bg-teal-deep/[0.16] text-teal-deep">
-                <Bell className="h-[18px] w-[18px]" />
+              <div className={`flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[12px] ${tile}`}>
+                <NIcon className="h-[18px] w-[18px]" />
               </div>
               <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -850,15 +970,24 @@ function AccountNotifications() {
                 )}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
 
+const PROFILE_LANGS: { value: string; label: string }[] = [
+  { value: "en", label: "English" },
+  { value: "et", label: "Eesti" },
+  { value: "ru", label: "Русский" },
+  { value: "lv", label: "Latviešu" },
+  { value: "lt", label: "Lietuvių" },
+];
+
 function AccountProfile() {
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const { user, updateProfile } = useAuth();
   const form = useForm<ProfileForm>({
     resolver: zodResolver(createProfileSchema(t)),
@@ -878,14 +1007,14 @@ function AccountProfile() {
 
   return (
     <div className="animate-slide-up">
-      <PageHead title={t("account.profileSettings")} />
+      <PageHead title={t("account.profile")} />
       <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 max-w-lg space-y-5 rounded-[14px] border border-line bg-card p-6 shadow-card">
         <div className="flex items-center gap-4">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-navy-ink font-display text-2xl font-extrabold text-white">{initials}</div>
-          <div className="min-w-0">
-            <p className="truncate font-display text-base font-bold text-navy-ink">{user?.name}</p>
-            <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
-          </div>
+          {/* Avatar upload has no backend yet (see backendNeeds: POST /auth/account/avatar). */}
+          <Button type="button" variant="outline" size="sm" className="min-h-[40px] gap-1.5 border-line-2 bg-secondary text-ink-2 hover:border-navy-ink hover:text-navy-ink" onClick={() => toast.info(t("account.changePhotoSoon"))}>
+            <ArrowRight className="h-3.5 w-3.5 -rotate-90" /> {t("account.changePhoto")}
+          </Button>
         </div>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="profile-name" className="text-[13px] font-semibold text-ink-2">{t("account.name")}</label>
@@ -900,6 +1029,17 @@ function AccountProfile() {
           <label htmlFor="profile-phone" className="text-[13px] font-semibold text-ink-2">{t("account.phoneLabel")}</label>
           <input id="profile-phone" className="w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...form.register("phone")} />
           {form.formState.errors.phone && <p role="alert" className="text-xs text-destructive">{form.formState.errors.phone.message}</p>}
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="profile-language" className="text-[13px] font-semibold text-ink-2">{t("account.language")}</label>
+          <select
+            id="profile-language"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value as typeof language)}
+            className="w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+          >
+            {PROFILE_LANGS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
+          </select>
         </div>
         <Button type="submit" className="min-h-[44px] bg-accent px-6 text-accent-foreground hover:bg-brand-greenDeep">{t("form.save")}</Button>
       </form>
@@ -1058,24 +1198,28 @@ function DataPrivacySection() {
 
   return (
     <>
-      <div className="space-y-4 rounded-[14px] border border-line bg-card p-5 shadow-card">
-        <h3 className="font-display text-sm font-bold text-ink">{t("account.dataPrivacy")}</h3>
-
+      {/* Download data — GDPR export (kept; real /auth/account/export endpoint) */}
+      <div className="rounded-[14px] border border-line bg-card p-5 shadow-card">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm text-ink">{t("account.downloadData")}</p>
+            <h3 className="font-display text-sm font-bold text-ink">{t("account.downloadData")}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">{t("account.downloadDataDesc")}</p>
           </div>
-          <Button variant="outline" size="sm" className="min-h-[40px] gap-1 border-line-2 text-navy-ink hover:border-navy-ink" onClick={handleExport} disabled={exporting}>
+          <Button variant="outline" size="sm" className="min-h-[40px] shrink-0 gap-1 border-line-2 text-navy-ink hover:border-navy-ink" onClick={handleExport} disabled={exporting}>
             {exporting ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("account.downloadingData")}</> : <><Download className="h-3.5 w-3.5" /> {t("account.downloadData")}</>}
           </Button>
         </div>
+      </div>
 
-        <div className="flex items-center justify-between gap-3 border-t border-line pt-4">
+      {/* Delete account — single spec card: danger title + desc + danger ghost Delete */}
+      <div className="rounded-[14px] border border-line bg-card p-5 shadow-card">
+        <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold text-destructive">{t("account.deleteAccount")}</p>
+            <h3 className="font-display text-sm font-bold text-destructive">{t("account.deleteAccount")}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">{t("account.deleteAccountDesc")}</p>
           </div>
-          <Button variant="destructive" size="sm" className="min-h-[40px]" onClick={() => setShowDeleteDialog(true)}>
-            {t("account.deleteAccount")}
+          <Button variant="outline" size="sm" className="min-h-[40px] shrink-0 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => setShowDeleteDialog(true)}>
+            {t("account.delete")}
           </Button>
         </div>
       </div>
@@ -1200,14 +1344,7 @@ function AccountBilling() {
 
   return (
     <div className="animate-slide-up">
-      <PageHead title={t("account.billing")} subtitle={t("account.billingOptionalDesc")} />
-      <div className="mt-5 flex items-start gap-3.5 rounded-[14px] border border-line bg-card p-4 shadow-card">
-        <ITile icon={Receipt} variant="teal" />
-        <div>
-          <p className="font-display text-sm font-bold text-ink">{t("account.billingOptionalTitle")}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">{t("account.billingOptionalNote")}</p>
-        </div>
-      </div>
+      <PageHead title={t("account.billing")} subtitle={t("account.billingSubtitle")} />
       {isLoading && <div className="py-8 text-center"><Loader2 className="mx-auto animate-spin text-muted-foreground" /></div>}
       {isError && <p role="alert" className="mt-4 text-sm text-destructive">{t("error.generic")}</p>}
       {invoices.length === 0 ? (

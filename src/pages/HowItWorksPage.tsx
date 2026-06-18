@@ -72,7 +72,7 @@ export default function HowItWorksPage() {
             {t("hiw.title")}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-sm text-primary-foreground/80 md:text-base">
-            {t("hiw.subtitle")}
+            {t("hiw.subtitleNew")}
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link to="/search?type=warehouse">
@@ -98,7 +98,7 @@ export default function HowItWorksPage() {
           <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">
             {t("hiw.stepsEyebrow")}
           </p>
-          <h2 className="mt-2.5 font-display text-2xl font-bold md:text-3xl">{t("hiw.stepsTitle")}</h2>
+          <h2 className="mt-2.5 font-display text-2xl font-bold md:text-3xl">{t("hiw.stepsTitleNew")}</h2>
           <p className="mt-2 text-sm text-muted-foreground">{t("hiw.stepsSubtitle")}</p>
         </div>
 

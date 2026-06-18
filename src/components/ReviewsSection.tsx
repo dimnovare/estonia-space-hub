@@ -9,7 +9,7 @@ function StarRating({ rating, size = 4 }: { rating: number; size?: number }) {
       {[1, 2, 3, 4, 5].map((i) => (
         <Star
           key={i}
-          className={`h-${size} w-${size} ${i <= rating ? "fill-accent text-accent" : "text-muted-foreground/30"}`}
+          className={`h-${size} w-${size} ${i <= rating ? "fill-[#F2A900] text-[#F2A900]" : "text-muted-foreground/30"}`}
         />
       ))}
     </div>
@@ -60,7 +60,7 @@ export default function ReviewsSection({ listingId }: { listingId: string }) {
         <h2 className="font-display text-lg font-semibold">{t("reviews.title")}</h2>
         {reviews.length > 0 && (
           <span className="flex items-center gap-1 text-sm text-muted-foreground">
-            <Star className="h-4 w-4 fill-accent text-accent" />
+            <Star className="h-4 w-4 fill-[#F2A900] text-[#F2A900]" />
             {avgRating} ({t("reviews.count").replace("{count}", String(reviews.length))})
           </span>
         )}

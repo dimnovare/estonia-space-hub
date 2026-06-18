@@ -1,6 +1,6 @@
 import { useState, useMemo, lazy, Suspense, useCallback, useRef, useEffect } from "react";
 import { useSearchParams, Link } from "@/i18n/routing";
-import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers, Warehouse, Truck, CarFront, Star, Building2, Calculator } from "lucide-react";
+import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers, Package, Warehouse, Truck, CarFront, Star, Building2, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from "@/components/ui/drawer";
 import { useListings, useLocations } from "@/hooks/queries";
@@ -12,7 +12,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import ListingCard from "@/components/ListingCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { SEO } from "@/components/SEO";
+import { SEO, verticalSeoMeta, type SeoVertical } from "@/components/SEO";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { trackEvent } from "@/lib/analytics";
 import { toast } from "sonner";
@@ -287,34 +287,40 @@ export default function SearchPage() {
     setSelectedListingId(loc.id);
   }, []);
 
-  const titleMap: Record<string, string> = {
-    warehouse: t("seo.search.warehouseTitle"),
-    moving: t("seo.search.movingTitle"),
-    trailer: t("seo.search.trailerTitle"),
+  // Per-language, per-vertical SEO. Maps the search vertical onto the shared
+  // verticalSeoMeta() keys (storage/moving/trailers) so en/ru/lv/lt users never
+  // see hardcoded Estonian nouns. City-scoped when a city filter is active.
+  const seoVerticalMap: Record<string, SeoVertical> = {
+    warehouse: "storage",
+    moving: "moving",
+    trailer: "trailers",
   };
-  const descMap: Record<string, string> = {
-    warehouse: t("seo.search.warehouseDesc"),
-    moving: t("seo.search.movingDesc"),
-    trailer: t("seo.search.trailerDesc"),
-  };
+  const seoMeta = (() => {
+    const v = seoVerticalMap[activeType];
+    if (v) return verticalSeoMeta(t, v, cityFilter || undefined);
+    // "all" view — generic, translated marketplace copy.
+    return { title: t("seo.search.defaultTitle"), description: t("seo.search.defaultDesc") };
+  })();
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] flex-col lg:flex-row">
+    <div className="flex min-h-[calc(100vh-72px)] flex-col lg:flex-row">
       <SEO
         title={query
           ? t("seo.search.withQuery").replace("{query}", query)
-          : titleMap[activeType] || t("seo.search.defaultTitle")}
-        description={descMap[activeType] || t("seo.search.defaultDesc")}
+          : seoMeta.title}
+        description={seoMeta.description}
         path="/search"
       />
       <h1 className="sr-only">{t("search.title") || "Search results"}</h1>
-      <div className="relative hidden lg:sticky lg:top-16 lg:block lg:h-[calc(100vh-4rem)] lg:w-1/2 xl:w-[55%]">
+      {/* Split: map slightly wider than results (spec 1.05fr | 1fr → 51.2% map),
+          full-height under the 72px public nav. */}
+      <div className="relative hidden lg:sticky lg:top-[72px] lg:block lg:h-[calc(100vh-72px)] lg:w-[51.2%]">
         <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary text-muted-foreground">{t("map.loading")}</div>}>
           <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" language={language} selectedId={selectedListingId} onMarkerClick={handleMarkerClick} onLocationClick={handleLocationClick} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} tViewLocation={t("location.viewLocation")} tAvailable={t("location.available")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
         </Suspense>
-        {/* Verticals overlay badge (proto: "Storage · Moving · Trailers") */}
+        {/* Verticals overlay badge — proto badge-soft "📦 Storage · Moving · Trailers" */}
         <span className="pointer-events-none absolute bottom-4 left-4 z-[500] inline-flex items-center gap-1.5 rounded-full bg-card/90 px-3 py-1.5 text-xs font-medium text-foreground shadow-card backdrop-blur-sm">
-          <Layers className="h-3.5 w-3.5 text-brand-tealDeep" />
+          <Package className="h-3.5 w-3.5 text-brand-tealDeep" />
           {mapVerticalsLabel}
         </span>
       </div>
@@ -380,7 +386,7 @@ export default function SearchPage() {
 
       {/* Sticky filter header — always visible on mobile (even in map mode) */}
       <div className={`flex-1 border-l border-border ${mobileView === "map" ? "hidden lg:block" : ""}`}>
-        <div className="sticky top-16 z-10 space-y-3 border-b border-border bg-card px-4 py-3">
+        <div className="sticky top-[72px] z-10 space-y-3 border-b border-border bg-card px-4 py-3">
           {/* Result count + filters/sort */}
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex flex-col">

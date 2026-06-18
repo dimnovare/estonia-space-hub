@@ -4,9 +4,10 @@ import { apiClient } from "@/services/apiClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import {
-  Loader2, ChevronLeft, ChevronRight, Megaphone, Inbox, CheckCircle2, MapPin, Send,
+  Loader2, ChevronLeft, ChevronRight, Megaphone, Inbox, CheckCircle2, MapPin, Send, Flag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/routing";
 
 type LeadStatus = "new" | "contacted" | "converted" | "dismissed";
 
@@ -140,7 +141,12 @@ export default function AdminLeads() {
         <Stat label={t("admin.leads.statTotal")} value={data?.total ?? 0} icon={Megaphone} />
         <Stat label={t("admin.leads.statNew")} value={stats.newCount} icon={Inbox} />
         <Stat label={t("admin.leads.statConverted")} value={stats.converted} icon={CheckCircle2} />
-        <Stat label={t("admin.leads.statAreas")} value={stats.areas} icon={MapPin} hint={t("admin.leads.statAreasHint")} />
+        <Link
+          to="/admin/partners"
+          className="block rounded-[14px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          <Stat label={t("admin.leads.statAreas")} value={stats.areas} icon={MapPin} hint={t("admin.leads.statAreasHint")} />
+        </Link>
       </div>
 
       {/* Status filter buttons */}
@@ -222,12 +228,11 @@ export default function AdminLeads() {
                       </select>
                     </td>
                     <td className="px-5 py-3.5">
-                      <div className="flex justify-end">
+                      <div className="flex justify-end gap-2">
                         <Button
                           size="sm"
-                          variant="outline"
-                          className="h-9 gap-1.5"
-                          disabled={updateMutation.isPending}
+                          className="h-9 gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90"
+                          disabled={updateMutation.isPending || lead.status === "converted"}
                           onClick={() => {
                             updateMutation.mutate({ id: lead.id, status: "contacted" });
                             toast.success(t("admin.leads.routing"));
@@ -235,6 +240,19 @@ export default function AdminLeads() {
                         >
                           <Send className="h-3.5 w-3.5" />
                           {t("admin.leads.route")}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-9 gap-1.5"
+                          disabled={updateMutation.isPending || lead.status === "dismissed"}
+                          onClick={() => {
+                            updateMutation.mutate({ id: lead.id, status: "dismissed" });
+                            toast.success(t("admin.leads.flaggedUnmatched"));
+                          }}
+                        >
+                          <Flag className="h-3.5 w-3.5" />
+                          {t("admin.leads.flagUnmatched")}
                         </Button>
                       </div>
                     </td>

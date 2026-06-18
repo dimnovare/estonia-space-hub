@@ -31,6 +31,7 @@ const getCatalog = (): CatalogGroup[] => [
       { id: "city_pages", nameKey: "provPage.feat.cityPages.name", descKey: "provPage.feat.cityPages.desc", price: "€39", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.location" },
       { id: "highlight_card", nameKey: "provPage.feat.highlightCard.name", descKey: "provPage.feat.highlightCard.desc", price: "€19", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.listing" },
       { id: "badge_available", nameKey: "provPage.feat.badgeAvailable.name", descKey: "provPage.feat.badgeAvailable.desc", price: "€12", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.listing" },
+      { id: "seasonal", nameKey: "provPage.feat.seasonal.name", descKey: "provPage.feat.seasonal.desc", price: "€49+", scopeKey: "provPage.scope.supplier" },
     ],
   },
   {
@@ -52,15 +53,19 @@ const getCatalog = (): CatalogGroup[] => [
       { id: "call_tracking", nameKey: "provPage.feat.callTracking.name", descKey: "provPage.feat.callTracking.desc", price: "€24", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.supplier" },
       { id: "sponsored_landing", nameKey: "provPage.feat.sponsoredLanding.name", descKey: "provPage.feat.sponsoredLanding.desc", price: "€89", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.supplier" },
       { id: "newsletter", nameKey: "provPage.feat.newsletter.name", descKey: "provPage.feat.newsletter.desc", price: "€49", unitKey: "provPage.unit.placement", scopeKey: "provPage.scope.supplier" },
+      { id: "blog", nameKey: "provPage.feat.blog.name", descKey: "provPage.feat.blog.desc", price: "€129", unitKey: "provPage.unit.article", scopeKey: "provPage.scope.supplier" },
     ],
   },
   {
     id: "operations", titleKey: "provPage.cat.operations", icon: Settings, tile: "navy",
     items: [
-      { id: "places_prefill", nameKey: "provPage.feat.placesPrefill.name", descKey: "provPage.feat.placesPrefill.desc", price: "€0", scopeKey: "provPage.scope.location", free: true },
+      { id: "bulk_import", nameKey: "provPage.feat.bulkImport.name", descKey: "provPage.feat.bulkImport.desc", price: "€0", unitKey: "provPage.unit.withWorkflow", scopeKey: "provPage.scope.supplier", free: true },
+      { id: "done_for_you", nameKey: "provPage.feat.doneForYou.name", descKey: "provPage.feat.doneForYou.desc", price: "€99", unitKey: "provPage.unit.oneTime", scopeKey: "provPage.scope.supplier" },
+      { id: "places_prefill", nameKey: "provPage.feat.placesPrefill.name", descKey: "provPage.feat.placesPrefill.desc", price: "€0", unitKey: "provPage.unit.free", scopeKey: "provPage.scope.location", free: true },
+      { id: "calendar_sync", nameKey: "provPage.feat.calendarSync.name", descKey: "provPage.feat.calendarSync.desc", price: "€15", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.supplier" },
+      { id: "api_dispatch", nameKey: "provPage.feat.apiDispatch.name", descKey: "provPage.feat.apiDispatch.desc", price: "€39", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.supplier" },
       { id: "booking_enable", nameKey: "provPage.feat.bookingEnable.name", descKey: "provPage.feat.bookingEnable.desc", price: "€0", unitKey: "provPage.unit.optional", scopeKey: "provPage.scope.listing", free: true },
       { id: "payments", nameKey: "provPage.feat.payments.name", descKey: "provPage.feat.payments.desc", price: "€0", unitKey: "provPage.unit.optional", scopeKey: "provPage.scope.supplier", free: true },
-      { id: "calendar_sync", nameKey: "provPage.feat.calendarSync.name", descKey: "provPage.feat.calendarSync.desc", price: "€15", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.supplier" },
       { id: "contracts", nameKey: "provPage.feat.contracts.name", descKey: "provPage.feat.contracts.desc", price: "€19", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.supplier" },
       { id: "analytics_export", nameKey: "provPage.feat.analyticsExport.name", descKey: "provPage.feat.analyticsExport.desc", price: "€19", unitKey: "provPage.unit.month", scopeKey: "provPage.scope.supplier" },
     ],
@@ -150,17 +155,17 @@ export default function ProviderPage() {
         </div>
       </section>
 
-      {/* ── Trust strip ── */}
-      <section className="container-wide py-10 md:py-14">
-        <div className="flex flex-wrap items-center justify-center gap-3">
+      {/* ── Trust strip (plain muted row, mirrors home §B) ── */}
+      <section className="container-wide py-8 md:py-10">
+        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
           {[
             { icon: Check, label: t("provPage.trust.listings") },
-            { icon: Map, label: t("provider.stat2") },
+            { icon: Map, label: t("provPage.trust.mapPresence") },
             { icon: Globe, label: t("provPage.trust.google") },
-            { icon: ShieldCheck, label: t("provPage.trust.verified") },
+            { icon: ShieldCheck, label: t("provPage.trust.verifiedBadge") },
           ].map(({ icon: Icon, label }) => (
-            <span key={label} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium shadow-card">
-              <Icon className="h-4 w-4 text-teal-deep" />
+            <span key={label} className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <Icon className="h-[18px] w-[18px] text-teal-deep" />
               {label}
             </span>
           ))}

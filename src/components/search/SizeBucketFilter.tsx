@@ -65,8 +65,11 @@ export function SizeBucketFilter({ selectedCode, onChange }: Props) {
                   )}
                   aria-pressed={isSelected}
                 >
+                  {/* Prototype: "<strong>XS</strong> ≤1.5 m²" — code bold, range muted, no dot. */}
                   <span className="font-semibold">{b.code}</span>
-                  <span className="ml-1 opacity-80">· {formatBucketRange(b, t("search.size.upTo"))}</span>
+                  <span className={cn("ml-1.5", isSelected ? "opacity-80" : "text-muted-foreground")}>
+                    {formatBucketRange(b, t("search.size.upTo"))}
+                  </span>
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-[200px] text-xs">

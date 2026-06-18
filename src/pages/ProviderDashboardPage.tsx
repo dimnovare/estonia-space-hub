@@ -2,8 +2,8 @@ import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useSearchParams, useNavigate, Link } from "@/i18n/routing";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
-  LayoutDashboard, List, Package, Calendar as CalendarIcon, Star, Settings, Users, Sparkles,
-  BarChart3, Inbox, Bell, Volume2, VolumeX, ChevronDown, X, FileText, AlertTriangle, LogOut
+  LayoutDashboard, List, Package, Calendar as CalendarIcon, Star, Building2, Users, Sparkles,
+  BarChart3, Inbox, Bell, Volume2, VolumeX, X, FileText, AlertTriangle, LogOut, Wallet
 } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,21 +29,25 @@ import ProviderTeam from "@/components/provider/ProviderTeam";
 import ProviderPartnerPage from "@/components/provider/ProviderPartnerPage";
 import ProviderContractTemplate from "@/components/provider/ProviderContractTemplate";
 import ProviderBoosts from "@/components/provider/ProviderBoosts";
+import ProviderBilling from "@/components/provider/ProviderBilling";
 
+// Spec order (04-partner-dashboard.md): Overview · My listings · Incoming orders ·
+// Bookings · Calendar · Boosts & visibility · Analytics · Payouts & billing ·
+// Reviews · Company profile · Team. No standalone "Contract template" nav item.
 function useSidebarLinks() {
   const { t } = useLanguage();
   return [
     { id: "overview", label: t("provider.nav.overview"), icon: LayoutDashboard },
-    { id: "orders", label: t("provider.nav.orders"), icon: Inbox },
     { id: "listings", label: t("provider.nav.listings"), icon: List },
+    { id: "orders", label: t("provider.nav.orders"), icon: Inbox },
     { id: "bookings", label: t("provider.nav.bookings"), icon: Package },
     { id: "calendar", label: t("provider.nav.calendar"), icon: CalendarIcon },
-    { id: "reviews", label: t("provider.nav.reviews"), icon: Star },
-    { id: "analytics", label: t("provider.nav.analytics"), icon: BarChart3 },
-    { id: "contract", label: t("provider.nav.contractTemplate"), icon: FileText },
-    { id: "profile", label: t("provider.nav.profile"), icon: Settings },
-    { id: "team", label: t("provider.nav.team"), icon: Users },
     { id: "boosts", label: t("provider.nav.boosts"), icon: Sparkles },
+    { id: "analytics", label: t("provider.nav.analytics"), icon: BarChart3 },
+    { id: "billing", label: t("provider.nav.billing"), icon: Wallet },
+    { id: "reviews", label: t("provider.nav.reviews"), icon: Star },
+    { id: "profile", label: t("provider.nav.profile"), icon: Building2 },
+    { id: "team", label: t("provider.nav.team"), icon: Users },
   ];
 }
 
@@ -72,25 +76,27 @@ export default function ProviderDashboardPage() {
   const navItems = sidebarLinks.filter(
     (l) =>
       (l.id !== "analytics" || hasAnalyticsTier) &&
-      (l.id !== "contract" || !adminNoSupplier) &&
+      (l.id !== "billing" || !adminNoSupplier) &&
       (l.id !== "boosts" || !adminNoSupplier)
   );
 
+  // "contract" is no longer a sidebar item but stays reachable via ?ptab=contract.
+  const ROUTABLE_TABS = new Set([...navItems.map((i) => i.id), "contract"]);
+
   useEffect(() => {
-    if (navItems.some((item) => item.id === tab)) return;
+    if (ROUTABLE_TABS.has(tab)) return;
     setSearchParams(prev => {
       const next = new URLSearchParams(prev);
-      next.set("ptab", tab === "billing" ? "boosts" : "overview");
+      next.set("ptab", "overview");
       return next;
     }, { replace: true });
-  }, [navItems, setSearchParams, tab]);
+  }, [ROUTABLE_TABS, setSearchParams, tab]);
 
   const { data: notifications = [] } = useNotifications();
   const unreadCount = notifications.filter((n: any) => !n.read).length;
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { data: allOrders = [] } = useOrders(supplierId ?? undefined);
   const bellRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -120,17 +126,17 @@ export default function ProviderDashboardPage() {
     } catch {}
   };
 
-  const currentTab = navItems.find(l => l.id === tab);
-  const CurrentIcon = currentTab?.icon || LayoutDashboard;
+  const orderBadge = allOrders.filter(o => o.status === "sent" || o.status === "created").length;
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
+    <div className="flex flex-col min-h-[calc(100vh-72px)] min-[1080px]:flex-row">
       <SEO title={`${t("seo.providerDashboard")} — Ruumly`} description="" noindex={true} />
-      <aside className="hidden w-56 shrink-0 border-r border-border bg-card lg:block">
-        <div className="px-4 pb-3 pt-5">
-          <p className="text-[15px] font-bold text-navy-ink">{supplierProfile?.name || user?.company || user?.name}</p>
+      {/* Desktop sidebar (≥1080px) — 248px, white, right hairline */}
+      <aside className="hidden w-[248px] shrink-0 border-r border-border bg-card px-4 py-7 min-[1080px]:block">
+        <div className="px-3 pb-3">
+          <p className="font-display text-[15px] font-bold text-navy-ink">{supplierProfile?.name || user?.company || user?.name}</p>
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
-            <p className="text-xs text-muted-foreground">{t("provider.panel")}</p>
+            <p className="text-[12.5px] text-muted-foreground">{t("provider.panel")}</p>
             {supplierInactive && (
               <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive">
                 {t("provider.inactive.badge")}
@@ -138,32 +144,55 @@ export default function ProviderDashboardPage() {
             )}
           </div>
         </div>
-        <p className="px-4 pb-1.5 font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground/80">
+        <p className="px-3 pb-2 pt-2 font-mono-label text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground/80">
           {t("provider.nav.sectionManage")}
         </p>
-        <nav className="space-y-0.5 px-2">
+        <nav className="space-y-0.5">
           {navItems.map((l) => {
             const Icon = l.icon;
             const isActive = tab === l.id;
-            const badge = l.id === "orders" ? allOrders.filter(o => o.status === "sent" || o.status === "created").length : 0;
+            const badge = l.id === "orders" ? orderBadge : 0;
             return (
-              <button key={l.id} onClick={() => setTab(l.id)} aria-current={isActive ? "page" : undefined} className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${isActive ? "bg-navy-ink text-white" : "text-muted-foreground hover:bg-secondary hover:text-navy-ink"}`}>
-                <span className="flex items-center gap-2.5"><Icon className={`h-4 w-4 ${isActive ? "text-teal" : ""}`} />{l.label}</span>
+              <button key={l.id} onClick={() => setTab(l.id)} aria-current={isActive ? "page" : undefined} className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${isActive ? "bg-navy-ink text-white" : "text-muted-foreground hover:bg-secondary hover:text-navy-ink"}`}>
+                <span className="flex items-center gap-3"><Icon className={`h-[18px] w-[18px] ${isActive ? "text-teal" : "text-muted-foreground"}`} />{l.label}</span>
                 {badge > 0 && <span className="flex h-5 w-5 items-center justify-center rounded-full bg-warning text-[10px] font-bold text-warning-foreground">{badge}</span>}
               </button>
             );
           })}
         </nav>
-        <div className="mx-2 my-3 border-t border-border" />
-        <nav className="px-2 pb-4">
-          <Link to="/" className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-navy-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
-            <LogOut className="h-4 w-4" />
+        <div className="my-3 border-t border-border" />
+        <nav>
+          <Link to="/" className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-navy-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
+            <LogOut className="h-[18px] w-[18px] text-muted-foreground" />
             {t("provider.nav.backToSite")}
           </Link>
         </nav>
       </aside>
 
-      <div className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6">
+      {/* Mobile tab bar (<1080px) — sticky horizontal-scroll pills */}
+      <div className="sticky top-[72px] z-20 -mx-px border-b border-border bg-card/95 backdrop-blur min-[1080px]:hidden">
+        <div className="flex gap-1.5 overflow-x-auto px-4 py-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {navItems.map((l) => {
+            const Icon = l.icon;
+            const isActive = tab === l.id;
+            const badge = l.id === "orders" ? orderBadge : 0;
+            return (
+              <button
+                key={l.id}
+                onClick={() => setTab(l.id)}
+                aria-current={isActive ? "page" : undefined}
+                className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${isActive ? "bg-navy-ink text-white" : "border border-line-2 text-muted-foreground hover:text-navy-ink"}`}
+              >
+                <Icon className={`h-3.5 w-3.5 ${isActive ? "text-teal" : "text-muted-foreground"}`} />
+                {l.label}
+                {badge > 0 && <span className="ml-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-warning px-1 text-[9px] font-bold text-warning-foreground">{badge}</span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="min-w-0 flex-1 overflow-x-hidden px-[18px] py-6 min-[1080px]:px-10 min-[1080px]:py-9">
         {supplierId && (
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-50 px-4 py-3 dark:bg-amber-950/30">
             <div className="flex items-center gap-2 text-sm">
@@ -173,11 +202,6 @@ export default function ProviderDashboardPage() {
               <span className="text-amber-900 dark:text-amber-100">
                 {supplierProfile?.name ?? "…"}
               </span>
-              {supplierProfile?.tier && (
-                <span className="rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-medium text-amber-900 dark:bg-amber-800 dark:text-amber-100">
-                  {t("admin.partner.featureSetBadge").replace("{value}", t(`admin.partner.featureSet.${String(supplierProfile.tier).toLowerCase()}`))}
-                </span>
-              )}
             </div>
             <Button
               size="sm"
@@ -208,31 +232,6 @@ export default function ProviderDashboardPage() {
         )}
 
         <div className="mb-4 flex items-center justify-between gap-3">
-          <div className="flex-1 lg:hidden relative">
-            <button onClick={() => setMobileNavOpen(!mobileNavOpen)} aria-expanded={mobileNavOpen} aria-haspopup="menu" className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
-              <span className="flex items-center gap-2.5"><CurrentIcon className="h-4 w-4 text-muted-foreground" />{currentTab?.label}</span>
-              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${mobileNavOpen ? "rotate-180" : ""}`} />
-            </button>
-            {mobileNavOpen && (
-              <>
-                <div className="fixed inset-0 z-30" onClick={() => setMobileNavOpen(false)} />
-                <div className="absolute left-0 right-0 top-full z-40 mt-1 rounded-xl border border-border bg-card p-1 shadow-xl max-h-[60vh] overflow-y-auto">
-                  {navItems.map((l) => {
-                    const Icon = l.icon;
-                    const isActive = tab === l.id;
-                    const badge = l.id === "orders" ? allOrders.filter(o => o.status === "sent" || o.status === "created").length : 0;
-                    return (
-                      <button key={l.id} onClick={() => { setTab(l.id); setMobileNavOpen(false); }} aria-current={isActive ? "page" : undefined} className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${isActive ? "bg-navy-ink text-white" : "text-muted-foreground hover:bg-secondary hover:text-navy-ink"}`}>
-                        <span className="flex items-center gap-2.5"><Icon className={`h-4 w-4 ${isActive ? "text-teal" : ""}`} />{l.label}</span>
-                        {badge > 0 && <span className="flex h-5 w-5 items-center justify-center rounded-full bg-warning text-[10px] font-bold text-warning-foreground">{badge}</span>}
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-          </div>
-
           <div className="ml-auto flex items-center gap-2 shrink-0">
             <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setSoundEnabled(!soundEnabled)} aria-pressed={soundEnabled} aria-label={soundEnabled ? t("provider.notifications.soundOn") : t("provider.notifications.soundOff")} title={soundEnabled ? t("provider.notifications.soundOn") : t("provider.notifications.soundOff")}>
               {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
@@ -328,6 +327,7 @@ export default function ProviderDashboardPage() {
         )}
         {tab === "team" && <ProviderTeam />}
         {tab === "boosts" && <ProviderBoosts />}
+        {tab === "billing" && <ProviderBilling />}
       </div>
     </div>
   );

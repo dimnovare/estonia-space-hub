@@ -1,12 +1,34 @@
 import { memo, useState } from "react";
 import { Link } from "@/i18n/routing";
 import { MapPin, Star, Warehouse, Truck, CarFront, Heart, ShieldCheck, Award, Sparkles, Zap, MessageSquare } from "lucide-react";
+import { toast } from "sonner";
 import type { Listing } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import { getSavingsDisplay } from "@/lib/savingsDisplay";
 import { useSizeBuckets, bucketCodeForSize } from "@/hooks/useSizeBuckets";
 import { formatPriceUnit } from "@/lib/priceUnit";
+
+/**
+ * Striped photo placeholder (00-foundations §4.1) + centered mono caption.
+ * The 16:10 listing-card hero uses the standard stripe pair; a localized,
+ * uppercased "{type} · PHOTO" caption sits centered in muted-2.
+ */
+function PhotoPlaceholder({ caption }: { caption: string }) {
+  return (
+    <div
+      className="photo-placeholder flex h-full w-full items-center justify-center"
+      style={{
+        background:
+          "repeating-linear-gradient(135deg,#e9eef7,#e9eef7 12px,#eef2fa 12px,#eef2fa 24px)",
+      }}
+    >
+      <span className="font-mono text-[11px] uppercase tracking-wide text-[#97A0B6]">
+        {caption}
+      </span>
+    </div>
+  );
+}
 
 function ImageWithFallback({ src, alt, fallback }: { src: string; alt: string; fallback: React.ReactNode }) {
   const [errored, setErrored] = useState(false);
@@ -77,6 +99,17 @@ function ListingCard({ listing }: { listing: Listing }) {
     ? bucketCodeForSize(sizeBuckets, listing.sizeM2)
     : null;
   const typeLabel = t(typeLabelKeys[listing.type] ?? "provider.listings.typeWarehouse");
+  // Striped-placeholder caption, e.g. "STORAGE · PHOTO" (00-foundations §4.1).
+  const photoCaption = `${typeLabel.toUpperCase()} · ${t("listing.photo")}`;
+
+  const handleHeartClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const wasFavorite = isFavorite(listing.id);
+    toggle(listing.id);
+    // Spec: heart click → "Saved to favorites" toast (favorites persist locally).
+    toast.success(wasFavorite ? t("listing.removedFromFav") : t("listing.savedToFav"));
+  };
 
   return (
     <Link
@@ -89,18 +122,18 @@ function ListingCard({ listing }: { listing: Listing }) {
           <ImageWithFallback
             src={listing.image}
             alt={`${listing.title} — ${listing.city}`}
-            fallback={<div className="flex h-full w-full items-center justify-center bg-secondary"><Icon className="h-10 w-10 text-muted-foreground/30" /></div>}
+            fallback={<PhotoPlaceholder caption={photoCaption} />}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-secondary">
-            <Icon className="h-10 w-10 text-muted-foreground/30" />
-          </div>
+          <PhotoPlaceholder caption={photoCaption} />
         )}
 
-        {/* Featured / Verified tags (top-left) */}
+        {/* Featured / Verified tags (top-left).
+            NOTE: the green→teal gradient (.tag-free) is reserved for Free/Optional
+            labels only — the Featured boost uses a distinct solid navy-ink tag. */}
         <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
           {featured && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-accent to-teal px-2.5 py-1 text-[11px] font-display font-semibold text-white shadow-sm">
+            <span className="inline-flex items-center gap-1 rounded-full bg-navy-ink px-2.5 py-1 text-[11px] font-display font-semibold text-white shadow-sm">
               <Sparkles className="h-3 w-3" />
               {t("listing.featured")}
             </span>
@@ -131,7 +164,7 @@ function ListingCard({ listing }: { listing: Listing }) {
 
         {/* Heart (top-right) */}
         <button
-          onClick={e => { e.preventDefault(); e.stopPropagation(); toggle(listing.id); }}
+          onClick={handleHeartClick}
           aria-label={isFavorite(listing.id) ? t("listing.favRemove") : t("listing.favAdd")}
           className={`absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full shadow-sm backdrop-blur-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${isFavorite(listing.id) ? "bg-white text-red-500" : "bg-white/92 text-muted-foreground hover:text-red-400"}`}
           title={isFavorite(listing.id) ? t("listing.favRemove") : t("listing.favAdd")}
@@ -203,12 +236,14 @@ function ListingCard({ listing }: { listing: Listing }) {
             <span className="font-display text-lg font-extrabold text-foreground">€{listing.priceFrom}<span className="text-[13px] font-medium text-muted-foreground">{priceUnitLabel}</span></span>
           )}
           {bookable ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-teal/15 px-2.5 py-1 text-[11px] font-display font-semibold text-brand-tealDeep">
+            // Teal tag — partner has instant booking enabled.
+            <span className="inline-flex items-center gap-1 rounded-full bg-brand-tealDeep px-2.5 py-1 text-[11px] font-display font-semibold text-white">
               <Zap className="h-3 w-3" />
               {t("listing.bookOnline")}
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-display font-semibold text-primary">
+            // Navy tag — request-only partner.
+            <span className="inline-flex items-center gap-1 rounded-full bg-navy-ink px-2.5 py-1 text-[11px] font-display font-semibold text-white">
               <MessageSquare className="h-3 w-3" />
               {t("listing.request")}
             </span>

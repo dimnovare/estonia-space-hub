@@ -84,13 +84,17 @@
     --card-foreground: 210 14% 92%;
     --popover: 213 28% 12%;
     --popover-foreground: 210 14% 92%;
-    --primary: 174 65% 47%;
-    --primary-foreground: 213 30% 8%;
+    /* Navy stays the brand/structure color even in dark mode — do NOT re-tint
+       primary to teal (00-foundations §2 green↔navy rule). Slightly lighter
+       navy for contrast on dark surfaces. */
+    --primary: 222 72% 60%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 213 24% 16%;
     --secondary-foreground: 210 14% 92%;
     --muted: 213 20% 18%;
     --muted-foreground: 210 10% 55%;
-    --accent: 174 65% 47%;
+    /* Action green remains the CTA/accent color in dark mode too. */
+    --accent: 170 88% 32%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 100%;
@@ -181,6 +185,14 @@
     color: #fff;
   }
 
+  /* The public nav is ABSOLUTE + transparent over a dark hero (spec §7.1), so it
+     no longer reserves layout space. Give the first dark hero in <main> the 72px
+     nav clearance so its content never sits under the bar. */
+  #main-content > section:first-of-type.hero-gradient,
+  #main-content > section:first-of-type.surface-dark {
+    padding-top: calc(72px + 2.5rem);
+  }
+
   .surface-sunken {
     background: hsl(var(--surface-sunken));
   }
@@ -191,6 +203,50 @@
 
   .font-mono-label {
     font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  /* Brand wordmark — live typeset text "Ruumly" (00-foundations §1.2):
+     Plus Jakarta 800, -0.03em, navy on light. Pair with .brand-word--on-dark
+     (or a parent that sets color) to flip the WORD to white on dark surfaces. */
+  .brand-word {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: #173B8D;
+  }
+  .brand-word--on-dark { color: #ffffff; }
+
+  /* Mono eyebrow (00-foundations §3): JetBrains Mono 11.5px, .2em, uppercase,
+     teal-deep on light. Sits above section h2. */
+  .eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #1FA6AE;
+  }
+  /* On dark bands the eyebrow reads in the brighter teal. */
+  .surface-dark .eyebrow,
+  .eyebrow--on-dark { color: #51CDD4; }
+
+  /* Striped photo placeholders (00-foundations §4.1) — every image area is a
+     deliberate diagonal stripe until a real asset drops in. */
+  .photo-placeholder {
+    background: repeating-linear-gradient(135deg,#e9eef7,#e9eef7 12px,#eef2fa 12px,#eef2fa 24px);
+  }
+  /* Softer pair for vertical card heroes. */
+  .photo-placeholder--soft {
+    background: repeating-linear-gradient(135deg,#eef2fa,#eef2fa 12px,#f4f7fc 12px,#f4f7fc 24px);
+  }
+  /* Centered mono caption inside a placeholder (e.g. STORAGE · PHOTO). */
+  .photo-placeholder__cap {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #97A0B6;
   }
 
   .section-y {
@@ -210,22 +266,24 @@
 }
 
 @layer utilities {
-  .animate-fade-in {
-    animation: fadeIn 0.5s ease-out forwards;
-  }
-
+  /* Entrance motion (00-foundations §8): 9px slide-up over .35s with NO opacity
+     fade — keeps print / SSR / screenshots from ever showing a blank frame. */
+  .animate-fade-in,
   .animate-slide-up {
-    animation: slideUp 0.5s ease-out forwards;
+    animation: slideUp9 0.35s ease both;
   }
 
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  @keyframes slideUp9 {
+    from { transform: translateY(9px); }
+    to { transform: none; }
   }
 
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
+  /* Respect reduced-motion: no entrance transform at all. */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-fade-in,
+    .animate-slide-up {
+      animation: none;
+    }
   }
 
   .animate-shimmer {

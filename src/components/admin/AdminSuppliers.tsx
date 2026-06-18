@@ -214,11 +214,9 @@ export default function AdminSuppliers() {
               <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${healthColor(s.integrationHealth)}`}>{healthLabel(s.integrationHealth)}</span>
               <span className="text-xs text-muted-foreground">{s.listingCount} {t("admin.listingsLabel")}</span>
               <span className="text-xs font-medium">€{s.revenue.toLocaleString()}</span>
-              {s.partnerDiscountRate > 0 && (
-                 <span className="text-[10px] rounded-full bg-success/10 text-success px-2 py-0.5 font-medium">
-                   {t("admin.marginLabel")}: {Math.max(0, s.partnerDiscountRate - (s.clientDiscountRate || 0))}%
-                </span>
-              )}
+              <span className="text-[10px] rounded-full bg-secondary text-muted-foreground px-2 py-0.5 font-medium">
+                {t(`admin.partner.featureSet.${(s.tier ?? "starter").toLowerCase()}`)}
+              </span>
             </div>
           </button>
         ))}
@@ -253,11 +251,9 @@ export default function AdminSuppliers() {
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap items-center gap-1">
                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s.isActive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{s.isActive ? t("admin.active") : t("admin.inactive")}</span>
-                    {s.partnerDiscountRate > 0 && (
-                      <span className="rounded-full bg-success/10 text-success px-2 py-0.5 text-[10px] font-medium">
-                        {Math.max(0, s.partnerDiscountRate - (s.clientDiscountRate || 0))}%
-                      </span>
-                    )}
+                    <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                      {t(`admin.partner.featureSet.${(s.tier ?? "starter").toLowerCase()}`)}
+                    </span>
                   </div>
                 </td>
                 <td className="px-4 py-3">
@@ -334,7 +330,7 @@ export default function AdminSuppliers() {
             <DialogTitle className="flex items-center gap-2">
               {selected?.name}
               {selected?.billingModel === "rebate"
-                ? <span className="rounded-full bg-amber-100 text-amber-700 px-2 py-0.5 text-[10px] font-medium">{t("admin.billingRebate")}</span>
+                ? <span className="rounded-full bg-secondary text-muted-foreground px-2 py-0.5 text-[10px] font-medium">{t("admin.billingDirect")}</span>
                 : <span className="rounded-full bg-teal-100 text-teal-700 px-2 py-0.5 text-[10px] font-medium">{t("admin.billingMarketplace")}</span>}
             </DialogTitle>
           </DialogHeader>
@@ -380,11 +376,11 @@ export default function AdminSuppliers() {
                     <label className="text-xs font-medium text-muted-foreground">{t("admin.billingModel")}</label>
                     <select className={inp} value={selected.billingModel ?? "marketplace"} onChange={(e) => setSelected({ ...selected, billingModel: e.target.value as "marketplace" | "rebate" })}>
                       <option value="marketplace">{t("admin.billingMarketplace")}</option>
-                      <option value="rebate">{t("admin.billingRebate")}</option>
+                      <option value="rebate">{t("admin.billingDirect")}</option>
                     </select>
                     <p className="mt-0.5 text-[10px] text-muted-foreground">
                       {selected.billingModel === "rebate"
-                        ? t("admin.billingRebateDesc")
+                        ? t("admin.billingDirectDesc")
                         : t("admin.billingMarketplaceDesc")}
                     </p>
                   </div>
@@ -681,10 +677,10 @@ export default function AdminSuppliers() {
               <label className="text-xs font-medium text-muted-foreground">{t("admin.billingModel")}</label>
               <select className={inp} value={createForm.billingModel} onChange={(e) => setCreateForm({ ...createForm, billingModel: e.target.value as any })}>
                 <option value="marketplace">{t("admin.billingMarketplaceFull")}</option>
-                <option value="rebate">{t("admin.billingRebateFull")}</option>
+                <option value="rebate">{t("admin.billingDirectFull")}</option>
               </select>
               <p className="mt-0.5 text-[10px] text-muted-foreground">
-                {t("admin.billingMarketplaceDesc")} {t("admin.billingRebateDesc")}
+                {t("admin.billingMarketplaceDesc")} {t("admin.billingDirectDesc")}
               </p>
             </div>
 

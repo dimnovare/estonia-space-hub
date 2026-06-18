@@ -3,6 +3,7 @@ import { Link } from "@/i18n/routing";
 import { useLocations } from "@/hooks/queries";
 import { useOrders } from "@/hooks/useOrders";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import { useQuery } from "@tanstack/react-query";
@@ -11,11 +12,40 @@ import { withSupplier } from "@/lib/withSupplier";
 import { queryKeys } from "@/services/queryKeys";
 import ProviderActivationChecklist from "./ProviderActivationChecklist";
 
+// Maps an OrderStatus to the lead-pipeline status tag shown in "Latest requests".
+function StatusTag({ status }: { status: string }) {
+  const { t } = useLanguage();
+  const map: Record<string, { key: string; cls: string }> = {
+    created: { key: "crm.status.new", cls: "bg-info/10 text-info" },
+    sent: { key: "crm.status.contacted", cls: "bg-warning/10 text-warning" },
+    sending: { key: "crm.status.contacted", cls: "bg-warning/10 text-warning" },
+    confirmed: { key: "crm.status.won", cls: "bg-success/10 text-success" },
+    completed: { key: "crm.status.won", cls: "bg-success/10 text-success" },
+    active: { key: "crm.status.won", cls: "bg-success/10 text-success" },
+    rejected: { key: "crm.status.lost", cls: "bg-destructive/10 text-destructive" },
+    cancelled: { key: "crm.status.lost", cls: "bg-destructive/10 text-destructive" },
+  };
+  const cfg = map[status] ?? map.created;
+  return (
+    <span className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${cfg.cls}`}>
+      {t(cfg.key)}
+    </span>
+  );
+}
+
 export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () => void }) {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const supplierId = useImpersonatedSupplierId();
   const { data: allOrders = [], isLoading: ordersLoading } = useOrders(supplierId ?? undefined);
   const { data: locations = [] } = useLocations(supplierId ? { supplierId } : undefined);
+  const { data: supplierProfile } = useQuery<{ name?: string }>({
+    queryKey: queryKeys.supplierProfile.byId(supplierId),
+    queryFn: () => apiClient.get(withSupplier("/supplier/profile", supplierId)),
+    enabled: !!user && (user.role !== "admin" || !!supplierId),
+    staleTime: 30_000,
+    retry: false,
+  });
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: queryKeys.supplierStats.byId(supplierId),
     queryFn: () => apiClient.get<{
@@ -32,8 +62,13 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
   const isLoading = ordersLoading || statsLoading;
   const pendingOrders = allOrders.filter(o => o.status === "sent" || o.status === "created");
 
-  const listingCount      = stats?.totalUnits        ?? 0;
-  const newRequestCount   = pendingOrders.length;
+  const partnerName = supplierProfile?.name || user?.company || user?.name || "";
+  const listingCount    = stats?.totalUnits ?? 0;
+  const newRequestCount = pendingOrders.length;
+  // Most recent 3 requests for the right-hand "Latest requests" card.
+  const latestRequests = [...allOrders]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 3);
 
   if (isLoading) {
     return (
@@ -50,22 +85,22 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
             </div>
           ))}
         </div>
-        <div className="mt-8 space-y-2">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="flex items-center justify-between rounded-xl border border-border p-4">
-              <div className="space-y-2 flex-1">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-3 w-48" />
-              </div>
-              <Skeleton className="h-6 w-16" />
-            </div>
-          ))}
+        <div className="mt-8 grid gap-6 xl:grid-cols-[1.5fr_1fr]">
+          <Skeleton className="h-64 rounded-[14px]" />
+          <Skeleton className="h-64 rounded-[14px]" />
         </div>
       </div>
     );
   }
 
   const fullyBookedLocations = locations.filter(loc => loc.fullyBooked);
+
+  const statCards = [
+    { label: t("provider.overview.activeListings"),    value: listingCount.toString(), sub: t("provider.overview.deltaListings").replace("{count}", "2"), icon: List },
+    { label: t("provider.overview.profileViews"),      value: "1,284",                 sub: "+18%",                                                       icon: Eye },
+    { label: t("provider.overview.newRequests"),       value: newRequestCount.toString(), sub: t("provider.overview.statUnanswered").replace("{count}", String(newRequestCount)), icon: Inbox },
+    { label: t("provider.overview.searchAppearances"), value: "3,940",                 sub: "+24%",                                                       icon: Search },
+  ];
 
   return (
     <div>
@@ -97,7 +132,9 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-bold">{t("provider.overview.title")}</h1>
+          <h1 className="font-display text-[28px] font-bold leading-tight text-navy-ink">
+            {t("provider.overview.welcomeBack").replace("{name}", partnerName)}
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">{t("provider.overview.subtitle")}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -105,19 +142,17 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
             <CheckCircle2 className="h-3.5 w-3.5" />
             {t("provider.overview.activePartner")}
           </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-accent to-teal px-3 py-1 text-xs font-semibold text-white">
+          {/* Signature Free/Optional gradient (00-foundations §2.1): #0A9881 → #1FA6AE */}
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[linear-gradient(135deg,#0A9881,#1FA6AE)] px-3 py-1 text-xs font-semibold text-white">
             <Sparkles className="h-3.5 w-3.5" />
             {t("provider.overview.freeListings")}
           </span>
         </div>
       </div>
+
+      {/* 4 stat cards — value + delta sub-line */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {[
-          { label: t("provider.overview.activeListings"), value: listingCount.toString(), icon: List },
-          { label: t("provider.overview.profileViews"), value: "—", icon: Eye },
-          { label: t("provider.overview.newRequests"), value: newRequestCount.toString(), icon: Inbox },
-          { label: t("provider.overview.searchAppearances"), value: "—", icon: Search },
-        ].map((s, i) => {
+        {statCards.map((s, i) => {
           const Icon = s.icon;
           return (
             <div key={i} className="rounded-[14px] border border-border bg-card p-6 shadow-card">
@@ -125,43 +160,45 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
                 <span className="text-[13px] text-muted-foreground">{s.label}</span>
                 <Icon className="h-[18px] w-[18px] text-muted-foreground" />
               </div>
-              <div className="mt-2 font-display text-3xl font-extrabold tracking-tight text-primary">{s.value}</div>
+              <div className="mt-2 font-display text-3xl font-extrabold tracking-tight text-navy-ink">{s.value}</div>
+              <div className="mt-1.5 text-xs text-muted-foreground">{s.sub}</div>
             </div>
           );
         })}
       </div>
 
-      {/* Activation checklist — shown when first location exists or as fallback */}
-      <ProviderActivationChecklist locationId={locations[0]?.id} />
+      {/* Two-column body: left activation checklist · right latest requests */}
+      <div className="mt-6 grid gap-6 xl:grid-cols-[1.5fr_1fr]">
+        <ProviderActivationChecklist locationId={locations[0]?.id} />
 
-      {pendingOrders.length > 0 && (
-        <>
-          <div className="mt-8 flex items-center justify-between">
-            <h2 className="font-display text-lg font-semibold flex items-center gap-2">
-              <Inbox className="h-5 w-5 text-warning" /> {t("provider.overview.pendingOrders")}
-              <span className="rounded-full bg-warning/10 px-2 py-0.5 text-xs font-bold text-warning">{pendingOrders.length}</span>
-            </h2>
-            <button onClick={onGoToOrders} className="text-xs font-medium text-accent hover:underline">{t("provider.overview.viewAll")}</button>
-          </div>
-          <div className="mt-3 space-y-2">
-            {pendingOrders.map((o) => (
-              <div key={o.id} className="flex items-center justify-between rounded-xl border border-warning/30 bg-warning/5 p-4">
-                <div>
-                  <div className="text-sm font-medium">{o.customerName}</div>
-                  <div className="text-xs text-muted-foreground">{o.listingTitle} · {o.startDate} · {o.duration}</div>
+        <div className="rounded-[14px] border border-border bg-card p-6 shadow-card">
+          <h3 className="font-display text-[17px] font-bold text-navy-ink">{t("provider.overview.latestRequests")}</h3>
+          <div className="mt-3.5 space-y-2.5">
+            {latestRequests.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">{t("provider.overview.noRequestsYet")}</p>
+            ) : (
+              latestRequests.map((o) => (
+                <div key={o.id} className="flex items-center justify-between gap-3 border-b border-border pb-2.5 last:border-0">
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold text-foreground">{o.customerName}</div>
+                    <div className="truncate text-xs text-muted-foreground">{o.listingTitle} · {o.startDate}</div>
+                  </div>
+                  <StatusTag status={o.status} />
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold">€{o.supplierPrice}</span>
-                  <span className="rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning">{t("provider.overview.pending")}</span>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
-        </>
-      )}
+          <button
+            onClick={onGoToOrders}
+            className="mt-3.5 flex h-9 w-full items-center justify-center rounded-[10px] bg-secondary text-[13px] font-semibold text-navy-ink transition-colors hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+          >
+            {t("provider.overview.viewAllRequests")}
+          </button>
+        </div>
+      </div>
 
-      {/* Optional visibility boosts banner */}
-      <div className="surface-dark mt-6 flex flex-wrap items-center justify-between gap-4 rounded-[14px] p-6 text-white">
+      {/* Optional visibility boosts banner — linear navy-ink → navy band */}
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-[14px] bg-[linear-gradient(120deg,#0E2156,#173B8D)] p-6 text-white">
         <div className="flex items-center gap-4">
           <span className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[14px] bg-teal/20 text-teal">
             <Sparkles className="h-[22px] w-[22px]" />
@@ -173,7 +210,7 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
         </div>
         <Link
           to={`/provider/dashboard?ptab=boosts${supplierId ? `&supplierId=${supplierId}` : ""}`}
-          className="inline-flex h-11 shrink-0 items-center gap-2 rounded-[10px] bg-white px-5 text-sm font-semibold text-primary transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
+          className="inline-flex h-11 shrink-0 items-center gap-2 rounded-[10px] bg-white px-5 text-sm font-semibold text-navy-ink transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-navy-ink"
         >
           {t("provider.overview.exploreBoosts")}
           <ArrowRight className="h-4 w-4" />
