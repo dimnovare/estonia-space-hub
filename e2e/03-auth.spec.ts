@@ -42,7 +42,9 @@ test.describe('Login page', () => {
     await page.goto('/et/login');
     const heading = page.locator('h1').first();
     await expect(heading).toBeVisible();
-    await expect(heading).toHaveText(/logi sisse/i);
+    // Redesign: sign-in view greets "Tere tulemast tagasi" (Welcome back) with a
+    // Sign in / Create account toggle, instead of a literal "Logi sisse" heading.
+    await expect(heading).toHaveText(/tere tulemast/i);
   });
 
   test('submitting a too-short password shows a zod validation error', async ({ page }) => {
