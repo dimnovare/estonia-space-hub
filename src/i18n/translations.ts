@@ -9,6 +9,17 @@ export const LANGUAGES: { code: Language; label: string; flag: string }[] = [
 ];
 
 const et: Record<string, string> = {
+    "admin.locations.eyebrow": "Kaardil",
+    "admin.locations.subtitle": "Kõik partnerite asukohad turuplatsi kaardil. {total} kokku · {published} avaldatud.",
+    "admin.locations.searchPlaceholder": "Otsi asukohti, linnu või partnereid…",
+    "admin.locations.allPartners": "Kõik partnerid",
+    "admin.locations.tagPublished": "Avaldatud",
+    "admin.locations.tagHidden": "Peidetud",
+    "admin.locations.tagGeocoded": "Geokodeeritud",
+    "admin.locations.tagNotGeocoded": "Koordinaadid puuduvad",
+    "admin.locations.externalId": "Väline ID",
+    "admin.locations.externalIdHint": "(tarnija asukoha ID — laoseisu pärimiseks)",
+    "admin.locations.externalIdPlaceholder": "nt vendor-loc-abc",
     "home.verticals.priceFrom": "Alates {price}",
     "home.whyRuumly.savingsAll": "Võrdle hoiustamist, kolimist ja haagiseid ühel kaardil",
     "home.mapBadgeAll": "{count} kuulutust sinu lähedal",
@@ -3268,6 +3279,17 @@ const et: Record<string, string> = {
 };
 
 const en: Record<string, string> = {
+    "admin.locations.eyebrow": "On the map",
+    "admin.locations.subtitle": "All partner locations on the marketplace map. {total} total · {published} published.",
+    "admin.locations.searchPlaceholder": "Search locations, cities or partners…",
+    "admin.locations.allPartners": "All partners",
+    "admin.locations.tagPublished": "Published",
+    "admin.locations.tagHidden": "Hidden",
+    "admin.locations.tagGeocoded": "Geocoded",
+    "admin.locations.tagNotGeocoded": "No coordinates",
+    "admin.locations.externalId": "External ID",
+    "admin.locations.externalIdHint": "(vendor's location ID — used for stock polling)",
+    "admin.locations.externalIdPlaceholder": "e.g. vendor-loc-abc",
     "home.verticals.priceFrom": "From {price}",
     "home.whyRuumly.savingsAll": "Compare storage, movers and trailers on one map",
     "home.mapBadgeAll": "{count} listings near you",
@@ -6491,6 +6513,17 @@ const en: Record<string, string> = {
 };
 
 const ru: Record<string, string> = {
+    "admin.locations.eyebrow": "На карте",
+    "admin.locations.subtitle": "Все локации партнёров на карте маркетплейса. {total} всего · {published} опубликовано.",
+    "admin.locations.searchPlaceholder": "Поиск локаций, городов или партнёров…",
+    "admin.locations.allPartners": "Все партнёры",
+    "admin.locations.tagPublished": "Опубликовано",
+    "admin.locations.tagHidden": "Скрыто",
+    "admin.locations.tagGeocoded": "Геокодировано",
+    "admin.locations.tagNotGeocoded": "Нет координат",
+    "admin.locations.externalId": "Внешний ID",
+    "admin.locations.externalIdHint": "(ID локации поставщика — для опроса остатков)",
+    "admin.locations.externalIdPlaceholder": "напр. vendor-loc-abc",
     "home.verticals.priceFrom": "От {price}",
     "home.whyRuumly.savingsAll": "Сравнивайте склады, грузчиков и прицепы на одной карте",
     "home.mapBadgeAll": "{count} объявлений рядом с вами",
@@ -9716,6 +9749,17 @@ const ru: Record<string, string> = {
 // ── Latvian ──────────────────────────
 // ── Latvian ──────────────────────────
 const lv: Record<string, string> = {
+    "admin.locations.eyebrow": "Kartē",
+    "admin.locations.subtitle": "Visas partneru atrašanās vietas tirgus kartē. {total} kopā · {published} publicētas.",
+    "admin.locations.searchPlaceholder": "Meklē atrašanās vietas, pilsētas vai partnerus…",
+    "admin.locations.allPartners": "Visi partneri",
+    "admin.locations.tagPublished": "Publicēts",
+    "admin.locations.tagHidden": "Paslēpts",
+    "admin.locations.tagGeocoded": "Ģeokodēts",
+    "admin.locations.tagNotGeocoded": "Nav koordinātu",
+    "admin.locations.externalId": "Ārējais ID",
+    "admin.locations.externalIdHint": "(piegādātāja atrašanās vietas ID — krājumu aptaujai)",
+    "admin.locations.externalIdPlaceholder": "piem. vendor-loc-abc",
     "home.verticals.priceFrom": "No {price}",
     "home.whyRuumly.savingsAll": "Salīdziniet noliktavas, pārvākšanos un piekabes vienā kartē",
     "home.mapBadgeAll": "{count} sludinājumi netālu no jums",
@@ -12874,6 +12918,17 @@ const lv: Record<string, string> = {
 };
 // ── Lithuanian ──────────────────────────
 const lt: Record<string, string> = {
+    "admin.locations.eyebrow": "Žemėlapyje",
+    "admin.locations.subtitle": "Visos partnerių vietos rinkos žemėlapyje. {total} iš viso · {published} paskelbta.",
+    "admin.locations.searchPlaceholder": "Ieškokite vietų, miestų ar partnerių…",
+    "admin.locations.allPartners": "Visi partneriai",
+    "admin.locations.tagPublished": "Paskelbta",
+    "admin.locations.tagHidden": "Paslėpta",
+    "admin.locations.tagGeocoded": "Geokoduota",
+    "admin.locations.tagNotGeocoded": "Nėra koordinačių",
+    "admin.locations.externalId": "Išorinis ID",
+    "admin.locations.externalIdHint": "(tiekėjo vietos ID — atsargų užklausoms)",
+    "admin.locations.externalIdPlaceholder": "pvz. vendor-loc-abc",
     "home.verticals.priceFrom": "Nuo {price}",
     "home.whyRuumly.savingsAll": "Palyginkite sandėliavimą, kraustymąsi ir priekabas viename žemėlapyje",
     "home.mapBadgeAll": "{count} skelbimų netoli jūsų",

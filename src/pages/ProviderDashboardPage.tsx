@@ -81,7 +81,9 @@ export default function ProviderDashboardPage() {
   );
 
   // "contract" is no longer a sidebar item but stays reachable via ?ptab=contract.
-  const ROUTABLE_TABS = new Set([...navItems.map((i) => i.id), "contract"]);
+  // "boosts" is hidden from the nav for an admin previewing without a supplier, but
+  // the "Explore boosts" CTA still links to it, so keep it routable (renders gracefully).
+  const ROUTABLE_TABS = new Set([...navItems.map((i) => i.id), "contract", "boosts"]);
 
   useEffect(() => {
     if (ROUTABLE_TABS.has(tab)) return;

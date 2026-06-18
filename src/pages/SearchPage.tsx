@@ -457,7 +457,7 @@ export default function SearchPage() {
                 {t("search.eyebrow")}
               </span>
               <span className="font-display text-sm font-semibold text-foreground">
-                <span className="font-extrabold text-primary">{filtered.length}</span>{" "}
+                <span className="font-extrabold text-primary">{filtered.length + displayLocations.length}</span>{" "}
                 <span className="font-normal text-muted-foreground">{t("search.resultsAcross")}</span>
               </span>
             </div>
@@ -605,7 +605,7 @@ export default function SearchPage() {
                 />
                 <DrawerClose asChild>
                   <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
-                    {t("search.resultsFound").replace("{count}", String(filtered.length))}
+                    {t("search.resultsFound").replace("{count}", String(filtered.length + displayLocations.length))}
                   </Button>
                 </DrawerClose>
               </div>
@@ -645,7 +645,7 @@ export default function SearchPage() {
           ) : (
             <>
               <p className="mb-4 text-sm text-muted-foreground">
-                {t("search.resultsFound").replace("{count}", String(filtered.length))}{query && ` ${t("search.forQuery")} "${query}"`}
+                {t("search.resultsFound").replace("{count}", String(filtered.length + displayLocations.length))}{query && ` ${t("search.forQuery")} "${query}"`}
               </p>
 
               {/* Location cards */}

@@ -1,3 +1,4 @@
+import "flag-icons/css/flag-icons.min.css";
 import { Link, useLocation, useSearchParams, stripLang } from "@/i18n/routing";
 import { Menu, User, LogIn, LogOut, ChevronDown, Bell, LayoutDashboard, Shield, Check, Globe } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -13,16 +14,29 @@ import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 // The icon is the ONLY image; the word is typeset so its colour adapts to the
 // background (navy on light, white on dark). Served from /public.
 
-// Emoji flag per UI language for the language selector. Regional-indicator
-// pairs render as a flag on every modern OS/browser; pure presentation, so each
-// is marked aria-hidden and the native name carries the accessible label.
-const LANG_FLAG: Record<string, string> = {
-  en: "🇬🇧",
-  et: "🇪🇪",
-  ru: "🇷🇺",
-  lv: "🇱🇻",
-  lt: "🇱🇹",
+// ISO 3166-1 alpha-2 country code per UI language, for flag-icons (.fi.fi-XX).
+// Emoji regional-indicator flags don't render on Windows desktop Chrome (they
+// show as letter pairs), so we use the flag-icons SVG sprite instead — renders
+// identically on every OS. en→gb (United Kingdom flag for English).
+const LANG_COUNTRY: Record<string, string> = {
+  en: "gb",
+  et: "ee",
+  ru: "ru",
+  lv: "lv",
+  lt: "lt",
 };
+
+// Real SVG flag (flag-icons). Purely presentational — aria-hidden, with the
+// native language name / 2-letter code carrying the accessible label. The
+// rounded corners + subtle ring match the design-system card treatment.
+function LangFlag({ code, className = "" }: { code: string; className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`fi fi-${LANG_COUNTRY[code] ?? code} inline-block shrink-0 rounded-[3px] ring-1 ring-black/10 ${className}`}
+    />
+  );
+}
 
 // Free partner-acquisition marketplace (CLAUDE.md): all three verticals are
 // public nav links, gated by platform toggles. Storage points at /search
@@ -187,7 +201,7 @@ export default function Navbar() {
               }`}
             >
               <Globe className="h-3.5 w-3.5" />
-              <span aria-hidden="true" className="text-sm leading-none">{LANG_FLAG[language]}</span>
+              <LangFlag code={language} className="h-3 w-[18px]" />
               <span className="uppercase">{language}</span>
               <ChevronDown className={`h-3 w-3 ${onDark ? "text-white/70" : "text-muted-foreground"}`} />
             </button>
@@ -207,7 +221,7 @@ export default function Navbar() {
                           : "text-foreground hover:bg-secondary"
                       }`}
                     >
-                      <span aria-hidden="true" className="text-base leading-none">{LANG_FLAG[lang.code]}</span>
+                      <LangFlag code={lang.code} className="h-3.5 w-[21px]" />
                       <span className="font-mono-label text-[11px] uppercase text-muted-foreground">{lang.code}</span>
                       <span>{lang.label}</span>
                       {language === lang.code && <Check className="ml-auto h-3.5 w-3.5" />}
@@ -343,7 +357,7 @@ export default function Navbar() {
                         }`}
                         title={lang.label}
                       >
-                        <span aria-hidden="true" className="text-base leading-none">{LANG_FLAG[lang.code]}</span>
+                        <LangFlag code={lang.code} className="h-3.5 w-[21px]" />
                         {lang.code.toUpperCase()}
                       </button>
                     ))}
