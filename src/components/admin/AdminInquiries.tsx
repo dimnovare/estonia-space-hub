@@ -56,13 +56,25 @@ export default function AdminInquiries() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">{t("admin.inquiries")}</h1>
+      {/* Page head — design-system header, consistent with Leads/Requests/Routing */}
+      <div>
+        <span className="font-mono-label text-[11.5px] uppercase tracking-[0.2em] text-teal-deep">
+          {t("admin.inquiries.eyebrow")}
+        </span>
+        <h1 className="mt-1 font-display text-2xl font-bold text-navy-ink md:text-[28px]">{t("admin.inquiries")}</h1>
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{t("admin.inquiries.subtitle")}</p>
+      </div>
+
       {/* Mobile cards */}
-      <div className="mt-4 space-y-2 sm:hidden">
-        {inquiries.map(inq => (
+      <div className="mt-6 space-y-2 sm:hidden">
+        {inquiries.length === 0 ? (
+          <div className="rounded-[14px] border border-border bg-card px-4 py-12 text-center text-sm text-muted-foreground shadow-card">
+            {t("admin.inquiries.empty")}
+          </div>
+        ) : inquiries.map(inq => (
           <button key={inq.id} onClick={() => openView(inq)} className="w-full rounded-xl border border-border p-3 text-left hover:bg-secondary/50 transition-colors">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">{inq.customer}</span>
+              <span className="text-sm font-medium text-navy-ink">{inq.customer}</span>
               <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inq.status === "new" ? "bg-accent/10 text-accent" : inq.status === "answered" ? "bg-info/10 text-info" : "bg-muted text-muted-foreground"}`}>{statusLabel(inq.status)}</span>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">{inq.listing} · {inq.date}</p>
@@ -70,27 +82,33 @@ export default function AdminInquiries() {
         ))}
       </div>
       {/* Desktop table */}
-      <div className="mt-6 hidden rounded-xl border border-border sm:block">
+      <div className="mt-6 hidden overflow-x-auto rounded-[14px] border border-border bg-card shadow-card sm:block">
         <table className="w-full text-sm">
-          <thead className="border-b border-border bg-secondary/50">
+          <thead className="border-b border-border bg-secondary/40">
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.client")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.email")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.listing")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.date")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.status")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.actions")}</th>
+              <th className="px-5 py-3 text-left font-medium text-muted-foreground">{t("admin.client")}</th>
+              <th className="px-5 py-3 text-left font-medium text-muted-foreground">{t("admin.email")}</th>
+              <th className="px-5 py-3 text-left font-medium text-muted-foreground">{t("admin.listing")}</th>
+              <th className="px-5 py-3 text-left font-medium text-muted-foreground">{t("admin.date")}</th>
+              <th className="px-5 py-3 text-left font-medium text-muted-foreground">{t("admin.status")}</th>
+              <th className="px-5 py-3 text-right font-medium text-muted-foreground">{t("admin.actions")}</th>
             </tr>
           </thead>
           <tbody>
-            {inquiries.map(inq => (
-              <tr key={inq.id} className="border-b border-border last:border-0">
-                <td className="px-4 py-3 font-medium">{inq.customer}</td>
-                <td className="px-4 py-3 text-muted-foreground">{inq.email}</td>
-                <td className="px-4 py-3 text-muted-foreground">{inq.listing}</td>
-                <td className="px-4 py-3 text-muted-foreground">{inq.date}</td>
-                <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inq.status === "new" ? "bg-accent/10 text-accent" : inq.status === "answered" ? "bg-info/10 text-info" : "bg-muted text-muted-foreground"}`}>{statusLabel(inq.status)}</span></td>
-                <td className="px-4 py-3"><Button variant="outline" size="sm" onClick={() => openView(inq)}>{t("admin.view")}</Button></td>
+            {inquiries.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-5 py-12 text-center text-sm text-muted-foreground">
+                  {t("admin.inquiries.empty")}
+                </td>
+              </tr>
+            ) : inquiries.map(inq => (
+              <tr key={inq.id} className="border-b border-border last:border-0 transition-colors hover:bg-secondary/30">
+                <td className="px-5 py-3.5 font-medium text-navy-ink">{inq.customer}</td>
+                <td className="px-5 py-3.5 text-muted-foreground">{inq.email}</td>
+                <td className="px-5 py-3.5 text-muted-foreground">{inq.listing}</td>
+                <td className="px-5 py-3.5 text-muted-foreground">{inq.date}</td>
+                <td className="px-5 py-3.5"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inq.status === "new" ? "bg-accent/10 text-accent" : inq.status === "answered" ? "bg-info/10 text-info" : "bg-muted text-muted-foreground"}`}>{statusLabel(inq.status)}</span></td>
+                <td className="px-5 py-3.5 text-right"><Button variant="outline" size="sm" onClick={() => openView(inq)}>{t("admin.view")}</Button></td>
               </tr>
             ))}
           </tbody>
