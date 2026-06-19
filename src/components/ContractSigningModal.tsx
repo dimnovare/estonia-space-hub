@@ -29,10 +29,11 @@ interface DokobitFlowProps {
 }
 
 export function DokobitSigningFrame({ signingUrl }: { signingUrl: string }) {
+  const { t } = useLanguage();
   return (
     <iframe
       id="isign-gateway"
-      title="Dokobit signing"
+      title={t("contract.dokobit.frameTitle")}
       src={signingUrl}
       className="h-[65vh] min-h-[520px] w-full rounded-lg border border-border bg-white"
       allow="publickey-credentials-get *; publickey-credentials-create *"
@@ -740,7 +741,7 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
               {t("contract.signNow")}
             </DialogTitle>
             <span className="text-xs text-muted-foreground">
-              {`Step ${step} of 3 — ${stepLabel}`}
+              {t("contract.stepIndicator").replace("{step}", String(step)).replace("{total}", "3").replace("{label}", stepLabel)}
             </span>
           </div>
           <DialogDescription className="sr-only">

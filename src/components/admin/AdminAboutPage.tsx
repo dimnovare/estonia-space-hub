@@ -84,7 +84,7 @@ export default function AdminAboutPage({ settings, set, setBool }: Props) {
     // validation
     const invalid = arr.findIndex((f) => !f.name?.trim());
     if (invalid >= 0) {
-      setError(`Asutaja #${invalid + 1}: nimi on kohustuslik`);
+      setError(t("admin.about.founderNameRequired").replace("{n}", String(invalid + 1)));
     } else {
       setError(null);
     }

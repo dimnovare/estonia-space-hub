@@ -1,5 +1,6 @@
 import { MapPin } from "lucide-react";
 import type { Listing } from "@/services/types";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface MapPlaceholderProps {
   listings?: Listing[];
@@ -8,6 +9,7 @@ interface MapPlaceholderProps {
 }
 
 export default function MapPlaceholder({ listings, className = "", height = "h-[400px]" }: MapPlaceholderProps) {
+  const { t } = useLanguage();
   return (
     <div className={`relative overflow-hidden rounded-xl bg-secondary ${height} ${className}`}>
       {/* Simulated map background */}
@@ -45,7 +47,7 @@ export default function MapPlaceholder({ listings, className = "", height = "h-[
       ))}
 
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-card/90 px-4 py-2 text-xs font-medium text-muted-foreground shadow backdrop-blur-sm">
-        Interaktiivne kaart tulekul
+        {t("map.placeholderComingSoon")}
       </div>
     </div>
   );

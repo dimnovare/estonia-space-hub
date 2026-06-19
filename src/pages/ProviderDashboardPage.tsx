@@ -295,7 +295,7 @@ export default function ProviderDashboardPage() {
         {tab === "calendar" && <ProviderCalendar />}
         {tab === "reviews" && <ProviderReviews />}
         {tab === "analytics" && hasAnalyticsTier && (
-          <Suspense fallback={<div className="py-16 text-center text-sm text-muted-foreground">Loading…</div>}>
+          <Suspense fallback={<div className="py-16 text-center text-sm text-muted-foreground">{t("provider.analytics.loading")}</div>}>
             <ProviderAnalytics />
           </Suspense>
         )}

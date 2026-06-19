@@ -477,7 +477,7 @@ function BookingCard({ booking, onMessage }: { booking: Booking; onMessage?: () 
             )}
             {booking.status === "completed" && booking.hasReview && (
               <p className="text-xs text-muted-foreground text-center py-1">
-                {t("reviews.alreadyLeft") || "Review submitted ✓"}
+                {t("reviews.alreadyLeft")}
               </p>
             )}
             {!contractQuery.isLoading && (

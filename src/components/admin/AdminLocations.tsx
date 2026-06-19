@@ -29,23 +29,23 @@ interface ParseResult {
   errors: string[];
 }
 
-function parseBulkInput(raw: string): ParseResult {
+function parseBulkInput(raw: string, t: (key: string) => string): ParseResult {
   const rows: BulkUnitRow[] = [];
   const errors: string[] = [];
   const trimmed = raw.trim();
-  if (!trimmed) return { rows, errors: ["Empty input"] };
+  if (!trimmed) return { rows, errors: [t("admin.bulkParse.emptyInput")] };
 
   // Try JSON first
   if (trimmed.startsWith("[")) {
     try {
       const parsed = JSON.parse(trimmed);
-      if (!Array.isArray(parsed)) { errors.push("JSON must be an array"); return { rows, errors }; }
+      if (!Array.isArray(parsed)) { errors.push(t("admin.bulkParse.jsonNotArray")); return { rows, errors }; }
       parsed.forEach((item: any, i: number) => {
-        if (!item.title) { errors.push(`Row ${i + 1}: missing title`); return; }
+        if (!item.title) { errors.push(t("admin.bulkParse.missingTitle").replace("{row}", String(i + 1))); return; }
         const validTypes = ["Warehouse", "Moving", "Trailer"];
         const type = validTypes.includes(item.type) ? item.type : "Warehouse";
         const price = parseFloat(item.priceFrom);
-        if (isNaN(price)) { errors.push(`Row ${i + 1}: invalid priceFrom`); return; }
+        if (isNaN(price)) { errors.push(t("admin.bulkParse.invalidPriceFrom").replace("{row}", String(i + 1))); return; }
         rows.push({
           title: String(item.title),
           type: type as BulkUnitRow["type"],
@@ -58,14 +58,14 @@ function parseBulkInput(raw: string): ParseResult {
       });
       return { rows, errors };
     } catch {
-      errors.push("Invalid JSON");
+      errors.push(t("admin.bulkParse.invalidJson"));
       return { rows, errors };
     }
   }
 
   // CSV parsing
   const lines = trimmed.split(/\r?\n/).filter(l => l.trim());
-  if (lines.length < 2) { errors.push("CSV needs a header row + at least one data row"); return { rows, errors }; }
+  if (lines.length < 2) { errors.push(t("admin.bulkParse.csvNeedsHeader")); return { rows, errors }; }
 
   const sep = lines[0].includes("\t") ? "\t" : ",";
   const headers = lines[0].split(sep).map(h => h.trim().toLowerCase());
@@ -74,13 +74,13 @@ function parseBulkInput(raw: string): ParseResult {
   for (let i = 1; i < lines.length; i++) {
     const cells = lines[i].split(sep).map(c => c.trim());
     const title = col("title") >= 0 ? cells[col("title")] : "";
-    if (!title) { errors.push(`Row ${i}: missing title`); continue; }
+    if (!title) { errors.push(t("admin.bulkParse.missingTitle").replace("{row}", String(i))); continue; }
     const rawType = col("type") >= 0 ? cells[col("type")] : "Warehouse";
     const validTypes = ["Warehouse", "Moving", "Trailer"];
-    const type = validTypes.find(t => t.toLowerCase() === (rawType || "").toLowerCase()) || "Warehouse";
+    const type = validTypes.find(vt => vt.toLowerCase() === (rawType || "").toLowerCase()) || "Warehouse";
     const priceRaw = col("pricefrom") >= 0 ? cells[col("pricefrom")] : "";
     const price = parseFloat(priceRaw);
-    if (isNaN(price)) { errors.push(`Row ${i}: invalid priceFrom "${priceRaw}"`); continue; }
+    if (isNaN(price)) { errors.push(t("admin.bulkParse.invalidPriceFromValue").replace("{row}", String(i)).replace("{value}", priceRaw)); continue; }
     const priceUnit = col("priceunit") >= 0 ? cells[col("priceunit")] : "€/month";
     const sizeRaw = col("sizem2") >= 0 ? cells[col("sizem2")] : "";
     const qtyRaw = col("quantitytotal") >= 0 ? cells[col("quantitytotal")] : "";
@@ -126,7 +126,7 @@ function BulkImportDialog({ open, onOpenChange, locationId }: { open: boolean; o
   const [importResult, setImportResult] = useState<{ created: number; failed: number; errors?: string[] } | null>(null);
 
   const handleParse = () => {
-    setParseResult(parseBulkInput(raw));
+    setParseResult(parseBulkInput(raw, t));
     setImportResult(null);
   };
 
@@ -147,9 +147,9 @@ function BulkImportDialog({ open, onOpenChange, locationId }: { open: boolean; o
     } catch (err: any) {
       // Endpoint may not exist yet — show graceful error
       if (err?.status === 404 || err?.statusCode === 404) {
-        toast.error("Bulk import endpoint not yet deployed");
+        toast.error(t("admin.bulkImportNotDeployed"));
       } else {
-        toast.error(err?.message || "Import failed");
+        toast.error(err?.message || t("admin.bulkImportFailed"));
       }
     } finally {
       setImporting(false);
@@ -829,7 +829,7 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
             </div>
             <div>
               <label className={fieldLabel}>{t("admin.locations.openingHours")}</label>
-              <input className={inp} placeholder="E-R 8-20, L 9-15" value={newLoc.openingHours} onChange={(e) => setNewLoc({ ...newLoc, openingHours: e.target.value })} />
+              <input className={inp} placeholder={t("admin.locations.openingHoursPlaceholder")} value={newLoc.openingHours} onChange={(e) => setNewLoc({ ...newLoc, openingHours: e.target.value })} />
             </div>
             <div>
               <label className={fieldLabel}>{t("admin.description")}</label>

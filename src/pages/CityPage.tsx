@@ -162,7 +162,7 @@ export default function CityPage() {
                   )}
                 </div>
                 <div className="p-4">
-                  <h3 className="truncate font-sans text-sm font-semibold text-foreground">{loc.name}</h3>
+                  <h3 className="line-clamp-2 font-sans text-sm font-semibold text-foreground">{loc.name}</h3>
                   <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                     <MapPin className="h-3 w-3 shrink-0" />
                     {loc.address}, {loc.city}

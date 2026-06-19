@@ -57,7 +57,12 @@ export default function AdminPartnerDetailPage() {
     mutationFn: () => supplierService.syncNow(partnerId),
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: queryKeys.adminSupplier.byId(partnerId) });
-      toast.success(res?.message || `Sync OK${res?.unitsRefreshed ? ` — ${res.unitsRefreshed} units` : ""}`);
+      toast.success(
+        res?.message ||
+          (res?.unitsRefreshed
+            ? t("admin.integration.syncOkUnits").replace("{count}", String(res.unitsRefreshed))
+            : t("admin.integration.syncOk"))
+      );
     },
     onError: (err: any) => toast.error(err?.message ?? t("admin.integration.syncFailed")),
   });

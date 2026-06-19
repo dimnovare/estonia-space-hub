@@ -206,7 +206,7 @@ export default function AdminListings() {
                 <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${l.availableNow === true ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>{l.availableNow === true ? t("admin.active") : t("admin.paused")}</span>
               </div>
               <div className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
-                <span>{l.city} · {l.price ?? l.priceFrom}€ · {l.views ?? 0} vaatamist</span>
+                <span>{l.city} · {l.price ?? l.priceFrom}€ · {l.views ?? 0} {t("admin.views").toLowerCase()}</span>
                 <div className="flex items-center gap-1">
                   <button aria-label={t("admin.edit")} onClick={() => openEdit(l)} className="rounded p-1 hover:bg-secondary"><Edit className="h-3.5 w-3.5 text-muted-foreground" /></button>
                   <button aria-label={t("admin.delete")} onClick={() => handleDelete(l.id)} className="rounded p-1 hover:bg-secondary"><Trash2 className="h-3.5 w-3.5 text-destructive" /></button>
@@ -277,7 +277,7 @@ export default function AdminListings() {
             <div>
               <label htmlFor="bulk-partner" className="text-xs font-medium text-muted-foreground">{t("admin.listings.partner")}</label>
               <select id="bulk-partner" className={inp} value={bulkSupplierId} onChange={e => setBulkSupplierId(e.target.value)}>
-                <option value="">— {t("admin.listings.partner")} —</option>
+                <option value="">— {t("admin.listings.selectPartner")} —</option>
                 {suppliers.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
@@ -387,7 +387,7 @@ export default function AdminListings() {
               <div>
                 <label className="text-xs font-medium text-muted-foreground">{t("admin.listings.partner")}</label>
                 <select className={inp} value={editItem.supplierId ?? ""} onChange={e => setEditItem({ ...editItem, supplierId: e.target.value })}>
-                  <option value="">— Vali partner —</option>
+                  <option value="">— {t("admin.listings.selectPartner")} —</option>
                   {suppliers.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
               </div>

@@ -85,7 +85,7 @@ export default function AdminUsers() {
             </div>
             <div className="mt-2 flex items-center gap-2">
               <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${u.role === "admin" ? "bg-primary/10 text-primary" : u.role === "provider" ? "bg-accent/10 text-accent" : "bg-secondary text-muted-foreground"}`}>{roleLabel(u.role)}</span>
-              <span className="text-[10px] text-muted-foreground">{u.bookingsCount} bron.</span>
+              <span className="text-[10px] text-muted-foreground">{u.bookingsCount} {t("admin.bookings")}</span>
             </div>
           </button>
         ))}

@@ -633,7 +633,7 @@ export default function BookingPage() {
                 {listing && (
                   <div className="flex items-center gap-3 rounded-xl border border-border p-3">
                     {listing.image && listing.image.length > 0 ? (
-                      <img src={listing.image} alt={listing?.title || "Listing image"} className="h-16 w-20 rounded-lg object-cover" />
+                      <img src={listing.image} alt={listing?.title || t("booking.listingImageAlt")} className="h-16 w-20 rounded-lg object-cover" />
                     ) : (
                       <div className="flex h-16 w-20 items-center justify-center rounded-lg bg-secondary">
                         <Warehouse className="h-6 w-6 text-muted-foreground/40" />
@@ -1072,7 +1072,7 @@ export default function BookingPage() {
             {listing && (
               <div className="mt-3 flex items-center gap-2">
                 {listing.image && listing.image.length > 0 ? (
-                  <img src={listing.image} alt={listing?.title || "Listing image"} className="h-10 w-12 rounded object-cover" />
+                  <img src={listing.image} alt={listing?.title || t("booking.listingImageAlt")} className="h-10 w-12 rounded object-cover" />
                 ) : (
                   <div className="flex h-10 w-12 items-center justify-center rounded bg-secondary">
                     <Warehouse className="h-4 w-4 text-muted-foreground/40" />

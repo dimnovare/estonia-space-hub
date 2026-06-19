@@ -130,7 +130,7 @@ export default function ProviderBilling() {
                 <span className="text-[13px] text-muted-foreground">{t("provider.billing.nextInvoice")}</span>
                 <Receipt className="h-[18px] w-[18px] text-muted-foreground/70" />
               </div>
-              <div className="mt-1 font-display text-[30px] font-extrabold leading-none text-navy-ink">Jul 1</div>
+              <div className="mt-1 font-display text-[30px] font-extrabold leading-none text-navy-ink">{t("provider.billing.nextInvoiceDate")}</div>
               <div className="mt-1.5 text-xs text-muted-foreground">{t("provider.billing.optionalToolsOnly")}</div>
             </div>
           </div>

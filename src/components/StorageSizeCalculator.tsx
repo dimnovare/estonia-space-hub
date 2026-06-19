@@ -123,7 +123,7 @@ export default function StorageSizeCalculator() {
                         })
                       }
                       className="text-muted-foreground hover:text-destructive"
-                      aria-label="Remove one"
+                      aria-label={t("calculator.removeOne")}
                     >
                       ×
                     </button>

@@ -179,7 +179,7 @@ export default function ProviderIncomingOrders() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="hidden gap-1 text-xs sm:inline-flex"
+                      className="inline-flex gap-1 text-xs"
                       onClick={() => {
                         setSelectedOrder(order);
                         setShowEmail(true);

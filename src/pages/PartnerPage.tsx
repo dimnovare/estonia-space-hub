@@ -213,7 +213,7 @@ export default function PartnerPage() {
             {/* 72px white rounded-14px monogram tile, navy letter */}
             <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-[14px] bg-white shadow-card">
               {partner.logoUrl ? (
-                <img src={partner.logoUrl} alt={`${partner.name} logo`} className="h-12 w-12 object-contain" />
+                <img src={partner.logoUrl} alt={t("partner.logoAlt").replace("{name}", partner.name)} className="h-12 w-12 object-contain" />
               ) : (
                 <span className="font-display text-[28px] font-extrabold text-primary">
                   {partner.name.charAt(0).toUpperCase()}

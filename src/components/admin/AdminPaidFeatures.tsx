@@ -28,9 +28,9 @@ const CATEGORY_META: Record<Category, { icon: typeof Sparkles; tile: string }> =
 
 const SCOPES: Scope[] = ["supplier", "location", "listing", "platform"];
 
-function formatPrice(amount: number, currency: string, interval: string, freeLabel: string) {
+function formatPrice(amount: number, currency: string, interval: string, freeLabel: string, monthlySuffix: string, yearlySuffix: string) {
   if (amount <= 0) return freeLabel;
-  const suffix = interval === "monthly" ? "/mo" : interval === "yearly" ? "/yr" : "";
+  const suffix = interval === "monthly" ? monthlySuffix : interval === "yearly" ? yearlySuffix : "";
   return `${amount.toFixed(0)} ${currency}${suffix}`;
 }
 
@@ -243,7 +243,7 @@ export default function AdminPaidFeatures() {
                           </td>
                           <td className="px-5 py-3.5 align-top">
                             <span className="font-display font-bold text-navy-ink">
-                              {formatPrice(f.priceAmount, f.priceCurrency, f.billingInterval, t("admin.paidFeatures.free"))}
+                              {formatPrice(f.priceAmount, f.priceCurrency, f.billingInterval, t("admin.paidFeatures.free"), t("account.perMonthShort"), t("admin.partner.feature.perYear"))}
                             </span>
                           </td>
                           <td className="px-5 py-3.5 align-top">

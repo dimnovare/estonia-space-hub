@@ -124,7 +124,7 @@ export default function ContactPage() {
             {[
               { icon: Mail, label: t("contact.email"), value: settings.siteEmail },
               { icon: Phone, label: t("contact.phone"), value: settings.sitePhone },
-              { icon: MapPin, label: t("contact.location"), value: "Tallinn, Eesti" },
+              { icon: MapPin, label: t("contact.location"), value: t("footer.location") },
               { icon: Clock, label: t("contact.support"), value: settings.openHours },
             ].map((c, i) => {
               const Icon = c.icon;

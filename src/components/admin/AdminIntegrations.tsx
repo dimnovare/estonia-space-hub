@@ -75,7 +75,7 @@ export default function AdminIntegrations() {
               <div className="flex items-center gap-2 sm:shrink-0">
                 {s.lastTestResult && (
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium shrink-0 ${s.lastTestResult === "success" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
-                    {s.lastTestResult === "success" ? "✓ OK" : "✗ Fail"}
+                    {s.lastTestResult === "success" ? `✓ ${t("admin.integrations.testOk")}` : `✗ ${t("admin.integrations.testFail")}`}
                   </span>
                 )}
                 <Button variant="outline" size="sm" onClick={() => openEdit(s)} className="shrink-0"><Edit className="h-3.5 w-3.5 mr-1" /> {t("admin.edit")}</Button>
@@ -131,7 +131,7 @@ export default function AdminIntegrations() {
                 <div>
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-medium text-muted-foreground">
-                      {t("admin.mappingProfile") || "Custom payload template"}
+                      {t("admin.mappingProfile")}
                     </label>
                     <button
                       type="button"
@@ -156,7 +156,7 @@ export default function AdminIntegrations() {
                         }, null, 2)
                       })}
                     >
-                      {t("admin.insertTemplate") || "Insert example template"}
+                      {t("admin.insertTemplate")}
                     </button>
                   </div>
                   <textarea
@@ -164,10 +164,10 @@ export default function AdminIntegrations() {
                     className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-accent"
                     value={editItem.mappingProfile || ""}
                     onChange={e => setEditItem({ ...editItem, mappingProfile: e.target.value })}
-                    placeholder='Leave empty for default payload. Use {{placeholders}} for custom mapping.'
+                    placeholder={t("admin.integrations.mappingPlaceholder")}
                   />
                   <p className="mt-1 text-[10px] text-muted-foreground">
-                    {t("admin.mappingHint") || "Available: {{orderId}}, {{listingTitle}}, {{listingType}}, {{startDate}}, {{endDate}}, {{duration}}, {{customerName}}, {{customerEmail}}, {{customerPhone}}, {{supplierPrice}}, {{extrasTotal}}, {{extras}}, {{notes}}"}
+                    {t("admin.mappingHint")}
                   </p>
                 </div>
               )}

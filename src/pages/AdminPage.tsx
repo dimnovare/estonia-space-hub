@@ -37,7 +37,7 @@ export default function AdminPage() {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
-      <SEO title="Admin — Ruumly" description="" noindex={true} />
+      <SEO title={`${t("seo.admin")} — Ruumly`} description="" noindex={true} />
       <AdminSidebar activeTab={activeTab} />
       <div className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6">
         {["locations", "orders", "payouts", "rebates"].includes(activeTab) && (

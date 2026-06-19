@@ -17,8 +17,8 @@ export default function MaintenancePage({ apiUnreachable }: Props) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-center">
       <SEO
-        title={isUnreachable ? "Teenus kättesaamatu — Ruumly" : "Hooldus — Ruumly"}
-        description={isUnreachable ? "Ruumly teenus on ajutiselt kättesaamatu." : "Ruumly on hetkel hoolduses. Tuleme varsti tagasi."}
+        title={isUnreachable ? `${t("maintenance.unreachable.seoTitle")} — Ruumly` : `${t("maintenance.seoTitle")} — Ruumly`}
+        description={isUnreachable ? t("maintenance.unreachable.seoDesc") : t("maintenance.seoDesc")}
         noindex={true}
       />
       <div className="mb-6 rounded-full bg-accent/10 p-4">

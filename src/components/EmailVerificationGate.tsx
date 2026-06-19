@@ -49,7 +49,7 @@ export function EmailVerificationGate({ onDismiss, className }: EmailVerificatio
           type="button"
           onClick={onDismiss}
           className="absolute right-3 top-3 rounded p-0.5 opacity-60 hover:opacity-100"
-          aria-label="Dismiss"
+          aria-label={t("common.close")}
         >
           <X className="h-4 w-4" />
         </button>

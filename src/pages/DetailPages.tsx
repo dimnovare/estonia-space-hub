@@ -489,7 +489,7 @@ function RequestModal({
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="flex flex-1 flex-col gap-1.5">
               <label htmlFor="req-email" className="text-[13px] font-semibold text-ink-2">{t("detail.requestEmailLabel")}</label>
-              <input id="req-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" className={inputCls} required />
+              <input id="req-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("booking.placeholder.email")} className={inputCls} required />
             </div>
             <div className="flex flex-1 flex-col gap-1.5">
               <label htmlFor="req-phone" className="text-[13px] font-semibold text-ink-2">{t("detail.requestPhoneLabel")}</label>
