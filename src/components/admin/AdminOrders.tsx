@@ -158,7 +158,7 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
                     <td className="px-4 py-3 font-medium">{o.customerName}</td>
                     <td className="px-4 py-3 text-muted-foreground">{o.listingTitle}</td>
                     <td className="px-4 py-3 text-muted-foreground">{o.supplierName}</td>
-                    <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${intConf.color}`}><IntIcon className="h-3 w-3" />{intConf.label}</span></td>
+                    <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${intConf.color}`}><IntIcon className="h-3 w-3" />{t(intConf.labelKey) || intConf.label}</span></td>
                     <td className="px-4 py-3 font-medium">€{o.total}</td>
                     <td className="px-4 py-3 text-success font-medium">€{o.margin}</td>
                     <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${statusConf.color}`}>{t(statusConf.labelKey) || statusConf.label}</span></td>
@@ -198,7 +198,7 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
                 <div><span className="text-xs text-muted-foreground">{t("admin.phone")}</span><p className="font-medium">{viewOrder.customerPhone}</p></div>
                 <div><span className="text-xs text-muted-foreground">{t("admin.service")}</span><p className="font-medium">{viewOrder.listingTitle}</p></div>
                 <div><span className="text-xs text-muted-foreground">{t("admin.partner")}</span><p className="font-medium">{viewOrder.supplierName}</p></div>
-                <div><span className="text-xs text-muted-foreground">{t("admin.integration")}</span><p><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${INTEGRATION_TYPE_CONFIG[viewOrder.integrationType].color}`}>{INTEGRATION_TYPE_CONFIG[viewOrder.integrationType].label}</span></p></div>
+                <div><span className="text-xs text-muted-foreground">{t("admin.integration")}</span><p><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${INTEGRATION_TYPE_CONFIG[viewOrder.integrationType].color}`}>{t(INTEGRATION_TYPE_CONFIG[viewOrder.integrationType].labelKey) || INTEGRATION_TYPE_CONFIG[viewOrder.integrationType].label}</span></p></div>
                 <div><span className="text-xs text-muted-foreground">{t("admin.startDate")}</span><p className="font-medium">{viewOrder.startDate}</p></div>
                 <div><span className="text-xs text-muted-foreground">{t("admin.period")}</span><p className="font-medium">{viewOrder.duration}</p></div>
               </div>
@@ -206,7 +206,7 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
                 <h3 className="flex items-center gap-2 text-sm font-semibold"><Send className="h-4 w-4 text-accent" /> {t("admin.fulfillment")}</h3>
                 <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                   <div><span className="text-xs text-muted-foreground">{t("admin.approvalMode")}</span><p className="font-medium">{viewOrder.integrationType === "api" ? t("admin.approvalAuto") : t("admin.approvalAdmin")}</p></div>
-                  <div><span className="text-xs text-muted-foreground">{t("admin.postingChannel")}</span><p className="font-medium">{INTEGRATION_TYPE_CONFIG[viewOrder.integrationType].label}</p></div>
+                  <div><span className="text-xs text-muted-foreground">{t("admin.postingChannel")}</span><p className="font-medium">{t(INTEGRATION_TYPE_CONFIG[viewOrder.integrationType].labelKey) || INTEGRATION_TYPE_CONFIG[viewOrder.integrationType].label}</p></div>
                   {viewOrder.sentAt && <div><span className="text-xs text-muted-foreground">{t("admin.markSent")}</span><p className="font-medium">{viewOrder.sentAt}</p></div>}
                   {viewOrder.confirmedAt && <div><span className="text-xs text-muted-foreground">{t("admin.markConfirmed")}</span><p className="font-medium">{viewOrder.confirmedAt}</p></div>}
                 </div>

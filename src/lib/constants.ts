@@ -12,10 +12,10 @@ export const ESTONIAN_CITIES = BALTIC_CITIES.EE;
 // All cities flattened for search
 export const ALL_CITIES = [...BALTIC_CITIES.EE, ...BALTIC_CITIES.LV, ...BALTIC_CITIES.LT];
 
-export const INTEGRATION_TYPE_CONFIG: Record<IntegrationType, { label: string; color: string; description: string }> = {
-  api: { label: "API", color: "bg-success/10 text-success", description: "Automatic API integration" },
-  email: { label: "Email", color: "bg-info/10 text-info", description: "Order sent via email" },
-  manual: { label: "Manual", color: "bg-warning/10 text-warning", description: "Operator forwards manually" },
+export const INTEGRATION_TYPE_CONFIG: Record<IntegrationType, { labelKey: string; label: string; color: string; description: string }> = {
+  api: { labelKey: "admin.integrationApi", label: "API", color: "bg-success/10 text-success", description: "Automatic API integration" },
+  email: { labelKey: "admin.integrationEmail", label: "Email", color: "bg-info/10 text-info", description: "Order sent via email" },
+  manual: { labelKey: "admin.integrationManual", label: "Manual", color: "bg-warning/10 text-warning", description: "Operator forwards manually" },
 };
 
 export const ORDER_STATUS_CONFIG: Record<OrderStatus, { labelKey: string; label: string; color: string }> = {

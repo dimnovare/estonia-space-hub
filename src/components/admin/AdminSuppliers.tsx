@@ -229,7 +229,7 @@ export default function AdminSuppliers() {
               <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s.isActive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{s.isActive ? t("admin.active") : t("admin.inactive")}</span>
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${INTEGRATION_TYPE_CONFIG[s.integrationType].color}`}>{intIcon(s.integrationType)} {INTEGRATION_TYPE_CONFIG[s.integrationType].label}</span>
+              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${INTEGRATION_TYPE_CONFIG[s.integrationType].color}`}>{intIcon(s.integrationType)} {t(INTEGRATION_TYPE_CONFIG[s.integrationType].labelKey) || INTEGRATION_TYPE_CONFIG[s.integrationType].label}</span>
               <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${healthColor(s.integrationHealth)}`}>{healthLabel(s.integrationHealth)}</span>
               <span className="text-xs text-muted-foreground">{s.listingCount} {t("admin.listingsLabel")}</span>
               <span className="text-xs font-medium">€{s.revenue.toLocaleString()}</span>
@@ -262,7 +262,7 @@ export default function AdminSuppliers() {
               <tr key={s.id} className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors">
                 <td className="px-4 py-3"><div className="font-medium">{s.name}{!s.isActive && <span className="ml-2 rounded-full bg-destructive/10 px-2 py-0.5 text-xs text-destructive">{t("admin.deactivated") || "Deactivated"}</span>}</div><div className="text-[10px] text-muted-foreground font-mono">{s.registryCode}</div></td>
                 <td className="px-4 py-3"><div className="text-xs">{s.contactName}</div><div className="text-[10px] text-muted-foreground">{s.contactEmail}</div></td>
-                <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${INTEGRATION_TYPE_CONFIG[s.integrationType].color}`}>{intIcon(s.integrationType)} {INTEGRATION_TYPE_CONFIG[s.integrationType].label}</span></td>
+                <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${INTEGRATION_TYPE_CONFIG[s.integrationType].color}`}>{intIcon(s.integrationType)} {t(INTEGRATION_TYPE_CONFIG[s.integrationType].labelKey) || INTEGRATION_TYPE_CONFIG[s.integrationType].label}</span></td>
                 <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${healthColor(s.integrationHealth)}`}>{healthLabel(s.integrationHealth)}</span></td>
                 <td className="px-4 py-3 text-muted-foreground">{s.listingCount}</td>
                 <td className="px-4 py-3 text-muted-foreground">{s.ordersTotal}</td>
@@ -527,9 +527,9 @@ export default function AdminSuppliers() {
                   <div>
                     <p className="text-xs text-muted-foreground">{t("admin.type")}</p>
                     <select className={inp} value={selected.integrationType} onChange={(e) => setSelected({ ...selected, integrationType: e.target.value as any })}>
-                      <option value="manual">{INTEGRATION_TYPE_CONFIG["manual"].label}</option>
-                      <option value="email">{INTEGRATION_TYPE_CONFIG["email"].label}</option>
-                      <option value="api">{INTEGRATION_TYPE_CONFIG["api"].label}</option>
+                      <option value="manual">{t(INTEGRATION_TYPE_CONFIG["manual"].labelKey) || INTEGRATION_TYPE_CONFIG["manual"].label}</option>
+                      <option value="email">{t(INTEGRATION_TYPE_CONFIG["email"].labelKey) || INTEGRATION_TYPE_CONFIG["email"].label}</option>
+                      <option value="api">{t(INTEGRATION_TYPE_CONFIG["api"].labelKey) || INTEGRATION_TYPE_CONFIG["api"].label}</option>
                     </select>
                   </div>
                   <div><p className="text-xs text-muted-foreground">{t("admin.health")}</p><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${healthColor(selected.integrationHealth)}`}>{healthLabel(selected.integrationHealth)}</span></div>
