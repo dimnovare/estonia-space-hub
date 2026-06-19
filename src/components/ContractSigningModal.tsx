@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
-import { apiClient } from "@/services/apiClient";
+import { apiClient, tokenStore } from "@/services/apiClient";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
@@ -125,15 +125,23 @@ function DokobitSigningFlow({
     setDownloading(true);
     setDownloadError(false);
     try {
-      // Spec §7: GET /contracts/{bookingId}/download → { url }
-      const result = await apiClient.get<{ url: string }>(
-        `/contracts/${bookingId}/download`
-      );
-      if (result?.url) {
-        window.open(result.url, "_blank", "noopener,noreferrer");
-      } else {
+      // The signed PDF carries verified national-ID PII, so the backend streams
+      // the bytes through the auth-gated endpoint instead of exposing a public URL.
+      const baseUrl = import.meta.env.VITE_API_URL || "";
+      const token = tokenStore.getAccess();
+      const res = await fetch(`${baseUrl}/api/contracts/${bookingId}/download`, {
+        credentials: "include",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) {
         setDownloadError(true);
+        return;
       }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank", "noopener,noreferrer");
+      // Keep the object URL alive long enough for the new tab to load it.
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch {
       setDownloadError(true);
     } finally {

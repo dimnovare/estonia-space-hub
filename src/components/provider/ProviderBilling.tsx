@@ -74,11 +74,9 @@ export default function ProviderBilling() {
   ];
   const activeCount = optionalFeatures.filter((f) => f.active).length;
 
-  // Static optional-tool invoices (download wired to a per-invoice endpoint).
-  const invoices = [
-    { id: "INV-2026-06", desc: t("provider.billing.invoiceJune"), amount: "€29.00", date: "2026-06-01" },
-    { id: "INV-2026-05", desc: t("provider.billing.invoiceMay"), amount: "€29.00", date: "2026-05-01" },
-  ];
+  // Real invoices come from the billing backend. Until a partner-billing invoice
+  // endpoint is wired, show a truthful empty state — never fabricated "Paid" rows.
+  const invoices: { id: string; desc: string; amount: string; date: string }[] = [];
 
   const downloadInvoice = (invId: string) => {
     // No invoice-PDF endpoint exists yet (see backendNeeds). Keep the action live
@@ -223,6 +221,13 @@ export default function ProviderBilling() {
                   </tr>
                 </thead>
                 <tbody>
+                  {invoices.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-5 py-10 text-center text-sm text-muted-foreground">
+                        {t("provider.billing.noInvoices")}
+                      </td>
+                    </tr>
+                  )}
                   {invoices.map((inv) => (
                     <tr key={inv.id} className="border-b border-border last:border-0">
                       <td className="px-5 py-4 font-mono text-xs text-muted-foreground">{inv.id}</td>

@@ -57,7 +57,7 @@ test.describe("Critical customer path: search → detail → book", () => {
     await expect(bookBtn).toBeVisible({ timeout: 10000 });
   });
 
-  test("full flow: search → card → detail → Book opens the booking modal", async ({ page }) => {
+  test("full flow: search → card → detail → Book routes to the /book funnel", async ({ page }) => {
     await stubAll(page);
     await page.goto("/et/search");
     await page.getByText("Testkeskuse Ladu").first().click();
@@ -65,6 +65,7 @@ test.describe("Critical customer path: search → detail → book", () => {
     const bookBtn = page.getByRole("button", { name: /broneeri|book online/i }).first();
     await expect(bookBtn).toBeVisible({ timeout: 10000 });
     await bookBtn.click();
-    await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10000 });
+    // Detail-page "Book online" now enters the real booking funnel, not a fake modal.
+    await expect(page).toHaveURL(/\/book(\?|$)/, { timeout: 10000 });
   });
 });

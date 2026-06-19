@@ -243,8 +243,16 @@ export default function BookingPage() {
   const savings = Math.round((publicPrice - ourPrice) * 100) / 100;
   const extrasTotal = selectedExtras.reduce(
     (s, id) => s + (listingExtras.find(e => e.key === id)?.price || 0), 0);
+  const vatRate = listing?.vatRate ?? 0;
+  const pricesIncludeVat = listing?.pricesIncludeVat ?? true;
+  const subtotal = Math.round((ourPrice + extrasTotal) * 100) / 100;
+  // Match the server (BookingService): inclusive prices already contain VAT;
+  // exclusive prices have VAT ADDED on top (the server charges subtotal + VAT),
+  // so the displayed total must add it too — otherwise the charge would exceed
+  // what the customer saw at review.
+  const vatAdded = pricesIncludeVat ? 0 : Math.round(subtotal * vatRate) / 100;
   const pricing = listing
-    ? { total: Math.round((ourPrice + extrasTotal) * 100) / 100, extrasTotal }
+    ? { total: Math.round((subtotal + vatAdded) * 100) / 100, subtotal, extrasTotal, vatRate, pricesIncludeVat, vatAdded }
     : null;
 
   const lastStep = steps.length - 1;
@@ -883,7 +891,13 @@ export default function BookingPage() {
                       {extrasTotal > 0 && (
                         <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.extras")}</span><span className="font-medium">+{extrasTotal}€</span></div>
                       )}
-                      {extrasTotal > 0 && (
+                      {vatRate > 0 && (
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>{(pricesIncludeVat ? t("booking.inclVat") : t("booking.vatAdded")).replace("{rate}", String(vatRate))}</span>
+                          {!pricesIncludeVat && <span>+{vatAdded}€</span>}
+                        </div>
+                      )}
+                      {(extrasTotal > 0 || vatAdded > 0) && (
                         <div className="flex justify-between font-semibold border-t border-border pt-1 mt-1"><span>{t("booking.totalWithExtras")}</span><span className="text-accent">{pricing?.total}€</span></div>
                       )}
                     </div>
@@ -1093,10 +1107,16 @@ export default function BookingPage() {
                 <div className="flex justify-between font-bold"><span>{t("booking.ourPrice")}</span><span className="text-accent">{ourPrice}€</span></div>
                 <div className="flex justify-between text-success font-medium"><span>{t("booking.savings")}</span><span>-{savings}€</span></div>
                 {extrasTotal > 0 && (
-                  <>
-                    <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.extras")}</span><span>+{extrasTotal}€</span></div>
-                    <div className="flex justify-between font-bold border-t border-border pt-1 mt-1"><span>{t("booking.total")}</span><span className="text-accent">{pricing?.total}€</span></div>
-                  </>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.extras")}</span><span>+{extrasTotal}€</span></div>
+                )}
+                {vatRate > 0 && (
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>{(pricesIncludeVat ? t("booking.inclVat") : t("booking.vatAdded")).replace("{rate}", String(vatRate))}</span>
+                    {!pricesIncludeVat && <span>+{vatAdded}€</span>}
+                  </div>
+                )}
+                {(extrasTotal > 0 || vatAdded > 0) && (
+                  <div className="flex justify-between font-bold border-t border-border pt-1 mt-1"><span>{t("booking.total")}</span><span className="text-accent">{pricing?.total}€</span></div>
                 )}
               </div>
             )}

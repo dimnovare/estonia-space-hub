@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "@/i18n/routing";
+import { useParams, Link, useNavigate } from "@/i18n/routing";
 import {
   MapPin,
   Star,
@@ -38,14 +38,19 @@ import { trackEvent } from "@/lib/analytics";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPriceUnit, parseBillingPeriod } from "@/lib/priceUnit";
 
-const DEFAULT_MOVE_IN = "2026-07-01";
+// Default move-in/pickup = tomorrow, computed at mount (never a hardcoded date).
+const defaultMoveIn = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().slice(0, 10);
+};
 
 function buildProductSchema(listing: Listing, lang: string) {
   const schema: any = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: listing.title,
-    url: `https://ruumly.eu/${lang}/listing/${listing.id}`,
+    url: `https://ruumly.eu/${lang}/${listing.type}/${listing.id}`,
     description: listing.description || listing.title,
     image: listing.image || undefined,
     brand: { "@type": "Brand", name: listing.provider },
@@ -100,7 +105,7 @@ function buildBreadcrumbSchema(listing: Listing, lang: string) {
         "@type": "ListItem",
         position: 3,
         name: listing.title,
-        item: `https://ruumly.eu/${lang}/listing/${listing.id}`,
+        item: `https://ruumly.eu/${lang}/${listing.type}/${listing.id}`,
       },
     ],
   };
@@ -714,8 +719,9 @@ function composeAbout(t: (k: string) => string, listing: Listing, typeLabel: str
 export function WarehouseDetail() {
   const { id } = useParams();
   const { t, language } = useLanguage();
-  const [moveInDate, setMoveInDate] = useState(DEFAULT_MOVE_IN);
+  const [moveInDate, setMoveInDate] = useState(defaultMoveIn());
   const [duration, setDuration] = useState("1");
+  const navigate = useNavigate();
   const [bookingOpen, setBookingOpen] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
   const { data: listing, isLoading } = useListing(id);
@@ -831,7 +837,7 @@ export function WarehouseDetail() {
             </div>
 
             <div className="mt-5">
-              <BookingActions listing={wListing} onBook={() => setBookingOpen(true)} onRequest={() => setRequestOpen(true)} />
+              <BookingActions listing={wListing} onBook={() => navigate(`/book?listing=${wListing.id}&type=${wListing.type}`)} onRequest={() => setRequestOpen(true)} />
             </div>
 
             <BookingSummaryRail listing={wListing} />
@@ -847,7 +853,7 @@ export function WarehouseDetail() {
           <div className="font-display text-lg font-extrabold text-navy-ink">€{wListing.priceFrom}
             <span className="ml-1 text-xs font-normal text-muted-foreground">{formatPriceUnit(wListing.priceUnit, t)}</span>
           </div>
-          <MobileBookingAction listing={wListing} onBook={() => setBookingOpen(true)} onRequest={() => setRequestOpen(true)} className="shrink-0" />
+          <MobileBookingAction listing={wListing} onBook={() => navigate(`/book?listing=${wListing.id}&type=${wListing.type}`)} onRequest={() => setRequestOpen(true)} className="shrink-0" />
         </div>
       </div>
 
@@ -861,8 +867,9 @@ export function MovingDetail() {
   const { id } = useParams();
   const { t, language } = useLanguage();
   const { showMovingService } = usePlatformSettings();
-  const [moveInDate, setMoveInDate] = useState(DEFAULT_MOVE_IN);
+  const [moveInDate, setMoveInDate] = useState(defaultMoveIn());
   const [crew, setCrew] = useState("1");
+  const navigate = useNavigate();
   const [bookingOpen, setBookingOpen] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
   const { data: listing, isLoading } = useListing(id);
@@ -971,7 +978,7 @@ export function MovingDetail() {
             </div>
 
             <div className="mt-5">
-              <BookingActions listing={mListing} onBook={() => setBookingOpen(true)} onRequest={() => setRequestOpen(true)} />
+              <BookingActions listing={mListing} onBook={() => navigate(`/book?listing=${mListing.id}&type=${mListing.type}`)} onRequest={() => setRequestOpen(true)} />
             </div>
             <BookingSummaryRail listing={mListing} />
           </div>
@@ -986,7 +993,7 @@ export function MovingDetail() {
           <div className="font-display text-lg font-extrabold text-navy-ink">€{mListing.priceFrom}
             <span className="ml-1 text-xs font-normal text-muted-foreground">{formatPriceUnit(mListing.priceUnit, t)}</span>
           </div>
-          <MobileBookingAction listing={mListing} onBook={() => setBookingOpen(true)} onRequest={() => setRequestOpen(true)} className="shrink-0" />
+          <MobileBookingAction listing={mListing} onBook={() => navigate(`/book?listing=${mListing.id}&type=${mListing.type}`)} onRequest={() => setRequestOpen(true)} className="shrink-0" />
         </div>
       </div>
 
@@ -1000,8 +1007,9 @@ export function TrailerDetail() {
   const { id } = useParams();
   const { t, language } = useLanguage();
   const { showTrailerService } = usePlatformSettings();
-  const [pickupDate, setPickupDate] = useState(DEFAULT_MOVE_IN);
+  const [pickupDate, setPickupDate] = useState(defaultMoveIn());
   const [days, setDays] = useState("1");
+  const navigate = useNavigate();
   const [bookingOpen, setBookingOpen] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
   const { data: listing, isLoading } = useListing(id);
@@ -1107,7 +1115,7 @@ export function TrailerDetail() {
             </div>
 
             <div className="mt-5">
-              <BookingActions listing={tListing} onBook={() => setBookingOpen(true)} onRequest={() => setRequestOpen(true)} />
+              <BookingActions listing={tListing} onBook={() => navigate(`/book?listing=${tListing.id}&type=${tListing.type}`)} onRequest={() => setRequestOpen(true)} />
             </div>
             <BookingSummaryRail listing={tListing} />
           </div>
@@ -1122,7 +1130,7 @@ export function TrailerDetail() {
           <div className="font-display text-lg font-extrabold text-navy-ink">€{tListing.priceFrom}
             <span className="ml-1 text-xs font-normal text-muted-foreground">{formatPriceUnit(tListing.priceUnit, t)}</span>
           </div>
-          <MobileBookingAction listing={tListing} onBook={() => setBookingOpen(true)} onRequest={() => setRequestOpen(true)} className="shrink-0" />
+          <MobileBookingAction listing={tListing} onBook={() => navigate(`/book?listing=${tListing.id}&type=${tListing.type}`)} onRequest={() => setRequestOpen(true)} className="shrink-0" />
         </div>
       </div>
 

@@ -57,7 +57,7 @@ test.describe("Listing detail page", () => {
     await expect(bookBtn).toBeVisible({ timeout: 10000 });
   });
 
-  test("clicking Book online opens the confirm-booking modal", async ({ page }) => {
+  test("clicking Book online routes to the real /book funnel", async ({ page }) => {
     await stubAll(page);
     await page.goto("/et/warehouse/wh-001");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("My Unit", {
@@ -65,7 +65,9 @@ test.describe("Listing detail page", () => {
     });
     const bookBtn = page.getByRole("button", { name: /broneeri|book online/i }).first();
     await bookBtn.click();
-    await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10000 });
+    // The detail-page CTA now navigates to the real booking flow (which actually
+    // creates a booking + sign + payment) rather than opening a fake lead modal.
+    await expect(page).toHaveURL(/\/book(\?|$)/, { timeout: 10000 });
   });
 
   test("unknown listing id returning 404 renders the not-found state", async ({ page }) => {
