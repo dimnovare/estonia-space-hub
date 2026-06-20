@@ -768,7 +768,7 @@ export default function SearchPage() {
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
                     <Warehouse className="h-6 w-6 text-muted-foreground" />
                   </div>
-                  <h3 className="mt-4 font-display text-lg font-semibold text-foreground">{t("empty.search.title")}</h3>
+                  <h2 className="mt-4 font-display text-lg font-semibold text-foreground">{t("empty.search.title")}</h2>
                   <p className="mt-1.5 text-sm text-muted-foreground">{t("search.empty.notifyDesc")}</p>
 
                   {/* Demand-lead capture — primary action of the empty state */}

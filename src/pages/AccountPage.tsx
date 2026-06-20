@@ -965,9 +965,14 @@ function AccountNotifications() {
             <div
               key={n.id}
               onClick={() => handleNotificationClick(n)}
+              role={n.actionUrl ? "button" : undefined}
+              tabIndex={n.actionUrl ? 0 : undefined}
+              onKeyDown={n.actionUrl ? (e) => {
+                if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleNotificationClick(n); }
+              } : undefined}
               className={`flex items-start gap-3.5 rounded-[14px] border border-line bg-card p-4 shadow-card transition-all
                 ${n.read ? "opacity-60" : ""}
-                ${n.actionUrl ? "cursor-pointer hover:-translate-y-0.5 hover:border-teal-deep/40 hover:shadow-elevated" : ""}`}
+                ${n.actionUrl ? "cursor-pointer hover:-translate-y-0.5 hover:border-teal-deep/40 hover:shadow-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" : ""}`}
             >
               <div className={`flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[12px] ${tile}`}>
                 <NIcon className="h-[18px] w-[18px]" />

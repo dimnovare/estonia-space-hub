@@ -272,6 +272,12 @@ export default function BookingPage() {
     : null;
 
   const lastStep = steps.length - 1;
+  // Reassurance line shown above the Confirm button. Make it method-aware so the
+  // pay-later expiry consequence (auto-cancel if unpaid) is surfaced once here —
+  // not only inside the collapsed payment-method explainer (UX P2-5).
+  const reassuranceText = (!isRebateModel && paymentMethod === "later")
+    ? t("booking.payLaterWarning")
+    : t("booking.paymentReassurance");
   const submitFromContact = () => {
     // Final step is the contact step (rebate: no payment step) — require auth, then submit.
     if (!isAuthenticated) {
@@ -1119,7 +1125,7 @@ export default function BookingPage() {
                 )}
               </Button>
               {step === steps.length - 1 && (
-                <p className="text-xs text-muted-foreground text-right max-w-xs">{t("booking.paymentReassurance")}</p>
+                <p className="text-xs text-muted-foreground text-right max-w-xs">{reassuranceText}</p>
               )}
             </div>
           </div>
@@ -1175,7 +1181,7 @@ export default function BookingPage() {
       <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card px-3 pt-2 pb-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
         {/* Reassurance copy on final step */}
         {step === steps.length - 1 && (
-          <p className="mb-1 text-xs text-muted-foreground text-center">{t("booking.paymentReassurance")}</p>
+          <p className="mb-1 text-xs text-muted-foreground text-center">{reassuranceText}</p>
         )}
         {/* Pricing summary row */}
         <div className="mb-2 flex items-center justify-between text-xs">
