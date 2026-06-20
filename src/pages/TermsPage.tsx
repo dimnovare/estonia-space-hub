@@ -5,7 +5,7 @@ import { SEO } from "@/components/SEO";
 
 export default function TermsPage() {
   const { t } = useLanguage();
-  const sections = ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"] as const;
+  const sections = ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s9", "s10", "s11", "s8"] as const;
 
   return (
     <div>
