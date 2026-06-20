@@ -945,6 +945,7 @@ export default function BookingPage() {
                       {(extrasTotal > 0 || vatAdded > 0) && (
                         <div className="flex justify-between font-semibold border-t border-border pt-1 mt-1"><span>{t("booking.totalWithExtras")}</span><span className="text-accent">{pricing?.total}€</span></div>
                       )}
+                      <p className="pt-1 text-[11px] text-muted-foreground">{t("booking.priceEstimateNote")}</p>
                     </div>
                   )}
                 </div>
@@ -1163,6 +1164,7 @@ export default function BookingPage() {
                 {(extrasTotal > 0 || vatAdded > 0) && (
                   <div className="flex justify-between font-bold border-t border-border pt-1 mt-1"><span>{t("booking.total")}</span><span className="text-accent">{pricing?.total}€</span></div>
                 )}
+                <p className="pt-1 text-[11px] leading-snug text-muted-foreground">{t("booking.priceEstimateNote")}</p>
               </div>
             )}
           </div>

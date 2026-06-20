@@ -102,9 +102,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (data?.accessToken) {
           tokenStore.setAccess(data.accessToken);
           if (data.csrfToken) tokenStore.setCsrf(data.csrfToken);
-          // Use stored profile for instant UI while token is valid
-          const profile = stored ? JSON.parse(stored) : null;
-          if (profile) setUser(profile);
+          // Make the SERVER the source of truth for identity/role: the refresh
+          // response carries the authoritative user (loaded from the DB), so a
+          // tampered cached role in localStorage can never drive client-side
+          // gating. Fall back to the cached profile only if the server response
+          // unexpectedly omits the user object.
+          if (data.user) {
+            const authoritative = normalizeUser(data.user);
+            setUser(authoritative);
+            try { localStorage.setItem("ruumly-auth", JSON.stringify(authoritative)); } catch {}
+          } else {
+            try {
+              const profile = stored ? JSON.parse(stored) : null;
+              if (profile) setUser(profile);
+            } catch {}
+          }
         } else {
           tokenStore.clear();
           localStorage.removeItem("ruumly-auth");

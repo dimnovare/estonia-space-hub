@@ -9,6 +9,9 @@ export const LANGUAGES: { code: Language; label: string; flag: string }[] = [
 ];
 
 const et: Record<string, string> = {
+    "contract.identityVerified": "Isik tuvastatud",
+    "contract.selfDeclared": "Omakäeline allkiri",
+    "booking.priceEstimateNote": "See on hinnanguline summa. Lõplik summa kinnitatakse maksmisel.",
     "admin.settings.bankTransferTitle": "Pangaülekanne",
     "admin.settings.bankTransferDesc": "Luba klientidel maksta pangaülekandega platvormi kontole. Sina uhildad maksed ja margid broneeringud makstuks adminis.",
     "admin.settings.bankTransferEnableLabel": "Luba pangaulekanne",
@@ -3336,6 +3339,9 @@ const et: Record<string, string> = {
 };
 
 const en: Record<string, string> = {
+    "contract.identityVerified": "Identity-verified",
+    "contract.selfDeclared": "Self-declared signature",
+    "booking.priceEstimateNote": "This is an estimate. The final amount is confirmed at checkout.",
     "admin.settings.bankTransferTitle": "Bank transfer",
     "admin.settings.bankTransferDesc": "Let customers pay by bank transfer to the platform account. You reconcile payments and mark bookings paid in the admin.",
     "admin.settings.bankTransferEnableLabel": "Enable bank transfer",
@@ -6627,6 +6633,9 @@ const en: Record<string, string> = {
 };
 
 const ru: Record<string, string> = {
+    "contract.identityVerified": "Личность подтверждена",
+    "contract.selfDeclared": "Самостоятельно заверенная подпись",
+    "booking.priceEstimateNote": "Это ориентировочная сумма. Окончательная сумма подтверждается при оформлении оплаты.",
     "admin.settings.bankTransferTitle": "Банковский перевод",
     "admin.settings.bankTransferDesc": "Разрешите клиентам оплачивать банковским переводом на счёт платформы. Вы сверяете платежи и отмечаете брони оплаченными в админке.",
     "admin.settings.bankTransferEnableLabel": "Включить банковский перевод",
@@ -9920,6 +9929,9 @@ const ru: Record<string, string> = {
 // ── Latvian ──────────────────────────
 // ── Latvian ──────────────────────────
 const lv: Record<string, string> = {
+    "contract.identityVerified": "Identitāte apstiprināta",
+    "contract.selfDeclared": "Pašapliecināts paraksts",
+    "booking.priceEstimateNote": "Šī ir aptuvena summa. Galīgā summa tiek apstiprināta apmaksas brīdī.",
     "admin.settings.bankTransferTitle": "Bankas pārskaitījums",
     "admin.settings.bankTransferDesc": "Lautet klientiem maksat ar bankas parskaitijumu uz platformas kontu. Jus saskanojat maksajumus un atzimejat rezervacijas ka apmaksatas administracija.",
     "admin.settings.bankTransferEnableLabel": "Iespejot bankas parskaitijumu",
@@ -13146,6 +13158,9 @@ const lv: Record<string, string> = {
 };
 // ── Lithuanian ──────────────────────────
 const lt: Record<string, string> = {
+    "contract.identityVerified": "Tapatybė patvirtinta",
+    "contract.selfDeclared": "Savarankiškai patvirtintas parašas",
+    "booking.priceEstimateNote": "Tai apytikrė suma. Galutinė suma patvirtinama apmokėjimo metu.",
     "admin.settings.bankTransferTitle": "Banko pavedimas",
     "admin.settings.bankTransferDesc": "Leiskite klientams moketi banko pavedimu i platformos saskaita. Jus suderinate mokejimus ir pazymite rezervacijas kaip apmoketas administravimo skydelyje.",
     "admin.settings.bankTransferEnableLabel": "Ijungti banko pavedima",

@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useRef } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { BrowserRouter, Route, Routes, useLocation, Outlet, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation, Outlet } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -39,7 +39,7 @@ import RequestDetailPage from "@/pages/RequestDetailPage";
 import VerifyEmailPage from "@/pages/VerifyEmailPage";
 import { Loader2 } from "lucide-react";
 import { trackPageView } from "@/lib/analytics";
-import { LangParamGuard, LangRedirect } from "@/i18n/routing";
+import { LangParamGuard, LangRedirect, Navigate } from "@/i18n/routing";
 
 // Lazy-loaded heavy pages
 const AdminPage = lazy(() => import("@/pages/AdminPage"));
@@ -111,6 +111,15 @@ function ScrollToTop() {
 const WithFooter = () => <><Outlet /><Footer /></>;
 const NoFooter = () => <Outlet />;
 
+// High-intent Estonian storage keyword landings (laopind / miniladu / panipaik /
+// hoiuruum). Each slug is an indexable, shareable entry point that redirects to
+// the canonical storage search, which already emits localized storage SEO
+// (seo.storage.*) and reads ?type=warehouse from the URL. <Navigate> here is the
+// lang-aware wrapper, so it resolves to /{lang}/search?type=warehouse.
+const StorageKeywordRedirect = () => (
+  <Navigate to="/search?type=warehouse" replace />
+);
+
 const PageLoader = () => (
   <div className="flex min-h-screen items-center justify-center">
     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -159,6 +168,11 @@ function AppContent() {
           <Route path="/:lang" element={<LangParamGuard><Outlet /></LangParamGuard>}>
             <Route element={<NoFooter />}>
               <Route path="search" element={<SearchPage />} />
+              {/* SEO keyword landings → canonical storage search */}
+              <Route path="laopind" element={<StorageKeywordRedirect />} />
+              <Route path="miniladu" element={<StorageKeywordRedirect />} />
+              <Route path="panipaik" element={<StorageKeywordRedirect />} />
+              <Route path="hoiuruum" element={<StorageKeywordRedirect />} />
               <Route path="admin/partners" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPartnerListPage /></ProtectedRoute>} />
               <Route path="admin/partners/:partnerId" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPartnerDetailPage /></ProtectedRoute>} />
               <Route path="admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>} />

@@ -10,7 +10,7 @@ import {
   LayoutDashboard, Package, Heart, Search, Bell, Shield,
   HelpCircle, ChevronRight, Warehouse, Truck, CarFront, Clock, CheckCircle,
   XCircle, Play, User, Send, MessageSquare, FileText,
-  Download, ArrowLeft, Loader2, Star, Receipt, Sparkles, Trash2, Camera
+  Download, ArrowLeft, Loader2, Star, Receipt, Sparkles, Trash2, Camera, ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReviewDialog from "@/components/ReviewDialog";
@@ -380,7 +380,10 @@ function BookingCard({ booking, onMessage }: { booking: Booking; onMessage?: () 
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `contract-${booking.id}.pdf`;
+      // A canvas (self-declared) contract is served as text/html — name the
+      // fallback download .html for it; only eID-signed contracts are PDFs.
+      const ext = signedContract?.signingMethod === "canvas" ? "html" : "pdf";
+      a.download = `contract-${booking.id}.${ext}`;
       a.click();
       URL.revokeObjectURL(url);
     }).catch((err: any) => {
@@ -486,14 +489,27 @@ function BookingCard({ booking, onMessage }: { booking: Booking; onMessage?: () 
                   <FileText className="h-3 w-3" /> {t("contract.signNow")}
                 </p>
                 {signedContract ? (
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="flex items-center gap-1 text-xs text-success font-medium">
-                      <CheckCircle className="h-3 w-3 shrink-0" /> {t("contract.signed")}
-                      {signedContract.signedAt ? ` · ${new Date(signedContract.signedAt).toLocaleDateString()}` : ""}
-                    </span>
-                    <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleViewContract(); }}>
-                      <Download className="h-3.5 w-3.5 mr-1" /> {t("contract.download")}
-                    </Button>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="flex items-center gap-1 text-xs text-success font-medium">
+                        <CheckCircle className="h-3 w-3 shrink-0" /> {t("contract.signed")}
+                        {signedContract.signedAt ? ` · ${new Date(signedContract.signedAt).toLocaleDateString()}` : ""}
+                      </span>
+                      <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleViewContract(); }}>
+                        <Download className="h-3.5 w-3.5 mr-1" /> {t("contract.download")}
+                      </Button>
+                    </div>
+                    {/* Signature trust badge: eID paths are identity-verified; a canvas
+                        signature is self-declared (verified === false). */}
+                    {signedContract.verified ? (
+                      <span className="inline-flex w-fit items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
+                        <ShieldCheck className="h-3 w-3 shrink-0" /> {t("contract.identityVerified")}
+                      </span>
+                    ) : (
+                      <span className="inline-flex w-fit items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                        <FileText className="h-3 w-3 shrink-0" /> {t("contract.selfDeclared")}
+                      </span>
+                    )}
                   </div>
                 ) : (
                   <div className="flex items-center justify-between gap-2">
