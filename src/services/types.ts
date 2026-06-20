@@ -30,8 +30,20 @@ export type ApprovalMode = "auto" | "admin" | "provider";
 export type PostingMode = "api" | "email" | "manual";
 export type FulfillmentStatus = "awaiting_approval" | "approved" | "rejected" | "posting" | "posted" | "confirmed" | "failed" | "completed";
 
+export interface BankTransferInstructions {
+  available: boolean;       // false when the platform IBAN isn't configured yet
+  amount: number;
+  currency: string;
+  reference: string;
+  accountName: string;
+  iban: string;
+  bic: string;
+  bankName: string;
+}
+
 export interface PaymentResult {
-  paymentUrl: string;
+  paymentUrl: string | null;        // null for bank transfer / pay-later (no redirect)
+  bankTransfer?: BankTransferInstructions;
 }
 
 export interface User {

@@ -15,7 +15,6 @@ import {
   ArrowRight,
   CreditCard,
   RefreshCw,
-  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -308,113 +307,6 @@ function PartnerCard({ listing, metaLabel }: { listing: Listing; metaLabel: stri
         )}
       </div>
     </div>
-  );
-}
-
-/**
- * Booking modal (pixel-spec §Booking modal). Keeps the user on-page: summary card
- * (type tile + title + area/size), line items (Monthly price / Move-in / Duration),
- * "Due today €NN", then a green "Confirm & continue" → "Booking requested — partner
- * notified" toast. Posts an enquiry to the contact endpoint so demand is captured.
- */
-function BookingModal({
-  listing,
-  typeLabel,
-  moveInLabel,
-  durationLabel,
-  open,
-  onOpenChange,
-}: {
-  listing: Listing;
-  typeLabel: string;
-  moveInLabel: string;
-  durationLabel: string;
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-}) {
-  const { t, language } = useLanguage();
-  const unit = rawUnit(listing.priceUnit);
-  const sizeMeta = "size" in listing ? `${(listing as WarehouseListing).size} ${(listing as WarehouseListing).sizeUnit}` : "";
-
-  const confirm = () => {
-    // Capture the booking request as a contact lead (closest existing endpoint).
-    contactService
-      .send({
-        name: "",
-        email: "",
-        subject: `Booking request — ${listing.title} (${listing.provider})`,
-        message: `Booking request for ${listing.title} in ${listing.city}. Price €${listing.priceFrom}/${unit}. Move-in ${moveInLabel}, duration ${durationLabel}.`,
-        language,
-      })
-      .catch(() => {
-        /* best-effort; the partner-notified toast still confirms intent to the user */
-      });
-    trackEvent("booking_request", { listing_id: listing.id, type: listing.type });
-    onOpenChange(false);
-    toast.success(t("detail.bookingRequestedToast"));
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md rounded-[14px] p-0">
-        <DialogHeader className="flex flex-row items-center justify-between gap-3 border-b border-border px-5 py-4 text-left">
-          <DialogTitle className="font-display text-lg font-bold">{t("detail.confirmBooking")}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 px-5 pb-5">
-          {/* Summary card */}
-          <div className="rounded-[14px] bg-secondary/60 p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-primary text-primary-foreground">
-                <Building2 className="h-5 w-5" />
-              </div>
-              <div className="min-w-0">
-                <div className="truncate font-display text-sm font-bold text-foreground">{listing.title}</div>
-                <div className="truncate text-sm text-muted-foreground">
-                  {typeLabel} · {listing.city}{sizeMeta ? ` · ${sizeMeta}` : ""}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Line items */}
-          <div className="space-y-2 text-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">
-                {unit === "month" ? t("detail.monthlyPrice") : t("detail.priceLabel")}
-              </span>
-              <strong className="font-semibold">€{listing.priceFrom}</strong>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">{t("detail.moveInDate")}</span>
-              <strong className="font-semibold">{moveInLabel}</strong>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">{t("detail.duration")}</span>
-              <strong className="font-semibold">{durationLabel}</strong>
-            </div>
-            <div className="my-2 border-t border-border" />
-            <div className="flex items-center justify-between">
-              <span className="font-medium text-foreground">{t("detail.dueToday")}</span>
-              <strong className="font-display text-lg font-extrabold text-navy-ink">€{listing.priceFrom}</strong>
-            </div>
-          </div>
-
-          <Button
-            onClick={confirm}
-            className="h-12 w-full gap-2 bg-accent text-base font-semibold text-accent-foreground hover:bg-brand-greenDeep"
-          >
-            {t("detail.confirmContinue")}
-          </Button>
-          <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
-            <Lock className="h-3 w-3 shrink-0" />
-            {(listing.bookingEnabled
-              ? t("detail.paymentHandledByCheckout")
-              : t("detail.paymentHandledBy")
-            ).replace("{partner}", listing.provider)}
-          </p>
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 }
 
@@ -722,7 +614,6 @@ export function WarehouseDetail() {
   const [moveInDate, setMoveInDate] = useState(defaultMoveIn());
   const [duration, setDuration] = useState("1");
   const navigate = useNavigate();
-  const [bookingOpen, setBookingOpen] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
   const { data: listing, isLoading } = useListing(id);
 
@@ -734,16 +625,6 @@ export function WarehouseDetail() {
   if (!listing || listing.type !== "warehouse") return <NotFoundDetail />;
   const wListing = listing as WarehouseListing;
   const typeLabel = t("provider.listings.typeWarehouse");
-
-  const durationLabels: Record<string, string> = {
-    "1": t("detail.duration1m"),
-    "3": t("detail.duration3m"),
-    "6": t("detail.duration6m"),
-    "12": t("detail.duration12m"),
-  };
-  const moveInLabel = moveInDate
-    ? new Date(moveInDate).toLocaleDateString(language === "et" ? "et-EE" : language === "ru" ? "ru-RU" : "en-GB", { day: "numeric", month: "short", year: "numeric" })
-    : t("detail.moveInDate");
 
   const presentFeatures = [
     { label: t("detail.heated"), value: wListing.heated },
@@ -857,7 +738,6 @@ export function WarehouseDetail() {
         </div>
       </div>
 
-      <BookingModal listing={wListing} typeLabel={typeLabel} moveInLabel={moveInLabel} durationLabel={durationLabels[duration] ?? durationLabels["1"]} open={bookingOpen} onOpenChange={setBookingOpen} />
       <RequestModal listing={wListing} typeLabel={typeLabel} open={requestOpen} onOpenChange={setRequestOpen} />
     </div>
   );
@@ -870,7 +750,6 @@ export function MovingDetail() {
   const [moveInDate, setMoveInDate] = useState(defaultMoveIn());
   const [crew, setCrew] = useState("1");
   const navigate = useNavigate();
-  const [bookingOpen, setBookingOpen] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
   const { data: listing, isLoading } = useListing(id);
 
@@ -882,15 +761,6 @@ export function MovingDetail() {
   if (!showMovingService || !listing || listing.type !== "moving") return <NotFoundDetail />;
   const mListing = listing as MovingListing;
   const typeLabel = t("provider.listings.typeMoving");
-
-  const crewLabels: Record<string, string> = {
-    "1": t("detail.crew2"),
-    "3": t("detail.crew3"),
-    "6": t("detail.crew4"),
-  };
-  const moveInLabel = moveInDate
-    ? new Date(moveInDate).toLocaleDateString(language === "et" ? "et-EE" : language === "ru" ? "ru-RU" : "en-GB", { day: "numeric", month: "short", year: "numeric" })
-    : t("detail.moveDate");
 
   const features = mListing.services.concat([t("detail.onSiteParking"), t("detail.litAndDry")]);
   const about = composeAbout(t, mListing, typeLabel);
@@ -997,7 +867,6 @@ export function MovingDetail() {
         </div>
       </div>
 
-      <BookingModal listing={mListing} typeLabel={typeLabel} moveInLabel={moveInLabel} durationLabel={crewLabels[crew] ?? crewLabels["1"]} open={bookingOpen} onOpenChange={setBookingOpen} />
       <RequestModal listing={mListing} typeLabel={typeLabel} open={requestOpen} onOpenChange={setRequestOpen} />
     </div>
   );
@@ -1010,7 +879,6 @@ export function TrailerDetail() {
   const [pickupDate, setPickupDate] = useState(defaultMoveIn());
   const [days, setDays] = useState("1");
   const navigate = useNavigate();
-  const [bookingOpen, setBookingOpen] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
   const { data: listing, isLoading } = useListing(id);
 
@@ -1022,16 +890,6 @@ export function TrailerDetail() {
   if (!showTrailerService || !listing || listing.type !== "trailer") return <NotFoundDetail />;
   const tListing = listing as TrailerListing;
   const typeLabel = t("provider.listings.typeTrailer");
-
-  const dayLabels: Record<string, string> = {
-    "1": t("detail.days1"),
-    "2": t("detail.days2"),
-    "3": t("detail.days3"),
-    "7": t("detail.days7"),
-  };
-  const pickupLabel = pickupDate
-    ? new Date(pickupDate).toLocaleDateString(language === "et" ? "et-EE" : language === "ru" ? "ru-RU" : "en-GB", { day: "numeric", month: "short", year: "numeric" })
-    : t("detail.pickupDate");
 
   const features = tListing.requirements.concat([t("detail.onSiteParking"), t("detail.litAndDry")]);
   const about = composeAbout(t, tListing, typeLabel);
@@ -1134,7 +992,6 @@ export function TrailerDetail() {
         </div>
       </div>
 
-      <BookingModal listing={tListing} typeLabel={typeLabel} moveInLabel={pickupLabel} durationLabel={dayLabels[days] ?? dayLabels["1"]} open={bookingOpen} onOpenChange={setBookingOpen} />
       <RequestModal listing={tListing} typeLabel={typeLabel} open={requestOpen} onOpenChange={setRequestOpen} />
     </div>
   );

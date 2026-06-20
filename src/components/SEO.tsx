@@ -143,6 +143,12 @@ export function SEO({
       <meta property="og:description" content={description} />
       <meta property="og:url" content={canonicalUrl} />
       <meta property="og:image" content={image} />
+      {/* The OG image is a fixed 1200×630 card; declaring dimensions + alt lets
+          scrapers (Facebook/LinkedIn/Slack) render the preview without a fetch
+          and keeps the card accessible. */}
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:image:alt" content={fullTitle} />
       <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:locale" content={OG_LOCALE[lang]} />
 

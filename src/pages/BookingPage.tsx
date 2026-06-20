@@ -111,7 +111,7 @@ export default function BookingPage() {
 
   const { isAuthenticated, user } = useAuth();
   const hasToken = !!tokenStore.getAccess();
-  const { showMovingService, showTrailerService } = usePlatformSettings();
+  const { showMovingService, showTrailerService, bankTransferEnabled } = usePlatformSettings();
   // Storage-only gate: a hidden vertical must never reach the booking flow. The
   // backend already 404s these, but redirect on the client too for UX/defense.
   // (Only act once the listing has loaded — before that, type is unknown.)
@@ -132,7 +132,23 @@ export default function BookingPage() {
   );
   const initialExtras = params.get("extras")?.split(",").filter(Boolean) || [];
   const [selectedExtras, setSelectedExtras] = useState<string[]>(initialExtras);
-  const [paymentMethod, setPaymentMethod] = useState("bank");
+  const [paymentMethod, setPaymentMethod] = useState("bank_transfer");
+  const [bankInstructions, setBankInstructions] = useState<import("@/services/types").BankTransferInstructions | null>(null);
+  // Which payment methods this supplier + platform actually support. Bank transfer
+  // (our IBAN, no PSP) when the platform has it enabled and the partner opted into
+  // direct payment; card only if the partner has Ruumly/Montonio payments on (off
+  // for now); pay-later when the partner accepts direct payment.
+  const availableMethods = [
+    bankTransferEnabled && supplier?.directPaymentEnabled ? "bank_transfer" : null,
+    supplier?.ruumlyPaymentEnabled ? "card" : null,
+    supplier?.directPaymentEnabled ? "later" : null,
+  ].filter(Boolean) as string[];
+  useEffect(() => {
+    if (availableMethods.length > 0 && !availableMethods.includes(paymentMethod)) {
+      setPaymentMethod(availableMethods[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableMethods.join(","), paymentMethod]);
   const [submitted, setSubmitted] = useState(false);
   const [phase, setPhase] = useState<SubmitPhase>("submitting");
   const [reservedUntil, setReservedUntil] = useState<string | null>(null);
@@ -365,6 +381,11 @@ export default function BookingPage() {
           window.location.href = result.paymentUrl;
           return;
         }
+        // Bank transfer (no PSP): show the payment instructions on the confirmation
+        // screen instead of redirecting.
+        if (result.bankTransfer) {
+          setBankInstructions(result.bankTransfer);
+        }
         // No paymentUrl returned — fall through to the confirmation screen.
         setRedirecting(false);
         setSubmitted(true);
@@ -584,6 +605,30 @@ export default function BookingPage() {
                     {t("booking.payLaterNote")}
                   </p>
                 </>
+              )}
+              {bankInstructions && (
+                <div className="mt-6 rounded-xl border border-accent/30 bg-accent/5 p-4 text-left">
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-navy-ink">
+                    <Building2 className="h-4 w-4 text-accent" />
+                    {t("booking.bankTransfer.title")}
+                  </h3>
+                  {bankInstructions.available ? (
+                    <>
+                      <p className="mt-1 text-xs text-muted-foreground">{t("booking.bankTransfer.instructions")}</p>
+                      <div className="mt-3 space-y-1.5 text-sm">
+                        <div className="flex justify-between gap-3"><span className="text-muted-foreground">{t("booking.bankTransfer.amount")}</span><span className="font-semibold">{bankInstructions.amount}€</span></div>
+                        <div className="flex justify-between gap-3"><span className="text-muted-foreground">{t("booking.bankTransfer.accountName")}</span><span className="font-medium">{bankInstructions.accountName}</span></div>
+                        <div className="flex justify-between gap-3"><span className="text-muted-foreground">{t("booking.bankTransfer.iban")}</span><span className="font-mono">{bankInstructions.iban}</span></div>
+                        {bankInstructions.bic && (<div className="flex justify-between gap-3"><span className="text-muted-foreground">{t("booking.bankTransfer.bic")}</span><span className="font-mono">{bankInstructions.bic}</span></div>)}
+                        {bankInstructions.bankName && (<div className="flex justify-between gap-3"><span className="text-muted-foreground">{t("booking.bankTransfer.bank")}</span><span className="font-medium">{bankInstructions.bankName}</span></div>)}
+                        <div className="flex justify-between gap-3 border-t border-border pt-1.5 mt-1.5"><span className="text-muted-foreground">{t("booking.bankTransfer.reference")}</span><span className="font-mono font-bold text-accent">{bankInstructions.reference}</span></div>
+                      </div>
+                      <p className="mt-3 text-xs text-muted-foreground">{t("booking.bankTransfer.note")}</p>
+                    </>
+                  ) : (
+                    <p className="mt-2 text-xs text-muted-foreground">{t("booking.bankTransfer.pending")}</p>
+                  )}
+                </div>
               )}
               <div className="mt-6 flex justify-center gap-3">
                 <Link to="/account?tab=bookings"><Button variant="outline">{t("booking.myBookings")}</Button></Link>
@@ -924,10 +969,10 @@ export default function BookingPage() {
                 <h2 id="booking-payment-heading" className="font-display text-xl font-semibold">{t("booking.paymentMethod")}</h2>
                 <div className="space-y-3" role="radiogroup" aria-labelledby="booking-payment-heading">
                   {[
-                    { id: "bank", icon: Building2, label: t("booking.bankTransfer"), desc: t("booking.bankTransferDesc"), recommended: true },
+                    { id: "bank_transfer", icon: Building2, label: t("booking.bankTransfer"), desc: t("booking.bankTransferDesc"), recommended: true },
                     { id: "card", icon: CreditCard, label: t("booking.creditCard"), desc: t("booking.creditCardDesc") },
                     { id: "later", icon: Clock, label: t("booking.payLater"), desc: t("booking.payLaterDesc") },
-                  ].map((pm) => {
+                  ].filter((pm) => availableMethods.includes(pm.id)).map((pm) => {
                     const Icon = pm.icon;
                     return (
                       <div key={pm.id}>

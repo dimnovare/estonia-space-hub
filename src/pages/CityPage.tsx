@@ -26,7 +26,16 @@ export default function CityPage() {
   const { slug } = useParams<{ slug: string }>();
   const { t, language } = useLanguage();
   const { showMovingService, showTrailerService } = usePlatformSettings();
-  const city = CITY_MAP[slug || ""] || slug || "";
+  // Unknown slugs (not in CITY_MAP) would otherwise render as the raw lowercase
+  // slug (e.g. "rakvere" / "viljandi-keskus") in the H1 and <title>. Title-case
+  // each hyphen/space-separated word so the visible name reads naturally.
+  const titleCaseSlug = (s: string) =>
+    s
+      .split(/[-\s]+/)
+      .filter(Boolean)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+  const city = CITY_MAP[slug || ""] || (slug ? titleCaseSlug(slug) : "");
 
   // Storage-only gating: never emit deep links to a disabled service vertical
   // (mirrors HomePage.tsx hideDisabled).

@@ -37,18 +37,30 @@ export default function Footer() {
     { label: t("footer.cookies"), to: "/cookies" },
   ];
 
+  // Internally link the city landing pages so they aren't orphaned (SEO).
+  // CityPage is mounted at /{lang}/storage/<slug> (see App.tsx Route
+  // "storage/:slug" and SitemapController's /storage/<city> URLs); the language
+  // prefix is added automatically by the i18n <Link> wrapper.
+  const popularCityLinks = [
+    { label: "Tallinn", to: "/storage/tallinn" },
+    { label: "Tartu", to: "/storage/tartu" },
+    { label: "Pärnu", to: "/storage/parnu" },
+  ];
+
   const columns = [
     { title: t("footer.services"), links: serviceLinks },
     { title: t("footer.company"), links: companyLinks },
     { title: t("footer.legal"), links: legalLinks },
+    { title: t("footer.popularCities"), links: popularCityLinks },
   ];
 
   return (
     <footer className="bg-navy-deep text-white/[0.66]">
       {/* padding: 64px top / 32px bottom (spec §7.2) */}
       <div className="container-wide pb-8 pt-16">
-        {/* Weighted 4-col grid 1.6fr 1fr 1fr 1fr (spec §7.2). */}
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
+        {/* Weighted grid: wide brand column + four link columns (spec §7.2,
+            extended with the Popular cities column). */}
+        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr_1fr]">
           <div className="max-w-sm">
             <Link
               to="/"

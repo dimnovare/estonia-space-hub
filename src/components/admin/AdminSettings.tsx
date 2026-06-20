@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Globe, ToggleLeft, Save, Loader2, Plus, Trash2, Eye, SlidersHorizontal,
-  Warehouse, Truck, CarFront,
+  Warehouse, Truck, CarFront, Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -43,6 +43,12 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   "aboutPage.mission.lt":  "",
   "blog.enabled":          "true",
   "blog.showInFooter":     "true",
+  // Bank transfer (no PSP). Off until the platform bank account is added.
+  "bankTransfer.enabled":     "false",
+  "bankTransfer.accountName": "",
+  "bankTransfer.iban":        "",
+  "bankTransfer.bic":         "",
+  "bankTransfer.bankName":    "",
 };
 
 export default function AdminSettings() {
@@ -245,6 +251,35 @@ export default function AdminSettings() {
                 <option value="0">0% ({t("provider.listings.vatExempt")})</option>
               </select>
               <p className="mt-0.5 text-[10px] text-muted-foreground">{t("admin.defaultVatRateDesc")}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Bank transfer (no PSP) — the platform account customers pay into */}
+        <div className="rounded-xl border border-border bg-card p-5 shadow-card">
+          <h3 className="flex items-center gap-2 font-display text-base font-semibold text-navy-ink">
+            <Building2 className="h-4 w-4 text-teal-deep" /> {t("admin.settings.bankTransferTitle")}
+          </h3>
+          <p className="mt-1 text-xs text-muted-foreground">{t("admin.settings.bankTransferDesc")}</p>
+          <div className="mt-4">
+            <ToggleRow k="bankTransfer.enabled" label={t("admin.settings.bankTransferEnableLabel")} desc={t("admin.settings.bankTransferEnableDesc")} />
+          </div>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="text-xs font-medium text-ink-2">{t("booking.bankTransfer.accountName")}</label>
+              <input className={inp} value={String(settings["bankTransfer.accountName"] ?? "")} onChange={e => set("bankTransfer.accountName", e.target.value)} placeholder="Ruumly OÜ" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-ink-2">{t("booking.bankTransfer.iban")}</label>
+              <input className={inp} value={String(settings["bankTransfer.iban"] ?? "")} onChange={e => set("bankTransfer.iban", e.target.value)} placeholder="EE00 0000 0000 0000 0000" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-ink-2">{t("booking.bankTransfer.bic")}</label>
+              <input className={inp} value={String(settings["bankTransfer.bic"] ?? "")} onChange={e => set("bankTransfer.bic", e.target.value)} />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-ink-2">{t("booking.bankTransfer.bank")}</label>
+              <input className={inp} value={String(settings["bankTransfer.bankName"] ?? "")} onChange={e => set("bankTransfer.bankName", e.target.value)} />
             </div>
           </div>
         </div>

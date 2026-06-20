@@ -21,6 +21,7 @@ export interface PlatformSettings {
   showMovingService:    boolean;
   showTrailerService:   boolean;
   showFeaturedPartners: boolean;
+  bankTransferEnabled:  boolean;
   heroSubtitle:         string;
   heroDiscount:         string;
   apiUnreachable:       boolean;
@@ -69,6 +70,10 @@ const FALLBACK = {
   showMovingService:     true,
   showTrailerService:    true,
   showFeaturedPartners:  true,
+  // Bank transfer is OFF until an admin enables it and adds the platform bank
+  // details in Settings. Keep it false by default so no half-configured pay
+  // option appears before launch.
+  bankTransferEnabled:   false,
   heroSubtitle:          "",
   heroDiscount:          "10",
 };
