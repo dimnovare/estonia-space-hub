@@ -251,7 +251,7 @@ function AccountOverview({ onNavigate }: { onNavigate: (tab: string) => void }) 
           <h2 className="font-display text-base font-bold text-navy-ink">{t("account.continueExploring")}</h2>
           <div className="mt-3.5 flex flex-col gap-2.5">
             <Link to="/search" className="flex items-center justify-between rounded-[10px] border border-line px-3 py-3 transition-colors hover:border-teal-deep/40 hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
-              <span className="flex items-center gap-2.5 text-sm font-medium text-ink"><Search className="h-[18px] w-[18px] text-teal-deep" /> {t("account.searchNearYou")}</span>
+              <span className="flex items-center gap-2.5 text-sm font-medium text-ink"><Search className="h-[18px] w-[18px] text-teal-deep" /> {t("account.browseSpaces")}</span>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </Link>
             <button onClick={() => onNavigate("favorites")} className="flex w-full items-center justify-between rounded-[10px] border border-line px-3 py-3 text-left transition-colors hover:border-teal-deep/40 hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">

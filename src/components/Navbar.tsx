@@ -80,7 +80,9 @@ function isLinkActive(link: NavLink, pathname: string, searchType: string | null
 const DARK_HERO_ROUTES = new Set(["/", "/how-it-works", "/provider"]);
 function isDarkHeroRoute(pathname: string): boolean {
   const s = stripLang(pathname);
-  return DARK_HERO_ROUTES.has(s) || s.startsWith("/partner/");
+  // /storage/:slug (CityPage) renders a surface-dark navy hero, so it gets the
+  // transparent absolute nav too — mirrors the /partner/ branch.
+  return DARK_HERO_ROUTES.has(s) || s.startsWith("/partner/") || s.startsWith("/storage/");
 }
 
 export default function Navbar() {

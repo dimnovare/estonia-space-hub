@@ -1,4 +1,4 @@
-import { List, Eye, Inbox, Search, AlertTriangle, MapPin, CheckCircle2, Sparkles, ArrowRight } from "lucide-react";
+import { List, Eye, Inbox, Search, AlertTriangle, MapPin, CheckCircle2, Sparkles, ArrowRight, Plus } from "lucide-react";
 import { useNavigate } from "@/i18n/routing";
 import { useLocations } from "@/hooks/queries";
 import { useOrders } from "@/hooks/useOrders";
@@ -41,6 +41,9 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
   // Jump to the boosts & visibility tab, preserving the impersonation context.
   const goToBoosts = () =>
     navigate(`/provider/dashboard?ptab=boosts${supplierId ? `&supplierId=${supplierId}` : ""}`);
+  // Jump to the My listings tab (used by the zero-listings first-run CTA).
+  const goToListings = () =>
+    navigate(`/provider/dashboard?ptab=listings${supplierId ? `&supplierId=${supplierId}` : ""}`);
   const { data: allOrders = [], isLoading: ordersLoading } = useOrders(supplierId ?? undefined);
   const { data: locations = [] } = useLocations(supplierId ? { supplierId } : undefined);
   const { data: supplierProfile } = useQuery<{ name?: string }>({
@@ -173,6 +176,29 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
           );
         })}
       </div>
+
+      {/* Zero-listings first-run CTA — only shown until the partner adds a listing */}
+      {listingCount === 0 && (
+        <div className="mt-6 flex flex-col items-start gap-4 rounded-[14px] border border-dashed border-accent/40 bg-accent/5 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-4">
+            <span className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[14px] bg-accent/10 text-accent">
+              <List className="h-[22px] w-[22px]" />
+            </span>
+            <div>
+              <strong className="font-display text-base font-bold text-navy-ink">{t("provider.noListings")}</strong>
+              <p className="mt-0.5 max-w-xl text-[13.5px] text-muted-foreground">{t("provider.noListingsDesc")}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={goToListings}
+            className="inline-flex h-11 shrink-0 items-center gap-2 rounded-[10px] bg-[linear-gradient(135deg,#0A9881,#1FA6AE)] px-5 text-sm font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+          >
+            <Plus className="h-4 w-4" />
+            {t("provider.noListingsCta")}
+          </button>
+        </div>
+      )}
 
       {/* Two-column body: left activation checklist · right latest requests */}
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.5fr_1fr]">

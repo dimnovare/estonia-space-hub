@@ -529,17 +529,31 @@ function MoreOptionsRail({
   );
 }
 
-/** Top "‹ Back to search" link (pixel-spec §Listing detail top). */
+/**
+ * Top "‹ Back to search" control (pixel-spec §Listing detail top).
+ * Returns the user to their actual previous results (preserving filters + scroll)
+ * via history when possible, falling back to a clean /search otherwise.
+ */
 function BackToSearch() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
+  const goBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/search");
+    }
+  };
   return (
-    <Link
-      to="/search"
+    <button
+      type="button"
+      onClick={goBack}
+      aria-label={t("detail.backToSearch")}
       className="mb-4 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
     >
       <ChevronLeft className="h-4 w-4" />
       {t("detail.backToSearch")}
-    </Link>
+    </button>
   );
 }
 
@@ -999,11 +1013,21 @@ export function TrailerDetail() {
 
 function NotFoundDetail() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
+  const goBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/search");
+    }
+  };
   return (
     <div className="container-wide py-20 text-center">
       <SEO title={t("detail.notFound")} description={t("detail.notFound")} noindex />
       <h1 className="font-display text-2xl font-bold">{t("detail.notFound")}</h1>
-      <Link to="/search"><Button variant="outline" className="mt-4">{t("detail.backToSearch")}</Button></Link>
+      <Button variant="outline" className="mt-4" onClick={goBack} aria-label={t("detail.backToSearch")}>
+        {t("detail.backToSearch")}
+      </Button>
     </div>
   );
 }

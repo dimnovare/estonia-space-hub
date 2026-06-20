@@ -1,5 +1,5 @@
 import { memo, useState } from "react";
-import { Link } from "@/i18n/routing";
+import { Link, useLocation } from "@/i18n/routing";
 import { MapPin, Star, Warehouse, Truck, CarFront, Heart, ShieldCheck, Award, Sparkles, Zap, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import type { Listing } from "@/services/types";
@@ -83,7 +83,10 @@ function featureChipKeys(listing: Listing): string[] {
 
 function ListingCard({ listing }: { listing: Listing }) {
   const Icon = typeIcons[listing.type];
-  const detailPath = `/${listing.type}/${listing.id}`;
+  // Carry the current search/filter query onto the detail link so even a direct
+  // visitor lands on a detail page that can route back to a filtered /search.
+  const { search } = useLocation();
+  const detailPath = `/${listing.type}/${listing.id}${search ?? ""}`;
   const { t } = useLanguage();
   const { isFavorite, toggle } = useFavorites();
   const { data: sizeBuckets } = useSizeBuckets();

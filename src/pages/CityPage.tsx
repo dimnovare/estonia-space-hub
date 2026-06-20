@@ -104,8 +104,10 @@ export default function CityPage() {
         }}
       />
 
-      {/* Hero */}
-      <section className="surface-dark px-4 py-16 text-center sm:py-20">
+      {/* Hero — the 72px navbar is absolute/transparent over this surface-dark
+          hero (Navbar isDarkHeroRoute /storage/ branch), so the top padding must
+          clear it: >= ~96px on mobile, a touch more on desktop. */}
+      <section className="surface-dark px-4 pb-16 pt-[96px] text-center sm:pb-20 sm:pt-[112px]">
         <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal">
           {t("cityPage.heroEyebrow")}
         </p>

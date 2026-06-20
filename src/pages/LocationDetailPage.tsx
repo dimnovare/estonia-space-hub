@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "@/i18n/routing";
+import { useParams, Link, useNavigate } from "@/i18n/routing";
 import { ArrowLeft, MapPin, Clock, Loader2, Zap, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "@/hooks/queries";
@@ -12,9 +12,20 @@ import { EmailVerificationGate } from "@/components/EmailVerificationGate";
 export default function LocationDetailPage() {
   const { id } = useParams();
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const { showMovingService, showTrailerService } = usePlatformSettings();
   const { data: location, isLoading, isError } = useLocation(id);
   const [showEmailGate, setShowEmailGate] = useState(false);
+
+  // Return the user to their actual previous results (preserving filters + scroll)
+  // via history when possible, falling back to a clean /search otherwise.
+  const goBackToSearch = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/search");
+    }
+  };
 
   const typeLabel = (type?: string) =>
     type === "moving"
@@ -42,12 +53,10 @@ export default function LocationDetailPage() {
     return (
       <div className="container-wide py-20 text-center">
         <p className="text-lg font-medium text-foreground">{t("detail.notFound")}</p>
-        <Link to="/search">
-          <Button variant="outline" className="mt-4">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t("location.backToSearch")}
-          </Button>
-        </Link>
+        <Button variant="outline" className="mt-4" onClick={goBackToSearch} aria-label={t("location.backToSearch")}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          {t("location.backToSearch")}
+        </Button>
       </div>
     );
   }
@@ -74,13 +83,15 @@ export default function LocationDetailPage() {
       />
 
       {/* Back */}
-      <Link
-        to="/search"
+      <button
+        type="button"
+        onClick={goBackToSearch}
+        aria-label={t("location.backToSearch")}
         className="mb-4 inline-flex items-center gap-1.5 rounded-md text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
       >
         <ArrowLeft className="h-4 w-4" />
         {t("location.backToSearch")}
-      </Link>
+      </button>
 
       {/* Header */}
       <div className="mb-6">

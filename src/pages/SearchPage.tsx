@@ -262,6 +262,12 @@ export default function SearchPage() {
 
   const shown = displayListings.slice(0, visibleCount);
 
+  // Single source of truth for the displayed result count: matching listings +
+  // browse-by-area location cards. Used by the header count, the Drawer apply
+  // button, the results-found line, and the empty-state guard so the number the
+  // user sees and the empty/notify state can never disagree.
+  const totalCount = filtered.length + displayLocations.length;
+
   const handleNotifySubmit = async () => {
     if (!notifyEmail.includes("@")) {
       setNotifyError(true);
@@ -466,7 +472,7 @@ export default function SearchPage() {
                 {t("search.eyebrow")}
               </span>
               <span className="font-display text-sm font-semibold text-foreground">
-                <span className="font-extrabold text-primary">{filtered.length + displayLocations.length}</span>{" "}
+                <span className="font-extrabold text-primary">{totalCount}</span>{" "}
                 <span className="font-normal text-muted-foreground">{t("search.resultsAcross")}</span>
               </span>
             </div>
@@ -620,7 +626,7 @@ export default function SearchPage() {
                 />
                 <DrawerClose asChild>
                   <Button className="min-h-[44px] w-full bg-accent text-accent-foreground hover:bg-accent/90">
-                    {t("search.resultsFound").replace("{count}", String(filtered.length + displayLocations.length))}
+                    {t("search.resultsFound").replace("{count}", String(totalCount))}
                   </Button>
                 </DrawerClose>
               </div>
@@ -660,7 +666,7 @@ export default function SearchPage() {
           ) : (
             <>
               <p className="mb-4 text-sm text-muted-foreground">
-                {t("search.resultsFound").replace("{count}", String(filtered.length + displayLocations.length))}{query && ` ${t("search.forQuery")} "${query}"`}
+                {t("search.resultsFound").replace("{count}", String(totalCount))}{query && ` ${t("search.forQuery")} "${query}"`}
               </p>
 
               {/* Location cards */}
@@ -757,7 +763,7 @@ export default function SearchPage() {
                   </Button>
                 </div>
               )}
-              {filtered.length === 0 && locations.length === 0 && (
+              {totalCount === 0 && (
                 <div className="mx-auto flex max-w-md flex-col items-center rounded-[18px] border border-line bg-card px-6 py-12 text-center shadow-card">
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
                     <Warehouse className="h-6 w-6 text-muted-foreground" />

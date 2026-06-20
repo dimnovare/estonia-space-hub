@@ -9,6 +9,7 @@ export const LANGUAGES: { code: Language; label: string; flag: string }[] = [
 ];
 
 const et: Record<string, string> = {
+    "account.browseSpaces": "Sirvi hoiukohti",
     "contract.identityVerified": "Isik tuvastatud",
     "contract.selfDeclared": "Omakäeline allkiri",
     "booking.priceEstimateNote": "See on hinnanguline summa. Lõplik summa kinnitatakse maksmisel.",
@@ -3339,6 +3340,7 @@ const et: Record<string, string> = {
 };
 
 const en: Record<string, string> = {
+    "account.browseSpaces": "Browse spaces",
     "contract.identityVerified": "Identity-verified",
     "contract.selfDeclared": "Self-declared signature",
     "booking.priceEstimateNote": "This is an estimate. The final amount is confirmed at checkout.",
@@ -6633,6 +6635,7 @@ const en: Record<string, string> = {
 };
 
 const ru: Record<string, string> = {
+    "account.browseSpaces": "Просмотр помещений",
     "contract.identityVerified": "Личность подтверждена",
     "contract.selfDeclared": "Самостоятельно заверенная подпись",
     "booking.priceEstimateNote": "Это ориентировочная сумма. Окончательная сумма подтверждается при оформлении оплаты.",
@@ -9929,6 +9932,7 @@ const ru: Record<string, string> = {
 // ── Latvian ──────────────────────────
 // ── Latvian ──────────────────────────
 const lv: Record<string, string> = {
+    "account.browseSpaces": "Pārlūkot telpas",
     "contract.identityVerified": "Identitāte apstiprināta",
     "contract.selfDeclared": "Pašapliecināts paraksts",
     "booking.priceEstimateNote": "Šī ir aptuvena summa. Galīgā summa tiek apstiprināta apmaksas brīdī.",
@@ -13158,6 +13162,7 @@ const lv: Record<string, string> = {
 };
 // ── Lithuanian ──────────────────────────
 const lt: Record<string, string> = {
+    "account.browseSpaces": "Naršyti vietas",
     "contract.identityVerified": "Tapatybė patvirtinta",
     "contract.selfDeclared": "Savarankiškai patvirtintas parašas",
     "booking.priceEstimateNote": "Tai apytikrė suma. Galutinė suma patvirtinama apmokėjimo metu.",
