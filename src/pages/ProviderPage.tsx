@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { SEO } from "@/components/SEO";
 import {
   Accordion,
@@ -95,6 +96,7 @@ const tileClass: Record<"teal" | "navy", string> = {
 
 export default function ProviderPage() {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const settings = usePlatformSettings();
 
   const showMoving = settings?.showMovingService !== false;
@@ -135,7 +137,7 @@ export default function ProviderPage() {
       />
 
       {/* ── Hero (navy) ── */}
-      <section className="surface-dark relative overflow-hidden py-20 md:py-28">
+      <section className="surface-dark relative overflow-hidden pt-[96px] pb-20 md:py-28">
         <div className="container-wide relative text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-accent to-teal-deep px-3.5 py-1.5 text-xs font-semibold text-white shadow-card">
             <Sparkles className="h-3.5 w-3.5" />
@@ -155,7 +157,8 @@ export default function ProviderPage() {
               </Link>
             </Button>
             <Button size="lg" className="bg-white px-8 text-navy-ink hover:bg-secondary" asChild>
-              <Link to="/provider/dashboard">{t("provPage.hero.ctaSecondary")}</Link>
+              {/* Existing partners → dashboard; everyone else → login/register (never a dead login wall). */}
+              <Link to={user?.role === "provider" ? "/provider/dashboard" : "/login"}>{t("provPage.hero.ctaSecondary")}</Link>
             </Button>
           </div>
           <p className="mt-5 text-xs text-white/55">{t("provPage.hero.reassurance")}</p>

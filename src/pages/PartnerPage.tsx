@@ -205,8 +205,8 @@ export default function PartnerPage() {
 
       {/* Header — navy linear gradient 135deg #0E2156 → #173B8D, padding 40px 0 */}
       <header
-        className="text-white"
-        style={{ background: "linear-gradient(135deg, #0E2156, #173B8D)", paddingTop: 40, paddingBottom: 40 }}
+        className="pt-[96px] pb-10 text-white md:pt-[112px]"
+        style={{ background: "linear-gradient(135deg, #0E2156, #173B8D)" }}
       >
         <div className="container-wide flex flex-wrap items-start justify-between gap-6">
           <div className="flex min-w-0 items-start gap-5">

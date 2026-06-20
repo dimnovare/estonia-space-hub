@@ -1172,7 +1172,7 @@ export default function BookingPage() {
       </div>
 
       {/* Mobile sticky pricing bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border bg-card px-3 pt-2 pb-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card px-3 pt-2 pb-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
         {/* Reassurance copy on final step */}
         {step === steps.length - 1 && (
           <p className="mb-1 text-xs text-muted-foreground text-center">{t("booking.paymentReassurance")}</p>

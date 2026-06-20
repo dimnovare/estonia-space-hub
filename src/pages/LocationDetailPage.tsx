@@ -208,17 +208,13 @@ export default function LocationDetailPage() {
                         {t("detail.bookOnline")}
                       </Button>
                     </Link>
-                  ) : unit.supplierSlug ? (
-                    <Link to={`/partner/${unit.supplierSlug}`}>
+                  ) : (
+                    <Link to={`/${unit.type ?? "warehouse"}/${unit.id}`}>
                       <Button size="sm" className="h-11 gap-1.5 bg-primary font-semibold text-primary-foreground hover:bg-navy-ink">
                         <MessageSquare className="h-3.5 w-3.5" />
                         {t("detail.sendRequest")}
                       </Button>
                     </Link>
-                  ) : (
-                    <Button size="sm" variant="outline" disabled className="h-11">
-                      {t("detail.bookingUnavailable")}
-                    </Button>
                   )}
                 </div>
               </div>

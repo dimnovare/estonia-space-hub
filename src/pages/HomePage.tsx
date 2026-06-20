@@ -196,7 +196,7 @@ export default function HomePage() {
           }
         }}
       />
-      <section className="hero-gradient relative overflow-hidden py-10 md:py-24">
+      <section className="hero-gradient relative overflow-hidden pt-[96px] pb-10 md:py-24">
         {/* subtle dot-grid texture */}
         <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.06]"
           style={{ backgroundImage: "radial-gradient(hsl(0 0% 100%) 1px, transparent 1px)", backgroundSize: "28px 28px" }}

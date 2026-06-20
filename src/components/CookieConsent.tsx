@@ -26,7 +26,7 @@ export default function CookieConsent() {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-0 inset-x-0 z-50 border-t border-border bg-background p-4">
+    <div className="fixed bottom-0 inset-x-0 z-30 border-t border-border bg-background p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <div className="container-wide flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">{t("consent.text")}</p>
         <div className="flex items-center gap-2 shrink-0">

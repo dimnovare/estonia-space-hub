@@ -104,7 +104,7 @@ export default function PaymentReturnPage() {
             <p className="mt-2 text-sm text-muted-foreground">
               {t("payment.failed")}
             </p>
-            <Link to={bookingId ? `/booking/${bookingId}` : "/account?tab=bookings"}>
+            <Link to={bookingId ? `/bookings/${bookingId}` : "/account?tab=bookings"}>
               <Button className="mt-6" variant="outline">
                 {t("payment.backToBooking")}
               </Button>

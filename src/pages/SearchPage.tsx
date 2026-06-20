@@ -13,7 +13,6 @@ import ListingCard from "@/components/ListingCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO, verticalSeoMeta, type SeoVertical } from "@/components/SEO";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { trackEvent } from "@/lib/analytics";
 import { toast } from "sonner";
 import { SizeBucketFilter } from "@/components/search/SizeBucketFilter";
@@ -165,7 +164,17 @@ export default function SearchPage() {
   }, [serverFiltered, featureDefs, searchParams, showMovingService, showTrailerService]);
 
   // Local-only UI state
-  const isMobile = useIsMobile();
+  // The desktop split + inline secondary filters only exist at lg+ (1024px).
+  // Below lg the layout is a single column and secondary filters live in the
+  // Drawer, so the Filters button must open the Drawer for the whole <lg band.
+  const [isBelowLg, setIsBelowLg] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 1023px)");
+    const onChange = () => setIsBelowLg(mql.matches);
+    onChange();
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
   const [showFilters, setShowFilters] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
@@ -462,7 +471,7 @@ export default function SearchPage() {
               </span>
             </div>
             <div className="ml-auto flex items-center gap-2">
-              <button aria-label={t("search.filters")} onClick={() => isMobile ? setDrawerOpen(true) : setShowFilters(!showFilters)} className="flex min-h-[36px] items-center gap-1.5 rounded-lg border border-line-2 px-3 py-2 sm:py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+              <button aria-label={t("search.filters")} onClick={() => isBelowLg ? setDrawerOpen(true) : setShowFilters(!showFilters)} className="flex min-h-[36px] items-center gap-1.5 rounded-lg border border-line-2 px-3 py-2 sm:py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t("search.filters")}</span>
                 {activeFiltersCount > 0 && (
@@ -498,68 +507,40 @@ export default function SearchPage() {
             })}
           </div>
 
+          {/* Secondary filters — inline on desktop only (lg+). On mobile these
+              live in the filter Drawer so the sticky header stays compact and the
+              results aren't pushed below the fold. Each block is gated with its
+              own hidden/lg: so the parent's space-y-3 rhythm is preserved on
+              desktop (a single display:contents wrapper would drop that spacing). */}
           {/* Size buckets (storage scope) */}
           {(activeType === "all" || activeType === "warehouse") && (
-            <SizeBucketFilter
-              selectedCode={sizeCategory}
-              onChange={(code) => updateFilters({ sizeCategory: code ?? "" })}
-            />
+            <div className="hidden lg:block">
+              <SizeBucketFilter
+                selectedCode={sizeCategory}
+                onChange={(code) => updateFilters({ sizeCategory: code ?? "" })}
+              />
+            </div>
           )}
 
-          {/* Primary inline filters: Near me · city · max price · Available now · Book online */}
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              aria-pressed={!!userLocation}
-              disabled={geoLoading}
-              onClick={handleNearMe}
-              className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-full border px-3.5 py-2 sm:py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:opacity-70 ${userLocation ? "border-navy-ink bg-navy-ink text-white" : "border-line-2 bg-card text-foreground hover:border-primary hover:text-primary"}`}
-            >
-              {geoLoading
-                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                : <LocateFixed className="h-3.5 w-3.5" />}
-              {userLocation ? t("search.nearMe.active") : t("search.nearMe")}
-            </button>
-            <div className="relative">
-              <select
-                aria-label={t("search.allCities")}
-                value={cityFilter || "all"}
-                onChange={(e) => updateFilters({ city: e.target.value === "all" ? "" : e.target.value })}
-                className="min-h-[36px] appearance-none rounded-full border border-line-2 bg-card py-2 sm:py-1.5 pl-3.5 pr-8 text-[13px] font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
-              >
-                <option value="all">{t("search.allCities")}</option>
-                {availableCities.map((c) => (
-                  <option key={`${c.country}-${c.city}`} value={c.city}>{c.city}</option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
-            </div>
-            <input
-              aria-label={t("search.maxPrice")}
-              type="number"
-              min="0"
-              inputMode="numeric"
-              placeholder={t("search.maxPrice")}
-              value={priceMax}
-              onChange={(e) => updateFilters({ priceMax: e.target.value })}
-              className="min-h-[36px] w-28 rounded-full border border-line-2 bg-card px-3.5 py-2 sm:py-1.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-accent"
-            />
-            <FilterToggle
-              label={t("search.availableNow")}
-              active={availableNow}
-              onChange={(v) => updateFilters({ availableNow: v ? "true" : "" })}
-            />
-            <FilterToggle
-              label={t("search.bookOnline")}
-              active={searchParams.get("bookable") === "true"}
-              onChange={(v) => updateFilters({ bookable: v ? "true" : "" })}
+          <div className="hidden lg:block">
+            <SecondaryFilterRow
+              t={t}
+              userLocation={userLocation}
+              geoLoading={geoLoading}
+              handleNearMe={handleNearMe}
+              cityFilter={cityFilter}
+              availableCities={availableCities}
+              priceMax={priceMax}
+              availableNow={availableNow}
+              bookable={searchParams.get("bookable") === "true"}
+              updateFilters={updateFilters}
             />
           </div>
 
           {/* Storage-size calculator — subtle helper below the filter row, so it
               guides the search without interrupting the result list. */}
           {(activeType === "all" || activeType === "warehouse") && (
-            <div>
+            <div className="hidden lg:block">
               <button
                 type="button"
                 aria-expanded={calcOpen}
@@ -578,9 +559,11 @@ export default function SearchPage() {
             </div>
           )}
 
-          {/* Desktop inline filters */}
-          {showFilters && !isMobile && (
-            <div className="mt-3 space-y-3 border-t border-border pt-3">
+          {/* Desktop inline filters (lg+ only — below lg the Filters button opens
+              the Drawer instead). Hidden with lg: so an open panel never leaks
+              into the mobile/tablet layout on resize. */}
+          {showFilters && !isBelowLg && (
+            <div className="mt-3 hidden space-y-3 border-t border-border pt-3 lg:block">
               <FilterContent
                 t={t} language={language} cityFilter={cityFilter} priceMax={priceMax} availableNow={availableNow}
                 activeType={activeType} featureDefs={featureDefs}
@@ -590,13 +573,45 @@ export default function SearchPage() {
             </div>
           )}
 
-          {/* Mobile filter drawer */}
+          {/* Mobile filter drawer — holds the FULL secondary filter set so the
+              sticky header can stay compact (count + Filters + sort + type chips). */}
           <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
             <DrawerContent className="max-h-[85vh]">
-              <DrawerHeader className="text-left">
+              <DrawerHeader className="flex flex-row items-center justify-between text-left">
                 <DrawerTitle>{t("search.filters")}</DrawerTitle>
+                {activeFiltersCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearAll}
+                    className="text-[13px] font-medium text-destructive transition-colors hover:text-destructive/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:rounded"
+                  >
+                    {t("search.clearFilters")} ({activeFiltersCount})
+                  </button>
+                )}
               </DrawerHeader>
-              <div className="overflow-y-auto px-4 pb-6 space-y-3">
+              <div className="overflow-y-auto px-4 pb-6 space-y-4">
+                {/* Near me · city · max price · available now · book online */}
+                <SecondaryFilterRow
+                  t={t}
+                  userLocation={userLocation}
+                  geoLoading={geoLoading}
+                  handleNearMe={handleNearMe}
+                  cityFilter={cityFilter}
+                  availableCities={availableCities}
+                  priceMax={priceMax}
+                  availableNow={availableNow}
+                  bookable={searchParams.get("bookable") === "true"}
+                  updateFilters={updateFilters}
+                />
+
+                {/* Size buckets (storage scope) */}
+                {(activeType === "all" || activeType === "warehouse") && (
+                  <SizeBucketFilter
+                    selectedCode={sizeCategory}
+                    onChange={(code) => updateFilters({ sizeCategory: code ?? "" })}
+                  />
+                )}
+
                 <FilterContent
                   t={t} language={language} cityFilter={cityFilter} priceMax={priceMax} availableNow={availableNow}
                   activeType={activeType} featureDefs={featureDefs}
@@ -604,7 +619,7 @@ export default function SearchPage() {
                   availableCities={availableCities} searchParams={searchParams}
                 />
                 <DrawerClose asChild>
-                  <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                  <Button className="min-h-[44px] w-full bg-accent text-accent-foreground hover:bg-accent/90">
                     {t("search.resultsFound").replace("{count}", String(filtered.length + displayLocations.length))}
                   </Button>
                 </DrawerClose>
@@ -822,9 +837,80 @@ export default function SearchPage() {
 
 function FilterToggle({ label, active, onChange }: { label: string; active: boolean; onChange: (v: boolean) => void }) {
   return (
-    <button aria-pressed={active} onClick={() => onChange(!active)} className={`inline-flex min-h-[36px] items-center rounded-full border px-3.5 py-2 sm:py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${active ? "border-navy-ink bg-navy-ink text-white" : "border-line-2 bg-card text-foreground hover:border-primary hover:text-primary"}`}>
+    <button aria-pressed={active} onClick={() => onChange(!active)} className={`inline-flex min-h-[44px] items-center rounded-full border px-3.5 py-2 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 lg:min-h-[36px] lg:py-1.5 ${active ? "border-navy-ink bg-navy-ink text-white" : "border-line-2 bg-card text-foreground hover:border-primary hover:text-primary"}`}>
       {label}
     </button>
+  );
+}
+
+interface SecondaryFilterRowProps {
+  t: (key: string) => string;
+  userLocation: [number, number] | null;
+  geoLoading: boolean;
+  handleNearMe: () => void;
+  cityFilter: string;
+  availableCities: { city: string; country: string }[];
+  priceMax: string;
+  availableNow: boolean;
+  bookable: boolean;
+  updateFilters: (u: Record<string, string>) => void;
+}
+
+// Near me · city · max price · Available now · Book online. Rendered inline in the
+// sticky header on desktop (lg+) and inside the filter Drawer on mobile/tablet.
+function SecondaryFilterRow({
+  t, userLocation, geoLoading, handleNearMe, cityFilter, availableCities,
+  priceMax, availableNow, bookable, updateFilters,
+}: SecondaryFilterRowProps) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        aria-pressed={!!userLocation}
+        disabled={geoLoading}
+        onClick={handleNearMe}
+        className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:opacity-70 lg:min-h-[36px] lg:py-1.5 ${userLocation ? "border-navy-ink bg-navy-ink text-white" : "border-line-2 bg-card text-foreground hover:border-primary hover:text-primary"}`}
+      >
+        {geoLoading
+          ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          : <LocateFixed className="h-3.5 w-3.5" />}
+        {userLocation ? t("search.nearMe.active") : t("search.nearMe")}
+      </button>
+      <div className="relative">
+        <select
+          aria-label={t("search.allCities")}
+          value={cityFilter || "all"}
+          onChange={(e) => updateFilters({ city: e.target.value === "all" ? "" : e.target.value })}
+          className="min-h-[44px] appearance-none rounded-full border border-line-2 bg-card py-2 pl-3.5 pr-8 text-[13px] font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-accent lg:min-h-[36px] lg:py-1.5"
+        >
+          <option value="all">{t("search.allCities")}</option>
+          {availableCities.map((c) => (
+            <option key={`${c.country}-${c.city}`} value={c.city}>{c.city}</option>
+          ))}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+      </div>
+      <input
+        aria-label={t("search.maxPrice")}
+        type="number"
+        min="0"
+        inputMode="numeric"
+        placeholder={t("search.maxPrice")}
+        value={priceMax}
+        onChange={(e) => updateFilters({ priceMax: e.target.value })}
+        className="min-h-[44px] w-28 rounded-full border border-line-2 bg-card px-3.5 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-accent lg:min-h-[36px] lg:py-1.5"
+      />
+      <FilterToggle
+        label={t("search.availableNow")}
+        active={availableNow}
+        onChange={(v) => updateFilters({ availableNow: v ? "true" : "" })}
+      />
+      <FilterToggle
+        label={t("search.bookOnline")}
+        active={bookable}
+        onChange={(v) => updateFilters({ bookable: v ? "true" : "" })}
+      />
+    </div>
   );
 }
 

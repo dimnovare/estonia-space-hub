@@ -63,7 +63,7 @@ export default function HowItWorksPage() {
       />
 
       {/* Hero */}
-      <section className="surface-dark py-16 md:py-24">
+      <section className="surface-dark pt-[96px] pb-16 md:py-24">
         <div className="container-wide text-center motion-safe:animate-slide-up">
           <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal">
             {t("hiw.eyebrow")}

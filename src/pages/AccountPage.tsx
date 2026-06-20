@@ -118,7 +118,7 @@ function MobileAccountNav({ tab, setTab, sidebarLinks, unreadMessages, unreadNot
   unreadMessages: number; unreadNotifications: number;
 }) {
   return (
-    <div className="sticky top-16 z-20 -mx-4 flex gap-2 overflow-x-auto border-b border-line bg-background/95 px-4 py-2.5 backdrop-blur-sm sm:-mx-6 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="sticky top-[72px] z-20 -mx-4 flex gap-2 overflow-x-auto border-b border-line bg-background/95 px-4 py-2.5 backdrop-blur-sm sm:-mx-6 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {sidebarLinks.map((l) => {
         const Icon = l.icon;
         const active = tab === l.id;

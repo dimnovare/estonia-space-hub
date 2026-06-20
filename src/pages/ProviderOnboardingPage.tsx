@@ -104,14 +104,18 @@ export default function ProviderOnboardingPage() {
         // Authenticated: use existing endpoint
         await providerService.apply(payload);
         await queryClient.invalidateQueries({ queryKey: queryKeys.users.me() });
+        toast.success(t("onboard.toastSubmitted"));
+        // Authenticated partner → straight to the dashboard.
+        setTimeout(goToDashboard, 900);
       } else {
-        // Anonymous: use public endpoint
+        // Anonymous: use public endpoint. Do NOT route into the protected
+        // dashboard (it would bounce them to /login with no context). Send them
+        // to login/register so they can create an account to track the
+        // application — with a clear success message.
         await providerService.applyPublic(payload);
+        toast.success(t("onboard.toastSubmitted"));
+        setTimeout(() => navigate("/login"), 900);
       }
-
-      toast.success(t("onboard.toastSubmitted"));
-      // Brief success state, then route to the partner dashboard.
-      setTimeout(goToDashboard, 900);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : t("onboard.error");
       toast.error(message);

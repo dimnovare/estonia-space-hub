@@ -729,7 +729,7 @@ export function WarehouseDetail() {
       <MoreOptionsRail type="warehouse" label={typeLabel} currentId={wListing.id} city={wListing.city} />
 
       {/* Mobile sticky CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border bg-card p-3 lg:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card p-3 lg:hidden">
         <div className="flex items-center justify-between gap-3">
           <div className="font-display text-lg font-extrabold text-navy-ink">€{wListing.priceFrom}
             <span className="ml-1 text-xs font-normal text-muted-foreground">{formatPriceUnit(wListing.priceUnit, t)}</span>
@@ -858,7 +858,7 @@ export function MovingDetail() {
       <MoreOptionsRail type="moving" label={typeLabel} currentId={mListing.id} city={mListing.city} />
 
       {/* Mobile sticky CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border bg-card p-3 lg:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card p-3 lg:hidden">
         <div className="flex items-center justify-between gap-3">
           <div className="font-display text-lg font-extrabold text-navy-ink">€{mListing.priceFrom}
             <span className="ml-1 text-xs font-normal text-muted-foreground">{formatPriceUnit(mListing.priceUnit, t)}</span>
@@ -983,7 +983,7 @@ export function TrailerDetail() {
       <MoreOptionsRail type="trailer" label={typeLabel} currentId={tListing.id} city={tListing.city} />
 
       {/* Mobile sticky CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border bg-card p-3 lg:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card p-3 lg:hidden">
         <div className="flex items-center justify-between gap-3">
           <div className="font-display text-lg font-extrabold text-navy-ink">€{tListing.priceFrom}
             <span className="ml-1 text-xs font-normal text-muted-foreground">{formatPriceUnit(tListing.priceUnit, t)}</span>
