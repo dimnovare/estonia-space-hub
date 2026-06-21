@@ -488,6 +488,58 @@ export const leadService = {
   },
 };
 
+// ─── Dispute Service ─────────────────────────────────────────────────────────
+// Trust-and-safety claims (damage / no-show / deposit) against a booking/order.
+export type DisputeType = "damage" | "noshow" | "deposit" | "other";
+export type DisputeStatus = "open" | "inreview" | "resolved" | "rejected";
+
+export interface AdminDispute {
+  id: string;
+  bookingId?: string | null;
+  orderId?: string | null;
+  supplierId: string;
+  supplierName?: string | null;
+  listingTitle?: string | null;
+  type: DisputeType;
+  status: DisputeStatus;
+  raisedByRole: string;
+  subject: string;
+  description?: string;
+  contactEmail?: string;
+  amountClaimed?: number | null;
+  evidence?: string[];
+  adminNotes?: string | null;
+  resolution?: string | null;
+  createdAt: string;
+  resolvedAt?: string | null;
+}
+
+export const disputeService = {
+  async raise(input: {
+    bookingId?: string;
+    orderId?: string;
+    type: DisputeType;
+    subject: string;
+    description?: string;
+    amountClaimed?: number;
+    evidence?: string[];
+  }): Promise<void> {
+    await apiClient.post("/disputes", input);
+  },
+  async listMine(): Promise<AdminDispute[]> {
+    const res = await apiClient.get<{ items: AdminDispute[] }>("/disputes/mine");
+    return res.items ?? [];
+  },
+  async adminList(status?: string, page = 1, limit = 50): Promise<{ total: number; items: AdminDispute[] }> {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (status && status !== "all") params.set("status", status);
+    return apiClient.get<{ total: number; items: AdminDispute[] }>(`/admin/disputes?${params}`);
+  },
+  async adminUpdate(id: string, body: { status?: string; adminNotes?: string; resolution?: string }): Promise<void> {
+    await apiClient.patch(`/admin/disputes/${id}`, body);
+  },
+};
+
 // ─── Bank Service ───────────────────────────────────────────────────────────────
 export interface BankDetails {
   iban?: string;

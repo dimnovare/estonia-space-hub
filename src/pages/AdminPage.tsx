@@ -20,6 +20,7 @@ import AdminSettings from "@/components/admin/AdminSettings";
 import AdminPayouts from "@/components/admin/AdminPayouts";
 import AdminRebates from "@/components/admin/AdminRebates";
 import AdminLeads from "@/components/admin/AdminLeads";
+import AdminDisputes from "@/components/admin/AdminDisputes";
 import AdminOps from "@/components/admin/AdminOps";
 import AdminMetrics from "@/components/admin/AdminMetrics";
 import AdminPaidFeatures from "@/components/admin/AdminPaidFeatures";
@@ -79,6 +80,7 @@ export default function AdminPage() {
         {activeTab === "integrations" && <AdminIntegrations />}
         {activeTab === "inquiries" && <AdminInquiries />}
         {activeTab === "leads" && <AdminLeads />}
+        {activeTab === "disputes" && <AdminDisputes />}
         {activeTab === "users" && <AdminUsers />}
         {activeTab === "audit" && <AdminAudit />}
         {activeTab === "payouts" && <AdminPayouts supplierId={filterSupplierId || undefined} />}

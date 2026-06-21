@@ -5,7 +5,7 @@ import {
   LayoutDashboard, MessageSquare, Settings, Users,
   Package, Activity, ChevronDown, Route, MapPin, Banknote, Receipt,
   Building2, Inbox, Gauge, BarChart2, ClipboardCheck, Sparkles, Zap,
-  ListChecks, Link2,
+  ListChecks, Link2, ShieldAlert,
   ArrowLeft,
 } from "lucide-react";
 
@@ -28,6 +28,7 @@ function useItems(): Item[] {
     { id: "integrations", label: t("admin.integrations"), icon: Link2,           href: "/admin?tab=integrations" },
     { id: "inquiries",    label: t("admin.inquiries"),    icon: MessageSquare,   href: "/admin?tab=inquiries" },
     { id: "leads",        label: t("admin.leads"),        icon: Inbox,           href: "/admin?tab=leads" },
+    { id: "disputes",     label: t("admin.disputes"),     icon: ShieldAlert,     href: "/admin?tab=disputes" },
     { id: "users",        label: t("admin.users"),        icon: Users,           href: "/admin?tab=users" },
     { id: "audit",        label: t("admin.audit"),        icon: Activity,        href: "/admin?tab=audit" },
     { id: "ops",          label: t("admin.ops"),          icon: Gauge,           href: "/admin?tab=ops" },

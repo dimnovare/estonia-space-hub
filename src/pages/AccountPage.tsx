@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReviewDialog from "@/components/ReviewDialog";
+import RaiseDisputeModal from "@/components/account/RaiseDisputeModal";
 import ContractSigningModal from "@/components/ContractSigningModal";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -428,6 +429,15 @@ function BookingCard({ booking, onMessage }: { booking: Booking; onMessage?: () 
               <p className="text-xs text-muted-foreground text-center py-1">
                 {t("reviews.alreadyLeft")}
               </p>
+            )}
+            {(booking.status === "completed" || booking.status === "active"
+              || booking.status === "confirmed" || booking.status === "awaitingconfirmation") && (
+              <div className="flex justify-center pt-1" onClick={(e) => e.stopPropagation()}>
+                <RaiseDisputeModal
+                  bookingId={booking.id}
+                  defaultType={booking.listingType === "trailer" ? "deposit" : "other"}
+                />
+              </div>
             )}
             {!contractQuery.isLoading && (
               <div className="rounded-lg border border-border p-3">
