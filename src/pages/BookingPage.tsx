@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useSearchParams, Link, Navigate } from "@/i18n/routing";
-import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand, Info, Warehouse, Lock, ShieldCheck, Shield, RefreshCw, AlertTriangle } from "lucide-react";
+import { Check, ArrowLeft, ArrowRight, Calendar, User, FileText, CheckCircle, CreditCard, Building2, Clock, Loader2, Wifi, Mail, Hand, Info, Warehouse, Truck, CarFront, Lock, ShieldCheck, Shield, RefreshCw, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListing, useCreateBooking, useSuppliers, usePricingConfig, useListingExtras } from "@/hooks/queries";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
@@ -58,6 +58,14 @@ function formatDuration(start: string, end: string, t: (k: string) => string): s
   const remainDays = days % 30;
   if (remainDays === 0) return `${months} ${months === 1 ? t("booking.month") : t("booking.months")}`;
   return `${months} ${months === 1 ? t("booking.month") : t("booking.months")}, ${remainDays} ${t("booking.days")}`;
+}
+
+// Per-vertical placeholder icon used when a listing has no photo, so a moving or
+// trailer booking doesn't show a warehouse glyph.
+function listingFallbackIcon(type?: string) {
+  if (type === "moving") return Truck;
+  if (type === "trailer") return CarFront;
+  return Warehouse;
 }
 
 function getDaysPerUnit(priceUnit: string): number {
@@ -733,7 +741,7 @@ export default function BookingPage() {
                       <img src={listing.image} alt={listing?.title || t("booking.listingImageAlt")} className="h-16 w-20 rounded-lg object-cover" />
                     ) : (
                       <div className="flex h-16 w-20 items-center justify-center rounded-lg bg-secondary">
-                        <Warehouse className="h-6 w-6 text-muted-foreground/40" />
+                        {(() => { const FallbackIcon = listingFallbackIcon(listing.type); return <FallbackIcon className="h-6 w-6 text-muted-foreground/40" />; })()}
                       </div>
                     )}
                     <div>
@@ -1068,26 +1076,33 @@ export default function BookingPage() {
                     <Lock className="h-4 w-4 text-success shrink-0" />
                     <span className="text-xs text-muted-foreground">{t("booking.securePayment")}</span>
                   </div>
-                  {/* Visual trust badge row — official marks (see public/payment/*.svg) */}
-                  <div className="flex flex-wrap items-center gap-2">
-                    <img
-                      src="/payment/montonio.svg"
-                      alt="Montonio"
-                      title={t("trust.securedBy")}
-                      className="h-7 w-auto"
-                    />
-                    <img
-                      src="/payment/visa.svg"
-                      alt="Visa"
-                      className="h-7 w-auto rounded ring-1 ring-black/5"
-                    />
-                    <img
-                      src="/payment/mastercard.svg"
-                      alt="Mastercard"
-                      className="h-7 w-auto rounded ring-1 ring-black/5"
-                    />
-                  </div>
-                  <p className="text-[11px] text-muted-foreground">{t("trust.cardsAccepted")}</p>
+                  {/* Card-scheme marks only when card is an actually-available method.
+                      At the bank-transfer-only launch (no PSP/Montonio), advertising
+                      Visa/Mastercard would promise a method the customer can't use. */}
+                  {availableMethods.includes("card") && (
+                    <>
+                      {/* Visual trust badge row — official marks (see public/payment/*.svg) */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <img
+                          src="/payment/montonio.svg"
+                          alt="Montonio"
+                          title={t("trust.securedBy")}
+                          className="h-7 w-auto"
+                        />
+                        <img
+                          src="/payment/visa.svg"
+                          alt="Visa"
+                          className="h-7 w-auto rounded ring-1 ring-black/5"
+                        />
+                        <img
+                          src="/payment/mastercard.svg"
+                          alt="Mastercard"
+                          className="h-7 w-auto rounded ring-1 ring-black/5"
+                        />
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">{t("trust.cardsAccepted")}</p>
+                    </>
+                  )}
                 </div>
                 {/* Cancellation */}
                 <div className="flex items-start gap-2">
@@ -1167,7 +1182,7 @@ export default function BookingPage() {
                   <img src={listing.image} alt={listing?.title || t("booking.listingImageAlt")} className="h-10 w-12 rounded object-cover" />
                 ) : (
                   <div className="flex h-10 w-12 items-center justify-center rounded bg-secondary">
-                    <Warehouse className="h-4 w-4 text-muted-foreground/40" />
+                    {(() => { const FallbackIcon = listingFallbackIcon(listing.type); return <FallbackIcon className="h-4 w-4 text-muted-foreground/40" />; })()}
                   </div>
                 )}
                 <div className="text-xs"><div className="font-medium">{listing.title}</div><div className="text-muted-foreground">{listing.city}</div></div>

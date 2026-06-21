@@ -1027,7 +1027,7 @@ export function MovingDetail() {
   const mListing = listing as MovingListing;
   const typeLabel = t("provider.listings.typeMoving");
 
-  const features = mListing.services.concat([t("detail.onSiteParking"), t("detail.litAndDry")]);
+  const features = mListing.services;
   const about = composeAbout(t, mListing, typeLabel);
 
   // Moving is a ONE-TIME job, not a recurring rental — so there is NO /book route here.
@@ -1060,7 +1060,7 @@ export function MovingDetail() {
 
           <hr className="mt-6 border-border" />
 
-          <h2 className="mt-6 font-display text-lg font-bold">{t("detail.aboutSpace")}</h2>
+          <h2 className="mt-6 font-display text-lg font-bold">{t("detail.aboutService")}</h2>
           <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">{about}</p>
 
           <h2 className="mt-7 font-display text-lg font-bold">{t("detail.features")}</h2>
@@ -1146,7 +1146,7 @@ export function TrailerDetail() {
   const tListing = listing as TrailerListing;
   const typeLabel = t("provider.listings.typeTrailer");
 
-  const features = tListing.requirements.concat([t("detail.onSiteParking"), t("detail.litAndDry")]);
+  const features = tListing.requirements;
   const about = composeAbout(t, tListing, typeLabel);
 
   // Forward the pickup date + rental days (derive the return date from days).
@@ -1186,7 +1186,7 @@ export function TrailerDetail() {
 
           <hr className="mt-6 border-border" />
 
-          <h2 className="mt-6 font-display text-lg font-bold">{t("detail.aboutSpace")}</h2>
+          <h2 className="mt-6 font-display text-lg font-bold">{t("detail.aboutTrailer")}</h2>
           <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">{about}</p>
 
           <h2 className="mt-7 font-display text-lg font-bold">{t("detail.specifications")}</h2>

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { queryKeys } from "@/services/queryKeys";
+import { formatPriceUnit } from "@/lib/priceUnit";
 
 const CITY_MAP: Record<string, string> = {
   tallinn: "Tallinn",
@@ -65,6 +66,9 @@ export default function CityPage() {
         availableUnits: loc.availableUnits ?? loc.unitCount,
         fullyBooked: loc.fullyBooked,
         priceFrom: loc.priceFrom,
+        // Locations aggregate multiple listings (possibly across verticals),
+        // so there is no single price unit — render a neutral "from €X".
+        priceUnit: undefined as string | undefined,
         href: `/location/${loc.id}`,
       }))
     : cityListings.filter(hideDisabled).slice(0, 4).map((l: any) => ({
@@ -76,6 +80,9 @@ export default function CityPage() {
         availableUnits: undefined,
         fullyBooked: false,
         priceFrom: l.priceFrom,
+        // Single-listing fallback carries its own stored unit, so a per-day
+        // trailer or one-time move is never mislabeled "/month".
+        priceUnit: l.priceUnit as string | undefined,
         href: `/${l.type}/${l.id}`,
       }));
 
@@ -181,7 +188,12 @@ export default function CityPage() {
                   {loc.priceFrom != null && (
                     <div className="mt-3 border-t border-border pt-3">
                       <span className="font-display text-lg font-extrabold text-navy-ink">{t("location.from")} €{loc.priceFrom}</span>
-                      <span className="text-xs text-muted-foreground"> / {t("location.perMonth")}</span>
+                      {/* Per-item unit from the listing's stored price unit so a
+                          per-day trailer or one-time move isn't shown "/month".
+                          Aggregate location cards (no single unit) show no suffix. */}
+                      {loc.priceUnit != null && (
+                        <span className="text-xs text-muted-foreground"> {formatPriceUnit(loc.priceUnit, t)}</span>
+                      )}
                     </div>
                   )}
                 </div>

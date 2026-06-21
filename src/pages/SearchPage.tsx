@@ -547,8 +547,10 @@ export default function SearchPage() {
               results aren't pushed below the fold. Each block is gated with its
               own hidden/lg: so the parent's space-y-3 rhythm is preserved on
               desktop (a single display:contents wrapper would drop that spacing). */}
-          {/* Size buckets (storage scope) */}
-          {(activeType === "all" || activeType === "warehouse") && (
+          {/* Size buckets (storage scope) — warehouse tab only. On the mixed
+              'all' view these storage-only tools are misleading next to
+              trailer/moving results, so they are not shown there. */}
+          {activeType === "warehouse" && (
             <div className="hidden lg:block">
               <SizeBucketFilter
                 selectedCode={sizeCategory}
@@ -573,8 +575,10 @@ export default function SearchPage() {
           </div>
 
           {/* Storage-size calculator — subtle helper below the filter row, so it
-              guides the search without interrupting the result list. */}
-          {(activeType === "all" || activeType === "warehouse") && (
+              guides the search without interrupting the result list. Warehouse
+              tab only: a storage-size calculator is meaningless on the mixed
+              'all' view (and for trailer/moving). */}
+          {activeType === "warehouse" && (
             <div className="hidden lg:block">
               <button
                 type="button"
@@ -756,10 +760,11 @@ export default function SearchPage() {
                         </p>
                         <div className="mt-3 flex items-baseline gap-2 border-t border-border pt-3">
                           {loc.priceFrom != null && (
-                            <>
-                              <span className="font-display text-lg font-bold text-foreground">{t("location.from")} €{loc.priceFrom}</span>
-                              <span className="text-xs text-muted-foreground">{t("priceUnit.month")}</span>
-                            </>
+                            // Location cards aggregate multiple listings which may
+                            // span verticals (warehouse=/mo, trailer=/day, moving=one-time),
+                            // so there is no single correct period suffix. Show a
+                            // neutral "from €X" rather than a wrong "/month".
+                            <span className="font-display text-lg font-bold text-foreground">{t("location.from")} €{loc.priceFrom}</span>
                           )}
                           {loc.priceFrom && (loc.bestCustomerDiscount ?? 0) > 0 && (
                             <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
