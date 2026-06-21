@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { useParams, Link } from "@/i18n/routing";
-import { Loader2, MapPin, Clock, Star, ShieldCheck, Award, Box, MessageCircle, Heart } from "lucide-react";
+import { Loader2, MapPin, Clock, Star, ShieldCheck, Award, Box, MessageCircle, Heart, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { usePartnerGoogleReviews, type GoogleReview } from "@/hooks/usePartnerGoogleReviews";
 import {
   Dialog,
   DialogContent,
@@ -141,6 +142,108 @@ function PartnerContactModal({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function PartnerStarRow({ rating }: { rating: number }) {
+  return (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star
+          key={i}
+          className={`h-4 w-4 ${i <= Math.round(rating) ? "fill-[#F2A900] text-[#F2A900]" : "text-muted-foreground/30"}`}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Inline Google wordmark so Google-sourced reviews are clearly attributed. */
+function GoogleBadge() {
+  return (
+    <span
+      aria-hidden
+      className="inline-flex select-none items-center font-bold leading-none tracking-tight"
+      style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
+    >
+      <span style={{ color: "#4285F4" }}>G</span>
+      <span style={{ color: "#EA4335" }}>o</span>
+      <span style={{ color: "#FBBC05" }}>o</span>
+      <span style={{ color: "#4285F4" }}>g</span>
+      <span style={{ color: "#34A853" }}>l</span>
+      <span style={{ color: "#EA4335" }}>e</span>
+    </span>
+  );
+}
+
+function GoogleReviewCard({ review }: { review: GoogleReview }) {
+  return (
+    <div className="rounded-[14px] border border-line bg-card p-5 shadow-card">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          {review.authorPhotoUrl ? (
+            <img src={review.authorPhotoUrl} alt="" className="h-9 w-9 rounded-full object-cover" loading="lazy" />
+          ) : (
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary font-display text-sm font-bold text-foreground">
+              {(review.authorName || "?").charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div>
+            <strong className="font-display text-sm font-semibold text-navy-ink">{review.authorName}</strong>
+            <div className="mt-0.5"><PartnerStarRow rating={review.rating} /></div>
+          </div>
+        </div>
+        <span className="shrink-0 text-xs text-muted-foreground">{review.relativeTimeDesc}</span>
+      </div>
+      {review.text && <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{review.text}</p>}
+    </div>
+  );
+}
+
+/**
+ * Partner reviews. Most partners are directory-only / request-based and can never
+ * earn an in-platform review (those require a completed booking). When the partner
+ * has a linked Google place, surface its rating + a few reviews instead of an empty
+ * section — clearly labelled "from Google", never merged into the platform average.
+ */
+function PartnerGoogleReviews({ partner }: { partner: PartnerProfile }) {
+  const { t } = useLanguage();
+  // Skip the request when there are platform reviews (header already shows them)
+  // or when the partner has no linked Google place.
+  const enabled = partner.reviewCount === 0 && (partner.hasGoogleReviews ?? false);
+  const { data: google } = usePartnerGoogleReviews(partner.slug, enabled);
+
+  const googleReviews = google?.reviews?.slice(0, 3) ?? [];
+  if (!enabled || !google || googleReviews.length === 0) return null;
+
+  return (
+    <section className="container-wide pb-14">
+      <div className="flex flex-wrap items-center gap-3">
+        <h2 className="font-display text-[22px] font-extrabold text-navy-ink">{t("reviews.title")}</h2>
+        <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+          <Star className="h-4 w-4 fill-[#F2A900] text-[#F2A900]" />
+          {google.rating.toFixed(1)} ({t("reviews.count").replace("{count}", String(google.totalRatings))})
+          <span className="inline-flex items-center gap-1 text-[11px]">· {t("reviews.fromGoogle")} <GoogleBadge /></span>
+        </span>
+      </div>
+      <p className="mt-2 text-xs text-muted-foreground">{t("reviews.noPlatformYet")}</p>
+      <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {googleReviews.map((r, i) => (
+          <GoogleReviewCard key={`${r.authorName}-${r.time}-${i}`} review={r} />
+        ))}
+      </div>
+      {google.mapsUrl && (
+        <a
+          href={google.mapsUrl}
+          target="_blank"
+          rel="noopener noreferrer nofollow"
+          className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+        >
+          {t("reviews.viewOnGoogle")}
+          <ExternalLink className="h-3.5 w-3.5" />
+        </a>
+      )}
+    </section>
   );
 }
 
@@ -314,6 +417,8 @@ export default function PartnerPage() {
           </div>
         )}
       </section>
+
+      <PartnerGoogleReviews partner={partner} />
 
       <PartnerContactModal partner={partner} open={contactOpen} onOpenChange={setContactOpen} />
     </div>

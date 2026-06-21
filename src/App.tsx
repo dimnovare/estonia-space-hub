@@ -193,7 +193,13 @@ function AppContent() {
               <Route path="bookings/:id" element={<ProtectedRoute><BookingRedirect /></ProtectedRoute>} />
               <Route path="provider" element={<ProviderPage />} />
               <Route path="partner/:slug" element={<PartnerPage />} />
-              <Route path="storage/:slug" element={<CityPage />} />
+              {/* Per-vertical SEO city hubs. The backend sitemap emits
+                  /storage/<city>, /moving/<city> and /trailer/<city>; each
+                  maps to the same CityPage with a vertical prop so the page is
+                  storage- / moving- / trailer-aware. storage = warehouse. */}
+              <Route path="storage/:slug" element={<CityPage vertical="warehouse" />} />
+              <Route path="moving/:slug" element={<CityPage vertical="moving" />} />
+              <Route path="trailer/:slug" element={<CityPage vertical="trailer" />} />
               <Route path="about" element={<AboutPage />} />
               <Route path="contact" element={<ContactPage />} />
               <Route path="how-it-works" element={<HowItWorksPage />} />

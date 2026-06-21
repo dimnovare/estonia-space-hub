@@ -5,7 +5,7 @@ import { useListings } from "@/hooks/queries";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import type { Listing } from "@/services/types";
-import { SEO } from "@/components/SEO";
+import { SEO, verticalSeoMeta, type SeoVertical } from "@/components/SEO";
 import { MapPin, Layers, Search, ArrowRight, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,10 +23,26 @@ const CITY_MAP: Record<string, string> = {
   daugavpils: "Daugavpils",
 };
 
-export default function CityPage() {
+/** Listing-type vertical this city hub is scoped to (storage = warehouse). */
+type CityVertical = "warehouse" | "moving" | "trailer";
+
+/**
+ * Per-vertical constants. Each city hub renders for exactly one vertical:
+ *  - `seoVertical` feeds verticalSeoMeta() (note plural "trailers").
+ *  - `urlSegment` is the canonical/structured-data path segment that must
+ *    match the backend sitemap (/storage|/moving|/trailer).
+ */
+const VERTICAL_CONFIG: Record<CityVertical, { seoVertical: SeoVertical; urlSegment: string }> = {
+  warehouse: { seoVertical: "storage", urlSegment: "storage" },
+  moving: { seoVertical: "moving", urlSegment: "moving" },
+  trailer: { seoVertical: "trailers", urlSegment: "trailer" },
+};
+
+export default function CityPage({ vertical = "warehouse" }: { vertical?: CityVertical }) {
   const { slug } = useParams<{ slug: string }>();
   const { t, language } = useLanguage();
   const { showMovingService, showTrailerService } = usePlatformSettings();
+  const { seoVertical, urlSegment } = VERTICAL_CONFIG[vertical];
   // Unknown slugs (not in CITY_MAP) would otherwise render as the raw lowercase
   // slug (e.g. "rakvere" / "viljandi-keskus") in the H1 and <title>. Title-case
   // each hyphen/space-separated word so the visible name reads naturally.
@@ -44,6 +60,12 @@ export default function CityPage() {
     (showMovingService  || l.type !== "moving") &&
     (showTrailerService || l.type !== "trailer");
 
+  // A moving city page must list movers, a trailer page trailers, etc. Storage
+  // (warehouse) keeps its current behavior — show every listing in the city —
+  // so this predicate only narrows the moving/trailer hubs.
+  const matchesVertical = (l: { type?: string }) =>
+    vertical === "warehouse" || l.type === vertical;
+
   const { data: locations = [], isLoading } = useQuery({
     queryKey: queryKeys.cityLocations.bySlug(city),
     queryFn: () => apiClient.get<any[]>(`/locations?city=${encodeURIComponent(city)}`),
@@ -56,7 +78,12 @@ export default function CityPage() {
   const { data: listingsResult } = useListings({ city });
   const cityListings: Listing[] = listingsResult?.data ?? [];
 
-  const topItems = locations.length > 0
+  // Locations aggregate storage units, so they only represent the warehouse
+  // vertical. Moving/trailer hubs skip them and list their own vertical's
+  // listings directly (filtered by type below).
+  const useLocations = vertical === "warehouse" && locations.length > 0;
+
+  const topItems = useLocations
     ? locations.slice(0, 4).map((loc: any) => ({
         id: loc.id,
         name: loc.name,
@@ -71,7 +98,7 @@ export default function CityPage() {
         priceUnit: undefined as string | undefined,
         href: `/location/${loc.id}`,
       }))
-    : cityListings.filter(hideDisabled).slice(0, 4).map((l: any) => ({
+    : cityListings.filter(hideDisabled).filter(matchesVertical).slice(0, 4).map((l: any) => ({
         id: l.id,
         name: l.title,
         images: l.image ? [l.image] : (l.images || []),
@@ -86,28 +113,51 @@ export default function CityPage() {
         href: `/${l.type}/${l.id}`,
       }));
 
-  const seoDesc = t("city.seoDesc").replace("{city}", city);
+  // SEO title/description. Storage keeps its existing, lighter copy unchanged;
+  // moving/trailer use the per-vertical verticalSeoMeta() city templates.
+  const storageSeoTitle = `${t("city.storageIn")} ${city} — Ruumly`;
+  const storageSeoDesc = t("city.seoDesc").replace("{city}", city);
+  const verticalMeta = verticalSeoMeta(t, seoVertical, city);
+  const seoTitle = vertical === "warehouse" ? storageSeoTitle : verticalMeta.title;
+  const seoDesc = vertical === "warehouse" ? storageSeoDesc : verticalMeta.description;
+
+  // Per-vertical H1 / hero. Storage reuses its existing cityPage.* copy verbatim;
+  // moving/trailer use "{label} {city}" headings plus a vertical description.
+  const heroTitle = vertical === "warehouse"
+    ? t("cityPage.heroTitle").replace("{city}", city)
+    : `${t(vertical === "moving" ? "city.movingIn" : "city.trailerIn")} ${city}`;
+  const heroDesc = vertical === "warehouse"
+    ? t("cityPage.heroDesc").replace("{city}", city)
+    : t(vertical === "moving" ? "city.movingDesc" : "city.trailerDesc").replace("{city}", city);
+
   const introText = t("city.introText")
     .replace("{city}", city)
     .replace("{count}", String(topItems.length || ""));
 
-  const faqs = [
-    { q: t("cityPage.faq1.q").replace("{city}", city), a: t("cityPage.faq1.a").replace("{city}", city) },
-    { q: t("cityPage.faq2.q").replace("{city}", city), a: t("cityPage.faq2.a").replace("{city}", city) },
-    { q: t("cityPage.faq3.q").replace("{city}", city), a: t("cityPage.faq3.a").replace("{city}", city) },
-  ];
+  // FAQ. faq1 (storage pricing "€29/month") and faq3 (storage security) are
+  // storage-specific, so they only show on the warehouse hub. faq2 (online
+  // booking) is generic and shown on every vertical.
+  const faqs = vertical === "warehouse"
+    ? [
+        { q: t("cityPage.faq1.q").replace("{city}", city), a: t("cityPage.faq1.a").replace("{city}", city) },
+        { q: t("cityPage.faq2.q").replace("{city}", city), a: t("cityPage.faq2.a").replace("{city}", city) },
+        { q: t("cityPage.faq3.q").replace("{city}", city), a: t("cityPage.faq3.a").replace("{city}", city) },
+      ]
+    : [
+        { q: t("cityPage.faq2.q").replace("{city}", city), a: t("cityPage.faq2.a").replace("{city}", city) },
+      ];
 
   return (
     <div>
       <SEO
-        title={`${t("city.storageIn")} ${city} — Ruumly`}
+        title={seoTitle}
         description={seoDesc}
-        path={`/storage/${slug}`}
+        path={`/${urlSegment}/${slug}`}
         structuredData={{
           "@context": "https://schema.org",
           "@type": "SearchResultsPage",
-          name: `${t("city.storageIn")} ${city}`,
-          url: `https://ruumly.eu/${language}/storage/${slug}`,
+          name: seoTitle.replace(" — Ruumly", ""),
+          url: `https://ruumly.eu/${language}/${urlSegment}/${slug}`,
         }}
       />
 
@@ -119,10 +169,10 @@ export default function CityPage() {
           {t("cityPage.heroEyebrow")}
         </p>
         <h1 className="mt-3 font-display text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-          {t("cityPage.heroTitle").replace("{city}", city)}
+          {heroTitle}
         </h1>
         <p className="mx-auto mt-3 max-w-lg text-sm text-white/80">
-          {t("cityPage.heroDesc").replace("{city}", city)}
+          {heroDesc}
         </p>
         <Link to={`/search?city=${encodeURIComponent(city)}`}>
           <Button className="mt-6 h-11 gap-2 bg-accent px-6 font-semibold text-accent-foreground hover:bg-accent/90">
