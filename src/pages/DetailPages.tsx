@@ -987,7 +987,7 @@ export function WarehouseDetail() {
 
           <PartnerCard listing={wListing} metaLabel={t("detail.managedByPartner")} />
 
-          <ReviewsSection listingId={wListing.id} />
+          <ReviewsSection listingId={wListing.id} supplierSlug={wListing.supplierSlug} />
         </div>
 
         <div>
@@ -1125,7 +1125,7 @@ export function MovingDetail() {
 
           <PartnerCard listing={mListing} metaLabel={t("detail.managedByPartner")} />
 
-          <ReviewsSection listingId={mListing.id} />
+          <ReviewsSection listingId={mListing.id} supplierSlug={mListing.supplierSlug} />
         </div>
 
         <div>
@@ -1257,7 +1257,7 @@ export function TrailerDetail() {
 
           <PartnerCard listing={tListing} metaLabel={t("detail.managedByPartner")} />
 
-          <ReviewsSection listingId={tListing.id} />
+          <ReviewsSection listingId={tListing.id} supplierSlug={tListing.supplierSlug} />
         </div>
 
         <div>

@@ -22,6 +22,9 @@ const localeMap: Record<string, string> = {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const TIMELINE_DAYS = 56; // 8-week window
+// Radix Select forbids an empty-string item value, so the "whole location"
+// blackout scope uses this sentinel instead of "".
+const WHOLE_LOCATION = "__whole__";
 
 export default function ProviderCalendar() {
   const { t, language } = useLanguage();
@@ -37,6 +40,8 @@ export default function ProviderCalendar() {
   const [viewMonth, setViewMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDate, setSelectedDate] = useState<Date>(() => new Date(today.getFullYear(), today.getMonth(), today.getDate()));
   const [selectedLocationId, setSelectedLocationId] = useState<string>("");
+  // Blackout scope: WHOLE_LOCATION (default) or a specific listing id at that location.
+  const [blockListingId, setBlockListingId] = useState<string>(WHOLE_LOCATION);
 
   const { data: blockedDatesRaw = [] } = useQuery({
     queryKey: queryKeys.blockedDates.byLocation(selectedLocationId),
@@ -107,7 +112,13 @@ export default function ProviderCalendar() {
           await apiClient.delete(`/locations/${selectedLocationId}/blocked-dates/${existing.id}`);
         }
       } else {
-        await apiClient.post(`/locations/${selectedLocationId}/blocked-dates`, { date: dateStr });
+        // When a specific unit is chosen, scope the blackout to that listing only;
+        // otherwise omit listingId to block the whole location (today's default).
+        const specificListing = blockListingId && blockListingId !== WHOLE_LOCATION;
+        await apiClient.post(`/locations/${selectedLocationId}/blocked-dates`, {
+          date: dateStr,
+          ...(specificListing ? { listingId: blockListingId } : {}),
+        });
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.blockedDates.byLocation(selectedLocationId) });
     } catch (err: any) {
@@ -223,7 +234,13 @@ export default function ProviderCalendar() {
             <MapPin className="mr-1 inline h-3.5 w-3.5 text-teal-deep" />
             {t("provider.calendar.selectLocation")}
           </label>
-          <Select value={selectedLocationId} onValueChange={setSelectedLocationId}>
+          <Select
+            value={selectedLocationId}
+            onValueChange={(v) => {
+              setSelectedLocationId(v);
+              setBlockListingId(WHOLE_LOCATION); // reset blackout scope when switching location
+            }}
+          >
             <SelectTrigger className="h-11 w-full max-w-xs rounded-[10px] border-input">
               <SelectValue placeholder={t("provider.calendar.allLocations")} />
             </SelectTrigger>
@@ -310,6 +327,27 @@ export default function ProviderCalendar() {
               )
             )}
           </div>
+
+          {/* Blackout scope: whole location (default) or a single unit/listing.
+              Only relevant when creating a new blackout for the selected day. */}
+          {selectedLocationId && !isBooked(selectedDate) && !isBlocked(selectedDate) && timelineRows.length > 0 && (
+            <div className="mt-3">
+              <label className="mb-1.5 block text-[13px] font-semibold text-ink-2">
+                {t("provider.calendar.blockScope")}
+              </label>
+              <Select value={blockListingId} onValueChange={setBlockListingId}>
+                <SelectTrigger className="h-11 w-full max-w-xs rounded-[10px] border-input">
+                  <SelectValue placeholder={t("provider.calendar.wholeLocation")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={WHOLE_LOCATION}>{t("provider.calendar.wholeLocation")}</SelectItem>
+                  {timelineRows.map((row) => (
+                    <SelectItem key={row.id} value={row.id}>{row.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Empty / blocked state */}
           <div className="mt-4 flex flex-col items-center rounded-[12px] bg-secondary/30 px-6 py-8 text-center">
