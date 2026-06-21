@@ -384,12 +384,17 @@ export default function BookingPage() {
         setReservedUntil(expires);
       }
 
-      // Booking is created and held as Pending. Do NOT initiate payment yet — the
-      // customer must SIGN the rental agreement first. Open the mandatory sign gate.
-      // (Backend rejects /payments/initiate for an unsigned booking → CONTRACT_NOT_SIGNED.)
+      // Booking is created and held as Pending. Sign-then-pay applies to STORAGE only —
+      // the one vertical with a contract template. For storage, open the mandatory sign
+      // gate (the backend also rejects /payments/initiate for an unsigned storage booking).
+      // For trailer (no template yet), skip signing and proceed straight to payment.
       setIsSubmitting(false);
       setSignCancelled(false);
-      setShowSignGate(true);
+      if (listing?.type === "warehouse") {
+        setShowSignGate(true);
+      } else {
+        void proceedAfterSign();
+      }
     }).catch((err: any) => {
       const msg = err?.message?.toLowerCase() || "";
       if (err?.code === "EMAIL_NOT_VERIFIED" || err?.status === 403 || (msg.includes("email") && msg.includes("verif"))) {
