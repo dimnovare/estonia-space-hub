@@ -220,6 +220,8 @@ export const listingService = {
     if (filters?.page)     params.set("page",     String(filters.page));
     if (filters?.limit)    params.set("limit",    String(filters.limit));
     if (filters?.availableNow) params.set("availableNow", "true");
+    if (filters?.availableFrom) params.set("availableFrom", filters.availableFrom);
+    if (filters?.availableTo)   params.set("availableTo",   filters.availableTo);
     if (filters?.minSize != null) params.set("minSize", String(filters.minSize));
     if (filters?.maxSize != null) params.set("maxSize", String(filters.maxSize));
     if (filters?.sizeCategory) params.set("sizeCategory", filters.sizeCategory);

@@ -440,6 +440,8 @@ export interface ListingFilters {
   priceMax?: number;
   features?: string[];
   availableNow?: boolean;
+  availableFrom?: string; // yyyy-MM-dd — date-window availability (trailer/moving)
+  availableTo?: string;   // yyyy-MM-dd
   query?: string;
   sort?: "best" | "cheapest" | "rating" | "newest";
   page?: number;

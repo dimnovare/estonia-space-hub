@@ -54,6 +54,8 @@ export default function SearchPage() {
   const cityFilter = searchParams.get("city") || "";
   const priceMax = searchParams.get("priceMax") || "";
   const availableNow = searchParams.get("availableNow") === "true";
+  const availableFrom = searchParams.get("availableFrom") || "";
+  const availableTo = searchParams.get("availableTo") || "";
   const sizeCategory = searchParams.get("sizeCategory") || undefined;
   const minSize = searchParams.get("minSize") || "";
   const maxSize = searchParams.get("maxSize") || "";
@@ -95,6 +97,12 @@ export default function SearchPage() {
     city: cityFilter || undefined,
     priceMax: debouncedPriceMax ? parseInt(debouncedPriceMax) : undefined,
     availableNow: availableNow || undefined,
+    // Date-window availability — only meaningful for trailer/moving verticals.
+    // Guarded by activeType so a stale URL param can't filter storage/all results.
+    availableFrom: (activeType === "trailer" || activeType === "moving") && availableFrom
+      ? availableFrom : undefined,
+    availableTo: activeType === "trailer" && availableTo
+      ? availableTo : undefined,
     sort: VALID_SORTS.includes(sort as ListingFilters["sort"])
       ? (sort as ListingFilters["sort"])
       : "best",
@@ -106,7 +114,7 @@ export default function SearchPage() {
     supplierId: supplierIdFilter || undefined,
     locationId: locationIdFilter || undefined,
     limit: 200,
-  }), [activeType, debouncedQ, cityFilter, debouncedPriceMax, availableNow, sort, sizeCategory, minSize, maxSize, supplierIdFilter, locationIdFilter]);
+  }), [activeType, debouncedQ, cityFilter, debouncedPriceMax, availableNow, availableFrom, availableTo, sort, sizeCategory, minSize, maxSize, supplierIdFilter, locationIdFilter]);
 
   const { data: result, isLoading } = useListings(filters);
   const serverFiltered = result?.data || [];
@@ -131,6 +139,8 @@ export default function SearchPage() {
     || !!maxSize
     || !!debouncedPriceMax
     || availableNow
+    || !!availableFrom
+    || !!availableTo
     || !!supplierIdFilter
     || !!locationIdFilter;
   const locations = useMemo(
@@ -367,12 +377,33 @@ export default function SearchPage() {
     }
   }, [showMovingService, showTrailerService, searchParams]);
 
+  // Date availability is trailer/moving-only. Drop stale date params when the
+  // active vertical can't use them, so switching to storage/'all' (or from
+  // trailer→moving, which has no end date) doesn't silently filter results.
+  useEffect(() => {
+    const isDateVertical = activeType === "trailer" || activeType === "moving";
+    if (!isDateVertical && (availableFrom || availableTo)) {
+      updateFilters({ availableFrom: "", availableTo: "" });
+    } else if (activeType === "moving" && availableTo) {
+      updateFilters({ availableTo: "" });
+    }
+  }, [activeType, availableFrom, availableTo]);
+
   const activeFiltersCount = Object.values(featureDefs)
     .flat()
     .filter(f => searchParams.get(f.key) === "true").length
     + (availableNow ? 1 : 0) + (cityFilter ? 1 : 0) + (priceMax ? 1 : 0)
     + (sizeCategory ? 1 : 0) + (minSize || maxSize ? 1 : 0)
-    + (searchParams.get("bookable") === "true" ? 1 : 0);
+    + (searchParams.get("bookable") === "true" ? 1 : 0)
+    + (availableFrom || availableTo ? 1 : 0);
+
+  // Min selectable date for the availability control (no past dates). yyyy-MM-dd
+  // in local time so it matches the backend's date-only window params.
+  const todayStr = useMemo(() => {
+    const d = new Date();
+    const off = d.getTimezoneOffset();
+    return new Date(d.getTime() - off * 60_000).toISOString().slice(0, 10);
+  }, []);
 
   function clearAll() {
     setSearchParams(prev => {
@@ -574,6 +605,22 @@ export default function SearchPage() {
             />
           </div>
 
+          {/* Date-availability — trailer (from/to range) and moving (single
+              service date) only. Storage is open-ended monthly, and the mixed
+              'all' view spans verticals, so a date window isn't shown there. */}
+          {(activeType === "trailer" || activeType === "moving") && (
+            <div className="hidden lg:block">
+              <DateAvailabilityFilter
+                t={t}
+                vertical={activeType}
+                availableFrom={availableFrom}
+                availableTo={availableTo}
+                minDate={todayStr}
+                updateFilters={updateFilters}
+              />
+            </div>
+          )}
+
           {/* Storage-size calculator — subtle helper below the filter row, so it
               guides the search without interrupting the result list. Warehouse
               tab only: a storage-size calculator is meaningless on the mixed
@@ -642,6 +689,18 @@ export default function SearchPage() {
                   bookable={searchParams.get("bookable") === "true"}
                   updateFilters={updateFilters}
                 />
+
+                {/* Date-availability — trailer/moving only (see desktop note) */}
+                {(activeType === "trailer" || activeType === "moving") && (
+                  <DateAvailabilityFilter
+                    t={t}
+                    vertical={activeType}
+                    availableFrom={availableFrom}
+                    availableTo={availableTo}
+                    minDate={todayStr}
+                    updateFilters={updateFilters}
+                  />
+                )}
 
                 {/* Size buckets (storage scope) */}
                 {(activeType === "all" || activeType === "warehouse") && (
@@ -956,6 +1015,71 @@ function SecondaryFilterRow({
         label={t("search.bookOnline")}
         active={bookable}
         onChange={(v) => updateFilters({ bookable: v ? "true" : "" })}
+      />
+    </div>
+  );
+}
+
+interface DateAvailabilityFilterProps {
+  t: (key: string) => string;
+  vertical: "trailer" | "moving";
+  availableFrom: string;
+  availableTo: string;
+  minDate: string;
+  updateFilters: (u: Record<string, string>) => void;
+}
+
+// Date-window availability. Trailer = a from/to range (two date inputs); moving =
+// a single service date (sets availableFrom only). Rendered inline on desktop and
+// inside the filter Drawer on mobile, gated to trailer/moving by the caller.
+function DateAvailabilityFilter({
+  t, vertical, availableFrom, availableTo, minDate, updateFilters,
+}: DateAvailabilityFilterProps) {
+  const inputClass =
+    "min-h-[44px] rounded-full border border-line-2 bg-card px-3.5 py-2 text-[13px] font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-accent lg:min-h-[36px] lg:py-1.5";
+
+  if (vertical === "moving") {
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {t("search.moveDate")}
+        </label>
+        <input
+          aria-label={t("search.moveDate")}
+          type="date"
+          min={minDate}
+          value={availableFrom}
+          onChange={(e) => updateFilters({ availableFrom: e.target.value })}
+          className={inputClass}
+        />
+      </div>
+    );
+  }
+
+  // trailer — from/to range
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {t("search.availableDates")}
+      </label>
+      <input
+        aria-label={t("search.from")}
+        type="date"
+        min={minDate}
+        value={availableFrom}
+        onChange={(e) => updateFilters({ availableFrom: e.target.value })}
+        className={inputClass}
+      />
+      <span className="text-sm text-muted-foreground">—</span>
+      <input
+        aria-label={t("search.to")}
+        type="date"
+        // The end of the window can't precede its start; fall back to the global
+        // min when no start is set yet.
+        min={availableFrom || minDate}
+        value={availableTo}
+        onChange={(e) => updateFilters({ availableTo: e.target.value })}
+        className={inputClass}
       />
     </div>
   );
