@@ -35,7 +35,6 @@ interface AdminMetricsData {
   locations: {
     published: number;
     unpublished: number;
-    pendingApproval: number;
   };
   /** Optional discovery metrics (free-acquisition model). Present only if the API returns them. */
   discovery?: {
@@ -278,14 +277,6 @@ export default function AdminMetrics() {
             label={t("admin.health.unpublished")}
             value={data.locations.unpublished}
             icon={MapPin}
-          />
-          <StatCard
-            label={t("admin.health.pendingApplications")}
-            value={data.locations.pendingApproval}
-            sub={t("admin.health.reviewApprove")}
-            icon={AlertTriangle}
-            highlight
-            href="/admin?tab=suppliers"
           />
         </div>
       </section>

@@ -21,7 +21,6 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   defaultVatRate:         "24",
   emailNotifications:     "true",
   maintenanceMode:        "false",
-  autoApproveListings:    "false",
   inviteCodeRequired:     "true",
   inviteCode:             "RUUMLY2026",
   showFeaturedListings:   "true",
@@ -148,7 +147,6 @@ export default function AdminSettings() {
   const platformToggles = [
     { key: "emailNotifications", label: t("admin.emailNotifications"), desc: t("admin.emailNotificationsDesc") },
     { key: "maintenanceMode", label: t("admin.maintenanceMode"), desc: t("admin.maintenanceModeDesc") },
-    { key: "autoApproveListings", label: t("admin.autoApprove"), desc: t("admin.autoApproveDesc") },
     { key: "inviteCodeRequired", label: t("admin.inviteCodeRequired"), desc: t("admin.inviteCodeRequiredDesc") },
     { key: "blog.enabled", label: t("admin.settings.blogEnabledLabel"), desc: t("admin.settings.blogEnabledDesc") },
     { key: "blog.showInFooter", label: t("admin.settings.blogFooterLabel"), desc: t("admin.settings.blogFooterDesc") },

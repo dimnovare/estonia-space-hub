@@ -41,6 +41,7 @@ function useStatusConfig() {
   return {
     pending: { label: t("status.pending"), color: "bg-warning/10 text-warning-text", icon: Clock },
     confirmed: { label: t("status.confirmed"), color: "bg-success/10 text-success", icon: CheckCircle },
+    awaitingconfirmation: { label: t("status.awaitingConfirmation"), color: "bg-info/10 text-info", icon: Clock },
     active: { label: t("status.active"), color: "bg-accent/10 text-accent", icon: Play },
     completed: { label: t("status.completed"), color: "bg-muted text-muted-foreground", icon: CheckCircle },
     cancelled: { label: t("status.cancelled"), color: "bg-destructive/10 text-destructive", icon: XCircle },
@@ -210,7 +211,7 @@ function AccountOverview({ onNavigate }: { onNavigate: (tab: string) => void }) 
   const { count: favCount } = useFavorites();
   const { t } = useLanguage();
 
-  const active = bookings.filter(b => b.status === "confirmed" || b.status === "active");
+  const active = bookings.filter(b => b.status === "confirmed" || b.status === "awaitingconfirmation" || b.status === "active");
   const pending = bookings.filter(b => b.status === "pending");
   // "Open requests" = bookings still awaiting a partner reply.
   const openRequests = pending.length;
@@ -525,7 +526,7 @@ function BookingCard({ booking, onMessage }: { booking: Booking; onMessage?: () 
                 )}
               </div>
             )}
-            {(booking.status === "pending" || booking.status === "confirmed" || booking.status === "active") && (
+            {(booking.status === "pending" || booking.status === "confirmed" || booking.status === "awaitingconfirmation" || booking.status === "active") && (
               <div className="pt-2">
                 <Button
                   variant="outline"
@@ -573,7 +574,7 @@ const BOOKING_SEGMENTS = ["all", "active", "completed", "cancelled"] as const;
 type BookingSegment = (typeof BOOKING_SEGMENTS)[number];
 const inSegment = (status: BookingStatus, seg: BookingSegment): boolean =>
   seg === "all" ? true
-  : seg === "active" ? status === "pending" || status === "confirmed" || status === "active"
+  : seg === "active" ? status === "pending" || status === "confirmed" || status === "awaitingconfirmation" || status === "active"
   : status === seg;
 
 function AccountBookings({ onNavigate }: { onNavigate: (tab: string) => void }) {

@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import type { Listing } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
-import { getSavingsDisplay } from "@/lib/savingsDisplay";
 import { useSizeBuckets, bucketCodeForSize } from "@/hooks/useSizeBuckets";
 import { formatPriceUnit } from "@/lib/priceUnit";
 
@@ -90,10 +89,6 @@ function ListingCard({ listing }: { listing: Listing }) {
   const { t } = useLanguage();
   const { isFavorite, toggle } = useFavorites();
   const { data: sizeBuckets } = useSizeBuckets();
-  const discountRate = listing.clientDiscountRateOverride
-    ?? listing.clientDiscountRate
-    ?? 0;
-  const savingsInfo = getSavingsDisplay(listing.priceFrom, discountRate);
   const priceUnitLabel = formatPriceUnit(listing.priceUnit, t);
   const bookable = !!listing.bookingEnabled;
   const featured = listing.badge === "promoted" || listing.isFoundingPartner;
@@ -159,12 +154,6 @@ function ListingCard({ listing }: { listing: Listing }) {
             {t("listing.availableNow")}
           </span>
         )}
-        {savingsInfo && (
-          <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[10px] font-semibold text-brand-tealDeep shadow-sm">
-            {t("listing.savings").replace("{amount}", savingsInfo.savings)}
-          </span>
-        )}
-
         {/* Heart (top-right) */}
         <button
           onClick={handleHeartClick}
@@ -230,14 +219,7 @@ function ListingCard({ listing }: { listing: Listing }) {
 
         {/* footer: price + Book online (teal) vs Request (navy) */}
         <div className="mt-2 flex items-end justify-between gap-2 border-t border-line pt-3 tabular-nums">
-          {savingsInfo ? (
-            <span className="flex items-baseline gap-1.5">
-              <span className="text-sm text-muted-foreground line-through">€{savingsInfo.directPrice}{priceUnitLabel}</span>
-              <span className="font-display text-lg font-extrabold text-foreground">€{savingsInfo.ruumlyPrice}<span className="text-[13px] font-medium text-muted-foreground">{priceUnitLabel}</span></span>
-            </span>
-          ) : (
-            <span className="font-display text-lg font-extrabold text-foreground">€{listing.priceFrom}<span className="text-[13px] font-medium text-muted-foreground">{priceUnitLabel}</span></span>
-          )}
+          <span className="font-display text-lg font-extrabold text-foreground">€{listing.priceFrom}<span className="text-[13px] font-medium text-muted-foreground">{priceUnitLabel}</span></span>
           {bookable ? (
             // Teal tag — partner has instant booking enabled.
             <span className="inline-flex items-center gap-1 rounded-full bg-brand-tealDeep px-2.5 py-1 text-[11px] font-display font-semibold text-white">

@@ -11,7 +11,7 @@ import { queryKeys } from "@/services/queryKeys";
 import type { Booking, BookingStatus } from "@/services/types";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 
-const FILTERS = ["all", "pending", "confirmed", "active", "completed", "cancelled"] as const;
+const FILTERS = ["all", "pending", "confirmed", "awaitingconfirmation", "active", "completed", "cancelled"] as const;
 type FilterKey = typeof FILTERS[number];
 
 /**
@@ -103,6 +103,7 @@ export default function ProviderBookings() {
 
   const statusClass = (s: string) =>
     s === "confirmed" ? "bg-success/10 text-success"
+    : s === "awaitingconfirmation" ? "bg-info/10 text-info"
     : s === "pending" || s === "reserved" ? "bg-warning/10 text-warning"
     : s === "completed" ? "bg-muted text-muted-foreground"
     : s === "cancelled" ? "bg-destructive/10 text-destructive"

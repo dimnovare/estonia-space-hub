@@ -271,13 +271,14 @@ export default function BookingPage() {
     ? computeDurationMultiplier(listing.priceUnit || "/month", watchedStartDate, watchedEndDate)
     : 1;
 
-  const publicPriceUnit = listing ? listing.priceFrom : 0;
-  const publicPrice = Math.round(publicPriceUnit * durationMultiplier * 100) / 100;
+  // The price the customer actually pays (per-unit list price minus the already-
+  // computed client discount). Only this single "our price" is shown to customers;
+  // the public/list price and "you save" comparison are never surfaced.
+  const basePriceUnit = listing ? listing.priceFrom : 0;
   const ourPriceUnit = listing
-    ? Math.round(publicPriceUnit * (1 - clientDiscount / 100))
+    ? Math.round(basePriceUnit * (1 - clientDiscount / 100))
     : 0;
   const ourPrice = Math.round(ourPriceUnit * durationMultiplier * 100) / 100;
-  const savings = Math.round((publicPrice - ourPrice) * 100) / 100;
   const extrasTotal = selectedExtras.reduce(
     (s, id) => s + (listingExtras.find(e => e.key === id)?.price || 0), 0);
   const vatRate = listing?.vatRate ?? 0;
@@ -826,12 +827,6 @@ export default function BookingPage() {
                       <span className="text-muted-foreground">{t("booking.yourPrice")}</span>
                       <span className="font-semibold text-accent">€{ourPrice.toFixed(2)}</span>
                     </div>
-                    {savings > 0 && (
-                      <div className="flex justify-end text-[11px] text-muted-foreground gap-1">
-                        <span className="line-through">€{publicPrice.toFixed(2)}</span>
-                        <span>{t("booking.youSave")} €{savings.toFixed(2)}</span>
-                      </div>
-                    )}
                     <p className="text-[11px] text-muted-foreground">
                       {t("booking.priceNote")} {listing?.priceUnit?.replace("€", "").replace("/", "/ ") || "/ month"}
                     </p>
@@ -874,13 +869,7 @@ export default function BookingPage() {
                           <div className="text-xs text-muted-foreground">{extra.description}</div>
                         )}
                         <div className="text-xs text-muted-foreground mt-0.5">
-                          {extra.savings > 0 && (
-                            <span className="line-through mr-1">{extra.publicPrice}€</span>
-                          )}
                           <span className="font-medium">+{extra.price}€</span>
-                          {extra.savings > 0 && (
-                            <span className="text-success ml-1">(-{extra.savings}€)</span>
-                          )}
                         </div>
                       </div>
                     </button>
@@ -948,13 +937,7 @@ export default function BookingPage() {
                           <div key={key} className="flex justify-between pl-2">
                             <span className="text-sm">{ex.label}</span>
                             <span className="text-sm font-medium">
-                              {ex.savings > 0 && (
-                                <span className="line-through text-muted-foreground mr-1">{ex.publicPrice}€</span>
-                              )}
                               +{ex.price}€
-                              {ex.savings > 0 && (
-                                <span className="text-success ml-1">(-{ex.savings}€)</span>
-                              )}
                             </span>
                           </div>
                         );
@@ -970,9 +953,7 @@ export default function BookingPage() {
                   {/* Prices here are frontend estimates; server calculates final prices on submission */}
                   {listing && (
                     <div className="border-t border-border pt-3 space-y-1">
-                      <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.publicPrice")}</span><span className="font-medium line-through text-muted-foreground">{publicPrice}€</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.ourPrice")}</span><span className="font-bold text-accent">{ourPrice}€</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.savings")}</span><span className="font-bold text-success">-{savings}€</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.yourPrice")}</span><span className="font-bold text-accent">{ourPrice}€</span></div>
                       {extrasTotal > 0 && (
                         <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.extras")}</span><span className="font-medium">+{extrasTotal}€</span></div>
                       )}
@@ -1196,9 +1177,7 @@ export default function BookingPage() {
             </div>
             {listing && (
               <div className="mt-4 space-y-1 border-t border-border pt-3 text-xs">
-                <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.publicPrice")}</span><span className="line-through text-muted-foreground">{publicPrice}€</span></div>
-                <div className="flex justify-between font-bold"><span>{t("booking.ourPrice")}</span><span className="text-accent">{ourPrice}€</span></div>
-                <div className="flex justify-between text-success font-medium"><span>{t("booking.savings")}</span><span>-{savings}€</span></div>
+                <div className="flex justify-between font-bold"><span>{t("booking.yourPrice")}</span><span className="text-accent">{ourPrice}€</span></div>
                 {extrasTotal > 0 && (
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("booking.extras")}</span><span>+{extrasTotal}€</span></div>
                 )}
@@ -1227,9 +1206,7 @@ export default function BookingPage() {
         {/* Pricing summary row */}
         <div className="mb-2 flex items-center justify-between text-xs">
           <div className="flex items-center gap-3">
-            <span className="text-muted-foreground line-through">{publicPrice}€</span>
             <span className="font-bold text-accent text-sm">{ourPrice}€</span>
-            {savings > 0 && <span className="text-success font-medium">-{savings}€</span>}
           </div>
           {extrasTotal > 0 && (
             <span className="text-muted-foreground">+ {extrasTotal}€ {t("booking.extras").toLowerCase()}</span>

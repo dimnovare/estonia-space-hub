@@ -56,7 +56,7 @@ export default function ProviderCalendar() {
     () =>
       new Set(
         filteredBookings
-          .filter((b) => b.status === "confirmed" || b.status === "active")
+          .filter((b) => b.status === "confirmed" || b.status === "awaitingconfirmation" || b.status === "active")
           .map((b) => formatLocal(new Date(b.startDate)))
       ),
     [filteredBookings]

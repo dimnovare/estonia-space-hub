@@ -24,7 +24,7 @@ export interface LeadSummary {
   lostThisWeek: number;
 }
 
-export type BookingStatus = "pending" | "confirmed" | "active" | "completed" | "cancelled";
+export type BookingStatus = "pending" | "confirmed" | "awaitingconfirmation" | "active" | "completed" | "cancelled";
 export type ListingType = "warehouse" | "moving" | "trailer";
 export type ApprovalMode = "auto" | "admin" | "provider";
 export type PostingMode = "api" | "email" | "manual";
