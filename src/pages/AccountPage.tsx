@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import {
   LayoutDashboard, Package, Heart, Search, Bell, Shield,
   HelpCircle, ChevronRight, Warehouse, Truck, CarFront, Clock, CheckCircle,
-  XCircle, Play, User, Send, MessageSquare, FileText,
+  XCircle, User, Send, MessageSquare, FileText,
   Download, ArrowLeft, Loader2, Star, Receipt, Sparkles, Trash2, Camera, ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,74 +26,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { messageService } from "@/services";
 import { apiClient, tokenStore } from "@/services/apiClient";
 import type { Booking, BookingStatus } from "@/services/types";
-import type { Invoice, Message } from "@/services/types";
 import { SkeletonList } from "@/components/SkeletonCard";
 import { invoiceService } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
 import ReservationCountdown from "@/components/ReservationCountdown";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useSavedSearches } from "@/hooks/useSavedSearches";
 import { useAllListings } from "@/hooks/queries";
 import ListingCard from "@/components/ListingCard";
 import { SEO } from "@/components/SEO";
-
-function useStatusConfig() {
-  const { t } = useLanguage();
-  return {
-    pending: { label: t("status.pending"), color: "bg-warning/10 text-warning-text", icon: Clock },
-    confirmed: { label: t("status.confirmed"), color: "bg-success/10 text-success", icon: CheckCircle },
-    awaitingconfirmation: { label: t("status.awaitingConfirmation"), color: "bg-info/10 text-info", icon: Clock },
-    active: { label: t("status.active"), color: "bg-accent/10 text-accent", icon: Play },
-    completed: { label: t("status.completed"), color: "bg-muted text-muted-foreground", icon: CheckCircle },
-    cancelled: { label: t("status.cancelled"), color: "bg-destructive/10 text-destructive", icon: XCircle },
-  } as Record<BookingStatus, { label: string; color: string; icon: typeof Clock }>;
-}
+import { useStatusConfig } from "@/pages/account/useStatusConfig";
+import { useGenerateInvoicePdf } from "@/pages/account/useGenerateInvoicePdf";
 
 const typeIcons = { warehouse: Warehouse, moving: Truck, trailer: CarFront };
-
-/* ─── Saved searches ───
-   No backend endpoint exists yet (see backendNeeds: GET/POST/DELETE
-   /saved-searches). Persisted to localStorage per browser so the feature is
-   live, not a dead stub. When an API lands, swap the read/write helpers and
-   keep this hook's surface identical. */
-type SavedSearch = { id: string; label: string; query: string; results?: number; new?: number; alerts: boolean };
-const SAVED_SEARCH_KEY = "ruumly-saved-searches";
-
-function readSavedSearches(): SavedSearch[] {
-  try {
-    const raw = localStorage.getItem(SAVED_SEARCH_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
-}
-
-function useSavedSearches() {
-  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>(readSavedSearches);
-
-  useEffect(() => {
-    const sync = () => setSavedSearches(readSavedSearches());
-    window.addEventListener("ruumly-saved-searches-changed", sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      window.removeEventListener("ruumly-saved-searches-changed", sync);
-      window.removeEventListener("storage", sync);
-    };
-  }, []);
-
-  const persist = useCallback((next: SavedSearch[]) => {
-    setSavedSearches(next);
-    try { localStorage.setItem(SAVED_SEARCH_KEY, JSON.stringify(next)); } catch { /* ignore */ }
-    window.dispatchEvent(new Event("ruumly-saved-searches-changed"));
-  }, []);
-
-  const toggleAlerts = useCallback((id: string) => {
-    persist(readSavedSearches().map(s => s.id === id ? { ...s, alerts: !s.alerts } : s));
-  }, [persist]);
-
-  const remove = useCallback((id: string) => {
-    persist(readSavedSearches().filter(s => s.id !== id));
-  }, [persist]);
-
-  return { savedSearches, toggleAlerts, remove };
-}
 
 function useSidebarLinks() {
   const { t } = useLanguage();
@@ -1355,96 +1300,6 @@ function DataPrivacySection() {
       </Dialog>
     </>
   );
-}
-
-function useGenerateInvoicePdf() {
-  const { t } = useLanguage();
-  return (inv: Invoice) => {
-  const statusLabel =
-    inv.status === "paid" ? t("account.invoiceStatus.paid") :
-    inv.status === "pending" ? t("account.invoiceStatus.pending") : t("account.invoiceStatus.overdue");
-  const badgeClass =
-    inv.status === "paid" ? "badge-paid" :
-    inv.status === "pending" ? "badge-pending" : "badge-overdue";
-
-  const html = `<!DOCTYPE html>
-<html lang="et">
-<head>
-  <meta charset="UTF-8" />
-  <title>Arve ${inv.id}</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color: #111; background: #fff; padding: 48px; max-width: 700px; margin: 0 auto; }
-    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 48px; }
-    .logo { font-size: 26px; font-weight: 800; color: #173B8D; }
-    .invoice-meta { text-align: right; }
-    .invoice-meta h1 { font-size: 22px; font-weight: 700; color: #111; margin-bottom: 4px; }
-    .invoice-meta p { font-size: 13px; color: #666; }
-    .divider { border: none; border-top: 1px solid #e5e7eb; margin: 24px 0; }
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 40px; }
-    .info-block label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #999; margin-bottom: 6px; display: block; }
-    .info-block p { font-size: 14px; color: #111; }
-    table { width: 100%; border-collapse: collapse; }
-    th { text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #999; padding: 10px 0; border-bottom: 2px solid #111; }
-    td { padding: 14px 0; font-size: 14px; border-bottom: 1px solid #f3f4f6; }
-    .total-row td { font-size: 16px; font-weight: 700; border-top: 2px solid #111; border-bottom: none; padding-top: 16px; }
-    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-    .badge-paid { background: #dcfce7; color: #166534; }
-    .badge-pending { background: #fef9c3; color: #854d0e; }
-    .badge-overdue { background: #fee2e2; color: #991b1b; }
-    .footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
-    .footer p { font-size: 12px; color: #999; margin-bottom: 4px; }
-    @media print { body { padding: 24px; } @page { margin: 20mm; } }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div class="logo">Ruumly</div>
-    <div class="invoice-meta">
-      <h1>${t("invoice.title")}</h1>
-      <p>${inv.id}</p>
-    </div>
-  </div>
-  <div class="info-grid">
-    <div class="info-block">
-      <label>${t("invoice.issuer")}</label>
-      <p>${import.meta.env.VITE_LEGAL_ENTITY_NAME || "Ruumly"}</p>
-      <p>${t("invoice.address")}</p>
-      <p>info@ruumly.eu</p>
-    </div>
-    <div class="info-block">
-      <label>${t("invoice.date")}</label>
-      <p>${inv.issuedAt}</p>
-      ${inv.paidAt ? `<label style="margin-top:12px">${t("invoice.paid")}</label><p>${inv.paidAt}</p>` : ""}
-    </div>
-  </div>
-  <table>
-    <thead><tr><th>${t("billing.description")}</th><th>${t("billing.amount")}</th><th>${t("billing.status")}</th></tr></thead>
-    <tbody>
-      <tr>
-        <td>${inv.description}</td>
-        <td>&euro;${inv.amount}</td>
-        <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
-      </tr>
-    </tbody>
-    <tr class="total-row"><td>${t("booking.total")}</td><td>&euro;${inv.amount}</td><td></td></tr>
-  </table>
-  <div class="footer">
-    <p>${import.meta.env.VITE_LEGAL_ENTITY_NAME || "Ruumly"} &middot; ruumly.eu &middot; info@ruumly.eu</p>
-  </div>
-</body>
-</html>`;
-
-  const win = window.open("", "_blank");
-  if (!win) {
-    toast.error(t("error.popupsBlocked"));
-    return;
-  }
-  win.document.write(html);
-  win.document.close();
-  win.focus();
-  setTimeout(() => { win.print(); }, 500);
-  };
 }
 
 function AccountBilling() {
