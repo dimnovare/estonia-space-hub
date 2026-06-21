@@ -19,7 +19,7 @@ interface Payout {
   orderId: string;
   supplierAmount: number;
   platformMargin: number;
-  status: "pending" | "paid";
+  status: "pending" | "paid" | "accrued";
   paidAt: string | null;
   paymentReference: string | null;
 }
@@ -35,7 +35,7 @@ export default function AdminPayouts({ supplierId }: { supplierId?: string }) {
   const locale = localeMap[language] || "en-GB";
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "paid">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "paid" | "accrued">("all");
   const [supplierFilter, setSupplierFilter] = useState("");
   const [markingId, setMarkingId] = useState<string | null>(null);
   const [references, setReferences] = useState<Record<string, string>>({});
@@ -125,6 +125,7 @@ export default function AdminPayouts({ supplierId }: { supplierId?: string }) {
             onChange={e => setStatusFilter(e.target.value as any)}
           >
             <option value="all">{t("admin.payouts.allStatuses")}</option>
+            <option value="accrued">{t("admin.payouts.accrued")}</option>
             <option value="pending">{t("admin.payouts.unpaid")}</option>
             <option value="paid">{t("admin.payouts.paid")}</option>
           </select>
@@ -172,9 +173,15 @@ export default function AdminPayouts({ supplierId }: { supplierId?: string }) {
                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                       p.status === "paid"
                         ? "bg-success/10 text-success"
-                        : "bg-warning/10 text-warning"
+                        : p.status === "accrued"
+                          ? "bg-muted text-muted-foreground"
+                          : "bg-warning/10 text-warning"
                     }`}>
-                      {p.status === "paid" ? t("admin.payouts.paid") : t("admin.payouts.unpaid")}
+                      {p.status === "paid"
+                        ? t("admin.payouts.paid")
+                        : p.status === "accrued"
+                          ? t("admin.payouts.accrued")
+                          : t("admin.payouts.unpaid")}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
@@ -202,6 +209,10 @@ export default function AdminPayouts({ supplierId }: { supplierId?: string }) {
                           {t("admin.payouts.markPaid")}
                         </Button>
                       </div>
+                    ) : p.status === "accrued" ? (
+                      <span className="text-xs text-muted-foreground italic">
+                        {t("admin.payouts.accruedHint")}
+                      </span>
                     ) : (
                       <span className="text-xs text-muted-foreground">
                         {p.paymentReference || "—"}
