@@ -450,6 +450,217 @@ function RequestModal({
 }
 
 /**
+ * Moving quote modal (quote-first flow). A move is a ONE-TIME job, not a recurring
+ * rental — so instead of routing to /book, the customer describes the move (date, from/to
+ * addresses, size, floors, lift, crew, notes) and the partner replies with a price.
+ * Composes everything into a single structured `message` and POSTs to the same contact
+ * endpoint RequestModal uses, so it works for every listing regardless of bookingEnabled.
+ */
+function MovingQuoteModal({
+  listing,
+  open,
+  onOpenChange,
+}: {
+  listing: Listing;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const { t, language } = useLanguage();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [moveDate, setMoveDate] = useState(defaultMoveIn());
+  const [fromCity, setFromCity] = useState("");
+  const [fromAddress, setFromAddress] = useState("");
+  const [toCity, setToCity] = useState("");
+  const [toAddress, setToAddress] = useState("");
+  const [rooms, setRooms] = useState("1-2");
+  const [floorFrom, setFloorFrom] = useState("");
+  const [floorTo, setFloorTo] = useState("");
+  const [liftFrom, setLiftFrom] = useState(false);
+  const [liftTo, setLiftTo] = useState(false);
+  const [crew, setCrew] = useState("1");
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      // Reset volatile fields on each open so a fresh quote isn't pre-filled with stale input.
+      setMoveDate(defaultMoveIn());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  const inputCls =
+    "h-11 rounded-[10px] border border-input bg-card px-3.5 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40";
+  const labelCls = "text-[13px] font-semibold text-ink-2";
+
+  const crewLabel = (v: string): string =>
+    v === "3" ? t("detail.crew3") : v === "6" ? t("detail.crew4") : t("detail.crew2");
+
+  const yesNo = (v: boolean): string => (v ? t("admin.yes") : t("admin.no"));
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (
+      !name.trim() ||
+      !email.trim() ||
+      !moveDate.trim() ||
+      !fromCity.trim() ||
+      !toCity.trim()
+    ) {
+      toast.error(t("detail.quote.missing"));
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const fromLine = `${[fromAddress.trim(), fromCity.trim()].filter(Boolean).join(", ")} (${t("detail.quote.floorFrom")}: ${floorFrom.trim() || "—"}, ${t("detail.quote.lift")}: ${yesNo(liftFrom)})`;
+      const toLine = `${[toAddress.trim(), toCity.trim()].filter(Boolean).join(", ")} (${t("detail.quote.floorTo")}: ${floorTo.trim() || "—"}, ${t("detail.quote.lift")}: ${yesNo(liftTo)})`;
+      const lines = [
+        `${t("detail.moveDate")}: ${moveDate.trim()}`,
+        `${t("detail.quote.fromCity")}: ${fromLine}`,
+        `${t("detail.quote.toCity")}: ${toLine}`,
+        `${t("detail.quote.rooms")}: ${rooms}`,
+        `${t("detail.crewSize")}: ${crewLabel(crew)}`,
+      ];
+      if (phone.trim()) lines.push(`${t("detail.requestPhoneLabel")}: ${phone.trim()}`);
+      if (notes.trim()) lines.push(`${t("detail.quote.notes")}: ${notes.trim()}`);
+      const message = `${lines.join("\n")}\n\n${t("detail.provider")}: ${listing.title} — ${listing.city} (${listing.provider})`;
+
+      await contactService.send({
+        name: name.trim(),
+        email: email.trim(),
+        subject: `Moving quote request — ${listing.title} (${listing.provider})`,
+        message,
+        language,
+      });
+      trackEvent("listing_request", { listing_id: listing.id, type: listing.type });
+      onOpenChange(false);
+      toast.success(t("detail.quote.sent"));
+    } catch {
+      toast.error(t("detail.requestError"));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto rounded-[14px] p-0">
+        <DialogHeader className="flex flex-row items-center justify-between gap-3 border-b border-border px-5 py-4 text-left">
+          <DialogTitle className="font-display text-lg font-bold">{t("detail.quote.title")}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={submit} className="space-y-3.5 px-5 pb-5">
+          <DialogDescription className="text-sm text-muted-foreground">
+            {t("detail.quote.intro").replace("{partner}", listing.provider)}
+          </DialogDescription>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="quote-name" className={labelCls}>{t("detail.requestNameLabel")}</label>
+            <input id="quote-name" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("detail.requestNamePlaceholder")} className={inputCls} required />
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-1 flex-col gap-1.5">
+              <label htmlFor="quote-email" className={labelCls}>{t("detail.requestEmailLabel")}</label>
+              <input id="quote-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("booking.placeholder.email")} className={inputCls} required />
+            </div>
+            <div className="flex flex-1 flex-col gap-1.5">
+              <label htmlFor="quote-phone" className={labelCls}>{t("detail.requestPhoneLabel")}</label>
+              <input id="quote-phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+372" className={inputCls} />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="quote-date" className={labelCls}>{t("detail.moveDate")}</label>
+            <input id="quote-date" type="date" value={moveDate} onChange={(e) => setMoveDate(e.target.value)} className={inputCls} required />
+          </div>
+
+          {/* From */}
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="quote-from-city" className={labelCls}>{t("detail.quote.fromCity")}</label>
+            <input id="quote-from-city" value={fromCity} onChange={(e) => setFromCity(e.target.value)} className={inputCls} required />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="quote-from-address" className={labelCls}>{t("detail.quote.fromAddress")}</label>
+            <input id="quote-from-address" value={fromAddress} onChange={(e) => setFromAddress(e.target.value)} className={inputCls} />
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-1 flex-col gap-1.5">
+              <label htmlFor="quote-floor-from" className={labelCls}>{t("detail.quote.floorFrom")}</label>
+              <input id="quote-floor-from" type="number" min={0} value={floorFrom} onChange={(e) => setFloorFrom(e.target.value)} className={inputCls} />
+            </div>
+            <label className="flex flex-1 items-center gap-2 sm:pt-7">
+              <input type="checkbox" checked={liftFrom} onChange={(e) => setLiftFrom(e.target.checked)} className="h-4 w-4 rounded border-input text-accent focus-visible:ring-2 focus-visible:ring-accent/40" />
+              <span className="text-sm text-foreground">{t("detail.quote.lift")}</span>
+            </label>
+          </div>
+
+          {/* To */}
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="quote-to-city" className={labelCls}>{t("detail.quote.toCity")}</label>
+            <input id="quote-to-city" value={toCity} onChange={(e) => setToCity(e.target.value)} className={inputCls} required />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="quote-to-address" className={labelCls}>{t("detail.quote.toAddress")}</label>
+            <input id="quote-to-address" value={toAddress} onChange={(e) => setToAddress(e.target.value)} className={inputCls} />
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-1 flex-col gap-1.5">
+              <label htmlFor="quote-floor-to" className={labelCls}>{t("detail.quote.floorTo")}</label>
+              <input id="quote-floor-to" type="number" min={0} value={floorTo} onChange={(e) => setFloorTo(e.target.value)} className={inputCls} />
+            </div>
+            <label className="flex flex-1 items-center gap-2 sm:pt-7">
+              <input type="checkbox" checked={liftTo} onChange={(e) => setLiftTo(e.target.checked)} className="h-4 w-4 rounded border-input text-accent focus-visible:ring-2 focus-visible:ring-accent/40" />
+              <span className="text-sm text-foreground">{t("detail.quote.lift")}</span>
+            </label>
+          </div>
+
+          {/* Size + crew */}
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-1 flex-col gap-1.5">
+              <label htmlFor="quote-rooms" className={labelCls}>{t("detail.quote.rooms")}</label>
+              <select id="quote-rooms" value={rooms} onChange={(e) => setRooms(e.target.value)} className={inputCls}>
+                <option value="studio">{t("detail.quote.roomsStudio")}</option>
+                <option value="1-2">{t("detail.quote.rooms12")}</option>
+                <option value="3">{t("detail.quote.rooms3")}</option>
+                <option value="4+">{t("detail.quote.rooms4plus")}</option>
+              </select>
+            </div>
+            <div className="flex flex-1 flex-col gap-1.5">
+              <label htmlFor="quote-crew" className={labelCls}>{t("detail.crewSize")}</label>
+              <select id="quote-crew" value={crew} onChange={(e) => setCrew(e.target.value)} className={inputCls}>
+                <option value="1">{t("detail.crew2")}</option>
+                <option value="3">{t("detail.crew3")}</option>
+                <option value="6">{t("detail.crew4")}</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="quote-notes" className={labelCls}>{t("detail.quote.notes")}</label>
+            <textarea
+              id="quote-notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              className="min-h-[88px] rounded-[10px] border border-input bg-card px-3.5 py-2.5 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            />
+          </div>
+
+          <Button
+            type="submit"
+            disabled={submitting}
+            className="h-12 w-full gap-2 bg-primary text-base font-semibold text-primary-foreground hover:bg-navy-ink"
+          >
+            {t("detail.quote.cta")}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/**
  * Sidebar booking action block (pixel-spec §Right column CTA):
  *  - bookable  → green "Book online" (opens Booking modal) + ghost "Message partner" (opens Request modal)
  *  - request   → navy "Send a request" (opens Request modal) + "no payment now" reassurance line
@@ -804,10 +1015,7 @@ export function MovingDetail() {
   const { id } = useParams();
   const { t, language } = useLanguage();
   const { showMovingService } = usePlatformSettings();
-  const [moveInDate, setMoveInDate] = useState(defaultMoveIn());
-  const [crew, setCrew] = useState("1");
-  const navigate = useNavigate();
-  const [requestOpen, setRequestOpen] = useState(false);
+  const [quoteOpen, setQuoteOpen] = useState(false);
   const { data: listing, isLoading } = useListing(id);
 
   useEffect(() => {
@@ -822,8 +1030,8 @@ export function MovingDetail() {
   const features = mListing.services.concat([t("detail.onSiteParking"), t("detail.litAndDry")]);
   const about = composeAbout(t, mListing, typeLabel);
 
-  // Moving is a same-day service — forward the move date + crew size (no end date).
-  const bookHref = buildBookHref(mListing, { start: moveInDate, crew });
+  // Moving is a ONE-TIME job, not a recurring rental — so there is NO /book route here.
+  // The primary CTA opens a quote request; the partner replies with a price.
 
   return (
     <div className="container-wide py-6 pb-24 lg:pb-6">
@@ -878,37 +1086,18 @@ export function MovingDetail() {
           <div className="card-prominent sticky top-24 p-6">
             <SidebarPrice listing={mListing} />
             <p className="mt-2 text-sm text-muted-foreground">
-              {mListing.bookingEnabled ? t("detail.instantBooking") : t("detail.partnerReplies")}
+              {t("detail.quote.subtitle")}
             </p>
 
-            <div className="mt-5 space-y-3">
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="mv-movein" className="text-[13px] font-semibold text-ink-2">{t("detail.moveDate")}</label>
-                <input
-                  id="mv-movein"
-                  type="date"
-                  value={moveInDate}
-                  onChange={(e) => setMoveInDate(e.target.value)}
-                  className="h-11 rounded-[10px] border border-input bg-card px-3.5 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="mv-crew" className="text-[13px] font-semibold text-ink-2">{t("detail.crewSize")}</label>
-                <select
-                  id="mv-crew"
-                  value={crew}
-                  onChange={(e) => setCrew(e.target.value)}
-                  className="h-11 rounded-[10px] border border-input bg-card px-3.5 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-                >
-                  <option value="1">{t("detail.crew2")}</option>
-                  <option value="3">{t("detail.crew3")}</option>
-                  <option value="6">{t("detail.crew4")}</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="mt-5">
-              <BookingActions listing={mListing} onBook={() => navigate(bookHref)} onRequest={() => setRequestOpen(true)} />
+            <div className="mt-5 space-y-2">
+              <Button
+                onClick={() => setQuoteOpen(true)}
+                className="h-11 w-full gap-2 bg-primary text-base font-semibold text-primary-foreground hover:bg-navy-ink"
+              >
+                <MessageSquare className="h-[17px] w-[17px]" />
+                {t("detail.quote.cta")}
+              </Button>
+              <p className="text-center text-xs text-muted-foreground">{t("detail.noPaymentNote")}</p>
             </div>
             <BookingSummaryRail listing={mListing} />
           </div>
@@ -923,11 +1112,17 @@ export function MovingDetail() {
           <div className="font-display text-lg font-extrabold text-navy-ink">€{mListing.priceFrom}
             <span className="ml-1 text-xs font-normal text-muted-foreground">{formatPriceUnit(mListing.priceUnit, t)}</span>
           </div>
-          <MobileBookingAction listing={mListing} onBook={() => navigate(bookHref)} onRequest={() => setRequestOpen(true)} className="shrink-0" />
+          <Button
+            onClick={() => setQuoteOpen(true)}
+            className="h-11 shrink-0 gap-1.5 bg-primary px-5 font-semibold text-primary-foreground hover:bg-navy-ink"
+          >
+            <MessageSquare className="h-4 w-4" />
+            {t("detail.quote.cta")}
+          </Button>
         </div>
       </div>
 
-      <RequestModal listing={mListing} typeLabel={typeLabel} open={requestOpen} onOpenChange={setRequestOpen} />
+      <MovingQuoteModal listing={mListing} open={quoteOpen} onOpenChange={setQuoteOpen} />
     </div>
   );
 }
