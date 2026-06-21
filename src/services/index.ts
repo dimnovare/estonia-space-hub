@@ -38,6 +38,9 @@ interface ApiListing {
   locationId?: string | null;
   vatRate?: number | null;
   pricesIncludeVat?: boolean;
+  depositAmount?: number | null;
+  requiresLicenseCategory?: string | null;
+  minBookingMonths?: number | null;
   bookingEnabled?: boolean;
   contractSigningEnabled?: boolean;
   directPaymentEnabled?: boolean;
@@ -81,6 +84,9 @@ function mapListing(api: ApiListing): Listing {
     // VAT-exclusive listing no longer renders as 0% and under-states the charge.
     vatRate: api.vatRate ?? null,
     pricesIncludeVat: api.pricesIncludeVat ?? undefined,
+    depositAmount: api.depositAmount ?? null,
+    requiresLicenseCategory: api.requiresLicenseCategory ?? null,
+    minBookingMonths: api.minBookingMonths ?? null,
   };
 
   const f = api.features ?? {};

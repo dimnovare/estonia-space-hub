@@ -298,6 +298,9 @@ export interface ListingBase {
   partnerDiscountRateOverride?: number | null;
   vatRate?: number | null;
   pricesIncludeVat?: boolean;
+  depositAmount?: number | null;
+  requiresLicenseCategory?: string | null;
+  minBookingMonths?: number | null;
   isVerified?: boolean;
   isFoundingPartner?: boolean;
   bookingEnabled?: boolean;

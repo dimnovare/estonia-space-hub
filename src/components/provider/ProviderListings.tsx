@@ -62,8 +62,19 @@ const unitSchema = z.object({
   quantityTotal: z.coerce.number().optional(),
   description: z.string().optional(),
   vatRate: z.coerce.number().optional(),
+  // Vertical-aware commercial fields (sent only for the relevant type).
+  depositAmount: z.coerce.number().optional().nullable(),     // Trailer
+  requiresLicenseCategory: z.string().optional().nullable(),  // Trailer
+  minBookingMonths: z.coerce.number().optional().nullable(),  // Warehouse
 });
 type UnitForm = z.infer<typeof unitSchema>;
+
+// Licence category options for trailers (driving licence required to tow).
+const LICENCE_OPTIONS: { value: string; labelKey: string }[] = [
+  { value: "__none", labelKey: "provider.listings.licenceNone" },
+  { value: "B", labelKey: "provider.listings.licenceB" },
+  { value: "BE", labelKey: "provider.listings.licenceBE" },
+];
 
 // ── Vertical-aware price units ──
 // Canonical priceUnit strings recognised by lib/priceUnit.ts (parseBillingPeriod).
@@ -303,6 +314,8 @@ function UnitDialog({
   const typeDefs = featureDefs[watchedType] || [];
 
   const onSubmit = (data: UnitForm) => {
+    const isTrailer = data.type === "Trailer";
+    const isWarehouse = data.type === "Warehouse";
     addUnit.mutate(
       {
         locationId,
@@ -316,6 +329,14 @@ function UnitDialog({
           description: data.description,
           vatRate: data.vatRate,
           pricesIncludeVat: false,
+          // Vertical-aware commercial fields — only send the relevant ones.
+          depositAmount: isTrailer ? data.depositAmount ?? undefined : undefined,
+          requiresLicenseCategory: isTrailer
+            ? (data.requiresLicenseCategory && data.requiresLicenseCategory !== "__none"
+                ? data.requiresLicenseCategory
+                : undefined)
+            : undefined,
+          minBookingMonths: isWarehouse ? data.minBookingMonths ?? undefined : undefined,
           features: Object.fromEntries(
             Object.entries(features).filter(([, v]) => v)
           ),
@@ -428,6 +449,38 @@ function UnitDialog({
               )}
             />
           </div>
+          {/* Vertical-aware commercial fields */}
+          {form.watch("type") === "Trailer" && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.deposit")}</label>
+                <Input type="number" step="0.01" {...form.register("depositAmount")} />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.licence")}</label>
+                <Controller
+                  control={form.control}
+                  name="requiresLicenseCategory"
+                  render={({ field }) => (
+                    <Select value={field.value || "__none"} onValueChange={field.onChange}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {LICENCE_OPTIONS.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>{t(o.labelKey)}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+            </div>
+          )}
+          {form.watch("type") === "Warehouse" && (
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.minMonths")}</label>
+              <Input type="number" min="0" {...form.register("minBookingMonths")} />
+            </div>
+          )}
           <div>
             <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitDesc")}</label>
             <Textarea rows={2} {...form.register("description")} />
@@ -888,6 +941,9 @@ function EditUnitDialog({
       quantityTotal: unitData?.quantityTotal || 1,
       description: unitData?.description || "",
       vatRate: unitData?.vatRate,
+      depositAmount: unitData?.depositAmount ?? undefined,
+      requiresLicenseCategory: unitData?.requiresLicenseCategory ?? undefined,
+      minBookingMonths: unitData?.minBookingMonths ?? undefined,
     },
   });
 
@@ -902,6 +958,9 @@ function EditUnitDialog({
         quantityTotal: unitData.quantityTotal || 1,
         description: unitData.description || "",
         vatRate: unitData.vatRate,
+        depositAmount: unitData.depositAmount ?? undefined,
+        requiresLicenseCategory: unitData.requiresLicenseCategory ?? undefined,
+        minBookingMonths: unitData.minBookingMonths ?? undefined,
       });
       setImages(unitData.images || []);
       setFeatures(unitData.features || {});
@@ -910,6 +969,8 @@ function EditUnitDialog({
 
   const onSubmit = async (data: UnitForm) => {
     setSaving(true);
+    const isTrailer = data.type === "Trailer";
+    const isWarehouse = data.type === "Warehouse";
     try {
       await apiClient.patch(
         `/locations/${unitData.locationId}/units/${unitData.id}`,
@@ -921,6 +982,14 @@ function EditUnitDialog({
           quantityTotal: data.quantityTotal,
           description: data.description,
           vatRate: data.vatRate,
+          // Vertical-aware commercial fields — only send the relevant ones.
+          depositAmount: isTrailer ? data.depositAmount ?? undefined : undefined,
+          requiresLicenseCategory: isTrailer
+            ? (data.requiresLicenseCategory && data.requiresLicenseCategory !== "__none"
+                ? data.requiresLicenseCategory
+                : undefined)
+            : undefined,
+          minBookingMonths: isWarehouse ? data.minBookingMonths ?? undefined : undefined,
           images,
           features: Object.fromEntries(
             Object.entries(features).filter(([, v]) => v)
@@ -1031,6 +1100,38 @@ function EditUnitDialog({
               )}
             />
           </div>
+          {/* Vertical-aware commercial fields */}
+          {form.watch("type") === "Trailer" && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.deposit")}</label>
+                <Input type="number" step="0.01" {...form.register("depositAmount")} />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.licence")}</label>
+                <Controller
+                  control={form.control}
+                  name="requiresLicenseCategory"
+                  render={({ field }) => (
+                    <Select value={field.value || "__none"} onValueChange={field.onChange}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {LICENCE_OPTIONS.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>{t(o.labelKey)}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+            </div>
+          )}
+          {form.watch("type") === "Warehouse" && (
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.minMonths")}</label>
+              <Input type="number" min="0" {...form.register("minBookingMonths")} />
+            </div>
+          )}
           <div>
             <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitDesc")}</label>
             <Textarea rows={2} {...form.register("description")} />

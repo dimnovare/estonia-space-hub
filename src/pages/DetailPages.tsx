@@ -15,6 +15,9 @@ import {
   ArrowRight,
   CreditCard,
   RefreshCw,
+  Wallet,
+  IdCard,
+  CalendarClock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -227,6 +230,42 @@ function FeaturesGrid({ items }: { items: string[] }) {
           <span>{label}</span>
         </div>
       ))}
+    </div>
+  );
+}
+
+/**
+ * Refundable-deposit callout (trailer rentals). A deposit is the #1 thing a renter
+ * asks about, so it must be visible BEFORE contacting/booking — rendered both in the
+ * spec block and the sidebar rail. Only shown when a positive deposit is set.
+ */
+function DepositCallout({ amount }: { amount: number }) {
+  const { t } = useLanguage();
+  return (
+    <div className="flex items-start gap-2.5 rounded-[10px] border border-border bg-secondary/40 p-3">
+      <Wallet className="mt-0.5 h-[18px] w-[18px] shrink-0 text-accent" />
+      <div className="min-w-0 text-sm">
+        <div className="font-semibold text-foreground">
+          {t("detail.deposit")}: €{amount}
+        </div>
+        <div className="mt-0.5 text-xs text-muted-foreground">{t("detail.depositNote")}</div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Driving-licence requirement callout (trailer rentals). The second thing a renter
+ * checks — whether their licence covers the trailer ("B" vs "BE"). Shown before booking.
+ */
+function LicenceCallout({ category }: { category: string }) {
+  const { t } = useLanguage();
+  return (
+    <div className="flex items-center gap-2.5 rounded-[10px] border border-border bg-secondary/40 p-3 text-sm">
+      <IdCard className="h-[18px] w-[18px] shrink-0 text-primary" />
+      <span className="font-medium text-foreground">
+        {t("detail.licenceRequired").replace("{cat}", category)}
+      </span>
     </div>
   );
 }
@@ -958,6 +997,13 @@ export function WarehouseDetail() {
               {wListing.bookingEnabled ? t("detail.instantBooking") : t("detail.partnerReplies")}
             </p>
 
+            {typeof wListing.minBookingMonths === "number" && wListing.minBookingMonths > 1 && (
+              <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-foreground">
+                <CalendarClock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                {t("detail.minMonths").replace("{n}", String(wListing.minBookingMonths))}
+              </div>
+            )}
+
             <div className="mt-5 space-y-3">
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="wh-movein" className="text-[13px] font-semibold text-ink-2">{t("detail.moveInDate")}</label>
@@ -1195,6 +1241,17 @@ export function TrailerDetail() {
             <div className="rounded-[10px] border border-border p-3"><div className="text-xs text-muted-foreground">{t("detail.weightClass")}</div><div className="mt-0.5 text-sm font-semibold">{tListing.weightClass}</div></div>
           </div>
 
+          {((typeof tListing.depositAmount === "number" && tListing.depositAmount > 0) || tListing.requiresLicenseCategory) && (
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {typeof tListing.depositAmount === "number" && tListing.depositAmount > 0 && (
+                <DepositCallout amount={tListing.depositAmount} />
+              )}
+              {tListing.requiresLicenseCategory && (
+                <LicenceCallout category={tListing.requiresLicenseCategory} />
+              )}
+            </div>
+          )}
+
           <h2 className="mt-7 font-display text-lg font-bold">{t("detail.features")}</h2>
           <FeaturesGrid items={features} />
 
@@ -1236,6 +1293,17 @@ export function TrailerDetail() {
                 </select>
               </div>
             </div>
+
+            {((typeof tListing.depositAmount === "number" && tListing.depositAmount > 0) || tListing.requiresLicenseCategory) && (
+              <div className="mt-5 space-y-2.5">
+                {typeof tListing.depositAmount === "number" && tListing.depositAmount > 0 && (
+                  <DepositCallout amount={tListing.depositAmount} />
+                )}
+                {tListing.requiresLicenseCategory && (
+                  <LicenceCallout category={tListing.requiresLicenseCategory} />
+                )}
+              </div>
+            )}
 
             <div className="mt-5">
               <BookingActions listing={tListing} onBook={() => navigate(bookHref)} onRequest={() => setRequestOpen(true)} />

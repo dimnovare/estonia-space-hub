@@ -1,6 +1,6 @@
 import { memo, useState } from "react";
 import { Link, useLocation } from "@/i18n/routing";
-import { MapPin, Star, Warehouse, Truck, CarFront, Heart, ShieldCheck, Award, Sparkles, Zap, MessageSquare } from "lucide-react";
+import { MapPin, Star, Warehouse, Truck, CarFront, Heart, ShieldCheck, Award, Sparkles, Zap, MessageSquare, CalendarClock, Wallet, IdCard } from "lucide-react";
 import { toast } from "sonner";
 import type { Listing } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -93,6 +93,21 @@ function ListingCard({ listing }: { listing: Listing }) {
   const bookable = !!listing.bookingEnabled;
   const featured = listing.badge === "promoted" || listing.isFoundingPartner;
   const chipKeys = featureChipKeys(listing);
+  // Vertical-aware informational chips (storage min-term, trailer deposit/licence).
+  // Subtle/secondary — they sit alongside the feature chips, not the price/rating.
+  const showMinMonths =
+    listing.type === "warehouse" &&
+    typeof listing.minBookingMonths === "number" &&
+    listing.minBookingMonths > 1;
+  const showDeposit =
+    listing.type === "trailer" &&
+    typeof listing.depositAmount === "number" &&
+    listing.depositAmount > 0;
+  const showLicence =
+    listing.type === "trailer" &&
+    typeof listing.requiresLicenseCategory === "string" &&
+    listing.requiresLicenseCategory.length > 0;
+  const hasInfoChips = showMinMonths || showDeposit || showLicence;
   const sizeBucketCode = listing.sizeM2 && listing.sizeM2 > 0
     ? bucketCodeForSize(sizeBuckets, listing.sizeM2)
     : null;
@@ -197,8 +212,8 @@ function ListingCard({ listing }: { listing: Listing }) {
           <span className="truncate">{listing.address}, {listing.city}</span>
         </p>
 
-        {/* up-to-3 feature chips + founding-partner tag */}
-        {(chipKeys.length > 0 || listing.isFoundingPartner) && (
+        {/* up-to-3 feature chips + founding-partner tag + vertical info chips */}
+        {(chipKeys.length > 0 || listing.isFoundingPartner || hasInfoChips) && (
           <div className="mt-0.5 flex flex-wrap gap-1.5">
             {listing.isFoundingPartner && (
               <span
@@ -214,6 +229,27 @@ function ListingCard({ listing }: { listing: Listing }) {
                 {t(key)}
               </span>
             ))}
+            {/* Storage: minimum booking term */}
+            {showMinMonths && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium text-muted-foreground tabular-nums">
+                <CalendarClock className="h-3 w-3" />
+                {t("card.minMonths").replace("{n}", String(listing.minBookingMonths))}
+              </span>
+            )}
+            {/* Trailer: deposit */}
+            {showDeposit && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium text-muted-foreground tabular-nums">
+                <Wallet className="h-3 w-3" />
+                {t("card.deposit").replace("{amount}", String(listing.depositAmount))}
+              </span>
+            )}
+            {/* Trailer: required driving-licence category */}
+            {showLicence && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                <IdCard className="h-3 w-3" />
+                {t("card.licence").replace("{cat}", String(listing.requiresLicenseCategory))}
+              </span>
+            )}
           </div>
         )}
 
