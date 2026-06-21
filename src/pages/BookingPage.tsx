@@ -64,7 +64,11 @@ function getDaysPerUnit(priceUnit: string): number {
   const unit = (priceUnit || "").toLowerCase().replace("€", "").trim().replace(/^\//, "");
   if (unit.includes("day") || unit.includes("päev") || unit.includes("diena")) return 1;
   if (unit.includes("week") || unit.includes("nädal") || unit.includes("savaitė")) return 7;
-  if (unit.includes("time") || unit.includes("kord") || unit.includes("kartas")) return Infinity;
+  // Flat units (charged once, not scaled by the booked date range): one-time/fixed
+  // moving jobs, and hourly (actual hours are agreed off-platform).
+  if (unit.startsWith("h") || unit.includes("hour") || unit.includes("tund") || unit.includes("valanda")
+      || unit.includes("stunda") || unit.includes("time") || unit.includes("kord") || unit.includes("kartas")
+      || unit.includes("reize") || unit.includes("one") || unit.includes("fix")) return Infinity;
   return 30.44;
 }
 

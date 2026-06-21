@@ -1,4 +1,4 @@
-export type BillingPeriod = "month" | "week" | "day" | "hour";
+export type BillingPeriod = "month" | "week" | "day" | "hour" | "onetime";
 
 export function parseBillingPeriod(stored: string | null | undefined): BillingPeriod {
   if (!stored) return "month";
@@ -6,6 +6,10 @@ export function parseBillingPeriod(stored: string | null | undefined): BillingPe
   if (s.startsWith("h") || s.startsWith("tund") || s.startsWith("час")) return "hour";
   if (s.startsWith("d") || s.startsWith("päev") || s.startsWith("дн") || s.startsWith("ден")) return "day";
   if (s.startsWith("w") || s.startsWith("näda") || s.startsWith("нед")) return "week";
+  // One-time / fixed (a move, a job) — not a recurring rental period.
+  if (s.includes("time") || s.includes("kord") || s.includes("kartas") || s.includes("reize")
+      || s.includes("one") || s.includes("fix") || s.includes("ühekord")
+      || s.includes("vienreiz") || s.includes("vienkart") || s.includes("раз")) return "onetime";
   return "month";
 }
 

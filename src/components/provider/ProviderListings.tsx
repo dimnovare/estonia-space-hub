@@ -65,6 +65,60 @@ const unitSchema = z.object({
 });
 type UnitForm = z.infer<typeof unitSchema>;
 
+// ── Vertical-aware price units ──
+// Canonical priceUnit strings recognised by lib/priceUnit.ts (parseBillingPeriod).
+// Each vertical exposes only the units that make business sense:
+//   Warehouse = recurring monthly/weekly rental
+//   Trailer   = per-day / hourly rental
+//   Moving    = one-time fixed quote OR hourly (never monthly)
+type UnitType = "Warehouse" | "Moving" | "Trailer";
+
+const PRICE_UNIT_OPTIONS: Record<UnitType, { value: string; labelKey: string }[]> = {
+  Warehouse: [
+    { value: "€/month", labelKey: "provider.listings.unitOpt.month" },
+    { value: "€/week", labelKey: "provider.listings.unitOpt.week" },
+  ],
+  Trailer: [
+    { value: "€/day", labelKey: "provider.listings.unitOpt.day" },
+    { value: "€/hour", labelKey: "provider.listings.unitOpt.hour" },
+  ],
+  Moving: [
+    { value: "€/one-time", labelKey: "provider.listings.unitOpt.onetime" },
+    { value: "€/hour", labelKey: "provider.listings.unitOpt.hour" },
+  ],
+};
+
+const DEFAULT_PRICE_UNIT: Record<UnitType, string> = {
+  Warehouse: "€/month",
+  Trailer: "€/day",
+  Moving: "€/one-time",
+};
+
+function defaultPriceUnitFor(type: string): string {
+  return DEFAULT_PRICE_UNIT[(type as UnitType)] ?? "€/month";
+}
+
+// Build the option list for a type, including the currently-stored value as a
+// fallback option when it isn't one of the canonical choices (e.g. legacy data),
+// so editing an existing unit never blanks the Select.
+function priceUnitOptionsFor(type: string, current?: string): { value: string; labelKey?: string }[] {
+  const base = PRICE_UNIT_OPTIONS[(type as UnitType)] ?? PRICE_UNIT_OPTIONS.Warehouse;
+  if (current && !base.some((o) => o.value === current)) {
+    return [...base, { value: current }];
+  }
+  return base;
+}
+
+const QTY_LABEL_KEY: Record<UnitType, string> = {
+  Warehouse: "provider.listings.qtyUnits",
+  Trailer: "provider.listings.qtyTrailers",
+  Moving: "provider.listings.qtyJobsPerDay",
+};
+
+function qtyLabelKey(type: string): string {
+  return QTY_LABEL_KEY[(type as UnitType)] ?? "provider.listings.qtyUnits";
+}
+
 // ── Location Dialog ──
 
 function LocationDialog({
@@ -296,7 +350,19 @@ function UnitDialog({
               control={form.control}
               name="type"
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select
+                  value={field.value}
+                  onValueChange={(newType) => {
+                    field.onChange(newType);
+                    // Reset priceUnit to the new vertical's default when the current
+                    // value isn't valid for it (storage=month, trailer=day, moving=one-time).
+                    const current = form.getValues("priceUnit");
+                    const allowed = (PRICE_UNIT_OPTIONS[newType as UnitType] ?? []).map((o) => o.value);
+                    if (!allowed.includes(current)) {
+                      form.setValue("priceUnit", defaultPriceUnitFor(newType));
+                    }
+                  }}
+                >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Warehouse">{t("provider.listings.typeWarehouse")}</SelectItem>
@@ -314,16 +380,33 @@ function UnitDialog({
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitPriceUnit")}</label>
-              <Input {...form.register("priceUnit")} />
+              <Controller
+                control={form.control}
+                name="priceUnit"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {priceUnitOptionsFor(form.watch("type"), field.value).map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.labelKey ? t(o.labelKey) : o.value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
+            {form.watch("type") === "Warehouse" && (
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitSizeM2")}</label>
+                <Input type="number" step="0.1" {...form.register("sizeM2")} />
+              </div>
+            )}
             <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitSizeM2")}</label>
-              <Input type="number" step="0.1" {...form.register("sizeM2")} />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitQuantity")}</label>
+              <label className="text-xs font-medium text-muted-foreground">{t(qtyLabelKey(form.watch("type")))}</label>
               <Input type="number" {...form.register("quantityTotal")} />
             </div>
           </div>
@@ -872,7 +955,17 @@ function EditUnitDialog({
               control={form.control}
               name="type"
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select
+                  value={field.value}
+                  onValueChange={(newType) => {
+                    field.onChange(newType);
+                    const current = form.getValues("priceUnit");
+                    const allowed = (PRICE_UNIT_OPTIONS[newType as UnitType] ?? []).map((o) => o.value);
+                    if (!allowed.includes(current)) {
+                      form.setValue("priceUnit", defaultPriceUnitFor(newType));
+                    }
+                  }}
+                >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Warehouse">{t("provider.listings.typeWarehouse")}</SelectItem>
@@ -890,16 +983,33 @@ function EditUnitDialog({
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitPriceUnit")}</label>
-              <Input {...form.register("priceUnit")} />
+              <Controller
+                control={form.control}
+                name="priceUnit"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {priceUnitOptionsFor(form.watch("type"), field.value).map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.labelKey ? t(o.labelKey) : o.value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
+            {form.watch("type") === "Warehouse" && (
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitSizeM2")}</label>
+                <Input type="number" step="0.1" {...form.register("sizeM2")} />
+              </div>
+            )}
             <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitSizeM2")}</label>
-              <Input type="number" step="0.1" {...form.register("sizeM2")} />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitQuantity")}</label>
+              <label className="text-xs font-medium text-muted-foreground">{t(qtyLabelKey(form.watch("type")))}</label>
               <Input type="number" {...form.register("quantityTotal")} />
             </div>
           </div>
