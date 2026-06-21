@@ -437,6 +437,57 @@ export const contactService = {
   },
 };
 
+// ─── Lead Service ───────────────────────────────────────────────────────────
+// "Request a quote" from a listing (moving/trailer). Creates a DemandLead routed
+// to the listing's partner; partners reply with a price from their dashboard.
+export interface QuoteLeadInput {
+  listingId: string;
+  email: string;
+  name?: string;
+  phone?: string;
+  city?: string;
+  message?: string;
+  language?: string;
+}
+
+export type ProviderLeadStatus = "new" | "contacted" | "quoted" | "converted" | "dismissed";
+
+export interface ProviderLead {
+  id: string;
+  name?: string | null;
+  email: string;
+  phone?: string | null;
+  city: string;
+  category: string;
+  query?: string | null;
+  status: ProviderLeadStatus;
+  quotedPrice?: number | null;
+  quotedAt?: string | null;
+  providerNotes?: string | null;
+  listingId?: string | null;
+  createdAt: string;
+}
+
+export const leadService = {
+  async requestQuote(input: QuoteLeadInput): Promise<void> {
+    await apiClient.post("/leads/quote", { ...input, language: input.language ?? "et" });
+  },
+  async listForProvider(supplierId?: string | null, status?: string): Promise<ProviderLead[]> {
+    const params = new URLSearchParams();
+    if (status && status !== "all") params.set("status", status);
+    const path = withSupplier(`/provider/leads${params.toString() ? `?${params}` : ""}`, supplierId ?? null);
+    const res = await apiClient.get<{ items: ProviderLead[] }>(path);
+    return res.items ?? [];
+  },
+  async respond(
+    id: string,
+    body: { status?: string; quotedPrice?: number; providerNotes?: string },
+    supplierId?: string | null,
+  ): Promise<void> {
+    await apiClient.patch(withSupplier(`/provider/leads/${id}`, supplierId ?? null), body);
+  },
+};
+
 // ─── Bank Service ───────────────────────────────────────────────────────────────
 export interface BankDetails {
   iban?: string;

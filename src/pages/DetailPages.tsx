@@ -29,7 +29,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useListing, useListings } from "@/hooks/queries";
-import { contactService } from "@/services";
+import { leadService } from "@/services";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import type { Listing, WarehouseListing, MovingListing, TrailerListing } from "@/services/types";
@@ -424,11 +424,13 @@ function RequestModal({
     }
     setSubmitting(true);
     try {
-      await contactService.send({
+      await leadService.requestQuote({
+        listingId: listing.id,
         name: name.trim(),
         email: email.trim(),
-        subject: `Listing enquiry — ${listing.title} (${listing.provider})`,
-        message: `${message.trim()}${phone.trim() ? `\n\nPhone: ${phone.trim()}` : ""}\n\nListing: ${listing.title} — ${listing.city} (€${listing.priceFrom}/${rawUnit(listing.priceUnit)})`,
+        phone: phone.trim() || undefined,
+        city: listing.city,
+        message: `${message.trim()}\n\nListing: ${listing.title} — ${listing.city} (€${listing.priceFrom}/${rawUnit(listing.priceUnit)})`,
         language,
       });
       trackEvent("listing_request", { listing_id: listing.id, type: listing.type });
@@ -566,10 +568,12 @@ function MovingQuoteModal({
       if (notes.trim()) lines.push(`${t("detail.quote.notes")}: ${notes.trim()}`);
       const message = `${lines.join("\n")}\n\n${t("detail.provider")}: ${listing.title} — ${listing.city} (${listing.provider})`;
 
-      await contactService.send({
+      await leadService.requestQuote({
+        listingId: listing.id,
         name: name.trim(),
         email: email.trim(),
-        subject: `Moving quote request — ${listing.title} (${listing.provider})`,
+        phone: phone.trim() || undefined,
+        city: fromCity.trim() || listing.city,
         message,
         language,
       });

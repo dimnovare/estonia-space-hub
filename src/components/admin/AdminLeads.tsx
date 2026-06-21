@@ -9,11 +9,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 
-type LeadStatus = "new" | "contacted" | "converted" | "dismissed";
+type LeadStatus = "new" | "contacted" | "quoted" | "converted" | "dismissed";
 
 interface Lead {
   id: string;
+  name?: string | null;
   email: string;
+  phone?: string | null;
   city: string;
   category: string;
   query?: string;
@@ -21,6 +23,8 @@ interface Lead {
   createdAt: string;
   status: LeadStatus;
   adminNotes?: string;
+  supplierName?: string | null;
+  quotedPrice?: number | null;
 }
 
 interface LeadsResponse {
@@ -34,6 +38,7 @@ const STATUS_OPTIONS: { value: LeadStatus | "all"; labelKey: string }[] = [
   { value: "all",       labelKey: "admin.leads.statusAll" },
   { value: "new",       labelKey: "admin.leads.statusNew" },
   { value: "contacted", labelKey: "admin.leads.statusContacted" },
+  { value: "quoted",    labelKey: "admin.leads.statusQuoted" },
   { value: "converted", labelKey: "admin.leads.statusConverted" },
   { value: "dismissed", labelKey: "admin.leads.statusDismissed" },
 ];
@@ -41,6 +46,7 @@ const STATUS_OPTIONS: { value: LeadStatus | "all"; labelKey: string }[] = [
 const STATUS_COLORS: Record<LeadStatus, string> = {
   new: "bg-info/10 text-info",
   contacted: "bg-warning/10 text-warning-text",
+  quoted: "bg-accent/10 text-accent",
   converted: "bg-success/10 text-success",
   dismissed: "bg-secondary text-muted-foreground",
 };
@@ -197,9 +203,20 @@ export default function AdminLeads() {
               ) : (
                 items.map((lead) => (
                   <tr key={lead.id} className="border-b border-border last:border-0 transition-colors hover:bg-secondary/30">
-                    <td className="px-5 py-3.5 font-medium text-navy-ink">{lead.email}</td>
+                    <td className="px-5 py-3.5 font-medium text-navy-ink">
+                      {lead.name ? <span className="block">{lead.name}</span> : null}
+                      <span className={lead.name ? "block text-xs font-normal text-muted-foreground" : ""}>{lead.email}</span>
+                      {lead.supplierName && (
+                        <span className="mt-0.5 block text-[11px] font-normal text-accent">→ {lead.supplierName}</span>
+                      )}
+                    </td>
                     <td className="px-5 py-3.5 text-muted-foreground">{lead.city}</td>
-                    <td className="px-5 py-3.5 text-muted-foreground">{lead.category}</td>
+                    <td className="px-5 py-3.5 text-muted-foreground">
+                      {lead.category}
+                      {lead.quotedPrice != null && (
+                        <span className="mt-0.5 block text-[11px] font-medium text-foreground">{lead.quotedPrice.toFixed(2)} €</span>
+                      )}
+                    </td>
                     <td className="px-5 py-3.5 max-w-[180px] truncate text-muted-foreground" title={lead.query}>
                       {lead.query || "—"}
                     </td>
@@ -223,6 +240,7 @@ export default function AdminLeads() {
                       >
                         <option value="new">{t("admin.leads.statusNew")}</option>
                         <option value="contacted">{t("admin.leads.statusContacted")}</option>
+                        <option value="quoted">{t("admin.leads.statusQuoted")}</option>
                         <option value="converted">{t("admin.leads.statusConverted")}</option>
                         <option value="dismissed">{t("admin.leads.statusDismissed")}</option>
                       </select>

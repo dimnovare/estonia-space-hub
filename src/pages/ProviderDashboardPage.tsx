@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, Link } from "@/i18n/routing";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   LayoutDashboard, List, Package, Calendar as CalendarIcon, Star, Building2, Users, Sparkles,
-  BarChart3, Inbox, Bell, Volume2, VolumeX, X, FileText, AlertTriangle, LogOut, Wallet
+  BarChart3, Inbox, Bell, Volume2, VolumeX, X, FileText, AlertTriangle, LogOut, Wallet, MessageSquare
 } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,6 +30,7 @@ import ProviderPartnerPage from "@/components/provider/ProviderPartnerPage";
 import ProviderContractTemplate from "@/components/provider/ProviderContractTemplate";
 import ProviderBoosts from "@/components/provider/ProviderBoosts";
 import ProviderBilling from "@/components/provider/ProviderBilling";
+import ProviderLeads from "@/components/provider/ProviderLeads";
 
 // Spec order (04-partner-dashboard.md): Overview · My listings · Incoming orders ·
 // Bookings · Calendar · Boosts & visibility · Analytics · Payouts & billing ·
@@ -40,6 +41,7 @@ function useSidebarLinks() {
     { id: "overview", label: t("provider.nav.overview"), icon: LayoutDashboard },
     { id: "listings", label: t("provider.nav.listings"), icon: List },
     { id: "orders", label: t("provider.nav.orders"), icon: Inbox },
+    { id: "leads", label: t("provider.nav.leads"), icon: MessageSquare },
     { id: "bookings", label: t("provider.nav.bookings"), icon: Package },
     { id: "calendar", label: t("provider.nav.calendar"), icon: CalendarIcon },
     { id: "boosts", label: t("provider.nav.boosts"), icon: Sparkles },
@@ -309,6 +311,7 @@ export default function ProviderDashboardPage() {
 
         {tab === "overview" && <ProviderOverview onGoToOrders={() => setTab("orders")} />}
         {tab === "orders" && <ProviderIncomingOrders />}
+        {tab === "leads" && <ProviderLeads />}
         {tab === "listings" && <ProviderListings />}
         {tab === "bookings" && <ProviderBookings />}
         {tab === "calendar" && <ProviderCalendar />}
