@@ -44,6 +44,39 @@ const defaultMoveIn = () => {
   return d.toISOString().slice(0, 10);
 };
 
+/** True for a "YYYY-MM-DD" string that parses to a real calendar date. */
+const isValidIsoDate = (v: string): boolean => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+  const d = new Date(`${v}T00:00:00`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+};
+
+/** Add `days` to a valid "YYYY-MM-DD" string, returning a new "YYYY-MM-DD" string. */
+const addDaysIso = (iso: string, days: number): string => {
+  const d = new Date(`${iso}T00:00:00`);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+};
+
+/**
+ * Build the `/book` query string, forwarding the customer's detail-page selections
+ * so BookingPage opens pre-filled instead of resetting to today→tomorrow.
+ * Only valid/derivable params are appended (BookingPage falls back to defaults otherwise).
+ */
+const buildBookHref = (
+  listing: Listing,
+  opts: { start?: string; end?: string; duration?: string; crew?: string },
+): string => {
+  const params = new URLSearchParams();
+  params.set("listing", listing.id);
+  params.set("type", listing.type);
+  if (opts.start && isValidIsoDate(opts.start)) params.set("start", opts.start);
+  if (opts.end && isValidIsoDate(opts.end)) params.set("end", opts.end);
+  if (opts.duration) params.set("duration", opts.duration);
+  if (opts.crew) params.set("crew", opts.crew);
+  return `/book?${params.toString()}`;
+};
+
 function buildProductSchema(listing: Listing, lang: string) {
   const schema: any = {
     "@context": "https://schema.org",
@@ -656,6 +689,16 @@ export function WarehouseDetail() {
 
   const about = composeAbout(t, wListing, typeLabel);
 
+  // Forward the selected move-in + duration (months → days) to the booking flow.
+  const durationMonths = Number(duration);
+  const bookHref = buildBookHref(wListing, {
+    start: moveInDate,
+    end: isValidIsoDate(moveInDate) && durationMonths > 0
+      ? addDaysIso(moveInDate, durationMonths * 30)
+      : undefined,
+    duration,
+  });
+
   return (
     <div className="container-wide py-6 pb-24 lg:pb-6">
       <SEO
@@ -732,7 +775,7 @@ export function WarehouseDetail() {
             </div>
 
             <div className="mt-5">
-              <BookingActions listing={wListing} onBook={() => navigate(`/book?listing=${wListing.id}&type=${wListing.type}`)} onRequest={() => setRequestOpen(true)} />
+              <BookingActions listing={wListing} onBook={() => navigate(bookHref)} onRequest={() => setRequestOpen(true)} />
             </div>
 
             <BookingSummaryRail listing={wListing} />
@@ -748,7 +791,7 @@ export function WarehouseDetail() {
           <div className="font-display text-lg font-extrabold text-navy-ink">€{wListing.priceFrom}
             <span className="ml-1 text-xs font-normal text-muted-foreground">{formatPriceUnit(wListing.priceUnit, t)}</span>
           </div>
-          <MobileBookingAction listing={wListing} onBook={() => navigate(`/book?listing=${wListing.id}&type=${wListing.type}`)} onRequest={() => setRequestOpen(true)} className="shrink-0" />
+          <MobileBookingAction listing={wListing} onBook={() => navigate(bookHref)} onRequest={() => setRequestOpen(true)} className="shrink-0" />
         </div>
       </div>
 
@@ -778,6 +821,9 @@ export function MovingDetail() {
 
   const features = mListing.services.concat([t("detail.onSiteParking"), t("detail.litAndDry")]);
   const about = composeAbout(t, mListing, typeLabel);
+
+  // Moving is a same-day service — forward the move date + crew size (no end date).
+  const bookHref = buildBookHref(mListing, { start: moveInDate, crew });
 
   return (
     <div className="container-wide py-6 pb-24 lg:pb-6">
@@ -862,7 +908,7 @@ export function MovingDetail() {
             </div>
 
             <div className="mt-5">
-              <BookingActions listing={mListing} onBook={() => navigate(`/book?listing=${mListing.id}&type=${mListing.type}`)} onRequest={() => setRequestOpen(true)} />
+              <BookingActions listing={mListing} onBook={() => navigate(bookHref)} onRequest={() => setRequestOpen(true)} />
             </div>
             <BookingSummaryRail listing={mListing} />
           </div>
@@ -877,7 +923,7 @@ export function MovingDetail() {
           <div className="font-display text-lg font-extrabold text-navy-ink">€{mListing.priceFrom}
             <span className="ml-1 text-xs font-normal text-muted-foreground">{formatPriceUnit(mListing.priceUnit, t)}</span>
           </div>
-          <MobileBookingAction listing={mListing} onBook={() => navigate(`/book?listing=${mListing.id}&type=${mListing.type}`)} onRequest={() => setRequestOpen(true)} className="shrink-0" />
+          <MobileBookingAction listing={mListing} onBook={() => navigate(bookHref)} onRequest={() => setRequestOpen(true)} className="shrink-0" />
         </div>
       </div>
 
@@ -907,6 +953,16 @@ export function TrailerDetail() {
 
   const features = tListing.requirements.concat([t("detail.onSiteParking"), t("detail.litAndDry")]);
   const about = composeAbout(t, tListing, typeLabel);
+
+  // Forward the pickup date + rental days (derive the return date from days).
+  const rentalDays = Number(days);
+  const bookHref = buildBookHref(tListing, {
+    start: pickupDate,
+    end: isValidIsoDate(pickupDate) && rentalDays > 0
+      ? addDaysIso(pickupDate, rentalDays)
+      : undefined,
+    duration: days,
+  });
 
   return (
     <div className="container-wide py-6 pb-24 lg:pb-6">
@@ -987,7 +1043,7 @@ export function TrailerDetail() {
             </div>
 
             <div className="mt-5">
-              <BookingActions listing={tListing} onBook={() => navigate(`/book?listing=${tListing.id}&type=${tListing.type}`)} onRequest={() => setRequestOpen(true)} />
+              <BookingActions listing={tListing} onBook={() => navigate(bookHref)} onRequest={() => setRequestOpen(true)} />
             </div>
             <BookingSummaryRail listing={tListing} />
           </div>
@@ -1002,7 +1058,7 @@ export function TrailerDetail() {
           <div className="font-display text-lg font-extrabold text-navy-ink">€{tListing.priceFrom}
             <span className="ml-1 text-xs font-normal text-muted-foreground">{formatPriceUnit(tListing.priceUnit, t)}</span>
           </div>
-          <MobileBookingAction listing={tListing} onBook={() => navigate(`/book?listing=${tListing.id}&type=${tListing.type}`)} onRequest={() => setRequestOpen(true)} className="shrink-0" />
+          <MobileBookingAction listing={tListing} onBook={() => navigate(bookHref)} onRequest={() => setRequestOpen(true)} className="shrink-0" />
         </div>
       </div>
 

@@ -97,6 +97,14 @@ function addDaysIso(iso: string, days: number): string {
   return `${y}-${m}-${day}`;
 }
 
+// True for a "YYYY-MM-DD" string that parses to a real calendar date. Used to
+// validate ?start=/?end= query params before seeding the booking date range.
+function isValidIsoDate(v: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+  const d = new Date(`${v}T00:00:00`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+}
+
 export default function BookingPage() {
   const [params] = useSearchParams();
   const listingId = params.get("listing");
@@ -170,6 +178,19 @@ export default function BookingPage() {
   const [sentContactEmail, setSentContactEmail] = useState<string | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
 
+  // Seed the date range from the detail page's selection (?start=&end=) when present,
+  // so the customer's picks carry over instead of resetting. Invalid/absent params
+  // fall back to the today→tomorrow defaults (the e2e flow passes no date params).
+  const defaultStart = todayIsoDate();
+  const paramStart = params.get("start");
+  const paramEnd = params.get("end");
+  const initialStartDate = paramStart && isValidIsoDate(paramStart) ? paramStart : defaultStart;
+  // Only accept the passed end date if it's a valid date strictly after the start.
+  const initialEndDate =
+    paramEnd && isValidIsoDate(paramEnd) && new Date(paramEnd) > new Date(initialStartDate)
+      ? paramEnd
+      : addDaysIso(initialStartDate, 1);
+
   const detailsForm = useForm<{ startDate: string; endDate: string }>({
     resolver: zodResolver(z.object({
       startDate: z.string().min(1, t("booking.startDateRequired") || "Start date required")
@@ -180,7 +201,7 @@ export default function BookingPage() {
       if (!data.startDate || !data.endDate) return true;
       return new Date(data.endDate) > new Date(data.startDate);
     }, { message: t("booking.endAfterStart") || "End date must be after start date", path: ["endDate"] })),
-    defaultValues: { startDate: todayIsoDate(), endDate: addDaysIso(todayIsoDate(), 1) },
+    defaultValues: { startDate: initialStartDate, endDate: initialEndDate },
   });
 
   const contactForm = useForm<BookingContactForm>({

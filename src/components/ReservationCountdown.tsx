@@ -43,9 +43,9 @@ export function ReservationCountdown({ createdAt, reservedUntil, size = "lg" }: 
   const locale = localeMap[language] || "en-GB";
   const expiryStr = new Date(expiresAt).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
 
-  const padding = size === "lg" ? "p-4" : "p-4";
+  const padding = size === "lg" ? "p-4" : "p-3";
   const titleClass = size === "lg" ? "text-base" : "text-sm";
-  const iconSize = size === "lg" ? "h-6 w-6" : "h-5 w-5";
+  const iconSize = size === "lg" ? "h-6 w-6" : "h-4 w-4";
 
   return (
     <div className={`rounded-xl border-2 border-warning/40 bg-warning/10 ${padding}`}>

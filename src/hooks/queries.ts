@@ -187,7 +187,7 @@ export function useCreateReview() {
 export function useSupplierTeam(supplierId?: string | null) {
   const { isAuthenticated, role } = useAuth();
   return useQuery<TeamMember[]>({
-    queryKey: ["supplier-team", supplierId ?? null],
+    queryKey: queryKeys.supplierTeam.byId(supplierId ?? null),
     queryFn: async () => {
       const res = await apiClient.get(withSupplier("/supplier/team", supplierId ?? null));
       return unwrapPaginated<TeamMember>(res);
@@ -203,7 +203,7 @@ export function useInviteTeamMember(supplierId?: string | null) {
     mutationFn: (data: { email: string; name: string }) =>
       apiClient.post(withSupplier("/supplier/team/invite", supplierId ?? null), data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["supplier-team", supplierId ?? null] });
+      qc.invalidateQueries({ queryKey: queryKeys.supplierTeam.byId(supplierId ?? null) });
     },
   });
 }
@@ -214,7 +214,7 @@ export function useRemoveTeamMember(supplierId?: string | null) {
     mutationFn: (userId: string) =>
       apiClient.delete(withSupplier(`/supplier/team/${userId}`, supplierId ?? null)),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["supplier-team", supplierId ?? null] });
+      qc.invalidateQueries({ queryKey: queryKeys.supplierTeam.byId(supplierId ?? null) });
     },
   });
 }

@@ -31,7 +31,7 @@ export default function AdminSuppliers() {
 
   const [selected, setSelected] = useState<Supplier | null>(null);
   const [testingId, setTestingId] = useState<string | null>(null);
-  const [testResult, setTestResult] = useState<{ success: boolean; latency: number } | null>(null);
+  const [testResult, setTestResult] = useState<{ success: boolean; latency?: number; message?: string } | null>(null);
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("active");
   const [countryFilter, setCountryFilter] = useState<"all" | "EE" | "LV" | "LT">("all");
   const [tierFilter, setTierFilter] = useState<"all" | "starter" | "standard" | "premium">("all");
@@ -126,9 +126,15 @@ export default function AdminSuppliers() {
   const testIntegration = async (id: string) => {
     setTestingId(id);
     setTestResult(null);
-    const result = await supplierService.testIntegration(id);
-    setTestResult(result);
-    setTestingId(null);
+    try {
+      const result = await supplierService.testIntegration(id);
+      setTestResult({ success: result.success, latency: result.latency });
+    } catch (err: any) {
+      // Surface the backend reason (message/status) instead of a bare "failed".
+      setTestResult({ success: false, message: err?.message ?? t("common.failed") });
+    } finally {
+      setTestingId(null);
+    }
   };
 
   const handleSaveSelected = () => {
@@ -543,7 +549,9 @@ export default function AdminSuppliers() {
                     </Button>
                     {testResult && (
                       <div className={`mt-2 rounded-lg p-2 text-xs font-medium ${testResult.success ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
-                        {testResult.success ? `✓ ${t("admin.connectionOk")} — ${testResult.latency}ms` : `✗ ${t("admin.connectionFailed")}`}
+                        {testResult.success
+                          ? `✓ ${t("admin.connectionOk")} — ${testResult.latency}ms`
+                          : `✗ ${t("admin.connectionFailed")}${testResult.message ? ` — ${testResult.message}` : ""}`}
                       </div>
                     )}
                   </div>

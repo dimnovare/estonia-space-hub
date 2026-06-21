@@ -236,8 +236,8 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
               <div className="rounded-xl border border-accent/30 bg-accent/5 p-4">
                 <h3 className="flex items-center gap-2 text-sm font-semibold"><Send className="h-4 w-4 text-accent" /> {t("admin.fulfillment")}</h3>
                 <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-                  <div><span className="text-xs text-muted-foreground">{t("admin.approvalMode")}</span><p className="font-medium">{viewOrder.integrationType === "api" ? t("admin.approvalAuto") : t("admin.approvalAdmin")}</p></div>
-                  <div><span className="text-xs text-muted-foreground">{t("admin.postingChannel")}</span><p className="font-medium">{t(INTEGRATION_TYPE_CONFIG[viewOrder.integrationType].labelKey) || INTEGRATION_TYPE_CONFIG[viewOrder.integrationType].label}</p></div>
+                  <div><span className="text-xs text-muted-foreground">{t("admin.approvalMode")}</span><p className="font-medium">{viewOrder.approvalMode === "auto" ? t("admin.approvalAuto") : viewOrder.approvalMode === "provider" ? t("admin.approvalProvider") : t("admin.approvalAdmin")}</p></div>
+                  {(() => { const ch = (viewOrder.postingChannel ?? viewOrder.integrationType) as keyof typeof INTEGRATION_TYPE_CONFIG; const cfg = INTEGRATION_TYPE_CONFIG[ch] ?? INTEGRATION_TYPE_CONFIG[viewOrder.integrationType]; return <div><span className="text-xs text-muted-foreground">{t("admin.postingChannel")}</span><p className="font-medium">{t(cfg.labelKey) || cfg.label}</p></div>; })()}
                   {viewOrder.sentAt && <div><span className="text-xs text-muted-foreground">{t("admin.markSent")}</span><p className="font-medium">{viewOrder.sentAt}</p></div>}
                   {viewOrder.confirmedAt && <div><span className="text-xs text-muted-foreground">{t("admin.markConfirmed")}</span><p className="font-medium">{viewOrder.confirmedAt}</p></div>}
                 </div>

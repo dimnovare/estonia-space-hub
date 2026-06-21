@@ -114,7 +114,7 @@ export default function AdminSettings() {
     try {
       await apiClient.patch("/admin/settings", settings);
       toast.success(t("admin.settingsSaved"));
-      qc.invalidateQueries({ queryKey: queryKeys.platformSettings.public() });
+      qc.invalidateQueries({ queryKey: queryKeys.platformSettingsPublic.all() });
     } catch (err: any) {
       toast.error(err.message || t("toast.saveFailed"));
     } finally {

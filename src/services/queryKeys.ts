@@ -22,7 +22,6 @@ export const queryKeys = {
   suppliers: {
     all: () => ["suppliers"] as const,
     byId: (id: string) => ["suppliers", id] as const,
-    team: (supplierId?: string | null) => ["supplier-team", supplierId ?? null] as const,
   },
   users: {
     all: () => ["users"] as const,
@@ -67,9 +66,6 @@ export const queryKeys = {
   },
   adminRevenue: {
     all: () => ["admin-revenue"] as const,
-  },
-  platformSettings: {
-    public: () => ["platform-settings-public"] as const,
   },
   rebateInvoices: {
     byPeriod: (period: string) => ["rebate-invoices", period] as const,
