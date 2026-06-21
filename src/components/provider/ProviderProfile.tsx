@@ -103,11 +103,14 @@ export default function ProviderProfile() {
     (page?.longDescription?.ru || page?.longDescriptionRu)
   );
 
+  // `adminGated` items are reviewed/toggled by Ruumly, not self-serviceable by the
+  // partner — we annotate them so an unchecked state never reads as the partner's
+  // own to-do (logo/description are the partner's; verify/publish are Ruumly's).
   const checks = [
-    { ok: !!(profile?.isVerified ?? profile?.verified), label: t("provider.profile.checkVerified") },
-    { ok: !!page?.isPartnerPagePublished, label: t("provider.profile.checkPublished") },
-    { ok: !!(page?.logoUrl && page?.heroImageUrl), label: t("provider.profile.checkLogoHero") },
-    { ok: hasLongDescriptions, label: t("provider.profile.checkLongDesc") },
+    { ok: !!(profile?.isVerified ?? profile?.verified), label: t("provider.profile.checkVerified"), adminGated: true },
+    { ok: !!page?.isPartnerPagePublished, label: t("provider.profile.checkPublished"), adminGated: true },
+    { ok: !!(page?.logoUrl && page?.heroImageUrl), label: t("provider.profile.checkLogoHero"), adminGated: false },
+    { ok: hasLongDescriptions, label: t("provider.profile.checkLongDesc"), adminGated: false },
   ];
 
   return (
@@ -167,13 +170,20 @@ export default function ProviderProfile() {
           </div>
           <div className="mt-4 space-y-3">
             {checks.map((c) => (
-              <div key={c.label} className="flex items-center gap-2.5 text-sm">
+              <div key={c.label} className="flex items-start gap-2.5 text-sm">
                 {c.ok ? (
-                  <CheckCircle2 className="h-5 w-5 shrink-0 text-success" />
+                  <CheckCircle2 className="mt-px h-5 w-5 shrink-0 text-success" />
                 ) : (
-                  <XCircle className="h-5 w-5 shrink-0 text-muted-foreground/50" />
+                  <XCircle className="mt-px h-5 w-5 shrink-0 text-muted-foreground/50" />
                 )}
-                <span className={c.ok ? "text-ink-2" : "text-ink-2"}>{c.label}</span>
+                <span className="text-ink-2">
+                  {c.label}
+                  {c.adminGated && (
+                    <span className="ml-2 inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground align-middle">
+                      {t("provider.profile.reviewedByRuumly")}
+                    </span>
+                  )}
+                </span>
               </div>
             ))}
           </div>

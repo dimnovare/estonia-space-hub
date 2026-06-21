@@ -2,9 +2,22 @@ import { useState } from "react";
 import { Mail, Wifi, Hand, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { useOrdersPaged, useOrderStatusCounts, useApproveOrder, useRejectOrder, useUpdateOrderStatus } from "@/hooks/useOrders";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+import { useOrdersPaged, useOrderStatusCounts, useApproveOrder, useRejectOrder, useConfirmOrder, useUpdateOrderStatus } from "@/hooks/useOrders";
 import { SkeletonList } from "@/components/SkeletonCard";
-import { ORDER_STATUS_CONFIG, INTEGRATION_TYPE_CONFIG, generateOrderEmailPreview } from "@/lib/constants";
+import { ORDER_STATUS_CONFIG, FALLBACK_ORDER_STATUS, INTEGRATION_TYPE_CONFIG, generateOrderEmailPreview } from "@/lib/constants";
 import type { Order, OrderStatus } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -27,20 +40,38 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
   const updateStatus  = useUpdateOrderStatus();
   const approveOrder  = useApproveOrder();
   const rejectOrder   = useRejectOrder();
+  const confirmOrder  = useConfirmOrder();
   const queryClient   = useQueryClient();
 
+  // Free-text reason captured before rejecting; the reject button stays disabled
+  // until it's non-empty so a real, stored reason is always sent to /reject.
+  const [rejectReason, setRejectReason] = useState("");
+
+  // Manual bank-reconciliation dialog state: capture an optional bank reference
+  // and note instead of a bare window.confirm.
+  const [wireDialogOpen, setWireDialogOpen] = useState(false);
+  const [wireReference, setWireReference] = useState("");
+  const [wireNote, setWireNote] = useState("");
+
   const markPaidByWire = useMutation({
-    mutationFn: async (bookingId: string) => {
+    mutationFn: async ({ bookingId, reference, note }: { bookingId: string; reference?: string; note?: string }) => {
       // Step 1: resolve the invoice ID from the booking.
       const invoice = await apiClient.get<{ id: string; status: string }>(
         `/invoices/by-booking/${bookingId}/status`
       );
       if (invoice.status === "paid") throw new Error("already_paid");
-      // Step 2: mark the invoice as paid via the admin endpoint.
-      return apiClient.post(`/admin/invoices/${invoice.id}/mark-paid`, {});
+      // Step 2: mark the invoice as paid via the admin endpoint, recording the
+      // operator-supplied bank reference / note for the audit trail.
+      const payload: { reference?: string; note?: string } = {};
+      if (reference?.trim()) payload.reference = reference.trim();
+      if (note?.trim()) payload.note = note.trim();
+      return apiClient.post(`/admin/invoices/${invoice.id}/mark-paid`, payload);
     },
     onSuccess: () => {
       toast.success(t("admin.markPaidByWire"));
+      setWireDialogOpen(false);
+      setWireReference("");
+      setWireNote("");
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.root() });
       queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all() });
     },
@@ -97,7 +128,7 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
     <div>
       <h1 className="font-display text-2xl font-bold">{t("admin.orders")}</h1>
       <div className="mt-4 flex gap-2 overflow-x-auto">
-        {(["all", "created", "sending", "sent", "confirmed", "rejected", "active", "completed", "cancelled"] as const).map((f) => (
+        {(["all", "created", "sending", "sent", "confirmed", "rejected", "active", "completed", "cancelled", "failed"] as const).map((f) => (
           <button key={f} onClick={() => goToStatus(f)} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
             {f === "all" ? `${t("admin.all")} (${counts.all ?? 0})` : `${t(ORDER_STATUS_CONFIG[f].labelKey) || ORDER_STATUS_CONFIG[f].label} (${counts[f] ?? 0})`}
           </button>
@@ -113,7 +144,7 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
       {/* Mobile cards */}
       <div className="mt-6 space-y-2 md:hidden">
         {filtered.map((o) => {
-          const statusConf = ORDER_STATUS_CONFIG[o.status];
+          const statusConf = ORDER_STATUS_CONFIG[o.status] ?? FALLBACK_ORDER_STATUS;
           return (
             <button key={o.id} onClick={() => setViewOrder(o)} className="w-full rounded-xl border border-border p-3 text-left hover:bg-secondary/50 transition-colors">
               <div className="flex items-center justify-between">
@@ -150,7 +181,7 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
             <tbody>
               {filtered.map((o) => {
                 const intConf = INTEGRATION_TYPE_CONFIG[o.integrationType];
-                const statusConf = ORDER_STATUS_CONFIG[o.status];
+                const statusConf = ORDER_STATUS_CONFIG[o.status] ?? FALLBACK_ORDER_STATUS;
                 const IntIcon = o.integrationType === "api" ? Wifi : o.integrationType === "email" ? Mail : Hand;
                 return (
                   <tr key={o.id} className="border-b border-border last:border-0">
@@ -184,7 +215,7 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
         </div>
       )}
 
-      <Dialog open={!!viewOrder} onOpenChange={() => { setViewOrder(null); setEmailPreview(false); }}>
+      <Dialog open={!!viewOrder} onOpenChange={() => { setViewOrder(null); setEmailPreview(false); setRejectReason(""); }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t("admin.order")} {viewOrder?.id}</DialogTitle>
@@ -264,11 +295,7 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
                     size="sm"
                     disabled={markPaidByWire.isPending}
                     className="text-destructive border-destructive/40 hover:bg-destructive/10"
-                    onClick={() => {
-                      if (window.confirm(t("admin.markPaidByWireConfirm"))) {
-                        markPaidByWire.mutate(viewOrder.bookingId);
-                      }
-                    }}
+                    onClick={() => { setWireReference(""); setWireNote(""); setWireDialogOpen(true); }}
                   >
                     {markPaidByWire.isPending ? "..." : t("admin.markPaidByWire")}
                   </Button>
@@ -276,42 +303,27 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
                 {(viewOrder.status === "created" || viewOrder.status === "sending") && (
                   <Button
                     size="sm"
-                    disabled={updateStatus.isPending}
-                    onClick={() => updateStatus.mutate(
-                      { id: viewOrder.id, status: "sent" },
-                      { onSuccess: (updated) => setViewOrder(updated) }
-                    )}
+                    disabled={approveOrder.isPending}
+                    onClick={() => approveOrder.mutate(viewOrder.id, {
+                      onSuccess: (updated) => setViewOrder(updated),
+                    })}
                     className="bg-info text-white hover:bg-info/90"
                   >
                     <Send className="mr-1 h-3.5 w-3.5" />
-                    {updateStatus.isPending ? "..." : t("admin.markSent")}
+                    {approveOrder.isPending ? "..." : t("admin.approveAndForward")}
                   </Button>
                 )}
                 {viewOrder.status === "sent" && (
-                  <>
-                    <Button
-                      size="sm"
-                      disabled={approveOrder.isPending}
-                      onClick={() => approveOrder.mutate(viewOrder.id, {
-                        onSuccess: (updated) => setViewOrder(updated),
-                      })}
-                      className="bg-success text-white hover:bg-success/90"
-                    >
-                      {approveOrder.isPending ? "..." : t("admin.markConfirmed")}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={rejectOrder.isPending}
-                      onClick={() => rejectOrder.mutate(
-                        { id: viewOrder.id, reason: t("admin.orders.rejectedReason") },
-                        { onSuccess: (updated) => setViewOrder(updated) }
-                      )}
-                      className="text-destructive"
-                    >
-                      {rejectOrder.isPending ? "..." : t("admin.markRejected")}
-                    </Button>
-                  </>
+                  <Button
+                    size="sm"
+                    disabled={confirmOrder.isPending}
+                    onClick={() => confirmOrder.mutate(viewOrder.id, {
+                      onSuccess: (updated) => setViewOrder(updated),
+                    })}
+                    className="bg-success text-white hover:bg-success/90"
+                  >
+                    {confirmOrder.isPending ? "..." : t("admin.markConfirmedPartner")}
+                  </Button>
                 )}
                 {viewOrder.status === "confirmed" && (
                   <Button
@@ -340,6 +352,33 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
                   </Button>
                 )}
               </div>
+              {viewOrder.status === "sent" && (
+                <div className="rounded-lg border border-destructive/30 p-3">
+                  <Label htmlFor="reject-reason" className="text-xs font-semibold text-destructive">
+                    {t("admin.rejectReasonLabel")}
+                  </Label>
+                  <Textarea
+                    id="reject-reason"
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                    placeholder={t("admin.rejectReasonPlaceholder")}
+                    rows={3}
+                    className="mt-2"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={rejectOrder.isPending || !rejectReason.trim()}
+                    onClick={() => rejectOrder.mutate(
+                      { id: viewOrder.id, reason: rejectReason.trim() },
+                      { onSuccess: (updated) => { setRejectReason(""); setViewOrder(updated); } }
+                    )}
+                    className="mt-2 text-destructive border-destructive/40 hover:bg-destructive/10"
+                  >
+                    {rejectOrder.isPending ? "..." : t("admin.markRejected")}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
           {viewOrder && emailPreview && (
@@ -353,6 +392,51 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={wireDialogOpen} onOpenChange={(open) => { if (!markPaidByWire.isPending) setWireDialogOpen(open); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("admin.markPaidByWire")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("admin.markPaidByWireConfirm")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="wire-reference" className="text-xs font-medium">{t("admin.bankReference")}</Label>
+              <Input
+                id="wire-reference"
+                value={wireReference}
+                onChange={(e) => setWireReference(e.target.value)}
+                placeholder={t("admin.bankReferencePlaceholder")}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="wire-note" className="text-xs font-medium">{t("admin.notes")}</Label>
+              <Textarea
+                id="wire-note"
+                value={wireNote}
+                onChange={(e) => setWireNote(e.target.value)}
+                rows={2}
+                className="mt-1"
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={markPaidByWire.isPending}>{t("admin.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={markPaidByWire.isPending || !viewOrder}
+              onClick={(e) => {
+                e.preventDefault();
+                if (viewOrder) {
+                  markPaidByWire.mutate({ bookingId: viewOrder.bookingId, reference: wireReference, note: wireNote });
+                }
+              }}
+            >
+              {markPaidByWire.isPending ? "..." : t("admin.markPaidByWire")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

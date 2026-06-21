@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { bankService, type BankDetails } from "@/services";
+import { bankService, providerPaidFeaturesService, type BankDetails } from "@/services";
 import { toast } from "sonner";
 import { apiClient } from "@/services/apiClient";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
@@ -42,6 +42,15 @@ export default function ProviderBilling() {
     retry: false,
   });
 
+  // Real paid-features data (same source as Boosts & visibility). The active list
+  // and monthly spend below are derived from this — never hardcoded demo rows.
+  const { data: paidFeatures } = useQuery({
+    queryKey: ["provider-paid-features", supplierId],
+    queryFn: () => providerPaidFeaturesService.getMine(supplierId),
+    staleTime: 60_000,
+    retry: false,
+  });
+
   const needsSupplierContext =
     isSupplierContextRequired(supplierError) || isSupplierContextRequired(bankError);
 
@@ -64,15 +73,29 @@ export default function ProviderBilling() {
     setEditingBank(true);
   };
 
-  // Optional features active on this account. Featured search + verified badge are
-  // active in the demo; the rest are available to request from Boosts & visibility.
-  const optionalFeatures = [
-    { name: t("provider.billing.featFeaturedSearch"), price: "€29/mo", active: true },
-    { name: t("provider.billing.featVerified"), price: t("provider.boosts.freeTag"), active: true },
-    { name: t("provider.billing.featCalendarSync"), price: "€15/mo", active: !!supplierData?.hasCalendarSync },
-    { name: t("provider.billing.featContracts"), price: "€19/mo", active: false },
-  ];
-  const activeCount = optionalFeatures.filter((f) => f.active).length;
+  // Optional features actually active on this account, straight from the paid-features
+  // backend. A €0/manual feature (e.g. a free verified badge) shows its free tag; the
+  // rest show their real recurring price. No feature is fabricated as active.
+  const activeFeatures = paidFeatures?.activeFeatures ?? [];
+  const optionalFeatures = activeFeatures.map((f) => {
+    const amount = f.paidFeature.priceAmount;
+    const isFree = amount <= 0;
+    const suffix = f.paidFeature.billingInterval === "monthly" ? "/mo" : "";
+    return {
+      key: f.id,
+      name: f.paidFeature.name,
+      price: isFree
+        ? t("provider.boosts.freeTag")
+        : `${amount.toFixed(0)} ${f.paidFeature.priceCurrency}${suffix}`,
+    };
+  });
+  const activeCount = optionalFeatures.length;
+  // Sum of recurring monthly spend across active paid features (free ones add €0).
+  const monthlySpend = activeFeatures.reduce(
+    (sum, f) =>
+      sum + (f.paidFeature.billingInterval === "monthly" ? Math.max(0, f.paidFeature.priceAmount) : 0),
+    0,
+  );
 
   // Real invoices come from the billing backend. Until a partner-billing invoice
   // endpoint is wired, show a truthful empty state — never fabricated "Paid" rows.
@@ -118,9 +141,11 @@ export default function ProviderBilling() {
                 <span className="text-[13px] text-muted-foreground">{t("provider.billing.optionalFeaturesStat")}</span>
                 <Sparkles className="h-[18px] w-[18px] text-muted-foreground/70" />
               </div>
-              <div className="mt-1 font-display text-[30px] font-extrabold leading-none text-navy-ink">€29</div>
+              <div className="mt-1 font-display text-[30px] font-extrabold leading-none text-navy-ink">€{monthlySpend.toFixed(0)}</div>
               <div className="mt-1.5 text-xs text-muted-foreground">
-                {t("provider.billing.perMonthActive").replace("{count}", String(activeCount))}
+                {activeCount > 0
+                  ? t("provider.billing.perMonthActive").replace("{count}", String(activeCount))
+                  : t("provider.billing.noneActive")}
               </div>
             </div>
             <div className="rounded-[14px] border border-border bg-card p-5 shadow-[var(--shadow-card)]">
@@ -171,24 +196,24 @@ export default function ProviderBilling() {
             <div className="rounded-[14px] border border-border bg-card p-5 shadow-[var(--shadow-card)]">
               <h3 className="font-display text-base font-semibold text-navy-ink">{t("provider.billing.optionalFeaturesTitle")}</h3>
               <div className="mt-3 divide-y divide-border">
-                {optionalFeatures.map((f) => (
-                  <div key={f.name} className="flex items-center justify-between py-2.5">
-                    <div>
-                      <div className="text-sm font-medium text-ink-2">{f.name}</div>
-                      <div className="text-xs text-muted-foreground">{f.price}</div>
-                    </div>
-                    {f.active ? (
+                {optionalFeatures.length === 0 ? (
+                  <p className="py-6 text-center text-sm text-muted-foreground">
+                    {t("provider.billing.noneActiveDesc")}
+                  </p>
+                ) : (
+                  optionalFeatures.map((f) => (
+                    <div key={f.key} className="flex items-center justify-between py-2.5">
+                      <div>
+                        <div className="text-sm font-medium text-ink-2">{f.name}</div>
+                        <div className="text-xs text-muted-foreground">{f.price}</div>
+                      </div>
                       <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-semibold text-success">
                         <CheckCircle2 className="h-3 w-3" />
                         {t("provider.billing.featActive")}
                       </span>
-                    ) : (
-                      <span className="inline-flex rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-                        {t("provider.billing.featAvailable")}
-                      </span>
-                    )}
-                  </div>
-                ))}
+                    </div>
+                  ))
+                )}
               </div>
               <Button
                 size="sm"

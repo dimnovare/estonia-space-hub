@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Inbox, Box, Mail, MessageSquare, CheckCircle2, XCircle, Download } from "lucide-react";
 import { useOrders, useLeadSummary } from "@/hooks/useOrders";
 import { SkeletonList } from "@/components/SkeletonCard";
-import { ORDER_STATUS_CONFIG } from "@/lib/constants";
+import { ORDER_STATUS_CONFIG, FALLBACK_ORDER_STATUS } from "@/lib/constants";
 import type { Order, LeadStatus } from "@/services/types";
 import EmailTemplatePreview from "@/components/EmailTemplatePreview";
 import { Button } from "@/components/ui/button";
@@ -45,16 +45,19 @@ export default function ProviderIncomingOrders() {
 
   const exportCSV = () => {
     const headers = t("provider.orders.csvHeaders").split(",");
-    const rows = filtered.map((o) => [
-      o.id,
-      o.customerName,
-      o.listingTitle,
-      o.city,
-      o.startDate,
-      o.duration,
-      `€${o.supplierPrice}`,
-      t(ORDER_STATUS_CONFIG[o.status].labelKey) || ORDER_STATUS_CONFIG[o.status].label,
-    ]);
+    const rows = filtered.map((o) => {
+      const cfg = ORDER_STATUS_CONFIG[o.status] ?? FALLBACK_ORDER_STATUS;
+      return [
+        o.id,
+        o.customerName,
+        o.listingTitle,
+        o.city,
+        o.startDate,
+        o.duration,
+        `€${o.supplierPrice}`,
+        t(cfg.labelKey) || cfg.label,
+      ];
+    });
     const csv = [headers.join(";"), ...rows.map((r) => r.join(";"))].join("\n");
     const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -76,8 +79,8 @@ export default function ProviderIncomingOrders() {
     <div>
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="font-display text-2xl font-bold text-navy-ink md:text-[28px]">{t("provider.orders.titleLong")}</h1>
-          <p className="mt-2 text-sm text-muted-foreground">{t("provider.orders.subtitle")}</p>
+          <h1 className="font-display text-2xl font-bold text-navy-ink md:text-[28px]">{t("provider.orders.requestsTitle")}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{t("provider.orders.requestsSubtitle")}</p>
         </div>
         <Button
           size="sm"
@@ -132,12 +135,12 @@ export default function ProviderIncomingOrders() {
         {filtered.length === 0 && !isLoading && (
           <div className="mx-auto flex max-w-sm flex-col items-center rounded-2xl bg-secondary/30 px-6 py-16 text-center">
             <Inbox className="h-12 w-12 text-muted-foreground/50" />
-            <p className="mt-4 font-display text-base font-semibold">{t("empty.providerOrders.title")}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{t("empty.providerOrders.desc")}</p>
+            <p className="mt-4 font-display text-base font-semibold">{t("provider.orders.requestsEmptyTitle")}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t("provider.orders.requestsEmptyDesc")}</p>
           </div>
         )}
         {filtered.map((order) => {
-          const statusCfg = ORDER_STATUS_CONFIG[order.status];
+          const statusCfg = ORDER_STATUS_CONFIG[order.status] ?? FALLBACK_ORDER_STATUS;
           return (
             <div key={order.id} className="rounded-[14px] border border-border bg-card p-5 shadow-[var(--shadow-card)]">
               <div className="flex flex-wrap items-start justify-between gap-4">
@@ -149,6 +152,11 @@ export default function ProviderIncomingOrders() {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <strong className="font-display text-[15px] font-semibold text-navy-ink">{order.listingTitle}</strong>
+                      {/* Real order status (admin-driven) surfaced prominently — the
+                          lead-pipeline chip below is the partner's own CRM tag. */}
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusCfg.color}`}>
+                        {t(statusCfg.labelKey) || statusCfg.label}
+                      </span>
                       <LeadStatusChip orderId={order.id} current={order.leadStatus} lastContactAt={order.lastContactAt} />
                       <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
                         {channelLabel(order)}

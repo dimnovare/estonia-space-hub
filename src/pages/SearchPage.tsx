@@ -1,6 +1,6 @@
 import { useState, useMemo, lazy, Suspense, useCallback, useRef, useEffect } from "react";
 import { useSearchParams, Link } from "@/i18n/routing";
-import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers, Package, Warehouse, Truck, CarFront, Star, Building2, Calculator, LocateFixed } from "lucide-react";
+import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers, Package, Warehouse, Truck, CarFront, Star, Building2, Calculator, LocateFixed, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from "@/components/ui/drawer";
 import { useListings, useLocations } from "@/hooks/queries";
@@ -291,6 +291,32 @@ export default function SearchPage() {
     }
   };
 
+  // Save the current search (term/filters) to the AccountPage saved-searches store.
+  // Mirrors AccountPage's SavedSearch shape + localStorage key + change event so
+  // the two stay in sync without a backend (see AccountPage useSavedSearches).
+  const handleSaveSearch = useCallback(() => {
+    const SAVED_SEARCH_KEY = "ruumly-saved-searches";
+    const queryString = searchParams.toString();
+    const label = query.trim() || cityFilter.trim() || t("search.savedSearchLabel");
+    const entry = {
+      id: crypto.randomUUID(),
+      label,
+      query: queryString,
+      results: totalCount,
+      alerts: false,
+    };
+    try {
+      const raw = localStorage.getItem(SAVED_SEARCH_KEY);
+      const existing: unknown[] = raw ? JSON.parse(raw) : [];
+      const next = Array.isArray(existing) ? [...existing, entry] : [entry];
+      localStorage.setItem(SAVED_SEARCH_KEY, JSON.stringify(next));
+      window.dispatchEvent(new Event("ruumly-saved-searches-changed"));
+      toast.success(t("search.searchSaved"));
+    } catch {
+      toast.error(t("toast.error"));
+    }
+  }, [searchParams, query, cityFilter, totalCount, t]);
+
   function updateFilters(updates: Record<string, string>) {
     const next = { ...updates };
     // Category and exact range are mutually exclusive expressions of size.
@@ -315,7 +341,6 @@ export default function SearchPage() {
     { value: "best", label: t("search.sort.best") },
     { value: "cheapest", label: t("search.sort.cheapest") },
     { value: "rating", label: t("search.sort.rating") },
-    { value: "best-value", label: t("search.sort.bestValue") },
     { value: "newest", label: t("search.sort.newest") },
   ];
 
@@ -477,6 +502,10 @@ export default function SearchPage() {
               </span>
             </div>
             <div className="ml-auto flex items-center gap-2">
+              <button aria-label={t("search.saveSearch")} onClick={handleSaveSearch} className="flex min-h-[36px] items-center gap-1.5 rounded-lg border border-line-2 px-3 py-2 sm:py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                <Bookmark className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{t("search.saveSearch")}</span>
+              </button>
               <button aria-label={t("search.filters")} onClick={() => isBelowLg ? setDrawerOpen(true) : setShowFilters(!showFilters)} className="flex min-h-[36px] items-center gap-1.5 rounded-lg border border-line-2 px-3 py-2 sm:py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t("search.filters")}</span>
@@ -766,7 +795,14 @@ export default function SearchPage() {
               {totalCount === 0 && (
                 <div className="mx-auto flex max-w-md flex-col items-center rounded-[18px] border border-line bg-card px-6 py-12 text-center shadow-card">
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
-                    <Warehouse className="h-6 w-6 text-muted-foreground" />
+                    {(() => {
+                      // Match the empty-state icon to the active vertical, the same
+                      // way the location-card image fallback picks its icon.
+                      const EmptyIcon = activeType === "moving" ? Truck
+                        : activeType === "trailer" ? CarFront
+                        : Warehouse;
+                      return <EmptyIcon className="h-6 w-6 text-muted-foreground" />;
+                    })()}
                   </div>
                   <h2 className="mt-4 font-display text-lg font-semibold text-foreground">{t("empty.search.title")}</h2>
                   <p className="mt-1.5 text-sm text-muted-foreground">{t("search.empty.notifyDesc")}</p>

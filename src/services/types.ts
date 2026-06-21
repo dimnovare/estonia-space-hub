@@ -14,7 +14,7 @@ export interface SupplierApplication {
   notes?: string;
 }
 export type IntegrationType = "api" | "email" | "manual";
-export type OrderStatus = "created" | "sending" | "sent" | "confirmed" | "rejected" | "active" | "completed" | "cancelled";
+export type OrderStatus = "created" | "sending" | "sent" | "confirmed" | "rejected" | "active" | "completed" | "cancelled" | "failed";
 export type LeadStatus = "new" | "contacted" | "won" | "lost";
 
 export interface LeadSummary {
@@ -495,7 +495,7 @@ export interface CreateBookingInput {
   contactName: string;
   contactEmail: string;
   contactPhone: string;
-  paymentMethod: "bank" | "card" | "later";
+  paymentMethod: "bank_transfer" | "card" | "later";
   notes?: string;
 }
 

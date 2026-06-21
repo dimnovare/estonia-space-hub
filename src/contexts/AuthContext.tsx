@@ -97,9 +97,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       credentials: "include",
       headers:     { "Content-Type": "application/json" },
     })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data?.accessToken) {
+      .then(async r => {
+        if (r.ok) {
+          return { ok: true as const, data: await r.json().catch(() => null) };
+        }
+        // Only a hard 401 means the refresh token is genuinely invalid/expired
+        // and the session must be cleared. Any other non-ok status (e.g. a
+        // transient 5xx) is treated as a soft failure — keep the cached session
+        // so a server blip doesn't silently log out a valid user.
+        return { ok: false as const, hardInvalid: r.status === 401 };
+      })
+      .then(result => {
+        if (result.ok && result.data?.accessToken) {
+          const data = result.data;
           tokenStore.setAccess(data.accessToken);
           if (data.csrfToken) tokenStore.setCsrf(data.csrfToken);
           // Make the SERVER the source of truth for identity/role: the refresh
@@ -117,14 +127,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               if (profile) setUser(profile);
             } catch {}
           }
-        } else {
+        } else if (!result.ok && result.hardInvalid) {
+          // Truly invalid session (401) — clear as before.
           tokenStore.clear();
           localStorage.removeItem("ruumly-auth");
+        } else {
+          // Soft failure (non-401 server error). Don't nuke the stored session;
+          // restore the cached profile optimistically so the user isn't dropped
+          // to guest on a transient blip. The next authenticated request will
+          // trigger the 401 → refresh path and self-correct if truly expired.
+          try {
+            const profile = stored ? JSON.parse(stored) : null;
+            if (profile) setUser(profile);
+          } catch {}
         }
       })
       .catch(() => {
-        tokenStore.clear();
-        localStorage.removeItem("ruumly-auth");
+        // Network error (server unreachable). Treat as a soft failure: keep the
+        // cached session rather than silently logging the user out offline.
+        try {
+          const profile = stored ? JSON.parse(stored) : null;
+          if (profile) setUser(profile);
+        } catch {}
       })
       .finally(() => setIsInitializing(false));
   }, []);

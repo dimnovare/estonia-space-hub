@@ -5,6 +5,7 @@ import {
   LayoutDashboard, MessageSquare, Settings, Users,
   Package, Activity, ChevronDown, Route, MapPin, Banknote, Receipt,
   Building2, Inbox, Gauge, BarChart2, ClipboardCheck, Sparkles, Zap,
+  ListChecks, Link2,
   ArrowLeft,
 } from "lucide-react";
 
@@ -19,10 +20,12 @@ function useItems(): Item[] {
     { id: "catalog",      label: t("admin.featureCatalog"), icon: Sparkles,      href: "/admin?tab=catalog" },
     { id: "requests",     label: t("admin.featureRequests"), icon: Zap,          href: "/admin?tab=requests" },
     { id: "locations",    label: t("admin.locations"),    icon: MapPin,          href: "/admin?tab=locations" },
+    { id: "listings",     label: t("admin.listings"),     icon: ListChecks,      href: "/admin?tab=listings" },
     { id: "orders",       label: t("admin.orders"),       icon: Package,         href: "/admin?tab=orders" },
     { id: "payouts",      label: t("admin.payouts"),      icon: Banknote,        href: "/admin?tab=payouts" },
     { id: "rebates",      label: t("admin.rebates"),      icon: Receipt,         href: "/admin?tab=rebates" },
     { id: "routing",      label: t("admin.routing"),      icon: Route,           href: "/admin?tab=routing" },
+    { id: "integrations", label: t("admin.integrations"), icon: Link2,           href: "/admin?tab=integrations" },
     { id: "inquiries",    label: t("admin.inquiries"),    icon: MessageSquare,   href: "/admin?tab=inquiries" },
     { id: "leads",        label: t("admin.leads"),        icon: Inbox,           href: "/admin?tab=leads" },
     { id: "users",        label: t("admin.users"),        icon: Users,           href: "/admin?tab=users" },

@@ -1,6 +1,5 @@
 import { Star, MessageSquare } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { apiClient } from "@/services/apiClient";
 import { withSupplier } from "@/lib/withSupplier";
@@ -97,12 +96,19 @@ export default function ProviderReviews() {
                 <span className="shrink-0 text-xs text-muted-foreground">{relativeTime(r.createdAt)}</span>
               </div>
               {r.comment && <p className="mt-3 text-sm text-muted-foreground">{r.comment}</p>}
+              {/* No review-reply endpoint exists yet — render a disabled "coming soon"
+                  control rather than faking a successful reply. */}
               <button
-                onClick={() => toast.success(t("provider.reviews.replySent"))}
-                className="mt-3 inline-flex items-center gap-1.5 rounded-[8px] bg-secondary px-3 py-1.5 text-[13px] font-medium text-ink-2 transition-colors hover:bg-secondary/70"
+                type="button"
+                disabled
+                title={t("provider.reviews.replyComingSoon")}
+                className="mt-3 inline-flex cursor-not-allowed items-center gap-1.5 rounded-[8px] bg-secondary px-3 py-1.5 text-[13px] font-medium text-muted-foreground opacity-60"
               >
                 <MessageSquare className="h-3.5 w-3.5" />
                 {t("provider.reviews.reply")}
+                <span className="ml-1 inline-flex items-center rounded-full bg-background px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("account.comingSoon")}
+                </span>
               </button>
             </div>
           ))}

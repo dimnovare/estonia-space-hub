@@ -35,8 +35,9 @@ interface ApiListing {
   images: string[];
   features: Record<string, unknown>;
   supplierId?: string;
-  supplierSlug?: string | null;
   locationId?: string | null;
+  vatRate?: number | null;
+  pricesIncludeVat?: boolean;
   bookingEnabled?: boolean;
   contractSigningEnabled?: boolean;
   directPaymentEnabled?: boolean;
@@ -75,6 +76,11 @@ function mapListing(api: ApiListing): Listing {
     contractSigningEnabled: api.contractSigningEnabled ?? false,
     directPaymentEnabled: api.directPaymentEnabled ?? false,
     ruumlyPaymentEnabled: api.ruumlyPaymentEnabled ?? false,
+    // VAT: carry through so the booking review can show the correct VAT row.
+    // Backend resolves vatRate to the effective country rate (never null), so a
+    // VAT-exclusive listing no longer renders as 0% and under-states the charge.
+    vatRate: api.vatRate ?? null,
+    pricesIncludeVat: api.pricesIncludeVat ?? undefined,
   };
 
   const f = api.features ?? {};
@@ -547,7 +553,7 @@ export const listingExtrasService = {
 export const paymentService = {
   initiate: (data: {
     invoiceId: string;
-    paymentMethod: string;
+    paymentMethod: "bank_transfer" | "card" | "later";
     customerEmail: string;
     locale: string;
   }): Promise<PaymentResult> =>

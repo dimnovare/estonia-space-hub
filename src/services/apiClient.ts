@@ -95,8 +95,44 @@ class ApiClient {
               }
               return retry.json() as Promise<T>;
             }
+            // Refresh succeeded but the retried request failed for a non-auth
+            // reason (genuine 403/404/5xx that merely coincided with an expired
+            // token). The session is still valid — do NOT clear/redirect.
+            // Surface the real error from the retry response using the same
+            // standard non-ok parsing as below.
+            if (retry.status !== 401) {
+              let message = `API error: ${retry.status}`;
+              let errorCode: string | undefined;
+              let errorBodyRaw: unknown = undefined;
+              try {
+                const errorBody = await retry.json();
+                errorBodyRaw = errorBody;
+                if (typeof errorBody?.error === "string") errorCode = errorBody.error;
+                if (errorBody.message) {
+                  message = errorBody.message;
+                } else if (errorBody.error) {
+                  message = errorBody.error;
+                } else if (errorBody.errors) {
+                  const msgs = Object.values(errorBody.errors).flat().filter(Boolean);
+                  if (msgs.length > 0) message = (msgs as string[]).join(". ");
+                } else if (errorBody.title) {
+                  message = errorBody.title;
+                }
+              } catch {}
+              const err = new Error(message) as ApiError;
+              err.status = retry.status;
+              if (errorCode) err.code = errorCode;
+              if (errorBodyRaw !== undefined) err.body = errorBodyRaw;
+              throw err;
+            }
+            // retry is AGAIN 401 — fall through to the genuine-expired-session
+            // clear/redirect path below.
           }
-        } catch {}
+        } catch (e) {
+          // Re-throw the ApiError we built from a non-ok retry above; only swallow
+          // network/parse errors so a genuine refresh/network failure still clears.
+          if (e instanceof Error && (e as ApiError).status !== undefined) throw e;
+        }
         tokenStore.clear();
         localStorage.removeItem("ruumly-auth");
         const lang = localStorage.getItem("ruumly-lang") || "et";

@@ -27,7 +27,12 @@ export const ORDER_STATUS_CONFIG: Record<OrderStatus, { labelKey: string; label:
   active: { labelKey: "status.active", label: "Active", color: "bg-accent/10 text-accent" },
   completed: { labelKey: "status.completed", label: "Completed", color: "bg-muted text-muted-foreground" },
   cancelled: { labelKey: "status.cancelled", label: "Cancelled", color: "bg-destructive/10 text-destructive" },
+  failed: { labelKey: "status.failed", label: "Failed", color: "bg-destructive/10 text-destructive" },
 };
+
+// Neutral fallback so a status the frontend hasn't been updated for never crashes
+// the orders list — always index as `ORDER_STATUS_CONFIG[s] ?? FALLBACK_ORDER_STATUS`.
+export const FALLBACK_ORDER_STATUS = { labelKey: "status.unknown", label: "—", color: "bg-secondary text-muted-foreground" };
 
 type EmailLabels = {
   greeting: string;

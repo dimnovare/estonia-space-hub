@@ -24,6 +24,8 @@ import AdminOps from "@/components/admin/AdminOps";
 import AdminMetrics from "@/components/admin/AdminMetrics";
 import AdminPaidFeatures from "@/components/admin/AdminPaidFeatures";
 import AdminBoosts from "@/components/admin/AdminBoosts";
+import AdminListings from "@/components/admin/AdminListings";
+import AdminIntegrations from "@/components/admin/AdminIntegrations";
 
 export default function AdminPage() {
   const [searchParams] = useSearchParams();
@@ -69,10 +71,12 @@ export default function AdminPage() {
         {activeTab === "catalog" && <AdminPaidFeatures />}
         {activeTab === "requests" && <AdminBoosts />}
         {activeTab === "locations" && <AdminLocations supplierId={filterSupplierId || undefined} />}
+        {activeTab === "listings" && <AdminListings />}
         {activeTab === "orders" && <AdminOrders supplierId={filterSupplierId || undefined} />}
         {activeTab === "suppliers" && <AdminSuppliers />}
-        
+
         {activeTab === "routing" && <AdminRouting />}
+        {activeTab === "integrations" && <AdminIntegrations />}
         {activeTab === "inquiries" && <AdminInquiries />}
         {activeTab === "leads" && <AdminLeads />}
         {activeTab === "users" && <AdminUsers />}

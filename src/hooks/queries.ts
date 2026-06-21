@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { listingService, bookingService, orderService, supplierService, notificationService, invoiceService, messageService, auditService, integrationSettingsService, routingRuleService, locationService, listingExtrasService } from "@/services";
-import type { ListingFilters, CreateBookingInput, Review, CreateReviewInput, Order, Supplier, Notification, Invoice, Message, AuditLogEntry, PartnerIntegrationSettings, OrderRoutingRule, SupplierLocation, Listing, TeamMember, SupplierListingExtra } from "@/services/types";
+import type { ListingFilters, CreateBookingInput, Review, CreateReviewInput, Order, Supplier, Notification, Invoice, Message, AuditLogEntry, PartnerIntegrationSettings, OrderRoutingRule, SupplierLocation, TeamMember, SupplierListingExtra } from "@/services/types";
 import { toast } from "sonner";
 import { apiClient } from "@/services/apiClient";
 import { useAuth } from "@/contexts/AuthContext";
@@ -38,7 +38,7 @@ export function useListing(id: string | undefined) {
 }
 
 export function useFeaturedListings() {
-  return useQuery({ queryKey: queryKeys.listings.featured(), queryFn: async () => unwrapPaginated<Listing>(await listingService.getFeatured()) });
+  return useQuery({ queryKey: queryKeys.listings.featured(), queryFn: () => listingService.getFeatured() });
 }
 
 export function useCreateBooking() {

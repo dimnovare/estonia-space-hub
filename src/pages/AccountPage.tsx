@@ -863,7 +863,9 @@ function AccountSearches() {
                     <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${s.alerts ? "translate-x-[19px]" : "translate-x-0.5"}`} />
                   </button>
                 </label>
-                <Link to={`/search${s.query ? `?${s.query}` : ""}`}>
+                {/* Open re-runs the saved search: /search?<query>. Strip any
+                    stored leading "?" so we never produce "/search??…". */}
+                <Link to={`/search${s.query ? `?${s.query.replace(/^\?/, "")}` : ""}`}>
                   <Button variant="outline" size="sm" className="min-h-[36px] border-line-2 text-navy-ink hover:border-navy-ink">{t("account.open")}</Button>
                 </Link>
                 <button

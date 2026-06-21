@@ -278,6 +278,12 @@ export default function BookingPage() {
   const reassuranceText = (!isRebateModel && paymentMethod === "later")
     ? t("booking.payLaterWarning")
     : t("booking.paymentReassurance");
+  // A non-rebate "Book online" listing whose partner has no online payment method
+  // enabled: we show an informational "arrange payment with the partner" note in
+  // place of the radio group (below), but we must NOT disable Confirm — the booking
+  // is created as Pending and, for sign-then-pay listings, the mandatory sign gate
+  // opens first (payment is handled only after signing, or offline by bank transfer).
+  const noPaymentMethodAvailable = !isRebateModel && availableMethods.length === 0;
   const submitFromContact = () => {
     // Final step is the contact step (rebate: no payment step) — require auth, then submit.
     if (!isAuthenticated) {
@@ -328,7 +334,7 @@ export default function BookingPage() {
       contactName: contactForm.getValues("name"),
       contactEmail: requestEmail,
       contactPhone: contactForm.getValues("phone"),
-      paymentMethod: isRebateModel ? "later" : paymentMethod as "bank" | "card" | "later",
+      paymentMethod: isRebateModel ? "later" : (paymentMethod as "bank_transfer" | "card" | "later"),
       notes: contactForm.getValues("notes"),
     }).then((bookingResult: any) => {
       // Record the email actually sent so payment retry can't drift to a stale value.
@@ -554,10 +560,10 @@ export default function BookingPage() {
               {phase === "submitting" && t("booking.phase.creating")}
               {phase === "sending" && t("booking.phase.sending")}
               {phase === "waiting" && t("booking.phase.waiting")}
-              {phase === "done" && t("booking.successTitle")}
+              {phase === "done" && t("booking.requestReceivedTitle")}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              {phase === "done" ? t("booking.successDesc") : t("booking.phase.pleaseWait")}
+              {phase === "done" ? t("booking.requestReceivedDesc") : t("booking.phase.pleaseWait")}
             </p>
             {phase === "done" && listing && (
               <div className="mt-4 rounded-lg border border-border bg-secondary/40 px-4 py-3 text-left space-y-1 text-sm">
@@ -590,14 +596,20 @@ export default function BookingPage() {
             {[
               { label: t("booking.phase.orderCreated"), done: phase !== "submitting" },
               { label: supplier?.integrationType === "api" ? t("booking.phase.sentApi") : supplier?.integrationType === "email" ? t("booking.phase.sentEmail") : t("booking.phase.awaitingOp"), done: phase === "waiting" || phase === "done" },
-              { label: t("booking.phase.awaitingConf"), done: phase === "done" },
-            ].map((s, i) => (
-              <div key={i} className={`flex items-center gap-3 rounded-lg border p-3 transition-all ${s.done ? "border-success/30 bg-success/5" : "border-border"}`}>
-                {s.done ? <CheckCircle className="h-5 w-5 text-success shrink-0" /> : <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30 shrink-0" />}
-                <span className={`text-sm font-medium ${s.done ? "text-foreground" : "text-muted-foreground"}`}>{s.label}</span>
+              // Final step is the partner's action, not ours — never render it as a
+              // completed (green check) step. Once we reach the end it surfaces as a
+              // genuine "pending partner confirmation" state, not an implied approval.
+              { label: t("booking.phase.awaitingConf"), done: false, pending: phase === "done" },
+            ].map((s, i) => {
+              const isPending = "pending" in s && s.pending;
+              return (
+              <div key={i} className={`flex items-center gap-3 rounded-lg border p-3 transition-all ${s.done ? "border-success/30 bg-success/5" : isPending ? "border-accent/30 bg-accent/5" : "border-border"}`}>
+                {s.done ? <CheckCircle className="h-5 w-5 text-success shrink-0" /> : isPending ? <Clock className="h-5 w-5 text-accent shrink-0" /> : <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30 shrink-0" />}
+                <span className={`text-sm font-medium ${s.done || isPending ? "text-foreground" : "text-muted-foreground"}`}>{s.label}</span>
                 <span className="sr-only">{s.done ? t("booking.phase.stepDone") : t("booking.phase.stepInProgress")}</span>
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {phase === "done" && (
@@ -802,6 +814,7 @@ export default function BookingPage() {
                     <p className="text-[11px] text-muted-foreground">
                       {t("booking.priceNote")} {listing?.priceUnit?.replace("€", "").replace("/", "/ ") || "/ month"}
                     </p>
+                    <p className="text-[11px] text-muted-foreground">{t("booking.priceEstimateNote")}</p>
                   </div>
                 )}
                 {isUnavailable && availability && (
@@ -948,7 +961,7 @@ export default function BookingPage() {
                           {!pricesIncludeVat && <span>+{vatAdded}€</span>}
                         </div>
                       )}
-                      {(extrasTotal > 0 || vatAdded > 0) && (
+                      {(extrasTotal > 0 || vatRate > 0) && (
                         <div className="flex justify-between font-semibold border-t border-border pt-1 mt-1"><span>{t("booking.totalWithExtras")}</span><span className="text-accent">{pricing?.total}€</span></div>
                       )}
                       <p className="pt-1 text-[11px] text-muted-foreground">{t("booking.priceEstimateNote")}</p>
@@ -974,6 +987,12 @@ export default function BookingPage() {
               ) : (
               <div className="space-y-4 border-t border-border pt-6">
                 <h2 id="booking-payment-heading" className="font-display text-xl font-semibold">{t("booking.paymentMethod")}</h2>
+                {noPaymentMethodAvailable ? (
+                  <div className="flex items-start gap-2 rounded-xl border border-border bg-secondary/40 p-4">
+                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                    <p className="text-sm text-muted-foreground">{t("booking.noPaymentMethodNote")}</p>
+                  </div>
+                ) : (
                 <div className="space-y-3" role="radiogroup" aria-labelledby="booking-payment-heading">
                   {[
                     { id: "bank_transfer", icon: Building2, label: t("booking.bankTransfer"), desc: t("booking.bankTransferDesc"), recommended: true },
@@ -1017,6 +1036,7 @@ export default function BookingPage() {
                     );
                   })}
                 </div>
+                )}
               </div>
               )}
 
@@ -1167,7 +1187,7 @@ export default function BookingPage() {
                     {!pricesIncludeVat && <span>+{vatAdded}€</span>}
                   </div>
                 )}
-                {(extrasTotal > 0 || vatAdded > 0) && (
+                {(extrasTotal > 0 || vatRate > 0) && (
                   <div className="flex justify-between font-bold border-t border-border pt-1 mt-1"><span>{t("booking.total")}</span><span className="text-accent">{pricing?.total}€</span></div>
                 )}
                 <p className="pt-1 text-[11px] leading-snug text-muted-foreground">{t("booking.priceEstimateNote")}</p>

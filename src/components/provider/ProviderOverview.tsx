@@ -106,7 +106,10 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
   // em-dash placeholder (never a fabricated number) until the backend exposes them.
   const NO_METRIC = "—";
   const statCards = [
-    { label: t("provider.overview.activeListings"),    value: listingCount.toString(),    sub: t("provider.overview.deltaListings").replace("{count}", "2"),                          icon: List },
+    // No new-listings-since-last-month metric is returned by /supplier/stats, so we
+    // never fabricate a delta — show the same neutral em-dash treatment as the
+    // profile-views / search-appearances cards below.
+    { label: t("provider.overview.activeListings"),    value: listingCount.toString(),    sub: NO_METRIC,                                                                            icon: List },
     { label: t("provider.overview.profileViews"),      value: NO_METRIC,                  sub: t("provider.overview.statNoData"),                                                     icon: Eye },
     { label: t("provider.overview.newRequests"),       value: newRequestCount.toString(), sub: t("provider.overview.statUnanswered").replace("{count}", String(newRequestCount)),     icon: Inbox },
     { label: t("provider.overview.searchAppearances"), value: NO_METRIC,                  sub: t("provider.overview.statNoData"),                                                     icon: Search },

@@ -696,14 +696,19 @@ export default function ProviderListings() {
                   <Plus className="h-3.5 w-3.5" />
                   {t("provider.listings.addUnit")}
                 </button>
+                {/* Bulk import has no endpoint yet — gate it as a disabled "coming soon"
+                    control (mirrors the calendar Import button), never a fake action. */}
                 <button
                   type="button"
-                  title={t("provider.listings.bulkImportHint")}
-                  onClick={() => toast.info(t("provider.listings.bulkImportHint"))}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-secondary px-3.5 text-[13px] font-semibold text-navy-ink transition-colors hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                  disabled
+                  title={t("provider.listings.bulkImportComingSoon")}
+                  className="inline-flex h-9 cursor-not-allowed items-center gap-1.5 rounded-lg bg-secondary px-3.5 text-[13px] font-medium text-muted-foreground opacity-60"
                 >
                   <Upload className="h-3.5 w-3.5" />
                   {t("provider.listings.bulkImport")}
+                  <span className="ml-1 inline-flex items-center rounded-full bg-background px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    {t("account.comingSoon")}
+                  </span>
                 </button>
               </div>
             </div>

@@ -51,9 +51,28 @@ function useSidebarLinks() {
   ];
 }
 
+// Locale codes for date formatting, keyed by app language.
+const NOTIF_LOCALE_MAP: Record<string, string> = {
+  et: "et-EE", en: "en-GB", ru: "ru-RU", lv: "lv-LV", lt: "lt-LT",
+};
+
 export default function ProviderDashboardPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Render a notification timestamp as relative time (matching ProviderReviews),
+  // falling back to a locale-aware date — never a raw ISO string.
+  const notifLocale = NOTIF_LOCALE_MAP[language] || "en-GB";
+  const formatNotifTime = (iso?: string): string => {
+    if (!iso) return "";
+    const ts = new Date(iso);
+    if (isNaN(ts.getTime())) return iso;
+    const days = Math.floor((Date.now() - ts.getTime()) / (1000 * 60 * 60 * 24));
+    if (days <= 0) return t("provider.reviews.today");
+    if (days < 7) return t("provider.reviews.daysAgo").replace("{n}", String(days));
+    if (days < 30) return t("provider.reviews.weeksAgo").replace("{n}", String(Math.floor(days / 7)));
+    return ts.toLocaleDateString(notifLocale, { day: "numeric", month: "short", year: "numeric" });
+  };
   const tab = searchParams.get("ptab") || "overview";
   const setTab = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("ptab", id); return n; }, { replace: true });
   const { user } = useAuth();
@@ -275,7 +294,7 @@ export default function ProviderDashboardPage() {
                           <div className="min-w-0 flex-1">
                             <p className={`text-xs font-medium ${!n.read ? "text-foreground" : "text-muted-foreground"}`}>{n.title}</p>
                             <p className="text-[11px] text-muted-foreground truncate">{n.desc || n.message}</p>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">{n.time || n.createdAt}</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">{n.time || formatNotifTime(n.createdAt)}</p>
                           </div>
                           {!n.read && <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-accent" />}
                         </button>
