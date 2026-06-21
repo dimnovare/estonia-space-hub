@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Edit, Save, PlusCircle, Route, Loader2 } from "lucide-react";
+import { Edit, Save, PlusCircle, Route, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -21,6 +21,7 @@ export default function AdminRouting() {
   const [editOpen, setEditOpen] = useState(false);
   const [editItem, setEditItem] = useState<OrderRoutingRule | null>(null);
   const [isNew, setIsNew] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const createMutation = useMutation({
     mutationFn: (rule: any) => routingRuleService.create(rule),
@@ -41,6 +42,16 @@ export default function AdminRouting() {
       setEditOpen(false);
     },
     onError: (err: any) => toast.error(err.message || t("toast.updateFailed")),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => routingRuleService.remove(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.routingRules.all() });
+      toast.success(t("toast.ruleDeleted"));
+      setConfirmDeleteId(null);
+    },
+    onError: (err: any) => toast.error(err.message || t("toast.deleteFailed")),
   });
 
   const isMutating = createMutation.isPending || updateMutation.isPending;
@@ -175,6 +186,15 @@ export default function AdminRouting() {
                   <Button variant="ghost" size="sm" className="h-9 w-9 p-0" aria-label={t("admin.edit")} onClick={() => openEdit(r)}>
                     <Edit className="h-4 w-4" />
                   </Button>
+                  {confirmDeleteId === r.id ? (
+                    <Button variant="destructive" size="sm" className="h-9 px-2.5" disabled={deleteMutation.isPending} onClick={() => deleteMutation.mutate(r.id)}>
+                      {deleteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : t("admin.confirmDelete")}
+                    </Button>
+                  ) : (
+                    <Button variant="ghost" size="sm" className="h-9 w-9 p-0" aria-label={t("admin.delete")} onClick={() => setConfirmDeleteId(r.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>

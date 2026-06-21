@@ -342,10 +342,30 @@ export const messageService = {
 };
 
 // ─── Audit Service ──────────────────────────────────────────────────────────────
+export interface AuditLogFilters {
+  actor?: string;
+  action?: string;
+  target?: string;
+  from?: string; // ISO date
+  to?: string;   // ISO date
+  page?: number;
+  limit?: number;
+}
+
 export const auditService = {
-  async getAll(): Promise<AuditLogEntry[]> {
-    const res = await apiClient.get<{ data: AuditLogEntry[]; total: number }>("/admin/audit-log");
-    return res.data;
+  async getAll(filters: AuditLogFilters = {}): Promise<{ data: AuditLogEntry[]; total: number }> {
+    const qs = new URLSearchParams();
+    if (filters.actor?.trim())  qs.set("actor", filters.actor.trim());
+    if (filters.action?.trim()) qs.set("action", filters.action.trim());
+    if (filters.target?.trim()) qs.set("target", filters.target.trim());
+    if (filters.from)           qs.set("from", filters.from);
+    if (filters.to)             qs.set("to", filters.to);
+    if (filters.page)           qs.set("page", String(filters.page));
+    if (filters.limit)          qs.set("limit", String(filters.limit));
+    const q = qs.toString();
+    const res = await apiClient.get<{ data: AuditLogEntry[]; total: number }>(
+      `/admin/audit-log${q ? `?${q}` : ""}`);
+    return { data: res.data, total: res.total };
   },
 };
 
@@ -369,6 +389,9 @@ export const routingRuleService = {
   },
   async update(id: string, updates: Partial<OrderRoutingRule>): Promise<OrderRoutingRule> {
     return apiClient.patch<OrderRoutingRule>(`/admin/routing-rules/${id}`, updates);
+  },
+  async remove(id: string): Promise<void> {
+    await apiClient.delete<void>(`/admin/routing-rules/${id}`);
   },
 };
 

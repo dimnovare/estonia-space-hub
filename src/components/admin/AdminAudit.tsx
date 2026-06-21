@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
-import { RefreshCw, Activity } from "lucide-react";
+import { RefreshCw, Activity, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { auditService } from "@/services";
+import { auditService, type AuditLogFilters } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
 import type { AuditLogEntry } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useDebounce } from "@/hooks/useDebounce";
 
 type TagTone = "ok" | "danger" | "warn" | "info" | "neutral";
 
@@ -37,14 +38,56 @@ export default function AdminAudit() {
   const { t } = useLanguage();
   const [tone, setTone] = useState<TagTone | "all">("all");
 
-  const { data: logs = [], isLoading, isError, refetch, isFetching } = useQuery<AuditLogEntry[]>({
-    queryKey: queryKeys.auditLog.all(),
-    queryFn: () => auditService.getAll(),
+  // Server-side filter inputs
+  const [actorInput, setActorInput] = useState("");
+  const [actionInput, setActionInput] = useState("");
+  const [targetInput, setTargetInput] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+
+  const actor = useDebounce(actorInput, 400);
+  const action = useDebounce(actionInput, 400);
+  const target = useDebounce(targetInput, 400);
+
+  const filters = useMemo<AuditLogFilters>(
+    () => ({
+      actor: actor.trim() || undefined,
+      action: action.trim() || undefined,
+      target: target.trim() || undefined,
+      from: from ? new Date(from).toISOString() : undefined,
+      to: to ? new Date(to).toISOString() : undefined,
+    }),
+    [actor, action, target, from, to],
+  );
+
+  const hasFilters = Boolean(
+    actorInput || actionInput || targetInput || from || to,
+  );
+
+  const clearFilters = () => {
+    setActorInput("");
+    setActionInput("");
+    setTargetInput("");
+    setFrom("");
+    setTo("");
+  };
+
+  const {
+    data: result = { data: [] as AuditLogEntry[], total: 0 },
+    isLoading,
+    isError,
+    refetch,
+    isFetching,
+  } = useQuery<{ data: AuditLogEntry[]; total: number }>({
+    queryKey: [...queryKeys.auditLog.all(), filters],
+    queryFn: () => auditService.getAll(filters),
     staleTime: 30_000,
     retry: 2,
   });
 
-  const filters: { value: TagTone | "all"; labelKey: string }[] = [
+  const logs = result.data;
+
+  const toneFilters: { value: TagTone | "all"; labelKey: string }[] = [
     { value: "all", labelKey: "admin.audit.filterAll" },
     { value: "ok", labelKey: "admin.audit.filterSuccess" },
     { value: "info", labelKey: "admin.audit.filterActivity" },
@@ -56,6 +99,9 @@ export default function AdminAudit() {
     () => (tone === "all" ? logs : logs.filter((l) => actionTone(l.action) === tone)),
     [logs, tone],
   );
+
+  const fieldInp =
+    "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
 
   if (isError)
     return (
@@ -92,9 +138,71 @@ export default function AdminAudit() {
         </Button>
       </div>
 
+      {/* Server-side filter controls */}
+      <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <input
+          value={actorInput}
+          onChange={(e) => setActorInput(e.target.value)}
+          placeholder={t("admin.audit.filterActor")}
+          aria-label={t("admin.audit.filterActor")}
+          className={fieldInp}
+        />
+        <input
+          value={actionInput}
+          onChange={(e) => setActionInput(e.target.value)}
+          placeholder={t("admin.audit.filterAction")}
+          aria-label={t("admin.audit.filterAction")}
+          className={fieldInp}
+        />
+        <input
+          value={targetInput}
+          onChange={(e) => setTargetInput(e.target.value)}
+          placeholder={t("admin.audit.filterTarget")}
+          aria-label={t("admin.audit.filterTarget")}
+          className={fieldInp}
+        />
+        <div className="flex items-center gap-2">
+          <label className="shrink-0 text-xs font-medium text-muted-foreground">
+            {t("admin.audit.filterFrom")}
+          </label>
+          <input
+            type="date"
+            value={from}
+            max={to || undefined}
+            onChange={(e) => setFrom(e.target.value)}
+            aria-label={t("admin.audit.filterFrom")}
+            className={fieldInp}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="shrink-0 text-xs font-medium text-muted-foreground">
+            {t("admin.audit.filterTo")}
+          </label>
+          <input
+            type="date"
+            value={to}
+            min={from || undefined}
+            onChange={(e) => setTo(e.target.value)}
+            aria-label={t("admin.audit.filterTo")}
+            className={fieldInp}
+          />
+        </div>
+        {hasFilters && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-auto gap-1.5 self-center justify-self-start"
+            onClick={clearFilters}
+          >
+            <X className="h-3.5 w-3.5" />
+            {t("admin.clearFilter")}
+          </Button>
+        )}
+      </div>
+
       {/* Filter chips */}
-      <div className="mt-6 flex flex-wrap items-center gap-2">
-        {filters.map((f) => (
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        {toneFilters.map((f) => (
           <button
             key={f.value}
             onClick={() => setTone(f.value)}
