@@ -368,7 +368,7 @@ export default function ProviderContractTemplate({ supplierId: supplierIdProp }:
         {listQuery.isLoading ? (
           <Skeleton className="h-40 w-full rounded-xl" />
         ) : (
-          <div className="overflow-hidden rounded-xl border border-border">
+          <div className="overflow-x-auto rounded-xl border border-border">
             <table className="w-full text-sm">
               <thead className="bg-secondary/50 text-xs text-muted-foreground">
                 <tr>

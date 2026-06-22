@@ -217,7 +217,7 @@ export default function AdminListings() {
         })}
       </div>
       {/* Desktop table */}
-      <div className="mt-6 hidden rounded-xl border border-border sm:block">
+      <div className="mt-6 hidden overflow-x-auto rounded-xl border border-border sm:block">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary/50">
             <tr>

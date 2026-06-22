@@ -451,6 +451,9 @@ export interface ListingFilters {
   sizeCategory?: "XS" | "S" | "M" | "L" | "XL";
   supplierId?: string;
   locationId?: string;
+  // Browse-all / map / stats: include listings grouped under a real Location
+  // (generic search hides them to avoid duplicate location-card + listing-card).
+  includeGrouped?: boolean;
 }
 
 export interface PaginatedResponse<T> {

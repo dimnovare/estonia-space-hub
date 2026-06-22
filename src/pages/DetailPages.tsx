@@ -1240,9 +1240,9 @@ export function TrailerDetail() {
           <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">{about}</p>
 
           <h2 className="mt-7 font-display text-lg font-bold">{t("detail.specifications")}</h2>
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <div className="rounded-[10px] border border-border p-3"><div className="text-xs text-muted-foreground">{t("detail.trailerType")}</div><div className="mt-0.5 text-sm font-semibold">{tListing.trailerType}</div></div>
-            <div className="rounded-[10px] border border-border p-3"><div className="text-xs text-muted-foreground">{t("detail.weightClass")}</div><div className="mt-0.5 text-sm font-semibold">{tListing.weightClass}</div></div>
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="min-w-0 rounded-[10px] border border-border p-3"><div className="text-xs text-muted-foreground">{t("detail.trailerType")}</div><div className="mt-0.5 break-words text-sm font-semibold">{tListing.trailerType}</div></div>
+            <div className="min-w-0 rounded-[10px] border border-border p-3"><div className="text-xs text-muted-foreground">{t("detail.weightClass")}</div><div className="mt-0.5 break-words text-sm font-semibold">{tListing.weightClass}</div></div>
           </div>
 
           {((typeof tListing.depositAmount === "number" && tListing.depositAmount > 0) || tListing.requiresLicenseCategory) && (

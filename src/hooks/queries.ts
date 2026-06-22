@@ -18,9 +18,11 @@ export function useListings(filters?: ListingFilters) {
 }
 
 export function useAllListings() {
+  // Homepage map + trust-strip stats: show EVERY active listing, including those
+  // grouped under a real Location (which generic search hides). Distinct cache key.
   return useQuery({
-    queryKey: queryKeys.listings.all({ limit: 200 }),
-    queryFn: () => listingService.search({ limit: 200 }),
+    queryKey: queryKeys.listings.all({ limit: 200, includeGrouped: true }),
+    queryFn: () => listingService.search({ limit: 200, includeGrouped: true }),
     staleTime: 5 * 60_000,
   });
 }

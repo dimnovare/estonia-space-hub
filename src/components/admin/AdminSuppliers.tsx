@@ -311,7 +311,7 @@ export default function AdminSuppliers() {
               {pendingApplications.length}
             </span>
           </h2>
-          <div className="mt-3 rounded-xl border border-border">
+          <div className="mt-3 overflow-x-auto rounded-xl border border-border">
             <table className="w-full text-sm">
               <thead className="border-b border-border bg-secondary/50">
                 <tr>

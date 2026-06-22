@@ -227,6 +227,7 @@ export const listingService = {
     if (filters?.sizeCategory) params.set("sizeCategory", filters.sizeCategory);
     if (filters?.supplierId) params.set("supplierId", filters.supplierId);
     if (filters?.locationId) params.set("locationId", filters.locationId);
+    if (filters?.includeGrouped) params.set("includeGrouped", "true");
     const raw = await apiClient.get<{ data: ApiListing[]; total: number; page: number; limit: number; hasMore: boolean }>(
       `/listings?${params.toString()}`
     );

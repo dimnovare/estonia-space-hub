@@ -675,10 +675,10 @@ export default function BookingPage() {
                       <div className="mt-3 space-y-1.5 text-sm">
                         <div className="flex justify-between gap-3"><span className="text-muted-foreground">{t("booking.bankTransfer.amount")}</span><span className="font-semibold">{bankInstructions.amount}€</span></div>
                         <div className="flex justify-between gap-3"><span className="text-muted-foreground">{t("booking.bankTransfer.accountName")}</span><span className="font-medium">{bankInstructions.accountName}</span></div>
-                        <div className="flex justify-between gap-3"><span className="text-muted-foreground">{t("booking.bankTransfer.iban")}</span><span className="font-mono">{bankInstructions.iban}</span></div>
-                        {bankInstructions.bic && (<div className="flex justify-between gap-3"><span className="text-muted-foreground">{t("booking.bankTransfer.bic")}</span><span className="font-mono">{bankInstructions.bic}</span></div>)}
-                        {bankInstructions.bankName && (<div className="flex justify-between gap-3"><span className="text-muted-foreground">{t("booking.bankTransfer.bank")}</span><span className="font-medium">{bankInstructions.bankName}</span></div>)}
-                        <div className="flex justify-between gap-3 border-t border-border pt-1.5 mt-1.5"><span className="text-muted-foreground">{t("booking.bankTransfer.reference")}</span><span className="font-mono font-bold text-accent">{bankInstructions.reference}</span></div>
+                        <div className="flex justify-between gap-3"><span className="shrink-0 text-muted-foreground">{t("booking.bankTransfer.iban")}</span><span className="min-w-0 break-all text-right font-mono">{bankInstructions.iban}</span></div>
+                        {bankInstructions.bic && (<div className="flex justify-between gap-3"><span className="shrink-0 text-muted-foreground">{t("booking.bankTransfer.bic")}</span><span className="min-w-0 break-all text-right font-mono">{bankInstructions.bic}</span></div>)}
+                        {bankInstructions.bankName && (<div className="flex justify-between gap-3"><span className="shrink-0 text-muted-foreground">{t("booking.bankTransfer.bank")}</span><span className="min-w-0 break-words text-right font-medium">{bankInstructions.bankName}</span></div>)}
+                        <div className="flex justify-between gap-3 border-t border-border pt-1.5 mt-1.5"><span className="shrink-0 text-muted-foreground">{t("booking.bankTransfer.reference")}</span><span className="min-w-0 break-all text-right font-mono font-bold text-accent">{bankInstructions.reference}</span></div>
                       </div>
                       <p className="mt-3 text-xs text-muted-foreground">{t("booking.bankTransfer.note")}</p>
                     </>
@@ -1041,7 +1041,7 @@ export default function BookingPage() {
                           </div>
                         </button>
                         {pm.id === "later" && paymentMethod === "later" && (
-                          <div className="mt-2 ml-14 rounded-lg border border-accent/20 bg-accent/5 p-3 space-y-1.5">
+                          <div className="mt-2 ml-0 sm:ml-14 rounded-lg border border-accent/20 bg-accent/5 p-3 space-y-1.5">
                             <p className="text-xs text-foreground">
                               {t("booking.payLaterExplainer")}
                             </p>
