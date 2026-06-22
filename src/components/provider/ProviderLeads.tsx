@@ -169,7 +169,7 @@ function LeadCard({
         <p className="mt-3 whitespace-pre-wrap rounded-lg bg-secondary/40 p-3 text-sm text-foreground/90">{lead.query}</p>
       )}
 
-      <p className="mt-2 text-[11px] text-muted-foreground">
+      <p className="mt-2 text-xs text-muted-foreground">
         {new Date(lead.createdAt).toLocaleString(locale)}
         {lead.quotedAt && ` · ${t("provider.leads.quotedOn")} ${new Date(lead.quotedAt).toLocaleDateString(locale)}`}
       </p>

@@ -12,6 +12,73 @@ import { queryKeys } from "@/services/queryKeys";
 import AdminExtrasOverrides from "./AdminExtrasOverrides";
 import { GooglePlacesAutocomplete } from "./GooglePlacesAutocomplete";
 
+// Row shape rendered by the admin listings table/cards, derived from how each
+// field is read below. The list endpoint returns priceFrom; legacy/mock shapes
+// may also carry price/views, so both stay optional.
+interface AdminListingRow {
+  id: string;
+  type: string;
+  title: string;
+  city: string;
+  price?: number;
+  priceFrom?: number;
+  availableNow?: boolean;
+  views?: number;
+  address?: string;
+  description?: string;
+  supplierId?: string;
+  lat?: number | null;
+  lng?: number | null;
+  priceUnit?: string;
+  images?: string[];
+  partnerDiscountRateOverride?: number | null;
+  clientDiscountRateOverride?: number | null;
+  vatRate?: number | null;
+  pricesIncludeVat?: boolean;
+}
+
+// Paginated envelope returned by /admin/listings. Older/mock responses may hand
+// back a raw array instead, handled at the call site.
+interface AdminListingsResponse {
+  data: AdminListingRow[];
+  total?: number;
+  hasMore?: boolean;
+}
+
+// Working copy held in the edit dialog: the row fields plus the form-only
+// `status` toggle (active/paused) that maps to availableNow on save. `id` is
+// optional because a not-yet-created listing (openNew) has none.
+interface ListingEditItem extends Omit<AdminListingRow, "id" | "type"> {
+  id?: string;
+  type: string;
+  status?: string;
+}
+
+// Payload sent to POST /admin/listings (create).
+interface CreateListingPayload {
+  type: string;
+  title: string;
+  supplierId?: string;
+  address: string;
+  city: string;
+  lat: number;
+  lng: number;
+  priceFrom: number;
+  priceUnit: string;
+  availableNow: boolean;
+  description: string;
+  partnerDiscountRateOverride: number | null;
+  clientDiscountRateOverride: number | null;
+  vatRate: number | null;
+  pricesIncludeVat: boolean;
+  images: string[];
+}
+
+// PATCH /admin/listings/{id} (update) carries the create payload plus isActive.
+interface UpdateListingPayload extends CreateListingPayload {
+  isActive: boolean;
+}
+
 const typeIcons: Record<string, typeof Warehouse> = { warehouse: Warehouse, moving: Truck, trailer: CarFront };
 const inp = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
 
@@ -19,7 +86,7 @@ export default function AdminListings() {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
-  const [editItem, setEditItem] = useState<any>(null);
+  const [editItem, setEditItem] = useState<ListingEditItem | null>(null);
   const [isNew, setIsNew] = useState(false);
 
   // Bulk import
@@ -32,10 +99,10 @@ export default function AdminListings() {
   const limit = 50;
   const { data: res, isLoading } = useQuery({
     queryKey: [...queryKeys.adminListings.all(), page],
-    queryFn: () => apiClient.get<any>(`/admin/listings?page=${page}&limit=${limit}`),
+    queryFn: () => apiClient.get<AdminListingsResponse | AdminListingRow[]>(`/admin/listings?page=${page}&limit=${limit}`),
   });
   // Tolerate both the paginated envelope and a raw array (mock / older responses).
-  const listings: any[] = Array.isArray(res) ? res : res?.data ?? [];
+  const listings: AdminListingRow[] = Array.isArray(res) ? res : res?.data ?? [];
   const total = Array.isArray(res) ? res.length : res?.total ?? listings.length;
   const hasMore = Array.isArray(res) ? false : res?.hasMore ?? false;
   const totalPages = Math.max(1, Math.ceil(total / limit));
@@ -75,7 +142,7 @@ export default function AdminListings() {
       invalidate();
       if (data.failed === 0) toast.success(t("admin.bulkImportResult").replace("{created}", String(data.created)).replace("{failed}", String(data.failed)));
     },
-    onError: (err: any) => toast.error(err?.message || t("toast.error")),
+    onError: (err: unknown) => toast.error((err instanceof Error ? err.message : "") || t("toast.error")),
   });
 
   const runBulk = () => {
@@ -94,21 +161,21 @@ export default function AdminListings() {
   };
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => apiClient.post("/admin/listings", data),
+    mutationFn: (data: CreateListingPayload) => apiClient.post("/admin/listings", data),
     onSuccess: () => { invalidate(); toast.success(t("toast.listingAdded")); setEditOpen(false); },
-    onError: (err: any) => toast.error(err.message || t("toast.addFailed")),
+    onError: (err: unknown) => toast.error((err instanceof Error ? err.message : "") || t("toast.addFailed")),
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => apiClient.patch(`/admin/listings/${id}`, data),
+    mutationFn: ({ id, data }: { id: string; data: UpdateListingPayload }) => apiClient.patch(`/admin/listings/${id}`, data),
     onSuccess: () => { invalidate(); toast.success(t("toast.listingUpdated")); setEditOpen(false); },
-    onError: (err: any) => toast.error(err.message || t("toast.updateFailed")),
+    onError: (err: unknown) => toast.error((err instanceof Error ? err.message : "") || t("toast.updateFailed")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiClient.delete(`/admin/listings/${id}`),
     onSuccess: () => { invalidate(); toast.success(t("toast.listingDeleted")); },
-    onError: (err: any) => toast.error(err.message || t("toast.deleteFailed")),
+    onError: (err: unknown) => toast.error((err instanceof Error ? err.message : "") || t("toast.deleteFailed")),
   });
 
   const openNew = () => {
@@ -126,7 +193,7 @@ export default function AdminListings() {
     setEditOpen(true);
   };
 
-  const openEdit = (l: any) => {
+  const openEdit = (l: AdminListingRow) => {
     setEditItem({
       ...l,
       price: l.priceFrom ?? l.price ?? 0,
@@ -140,7 +207,7 @@ export default function AdminListings() {
   const handleSave = () => {
     if (!editItem) return;
 
-    const payload: Record<string, unknown> = {
+    const payload: CreateListingPayload = {
       type: editItem.type,
       title: editItem.title,
       supplierId: editItem.supplierId || undefined,
@@ -166,7 +233,7 @@ export default function AdminListings() {
         ...payload,
         isActive: editItem.status === "active",
       };
-      updateMutation.mutate({ id: editItem.id, data: updatePayload });
+      updateMutation.mutate({ id: editItem.id!, data: updatePayload });
     }
   };
 
@@ -194,7 +261,7 @@ export default function AdminListings() {
       </div>
       {/* Mobile cards */}
       <div className="mt-4 space-y-2 sm:hidden">
-        {listings.map((l: any) => {
+        {listings.map((l: AdminListingRow) => {
           const Icon = typeIcons[l.type] || Warehouse;
           return (
             <div key={l.id} className="rounded-xl border border-border p-3">
@@ -231,7 +298,7 @@ export default function AdminListings() {
             </tr>
           </thead>
           <tbody>
-            {listings.map((l: any) => {
+            {listings.map((l: AdminListingRow) => {
               const Icon = typeIcons[l.type] || Warehouse;
               return (
                 <tr key={l.id} className="border-b border-border last:border-0">
@@ -278,7 +345,7 @@ export default function AdminListings() {
               <label htmlFor="bulk-partner" className="text-xs font-medium text-muted-foreground">{t("admin.listings.partner")}</label>
               <select id="bulk-partner" className={inp} value={bulkSupplierId} onChange={e => setBulkSupplierId(e.target.value)}>
                 <option value="">— {t("admin.listings.selectPartner")} —</option>
-                {suppliers.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
             <div>
@@ -325,8 +392,8 @@ export default function AdminListings() {
               <div>
                 <label className="text-xs font-medium text-muted-foreground">{t("admin.places.search")}</label>
                 <GooglePlacesAutocomplete
-                  onSelect={(p) => setEditItem((prev: any) => ({
-                    ...prev,
+                  onSelect={(p) => setEditItem((prev: ListingEditItem | null) => ({
+                    ...(prev as ListingEditItem),
                     title: prev?.title || p.name,
                     address: p.address,
                     city: p.city,
@@ -388,7 +455,7 @@ export default function AdminListings() {
                 <label className="text-xs font-medium text-muted-foreground">{t("admin.listings.partner")}</label>
                 <select className={inp} value={editItem.supplierId ?? ""} onChange={e => setEditItem({ ...editItem, supplierId: e.target.value })}>
                   <option value="">— {t("admin.listings.selectPartner")} —</option>
-                  {suppliers.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
               </div>
 

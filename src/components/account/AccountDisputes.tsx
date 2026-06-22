@@ -56,7 +56,7 @@ export default function AccountDisputes() {
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] font-semibold uppercase text-muted-foreground">
+                    <span className="rounded bg-secondary px-1.5 py-0.5 text-xs font-semibold uppercase text-muted-foreground">
                       {t(TYPE_KEYS[d.type] ?? "dispute.type.other")}
                     </span>
                     <p className="font-semibold text-foreground">{d.subject}</p>
@@ -72,7 +72,7 @@ export default function AccountDisputes() {
                   <strong>{t("admin.disputes.resolutionLabel")}:</strong> {d.resolution}
                 </p>
               )}
-              <p className="mt-2 text-[11px] text-muted-foreground">
+              <p className="mt-2 text-xs text-muted-foreground">
                 {new Date(d.createdAt).toLocaleString(locale)}
                 {d.amountClaimed != null && ` · ${d.amountClaimed.toFixed(2)} €`}
               </p>

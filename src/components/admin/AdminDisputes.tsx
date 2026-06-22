@@ -98,7 +98,7 @@ function DisputeCard({ dispute, typeLabel }: { dispute: AdminDispute; typeLabel:
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] font-semibold uppercase text-muted-foreground">{typeLabel(dispute.type)}</span>
+            <span className="rounded bg-secondary px-1.5 py-0.5 text-xs font-semibold uppercase text-muted-foreground">{typeLabel(dispute.type)}</span>
             <p className="font-semibold text-foreground">{dispute.subject}</p>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
