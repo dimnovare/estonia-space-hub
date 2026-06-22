@@ -4,7 +4,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useLocations, useCreateLocation, useUpdateLocation, useAddUnit } from "@/hooks/queries";
 import { useFeatureDefinitions } from "@/hooks/useFeatureDefinitions";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
-import { ESTONIAN_CITIES } from "@/lib/constants";
+import { ALL_CITIES } from "@/lib/constants";
 import { Loader2, MapPin, Warehouse, Truck, CarFront, Plus, Pencil, ChevronDown, ChevronUp, Trash2, Eye, EyeOff, Upload } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import ListingExtrasManager from "./ListingExtrasManager";
@@ -207,20 +207,12 @@ function LocationDialog({
           </div>
           <div>
             <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.locationCity")} <span className="text-destructive">*</span></label>
-            <Controller
-              control={form.control}
-              name="city"
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {ESTONIAN_CITIES.map((c) => (
-                      <SelectItem key={c} value={c}>{c}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
+            {/* Free-text + datalist: type ANY city (incl. towns/villages not listed)
+                while still suggesting the Baltic cities. Fixes the old EE-only dropdown. */}
+            <Input {...form.register("city")} list="provider-location-cities" placeholder={t("provider.listings.cityPlaceholder")} autoComplete="off" />
+            <datalist id="provider-location-cities">
+              {ALL_CITIES.map((c) => <option key={c} value={c} />)}
+            </datalist>
           </div>
           <div className="flex items-end gap-2">
             <div className="flex-1">
@@ -691,7 +683,7 @@ export default function ProviderListings() {
 
               {loc.units && loc.units.length > 0 ? (
                 <div className="mt-3 overflow-x-auto">
-                  <table className="w-full text-[13px]">
+                  <table className="w-full min-w-[600px] text-[13px]">
                     <thead>
                       <tr className="border-b border-border text-left text-muted-foreground">
                         <th className="pb-2.5 pr-4 text-xs font-medium">{t("provider.listings.unitTitle")}</th>

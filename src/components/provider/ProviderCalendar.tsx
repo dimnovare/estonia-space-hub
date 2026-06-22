@@ -336,7 +336,7 @@ export default function ProviderCalendar() {
                 {t("provider.calendar.blockScope")}
               </label>
               <Select value={blockListingId} onValueChange={setBlockListingId}>
-                <SelectTrigger className="h-11 w-full max-w-xs rounded-[10px] border-input">
+                <SelectTrigger className="h-11 w-full sm:max-w-xs rounded-[10px] border-input">
                   <SelectValue placeholder={t("provider.calendar.wholeLocation")} />
                 </SelectTrigger>
                 <SelectContent>
