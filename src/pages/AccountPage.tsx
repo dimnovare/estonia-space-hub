@@ -10,11 +10,12 @@ import {
   LayoutDashboard, Package, Heart, Search, Bell, Shield,
   HelpCircle, ChevronRight, Warehouse, Truck, CarFront, Clock, CheckCircle,
   XCircle, User, Send, MessageSquare, FileText,
-  Download, ArrowLeft, Loader2, Star, Receipt, Sparkles, Trash2, Camera, ShieldCheck
+  Download, ArrowLeft, Loader2, Star, Receipt, Sparkles, Trash2, Camera, ShieldCheck, ShieldAlert
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReviewDialog from "@/components/ReviewDialog";
 import RaiseDisputeModal from "@/components/account/RaiseDisputeModal";
+import AccountDisputes from "@/components/account/AccountDisputes";
 import ContractSigningModal from "@/components/ContractSigningModal";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -53,6 +54,7 @@ function useSidebarLinks() {
     { id: "profile", label: t("account.profile"), icon: User },
     { id: "security", label: t("account.security"), icon: Shield },
     { id: "billing", label: t("account.billing"), icon: Receipt },
+    { id: "disputes", label: t("account.disputes"), icon: ShieldAlert },
     { id: "help", label: t("account.help"), icon: HelpCircle },
   ];
 }
@@ -142,6 +144,7 @@ export default function AccountPage() {
         {tab === "messages" && <AccountMessages />}
         {tab === "notifications" && <AccountNotifications />}
         {tab === "profile" && <AccountProfile />}
+        {tab === "disputes" && <AccountDisputes />}
         {tab === "security" && <AccountSecurity />}
         {tab === "billing" && <AccountBilling />}
         {tab === "help" && <AccountHelp />}

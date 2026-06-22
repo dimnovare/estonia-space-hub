@@ -122,30 +122,38 @@ function DisputeCard({ dispute, typeLabel }: { dispute: AdminDispute; typeLabel:
 
       {!terminal ? (
         <div className="mt-3 space-y-2 border-t border-border pt-3">
-          <input
-            value={resolution}
-            onChange={(e) => setResolution(e.target.value)}
-            placeholder={t("admin.disputes.resolutionPlaceholder")}
-            className="h-9 w-full rounded-lg border border-input bg-card px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
-          />
-          <input
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder={t("admin.disputes.notesPlaceholder")}
-            className="h-9 w-full rounded-lg border border-input bg-card px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
-          />
+          <div className="flex flex-col gap-1">
+            <label htmlFor={`resolution-${dispute.id}`} className="text-xs font-semibold text-muted-foreground">{t("admin.disputes.resolutionLabel")}</label>
+            <input
+              id={`resolution-${dispute.id}`}
+              value={resolution}
+              onChange={(e) => setResolution(e.target.value)}
+              placeholder={t("admin.disputes.resolutionPlaceholder")}
+              className="h-10 w-full rounded-lg border border-input bg-card px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor={`notes-${dispute.id}`} className="text-xs font-semibold text-muted-foreground">{t("admin.disputes.notesLabel")}</label>
+            <input
+              id={`notes-${dispute.id}`}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder={t("admin.disputes.notesPlaceholder")}
+              className="h-10 w-full rounded-lg border border-input bg-card px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+            />
+          </div>
           <div className="flex flex-wrap gap-2">
             {dispute.status === "open" && (
-              <Button size="sm" variant="outline" className="h-8" disabled={update.isPending}
+              <Button size="sm" variant="outline" className="h-10" disabled={update.isPending}
                 onClick={() => update.mutate({ status: "inreview", adminNotes: notes.trim() || undefined })}>
                 {t("admin.disputes.startReview")}
               </Button>
             )}
-            <Button size="sm" className="h-8 gap-1" disabled={update.isPending}
+            <Button size="sm" className="h-10 gap-1" disabled={update.isPending}
               onClick={() => update.mutate({ status: "resolved", resolution: resolution.trim() || undefined, adminNotes: notes.trim() || undefined })}>
               <Check className="h-3.5 w-3.5" /> {t("admin.disputes.resolve")}
             </Button>
-            <Button size="sm" variant="outline" className="h-8 gap-1" disabled={update.isPending}
+            <Button size="sm" variant="outline" className="h-10 gap-1" disabled={update.isPending}
               onClick={() => update.mutate({ status: "rejected", resolution: resolution.trim() || undefined, adminNotes: notes.trim() || undefined })}>
               <X className="h-3.5 w-3.5" /> {t("admin.disputes.reject")}
             </Button>
