@@ -75,7 +75,7 @@ export default function ProviderLeads() {
             key={opt.value}
             onClick={() => setStatusFilter(opt.value)}
             aria-pressed={statusFilter === opt.value}
-            className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={`rounded-full px-3 py-2 text-xs font-medium transition-colors ${
               statusFilter === opt.value
                 ? "bg-navy-ink text-white"
                 : "border border-line-2 text-muted-foreground hover:text-navy-ink"
@@ -189,12 +189,16 @@ function LeadCard({
             <span className="text-sm text-muted-foreground">€</span>
           </div>
         </div>
-        <input
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder={t("provider.leads.notesPlaceholder")}
-          className="h-9 flex-1 rounded-lg border border-input bg-card px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
-        />
+        <div className="flex flex-1 flex-col gap-1">
+          <label htmlFor={`lead-notes-${lead.id}`} className="text-xs font-semibold text-muted-foreground">{t("provider.leads.notesLabel")}</label>
+          <input
+            id={`lead-notes-${lead.id}`}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder={t("provider.leads.notesPlaceholder")}
+            className="h-9 w-full rounded-lg border border-input bg-card px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
+          />
+        </div>
         <div className="flex gap-2">
           <Button size="sm" className="h-9 gap-1" disabled={respond.isPending} onClick={sendQuote}>
             {respond.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}

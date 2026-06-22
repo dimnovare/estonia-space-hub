@@ -19,7 +19,7 @@ interface Payout {
   orderId: string;
   supplierAmount: number;
   platformMargin: number;
-  status: "pending" | "paid" | "accrued";
+  status: "pending" | "paid" | "accrued" | "disputed" | "cancelled";
   paidAt: string | null;
   paymentReference: string | null;
 }
@@ -35,7 +35,7 @@ export default function AdminPayouts({ supplierId }: { supplierId?: string }) {
   const locale = localeMap[language] || "en-GB";
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "paid" | "accrued">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "paid" | "accrued" | "disputed" | "cancelled">("all");
   const [supplierFilter, setSupplierFilter] = useState("");
   const [markingId, setMarkingId] = useState<string | null>(null);
   const [references, setReferences] = useState<Record<string, string>>({});
@@ -128,6 +128,8 @@ export default function AdminPayouts({ supplierId }: { supplierId?: string }) {
             <option value="accrued">{t("admin.payouts.accrued")}</option>
             <option value="pending">{t("admin.payouts.unpaid")}</option>
             <option value="paid">{t("admin.payouts.paid")}</option>
+            <option value="disputed">{t("admin.payouts.disputed")}</option>
+            <option value="cancelled">{t("admin.payouts.cancelled")}</option>
           </select>
         </div>
         <div className="relative flex-1 min-w-[200px] max-w-xs">
@@ -175,13 +177,21 @@ export default function AdminPayouts({ supplierId }: { supplierId?: string }) {
                         ? "bg-success/10 text-success"
                         : p.status === "accrued"
                           ? "bg-muted text-muted-foreground"
-                          : "bg-warning/10 text-warning"
+                          : p.status === "disputed"
+                            ? "bg-warning/10 text-warning-text"
+                            : p.status === "cancelled"
+                              ? "bg-secondary text-muted-foreground"
+                              : "bg-warning/10 text-warning"
                     }`}>
                       {p.status === "paid"
                         ? t("admin.payouts.paid")
                         : p.status === "accrued"
                           ? t("admin.payouts.accrued")
-                          : t("admin.payouts.unpaid")}
+                          : p.status === "disputed"
+                            ? t("admin.payouts.disputed")
+                            : p.status === "cancelled"
+                              ? t("admin.payouts.cancelled")
+                              : t("admin.payouts.unpaid")}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
