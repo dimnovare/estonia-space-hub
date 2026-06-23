@@ -9,6 +9,7 @@ import { Loader2, MapPin, Warehouse, Truck, CarFront, Plus, Pencil, ChevronDown,
 import type { LucideIcon } from "lucide-react";
 import ListingExtrasManager from "./ListingExtrasManager";
 import ImageUploader from "@/components/admin/ImageUploader";
+import { GooglePlacesAutocomplete } from "@/components/admin/GooglePlacesAutocomplete";
 import type { SupplierLocation } from "@/services/types";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
@@ -213,6 +214,20 @@ function LocationDialog({
             <datalist id="provider-location-cities">
               {ALL_CITIES.map((c) => <option key={c} value={c} />)}
             </datalist>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">{t("admin.places.search")}</label>
+            {/* Google Places autocomplete: picking a place fills address + city +
+                lat/lng. Degrades silently with no key; the address/city fields
+                below stay manually editable, so saving without Google still works. */}
+            <GooglePlacesAutocomplete
+              onSelect={(p) => {
+                form.setValue("address", p.address, { shouldValidate: true });
+                if (p.city) form.setValue("city", p.city, { shouldValidate: true });
+                form.setValue("lat", p.lat);
+                form.setValue("lng", p.lng);
+              }}
+            />
           </div>
           <div className="flex items-end gap-2">
             <div className="flex-1">
