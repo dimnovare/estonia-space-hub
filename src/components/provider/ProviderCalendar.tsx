@@ -255,7 +255,7 @@ export default function ProviderCalendar() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[340px_1fr]">
         {/* Month card */}
-        <div className="rounded-[14px] border border-border bg-card p-4 shadow-[var(--shadow-card)]">
+        <div className="min-w-0 rounded-[14px] border border-border bg-card p-4 shadow-[var(--shadow-card)]">
           <div className="mb-3 flex items-center justify-between">
             <button
               onClick={() => changeMonth(-1)}
@@ -305,7 +305,7 @@ export default function ProviderCalendar() {
         </div>
 
         {/* Day card */}
-        <div className="rounded-[14px] border border-border bg-card p-5 shadow-[var(--shadow-card)]">
+        <div className="min-w-0 rounded-[14px] border border-border bg-card p-5 shadow-[var(--shadow-card)]">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h3 className="font-display text-base font-semibold text-navy-ink">
               {selectedDate.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
@@ -413,7 +413,7 @@ export default function ProviderCalendar() {
             <p className="mt-3 text-sm text-muted-foreground">{t("provider.calendar.timelineEmpty")}</p>
           </div>
         ) : (
-          <div className="mt-4 overflow-x-auto">
+          <div className="mt-4 max-w-full overflow-x-auto">
             <div className="min-w-[640px]">
               {/* Week axis */}
               <div className="grid" style={{ gridTemplateColumns: "180px 1fr" }}>

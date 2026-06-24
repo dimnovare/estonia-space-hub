@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, ShieldAlert, Check, X } from "lucide-react";
+import { Loader2, ShieldAlert, Check, X, Banknote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { disputeService, type AdminDispute, type DisputeStatus } from "@/services";
@@ -87,9 +87,12 @@ function DisputeCard({ dispute, typeLabel }: { dispute: AdminDispute; typeLabel:
   const terminal = dispute.status === "resolved" || dispute.status === "rejected";
 
   const update = useMutation({
-    mutationFn: (body: { status?: string; adminNotes?: string; resolution?: string }) =>
+    mutationFn: (body: { status?: string; adminNotes?: string; resolution?: string; issueRefund?: boolean }) =>
       disputeService.adminUpdate(dispute.id, body),
-    onSuccess: () => { toast.success(t("admin.disputes.saved")); qc.invalidateQueries({ queryKey: ["admin", "disputes"] }); },
+    onSuccess: (res) => {
+      toast.success(res?.refundIssued ? t("admin.disputes.refundIssued") : t("admin.disputes.saved"));
+      qc.invalidateQueries({ queryKey: ["admin", "disputes"] });
+    },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : t("toast.error")),
   });
 
@@ -153,6 +156,17 @@ function DisputeCard({ dispute, typeLabel }: { dispute: AdminDispute; typeLabel:
               onClick={() => update.mutate({ status: "resolved", resolution: resolution.trim() || undefined, adminNotes: notes.trim() || undefined })}>
               <Check className="h-3.5 w-3.5" /> {t("admin.disputes.resolve")}
             </Button>
+            {/* Admin-confirmed refund: only for disputes tied to a booking. Resolves
+                AND marks the paid invoice for refund + cancels the supplier payout. */}
+            {dispute.bookingId && (
+              <Button size="sm" className="h-10 gap-1 bg-warning text-warning-foreground hover:bg-warning/90" disabled={update.isPending}
+                onClick={() => {
+                  if (!window.confirm(t("admin.disputes.refundConfirm"))) return;
+                  update.mutate({ status: "resolved", resolution: resolution.trim() || undefined, adminNotes: notes.trim() || undefined, issueRefund: true });
+                }}>
+                <Banknote className="h-3.5 w-3.5" /> {t("admin.disputes.resolveRefund")}
+              </Button>
+            )}
             <Button size="sm" variant="outline" className="h-10 gap-1" disabled={update.isPending}
               onClick={() => update.mutate({ status: "rejected", resolution: resolution.trim() || undefined, adminNotes: notes.trim() || undefined })}>
               <X className="h-3.5 w-3.5" /> {t("admin.disputes.reject")}

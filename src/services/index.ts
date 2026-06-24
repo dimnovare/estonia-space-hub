@@ -536,8 +536,8 @@ export const disputeService = {
     if (status && status !== "all") params.set("status", status);
     return apiClient.get<{ total: number; items: AdminDispute[] }>(`/admin/disputes?${params}`);
   },
-  async adminUpdate(id: string, body: { status?: string; adminNotes?: string; resolution?: string }): Promise<void> {
-    await apiClient.patch(`/admin/disputes/${id}`, body);
+  async adminUpdate(id: string, body: { status?: string; adminNotes?: string; resolution?: string; issueRefund?: boolean }): Promise<{ refundIssued?: boolean }> {
+    return apiClient.patch<{ refundIssued?: boolean }>(`/admin/disputes/${id}`, body);
   },
 };
 
