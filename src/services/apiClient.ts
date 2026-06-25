@@ -108,6 +108,15 @@ class ApiClient {
           // 401s so the rotating refresh cookie is spent only once (see
           // refreshAccessToken). Prevents the rotation-race spurious logout.
           const result = await refreshAccessToken();
+          // A transient refresh failure (5xx / network) is NOT an expired session.
+          // Surface a retryable error and KEEP the session — don't log the user out
+          // on a server blip (mirrors AuthContext bootstrap's soft-failure tolerance).
+          // Only a hard 401 from /auth/refresh (result.hardInvalid) clears below.
+          if (!result.ok && !result.hardInvalid) {
+            const transient = new Error("Temporary server error. Please try again.") as ApiError;
+            transient.status = 503;
+            throw transient;
+          }
           if (result.ok && result.data?.accessToken) {
             const data = result.data;
             const retryHeaders: Record<string, string> = {
