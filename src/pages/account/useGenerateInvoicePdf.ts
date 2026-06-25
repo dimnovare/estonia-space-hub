@@ -87,7 +87,7 @@ export function useGenerateInvoicePdf() {
   <div class="info-grid">
     <div class="info-block">
       <label>${t("invoice.issuer")}</label>
-      <p>${import.meta.env.VITE_LEGAL_ENTITY_NAME || "Ruumly"}</p>
+      <p>${import.meta.env.VITE_LEGAL_ENTITY_NAME || "Valguse Kodu OÜ"}</p>
       <p>${t("invoice.address")}</p>
       <p>info@ruumly.eu</p>
       <p class="receipt-note">${t("invoice.notVatRegistered")}</p>
