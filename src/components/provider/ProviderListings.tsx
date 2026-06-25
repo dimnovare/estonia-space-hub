@@ -148,6 +148,10 @@ function LocationDialog({
   const createLoc = useCreateLocation();
   const updateLoc = useUpdateLocation();
   const { user } = useAuth();
+  // Admin "view as partner" creates locations on the impersonated supplier's
+  // behalf; the logged-in admin has no own supplierId. Prefer the impersonated
+  // id (?supplierId=) and fall back to the provider's own for real providers.
+  const impersonatedSupplierId = useImpersonatedSupplierId();
   const isEdit = !!locationId;
   const [images, setImages] = useState<string[]>(defaultValues?.images || []);
   const form = useForm<LocationForm>({
@@ -178,7 +182,7 @@ function LocationDialog({
       );
     } else {
       createLoc.mutate(
-        { supplierId: user?.supplierId || undefined, name: data.name, address: data.address, city: data.city, lat: data.lat ?? 0, lng: data.lng ?? 0, description: data.description, openingHours: data.openingHours, images },
+        { supplierId: (impersonatedSupplierId ?? user?.supplierId) || undefined, name: data.name, address: data.address, city: data.city, lat: data.lat ?? 0, lng: data.lng ?? 0, description: data.description, openingHours: data.openingHours, images },
         {
           onSuccess: () => {
             toast.success(t("toast.locationCreated"));
