@@ -164,7 +164,7 @@ export default function LocationDetailPage() {
       <p className="mt-1 text-sm text-muted-foreground">
         {location.fullyBooked
           ? `${location.unitCount} ${t("location.units")} · ${t("location.fullyBooked")}`
-          : `${location.availableUnits ?? location.unitCount} / ${location.unitCount} ${t("location.availableUnits")}`}
+          : `${location.availableUnits ?? location.unitCount} ${t("location.availableUnits")}`}
         {location.priceFrom != null && (
           <> · {t("location.from")} €{location.priceFrom}{t("location.perMonth")}</>
         )}
