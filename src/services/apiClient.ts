@@ -25,6 +25,51 @@ export const tokenStore = {
   },
 };
 
+// ── Single-flight refresh ──────────────────
+// On a hard reload several requests can 401 at once AND AuthContext fires its
+// own bootstrap refresh. The backend rotates the refresh token single-use, so
+// firing POST /auth/refresh more than once concurrently makes the 2nd+ calls
+// present an already-rotated cookie → 401 → spurious logout. Dedupe every
+// concurrent refresh onto ONE in-flight request.
+export type RefreshResult =
+  | { ok: true; data: any }
+  | { ok: false; hardInvalid: boolean };
+
+let _refreshPromise: Promise<RefreshResult> | null = null;
+
+export function refreshAccessToken(): Promise<RefreshResult> {
+  if (_refreshPromise) return _refreshPromise;
+  _refreshPromise = (async (): Promise<RefreshResult> => {
+    const csrf = tokenStore.getCsrf();
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    // Cookie-based refresh is accepted without a CSRF token; send it only when
+    // we still hold it in memory (a reload clears it but the cookie is valid).
+    if (csrf) headers["X-CSRF-Token"] = csrf;
+    let res: Response;
+    try {
+      res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: "POST",
+        credentials: "include",
+        headers,
+      });
+    } catch {
+      return { ok: false, hardInvalid: false };   // network error → soft failure
+    }
+    if (res.ok) {
+      const data = await res.json().catch(() => null);
+      if (data?.accessToken) {
+        tokenStore.setAccess(data.accessToken);
+        if (data.csrfToken) tokenStore.setCsrf(data.csrfToken);
+        return { ok: true, data };
+      }
+      return { ok: false, hardInvalid: false };
+    }
+    // Only a hard 401 means the refresh cookie is genuinely invalid/expired.
+    return { ok: false, hardInvalid: res.status === 401 };
+  })().finally(() => { _refreshPromise = null; });
+  return _refreshPromise;
+}
+
 class ApiClient {
   private getToken(): string | null {
     return tokenStore.getAccess();
@@ -58,23 +103,13 @@ class ApiClient {
     }
     if (response.status === 401) {
      if (token) {
-        const csrf = tokenStore.getCsrf();
         try {
-          const refreshHeaders: Record<string, string> = { "Content-Type": "application/json" };
-          // Cookie-based refresh is accepted by the backend WITHOUT a CSRF token
-          // (needsCsrf only applies to body-sourced refresh). Send the CSRF token
-          // when we still hold it in memory, but don't block a valid cookie
-          // refresh just because a page reload cleared the in-memory token.
-          if (csrf) refreshHeaders["X-CSRF-Token"] = csrf;
-          const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
-            method:      "POST",
-            credentials: "include",
-            headers:     refreshHeaders,
-          });
-          if (refreshRes.ok) {
-            const data = await refreshRes.json();
-            tokenStore.setAccess(data.accessToken);
-            if (data.csrfToken) tokenStore.setCsrf(data.csrfToken);
+          // Single-flight: dedupe with AuthContext bootstrap + other concurrent
+          // 401s so the rotating refresh cookie is spent only once (see
+          // refreshAccessToken). Prevents the rotation-race spurious logout.
+          const result = await refreshAccessToken();
+          if (result.ok && result.data?.accessToken) {
+            const data = result.data;
             const retryHeaders: Record<string, string> = {
               "Content-Type": "application/json",
               Authorization: `Bearer ${data.accessToken}`,

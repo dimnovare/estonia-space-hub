@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
-import { apiClient, tokenStore } from "@/services/apiClient";
+import { apiClient, tokenStore, refreshAccessToken } from "@/services/apiClient";
 import type { UserRole } from "@/services/types";
 import { localizedHref } from "@/i18n/routing";
 
@@ -91,32 +91,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Cookie-based refresh: credentials: "include" sends the HttpOnly cookie.
-    fetch(`${API_BASE_URL}/auth/refresh`, {
-      method:      "POST",
-      credentials: "include",
-      headers:     { "Content-Type": "application/json" },
-    })
-      .then(async r => {
-        if (r.ok) {
-          return { ok: true as const, data: await r.json().catch(() => null) };
-        }
-        // Only a hard 401 means the refresh token is genuinely invalid/expired
-        // and the session must be cleared. Any other non-ok status (e.g. a
-        // transient 5xx) is treated as a soft failure — keep the cached session
-        // so a server blip doesn't silently log out a valid user.
-        return { ok: false as const, hardInvalid: r.status === 401 };
-      })
+    // Single-flight refresh (shared with apiClient via refreshAccessToken) so a
+    // hard reload fires exactly ONE POST /auth/refresh. The backend rotates the
+    // refresh cookie single-use; two concurrent refreshes (this bootstrap + a
+    // request's 401 handler) would spend it twice → spurious logout.
+    refreshAccessToken()
       .then(result => {
         if (result.ok && result.data?.accessToken) {
           const data = result.data;
-          tokenStore.setAccess(data.accessToken);
-          if (data.csrfToken) tokenStore.setCsrf(data.csrfToken);
-          // Make the SERVER the source of truth for identity/role: the refresh
-          // response carries the authoritative user (loaded from the DB), so a
-          // tampered cached role in localStorage can never drive client-side
-          // gating. Fall back to the cached profile only if the server response
-          // unexpectedly omits the user object.
+          // Token + csrf are already stored by refreshAccessToken. Make the
+          // SERVER the source of truth for identity/role: the refresh response
+          // carries the authoritative user (loaded from the DB), so a tampered
+          // cached role in localStorage can never drive client-side gating. Fall
+          // back to the cached profile only if the response omits the user.
           if (data.user) {
             const authoritative = normalizeUser(data.user);
             setUser(authoritative);
@@ -132,23 +119,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           tokenStore.clear();
           localStorage.removeItem("ruumly-auth");
         } else {
-          // Soft failure (non-401 server error). Don't nuke the stored session;
-          // restore the cached profile optimistically so the user isn't dropped
-          // to guest on a transient blip. The next authenticated request will
-          // trigger the 401 → refresh path and self-correct if truly expired.
+          // Soft failure (network/5xx). Don't nuke the stored session; restore
+          // the cached profile optimistically so the user isn't dropped to guest
+          // on a transient blip. The next authenticated request's 401 → refresh
+          // path self-corrects if the session is truly expired.
           try {
             const profile = stored ? JSON.parse(stored) : null;
             if (profile) setUser(profile);
           } catch {}
         }
-      })
-      .catch(() => {
-        // Network error (server unreachable). Treat as a soft failure: keep the
-        // cached session rather than silently logging the user out offline.
-        try {
-          const profile = stored ? JSON.parse(stored) : null;
-          if (profile) setUser(profile);
-        } catch {}
       })
       .finally(() => setIsInitializing(false));
   }, []);
