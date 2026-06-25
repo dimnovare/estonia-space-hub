@@ -193,7 +193,7 @@ ${l.confirmHow}
 
 ${l.signoff}
 ${l.team}
-info@ruumly.eu | +372 5555 1234
+info@ruumly.eu | +372 5649 7933
 `;
 }
 

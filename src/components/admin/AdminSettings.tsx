@@ -14,7 +14,7 @@ import { queryKeys } from "@/services/queryKeys";
 const DEFAULT_SETTINGS: Record<string, string> = {
   siteName:               "Ruumly",
   siteEmail:              "info@ruumly.eu",
-  sitePhone:              "+372 5555 1234",
+  sitePhone:              "+372 5649 7933",
   openHours:              "E–R 10–17",
   defaultLanguage:        "et",
   currency:               "EUR",
@@ -265,7 +265,7 @@ export default function AdminSettings() {
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
               <label className="text-xs font-medium text-ink-2">{t("booking.bankTransfer.accountName")}</label>
-              <input className={inp} value={String(settings["bankTransfer.accountName"] ?? "")} onChange={e => set("bankTransfer.accountName", e.target.value)} placeholder="Ruumly OÜ" />
+              <input className={inp} value={String(settings["bankTransfer.accountName"] ?? "")} onChange={e => set("bankTransfer.accountName", e.target.value)} placeholder="Valguse Kodu OÜ" />
             </div>
             <div>
               <label className="text-xs font-medium text-ink-2">{t("booking.bankTransfer.iban")}</label>

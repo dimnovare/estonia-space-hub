@@ -51,7 +51,7 @@ export interface PlatformSettings {
 const FALLBACK = {
   siteName:              "Ruumly",
   siteEmail:             "info@ruumly.eu",
-  sitePhone:             "+372 5555 1234",
+  sitePhone:             "+372 5649 7933",
   openHours:             "E–R 9–18",
   openHoursSat:          "",
   inviteCodeRequired:    false,
