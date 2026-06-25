@@ -9,6 +9,8 @@ import { providerPaidFeaturesService } from "@/services";
 import { Building2, Copy } from "lucide-react";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import { useLocations } from "@/hooks/queries";
+import { useAuth } from "@/contexts/AuthContext";
+import { Info } from "lucide-react";
 
 function formatPrice(amount: number, currency: string, interval: string, manualLabel: string) {
   if (amount <= 0) return manualLabel;
@@ -52,7 +54,11 @@ function PayRow({ label, value, mono, highlight }: { label: string; value: strin
 
 export default function ProviderBoosts() {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const supplierId = useImpersonatedSupplierId();
+  // Admin viewing the provider dashboard without picking a partner: the catalog is
+  // browsable, but requesting/activating a boost needs a partner context.
+  const adminNoPartner = user?.role === "admin" && !supplierId;
   const queryClient = useQueryClient();
   const [targets, setTargets] = useState<Record<string, string>>({});
   const [requestNotes, setRequestNotes] = useState<Record<string, string>>({});
@@ -152,6 +158,10 @@ export default function ProviderBoosts() {
     targets[feature.id] ?? defaultScopeValue(feature);
 
   const submitRequest = (feature: (typeof catalog)[number]) => {
+    if (adminNoPartner) {
+      toast.info(t("provider.boosts.adminNoPartner"));
+      return;
+    }
     const value = scopeValueOf(feature);
     let listingId: string | undefined;
     let locationId: string | undefined;
@@ -174,6 +184,14 @@ export default function ProviderBoosts() {
           {t("provider.boosts.subtitle")}
         </p>
       </div>
+
+      {/* Admin browsing without a partner selected — catalog is read-only here. */}
+      {adminNoPartner && (
+        <div className="flex items-start gap-2.5 rounded-[12px] border border-info/30 bg-info/5 p-3.5 text-sm">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-info" />
+          <p className="text-foreground/90">{t("provider.boosts.adminNoPartner")}</p>
+        </div>
+      )}
 
       {/* Active-boosts summary */}
       <section className="rounded-[14px] border border-border bg-[#F4F6FB] p-5 shadow-[var(--shadow-card)]">
