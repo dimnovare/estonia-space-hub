@@ -165,6 +165,9 @@ export default function AdminBoosts() {
                   </td>
                   <td className="px-5 py-3.5">
                     <div className="font-medium text-navy-ink">{r.paidFeature.name}</div>
+                    {r.paidFeature.priceAmount > 0 && (
+                      <div className="mt-0.5 font-mono text-[11px] text-muted-foreground">{t("admin.boosts.ref")}: RUUMLY-{r.id.slice(0, 8).toUpperCase()}</div>
+                    )}
                     {r.message && <div className="mt-0.5 max-w-xs truncate text-xs text-muted-foreground" title={r.message}>{r.message}</div>}
                   </td>
                   <td className="px-5 py-3.5">

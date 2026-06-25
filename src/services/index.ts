@@ -710,7 +710,18 @@ export const providerPaidFeaturesService = {
       data
     );
   },
+  // Ruumly's bank account for paying for a paid feature by transfer (no PSP at launch).
+  async paymentInfo(supplierId?: string | null): Promise<PlatformPaymentInfo> {
+    return apiClient.get<PlatformPaymentInfo>(withSupplier("/supplier/paid-features/payment-info", supplierId));
+  },
 };
+
+export interface PlatformPaymentInfo {
+  accountName: string;
+  iban: string;
+  bic: string;
+  bankName: string;
+}
 
 // ─── Provider Service ────────────────────────────────────────────────────────
 export const providerService = {

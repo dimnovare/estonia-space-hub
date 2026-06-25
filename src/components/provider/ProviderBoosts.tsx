@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { providerPaidFeaturesService } from "@/services";
+import { Building2, Copy } from "lucide-react";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import { useLocations } from "@/hooks/queries";
 
@@ -29,6 +30,26 @@ function categoryVisual(category: string) {
   return CATEGORY_VISUALS[category.toLowerCase()] ?? { icon: Sparkles, tint: "bg-teal/15 text-teal-deep" };
 }
 
+// One label/value row in the bank-transfer instructions, with click-to-copy.
+function PayRow({ label, value, mono, highlight }: { label: string; value: string; mono?: boolean; highlight?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <dt className="shrink-0 text-muted-foreground">{label}</dt>
+      <dd className={`flex min-w-0 items-center gap-1.5 ${mono ? "font-mono" : ""} ${highlight ? "font-bold text-accent" : "text-foreground"}`}>
+        <span className="break-all text-right">{value}</span>
+        <button
+          type="button"
+          onClick={() => navigator.clipboard?.writeText(value)}
+          className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+          aria-label="Copy"
+        >
+          <Copy className="h-3 w-3" />
+        </button>
+      </dd>
+    </div>
+  );
+}
+
 export default function ProviderBoosts() {
   const { t } = useLanguage();
   const supplierId = useImpersonatedSupplierId();
@@ -41,6 +62,17 @@ export default function ProviderBoosts() {
   const { data, isLoading } = useQuery({
     queryKey: ["provider-paid-features", supplierId],
     queryFn: () => providerPaidFeaturesService.getMine(supplierId),
+  });
+
+  // A pending request for a PAID feature means the partner still owes a transfer.
+  const hasPendingPaid = (data?.requests ?? []).some(
+    (r) => r.status === "new" && r.paidFeature.priceAmount > 0,
+  );
+  const { data: paymentInfo } = useQuery({
+    queryKey: ["paid-feature-payment-info", supplierId],
+    queryFn: () => providerPaidFeaturesService.paymentInfo(supplierId),
+    enabled: hasPendingPaid,
+    staleTime: 5 * 60_000,
   });
 
   const requestMutation = useMutation({
@@ -207,20 +239,50 @@ export default function ProviderBoosts() {
         <section>
           <h2 className="font-display text-base font-semibold text-navy-ink">{t("provider.boosts.requests")}</h2>
           <div className="mt-3 space-y-2">
-            {requests.slice(0, 5).map((request) => (
-              <div key={request.id} className="flex items-center justify-between rounded-[14px] border border-border bg-card px-4 py-3 shadow-[var(--shadow-card)]">
-                <div>
-                  <p className="text-sm font-semibold text-navy-ink">{request.paidFeature.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {t(`provider.boosts.status.${request.status}`)} · {targetLabel(request.listingId, request.locationId)}
-                  </p>
+            {requests.slice(0, 5).map((request) => {
+              const awaitingPayment = request.status === "new" && request.paidFeature.priceAmount > 0;
+              const reference = `RUUMLY-${request.id.slice(0, 8).toUpperCase()}`;
+              return (
+                <div key={request.id} className="rounded-[14px] border border-border bg-card px-4 py-3 shadow-[var(--shadow-card)]">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-navy-ink">{request.paidFeature.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {t(`provider.boosts.status.${request.status}`)} · {targetLabel(request.listingId, request.locationId)}
+                      </p>
+                    </div>
+                    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-warning/10 px-2.5 py-1 text-xs font-medium text-warning-text">
+                      <Clock className="h-3.5 w-3.5" />
+                      {t(`provider.boosts.status.${request.status}`)}
+                    </span>
+                  </div>
+
+                  {/* Bank-transfer instructions: the partner pays Ruumly to activate. */}
+                  {awaitingPayment && (
+                    <div className="mt-3 rounded-[10px] border border-warning/30 bg-warning/5 p-3">
+                      <p className="flex items-center gap-1.5 text-xs font-semibold text-warning-text">
+                        <Building2 className="h-3.5 w-3.5" /> {t("provider.boosts.pay.title")}
+                      </p>
+                      <p className="mt-1 text-sm text-foreground">
+                        {t("provider.boosts.pay.intro").replace("{amount}", `${request.paidFeature.priceAmount.toFixed(0)} ${request.paidFeature.priceCurrency}`)}
+                      </p>
+                      {paymentInfo?.iban ? (
+                        <dl className="mt-2 space-y-1 text-xs">
+                          {paymentInfo.accountName && <PayRow label={t("booking.bankTransfer.accountName")} value={paymentInfo.accountName} />}
+                          <PayRow label={t("booking.bankTransfer.iban")} value={paymentInfo.iban} mono />
+                          {paymentInfo.bic && <PayRow label={t("booking.bankTransfer.bic")} value={paymentInfo.bic} mono />}
+                          {paymentInfo.bankName && <PayRow label={t("booking.bankTransfer.bank")} value={paymentInfo.bankName} />}
+                          <PayRow label={t("provider.boosts.pay.reference")} value={reference} mono highlight />
+                        </dl>
+                      ) : (
+                        <p className="mt-2 text-xs text-muted-foreground">{t("provider.boosts.pay.noBank")}</p>
+                      )}
+                      <p className="mt-2 text-[11px] text-muted-foreground">{t("provider.boosts.pay.note")}</p>
+                    </div>
+                  )}
                 </div>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-warning/10 px-2.5 py-1 text-xs font-medium text-warning-text">
-                  <Clock className="h-3.5 w-3.5" />
-                  {t(`provider.boosts.status.${request.status}`)}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}
