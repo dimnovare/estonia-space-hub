@@ -731,7 +731,11 @@ function PartnerPageTab({ supplier, onSave, pending }: { supplier: any; onSave: 
 function VisibilityTab({ supplier: s, onSave, pending }: { supplier: any; onSave: (p: any) => void; pending: boolean }) {
   const { t } = useLanguage();
   const qc = useQueryClient();
-  const published = !!s.isPartnerPagePublished;
+  // Marketplace presence = Supplier.IsActive — the public search + locations/map
+  // queries filter on it. (The Partner Page tab separately controls
+  // isPartnerPagePublished.) This toggle previously set the page-published flag,
+  // so hiding a partner left its location active on the public map. Use isActive.
+  const published = s.isActive !== false;
 
   const featuresKey = ["admin", "partner", s.id, "paid-features"];
   const { data, isLoading } = useQuery({
@@ -760,6 +764,20 @@ function VisibilityTab({ supplier: s, onSave, pending }: { supplier: any; onSave
     },
     onError: (err: any) => toast.error(err?.message ?? t("toast.saveFailed")),
     onSettled: () => setBusyFeatureId(null),
+  });
+
+  // Marketplace presence toggle → PATCH /admin/suppliers/{id}/status { isActive }.
+  // Public search + locations/map queries filter on Supplier.IsActive, so flipping
+  // it hides/shows the partner (incl. its locations on the map) symmetrically —
+  // no row cascade, so restore brings everything back exactly.
+  const marketplaceMutation = useMutation({
+    mutationFn: (visible: boolean) => supplierService.updateStatus(s.id, visible),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.adminSupplier.byId(s.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.suppliers.all() });
+      toast.success(t("common.saved"));
+    },
+    onError: (err: any) => toast.error(err?.message ?? t("toast.saveFailed")),
   });
 
   const scopeLabel = (listingId?: string | null, locationId?: string | null, scope?: string) => {
@@ -795,9 +813,9 @@ function VisibilityTab({ supplier: s, onSave, pending }: { supplier: any; onSave
           </div>
           <Switch
             checked={published}
-            disabled={pending}
+            disabled={pending || marketplaceMutation.isPending}
             aria-label={t("admin.partner.marketplaceVisibility")}
-            onCheckedChange={(v) => onSave({ isPartnerPagePublished: v })}
+            onCheckedChange={(v) => marketplaceMutation.mutate(v)}
           />
         </div>
       </div>
