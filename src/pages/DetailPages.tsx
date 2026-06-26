@@ -35,6 +35,7 @@ import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import type { Listing, WarehouseListing, MovingListing, TrailerListing } from "@/services/types";
 import { SEO } from "@/components/SEO";
 import ListingCard from "@/components/ListingCard";
+import SizeGuide from "@/components/SizeGuide";
 import ReviewsSection from "@/components/ReviewsSection";
 import { trackEvent } from "@/lib/analytics";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -979,6 +980,8 @@ export function WarehouseDetail() {
               <span className="flex items-center gap-1.5"><Star className="h-4 w-4 fill-[#F2A900] text-[#F2A900]" /> <strong className="text-foreground">{wListing.rating}</strong> ({wListing.reviewCount} {t("detail.reviews")})</span>
             )}
             <span className="flex items-center gap-1.5"><Ruler className="h-4 w-4" /> {wListing.size} {wListing.sizeUnit}</span>
+            {/* "What size do I need?" → visual m² reference modal (storage only). */}
+            <SizeGuide variant="link" />
           </div>
 
           <hr className="mt-6 border-border" />

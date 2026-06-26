@@ -58,6 +58,20 @@ const typeLabelKeys: Record<string, string> = {
   trailer: "provider.listings.typeTrailer",
 };
 
+// i18n label key for a stored trailerType / vanSize value (Features JSON).
+const TRAILER_TYPE_LABEL_KEY: Record<string, string> = {
+  closed: "trailerType.closed",
+  open: "trailerType.open",
+  box: "trailerType.box",
+  flatbed: "trailerType.flatbed",
+};
+const VAN_SIZE_LABEL_KEY: Record<string, string> = {
+  small: "vanSize.small",
+  medium: "vanSize.medium",
+  large: "vanSize.large",
+  boxtruck: "vanSize.boxtruck",
+};
+
 // Up-to-three quick feature chips derived from each vertical's boolean flags.
 // Order = priority; the card shows the first three that are true.
 // Reuses the existing per-feature filter label keys (search.*).
@@ -71,14 +85,27 @@ function featureChipKeys(listing: Listing): string[] {
     if (listing.loadingDock) keys.push("search.loadingDock");
     if (listing.forklift) keys.push("search.forklift");
   } else if (listing.type === "moving") {
+    // Crew size first (most distinguishing), then van size, then the boolean flags.
+    if (listing.crewSize && CREW_SIZE_CHIP_KEY[listing.crewSize]) keys.push(CREW_SIZE_CHIP_KEY[listing.crewSize]);
+    if (listing.vanSize && VAN_SIZE_LABEL_KEY[listing.vanSize]) keys.push(VAN_SIZE_LABEL_KEY[listing.vanSize]);
     if (listing.withVan) keys.push("search.withVan");
     if (listing.packingHelp) keys.push("search.packingHelp");
     if (listing.loadingHelp) keys.push("search.loadingHelp");
   } else if (listing.type === "trailer") {
-    if (listing.trailerType) keys.push("search.closedTrailer");
+    // Show the actual trailer body type (closed/open/box/flatbed), not a fixed label.
+    const k = listing.trailerType ? TRAILER_TYPE_LABEL_KEY[listing.trailerType] : undefined;
+    if (k) keys.push(k);
   }
   return keys.slice(0, 3);
 }
+
+// Crew-size chip uses a compact "{n}-person crew" label key set.
+const CREW_SIZE_CHIP_KEY: Record<string, string> = {
+  "1": "crewSize.chip.1",
+  "2": "crewSize.chip.2",
+  "3": "crewSize.chip.3",
+  "4": "crewSize.chip.4plus",
+};
 
 function ListingCard({ listing }: { listing: Listing }) {
   const Icon = typeIcons[listing.type];

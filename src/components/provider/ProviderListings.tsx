@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
+import { TRAILER_TYPE_OPTIONS, CREW_SIZE_OPTIONS, VAN_SIZE_OPTIONS } from "@/lib/constants";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { trackEvent } from "@/lib/analytics";
@@ -129,6 +130,109 @@ const QTY_LABEL_KEY: Record<UnitType, string> = {
 
 function qtyLabelKey(type: string): string {
   return QTY_LABEL_KEY[(type as UnitType)] ?? "provider.listings.qtyUnits";
+}
+
+// Reserved string-valued attribute keys — these live in the Features JSON but are
+// edited via dedicated dropdowns, NOT the boolean feature-toggle chips. They must
+// be excluded from the boolean `features` map so a value like "closed" can't be
+// re-serialized as `trailerType: true`.
+const RESERVED_ATTRIBUTE_KEYS = ["trailerType", "crewSize", "vanSize"];
+
+// Strip the reserved string-attribute keys + keep only boolean values, so the
+// feature-toggle state never carries a string attribute. Used to seed the
+// boolean `features` state from a unit's raw Features JSON.
+function booleanFeaturesOnly(raw: Record<string, unknown> | undefined): Record<string, boolean> {
+  const out: Record<string, boolean> = {};
+  Object.entries(raw ?? {}).forEach(([k, v]) => {
+    if (RESERVED_ATTRIBUTE_KEYS.includes(k)) return;
+    if (v === true || v === "true") out[k] = true;
+    else if (typeof v === "boolean") out[k] = v;
+  });
+  return out;
+}
+
+// ── Vertical attributes stored in the Features JSON ──
+// Merge the boolean feature toggles (only the `true` ones) with the string-valued
+// vertical attributes (trailerType / crewSize / vanSize), dropping any that are
+// empty. The backend stores arbitrary keys in the listing Features JSON, so these
+// round-trip with no DB migration.
+function buildFeaturesPayload(
+  features: Record<string, boolean>,
+  attrs: { trailerType?: string; crewSize?: string; vanSize?: string },
+): Record<string, boolean | string> {
+  const payload: Record<string, boolean | string> = Object.fromEntries(
+    Object.entries(features).filter(([, v]) => v),
+  );
+  if (attrs.trailerType) payload.trailerType = attrs.trailerType;
+  if (attrs.crewSize) payload.crewSize = attrs.crewSize;
+  if (attrs.vanSize) payload.vanSize = attrs.vanSize;
+  return payload;
+}
+
+// Reusable form fields for the string-valued vertical attributes. Rendered in
+// both the Add-unit and Edit-unit dialogs, gated to the active vertical type.
+function VerticalAttributeFields({
+  type,
+  trailerType, setTrailerType,
+  crewSize, setCrewSize,
+  vanSize, setVanSize,
+}: {
+  type: string;
+  trailerType: string; setTrailerType: (v: string) => void;
+  crewSize: string; setCrewSize: (v: string) => void;
+  vanSize: string; setVanSize: (v: string) => void;
+}) {
+  const { t } = useLanguage();
+
+  if (type === "Trailer") {
+    return (
+      <div>
+        <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.trailerType")}</label>
+        <Select value={trailerType || "__none"} onValueChange={(v) => setTrailerType(v === "__none" ? "" : v)}>
+          <SelectTrigger><SelectValue placeholder={t("provider.listings.selectTrailerType")} /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__none">{t("provider.listings.notSpecified")}</SelectItem>
+            {TRAILER_TYPE_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>{t(o.labelKey)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  }
+
+  if (type === "Moving") {
+    return (
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.crewSize")}</label>
+          <Select value={crewSize || "__none"} onValueChange={(v) => setCrewSize(v === "__none" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder={t("provider.listings.selectCrewSize")} /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none">{t("provider.listings.notSpecified")}</SelectItem>
+              {CREW_SIZE_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{t(o.labelKey)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.vanSize")}</label>
+          <Select value={vanSize || "__none"} onValueChange={(v) => setVanSize(v === "__none" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder={t("provider.listings.selectVanSize")} /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none">{t("provider.listings.notSpecified")}</SelectItem>
+              {VAN_SIZE_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{t(o.labelKey)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 }
 
 // ── Location Dialog ──
@@ -309,6 +413,11 @@ function UnitDialog({
   const addUnit = useAddUnit();
   const { data: featureDefs = {} } = useFeatureDefinitions();
   const [features, setFeatures] = useState<Record<string, boolean>>({});
+  // String-valued vertical attributes stored in the Features JSON (no migration):
+  //   trailerType (Trailer), crewSize + vanSize (Moving). "" = not set.
+  const [trailerType, setTrailerType] = useState("");
+  const [crewSize, setCrewSize] = useState("");
+  const [vanSize, setVanSize] = useState("");
 
   const form = useForm<UnitForm>({
     resolver: zodResolver(unitSchema),
@@ -327,6 +436,7 @@ function UnitDialog({
   const onSubmit = (data: UnitForm) => {
     const isTrailer = data.type === "Trailer";
     const isWarehouse = data.type === "Warehouse";
+    const isMoving = data.type === "Moving";
     addUnit.mutate(
       {
         locationId,
@@ -348,9 +458,11 @@ function UnitDialog({
                 : undefined)
             : undefined,
           minBookingMonths: isWarehouse ? data.minBookingMonths ?? undefined : undefined,
-          features: Object.fromEntries(
-            Object.entries(features).filter(([, v]) => v)
-          ),
+          features: buildFeaturesPayload(features, {
+            trailerType: isTrailer ? trailerType : "",
+            crewSize: isMoving ? crewSize : "",
+            vanSize: isMoving ? vanSize : "",
+          }),
         },
       },
       {
@@ -492,6 +604,13 @@ function UnitDialog({
               <Input type="number" min="0" {...form.register("minBookingMonths")} />
             </div>
           )}
+          {/* Vertical attributes (Features JSON): trailerType / crewSize + vanSize */}
+          <VerticalAttributeFields
+            type={form.watch("type")}
+            trailerType={trailerType} setTrailerType={setTrailerType}
+            crewSize={crewSize} setCrewSize={setCrewSize}
+            vanSize={vanSize} setVanSize={setVanSize}
+          />
           <div>
             <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitDesc")}</label>
             <Textarea rows={2} {...form.register("description")} />
@@ -939,7 +1058,11 @@ function EditUnitDialog({
   const [saving, setSaving] = useState(false);
   const [images, setImages] = useState<string[]>(unitData?.images || []);
   const { data: featureDefs = {} } = useFeatureDefinitions();
-  const [features, setFeatures] = useState<Record<string, boolean>>(unitData?.features || {});
+  const [features, setFeatures] = useState<Record<string, boolean>>(booleanFeaturesOnly(unitData?.features));
+  // String-valued vertical attributes seeded from the existing Features JSON.
+  const [trailerType, setTrailerType] = useState<string>(String(unitData?.features?.trailerType ?? ""));
+  const [crewSize, setCrewSize] = useState<string>(String(unitData?.features?.crewSize ?? ""));
+  const [vanSize, setVanSize] = useState<string>(String(unitData?.features?.vanSize ?? ""));
 
   const form = useForm<UnitForm>({
     resolver: zodResolver(unitSchema),
@@ -974,7 +1097,10 @@ function EditUnitDialog({
         minBookingMonths: unitData.minBookingMonths ?? undefined,
       });
       setImages(unitData.images || []);
-      setFeatures(unitData.features || {});
+      setFeatures(booleanFeaturesOnly(unitData.features));
+      setTrailerType(String(unitData.features?.trailerType ?? ""));
+      setCrewSize(String(unitData.features?.crewSize ?? ""));
+      setVanSize(String(unitData.features?.vanSize ?? ""));
     }
   }, [unitData]);
 
@@ -982,6 +1108,7 @@ function EditUnitDialog({
     setSaving(true);
     const isTrailer = data.type === "Trailer";
     const isWarehouse = data.type === "Warehouse";
+    const isMoving = data.type === "Moving";
     try {
       await apiClient.patch(
         `/locations/${unitData.locationId}/units/${unitData.id}`,
@@ -1002,9 +1129,11 @@ function EditUnitDialog({
             : undefined,
           minBookingMonths: isWarehouse ? data.minBookingMonths ?? undefined : undefined,
           images,
-          features: Object.fromEntries(
-            Object.entries(features).filter(([, v]) => v)
-          ),
+          features: buildFeaturesPayload(features, {
+            trailerType: isTrailer ? trailerType : "",
+            crewSize: isMoving ? crewSize : "",
+            vanSize: isMoving ? vanSize : "",
+          }),
         }
       );
       queryClient.invalidateQueries({ queryKey: queryKeys.locations.all() });
@@ -1143,6 +1272,13 @@ function EditUnitDialog({
               <Input type="number" min="0" {...form.register("minBookingMonths")} />
             </div>
           )}
+          {/* Vertical attributes (Features JSON): trailerType / crewSize + vanSize */}
+          <VerticalAttributeFields
+            type={form.watch("type")}
+            trailerType={trailerType} setTrailerType={setTrailerType}
+            crewSize={crewSize} setCrewSize={setCrewSize}
+            vanSize={vanSize} setVanSize={setVanSize}
+          />
           <div>
             <label className="text-xs font-medium text-muted-foreground">{t("provider.listings.unitDesc")}</label>
             <Textarea rows={2} {...form.register("description")} />

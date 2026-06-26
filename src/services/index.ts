@@ -120,6 +120,8 @@ function mapListing(api: ApiListing): Listing {
       loadingHelp: (f.loadingHelp as boolean) ?? false,
       pricingModel: (f.pricingModel as "fixed" | "hourly") ?? "fixed",
       services: (f.services as string[]) ?? [],
+      crewSize: (f.crewSize as string) || undefined,
+      vanSize: (f.vanSize as string) || undefined,
     } as MovingListing;
   }
 
@@ -652,7 +654,9 @@ export const locationService = {
     description?: string;
     vatRate?: number;
     pricesIncludeVat: boolean;
-    features?: Record<string, boolean>;
+    // Boolean feature toggles + string-valued vertical attributes (trailerType,
+    // crewSize, vanSize) — all stored in the listing Features JSON.
+    features?: Record<string, boolean | string>;
   }): Promise<{ id: string }> {
     return apiClient.post<{ id: string }>(`/locations/${locationId}/units`, unit);
   },

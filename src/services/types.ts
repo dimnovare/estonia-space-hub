@@ -423,11 +423,13 @@ export interface MovingListing extends ListingBase {
   loadingHelp: boolean;
   pricingModel: "fixed" | "hourly";
   services: string[];
+  crewSize?: string;  // "1" | "2" | "3" | "4" (4 = 4+); stored in Features JSON
+  vanSize?: string;   // "small" | "medium" | "large" | "boxtruck"; stored in Features JSON
 }
 
 export interface TrailerListing extends ListingBase {
   type: "trailer";
-  trailerType: string;
+  trailerType: string; // "closed" | "open" | "box" | "flatbed"; stored in Features JSON
   weightClass: string;
   requirements: string[];
 }
@@ -449,6 +451,10 @@ export interface ListingFilters {
   minSize?: number;
   maxSize?: number;
   sizeCategory?: "XS" | "S" | "M" | "L" | "XL";
+  // Vertical attribute filters (client-side, read from the listing Features JSON).
+  trailerType?: string; // trailer vertical — "closed" | "open" | "box" | "flatbed"
+  crewSize?: string;    // moving vertical — "1" | "2" | "3" | "4"
+  vanSize?: string;     // moving vertical — "small" | "medium" | "large" | "boxtruck"
   supplierId?: string;
   locationId?: string;
   // Browse-all / map / stats: include listings grouped under a real Location

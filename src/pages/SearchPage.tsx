@@ -17,8 +17,10 @@ import { trackEvent } from "@/lib/analytics";
 import { toast } from "sonner";
 import { SizeBucketFilter } from "@/components/search/SizeBucketFilter";
 import StorageSizeCalculator from "@/components/StorageSizeCalculator";
+import SizeGuide from "@/components/SizeGuide";
 import { queryKeys } from "@/services/queryKeys";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { TRAILER_TYPE_OPTIONS, CREW_SIZE_OPTIONS, VAN_SIZE_OPTIONS } from "@/lib/constants";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
@@ -59,6 +61,11 @@ export default function SearchPage() {
   const sizeCategory = searchParams.get("sizeCategory") || undefined;
   const minSize = searchParams.get("minSize") || "";
   const maxSize = searchParams.get("maxSize") || "";
+  // Vertical attribute filters (stored in the listing Features JSON, filtered
+  // client-side). trailerType = trailer vertical; crewSize/vanSize = moving.
+  const trailerType = searchParams.get("trailerType") || "";
+  const crewSize = searchParams.get("crewSize") || "";
+  const vanSize = searchParams.get("vanSize") || "";
   const supplierIdFilter = searchParams.get("supplierId") || "";
   const locationIdFilter = searchParams.get("locationId") || "";
 
@@ -159,6 +166,21 @@ export default function SearchPage() {
     if (searchParams.get("bookable") === "true") {
       results = results.filter(l => !!l.bookingEnabled);
     }
+    // Vertical attribute filters (read from the listing Features JSON via the
+    // mapped fields). Each is gated to its vertical so a stale URL param can't
+    // filter the wrong service type.
+    const trailerTypeParam = searchParams.get("trailerType");
+    if (activeType === "trailer" && trailerTypeParam) {
+      results = results.filter(l => l.type === "trailer" && l.trailerType === trailerTypeParam);
+    }
+    const crewSizeParam = searchParams.get("crewSize");
+    if (activeType === "moving" && crewSizeParam) {
+      results = results.filter(l => l.type === "moving" && l.crewSize === crewSizeParam);
+    }
+    const vanSizeParam = searchParams.get("vanSize");
+    if (activeType === "moving" && vanSizeParam) {
+      results = results.filter(l => l.type === "moving" && l.vanSize === vanSizeParam);
+    }
     Object.entries(featureDefs).forEach(([type, features]) => {
       features.forEach(f => {
         if (searchParams.get(f.key) === "true") {
@@ -171,7 +193,7 @@ export default function SearchPage() {
       });
     });
     return results;
-  }, [serverFiltered, featureDefs, searchParams, showMovingService, showTrailerService]);
+  }, [serverFiltered, featureDefs, searchParams, activeType, showMovingService, showTrailerService]);
 
   // Local-only UI state
   // The desktop split + inline secondary filters only exist at lg+ (1024px).
@@ -389,13 +411,28 @@ export default function SearchPage() {
     }
   }, [activeType, availableFrom, availableTo]);
 
+  // Vertical attribute filters are per-vertical. Drop stale params when leaving
+  // their vertical so e.g. a trailerType set on the trailer tab can't silently
+  // filter (empty) results after switching to moving/storage/'all'.
+  useEffect(() => {
+    if (activeType !== "trailer" && trailerType) {
+      updateFilters({ trailerType: "" });
+    }
+    if (activeType !== "moving" && (crewSize || vanSize)) {
+      updateFilters({ crewSize: "", vanSize: "" });
+    }
+  }, [activeType, trailerType, crewSize, vanSize]);
+
   const activeFiltersCount = Object.values(featureDefs)
     .flat()
     .filter(f => searchParams.get(f.key) === "true").length
     + (availableNow ? 1 : 0) + (cityFilter ? 1 : 0) + (priceMax ? 1 : 0)
     + (sizeCategory ? 1 : 0) + (minSize || maxSize ? 1 : 0)
     + (searchParams.get("bookable") === "true" ? 1 : 0)
-    + (availableFrom || availableTo ? 1 : 0);
+    + (availableFrom || availableTo ? 1 : 0)
+    + (activeType === "trailer" && trailerType ? 1 : 0)
+    + (activeType === "moving" && crewSize ? 1 : 0)
+    + (activeType === "moving" && vanSize ? 1 : 0);
 
   // Min selectable date for the availability control (no past dates). yyyy-MM-dd
   // in local time so it matches the backend's date-only window params.
@@ -621,22 +658,42 @@ export default function SearchPage() {
             </div>
           )}
 
+          {/* Vertical attribute filters — trailer body type (chips) and moving
+              crew/van size (dropdowns). Stored in the listing Features JSON.
+              Gated to their vertical; hidden on storage/'all'. */}
+          {(activeType === "trailer" || activeType === "moving") && (
+            <div className="hidden lg:block">
+              <VerticalAttributeFilter
+                t={t}
+                vertical={activeType}
+                trailerType={trailerType}
+                crewSize={crewSize}
+                vanSize={vanSize}
+                updateFilters={updateFilters}
+              />
+            </div>
+          )}
+
           {/* Storage-size calculator — subtle helper below the filter row, so it
               guides the search without interrupting the result list. Warehouse
               tab only: a storage-size calculator is meaningless on the mixed
               'all' view (and for trailer/moving). */}
           {activeType === "warehouse" && (
             <div className="hidden lg:block">
-              <button
-                type="button"
-                aria-expanded={calcOpen}
-                onClick={() => setCalcOpen(!calcOpen)}
-                className="inline-flex items-center gap-1.5 rounded text-[13px] font-medium text-brand-tealDeep transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-              >
-                <Calculator className="h-3.5 w-3.5" />
-                {t("search.sizeHelper")}
-                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${calcOpen ? "rotate-180" : ""}`} />
-              </button>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                <button
+                  type="button"
+                  aria-expanded={calcOpen}
+                  onClick={() => setCalcOpen(!calcOpen)}
+                  className="inline-flex items-center gap-1.5 rounded text-[13px] font-medium text-brand-tealDeep transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                >
+                  <Calculator className="h-3.5 w-3.5" />
+                  {t("search.sizeHelper")}
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${calcOpen ? "rotate-180" : ""}`} />
+                </button>
+                {/* "What size do I need?" → visual m² reference modal (SizeGuide). */}
+                <SizeGuide variant="link" />
+              </div>
               {calcOpen && (
                 <div className="mt-3 rounded-[14px] border border-line bg-card p-4 shadow-card">
                   <StorageSizeCalculator />
@@ -698,6 +755,18 @@ export default function SearchPage() {
                     availableFrom={availableFrom}
                     availableTo={availableTo}
                     minDate={todayStr}
+                    updateFilters={updateFilters}
+                  />
+                )}
+
+                {/* Vertical attribute filters — trailer type / moving crew + van */}
+                {(activeType === "trailer" || activeType === "moving") && (
+                  <VerticalAttributeFilter
+                    t={t}
+                    vertical={activeType}
+                    trailerType={trailerType}
+                    crewSize={crewSize}
+                    vanSize={vanSize}
                     updateFilters={updateFilters}
                   />
                 )}
@@ -1081,6 +1150,94 @@ function DateAvailabilityFilter({
         onChange={(e) => updateFilters({ availableTo: e.target.value })}
         className={inputClass}
       />
+    </div>
+  );
+}
+
+interface VerticalAttributeFilterProps {
+  t: (key: string) => string;
+  vertical: "trailer" | "moving";
+  trailerType: string;
+  crewSize: string;
+  vanSize: string;
+  updateFilters: (u: Record<string, string>) => void;
+}
+
+// Vertical-specific attribute filters stored in the listing Features JSON:
+//   trailer → trailer body type (closed / open / box / flatbed) as chips
+//   moving  → crew size + van size as dropdowns
+// Rendered inline on desktop (lg+) and inside the filter Drawer on mobile,
+// gated to trailer/moving by the caller.
+function VerticalAttributeFilter({
+  t, vertical, trailerType, crewSize, vanSize, updateFilters,
+}: VerticalAttributeFilterProps) {
+  const selectClass =
+    "min-h-[44px] appearance-none rounded-full border border-line-2 bg-card py-2 pl-3.5 pr-8 text-[13px] font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-accent lg:min-h-[36px] lg:py-1.5";
+
+  if (vertical === "trailer") {
+    return (
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {t("search.trailerTypeLabel")}
+        </label>
+        <div className="flex flex-wrap items-center gap-2">
+          {TRAILER_TYPE_OPTIONS.map((o) => (
+            <FilterToggle
+              key={o.value}
+              label={t(o.labelKey)}
+              active={trailerType === o.value}
+              // Toggle: clicking the active option clears it.
+              onChange={() => updateFilters({ trailerType: trailerType === o.value ? "" : o.value })}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // moving — crew size + van size dropdowns
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="filter-crew" className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {t("search.crewSizeLabel")}
+        </label>
+        <div className="relative">
+          <select
+            id="filter-crew"
+            aria-label={t("search.crewSizeLabel")}
+            value={crewSize || "any"}
+            onChange={(e) => updateFilters({ crewSize: e.target.value === "any" ? "" : e.target.value })}
+            className={selectClass}
+          >
+            <option value="any">{t("search.anyOption")}</option>
+            {CREW_SIZE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{t(o.labelKey)}</option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+        </div>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="filter-van" className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {t("search.vanSizeLabel")}
+        </label>
+        <div className="relative">
+          <select
+            id="filter-van"
+            aria-label={t("search.vanSizeLabel")}
+            value={vanSize || "any"}
+            onChange={(e) => updateFilters({ vanSize: e.target.value === "any" ? "" : e.target.value })}
+            className={selectClass}
+          >
+            <option value="any">{t("search.anyOption")}</option>
+            {VAN_SIZE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{t(o.labelKey)}</option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+        </div>
+      </div>
     </div>
   );
 }

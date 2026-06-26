@@ -12,6 +12,35 @@ export const ESTONIAN_CITIES = BALTIC_CITIES.EE;
 // All cities flattened for search
 export const ALL_CITIES = [...BALTIC_CITIES.EE, ...BALTIC_CITIES.LV, ...BALTIC_CITIES.LT];
 
+// ── Vertical listing attributes stored in the Features JSON (no DB migration) ──
+// Each option's `value` is the canonical string persisted under features.<key>;
+// `labelKey` is the i18n key for its localized label. Used by both the SearchPage
+// filters (read features.<key>) and the provider unit edit form (write features.<key>).
+
+// Trailer body type — features.trailerType
+export const TRAILER_TYPE_OPTIONS = [
+  { value: "closed",  labelKey: "trailerType.closed"  },
+  { value: "open",    labelKey: "trailerType.open"    },
+  { value: "box",     labelKey: "trailerType.box"     },
+  { value: "flatbed", labelKey: "trailerType.flatbed" },
+] as const;
+
+// Moving crew size — features.crewSize ("4" means 4 or more)
+export const CREW_SIZE_OPTIONS = [
+  { value: "1", labelKey: "crewSize.1" },
+  { value: "2", labelKey: "crewSize.2" },
+  { value: "3", labelKey: "crewSize.3" },
+  { value: "4", labelKey: "crewSize.4plus" },
+] as const;
+
+// Moving van / vehicle size — features.vanSize
+export const VAN_SIZE_OPTIONS = [
+  { value: "small",    labelKey: "vanSize.small"    },
+  { value: "medium",   labelKey: "vanSize.medium"   },
+  { value: "large",    labelKey: "vanSize.large"    },
+  { value: "boxtruck", labelKey: "vanSize.boxtruck" },
+] as const;
+
 export const INTEGRATION_TYPE_CONFIG: Record<IntegrationType, { labelKey: string; label: string; color: string; description: string }> = {
   api: { labelKey: "admin.integrationApi", label: "API", color: "bg-success/10 text-success", description: "Automatic API integration" },
   email: { labelKey: "admin.integrationEmail", label: "Email", color: "bg-info/10 text-info", description: "Order sent via email" },
