@@ -113,6 +113,9 @@ export const queryKeys = {
   listingAvailability: {
     byId: (id: string) => ["listing-availability", id] as const,
   },
+  listingBlockedDates: {
+    byId: (id: string) => ["listing-blocked-dates", id] as const,
+  },
   featuredPartners: {
     all: () => ["featured-partners"] as const,
   },

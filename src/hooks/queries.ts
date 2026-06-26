@@ -58,6 +58,27 @@ export function useListing(id: string | undefined) {
   return useQuery({ queryKey: queryKeys.listings.byId(id ?? ""), queryFn: () => listingService.getById(id!), enabled: !!id });
 }
 
+export interface ListingBlockedDates {
+  listingId: string;
+  from: string;          // yyyy-MM-dd window start
+  to: string;            // yyyy-MM-dd window end
+  blockedDates: string[]; // unavailable days as yyyy-MM-dd (no PII)
+}
+
+/**
+ * Public, read-only calendar feed of unavailable days for a single listing.
+ * Powers the customer-facing availability calendar on the detail page.
+ * Returns ONLY date strings — no booking ids, names, or prices.
+ */
+export function useListingBlockedDates(id: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.listingBlockedDates.byId(id ?? ""),
+    queryFn: () => apiClient.get<ListingBlockedDates>(`/listings/${id}/blocked-dates`),
+    enabled: !!id,
+    staleTime: 5 * 60_000,
+  });
+}
+
 export function useFeaturedListings() {
   return useQuery({ queryKey: queryKeys.listings.featured(), queryFn: () => listingService.getFeatured() });
 }

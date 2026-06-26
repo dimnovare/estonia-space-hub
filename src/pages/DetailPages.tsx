@@ -37,6 +37,7 @@ import { SEO } from "@/components/SEO";
 import ListingCard from "@/components/ListingCard";
 import SizeGuide from "@/components/SizeGuide";
 import ReviewsSection from "@/components/ReviewsSection";
+import AvailabilityCalendar from "@/components/AvailabilityCalendar";
 import { trackEvent } from "@/lib/analytics";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPriceUnit, parseBillingPeriod } from "@/lib/priceUnit";
@@ -898,6 +899,31 @@ function LoadingDetail() {
   );
 }
 
+/**
+ * Customer-facing availability block for the detail page. Gated: when the partner
+ * has booking enabled (real availability data drives the calendar) we render the
+ * read-only AvailabilityCalendar; otherwise we show a plain "contact the partner
+ * for availability" line. The calendar itself degrades gracefully — an empty DB
+ * (no blocked dates) simply shows everything as available.
+ */
+function AvailabilitySection({ listing }: { listing: Listing }) {
+  const { t } = useLanguage();
+  return (
+    <section className="mt-7">
+      <h2 className="font-display text-lg font-bold">{t("detail.availability.heading")}</h2>
+      {listing.bookingEnabled ? (
+        <div className="mt-3">
+          <AvailabilityCalendar listingId={listing.id} />
+        </div>
+      ) : (
+        <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">
+          {t("detail.availability.contactPartner")}
+        </p>
+      )}
+    </section>
+  );
+}
+
 /** Composes the templated "About this space" paragraph (pixel-spec §About). */
 function composeAbout(t: (k: string) => string, listing: Listing, typeLabel: string): string {
   if (listing.description && listing.description.trim().length > 0) {
@@ -991,6 +1017,8 @@ export function WarehouseDetail() {
 
           <h2 className="mt-7 font-display text-lg font-bold">{t("detail.features")}</h2>
           <FeaturesGrid items={presentFeatures} />
+
+          <AvailabilitySection listing={wListing} />
 
           <PartnerCard listing={wListing} metaLabel={t("detail.managedByPartner")} />
 
@@ -1261,6 +1289,8 @@ export function TrailerDetail() {
 
           <h2 className="mt-7 font-display text-lg font-bold">{t("detail.features")}</h2>
           <FeaturesGrid items={features} />
+
+          <AvailabilitySection listing={tListing} />
 
           <PartnerCard listing={tListing} metaLabel={t("detail.managedByPartner")} />
 
