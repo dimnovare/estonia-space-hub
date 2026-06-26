@@ -61,10 +61,6 @@ export default function PrivacyPage() {
               <List items={t("privacy.s3.items")} />
             </section>
             <section>
-              <h2 className="font-display text-lg font-semibold text-primary md:text-xl">{t("privacy.s8.title")}</h2>
-              <List items={t("privacy.s8.items")} />
-            </section>
-            <section>
               <h2 className="font-display text-lg font-semibold text-primary md:text-xl">{t("privacy.s4.title")}</h2>
               <p className="mt-2.5 text-[15px] leading-[1.55] text-ink-2">{t("privacy.s4.text")}</p>
             </section>
@@ -76,6 +72,10 @@ export default function PrivacyPage() {
             <section>
               <h2 className="font-display text-lg font-semibold text-primary md:text-xl">{t("privacy.s6.title")}</h2>
               <p className="mt-2.5 text-[15px] leading-[1.55] text-ink-2">{t("privacy.s6.text")}</p>
+            </section>
+            <section>
+              <h2 className="font-display text-lg font-semibold text-primary md:text-xl">{t("privacy.s8.title")}</h2>
+              <List items={t("privacy.s8.items")} />
             </section>
             <section>
               <h2 className="font-display text-lg font-semibold text-primary md:text-xl">{t("privacy.s9.title")}</h2>
