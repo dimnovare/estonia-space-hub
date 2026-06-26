@@ -95,6 +95,9 @@ export const queryKeys = {
   cities: {
     available: () => ["available-cities"] as const,
   },
+  directoryCities: {
+    all: () => ["directory-cities"] as const,
+  },
   supplierStats: {
     byId: (id: string | null) => ["supplier-stats", id] as const,
   },

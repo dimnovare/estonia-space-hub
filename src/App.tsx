@@ -48,6 +48,8 @@ const LocationDetailPage = lazy(() => import("@/pages/LocationDetailPage"));
 const ProviderOnboardingPage = lazy(() => import("@/pages/ProviderOnboardingPage"));
 const AccountPage = lazy(() => import("@/pages/AccountPage"));
 const CityPage = lazy(() => import("@/pages/CityPage"));
+const LocationsDirectoryPage = lazy(() => import("@/pages/LocationsDirectoryPage"));
+const CityHubPage = lazy(() => import("@/pages/CityHubPage"));
 const BlogIndexPage = lazy(() => import("@/pages/BlogIndexPage"));
 const BlogPostPage = lazy(() => import("@/pages/BlogPostPage"));
 const PartnerPage = lazy(() => import("@/pages/PartnerPage"));
@@ -200,6 +202,12 @@ function AppContent() {
               <Route path="storage/:slug" element={<CityPage vertical="warehouse" />} />
               <Route path="moving/:slug" element={<CityPage vertical="moving" />} />
               <Route path="trailer/:slug" element={<CityPage vertical="trailer" />} />
+              {/* City-pages SEO hub: /locations is the directory (internal-link
+                  hub); /locations/<slug> is a per-city hub linking out to the
+                  single-vertical pages above. The static "locations" route is
+                  listed before the ":slug" param so it can't be swallowed. */}
+              <Route path="locations" element={<LocationsDirectoryPage />} />
+              <Route path="locations/:slug" element={<CityHubPage />} />
               <Route path="about" element={<AboutPage />} />
               <Route path="contact" element={<ContactPage />} />
               <Route path="how-it-works" element={<HowItWorksPage />} />

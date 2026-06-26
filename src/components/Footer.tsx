@@ -1,12 +1,14 @@
 import { Link } from "@/i18n/routing";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { useDirectoryCities } from "@/hooks/queries";
 // Footer lockup (00-foundations §1.2): ruumly-mark.png icon (30px) + live white
 // "Ruumly" wordmark.
 
 export default function Footer() {
   const { t } = useLanguage();
   const settings = usePlatformSettings();
+  const { cities } = useDirectoryCities();
   const { showMovingService, showTrailerService } = settings;
   const aboutEnabled = String(settings.aboutPage?.enabled ?? "true") !== "false";
   const blogEnabled = String(settings.blog?.enabled ?? "false") === "true";
@@ -37,14 +39,17 @@ export default function Footer() {
     { label: t("footer.cookies"), to: "/cookies" },
   ];
 
-  // Internally link the city landing pages so they aren't orphaned (SEO).
-  // CityPage is mounted at /{lang}/storage/<slug> (see App.tsx Route
-  // "storage/:slug" and SitemapController's /storage/<city> URLs); the language
-  // prefix is added automatically by the i18n <Link> wrapper.
+  // Internally link the city HUB pages so they aren't orphaned (SEO). Cap at 5
+  // and source from the shared curated/merged city list (src/lib/cities.ts) so
+  // the column is NOT storage-biased — each hub presents all enabled verticals.
+  // The language prefix is added automatically by the i18n <Link> wrapper.
   const popularCityLinks = [
-    { label: "Tallinn", to: "/storage/tallinn" },
-    { label: "Tartu", to: "/storage/tartu" },
-    { label: "Pärnu", to: "/storage/parnu" },
+    ...cities.slice(0, 5).map((c) => ({
+      label: c.name,
+      to: `/locations/${c.slug}`,
+    })),
+    // "All locations →" points at the directory hub (the internal-link index).
+    { label: t("footer.allLocations"), to: "/locations" },
   ];
 
   const columns = [

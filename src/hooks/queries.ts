@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { withSupplier } from "@/lib/withSupplier";
 import { queryKeys } from "@/services/queryKeys";
 import { unwrapPaginated } from "@/services/unwrapPaginated";
+import { getDirectoryCities, type ApiCity } from "@/lib/cities";
 
 export function useListings(filters?: ListingFilters) {
   return useQuery({
@@ -33,6 +34,24 @@ export function useCities() {
     queryFn: () => apiClient.get<{ city: string; country: string }[]>("/locations/cities"),
     staleTime: 5 * 60_000,
   });
+}
+
+/**
+ * Cities for the /locations directory + per-city hubs. Fetches the live city
+ * list and merges it with the curated launch markets (getDirectoryCities). An
+ * empty or failed fetch tolerantly falls back to the curated list only, so the
+ * directory and footer are never blank even with an empty DB at launch.
+ */
+export function useDirectoryCities() {
+  const query = useQuery({
+    queryKey: queryKeys.directoryCities.all(),
+    queryFn: () => apiClient.get<ApiCity[]>("/locations/cities"),
+    staleTime: 5 * 60_000,
+    retry: 1,
+  });
+  // query.data may be undefined (loading/error) → getDirectoryCities returns
+  // the curated list only, which is the desired graceful fallback.
+  return { ...query, cities: getDirectoryCities(query.data) };
 }
 
 export function useListing(id: string | undefined) {

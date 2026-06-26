@@ -3550,6 +3550,13 @@ const et: Record<string, string> = {
     "admin.partner.pageNone": "Lehte pole",
     "admin.partner.pagePublished": "Avaldatud",
     "admin.partner.pageDraft": "Mustand",
+    "footer.allLocations": "Kõik asukohad",
+    "locations.dir.eyebrow": "Asukohad",
+    "locations.dir.title": "Hoiustamine, kolimine ja haagised üle Eesti",
+    "locations.dir.intro": "Vali linn, et näha hoiustamist, kolimisteenuseid ja haagiste renti sinu lähedal. Võrdle kontrollitud partnereid ühes kohas ning võta ühendust või broneeri, kui see on lubatud.",
+    "locations.hub.eyebrow": "Linn",
+    "locations.hub.intro": "Avasta hoiustamine, kolimisteenused ja haagiste rent linnas {city}. Vali teenus, et võrrelda kohalikke partnereid suuruse, hinna ja saadavuse järgi.",
+    "locations.cardCta": "Vaata {city}",
 };
 
 const en: Record<string, string> = {
@@ -7058,6 +7065,13 @@ const en: Record<string, string> = {
     "admin.partner.pageNone": "No page",
     "admin.partner.pagePublished": "Published",
     "admin.partner.pageDraft": "Draft",
+    "footer.allLocations": "All locations",
+    "locations.dir.eyebrow": "Locations",
+    "locations.dir.title": "Storage, moving and trailers across the Baltics",
+    "locations.dir.intro": "Pick a city to see storage, moving services and trailer rental near you. Compare verified partners in one place, then contact or book where enabled.",
+    "locations.hub.eyebrow": "City",
+    "locations.hub.intro": "Discover storage, moving services and trailer rental in {city}. Choose a service to compare local partners by size, price and availability.",
+    "locations.cardCta": "View {city}",
 };
 
 const ru: Record<string, string> = {
@@ -10565,6 +10579,13 @@ const ru: Record<string, string> = {
     "admin.partner.pageNone": "Страницы нет",
     "admin.partner.pagePublished": "Опубликовано",
     "admin.partner.pageDraft": "Черновик",
+    "footer.allLocations": "Все города",
+    "locations.dir.eyebrow": "Города",
+    "locations.dir.title": "Хранение, переезд и прицепы по всей Прибалтике",
+    "locations.dir.intro": "Выберите город, чтобы увидеть хранение, услуги переезда и аренду прицепов рядом с вами. Сравнивайте проверенных партнёров в одном месте, затем свяжитесь или бронируйте там, где это доступно.",
+    "locations.hub.eyebrow": "Город",
+    "locations.hub.intro": "Откройте для себя хранение, услуги переезда и аренду прицепов в {city}. Выберите услугу, чтобы сравнить местных партнёров по размеру, цене и доступности.",
+    "locations.cardCta": "Смотреть {city}",
 };
 
 
@@ -14011,6 +14032,13 @@ const lv: Record<string, string> = {
     "admin.partner.pageNone": "Nav lapas",
     "admin.partner.pagePublished": "Publicēts",
     "admin.partner.pageDraft": "Melnraksts",
+    "footer.allLocations": "Visas pilsētas",
+    "locations.dir.eyebrow": "Pilsētas",
+    "locations.dir.title": "Glabāšana, pārvākšanās un piekabes visā Latvijā",
+    "locations.dir.intro": "Izvēlies pilsētu, lai redzētu glabāšanu, pārvākšanās pakalpojumus un piekabju nomu tuvumā. Salīdzini pārbaudītus partnerus vienuviet, tad sazinies vai rezervē, kur tas ir iespējots.",
+    "locations.hub.eyebrow": "Pilsēta",
+    "locations.hub.intro": "Atklāj glabāšanu, pārvākšanās pakalpojumus un piekabju nomu pilsētā {city}. Izvēlies pakalpojumu, lai salīdzinātu vietējos partnerus pēc izmēra, cenas un pieejamības.",
+    "locations.cardCta": "Skatīt {city}",
 };
 // ── Lithuanian ──────────────────────────
 const lt: Record<string, string> = {
@@ -17454,6 +17482,13 @@ const lt: Record<string, string> = {
     "admin.partner.pageNone": "Puslapio nėra",
     "admin.partner.pagePublished": "Publikuota",
     "admin.partner.pageDraft": "Juodraštis",
+    "footer.allLocations": "Visi miestai",
+    "locations.dir.eyebrow": "Miestai",
+    "locations.dir.title": "Sandėliavimas, perkraustymas ir priekabos visoje Lietuvoje",
+    "locations.dir.intro": "Pasirinkite miestą, kad pamatytumėte sandėliavimą, perkraustymo paslaugas ir priekabų nuomą netoliese. Palyginkite patikrintus partnerius vienoje vietoje, tada susisiekite arba rezervuokite ten, kur tai įjungta.",
+    "locations.hub.eyebrow": "Miestas",
+    "locations.hub.intro": "Atraskite sandėliavimą, perkraustymo paslaugas ir priekabų nuomą mieste {city}. Pasirinkite paslaugą, kad palygintumėte vietos partnerius pagal dydį, kainą ir prieinamumą.",
+    "locations.cardCta": "Žiūrėti {city}",
 };
 const translations: Record<Language, Record<string, string>> = { et, en, ru, lv, lt };
 
