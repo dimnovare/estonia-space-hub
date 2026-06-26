@@ -303,6 +303,10 @@ export interface ListingBase {
   minBookingMonths?: number | null;
   isVerified?: boolean;
   isFoundingPartner?: boolean;
+  // True when an active visibility boost (featured_search / featured_map /
+  // service_area_boost / pickup_location_boost) applies — drives the "Featured"
+  // card badge and the emphasised map pin.
+  isFeatured?: boolean;
   bookingEnabled?: boolean;
   contractSigningEnabled?: boolean;
   directPaymentEnabled?: boolean;

@@ -47,6 +47,7 @@ interface ApiListing {
   ruumlyPaymentEnabled?: boolean;
   isVerified?: boolean;
   foundingPartner?: boolean;
+  isFeatured?: boolean;
 }
 
 function mapListing(api: ApiListing): Listing {
@@ -75,6 +76,7 @@ function mapListing(api: ApiListing): Listing {
     locationId: api.locationId ?? undefined,
     isVerified: api.isVerified ?? false,
     isFoundingPartner: api.foundingPartner ?? false,
+    isFeatured: api.isFeatured ?? false,
     bookingEnabled: api.bookingEnabled ?? false,
     contractSigningEnabled: api.contractSigningEnabled ?? false,
     directPaymentEnabled: api.directPaymentEnabled ?? false,

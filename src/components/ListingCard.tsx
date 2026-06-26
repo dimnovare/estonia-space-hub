@@ -118,7 +118,9 @@ function ListingCard({ listing }: { listing: Listing }) {
   const { data: sizeBuckets } = useSizeBuckets();
   const priceUnitLabel = formatPriceUnit(listing.priceUnit, t);
   const bookable = !!listing.bookingEnabled;
-  const featured = listing.badge === "promoted" || listing.isFoundingPartner;
+  // "Featured" = a promoted badge, a founding partner, OR an active paid visibility
+  // boost (featured_search / service_area_boost / pickup_location_boost — backend sets isFeatured).
+  const featured = listing.badge === "promoted" || listing.isFoundingPartner || !!listing.isFeatured;
   const chipKeys = featureChipKeys(listing);
   // Vertical-aware informational chips (storage min-term, trailer deposit/licence).
   // Subtle/secondary — they sit alongside the feature chips, not the price/rating.

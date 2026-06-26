@@ -52,9 +52,11 @@ const typeColors: Record<string, string> = {
   multi: PIN_TEAL_DEEP,
 };
 
-// A listing is "featured" when it has the promoted boost or is a founding partner.
+// A listing is "featured" when it has the promoted boost, is a founding partner, or
+// carries an active paid visibility boost (featured_search / featured_map /
+// service_area_boost / pickup_location_boost — backend sets isFeatured).
 function isFeaturedListing(l: Listing): boolean {
-  return l.badge === "promoted" || !!l.isFoundingPartner;
+  return l.badge === "promoted" || !!l.isFoundingPartner || !!l.isFeatured;
 }
 
 /**
