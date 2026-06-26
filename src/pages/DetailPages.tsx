@@ -937,7 +937,8 @@ function composeAbout(t: (k: string) => string, listing: Listing, typeLabel: str
 }
 
 export function WarehouseDetail() {
-  const { id } = useParams();
+  const { id: idParam, slug: slugParam } = useParams();
+  const id = idParam ?? slugParam;
   const { t, language } = useLanguage();
   const [moveInDate, setMoveInDate] = useState(defaultMoveIn());
   const [duration, setDuration] = useState("1");
@@ -1093,7 +1094,8 @@ export function WarehouseDetail() {
 }
 
 export function MovingDetail() {
-  const { id } = useParams();
+  const { id: idParam, slug: slugParam } = useParams();
+  const id = idParam ?? slugParam;
   const { t, language } = useLanguage();
   const { showMovingService } = usePlatformSettings();
   const [quoteOpen, setQuoteOpen] = useState(false);
@@ -1209,7 +1211,8 @@ export function MovingDetail() {
 }
 
 export function TrailerDetail() {
-  const { id } = useParams();
+  const { id: idParam, slug: slugParam } = useParams();
+  const id = idParam ?? slugParam;
   const { t, language } = useLanguage();
   const { showTrailerService } = usePlatformSettings();
   const [pickupDate, setPickupDate] = useState(defaultMoveIn());

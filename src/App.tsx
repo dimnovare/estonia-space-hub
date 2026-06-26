@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useRef } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { BrowserRouter, Route, Routes, useLocation, Outlet } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation, Outlet, useParams } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -48,6 +48,21 @@ const LocationDetailPage = lazy(() => import("@/pages/LocationDetailPage"));
 const ProviderOnboardingPage = lazy(() => import("@/pages/ProviderOnboardingPage"));
 const AccountPage = lazy(() => import("@/pages/AccountPage"));
 const CityPage = lazy(() => import("@/pages/CityPage"));
+
+// Moving & Trailer share one URL prefix for BOTH listing detail (/moving/<guid>)
+// and the SEO city + route pages (/moving/<city>, /moving/<from>-to-<to>). A single
+// :slug route dispatches by param shape: a listing GUID -> detail page, anything
+// else -> CityPage (which itself handles city vs route). Storage avoids the clash
+// via a distinct /warehouse/<id> detail prefix.
+const LISTING_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function MovingSlugRoute() {
+  const { slug } = useParams();
+  return LISTING_ID_RE.test(slug ?? "") ? <MovingDetail /> : <CityPage vertical="moving" />;
+}
+function TrailerSlugRoute() {
+  const { slug } = useParams();
+  return LISTING_ID_RE.test(slug ?? "") ? <TrailerDetail /> : <CityPage vertical="trailer" />;
+}
 const LocationsDirectoryPage = lazy(() => import("@/pages/LocationsDirectoryPage"));
 const CityHubPage = lazy(() => import("@/pages/CityHubPage"));
 const BlogIndexPage = lazy(() => import("@/pages/BlogIndexPage"));
@@ -187,8 +202,6 @@ function AppContent() {
             <Route element={<WithFooter />}>
               <Route index element={<HomePage />} />
               <Route path="warehouse/:id" element={<WarehouseDetail />} />
-              <Route path="moving/:id" element={<MovingDetail />} />
-              <Route path="trailer/:id" element={<TrailerDetail />} />
               <Route path="location/:id" element={<LocationDetailPage />} />
               <Route path="payment/return" element={<PaymentReturnPage />} />
               <Route path="book" element={<BookingPage />} />
@@ -200,8 +213,8 @@ function AppContent() {
                   maps to the same CityPage with a vertical prop so the page is
                   storage- / moving- / trailer-aware. storage = warehouse. */}
               <Route path="storage/:slug" element={<CityPage vertical="warehouse" />} />
-              <Route path="moving/:slug" element={<CityPage vertical="moving" />} />
-              <Route path="trailer/:slug" element={<CityPage vertical="trailer" />} />
+              <Route path="moving/:slug" element={<MovingSlugRoute />} />
+              <Route path="trailer/:slug" element={<TrailerSlugRoute />} />
               {/* City-pages SEO hub: /locations is the directory (internal-link
                   hub); /locations/<slug> is a per-city hub linking out to the
                   single-vertical pages above. The static "locations" route is
