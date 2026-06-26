@@ -27,6 +27,7 @@ import AdminPaidFeatures from "@/components/admin/AdminPaidFeatures";
 import AdminBoosts from "@/components/admin/AdminBoosts";
 import AdminListings from "@/components/admin/AdminListings";
 import AdminIntegrations from "@/components/admin/AdminIntegrations";
+import AdminBlogPage from "@/components/admin/AdminBlogPage";
 
 export default function AdminPage() {
   const [searchParams] = useSearchParams();
@@ -85,6 +86,7 @@ export default function AdminPage() {
         {activeTab === "audit" && <AdminAudit />}
         {activeTab === "payouts" && <AdminPayouts supplierId={filterSupplierId || undefined} />}
         {activeTab === "rebates" && <AdminRebates supplierId={filterSupplierId || undefined} />}
+        {activeTab === "blog" && <AdminBlogPage />}
         {activeTab === "settings" && <AdminSettings />}
         {activeTab === "ops" && <AdminOps />}
         {activeTab === "metrics" && <AdminMetrics />}

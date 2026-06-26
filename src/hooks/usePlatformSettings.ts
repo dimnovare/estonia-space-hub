@@ -38,6 +38,7 @@ export interface PlatformSettings {
     enabled?:      string;
     showInNav?:    string;
     showInFooter?: string;
+    articles?:     string;
   };
   aboutPage?: {
     enabled?: string;

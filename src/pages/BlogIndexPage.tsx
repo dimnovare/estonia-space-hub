@@ -1,7 +1,7 @@
 import { Link, useSearchParams } from "@/i18n/routing";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
-import { getAllPosts } from "@/lib/blog";
+import { getAllPosts, parseArticles, articlesToPosts } from "@/lib/blog";
 import { SEO } from "@/components/SEO";
 import NotFound from "@/pages/NotFound";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,10 @@ export default function BlogIndexPage() {
 
   if (!enabled) return <NotFound />;
 
-  const posts = getAllPosts(language);
+  // Prefer admin-editable articles from PlatformSettings (`blog.articles`).
+  // Fall back to the build-time markdown glob until content is seeded.
+  const articles = parseArticles(settings.blog?.articles);
+  const posts = articles.length > 0 ? articlesToPosts(articles, language) : getAllPosts(language);
   const totalPages = Math.max(1, Math.ceil(posts.length / PAGE_SIZE));
   const current = Math.min(page, totalPages);
   const slice = posts.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);

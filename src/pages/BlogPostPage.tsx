@@ -4,7 +4,7 @@ import remarkGfm from "remark-gfm";
 import { ArrowLeft, CalendarDays, User } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
-import { getPostBySlug, getRelatedPosts } from "@/lib/blog";
+import { getPostBySlug, getRelatedPosts, parseArticles, articlesToPosts } from "@/lib/blog";
 import { SEO } from "@/components/SEO";
 import NotFound from "@/pages/NotFound";
 import { Helmet } from "react-helmet-async";
@@ -17,10 +17,22 @@ export default function BlogPostPage() {
 
   if (!enabled) return <NotFound />;
 
-  const post = getPostBySlug(slug, language);
+  // Prefer admin-editable articles from PlatformSettings (`blog.articles`).
+  // Fall back to the build-time markdown glob until content is seeded.
+  const articles = parseArticles(settings.blog?.articles);
+  const useArticles = articles.length > 0;
+  const allPosts = useArticles ? articlesToPosts(articles, language) : [];
+
+  const post = useArticles
+    ? allPosts.find((p) => p.slug === slug) ?? null
+    : getPostBySlug(slug, language);
   if (!post) return <NotFound />;
 
-  const related = getRelatedPosts(post, 3, language);
+  const related = useArticles
+    ? allPosts
+        .filter((p) => p.slug !== post.slug && p.tags.some((tag) => post.tags.includes(tag)))
+        .slice(0, 3)
+    : getRelatedPosts(post, 3, language);
 
   const dateFmt = (iso: string) =>
     new Date(iso).toLocaleDateString(

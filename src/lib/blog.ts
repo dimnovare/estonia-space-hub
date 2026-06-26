@@ -13,6 +13,36 @@ export interface BlogPost {
   filename: string;
 }
 
+export type BlogLang = "et" | "en" | "ru" | "lv" | "lt";
+
+/** Per-language localized text bag. */
+export type LocalizedText = Record<BlogLang, string>;
+
+/**
+ * Admin-editable article shape, stored as a JSON array in the
+ * PlatformSettings key `blog.articles`. Source of truth for the public blog.
+ */
+export interface BlogArticle {
+  slug: string;
+  publishedAt: string;
+  author: string;
+  coverImage: string | null;
+  tags: string[];
+  title: LocalizedText;
+  excerpt: LocalizedText;
+  body: LocalizedText;
+}
+
+/**
+ * Resolve a per-language field for the active language, falling back to
+ * English then Estonian so a partially-translated article never renders blank.
+ */
+function resolve(field: Partial<LocalizedText> | undefined, lang: string): string {
+  if (!field) return "";
+  const f = field as Record<string, string | undefined>;
+  return (f[lang] || f.en || f.et || "").trim();
+}
+
 // Eager-load all markdown files at build time
 const modules = import.meta.glob("/src/content/blog/*.md", {
   eager: true,
@@ -113,4 +143,54 @@ export function getRelatedPosts(post: BlogPost, limit: number, language: string)
   return getAllPosts(language)
     .filter((p) => p.slug !== post.slug && p.tags.some((t) => post.tags.includes(t)))
     .slice(0, limit);
+}
+
+// ---------------------------------------------------------------------------
+// Admin-editable articles (PlatformSettings `blog.articles`) → BlogPost
+// ---------------------------------------------------------------------------
+
+/** Safely JSON-parse the `blog.articles` settings string. Returns [] on error. */
+export function parseArticles(json: string | undefined): BlogArticle[] {
+  if (!json || !json.trim()) return [];
+  try {
+    const parsed = JSON.parse(json);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((a) => a && typeof a === "object" && typeof a.slug === "string" && a.slug.trim())
+      .map((a: any) => ({
+        slug: String(a.slug),
+        publishedAt: a.publishedAt ? String(a.publishedAt) : "1970-01-01",
+        author: a.author ? String(a.author) : "Ruumly",
+        coverImage: a.coverImage && a.coverImage !== "null" ? String(a.coverImage) : null,
+        tags: Array.isArray(a.tags) ? a.tags.map(String) : [],
+        title: { et: "", en: "", ru: "", lv: "", lt: "", ...(a.title || {}) },
+        excerpt: { et: "", en: "", ru: "", lv: "", lt: "", ...(a.excerpt || {}) },
+        body: { et: "", en: "", ru: "", lv: "", lt: "", ...(a.body || {}) },
+      }));
+  } catch {
+    return [];
+  }
+}
+
+/** Resolve a single article to a BlogPost for the active language. */
+export function articleToPost(article: BlogArticle, lang: string): BlogPost {
+  return {
+    slug: article.slug,
+    title: resolve(article.title, lang) || article.slug,
+    excerpt: resolve(article.excerpt, lang),
+    publishedAt: article.publishedAt || "1970-01-01",
+    author: article.author || "Ruumly",
+    language: lang,
+    coverImage: article.coverImage && article.coverImage !== "null" ? article.coverImage : null,
+    tags: Array.isArray(article.tags) ? article.tags : [],
+    body: resolve(article.body, lang),
+    filename: `${article.slug}.json`,
+  };
+}
+
+/** Resolve all articles to BlogPosts (newest first) for the active language. */
+export function articlesToPosts(articles: BlogArticle[], lang: string): BlogPost[] {
+  return articles
+    .map((a) => articleToPost(a, lang))
+    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 }
