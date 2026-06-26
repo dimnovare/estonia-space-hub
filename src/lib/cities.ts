@@ -54,6 +54,23 @@ export function cityBySlug(slug: string | undefined): CuratedCity | undefined {
   return CURATED_CITIES.find((c) => c.slug === target);
 }
 
+/**
+ * Popular moving-route destinations from a given origin slug, for internal
+ * linking on the moving single-city hub (seeds crawl paths to the
+ * /moving/<from>-to-<to> route pages). Only links BETWEEN curated cities, capped
+ * at `limit`, and never links a city to itself. Destinations stay in the curated
+ * order. Returns [] for an unknown origin (so we never invent route links for an
+ * uncurated/long-tail city).
+ */
+export function getPopularRoutesFrom(
+  originSlug: string | undefined,
+  limit = 3,
+): CuratedCity[] {
+  const origin = cityBySlug(originSlug);
+  if (!origin) return [];
+  return CURATED_CITIES.filter((c) => c.slug !== origin.slug).slice(0, limit);
+}
+
 /** Raw shape returned by GET /api/locations/cities (tolerant of casing). */
 export interface ApiCity {
   City?: string;

@@ -12,6 +12,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { queryKeys } from "@/services/queryKeys";
 import { formatPriceUnit } from "@/lib/priceUnit";
+import MovingRoutePage, { parseRouteSlug } from "@/pages/MovingRoutePage";
+import { getPopularRoutesFrom } from "@/lib/cities";
 
 const CITY_MAP: Record<string, string> = {
   tallinn: "Tallinn",
@@ -38,7 +40,27 @@ const VERTICAL_CONFIG: Record<CityVertical, { seoVertical: SeoVertical; urlSegme
   trailer: { seoVertical: "trailers", urlSegment: "trailer" },
 };
 
+/**
+ * Entry for the `/moving|/storage|/trailer/:slug` route. For the moving vertical
+ * a slug shaped `<from>-to-<to>` (e.g. "tallinn-to-tartu") is a city-pair ROUTE
+ * and renders MovingRoutePage; everything else (plain city slugs like "tartu",
+ * and all storage/trailer slugs) renders the single-city CityHub below.
+ *
+ * The branch lives in this wrapper — NOT inside CityHub — so route mode and
+ * city mode are distinct component trees. CityHub then always runs the same
+ * hooks in the same order (no conditional-hook violation when React reconciles
+ * the same CityPage element across a /moving/tartu → /moving/x-to-y nav).
+ */
 export default function CityPage({ vertical = "warehouse" }: { vertical?: CityVertical }) {
+  const { slug } = useParams<{ slug: string }>();
+  const route = vertical === "moving" ? parseRouteSlug(slug) : null;
+  if (route) {
+    return <MovingRoutePage fromSlug={route.fromSlug} toSlug={route.toSlug} />;
+  }
+  return <CityHub vertical={vertical} />;
+}
+
+function CityHub({ vertical }: { vertical: CityVertical }) {
   const { slug } = useParams<{ slug: string }>();
   const { t, language } = useLanguage();
   const { showMovingService, showTrailerService } = usePlatformSettings();
@@ -53,6 +75,10 @@ export default function CityPage({ vertical = "warehouse" }: { vertical?: CityVe
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
       .join(" ");
   const city = CITY_MAP[slug || ""] || (slug ? titleCaseSlug(slug) : "");
+
+  // Popular moving routes from this origin (curated cities only) — empty for the
+  // storage/trailer hubs and for uncurated origins, so the section self-hides.
+  const popularRoutes = vertical === "moving" ? getPopularRoutesFrom(slug) : [];
 
   // Storage-only gating: never emit deep links to a disabled service vertical
   // (mirrors HomePage.tsx hideDisabled).
@@ -262,6 +288,33 @@ export default function CityPage({ vertical = "warehouse" }: { vertical?: CityVe
           </Link>
         </div>
       </section>
+
+      {/* Popular routes — moving hub only, curated-city origins only. Seeds
+          internal-link crawl paths to the /moving/<from>-to-<to> route pages. */}
+      {vertical === "moving" && popularRoutes.length > 0 && (
+        <section className="border-t border-border px-4 py-10">
+          <div className="container-wide">
+            <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">
+              {t("route.popularEyebrow")}
+            </p>
+            <h2 className="mt-1.5 font-display text-xl font-bold">
+              {t("route.popularTitle").replace("{from}", city)}
+            </h2>
+            <div className="mt-5 flex flex-wrap gap-3">
+              {popularRoutes.map((dest) => (
+                <Link
+                  key={dest.slug}
+                  to={`/moving/${slug}-to-${dest.slug}`}
+                  className="group inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold text-navy-ink transition-colors hover:border-accent hover:text-accent"
+                >
+                  {city} → {dest.name}
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* FAQ */}
       <section className="border-t border-border bg-secondary/30 px-4 py-12">
