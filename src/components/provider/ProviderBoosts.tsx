@@ -361,7 +361,7 @@ export default function ProviderBoosts() {
                             ? "h-11 bg-secondary text-secondary-foreground hover:bg-secondary"
                             : free
                               ? "h-11 bg-accent text-accent-foreground hover:bg-accent/90"
-                              : "h-11 border border-input bg-background text-navy-ink hover:border-primary hover:text-primary"
+                              : "h-11 bg-primary text-primary-foreground hover:bg-primary/90"
                         }
                         disabled={isActiveFeature || isPending || requestMutation.isPending}
                         onClick={() => {
