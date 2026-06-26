@@ -60,8 +60,17 @@ test.describe("Critical customer path: search → detail → book", () => {
   test("full flow: search → card → detail → Book routes to the /book funnel", async ({ page }) => {
     await stubAll(page);
     await page.goto("/et/search");
-    await page.getByText("Testkeskuse Ladu").first().click();
+    // Wait for the card to be stable before clicking — an early click can be
+    // intercepted by the still-rendering search map, leaving us on /search where
+    // the "Broneeritav veebis" filter chip ALSO matches the book-button selector
+    // below (it contains "broneeri"). Mirrors the dedicated nav test above.
+    const card = page.getByText("Testkeskuse Ladu").first();
+    await expect(card).toBeVisible({ timeout: 15000 });
+    await card.click();
     await page.waitForURL("**/et/warehouse/wh-001", { timeout: 10000 });
+    // Confirm the detail page actually rendered before locating the Book button,
+    // so the selector resolves against the detail CTA, not a search-page chip.
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Testkeskuse Ladu", { timeout: 15000 });
     const bookBtn = page.getByRole("button", { name: /broneeri|book online/i }).first();
     await expect(bookBtn).toBeVisible({ timeout: 10000 });
     await bookBtn.click();
