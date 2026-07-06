@@ -1,4 +1,5 @@
 import { Link } from "@/i18n/routing";
+import { Facebook, Instagram, Linkedin } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { useDirectoryCities } from "@/hooks/queries";
@@ -50,6 +51,13 @@ export default function Footer() {
     })),
     // "All locations →" points at the directory hub (the internal-link index).
     { label: t("footer.allLocations"), to: "/locations" },
+  ];
+
+  // Social profiles (lucide SVG icons — not emoji; brand names are language-neutral).
+  const socials = [
+    { name: "Facebook", href: "https://www.facebook.com/ruumly.eu", Icon: Facebook },
+    { name: "Instagram", href: "https://www.instagram.com/ruumly.eu/", Icon: Instagram },
+    { name: "LinkedIn", href: "https://www.linkedin.com/company/ruumly/", Icon: Linkedin },
   ];
 
   const columns = [
@@ -116,8 +124,22 @@ export default function Footer() {
           ))}
         </div>
 
-        {/* Support row */}
-        <div className="mt-12 flex flex-col gap-5 border-t border-white/10 pt-7 sm:flex-row sm:items-center sm:justify-end">
+        {/* Support row: social profiles (left) + support email (right) */}
+        <div className="mt-12 flex flex-col gap-5 border-t border-white/10 pt-7 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2.5">
+            {socials.map(({ name, href, Icon }) => (
+              <a
+                key={name}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Ruumly ${name}`}
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 text-white/70 transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              >
+                <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+              </a>
+            ))}
+          </div>
           <a
             href="mailto:info@ruumly.eu"
             className="text-sm text-white/70 transition-colors hover:text-white rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
