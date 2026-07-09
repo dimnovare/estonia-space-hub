@@ -21,6 +21,7 @@ import SizeGuide from "@/components/SizeGuide";
 import { queryKeys } from "@/services/queryKeys";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { TRAILER_TYPE_OPTIONS, CREW_SIZE_OPTIONS, VAN_SIZE_OPTIONS } from "@/lib/constants";
+import { serviceTypeLabelMap, serviceTypeLabel } from "@/lib/serviceTypes";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
@@ -44,6 +45,9 @@ export default function SearchPage() {
   const [calcOpen, setCalcOpen] = useState(false);
 
   const { data: featureDefs = {} } = useFeatureDefinitions();
+  // Localized service-type labels for directory map pins. Memoized so the
+  // memo()'d InteractiveMap isn't torn down / rebuilt on every render.
+  const serviceTypeLabels = useMemo(() => serviceTypeLabelMap(t), [t]);
   const { data: availableCities = [] } = useQuery({
     queryKey: queryKeys.cities.available(),
     queryFn: () => apiClient.get<{ city: string; country: string }[]>("/locations/cities"),
@@ -487,7 +491,7 @@ export default function SearchPage() {
           full-height under the 72px public nav. */}
       <div className="relative hidden lg:sticky lg:top-[72px] lg:block lg:h-[calc(100vh-72px)] lg:w-[51.2%]">
         <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary text-muted-foreground">{t("map.loading")}</div>}>
-          <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" language={language} selectedId={selectedListingId} onMarkerClick={handleMarkerClick} onLocationClick={handleLocationClick} userLocation={userLocation} tYourLocation={t("search.nearMe.youAreHere")} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} tViewLocation={t("location.viewLocation")} tAvailable={t("location.available")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
+          <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" language={language} selectedId={selectedListingId} onMarkerClick={handleMarkerClick} onLocationClick={handleLocationClick} userLocation={userLocation} tYourLocation={t("search.nearMe.youAreHere")} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} tViewLocation={t("location.viewLocation")} tViewProfile={t("detail.viewProfile")} serviceTypeLabels={serviceTypeLabels} tAvailable={t("location.available")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
         </Suspense>
         {/* Verticals overlay badge — proto badge-soft "📦 Storage · Moving · Trailers" */}
         <span className="pointer-events-none absolute bottom-4 left-4 z-[500] inline-flex items-center gap-1.5 rounded-full bg-card/90 px-3 py-1.5 text-xs font-medium text-foreground shadow-card backdrop-blur-sm">
@@ -508,7 +512,7 @@ export default function SearchPage() {
       {mobileView === "map" && (
         <div className="h-[calc(100vh-8rem)] lg:hidden relative">
           <Suspense fallback={<div className="flex h-full items-center justify-center bg-secondary">{t("map.loading")}</div>}>
-            <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" language={language} selectedId={selectedListingId} onMarkerClick={handleMarkerClick} onLocationClick={handleLocationClick} userLocation={userLocation} tYourLocation={t("search.nearMe.youAreHere")} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} tViewLocation={t("location.viewLocation")} tAvailable={t("location.available")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
+            <InteractiveMap listings={filtered} locations={locations} className="rounded-none" height="h-full" language={language} selectedId={selectedListingId} onMarkerClick={handleMarkerClick} onLocationClick={handleLocationClick} userLocation={userLocation} tYourLocation={t("search.nearMe.youAreHere")} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} tViewLocation={t("location.viewLocation")} tViewProfile={t("detail.viewProfile")} serviceTypeLabels={serviceTypeLabels} tAvailable={t("location.available")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
           </Suspense>
           {selectedListingId && (() => {
             // A marker click sets selectedListingId to either a listing OR a
@@ -516,12 +520,16 @@ export default function SearchPage() {
             const sl = filtered.find(l => l.id === selectedListingId);
             const loc = sl ? undefined : locations.find(l => l.id === selectedListingId);
             if (!sl && !loc) return null;
-            const to        = sl ? `/${sl.type}/${sl.id}` : `/location/${loc!.id}`;
+            // Directory profiles link to their partner page, not a location page.
+            const isDir     = !sl && !!loc!.isDirectory;
+            const to        = sl
+              ? `/${sl.type}/${sl.id}`
+              : isDir && loc!.supplierSlug ? `/partner/${loc!.supplierSlug}` : `/location/${loc!.id}`;
             const img       = sl ? sl.image : loc!.images?.[0];
-            const cardTitle = sl ? sl.title : loc!.name;
+            const cardTitle = sl ? sl.title : (isDir ? (loc!.supplierName || loc!.name) : loc!.name);
             const cardCity  = sl ? sl.city  : loc!.city;
             const cardAddr  = sl ? sl.address : loc!.address;
-            const price     = sl ? sl.priceFrom : loc!.priceFrom;
+            const price     = sl ? sl.priceFrom : (isDir ? null : loc!.priceFrom);
             const rating    = sl ? sl.rating : loc!.rating;
             return (
               <div className="absolute bottom-4 left-4 right-4 z-[1000]">
@@ -833,7 +841,53 @@ export default function SearchPage() {
               {/* Location cards */}
               {displayLocations.length > 0 && (
                 <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
-                  {displayLocations.map((loc) => (
+                  {displayLocations.map((loc) => loc.isDirectory ? (
+                    /* Directory profile card — company in the Ruumly catalog:
+                       name, city, service chips + profile link. NO price, NO
+                       availability (there are no units to count). */
+                    <Link
+                      key={loc.id}
+                      to={loc.supplierSlug ? `/partner/${loc.supplierSlug}` : `/location/${loc.id}`}
+                      data-testid="directory-card"
+                      className={`card-elevated group block overflow-hidden transition-all ${selectedListingId === loc.id ? "ring-2 ring-accent" : ""}`}
+                      onMouseEnter={() => setSelectedListingId(loc.id)}
+                      onMouseLeave={() => setSelectedListingId(null)}
+                    >
+                      <div className="p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                            <Building2 className="h-[22px] w-[22px] text-primary" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="truncate font-sans text-sm font-semibold text-foreground">
+                              {loc.supplierName || loc.name}
+                            </h3>
+                            <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                              <MapPin className="h-3 w-3 shrink-0" />
+                              {loc.city}
+                            </p>
+                          </div>
+                        </div>
+                        {(loc.serviceTypes ?? []).length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-1.5">
+                            {(loc.serviceTypes ?? []).map((st) => (
+                              <span
+                                key={st}
+                                className="rounded-full bg-teal/[0.14] px-2.5 py-0.5 text-[11px] font-semibold text-teal-deep"
+                              >
+                                {serviceTypeLabel(t, st)}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <div className="mt-3 border-t border-border pt-3">
+                          <span className="inline-flex items-center gap-1 text-sm font-semibold text-accent group-hover:underline">
+                            {t("detail.viewProfile")} →
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  ) : (
                     <Link
                       key={loc.id}
                       to={`/location/${loc.id}`}

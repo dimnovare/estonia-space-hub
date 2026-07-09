@@ -8,6 +8,7 @@ import {
 } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { serviceTypeLabel } from "@/lib/serviceTypes";
 import { toast } from "sonner";
 import {
   Loader2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Megaphone,
@@ -103,15 +104,31 @@ function LeadMatches({ leadId }: { leadId: string }) {
     <ul className="mt-2 space-y-2">
       {data.map((m) => (
         <li
-          key={`${m.supplierId}-${m.listingId}`}
+          key={`${m.supplierId}-${m.listingId ?? "directory"}`}
           className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-lg border border-border bg-card p-3 text-sm"
         >
           <div className="min-w-[160px]">
             <div className="font-medium text-navy-ink">{m.supplierName}</div>
-            <div className="text-xs text-muted-foreground">
-              {m.listingTitle}
-              {m.listingCity && <span> · {m.listingCity}</span>}
-            </div>
+            {/* Directory suppliers have no listing (listingTitle/price null) —
+                show a directory chip + services + city instead of a listing line. */}
+            {m.listingTitle == null ? (
+              <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="rounded-full bg-teal/[0.14] px-2 py-0.5 font-semibold text-teal-deep">
+                  {t("admin.leads.matchDirectory")}
+                </span>
+                {(m.serviceTypes ?? []).map((st) => (
+                  <span key={st} className="rounded-full bg-secondary px-2 py-0.5 font-medium text-foreground">
+                    {serviceTypeLabel(t, st)}
+                  </span>
+                ))}
+                {m.listingCity && <span>· {m.listingCity}</span>}
+              </div>
+            ) : (
+              <div className="text-xs text-muted-foreground">
+                {m.listingTitle}
+                {m.listingCity && <span> · {m.listingCity}</span>}
+              </div>
+            )}
           </div>
           {m.price != null && (
             <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-foreground">

@@ -61,6 +61,84 @@ export const listEnvelope = (items: Json[]) => ({
   hasMore: false,
 });
 
+/** GET /locations item (SupplierLocation) incl. the provider-directory fields
+ *  (isDirectory / supplierSlug / serviceTypes) added by the directory feature. */
+export function apiLocation(over: Json = {}): Json {
+  return {
+    id: "loc-001",
+    supplierId: "sup-1",
+    supplierName: "Acme Storage",
+    name: "Acme Tallinn",
+    address: "Tartu mnt 1",
+    city: "Tallinn",
+    lat: 59.43,
+    lng: 24.75,
+    images: [],
+    description: "",
+    isActive: true,
+    unitCount: 3,
+    availableUnits: 3,
+    availableUnitCount: 3,
+    totalUnitCount: 3,
+    fullyBooked: false,
+    priceFrom: 49,
+    units: [],
+    isDirectory: false,
+    supplierSlug: null,
+    serviceTypes: [],
+    ...over,
+  };
+}
+
+/** Directory supplier location — free unclaimed profile: map pin + partner page,
+ *  NO listings/units/pricing/booking. */
+export function directoryLocation(over: Json = {}): Json {
+  return apiLocation({
+    id: "dir-001",
+    supplierId: "sup-dir",
+    supplierName: "Kolimisfirma OÜ",
+    name: "Kolimisfirma OÜ",
+    address: "Pärnu mnt 10",
+    unitCount: 0,
+    availableUnits: 0,
+    availableUnitCount: 0,
+    totalUnitCount: 0,
+    priceFrom: null,
+    isDirectory: true,
+    supplierSlug: "kolimisfirma",
+    serviceTypes: ["moving", "cleaning"],
+    ...over,
+  });
+}
+
+/** GET /suppliers/by-slug/{slug} profile (PartnerProfile), directory variant by default. */
+export function partnerProfile(over: Json = {}): Json {
+  return {
+    id: "sup-dir",
+    slug: "kolimisfirma",
+    name: "Kolimisfirma OÜ",
+    country: "EE",
+    tagline: null,
+    longDescription: null,
+    logoUrl: null,
+    heroImageUrl: null,
+    websiteUrl: "https://kolimisfirma.ee",
+    foundedYear: null,
+    rating: 0,
+    reviewCount: 0,
+    tier: "starter",
+    isVerified: false,
+    foundingPartner: false,
+    locationCount: 1,
+    listingCount: 0,
+    locations: [],
+    hasGoogleReviews: false,
+    isDirectory: true,
+    serviceTypes: ["moving", "cleaning"],
+    ...over,
+  };
+}
+
 /** PlatformPricingConfig — the detail/booking pages read config.tiers.starter.* etc. */
 export const pricingConfig = (): Json => ({
   defaultPartnerDiscount: 0,
@@ -102,6 +180,29 @@ export async function stubCommon(page: Page, opts: CommonOpts = {}): Promise<voi
   await page.route(/\/reviews(\b|\/|\?|$)/, (r) => json(r, { data: [], total: 0 }));
   await page.route(/\/notifications/, (r) => json(r, []));
   await page.route(/\/suppliers(\b|\/|\?|$)/, (r) => json(r, []));
+}
+
+/**
+ * Override the GET /locations list with concrete items (stubCommon returns []).
+ * Register AFTER stubCommon — Playwright routes match in reverse registration
+ * order, so this handler wins for /locations* (and keeps /locations/cities working).
+ */
+export async function stubLocations(page: Page, items: Json[]): Promise<void> {
+  await page.route(/\/locations(\b|\/|\?|$)/, (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (/\/locations\/cities/.test(path)) return json(route, [{ city: "Tallinn", country: "EE" }]);
+    const m = path.match(/\/locations\/([^/]+)$/);
+    if (m && m[1] !== "cities") {
+      const found = items.find((i) => (i as Json).id === m[1]);
+      return found ? json(route, found) : json(route, { message: "not found" }, 404);
+    }
+    return json(route, items);
+  });
+}
+
+/** Stub GET /suppliers/by-slug/{slug}. Register AFTER stubCommon (later route wins). */
+export async function stubPartner(page: Page, profile: Json): Promise<void> {
+  await page.route(/\/suppliers\/by-slug\//, (r) => json(r, profile));
 }
 
 export interface ListingsOpts {

@@ -475,7 +475,14 @@ export interface ProviderLead {
 
 // Concierge demand funnel ("/request"): tell us what you need, we find you
 // 2-3 offers. Creates a DemandLead worked by the admin match queue.
-export type ConciergeCategory = "warehouse" | "moving" | "trailer";
+export type ConciergeCategory =
+  | "warehouse"
+  | "moving"
+  | "trailer"
+  | "cleaning"
+  | "packing"
+  | "vanrental"
+  | "insurance";
 
 export interface ConciergeRequestInput {
   name?: string;
@@ -553,17 +560,21 @@ export interface AdminLeadMetrics {
   medianFirstResponseMinutes: number | null;
 }
 
-/** Partner/listing suggestion for a lead (GET /admin/leads/{id}/matches, ≤10). */
+/** Partner/listing suggestion for a lead (GET /admin/leads/{id}/matches, ≤10).
+ *  Directory suppliers (no listings) come back with listingId/listingTitle/
+ *  price/priceUnit ALL null but supplier contact + city filled. */
 export interface AdminLeadMatch {
   supplierId: string;
   supplierName: string;
   contactEmail: string;
   contactPhone: string;
-  listingId: string;
-  listingTitle: string;
+  listingId: string | null;
+  listingTitle: string | null;
   listingCity: string;
   price: number | null;
   priceUnit: string | null;
+  /** Service slugs (directory suppliers) — optional, backend may omit. */
+  serviceTypes?: string[];
 }
 
 export const adminLeadService = {

@@ -34,6 +34,11 @@ export interface PartnerProfile {
   listingCount: number;
   locations: PartnerLocation[];
   hasGoogleReviews?: boolean;
+  // Provider directory: unclaimed company profile — public page + map pin,
+  // no listings/pricing/booking. Claimable by the company later.
+  isDirectory?: boolean;
+  /** Service slugs: warehouse|moving|trailer|cleaning|packing|vanrental|insurance */
+  serviceTypes?: string[];
 }
 
 export interface FeaturedPartner {

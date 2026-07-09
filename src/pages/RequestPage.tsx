@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Link } from "@/i18n/routing";
 import {
-  Warehouse, Truck, Caravan, ArrowRight, ArrowLeft, CheckCircle, Check,
+  Warehouse, Truck, Caravan, Sparkles, Package, Bus, Shield,
+  ArrowRight, ArrowLeft, CheckCircle, Check,
   MapPin, CalendarDays, Loader2, AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -64,6 +65,12 @@ export default function RequestPage() {
     { key: "warehouse", icon: Warehouse, title: t("request.need.storage"), desc: t("request.need.storage.desc"), show: true },
     { key: "moving",    icon: Truck,     title: t("request.need.moving"),  desc: t("request.need.moving.desc"),  show: showMovingService },
     { key: "trailer",   icon: Caravan,   title: t("request.need.trailer"), desc: t("request.need.trailer.desc"), show: showTrailerService },
+    // Moving-event categories (directory verticals) — always visible, worked
+    // manually by the concierge match loop; no platform-setting gate.
+    { key: "cleaning",  icon: Sparkles,  title: t("request.need.cleaning"),  desc: t("request.need.cleaning.desc"),  show: true },
+    { key: "packing",   icon: Package,   title: t("request.need.packing"),   desc: t("request.need.packing.desc"),   show: true },
+    { key: "vanrental", icon: Bus,       title: t("request.need.vanrental"), desc: t("request.need.vanrental.desc"), show: true },
+    { key: "insurance", icon: Shield,    title: t("request.need.insurance"), desc: t("request.need.insurance.desc"), show: true },
   ];
 
   const toggleCategory = (key: ConciergeCategory) => {
@@ -175,7 +182,9 @@ export default function RequestPage() {
                 <legend className="font-display text-lg font-semibold text-navy-ink">
                   {t("request.steps.step1")}
                 </legend>
-                <div className="mt-4 grid gap-3">
+                {/* 7 categories → compact 2-col multi-select grid (also 2-col on
+                    mobile, so the step never scrolls past the fold). */}
+                <div className="mt-4 grid grid-cols-2 gap-3">
                   {needOptions.filter((o) => o.show).map((opt) => {
                     const Icon = opt.icon;
                     const selected = categories.includes(opt.key);
@@ -185,26 +194,26 @@ export default function RequestPage() {
                         type="button"
                         onClick={() => toggleCategory(opt.key)}
                         aria-pressed={selected}
-                        className={`flex min-h-[64px] items-center gap-4 rounded-xl border p-4 text-left transition-all active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                        className={`relative flex min-h-[104px] flex-col items-start gap-2.5 rounded-xl border p-3.5 pr-9 text-left transition-all active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                           selected
                             ? "border-accent bg-accent/5 ring-1 ring-accent"
                             : "border-border bg-card hover:border-accent/40"
                         }`}
                       >
-                        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${selected ? "bg-accent/15" : "bg-teal/[0.14]"}`}>
-                          <Icon className={`h-[22px] w-[22px] ${selected ? "text-accent" : "text-teal-deep"}`} />
+                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${selected ? "bg-accent/15" : "bg-teal/[0.14]"}`}>
+                          <Icon className={`h-5 w-5 ${selected ? "text-accent" : "text-teal-deep"}`} />
                         </div>
-                        <div className="flex-1">
-                          <div className="font-display text-[15px] font-semibold text-foreground">{opt.title}</div>
-                          <div className="mt-0.5 text-[13px] text-muted-foreground">{opt.desc}</div>
+                        <div>
+                          <div className="font-display text-[14px] font-semibold leading-tight text-foreground">{opt.title}</div>
+                          <div className="mt-0.5 text-xs leading-snug text-muted-foreground">{opt.desc}</div>
                         </div>
                         <div
                           aria-hidden
-                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                          className={`absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full border transition-colors ${
                             selected ? "border-accent bg-accent text-accent-foreground" : "border-border bg-card"
                           }`}
                         >
-                          {selected && <Check className="h-3.5 w-3.5" />}
+                          {selected && <Check className="h-3 w-3" />}
                         </div>
                       </button>
                     );

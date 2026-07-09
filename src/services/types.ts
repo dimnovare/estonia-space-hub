@@ -402,6 +402,12 @@ export interface SupplierLocation {
   reviewCount?: number;
   bestCustomerDiscount?: number | null;
   externalId?: string | null;           // vendor-side ID used for stock polling
+  // Provider directory: real companies imported as free "existing on Ruumly"
+  // profiles — public partner page + map pin, NO listings/units/pricing/booking.
+  isDirectory?: boolean;
+  supplierSlug?: string | null;
+  /** Service slugs: warehouse|moving|trailer|cleaning|packing|vanrental|insurance */
+  serviceTypes?: string[];
 }
 
 export interface WarehouseListing extends ListingBase {

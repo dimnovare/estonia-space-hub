@@ -29,10 +29,14 @@ interface InteractiveMapProps {
   tFoundingPartner?: string;
   tViewDetails?: string;
   tViewLocation?: string;
+  tViewProfile?: string;
   tAvailable?: string;
   tTypeWarehouse?: string;
   tTypeMoving?: string;
   tTypeTrailer?: string;
+  /** slug → localized label for directory serviceTypes popup chips.
+   *  Memoize at the call site — a fresh object each render defeats memo(). */
+  serviceTypeLabels?: Record<string, string>;
 }
 
 // 00-foundations §2 + §4.3 — map price-bubble pin palette.
@@ -155,7 +159,32 @@ function createMarkerIcon(listing: Listing, isSelected: boolean) {
   });
 }
 
+/**
+ * Directory pin — an unclaimed provider profile has no price and no unit
+ * counts, so it renders as a brand dot (navy fill, teal core, white ring)
+ * instead of a price bubble. Selected pins grow slightly.
+ */
+function directoryPinIcon(selected: boolean) {
+  const size = selected ? 22 : 18;
+  const inset = Math.round(size * 0.3);
+  return L.divIcon({
+    className: "ruumly-directory-pin",
+    html: `
+      <div style="position:relative; width:${size}px; height:${size}px; cursor:pointer;">
+        <span style="position:absolute; inset:0; border-radius:999px;
+          background:${PIN_NAVY_INK};
+          box-shadow:0 0 0 2.5px rgba(255,255,255,.95), 0 4px 14px rgba(16,28,64,.22), 0 2px 6px rgba(16,28,64,.14);"></span>
+        <span style="position:absolute; inset:${inset}px; border-radius:999px; background:${PIN_TEAL_DEEP};"></span>
+      </div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
+
 function createLocationMarkerIcon(location: SupplierLocation, isSelected: boolean, _unitLabel = "units") {
+  // Directory profiles: brand dot — NO price, NO "0 available" bubble.
+  if (location.isDirectory) return directoryPinIcon(isSelected);
+
   const label = location.priceFrom != null
     ? `€${location.priceFrom}`
     : `${location.availableUnitCount != null ? location.availableUnitCount : location.unitCount}`;
@@ -206,10 +235,12 @@ function InteractiveMap({
   tFoundingPartner = "Founding Partner",
   tViewDetails = "View →",
   tViewLocation = "View location",
+  tViewProfile = "View profile",
   tAvailable = "available",
   tTypeWarehouse = "Warehouse",
   tTypeMoving    = "Moving",
   tTypeTrailer   = "Trailer",
+  serviceTypeLabels,
 }: InteractiveMapProps) {
   const { showMovingService, showTrailerService } = usePlatformSettings();
   const visibleServiceTypes = getVisibleServiceTypes(showMovingService, showTrailerService);
@@ -316,7 +347,21 @@ function InteractiveMap({
       const locFeatured = (loc.units ?? []).some((u) => isFeaturedListing(u));
       const marker = L.marker([loc.lat, loc.lng], { icon, zIndexOffset: locFeatured ? 1000 : 0 });
 
-      const popupHtml = `
+      // Directory profile popup — supplier name + localized service chips +
+      // partner-page link. No price, no availability, no booking.
+      const popupHtml = loc.isDirectory ? `
+        <div style="min-width: 200px; font-family: 'DM Sans', sans-serif;">
+          <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #1E3A5F;">${loc.supplierName || loc.name}</div>
+          <div style="font-size: 12px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            ${[loc.address, loc.city].filter(Boolean).join(", ")}
+          </div>
+          ${(loc.serviceTypes ?? []).length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">${(loc.serviceTypes ?? []).map((st) => `<span style="font-size:10px;font-weight:600;color:#1FA6AE;background:#1FA6AE14;padding:2px 8px;border-radius:10px;">${serviceTypeLabels?.[st] ?? st}</span>`).join("")}</div>` : ''}
+          ${loc.supplierSlug
+            ? `<a href="/${langPrefix}/partner/${loc.supplierSlug}" style="display: block; text-align: center; font-size: 13px; color: #fff; background: #2EC4B6; text-decoration: none; font-weight: 600; padding: 10px 0; border-radius: 8px;">${tViewProfile} →</a>`
+            : ''}
+        </div>
+      ` : `
         <div style="min-width: 200px; font-family: 'DM Sans', sans-serif;">
           ${loc.images?.[0] ? `<img src="${loc.images[0]}" alt="${loc.name}" onerror="this.style.display='none'" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />` : imgFallback}
           <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #1E3A5F;">${loc.name}</div>
@@ -401,7 +446,7 @@ function InteractiveMap({
     // selectedId intentionally excluded — selection is handled by the effect
     // below via setIcon on just the affected markers, so hovering a card does
     // not clear and rebuild every Leaflet layer.
-  }, [listings, locations, tUnits, tFrom, tPerMonth, tAllUnits, tViewLocation, tAvailable, tTypeWarehouse, tTypeMoving, tTypeTrailer]);
+  }, [listings, locations, tUnits, tFrom, tPerMonth, tAllUnits, tViewLocation, tViewProfile, tAvailable, tTypeWarehouse, tTypeMoving, tTypeTrailer, serviceTypeLabels]);
 
   // When selectedId changes, restyle only the previously- and newly-selected
   // markers (grow + glow), open the popup, and pan. No full layer rebuild.

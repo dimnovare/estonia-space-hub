@@ -22,6 +22,7 @@ import { contactService } from "@/services";
 import ListingCard from "@/components/ListingCard";
 import type { PartnerProfile } from "@/types/partner";
 import type { Language } from "@/i18n/translations";
+import { serviceTypeLabel } from "@/lib/serviceTypes";
 
 function buildStructuredData(partner: PartnerProfile, lang: Language) {
   return {
@@ -357,10 +358,14 @@ export default function PartnerPage() {
                     {partner.rating.toFixed(1)} {t("partner.ratingLabel")}
                   </span>
                 )}
-                <span className="inline-flex items-center gap-1.5">
-                  <Box className="h-4 w-4" />
-                  {partner.listingCount} {t("partner.listingsLabel")}
-                </span>
+                {/* Directory profiles have no listings — a "0 listings" stat
+                    would only undermine the profile, so it is hidden. */}
+                {!partner.isDirectory && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Box className="h-4 w-4" />
+                    {partner.listingCount} {t("partner.listingsLabel")}
+                  </span>
+                )}
                 {partner.foundedYear && (
                   <span className="inline-flex items-center gap-1.5">
                     <Clock className="h-4 w-4" />
@@ -368,11 +373,36 @@ export default function PartnerPage() {
                   </span>
                 )}
               </div>
+
+              {/* Directory service-type chips — what this company offers */}
+              {partner.isDirectory && (partner.serviceTypes ?? []).length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {(partner.serviceTypes ?? []).map((st) => (
+                    <span
+                      key={st}
+                      className="inline-flex items-center rounded-full bg-white/15 px-2.5 py-1 text-xs font-semibold text-white"
+                    >
+                      {serviceTypeLabel(t, st)}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Actions: Contact (white) + Save (green) */}
+          {/* Actions: Website (directory, white) + Contact (white) + Save (green) */}
           <div className="flex shrink-0 flex-wrap gap-3">
+            {partner.isDirectory && partner.websiteUrl && (
+              <Button
+                asChild
+                className="min-h-[44px] bg-white text-navy-ink hover:bg-secondary"
+              >
+                <a href={partner.websiteUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  {t("partner.visitWebsite")}
+                </a>
+              </Button>
+            )}
             <Button
               onClick={() => setContactOpen(true)}
               className="min-h-[44px] bg-white text-navy-ink hover:bg-secondary"
@@ -392,33 +422,70 @@ export default function PartnerPage() {
         </div>
       </header>
 
-      {/* Body — "Available from {name}" listings grid */}
-      <section className="container-wide py-14">
-        <h2 className="font-display text-[22px] font-extrabold text-navy-ink">
-          {t("partner.availableFrom").replace("{name}", partner.name)}
-        </h2>
-
-        {partnerListings.length > 0 ? (
-          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {partnerListings.map((l) => <ListingCard key={l.id} listing={l} />)}
-          </div>
-        ) : (
-          /* Empty "getting set up" state */
-          <div className="mx-auto mt-6 flex max-w-md flex-col items-center rounded-[14px] border border-line bg-card p-10 text-center shadow-card">
+      {/* Body — directory note (unclaimed profile: no listings/pricing/booking)
+          OR the "Available from {name}" listings grid */}
+      {partner.isDirectory ? (
+        <section className="container-wide py-14">
+          <div className="mx-auto flex max-w-md flex-col items-center rounded-[14px] border border-line bg-card p-10 text-center shadow-card">
             <div className="flex h-[54px] w-[54px] items-center justify-center rounded-[14px] bg-secondary">
               <Box className="h-[26px] w-[26px] text-muted-foreground" />
             </div>
-            <h3 className="mt-4 font-display text-lg font-extrabold text-navy-ink">
-              {t("partner.empty.title")}
-            </h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {t("partner.empty.body")}
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+              {t("partner.directory.note")}
             </p>
           </div>
-        )}
-      </section>
+        </section>
+      ) : (
+        <section className="container-wide py-14">
+          <h2 className="font-display text-[22px] font-extrabold text-navy-ink">
+            {t("partner.availableFrom").replace("{name}", partner.name)}
+          </h2>
+
+          {partnerListings.length > 0 ? (
+            <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {partnerListings.map((l) => <ListingCard key={l.id} listing={l} />)}
+            </div>
+          ) : (
+            /* Empty "getting set up" state */
+            <div className="mx-auto mt-6 flex max-w-md flex-col items-center rounded-[14px] border border-line bg-card p-10 text-center shadow-card">
+              <div className="flex h-[54px] w-[54px] items-center justify-center rounded-[14px] bg-secondary">
+                <Box className="h-[26px] w-[26px] text-muted-foreground" />
+              </div>
+              <h3 className="mt-4 font-display text-lg font-extrabold text-navy-ink">
+                {t("partner.empty.title")}
+              </h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {t("partner.empty.body")}
+              </p>
+            </div>
+          )}
+        </section>
+      )}
 
       <PartnerGoogleReviews partner={partner} />
+
+      {/* Claim banner — free takeover pitch for the company that owns this
+          unclaimed directory profile. */}
+      {partner.isDirectory && (
+        <section className="container-wide pb-14">
+          <div className="rounded-[14px] border border-line bg-secondary/60 p-8 text-center shadow-card md:p-10">
+            <h2 className="font-display text-[22px] font-extrabold text-navy-ink">
+              {t("partner.claim.title")}
+            </h2>
+            <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+              {t("partner.claim.body")}
+            </p>
+            <Button
+              asChild
+              className="mt-5 min-h-[44px] bg-accent px-6 font-semibold text-accent-foreground hover:bg-brand-greenDeep"
+            >
+              <a href={`mailto:info@ruumly.eu?subject=${encodeURIComponent(`Profiili ülevõtmine: ${partner.slug}`)}`}>
+                {t("partner.claim.cta")}
+              </a>
+            </Button>
+          </div>
+        </section>
+      )}
 
       <PartnerContactModal partner={partner} open={contactOpen} onOpenChange={setContactOpen} />
     </div>
