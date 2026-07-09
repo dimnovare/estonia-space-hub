@@ -22,6 +22,11 @@ export interface PlatformSettings {
   showTrailerService:   boolean;
   showFeaturedPartners: boolean;
   bankTransferEnabled:  boolean;
+  /** Concierge pivot: when true the homepage hero leads with the "/request"
+   *  demand funnel instead of the marketplace search card. */
+  conciergeFirst:       boolean;
+  /** Comma-separated list of cities/areas the concierge service operates in. */
+  conciergeCities:      string;
   heroSubtitle:         string;
   heroDiscount:         string;
   apiUnreachable:       boolean;
@@ -75,6 +80,11 @@ const FALLBACK = {
   // details in Settings. Keep it false by default so no half-configured pay
   // option appears before launch.
   bankTransferEnabled:   false,
+  // Concierge-first is the new default front door ("tell us what you need,
+  // we find you 2-3 offers"). Admin can flip back to the marketplace hero via
+  // the `conciergeFirst` platform setting.
+  conciergeFirst:        true,
+  conciergeCities:       "Tallinn, Harjumaa",
   heroSubtitle:          "",
   heroDiscount:          "10",
 };
@@ -90,5 +100,13 @@ export function usePlatformSettings(): PlatformSettings {
     gcTime:    30_000,
     retry:     2,
   });
-  return { ...FALLBACK, ...data, apiUnreachable: isError };
+  const merged = { ...FALLBACK, ...data, apiUnreachable: isError };
+  // PlatformSettings values arrive as strings from the key/value table;
+  // conciergeFirst comes through as "true"/"false" (unlike the older flags,
+  // which the backend pre-parses to JSON booleans). Normalise both shapes,
+  // defaulting to ON when absent.
+  return {
+    ...merged,
+    conciergeFirst: String(merged.conciergeFirst ?? "true") !== "false",
+  };
 }

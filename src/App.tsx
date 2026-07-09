@@ -35,6 +35,7 @@ import PrivacyPage from "@/pages/PrivacyPage";
 import CookiePage from "@/pages/CookiePage";
 import NotFound from "@/pages/NotFound";
 const ProviderPage = lazy(() => import("@/pages/ProviderPage"));
+const RequestPage = lazy(() => import("@/pages/RequestPage"));
 import RequestDetailPage from "@/pages/RequestDetailPage";
 import VerifyEmailPage from "@/pages/VerifyEmailPage";
 import { Loader2 } from "lucide-react";
@@ -207,6 +208,8 @@ function AppContent() {
               <Route path="book" element={<BookingPage />} />
               <Route path="bookings/:id" element={<ProtectedRoute><BookingRedirect /></ProtectedRoute>} />
               <Route path="provider" element={<ProviderPage />} />
+              {/* Concierge demand funnel — the conciergeFirst front door */}
+              <Route path="request" element={<RequestPage />} />
               <Route path="partner/:slug" element={<PartnerPage />} />
               {/* Per-vertical SEO city hubs. The backend sitemap emits
                   /storage/<city>, /moving/<city> and /trailer/<city>; each

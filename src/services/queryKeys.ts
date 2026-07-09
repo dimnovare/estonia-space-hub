@@ -141,6 +141,12 @@ export const queryKeys = {
   adminMetrics: {
     all: () => ["admin-metrics"] as const,
   },
+  adminLeads: {
+    root:    () => ["admin-leads"] as const,
+    list:    (status: string, page: number) => ["admin-leads", "list", status, page] as const,
+    metrics: () => ["admin-leads", "metrics"] as const,
+    matches: (id: string) => ["admin-leads", "matches", id] as const,
+  },
   supplierTeam: {
     byId: (id: string | null) => ["supplier-team", id] as const,
   },

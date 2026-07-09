@@ -88,6 +88,10 @@ export async function stubCommon(page: Page, opts: CommonOpts = {}): Promise<voi
     showTrailerService: false,
     showFeaturedListings: true,
     showMap: false,
+    // Concierge pivot flags — the real API returns these as STRINGS
+    // ("true"/"false"), unlike the older pre-parsed boolean flags.
+    conciergeFirst: "true",
+    conciergeCities: "Tallinn, Harjumaa",
     ...(opts.settings ?? {}),
   };
   await page.route(/\/settings\/public/, (r) => json(r, settings));
@@ -159,6 +163,39 @@ export async function stubLogin(page: Page, user: AuthUser): Promise<void> {
   await page.route(/\/auth\/login/, (r) =>
     json(r, { user, accessToken: "test-access", refreshToken: "test-refresh", csrfToken: "test-csrf" }),
   );
+}
+
+/** Stub POST /leads/request (concierge funnel). Pass a non-2xx status to test errors (e.g. 429). */
+export async function stubConciergeLead(page: Page, status = 200): Promise<void> {
+  await page.route(/\/leads\/request/, (route) =>
+    route.request().method() === "POST"
+      ? json(route, status === 200 ? { ok: true } : { message: "error" }, status)
+      : route.continue(),
+  );
+}
+
+/** Stub the admin match-queue endpoints: list, metrics and per-lead matches. */
+export async function stubAdminLeads(
+  page: Page,
+  opts: { items?: Json[]; metrics?: Json; matches?: Json[] } = {},
+): Promise<void> {
+  const items = opts.items ?? [];
+  const metrics = {
+    requestsThisWeek: 4,
+    requests30d: 12,
+    contactRate30d: 0.75,
+    quoteRate30d: 0.5,
+    bookingRate30d: 0.25,
+    medianFirstResponseMinutes: 42,
+    ...(opts.metrics ?? {}),
+  };
+  await page.route(/\/admin\/leads(\b|\/|\?|$)/, (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (/\/admin\/leads\/metrics/.test(path)) return json(route, metrics);
+    if (/\/admin\/leads\/[^/]+\/matches/.test(path)) return json(route, opts.matches ?? []);
+    if (route.request().method() === "PATCH") return json(route, { ok: true });
+    return json(route, { total: items.length, page: 1, limit: 50, items });
+  });
 }
 
 /** Stub POST /bookings to return a created booking. */

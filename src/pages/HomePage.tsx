@@ -41,7 +41,7 @@ export default function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const { t, language } = useLanguage();
   const settings = usePlatformSettings();
-  const { showMovingService, showTrailerService } = settings;
+  const { showMovingService, showTrailerService, conciergeFirst } = settings;
 
   // Sticky mobile search CTA — appears once user scrolls past the hero search card.
   const [showStickySearch, setShowStickySearch] = useState(false);
@@ -77,11 +77,18 @@ export default function HomePage() {
   const { data: citiesFromApi = [] } = useCities();
 
   const storageOnly        = !showMovingService && !showTrailerService;
+  // Concierge-first (flag-gated pivot): the hero leads with the /request demand
+  // funnel — fixed request.* copy, deliberately IGNORING the heroSubtitle
+  // platform-setting override in this branch. When the flag is off, everything
+  // renders exactly as the marketplace-first hero below.
   // Spec hero copy (content-and-i18n §2): "Find space near you, / contact or book in minutes"
   // with the second line in teal. Storage-only keeps the narrower fallback headline.
-  const heroTitle          = storageOnly ? t("hero.titleStorage")          : t("home.hero.title");
-  const heroTitleHighlight = storageOnly ? t("hero.titleStorageHighlight") : t("home.hero.titleHighlight");
-  const heroSubtitle       = storageOnly ? t("hero.subtitleStorage")       : (settings.heroSubtitle || t("home.hero.subtitle"));
+  const heroTitle          = conciergeFirst ? t("request.hero.title")
+    : storageOnly ? t("hero.titleStorage")          : t("home.hero.title");
+  const heroTitleHighlight = conciergeFirst ? t("request.hero.titleHighlight")
+    : storageOnly ? t("hero.titleStorageHighlight") : t("home.hero.titleHighlight");
+  const heroSubtitle       = conciergeFirst ? t("request.hero.subtitle")
+    : storageOnly ? t("hero.subtitleStorage")       : (settings.heroSubtitle || t("home.hero.subtitle"));
 
   // Hero trust strip — partners (unique suppliers) and cities, derived from public listings
   const partnerCount = new Set(allListings.map((l: any) => l.supplierId).filter(Boolean)).size;
@@ -221,6 +228,37 @@ export default function HomePage() {
             </h1>
             <p className="mt-3 min-h-[3rem] text-base leading-relaxed text-primary-foreground/75 md:mt-4 md:min-h-[3.5rem] md:text-xl">{heroSubtitle}</p>
 
+            {conciergeFirst ? (
+              /* Concierge-first: one clear primary action into the /request
+                 funnel, with a subtle marketplace escape hatch. The popular-
+                 search chips are deliberately dropped in this branch to keep
+                 the funnel focused. */
+              <div className="mx-auto mt-8 max-w-md md:mt-10">
+                <Button
+                  asChild
+                  size="lg"
+                  className="h-14 w-full bg-accent px-8 text-base font-semibold text-accent-foreground shadow-2xl shadow-primary/25 hover:bg-accent/90 active:scale-[0.98] transition-transform"
+                >
+                  <Link to="/request">
+                    {t("request.hero.cta")}
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+                <p className="mt-3 flex items-center justify-center gap-2 text-sm text-primary-foreground/75">
+                  <CheckCircle className="h-4 w-4" />
+                  {t("hero.valueHint")}
+                </p>
+                <div className="mt-4">
+                  <Link
+                    to="/search"
+                    className="inline-flex min-h-[44px] items-center justify-center text-sm font-medium text-primary-foreground/80 underline underline-offset-4 transition-colors hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  >
+                    {t("request.hero.browse")}
+                  </Link>
+                </div>
+              </div>
+            ) : (
+            <>
             <div className="card-prominent mx-auto mt-7 max-w-2xl p-2 shadow-2xl shadow-primary/25 ring-1 ring-black/5 md:mt-9">
               {categories.length > 2 && (
               <div className="-mx-1 flex gap-1 overflow-x-auto border-b border-border px-1 pb-2 mb-2 snap-x scrollbar-hide fade-edges-x">
@@ -295,6 +333,8 @@ export default function HomePage() {
                 </Link>
               ))}
             </div>
+            </>
+            )}
 
             <p className="mt-3 min-h-[1.25rem] text-sm text-primary-foreground/75">
               {showTrustStrip
@@ -635,10 +675,13 @@ export default function HomePage() {
           className="fixed inset-x-0 bottom-0 z-40 border-t surface-glass p-3 md:hidden animate-slide-up"
           style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
         >
-          <Link to="/search" className="block">
+          <Link to={conciergeFirst ? "/request" : "/search"} className="block">
             <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90 h-12">
-              <Search className="mr-2 h-4 w-4" />
-              {t("hero.search")}
+              {conciergeFirst ? (
+                <>{t("request.hero.cta")}<ArrowRight className="ml-2 h-4 w-4" /></>
+              ) : (
+                <><Search className="mr-2 h-4 w-4" />{t("hero.search")}</>
+              )}
             </Button>
           </Link>
         </div>

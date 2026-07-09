@@ -473,9 +473,29 @@ export interface ProviderLead {
   createdAt: string;
 }
 
+// Concierge demand funnel ("/request"): tell us what you need, we find you
+// 2-3 offers. Creates a DemandLead worked by the admin match queue.
+export type ConciergeCategory = "warehouse" | "moving" | "trailer";
+
+export interface ConciergeRequestInput {
+  name?: string;
+  email: string;
+  phone?: string;
+  categories: ConciergeCategory[];
+  city: string;
+  toCity?: string;
+  /** ISO date string (yyyy-MM-dd) */
+  needDate?: string;
+  details?: string;
+  language?: string;
+}
+
 export const leadService = {
   async requestQuote(input: QuoteLeadInput): Promise<void> {
     await apiClient.post("/leads/quote", { ...input, language: input.language ?? "et" });
+  },
+  async requestConcierge(input: ConciergeRequestInput): Promise<void> {
+    await apiClient.post("/leads/request", { ...input, language: input.language ?? "et" });
   },
   async listForProvider(supplierId?: string | null, status?: string): Promise<ProviderLead[]> {
     const params = new URLSearchParams();
@@ -490,6 +510,78 @@ export const leadService = {
     supplierId?: string | null,
   ): Promise<void> {
     await apiClient.patch(withSupplier(`/provider/leads/${id}`, supplierId ?? null), body);
+  },
+};
+
+// ─── Admin Lead Service (concierge match queue) ──────────────────────────────
+export type AdminLeadStatus =
+  | "new" | "contacted" | "quoted" | "converted" | "dismissed" | "unmatched";
+
+export interface AdminLead {
+  id: string;
+  name?: string | null;
+  email: string;
+  phone?: string | null;
+  city: string;
+  toCity?: string | null;
+  needDate?: string | null;
+  category: string;
+  query?: string;
+  language: string;
+  createdAt: string;
+  status: AdminLeadStatus;
+  adminNotes?: string | null;
+  supplierName?: string | null;
+  quotedPrice?: number | null;
+}
+
+export interface AdminLeadsResponse {
+  total: number;
+  page: number;
+  limit: number;
+  items: AdminLead[];
+}
+
+/** Ops funnel metrics for the concierge match queue (rates are 0-1 fractions). */
+export interface AdminLeadMetrics {
+  requestsThisWeek: number;
+  requests30d: number;
+  contactRate30d: number;
+  quoteRate30d: number;
+  bookingRate30d: number;
+  medianFirstResponseMinutes: number | null;
+}
+
+/** Partner/listing suggestion for a lead (GET /admin/leads/{id}/matches, ≤10). */
+export interface AdminLeadMatch {
+  supplierId: string;
+  supplierName: string;
+  contactEmail: string;
+  contactPhone: string;
+  listingId: string;
+  listingTitle: string;
+  listingCity: string;
+  price: number | null;
+  priceUnit: string | null;
+}
+
+export const adminLeadService = {
+  async list(status: AdminLeadStatus | "all", page: number, limit = 50): Promise<AdminLeadsResponse> {
+    const params = new URLSearchParams();
+    if (status !== "all") params.set("status", status);
+    params.set("page", String(page));
+    params.set("limit", String(limit));
+    return apiClient.get<AdminLeadsResponse>(`/admin/leads?${params}`);
+  },
+  async update(id: string, body: { status?: AdminLeadStatus; adminNotes?: string }): Promise<void> {
+    await apiClient.patch(`/admin/leads/${id}`, body);
+  },
+  async metrics(): Promise<AdminLeadMetrics> {
+    return apiClient.get<AdminLeadMetrics>("/admin/leads/metrics");
+  },
+  async matches(id: string): Promise<AdminLeadMatch[]> {
+    const res = await apiClient.get<AdminLeadMatch[] | { items: AdminLeadMatch[] }>(`/admin/leads/${id}/matches`);
+    return Array.isArray(res) ? res : res.items ?? [];
   },
 };
 
