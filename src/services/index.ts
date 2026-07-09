@@ -570,7 +570,7 @@ export interface AdminLeadMatch {
   contactPhone: string;
   listingId: string | null;
   listingTitle: string | null;
-  listingCity: string;
+  listingCity: string | null;
   price: number | null;
   priceUnit: string | null;
   /** Service slugs (directory suppliers) — optional, backend may omit. */

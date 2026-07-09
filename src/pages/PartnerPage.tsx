@@ -392,7 +392,8 @@ export default function PartnerPage() {
 
           {/* Actions: Website (directory, white) + Contact (white) + Save (green) */}
           <div className="flex shrink-0 flex-wrap gap-3">
-            {partner.isDirectory && partner.websiteUrl && (
+            {/* Scheme-guarded: API data must never mint javascript:/data: hrefs. */}
+            {partner.isDirectory && partner.websiteUrl && /^https?:\/\//i.test(partner.websiteUrl) && (
               <Button
                 asChild
                 className="min-h-[44px] bg-white text-navy-ink hover:bg-secondary"

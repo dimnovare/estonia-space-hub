@@ -187,7 +187,7 @@ function createLocationMarkerIcon(location: SupplierLocation, isSelected: boolea
 
   const label = location.priceFrom != null
     ? `€${location.priceFrom}`
-    : `${location.availableUnitCount != null ? location.availableUnitCount : location.unitCount}`;
+    : `${location.availableUnits != null ? location.availableUnits : location.unitCount}`;
   // A location reads as featured if it surfaces any promoted / founding-partner unit.
   const featured = (location.units ?? []).some((u) => isFeaturedListing(u));
 
@@ -338,6 +338,13 @@ function InteractiveMap({
     // Shared image placeholder — a brand warehouse glyph, not an emoji.
     const imgFallback = `<div style="width: 100%; height: 88px; background: #f1f5f9; border-radius: 8px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; color: #94a3b8;"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="11" rx="1"/><path d="M2 10l10-6 10 6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
 
+    // Leaflet's bindPopup(string) renders via innerHTML — every data value that
+    // reaches a popup template MUST go through esc(). Supplier/listing names and
+    // addresses include self-registered and bulk-imported (scraped) data.
+    const esc = (s: unknown): string =>
+      String(s ?? "").replace(/[&<>"']/g, (c) =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string);
+
     // Render location markers
     locations.forEach((loc) => {
       loc.units?.forEach(u => coveredListingIds.add(u.id));
@@ -351,28 +358,28 @@ function InteractiveMap({
       // partner-page link. No price, no availability, no booking.
       const popupHtml = loc.isDirectory ? `
         <div style="min-width: 200px; font-family: 'DM Sans', sans-serif;">
-          <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #1E3A5F;">${loc.supplierName || loc.name}</div>
+          <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #1E3A5F;">${esc(loc.supplierName || loc.name)}</div>
           <div style="font-size: 12px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-            ${[loc.address, loc.city].filter(Boolean).join(", ")}
+            ${esc([loc.address, loc.city].filter(Boolean).join(", "))}
           </div>
-          ${(loc.serviceTypes ?? []).length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">${(loc.serviceTypes ?? []).map((st) => `<span style="font-size:10px;font-weight:600;color:#1FA6AE;background:#1FA6AE14;padding:2px 8px;border-radius:10px;">${serviceTypeLabels?.[st] ?? st}</span>`).join("")}</div>` : ''}
+          ${(loc.serviceTypes ?? []).length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">${(loc.serviceTypes ?? []).map((st) => `<span style="font-size:10px;font-weight:600;color:#1FA6AE;background:#1FA6AE14;padding:2px 8px;border-radius:10px;">${esc(serviceTypeLabels?.[st] ?? st)}</span>`).join("")}</div>` : ''}
           ${loc.supplierSlug
-            ? `<a href="/${langPrefix}/partner/${loc.supplierSlug}" style="display: block; text-align: center; font-size: 13px; color: #fff; background: #2EC4B6; text-decoration: none; font-weight: 600; padding: 10px 0; border-radius: 8px;">${tViewProfile} →</a>`
+            ? `<a href="/${langPrefix}/partner/${esc(loc.supplierSlug)}" style="display: block; text-align: center; font-size: 13px; color: #fff; background: #2EC4B6; text-decoration: none; font-weight: 600; padding: 10px 0; border-radius: 8px;">${esc(tViewProfile)} →</a>`
             : ''}
         </div>
       ` : `
         <div style="min-width: 200px; font-family: 'DM Sans', sans-serif;">
-          ${loc.images?.[0] ? `<img src="${loc.images[0]}" alt="${loc.name}" onerror="this.style.display='none'" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />` : imgFallback}
-          <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #1E3A5F;">${loc.name}</div>
-          ${loc.supplierName ? `<div style="font-size: 12px; color: #666; margin-bottom: 4px;">${loc.supplierName}</div>` : ''}
+          ${loc.images?.[0] ? `<img src="${esc(loc.images[0])}" alt="${esc(loc.name)}" onerror="this.style.display='none'" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />` : imgFallback}
+          <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #1E3A5F;">${esc(loc.name)}</div>
+          ${loc.supplierName ? `<div style="font-size: 12px; color: #666; margin-bottom: 4px;">${esc(loc.supplierName)}</div>` : ''}
           <div style="font-size: 12px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-            ${loc.address}, ${loc.city}
+            ${esc(loc.address)}, ${esc(loc.city)}
           </div>
           <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px;">
             ${loc.priceFrom ? `<span style="font-weight: 700; font-size: 16px; color: #1E3A5F;">${tFrom} €${loc.priceFrom}${tPerMonth}</span>` : '<span></span>'}
-            <span style="font-size: 11px; color: #16A34A; background: #16A34A14; padding: 3px 8px; border-radius: 10px; font-weight: 600; white-space: nowrap;">${loc.availableUnitCount != null ? loc.availableUnitCount : loc.unitCount} ${tAvailable}</span>
+            <span style="font-size: 11px; color: #16A34A; background: #16A34A14; padding: 3px 8px; border-radius: 10px; font-weight: 600; white-space: nowrap;">${loc.availableUnits != null ? loc.availableUnits : loc.unitCount} ${tAvailable}</span>
           </div>
           <a href="/${langPrefix}/location/${loc.id}" style="display: block; text-align: center; font-size: 13px; color: #fff; background: #2EC4B6; text-decoration: none; font-weight: 600; padding: 10px 0; border-radius: 8px;">${tViewLocation} →</a>
         </div>
@@ -404,12 +411,12 @@ function InteractiveMap({
 
       const popupHtml = `
         <div style="min-width: 200px; font-family: 'DM Sans', sans-serif;">
-          ${listing.image ? `<img src="${listing.image}" alt="${listing.title}" onerror="this.style.display='none'" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />` : imgFallback}
-          <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #1E3A5F;">${listing.title}</div>
+          ${listing.image ? `<img src="${esc(listing.image)}" alt="${esc(listing.title)}" onerror="this.style.display='none'" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />` : imgFallback}
+          <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #1E3A5F;">${esc(listing.title)}</div>
           ${(listing.isVerified || listing.isFoundingPartner) ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;">${listing.isVerified ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:#16A34A;background:#16A34A14;padding:2px 6px;border-radius:10px;">✓ ${tVerified}</span>` : ''}${listing.isFoundingPartner ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:#2EC4B6;background:#2EC4B614;padding:2px 6px;border-radius:10px;">★ ${tFoundingPartner}</span>` : ''}</div>` : ''}
           <div style="font-size: 12px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-            ${listing.address}, ${listing.city}
+            ${esc(listing.address)}, ${esc(listing.city)}
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="font-weight: 700; font-size: 16px; color: #1E3A5F;">${tFrom} ${listing.priceFrom}€</span>

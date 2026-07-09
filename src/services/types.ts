@@ -396,7 +396,6 @@ export interface SupplierLocation {
   priceFrom?: number;
   createdAt?: string;
   units?: Listing[];
-  availableUnitCount?: number | null;
   totalUnitCount?: number | null;
   rating?: number;
   reviewCount?: number;
