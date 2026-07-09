@@ -205,6 +205,13 @@ function LeadDetailPanel({ lead }: { lead: AdminLead }) {
         </div>
       )}
 
+      {/* Customer's free-text details — the core context for the manual match call */}
+      {lead.details && (
+        <p className="whitespace-pre-wrap rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground">
+          {lead.details}
+        </p>
+      )}
+
       {/* Status quick-actions */}
       <div>
         <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("admin.leads.quickStatus")}</span>

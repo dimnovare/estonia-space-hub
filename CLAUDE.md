@@ -21,15 +21,17 @@ Single test file: `npx vitest run src/path/to/file.test.tsx`
 
 ## Current focus
 
-**Free partner-acquisition marketplace** — all three verticals public: Storage,
-Moving, Trailers. `showMovingService` / `showTrailerService` default **visible**
-and are admin-toggleable (no longer "hidden launch" flags). Always use
-`usePlatformSettings()` for service-type-dependent UI; never hardcode visibility.
-Listing is **free**; monetization = optional paid features/boosts
-(`PaidFeature` / `ProviderBoosts`) — **never** mandatory plans/commission in any
-public or partner-facing UI. Booking/payment/contract infra stays, enabled
-optionally per partner/listing. Design system per the redesign handoff
-(navy `#173B8D` / green `#0A9881` / teal `#51CDD4`; Plus Jakarta Sans headings).
+**Demand-first concierge** (2026-07 pivot): the public front door is the `/request`
+funnel ("tell us what you need → we return 2-3 offers"), organized around the life
+event ("I'm moving"), not the inventory. The homepage hero is flag-gated by the
+`conciergeFirst` platform setting (FALLBACK true) — when false, the old marketplace
+search hero renders unchanged. Admin `?tab=leads` is the ops match queue (statuses
+new/contacted/quoted/converted=Booked/dismissed=Lost/unmatched + metrics row).
+Marketplace surfaces (search, listings, booking, provider dashboard) stay as
+secondary/ops layers. `showMovingService` / `showTrailerService` gate verticals —
+always use `usePlatformSettings()`, never hardcode. Listing stays **free**; boosts
+optional; never mandatory plans/commission in public/partner UI. Design system:
+navy `#173B8D` / green `#0A9881` / teal `#51CDD4`; Plus Jakarta Sans headings.
 
 ## Routing — language-prefixed URLs
 

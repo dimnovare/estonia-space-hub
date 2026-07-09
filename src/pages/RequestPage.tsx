@@ -265,7 +265,7 @@ export default function RequestPage() {
                         id="req-date"
                         type="date"
                         value={needDate}
-                        min={new Date().toISOString().slice(0, 10)}
+                        min={new Date().toLocaleDateString("sv-SE")}
                         onChange={(e) => setNeedDate(e.target.value)}
                         className="h-12 w-full rounded-lg border border-border bg-card pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                       />

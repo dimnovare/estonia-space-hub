@@ -525,6 +525,7 @@ export interface AdminLead {
   city: string;
   toCity?: string | null;
   needDate?: string | null;
+  details?: string | null;
   category: string;
   query?: string;
   language: string;
