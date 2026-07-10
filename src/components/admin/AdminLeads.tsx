@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   adminLeadService,
+  adminOfferService,
   type AdminLead,
   type AdminLeadStatus,
   type AdminLeadMatch,
+  type AdminOffer,
+  type OfferOptionInput,
+  type OutreachStatus,
 } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -12,9 +16,14 @@ import { serviceTypeLabel } from "@/lib/serviceTypes";
 import { toast } from "sonner";
 import {
   Loader2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Megaphone,
-  TrendingUp, Timer, CalendarCheck, Users, Copy, Mail, Phone, MapPin,
+  TrendingUp, Timer, CalendarCheck, Copy, Mail, Phone, MapPin, Send,
+  Plus, ArrowUp, ArrowDown, Trash2, Eye, ExternalLink, Clock, CheckCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const STATUS_OPTIONS: { value: AdminLeadStatus | "all"; labelKey: string }[] = [
   { value: "all",       labelKey: "admin.leads.statusAll" },
@@ -34,6 +43,21 @@ const STATUS_COLORS: Record<AdminLeadStatus, string> = {
   dismissed: "bg-secondary text-muted-foreground",
   unmatched: "bg-destructive/10 text-destructive",
 };
+
+// The concierge pipeline order (spec §5 Admin UI): the four happy-path stages,
+// then the two terminal outcomes. Clicking a chip moves the lead there.
+const PIPELINE: AdminLeadStatus[] = ["new", "contacted", "quoted", "converted"];
+const TERMINAL: AdminLeadStatus[] = ["dismissed", "unmatched"];
+const STATUS_LABEL_KEYS: Record<AdminLeadStatus, string> = {
+  new: "admin.leads.statusNew",
+  contacted: "admin.leads.statusContacted",
+  quoted: "admin.leads.statusQuoted",
+  converted: "admin.leads.statusConverted",
+  dismissed: "admin.leads.statusDismissed",
+  unmatched: "admin.leads.statusUnmatched",
+};
+
+const OUTREACH_STATUSES: OutreachStatus[] = ["sent", "replied", "declined", "noanswer"];
 
 const LIMIT = 50;
 
@@ -81,97 +105,130 @@ function CopyButton({ value, label, copiedLabel }: { value: string; label: strin
   );
 }
 
-/** Suggested-partner list, fetched on demand via "Find partners". */
-function LeadMatches({ leadId }: { leadId: string }) {
-  const { t } = useLanguage();
-  const { data, isLoading, isError } = useQuery<AdminLeadMatch[]>({
-    queryKey: queryKeys.adminLeads.matches(leadId),
-    queryFn: () => adminLeadService.matches(leadId),
-    staleTime: 60_000,
-  });
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin" /> {t("admin.leads.findPartners")}…
-      </div>
-    );
-  }
-  if (isError || !data || data.length === 0) {
-    return <p className="py-3 text-sm text-muted-foreground">{t("admin.leads.matchesEmpty")}</p>;
-  }
+/** Small section heading used across the workspace panels. */
+function PanelHeading({ children }: { children: React.ReactNode }) {
   return (
-    <ul className="mt-2 space-y-2">
-      {data.map((m) => (
-        <li
-          key={`${m.supplierId}-${m.listingId ?? "directory"}`}
-          className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-lg border border-border bg-card p-3 text-sm"
-        >
-          <div className="min-w-[160px]">
-            <div className="font-medium text-navy-ink">{m.supplierName}</div>
-            {/* Directory suppliers have no listing (listingTitle/price null) —
-                show a directory chip + services + city instead of a listing line. */}
-            {m.listingTitle == null ? (
-              <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="rounded-full bg-teal/[0.14] px-2 py-0.5 font-semibold text-teal-deep">
-                  {t("admin.leads.matchDirectory")}
-                </span>
-                {(m.serviceTypes ?? []).map((st) => (
-                  <span key={st} className="rounded-full bg-secondary px-2 py-0.5 font-medium text-foreground">
-                    {serviceTypeLabel(t, st)}
-                  </span>
-                ))}
-                {m.listingCity && <span>· {m.listingCity}</span>}
-              </div>
-            ) : (
-              <div className="text-xs text-muted-foreground">
-                {m.listingTitle}
-                {m.listingCity && <span> · {m.listingCity}</span>}
-              </div>
-            )}
-          </div>
-          {m.price != null && (
-            <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-foreground">
-              {m.price} {m.priceUnit ?? "€"}
-            </span>
-          )}
-          <div className="ml-auto flex items-center gap-1.5">
-            {m.contactEmail && (
-              <>
-                <a
-                  href={`mailto:${m.contactEmail}`}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
-                >
-                  <Mail className="h-3.5 w-3.5" /> {m.contactEmail}
-                </a>
-                <CopyButton value={m.contactEmail} label={t("admin.leads.copy")} copiedLabel={t("admin.leads.copied")} />
-              </>
-            )}
-            {m.contactPhone && (
-              <>
-                <a
-                  href={`tel:${m.contactPhone.replace(/\s/g, "")}`}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
-                >
-                  <Phone className="h-3.5 w-3.5" /> {m.contactPhone}
-                </a>
-                <CopyButton value={m.contactPhone} label={t("admin.leads.copy")} copiedLabel={t("admin.leads.copied")} />
-              </>
-            )}
-          </div>
-        </li>
-      ))}
-    </ul>
+    <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{children}</span>
   );
 }
 
-/** Expanded work-panel: admin notes + partner matches + status quick-actions. */
-function LeadDetailPanel({ lead }: { lead: AdminLead }) {
+// ── Offer-builder local editing model ────────────────────────────────────────
+interface EditableOption {
+  localId: string;
+  supplierId: string | null;
+  supplierName: string | null;
+  supplierLocationId: string | null;
+  title: string;
+  price: string;    // free text; parsed on save
+  priceUnit: string;
+  notes: string;
+}
+
+let localSeq = 0;
+const nextLocalId = () => `opt-local-${++localSeq}`;
+
+function toEditable(o: AdminOffer["options"][number]): EditableOption {
+  return {
+    localId: o.id || nextLocalId(),
+    supplierId: o.supplierId,
+    supplierName: o.supplierName,
+    supplierLocationId: o.supplierLocationId,
+    title: o.title ?? "",
+    price: o.priceAmount != null ? String(o.priceAmount) : "",
+    priceUnit: o.priceUnit ?? "",
+    notes: o.notes ?? "",
+  };
+}
+
+function matchToEditable(m: AdminLeadMatch): EditableOption {
+  return {
+    localId: nextLocalId(),
+    supplierId: m.supplierId,
+    supplierName: m.supplierName,
+    supplierLocationId: null,
+    title: m.listingTitle ?? m.supplierName,
+    price: m.price != null ? String(m.price) : "",
+    priceUnit: m.priceUnit ?? "",
+    notes: "",
+  };
+}
+
+function parsePrice(s: string): number | null {
+  const v = parseFloat(s.replace(",", ".").trim());
+  return Number.isFinite(v) ? v : null;
+}
+
+function toInput(o: EditableOption, index: number): OfferOptionInput {
+  return {
+    title: o.title.trim(),
+    supplierId: o.supplierId ?? undefined,
+    supplierLocationId: o.supplierLocationId ?? undefined,
+    priceAmount: parsePrice(o.price),
+    priceUnit: o.priceUnit.trim() || null,
+    notes: o.notes.trim() || null,
+    sortOrder: index,
+  };
+}
+
+const fmtDateTime = (iso: string) =>
+  new Date(iso).toLocaleString(undefined, { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
+/**
+ * Lead workspace (overhaul spec §5 Admin UI) — the expanded detail row is the
+ * concierge cockpit: status pipeline chips, lead facts + contact shortcuts,
+ * outreach panel (matches with checkboxes → "Ask availability" + sent rows
+ * with status dropdowns), offer builder (options → save → preview → send →
+ * Sent/Viewed/Chosen timestamps) and the derived activity timeline.
+ * Endpoint contract: overhaul spec §5.1 (as built).
+ */
+function LeadWorkspace({ lead }: { lead: AdminLead }) {
   const { t } = useLanguage();
   const qc = useQueryClient();
   const [notes, setNotes] = useState(lead.adminNotes ?? "");
-  const [showMatches, setShowMatches] = useState(false);
+  const [selectedSuppliers, setSelectedSuppliers] = useState<Set<string>>(new Set());
+  const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
 
+  // ── Offer builder state (edit buffer over the latest server offer) ──
+  const [options, setOptions] = useState<EditableOption[]>([]);
+  const [customerNote, setCustomerNote] = useState("");
+  const [dirty, setDirty] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [confirmSend, setConfirmSend] = useState(false);
+
+  // ── Queries ──
+  const matchesQuery = useQuery<AdminLeadMatch[]>({
+    queryKey: queryKeys.adminLeads.matches(lead.id),
+    queryFn: () => adminLeadService.matches(lead.id),
+    staleTime: 60_000,
+  });
+  const outreachQuery = useQuery({
+    queryKey: queryKeys.adminLeads.outreach(lead.id),
+    queryFn: () => adminOfferService.listOutreach(lead.id),
+    staleTime: 30_000,
+  });
+  const offersQuery = useQuery({
+    queryKey: queryKeys.adminLeads.offers(lead.id),
+    queryFn: () => adminOfferService.listForLead(lead.id),
+    staleTime: 30_000,
+  });
+  const offer = useMemo(() => {
+    const list = offersQuery.data ?? [];
+    return [...list].sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""))[0];
+  }, [offersQuery.data]);
+  // A chosen offer is immutable (PATCH → 409) — lock the editor.
+  const locked = offer?.status === "chosen";
+
+  // Reset the edit buffer when a different offer arrives (create/refresh);
+  // refetches of the SAME offer never clobber in-progress edits.
+  useEffect(() => {
+    if (!offer) { setOptions([]); setCustomerNote(""); setDirty(false); return; }
+    setOptions(offer.options.map(toEditable));
+    setCustomerNote(offer.customerNote ?? "");
+    setDirty(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [offer?.id]);
+
+  // ── Mutations ──
   const notesMutation = useMutation({
     mutationFn: () => adminLeadService.update(lead.id, { adminNotes: notes }),
     onSuccess: () => {
@@ -190,37 +247,203 @@ function LeadDetailPanel({ lead }: { lead: AdminLead }) {
     onError: (err: Error) => toast.error(err?.message || t("toast.error")),
   });
 
-  const quickActions: { status: AdminLeadStatus; labelKey: string }[] = [
-    { status: "contacted", labelKey: "admin.leads.statusContacted" },
-    { status: "quoted",    labelKey: "admin.leads.statusQuoted" },
-    { status: "converted", labelKey: "admin.leads.statusConverted" },
-    { status: "dismissed", labelKey: "admin.leads.statusDismissed" },
-    { status: "unmatched", labelKey: "admin.leads.statusUnmatched" },
-  ];
+  const outreachMutation = useMutation({
+    mutationFn: (supplierIds: string[]) => adminOfferService.outreach(lead.id, supplierIds),
+    onSuccess: (res) => {
+      toast.success(
+        t("admin.leads.outreachSentToast")
+          .replace("{sent}", String(res.sent?.length ?? 0))
+          .replace("{skipped}", String(res.skipped?.length ?? 0)),
+      );
+      setSelectedSuppliers(new Set());
+      qc.invalidateQueries({ queryKey: queryKeys.adminLeads.outreach(lead.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.adminLeads.root() }); // lead auto → contacted
+    },
+    onError: (err: Error) => toast.error(err?.message || t("toast.error")),
+  });
+
+  const outreachUpdateMutation = useMutation({
+    mutationFn: ({ id, status, note }: { id: string; status?: OutreachStatus; note?: string }) =>
+      adminOfferService.updateOutreach(id, { status, note }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.adminLeads.outreach(lead.id) }),
+    onError: (err: Error) => toast.error(err?.message || t("toast.error")),
+  });
+
+  const createOfferMutation = useMutation({
+    mutationFn: (seed?: OfferOptionInput[]) =>
+      adminOfferService.create(lead.id, seed?.length ? { options: seed } : {}),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.adminLeads.offers(lead.id) }),
+    onError: (err: Error) => toast.error(err?.message || t("toast.error")),
+  });
+
+  const saveOfferMutation = useMutation({
+    mutationFn: () =>
+      adminOfferService.update(offer!.id, {
+        customerNote: customerNote.trim() || null,
+        options: options.filter((o) => o.title.trim()).map(toInput),
+      }),
+    onSuccess: (updated) => {
+      toast.success(t("admin.leads.offerSaved"));
+      setDirty(false);
+      setOptions(updated.options.map(toEditable));
+      setCustomerNote(updated.customerNote ?? "");
+      qc.setQueryData(queryKeys.adminLeads.offers(lead.id), (prev: AdminOffer[] | undefined) =>
+        (prev ?? []).map((o) => (o.id === updated.id ? updated : o)));
+    },
+    onError: (err: Error) => toast.error(err?.message || t("toast.error")),
+  });
+
+  const sendOfferMutation = useMutation({
+    mutationFn: async () => {
+      // Always persist the current buffer first (replace-set), then send.
+      await adminOfferService.update(offer!.id, {
+        customerNote: customerNote.trim() || null,
+        options: options.filter((o) => o.title.trim()).map(toInput),
+      });
+      return adminOfferService.send(offer!.id);
+    },
+    onSuccess: (sent) => {
+      toast.success(t("admin.leads.offerSentToast"));
+      setConfirmSend(false);
+      setDirty(false);
+      qc.setQueryData(queryKeys.adminLeads.offers(lead.id), (prev: AdminOffer[] | undefined) =>
+        (prev ?? []).map((o) => (o.id === sent.id ? sent : o)));
+      qc.invalidateQueries({ queryKey: queryKeys.adminLeads.offers(lead.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.adminLeads.root() }); // lead auto → quoted
+    },
+    onError: (err: Error) => {
+      setConfirmSend(false);
+      toast.error(err?.message || t("toast.error"));
+    },
+  });
+
+  // ── Helpers ──
+  const matches = matchesQuery.data ?? [];
+  const outreachRows = outreachQuery.data ?? [];
+  const validOptionCount = options.filter((o) => o.title.trim()).length;
+
+  const toggleSupplier = (id: string) =>
+    setSelectedSuppliers((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+
+  const mutateOptions = (updater: (prev: EditableOption[]) => EditableOption[]) => {
+    setOptions(updater);
+    setDirty(true);
+  };
+
+  const addFromMatch = (m: AdminLeadMatch) => {
+    if (!offer) {
+      // No draft yet — create one seeded with this match (create accepts options).
+      createOfferMutation.mutate([toInput(matchToEditable(m), 0)]);
+    } else if (!locked) {
+      mutateOptions((prev) => [...prev, matchToEditable(m)]);
+    }
+  };
+
+  const moveOption = (index: number, dir: -1 | 1) =>
+    mutateOptions((prev) => {
+      const next = [...prev];
+      const j = index + dir;
+      if (j < 0 || j >= next.length) return prev;
+      [next[index], next[j]] = [next[j], next[index]];
+      return next;
+    });
+
+  const updateOption = (localId: string, patch: Partial<EditableOption>) =>
+    mutateOptions((prev) => prev.map((p) => (p.localId === localId ? { ...p, ...patch } : p)));
+
+  // ── Activity timeline (derived from timestamps; spec §5 Admin UI) ──
+  const timeline = useMemo(() => {
+    const events: { at: string; label: string }[] = [
+      { at: lead.createdAt, label: t("admin.leads.timeline.created") },
+      ...outreachRows.map((r) => ({
+        at: r.sentAt,
+        label: t("admin.leads.timeline.outreach").replace("{name}", r.supplierName ?? r.sentTo),
+      })),
+    ];
+    if (offer) {
+      events.push({ at: offer.createdAt, label: t("admin.leads.timeline.offerCreated") });
+      if (offer.sentAt)   events.push({ at: offer.sentAt,   label: t("admin.leads.timeline.offerSent") });
+      if (offer.viewedAt) events.push({ at: offer.viewedAt, label: t("admin.leads.timeline.offerViewed") });
+      if (offer.chosenAt) events.push({ at: offer.chosenAt, label: t("admin.leads.timeline.offerChosen") });
+    }
+    return events.filter((e) => !!e.at).sort((a, b) => a.at.localeCompare(b.at));
+  }, [lead.createdAt, outreachRows, offer, t]);
+
+  const offerPagePath = offer ? `/${offer.language || lead.language || "et"}/offer/${offer.token}` : null;
 
   return (
-    <div className="space-y-4 bg-secondary/30 px-5 py-4">
-      {/* Extra request context (present for concierge /request leads) */}
-      {(lead.toCity || lead.needDate || lead.phone) && (
-        <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
-          {lead.phone && (
-            <span className="inline-flex items-center gap-1.5">
-              <Phone className="h-3.5 w-3.5" />
-              <a href={`tel:${lead.phone.replace(/\s/g, "")}`} className="hover:text-foreground">{lead.phone}</a>
+    <div className="space-y-5 bg-secondary/30 px-5 py-4">
+      {/* ── Status pipeline chips ── */}
+      <div>
+        <PanelHeading>{t("admin.leads.quickStatus")}</PanelHeading>
+        <div className="mt-1.5 flex flex-wrap items-center gap-y-2">
+          {PIPELINE.map((s, i) => (
+            <span key={s} className="flex items-center">
+              {i > 0 && <ChevronRight className="mx-0.5 h-3.5 w-3.5 text-muted-foreground/50" aria-hidden />}
+              <button
+                type="button"
+                disabled={statusMutation.isPending || lead.status === s}
+                aria-pressed={lead.status === s}
+                onClick={() => statusMutation.mutate(s)}
+                className={`min-h-[36px] rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  lead.status === s
+                    ? "bg-navy-ink text-white"
+                    : "border border-border bg-card text-muted-foreground hover:border-primary hover:text-primary"
+                }`}
+              >
+                {t(STATUS_LABEL_KEYS[s])}
+              </button>
             </span>
-          )}
-          {lead.toCity && (
-            <span className="inline-flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5" /> {t("admin.leads.toCity")}: {lead.toCity}
-            </span>
-          )}
-          {lead.needDate && (
-            <span className="inline-flex items-center gap-1.5">
-              <CalendarCheck className="h-3.5 w-3.5" /> {t("admin.leads.needDate")}: {new Date(lead.needDate).toLocaleDateString()}
-            </span>
-          )}
+          ))}
+          <span className="mx-2 h-5 w-px bg-border" aria-hidden />
+          {TERMINAL.map((s) => (
+            <button
+              key={s}
+              type="button"
+              disabled={statusMutation.isPending || lead.status === s}
+              aria-pressed={lead.status === s}
+              onClick={() => statusMutation.mutate(s)}
+              className={`mr-1.5 min-h-[36px] rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                lead.status === s
+                  ? `${STATUS_COLORS[s]} ring-1 ring-border`
+                  : "border border-border bg-card text-muted-foreground hover:border-destructive/50 hover:text-destructive"
+              }`}
+            >
+              {t(STATUS_LABEL_KEYS[s])}
+            </button>
+          ))}
         </div>
-      )}
+      </div>
+
+      {/* ── Lead facts + contact shortcuts (tel:/mailto:) ── */}
+      <div className="flex flex-wrap gap-x-6 gap-y-1.5 text-sm text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5">
+          <Mail className="h-3.5 w-3.5" />
+          <a href={`mailto:${lead.email}`} className="hover:text-foreground">{lead.email}</a>
+        </span>
+        {lead.phone && (
+          <span className="inline-flex items-center gap-1.5">
+            <Phone className="h-3.5 w-3.5" />
+            <a href={`tel:${lead.phone.replace(/\s/g, "")}`} className="hover:text-foreground">{lead.phone}</a>
+          </span>
+        )}
+        <span className="inline-flex items-center gap-1.5">
+          <MapPin className="h-3.5 w-3.5" />
+          {lead.city}{lead.toCity ? ` → ${lead.toCity}` : ""}
+        </span>
+        {lead.needDate && (
+          <span className="inline-flex items-center gap-1.5">
+            <CalendarCheck className="h-3.5 w-3.5" /> {t("admin.leads.needDate")}: {new Date(lead.needDate).toLocaleDateString()}
+          </span>
+        )}
+        <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium uppercase">
+          {lead.language}
+        </span>
+      </div>
 
       {/* Customer's free-text details — the core context for the manual match call */}
       {lead.details && (
@@ -229,26 +452,414 @@ function LeadDetailPanel({ lead }: { lead: AdminLead }) {
         </p>
       )}
 
-      {/* Status quick-actions */}
-      <div>
-        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("admin.leads.quickStatus")}</span>
-        <div className="mt-1.5 flex flex-wrap gap-2">
-          {quickActions.map((a) => (
+      {/* ── Two-column work area: outreach (left) + offer builder (right) ── */}
+      <div className="grid gap-5 xl:grid-cols-2">
+        {/* Outreach panel */}
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <PanelHeading>{t("admin.leads.outreachTitle")}</PanelHeading>
             <Button
-              key={a.status}
               size="sm"
-              variant={lead.status === a.status ? "default" : "outline"}
-              className="h-9"
-              disabled={statusMutation.isPending || lead.status === a.status}
-              onClick={() => statusMutation.mutate(a.status)}
+              className="h-9 gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90"
+              disabled={selectedSuppliers.size === 0 || outreachMutation.isPending}
+              onClick={() => outreachMutation.mutate([...selectedSuppliers])}
             >
-              {t(a.labelKey)}
+              {outreachMutation.isPending
+                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                : <Send className="h-3.5 w-3.5" />}
+              {t("admin.leads.askAvailability")}
+              {selectedSuppliers.size > 0 && ` (${selectedSuppliers.size})`}
             </Button>
-          ))}
+          </div>
+          <p className="mt-1.5 text-xs text-muted-foreground">{t("admin.leads.askAvailabilityHint")}</p>
+
+          {/* Suggested partners with selection checkboxes */}
+          {matchesQuery.isLoading ? (
+            <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> {t("admin.leads.findPartners")}…
+            </div>
+          ) : matches.length === 0 ? (
+            <p className="py-3 text-sm text-muted-foreground">{t("admin.leads.matchesEmpty")}</p>
+          ) : (
+            <ul className="mt-3 space-y-2">
+              {matches.map((m) => {
+                const hasEmail = !!m.contactEmail;
+                return (
+                  <li
+                    key={`${m.supplierId}-${m.listingId ?? "directory"}`}
+                    className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-border bg-background p-3 text-sm"
+                  >
+                    <input
+                      type="checkbox"
+                      aria-label={m.supplierName}
+                      className="h-4 w-4 shrink-0 accent-[hsl(var(--accent))]"
+                      disabled={!hasEmail}
+                      checked={selectedSuppliers.has(m.supplierId)}
+                      onChange={() => toggleSupplier(m.supplierId)}
+                    />
+                    <div className="min-w-[140px] flex-1">
+                      <div className="font-medium text-navy-ink">{m.supplierName}</div>
+                      {m.listingTitle == null ? (
+                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                          <span className="rounded-full bg-teal/[0.14] px-2 py-0.5 font-semibold text-teal-deep">
+                            {t("admin.leads.matchDirectory")}
+                          </span>
+                          {(m.serviceTypes ?? []).map((st) => (
+                            <span key={st} className="rounded-full bg-secondary px-2 py-0.5 font-medium text-foreground">
+                              {serviceTypeLabel(t, st)}
+                            </span>
+                          ))}
+                          {m.listingCity && <span>· {m.listingCity}</span>}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-muted-foreground">
+                          {m.listingTitle}
+                          {m.listingCity && <span> · {m.listingCity}</span>}
+                          {m.price != null && <span> · {m.price} {m.priceUnit ?? "€"}</span>}
+                        </div>
+                      )}
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
+                        {hasEmail ? (
+                          <>
+                            <a href={`mailto:${m.contactEmail}`} className="inline-flex items-center gap-1 font-medium text-accent hover:underline">
+                              <Mail className="h-3 w-3" /> {m.contactEmail}
+                            </a>
+                            <CopyButton value={m.contactEmail} label={t("admin.leads.copy")} copiedLabel={t("admin.leads.copied")} />
+                          </>
+                        ) : (
+                          <span className="rounded-full bg-secondary px-2 py-0.5 font-medium text-muted-foreground">
+                            {t("admin.leads.noEmail")}
+                          </span>
+                        )}
+                        {m.contactPhone && (
+                          <a href={`tel:${m.contactPhone.replace(/\s/g, "")}`} className="inline-flex items-center gap-1 font-medium text-accent hover:underline">
+                            <Phone className="h-3 w-3" /> {m.contactPhone}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 gap-1 px-2.5 text-xs"
+                      disabled={createOfferMutation.isPending || locked}
+                      onClick={() => addFromMatch(m)}
+                    >
+                      <Plus className="h-3 w-3" />
+                      {t("admin.leads.offerAddFromMatch")}
+                    </Button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          {/* Sent outreach rows with manual status dropdowns */}
+          <div className="mt-4 border-t border-border pt-3">
+            {outreachRows.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t("admin.leads.outreachEmpty")}</p>
+            ) : (
+              <ul className="space-y-2">
+                {outreachRows.map((r) => (
+                  <li key={r.id} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-border bg-background p-3 text-sm">
+                    <div className="min-w-[140px] flex-1">
+                      <div className="font-medium text-navy-ink">{r.supplierName ?? r.sentTo}</div>
+                      <div className="text-xs text-muted-foreground">{r.sentTo} · {fmtDateTime(r.sentAt)}</div>
+                    </div>
+                    <select
+                      value={r.status}
+                      aria-label={t("admin.leads.colStatus")}
+                      disabled={outreachUpdateMutation.isPending}
+                      onChange={(e) => outreachUpdateMutation.mutate({ id: r.id, status: e.target.value as OutreachStatus })}
+                      className="cursor-pointer rounded-full border-0 bg-secondary px-2.5 py-1 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      {OUTREACH_STATUSES.map((s) => (
+                        <option key={s} value={s}>{t(`admin.leads.outreachStatus.${s}`)}</option>
+                      ))}
+                    </select>
+                    <div className="flex w-full items-center gap-1.5 sm:w-auto">
+                      <input
+                        type="text"
+                        placeholder={t("admin.leads.outreachNotePlaceholder")}
+                        value={noteDrafts[r.id] ?? r.note ?? ""}
+                        onChange={(e) => setNoteDrafts((prev) => ({ ...prev, [r.id]: e.target.value }))}
+                        className="h-8 w-full min-w-[120px] rounded-md border border-border bg-card px-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-accent sm:w-[160px]"
+                      />
+                      {noteDrafts[r.id] != null && noteDrafts[r.id] !== (r.note ?? "") && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-2.5 text-xs"
+                          disabled={outreachUpdateMutation.isPending}
+                          onClick={() => outreachUpdateMutation.mutate({ id: r.id, note: noteDrafts[r.id] })}
+                        >
+                          {t("admin.leads.save")}
+                        </Button>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        {/* Offer builder */}
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <PanelHeading>{t("admin.leads.offerTitle")}</PanelHeading>
+              {offer && (
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                  offer.status === "chosen" ? "bg-success/10 text-success"
+                  : offer.status === "sent" || offer.status === "viewed" ? "bg-accent/10 text-accent"
+                  : "bg-secondary text-muted-foreground"
+                }`}>
+                  {t(`admin.leads.offerStatus.${offer.status}`)}
+                </span>
+              )}
+            </div>
+            {offer && offerPagePath && offer.status !== "draft" && (
+              <a
+                href={offerPagePath}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
+              >
+                <ExternalLink className="h-3 w-3" />
+                {t("admin.leads.offerOpenPage")}
+              </a>
+            )}
+          </div>
+
+          {!offer ? (
+            <div className="py-4">
+              <p className="text-sm text-muted-foreground">{t("admin.leads.offerEmpty")}</p>
+              <Button
+                size="sm"
+                className="mt-3 h-9 gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90"
+                disabled={createOfferMutation.isPending}
+                onClick={() => createOfferMutation.mutate(undefined)}
+              >
+                {createOfferMutation.isPending
+                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  : <Plus className="h-3.5 w-3.5" />}
+                {t("admin.leads.offerCreate")}
+              </Button>
+            </div>
+          ) : (
+            <>
+              {/* Sent / Viewed / Chosen timestamps after send */}
+              {(offer.sentAt || offer.viewedAt || offer.chosenAt) && (
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                  {offer.sentAt && (
+                    <span className="inline-flex items-center gap-1">
+                      <Send className="h-3 w-3" /> {t("admin.leads.offerStatus.sent")}: {fmtDateTime(offer.sentAt)}
+                    </span>
+                  )}
+                  {offer.viewedAt && (
+                    <span className="inline-flex items-center gap-1">
+                      <Eye className="h-3 w-3" /> {t("admin.leads.offerStatus.viewed")}: {fmtDateTime(offer.viewedAt)}
+                    </span>
+                  )}
+                  {offer.chosenAt && (
+                    <span className="inline-flex items-center gap-1 font-medium text-success">
+                      <CheckCircle className="h-3 w-3" /> {t("admin.leads.offerStatus.chosen")}: {fmtDateTime(offer.chosenAt)}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Option editors */}
+              <div className="mt-3 space-y-3">
+                {options.map((o, i) => (
+                  <div key={o.localId} className="rounded-lg border border-border bg-background p-3">
+                    <div className="flex items-start gap-2">
+                      <div className="flex-1 space-y-2">
+                        <input
+                          type="text"
+                          aria-label={t("admin.leads.offerOptionTitle")}
+                          placeholder={t("admin.leads.offerOptionTitle")}
+                          value={o.title}
+                          disabled={locked}
+                          onChange={(e) => updateOption(o.localId, { title: e.target.value })}
+                          className="h-9 w-full rounded-md border border-border bg-card px-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-60"
+                        />
+                        <div className="flex flex-wrap gap-2">
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            aria-label={t("admin.leads.offerPrice")}
+                            placeholder={t("admin.leads.offerPrice")}
+                            value={o.price}
+                            disabled={locked}
+                            onChange={(e) => updateOption(o.localId, { price: e.target.value })}
+                            className="h-9 w-[110px] rounded-md border border-border bg-card px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-60"
+                          />
+                          <input
+                            type="text"
+                            aria-label={t("admin.leads.offerPriceUnit")}
+                            placeholder={t("admin.leads.offerPriceUnit")}
+                            value={o.priceUnit}
+                            disabled={locked}
+                            onChange={(e) => updateOption(o.localId, { priceUnit: e.target.value })}
+                            className="h-9 w-[140px] rounded-md border border-border bg-card px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-60"
+                          />
+                          {o.supplierName && (
+                            <span className="inline-flex h-9 items-center rounded-md bg-secondary px-2.5 text-xs font-medium text-muted-foreground">
+                              {o.supplierName}
+                            </span>
+                          )}
+                        </div>
+                        <textarea
+                          aria-label={t("admin.leads.offerNotes")}
+                          placeholder={t("admin.leads.offerNotes")}
+                          value={o.notes}
+                          rows={2}
+                          disabled={locked}
+                          onChange={(e) => updateOption(o.localId, { notes: e.target.value })}
+                          className="w-full rounded-md border border-border bg-card px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-60"
+                        />
+                      </div>
+                      <div className="flex shrink-0 flex-col gap-1">
+                        <button
+                          type="button"
+                          aria-label={t("admin.leads.offerMoveUp")}
+                          disabled={i === 0 || locked}
+                          onClick={() => moveOption(i, -1)}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-30"
+                        >
+                          <ArrowUp className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={t("admin.leads.offerMoveDown")}
+                          disabled={i === options.length - 1 || locked}
+                          onClick={() => moveOption(i, 1)}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-30"
+                        >
+                          <ArrowDown className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={t("admin.leads.offerRemoveOption")}
+                          disabled={locked}
+                          onClick={() => mutateOptions((prev) => prev.filter((p) => p.localId !== o.localId))}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-30"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-3 h-9 gap-1.5"
+                disabled={locked}
+                onClick={() => mutateOptions((prev) => [...prev, {
+                  localId: nextLocalId(), supplierId: null, supplierName: null,
+                  supplierLocationId: null, title: "", price: "", priceUnit: "", notes: "",
+                }])}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                {t("admin.leads.offerAddOption")}
+              </Button>
+
+              {/* Customer note */}
+              <div className="mt-3">
+                <label htmlFor={`offer-note-${lead.id}`} className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {t("admin.leads.offerCustomerNote")}
+                </label>
+                <textarea
+                  id={`offer-note-${lead.id}`}
+                  value={customerNote}
+                  rows={2}
+                  disabled={locked}
+                  onChange={(e) => { setCustomerNote(e.target.value); setDirty(true); }}
+                  className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-60"
+                />
+              </div>
+
+              {/* Actions: save / preview / send (with confirm) */}
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-9"
+                  disabled={saveOfferMutation.isPending || !dirty || locked}
+                  onClick={() => saveOfferMutation.mutate()}
+                >
+                  {saveOfferMutation.isPending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+                  {t("admin.leads.offerSave")}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-9 gap-1.5"
+                  aria-pressed={showPreview}
+                  onClick={() => setShowPreview((v) => !v)}
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  {t("admin.leads.offerPreview")}
+                </Button>
+                <Button
+                  size="sm"
+                  className="h-9 gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90"
+                  disabled={sendOfferMutation.isPending || locked}
+                  onClick={() => {
+                    if (validOptionCount === 0) { toast.error(t("admin.leads.offerNoOptions")); return; }
+                    setConfirmSend(true);
+                  }}
+                >
+                  {sendOfferMutation.isPending
+                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    : <Send className="h-3.5 w-3.5" />}
+                  {t("admin.leads.offerSend")}
+                </Button>
+              </div>
+
+              {/* Live customer-facing preview — reuses the public page copy. */}
+              {showPreview && (
+                <div className="mt-4 rounded-lg border border-dashed border-border bg-background p-4">
+                  <p className="font-display text-base font-bold text-navy-ink">
+                    {t("offer.title")
+                      .replace("{category}", serviceTypeLabel(t, lead.category))
+                      .replace("{city}", lead.city)}
+                  </p>
+                  {customerNote.trim() && (
+                    <p className="mt-2 whitespace-pre-wrap rounded-md bg-secondary/60 px-3 py-2 text-xs text-foreground">{customerNote}</p>
+                  )}
+                  <div className="mt-3 space-y-2">
+                    {options.filter((o) => o.title.trim()).map((o) => (
+                      <div key={o.localId} className="rounded-lg border border-border bg-card p-3">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <span className="text-sm font-semibold text-foreground">{o.title}</span>
+                          {parsePrice(o.price) != null && (
+                            <span className="shrink-0 font-display text-sm font-extrabold text-navy-ink">
+                              €{parsePrice(o.price)}{o.priceUnit && <span className="ml-1 text-xs font-medium text-muted-foreground">{o.priceUnit}</span>}
+                            </span>
+                          )}
+                        </div>
+                        {o.supplierName && <p className="mt-0.5 text-xs text-muted-foreground">{o.supplierName}</p>}
+                        {o.notes.trim() && <p className="mt-1 text-xs text-muted-foreground">{o.notes}</p>}
+                        <span className="mt-2 inline-flex rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground">
+                          {t("offer.choose")}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 
-      {/* Admin notes */}
+      {/* ── Admin notes (existing) ── */}
       <div>
         <label htmlFor={`lead-notes-${lead.id}`} className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
           {t("admin.leads.notes")}
@@ -261,37 +872,55 @@ function LeadDetailPanel({ lead }: { lead: AdminLead }) {
           rows={2}
           className="mt-1.5 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
         />
-        <div className="mt-2 flex items-center gap-3">
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-9"
-            disabled={notesMutation.isPending || notes === (lead.adminNotes ?? "")}
-            onClick={() => notesMutation.mutate()}
-          >
-            {notesMutation.isPending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
-            {t("admin.leads.saveNotes")}
-          </Button>
-          {!showMatches && (
-            <Button
-              size="sm"
-              className="h-9 gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90"
-              onClick={() => setShowMatches(true)}
-            >
-              <Users className="h-3.5 w-3.5" />
-              {t("admin.leads.findPartners")}
-            </Button>
-          )}
-        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          className="mt-2 h-9"
+          disabled={notesMutation.isPending || notes === (lead.adminNotes ?? "")}
+          onClick={() => notesMutation.mutate()}
+        >
+          {notesMutation.isPending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+          {t("admin.leads.saveNotes")}
+        </Button>
       </div>
 
-      {/* Partner suggestions */}
-      {showMatches && (
-        <div>
-          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("admin.leads.matchesTitle")}</span>
-          <LeadMatches leadId={lead.id} />
-        </div>
-      )}
+      {/* ── Activity timeline (derived from timestamps) ── */}
+      <div>
+        <PanelHeading>{t("admin.leads.timelineTitle")}</PanelHeading>
+        <ol className="ml-1 mt-2 space-y-1.5 border-l-2 border-border pl-4">
+          {timeline.map((e, i) => (
+            <li key={`${e.at}-${i}`} className="relative text-sm text-foreground">
+              <span aria-hidden className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full bg-teal-deep ring-2 ring-card" />
+              <span className="mr-2 inline-flex items-center gap-1 font-mono text-xs text-muted-foreground">
+                <Clock className="h-3 w-3" aria-hidden />
+                {fmtDateTime(e.at)}
+              </span>
+              {e.label}
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      {/* Send confirmation */}
+      <AlertDialog open={confirmSend} onOpenChange={setConfirmSend}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("admin.leads.offerSendConfirmTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("admin.leads.offerSendConfirmBody").replace("{count}", String(validOptionCount))}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("offer.confirmCancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-accent text-accent-foreground hover:bg-accent/90"
+              onClick={() => sendOfferMutation.mutate()}
+            >
+              {t("admin.leads.offerSend")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -567,7 +1196,7 @@ function LeadRow({ lead, expanded, onToggle, onStatusChange, statusPending }: {
       {expanded && (
         <tr className="border-b border-border last:border-0">
           <td colSpan={8} className="p-0">
-            <LeadDetailPanel lead={lead} />
+            <LeadWorkspace lead={lead} />
           </td>
         </tr>
       )}

@@ -296,6 +296,155 @@ export async function stubAdminLeads(
   });
 }
 
+/** Admin demand-lead row (GET /admin/leads item). */
+export function adminLead(over: Json = {}): Json {
+  return {
+    id: "lead-1",
+    name: "Mari Maasikas",
+    email: "mari@example.com",
+    phone: "+372 5555 5555",
+    city: "Tallinn",
+    toCity: null,
+    needDate: "2026-08-01",
+    details: "Vajan ladu u 20 m2, augusti algusest.",
+    category: "warehouse",
+    query: "",
+    language: "et",
+    createdAt: "2026-07-09T08:00:00Z",
+    status: "new",
+    adminNotes: null,
+    supplierName: null,
+    quotedPrice: null,
+    ...over,
+  };
+}
+
+/** Suggested partner match (GET /admin/leads/{id}/matches item). */
+export function adminMatch(over: Json = {}): Json {
+  return {
+    supplierId: "sup-1",
+    supplierName: "Acme Storage",
+    contactEmail: "acme@example.com",
+    contactPhone: "+372 5111 1111",
+    listingId: "wh-001",
+    listingTitle: "Miniladu 10 m²",
+    listingCity: "Tallinn",
+    price: 89,
+    priceUnit: "€/kuu",
+    serviceTypes: [],
+    ...over,
+  };
+}
+
+/**
+ * Stateful stub for the admin offer loop (overhaul spec §5.1):
+ * GET/POST /admin/leads/{id}/outreach, GET/POST /admin/leads/{id}/offers,
+ * GET/PATCH /admin/offers/{id}, POST /admin/offers/{id}/send,
+ * PATCH /admin/outreach/{id}. Register AFTER stubAdminLeads — the later
+ * route wins for the overlapping /admin/leads/{id}/... paths.
+ */
+export async function stubOfferLoop(
+  page: Page,
+  opts: { offers?: Json[]; outreach?: Json[] } = {},
+): Promise<void> {
+  const offers: Json[] = [...(opts.offers ?? [])];
+  const outreach: Json[] = [...(opts.outreach ?? [])];
+  let seq = 0;
+  await page.route(
+    /\/admin\/(leads\/[^/]+\/(outreach|offers)|offers\/[^/]+(\/send)?|outreach\/[^/]+)(\?|$)/,
+    (route) => {
+      const req = route.request();
+      const path = new URL(req.url()).pathname;
+      const method = req.method();
+
+      if (/\/admin\/leads\/[^/]+\/outreach/.test(path)) {
+        if (method === "POST") {
+          const body = (req.postDataJSON() ?? {}) as { supplierIds?: string[] };
+          const rows = (body.supplierIds ?? []).map((sid) => ({
+            id: `or-${++seq}`, demandLeadId: "lead-1", supplierId: sid,
+            supplierName: "Acme Storage", sentTo: "acme@example.com",
+            sentAt: "2026-07-10T09:30:00Z", status: "sent", note: null,
+          }));
+          outreach.push(...rows);
+          return json(route, { sent: rows, skipped: [] });
+        }
+        return json(route, outreach);
+      }
+
+      if (/\/admin\/leads\/[^/]+\/offers/.test(path)) {
+        if (method === "POST") {
+          const body = (req.postDataJSON() ?? {}) as { options?: Json[]; customerNote?: string };
+          const created: Json = {
+            id: `offer-${++seq}`, demandLeadId: "lead-1", token: "tok-e2e",
+            status: "draft", language: "et", customerNote: body.customerNote ?? null,
+            createdAt: "2026-07-10T09:40:00Z", sentAt: null, viewedAt: null,
+            chosenAt: null, chosenOptionId: null, createdBy: "admin@ruumly.eu",
+            options: (body.options ?? []).map((o, i) => ({
+              id: `oopt-${++seq}`,
+              supplierId: (o as Json).supplierId ?? null,
+              supplierName: null,
+              supplierLocationId: (o as Json).supplierLocationId ?? null,
+              title: (o as Json).title ?? "",
+              priceAmount: (o as Json).priceAmount ?? null,
+              priceUnit: (o as Json).priceUnit ?? null,
+              notes: (o as Json).notes ?? null,
+              sortOrder: (o as Json).sortOrder ?? i,
+            })),
+          };
+          offers.push(created);
+          return json(route, created);
+        }
+        return json(route, offers);
+      }
+
+      const sendMatch = path.match(/\/admin\/offers\/([^/]+)\/send/);
+      if (sendMatch && method === "POST") {
+        const o = offers.find((x) => x.id === sendMatch[1]) as Json | undefined;
+        if (!o) return json(route, { message: "not found" }, 404);
+        o.status = "sent";
+        o.sentAt = "2026-07-10T10:00:00Z";
+        return json(route, o);
+      }
+
+      const offerMatch = path.match(/\/admin\/offers\/([^/]+)$/);
+      if (offerMatch) {
+        const o = offers.find((x) => x.id === offerMatch[1]) as Json | undefined;
+        if (!o) return json(route, { message: "not found" }, 404);
+        if (method === "PATCH") {
+          const body = (req.postDataJSON() ?? {}) as Json;
+          if (body.customerNote !== undefined) o.customerNote = body.customerNote;
+          if (Array.isArray(body.options)) {
+            o.options = (body.options as Json[]).map((op, i) => ({
+              id: `oopt-${++seq}`,
+              supplierId: op.supplierId ?? null,
+              supplierName: null,
+              supplierLocationId: op.supplierLocationId ?? null,
+              title: op.title ?? "",
+              priceAmount: op.priceAmount ?? null,
+              priceUnit: op.priceUnit ?? null,
+              notes: op.notes ?? null,
+              sortOrder: op.sortOrder ?? i,
+            }));
+          }
+        }
+        return json(route, o);
+      }
+
+      const outreachMatch = path.match(/\/admin\/outreach\/([^/]+)$/);
+      if (outreachMatch && method === "PATCH") {
+        const r = outreach.find((x) => x.id === outreachMatch[1]) as Json | undefined;
+        if (!r) return json(route, { message: "not found" }, 404);
+        const body = (req.postDataJSON() ?? {}) as Json;
+        if (body.status) r.status = body.status;
+        if (body.note !== undefined) r.note = body.note;
+        return json(route, r);
+      }
+
+      return route.continue();
+    },
+  );
+}
+
 /** Public offer fixture (GET /offers/{token} shape per overhaul spec §5.1). */
 export function publicOffer(over: Json = {}): Json {
   return {
