@@ -69,7 +69,9 @@ test.describe("Homepage (concierge-first hero)", () => {
     await stubLocations(page, [directoryLocation()]);
     await page.goto("/et");
     // The map bundle is lazy and deferred until scrolled near the viewport.
-    const pin = page.locator(".ruumly-directory-pin");
+    // Directory profiles render as per-category pins (clustered; a single pin
+    // is shown as-is, not as a count bubble).
+    const pin = page.locator(".ruumly-category-pin");
     for (let i = 0; i < 12 && (await pin.count()) === 0; i++) {
       await page.mouse.wheel(0, 400);
       await page.waitForTimeout(250);

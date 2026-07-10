@@ -1,6 +1,8 @@
-import { useEffect, useRef, useCallback, memo } from "react";
+import { useEffect, useRef, memo } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster";
+import "leaflet.markercluster/dist/MarkerCluster.css";
 import type { Listing, SupplierLocation } from "@/services/types";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { getVisibleServiceTypes } from "@/lib/visibleServiceTypes";
@@ -48,17 +50,103 @@ const PIN_TEAL_DEEP = "#1FA6AE"; // non-featured base
 const PIN_GREEN = "#0A9881"; // hover / selected
 const PIN_GREY = "#97A0B6"; // fully-booked location
 
-// Legend swatch colors (kept type-keyed so the legend still reads per vertical).
-const typeColors: Record<string, string> = {
-  warehouse: PIN_NAVY_INK,
-  moving: PIN_TEAL_DEEP,
-  trailer: PIN_TEAL_DEEP,
-  multi: PIN_TEAL_DEEP,
+// ── Per-category pins (overhaul spec §1) ─────────────────────────────────────
+// 7 distinct, accessible fills (≥3:1 against the light CARTO basemap) anchored
+// on the brand navy/teal family, one per canonical service category. Directory
+// / location pins render as a colored teardrop bubble with a white Lucide
+// glyph; the legend reuses the exact same icon + color per category.
+const CATEGORY_COLORS: Record<string, string> = {
+  warehouse: "#173B8D", // brand navy
+  moving:    "#0F766E", // deep teal
+  trailer:   "#B45309", // amber
+  cleaning:  "#7C3AED", // violet
+  packing:   "#BE185D", // magenta
+  vanrental: "#4D7C0F", // olive green
+  insurance: "#475569", // slate
 };
 
+// Inner SVG markup (24×24 viewBox) per category — white Lucide glyphs:
+// Warehouse / Truck / Caravan / Sparkles / Package / Bus / Shield.
+const CATEGORY_GLYPHS: Record<string, string> = {
+  warehouse:
+    '<path d="M18 21V10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1v11"/><path d="M22 21V8a1 1 0 0 0-.618-.923l-9-3.75a1 1 0 0 0-.764 0l-9 3.75A1 1 0 0 0 2 8v13"/><path d="M6 13h12"/><path d="M6 17h12"/>',
+  moving:
+    '<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
+  trailer:
+    '<path d="M18 19V9a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v8a2 2 0 0 0 2 2h2"/><path d="M2 9h3a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H2"/><path d="M22 17v1a1 1 0 0 1-1 1H10v-9a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v9"/><circle cx="8" cy="19" r="2"/>',
+  cleaning:
+    '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/>',
+  packing:
+    '<path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="m7.5 4.27 9 5.15"/>',
+  vanrental:
+    '<path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h5"/><circle cx="16" cy="18" r="2"/>',
+  insurance:
+    '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
+};
+
+const glyphSvg = (slug: string, size: number) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${CATEGORY_GLYPHS[slug] ?? CATEGORY_GLYPHS.warehouse}</svg>`;
+
+/**
+ * Category pin — a round bubble + short teardrop tail, colored per category,
+ * with the white Lucide glyph. Used for directory/location profiles (no price).
+ * Selected pins grow slightly. Anchored at the tail tip (true coordinate).
+ */
+function categoryPinIcon(slug: string, selected: boolean) {
+  const color = CATEGORY_COLORS[slug] ?? CATEGORY_COLORS.warehouse;
+  const size = selected ? 30 : 26;
+  const tail = 6;
+  const glyph = glyphSvg(slug, Math.round(size * 0.54));
+  return L.divIcon({
+    className: "ruumly-category-pin",
+    html: `
+      <div style="position:relative; width:${size}px; height:${size + tail}px; cursor:pointer;">
+        <span style="position:absolute; left:0; top:0; width:${size}px; height:${size}px;
+          display:inline-flex; align-items:center; justify-content:center;
+          border-radius:999px; background:${color};
+          box-shadow:0 0 0 2px rgba(255,255,255,.95), 0 4px 14px rgba(16,28,64,.22), 0 2px 6px rgba(16,28,64,.14);
+        ">${glyph}</span>
+        <span style="position:absolute; left:50%; bottom:0; width:0; height:0;
+          transform:translateX(-50%);
+          border-left:5px solid transparent; border-right:5px solid transparent;
+          border-top:${tail + 1}px solid ${color};
+          filter:drop-shadow(0 1px 1px rgba(16,28,64,.2));"></span>
+      </div>`,
+    iconSize: [size, size + tail],
+    iconAnchor: [size / 2, size + tail],
+  });
+}
+
+// Legend swatch — identical icon + color as the map pin for the category.
+function CategorySwatch({ slug }: { slug: string }) {
+  return (
+    <span
+      className="inline-flex h-6 w-6 items-center justify-center rounded-full"
+      style={{
+        background: CATEGORY_COLORS[slug] ?? CATEGORY_COLORS.warehouse,
+        boxShadow: "0 0 0 1.5px rgba(255,255,255,.9)",
+      }}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#fff"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+        dangerouslySetInnerHTML={{ __html: CATEGORY_GLYPHS[slug] ?? CATEGORY_GLYPHS.warehouse }}
+      />
+    </span>
+  );
+}
+
 // Directory-only event categories (no price-pin vertical of their own). When
-// directory profiles are on the map, the legend lists them with the directory
-// dot swatch, labelled via the serviceTypeLabels prop (i18n serviceType.*).
+// directory profiles are on the map, the legend lists them with their category
+// swatch, labelled via the serviceTypeLabels prop (i18n serviceType.*).
 const DIRECTORY_LEGEND_SLUGS = ["cleaning", "packing", "vanrental", "insurance"] as const;
 
 // A listing is "featured" when it has the promoted boost, is a founding partner, or
@@ -112,51 +200,6 @@ function priceBubbleIcon(label: string, opts: { featured: boolean; selected: boo
   });
 }
 
-// Per-vertical glyphs rendered inside React (the map legend swatches).
-// Map pins themselves are uniform price-bubble pills (see priceBubbleIcon),
-// so these glyphs are only used to decorate the legend labels.
-function MarkerIcon({ type }: { type: string }) {
-  const stroke = "white";
-  const sw = 2;
-  switch (type) {
-    case "moving":
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24">
-          <rect x="1" y="6" width="12" height="12" rx="1" fill="none" stroke={stroke} strokeWidth={sw} />
-          <path d="M13 10h4l3 4v4h-4" fill="none" stroke={stroke} strokeWidth={sw} strokeLinejoin="round" />
-          <circle cx="6" cy="18" r="2" fill="none" stroke={stroke} strokeWidth={sw} />
-          <circle cx="17" cy="18" r="2" fill="none" stroke={stroke} strokeWidth={sw} />
-        </svg>
-      );
-    case "trailer":
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24">
-          <rect x="1" y="7" width="14" height="10" rx="1" fill="none" stroke={stroke} strokeWidth={sw} />
-          <path d="M15 14h5l2 3h1" fill="none" stroke={stroke} strokeWidth={sw} strokeLinejoin="round" />
-          <circle cx="6" cy="17" r="2" fill="none" stroke={stroke} strokeWidth={sw} />
-          <circle cx="18" cy="17" r="2" fill="none" stroke={stroke} strokeWidth={sw} />
-        </svg>
-      );
-    case "multi":
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24">
-          <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" fill="none" stroke={stroke} strokeWidth={sw} strokeLinejoin="round" />
-          <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" fill="none" stroke={stroke} strokeWidth={sw} strokeLinejoin="round" />
-          <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" fill="none" stroke={stroke} strokeWidth={sw} strokeLinejoin="round" />
-          <path d="M10 6h4M10 10h4M10 14h4M10 18h4" stroke={stroke} strokeWidth={sw} strokeLinecap="round" />
-        </svg>
-      );
-    case "warehouse":
-    default:
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24">
-          <rect x="4" y="10" width="16" height="12" rx="1" fill="none" stroke={stroke} strokeWidth={sw} />
-          <path d="M2 10l10-6 10 6" fill="none" stroke={stroke} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      );
-  }
-}
-
 function createMarkerIcon(listing: Listing, isSelected: boolean) {
   return priceBubbleIcon(`€${listing.priceFrom}`, {
     featured: isFeaturedListing(listing),
@@ -164,79 +207,12 @@ function createMarkerIcon(listing: Listing, isSelected: boolean) {
   });
 }
 
-/**
- * Directory pin — an unclaimed provider profile has no price and no unit
- * counts, so it renders as a brand dot (navy fill, teal core, white ring)
- * instead of a price bubble. Selected pins grow slightly.
- */
-function directoryPinIcon(selected: boolean) {
-  const size = selected ? 22 : 18;
-  const inset = Math.round(size * 0.3);
-  return L.divIcon({
-    className: "ruumly-directory-pin",
-    html: `
-      <div style="position:relative; width:${size}px; height:${size}px; cursor:pointer;">
-        <span style="position:absolute; inset:0; border-radius:999px;
-          background:${PIN_NAVY_INK};
-          box-shadow:0 0 0 2.5px rgba(255,255,255,.95), 0 4px 14px rgba(16,28,64,.22), 0 2px 6px rgba(16,28,64,.14);"></span>
-        <span style="position:absolute; inset:${inset}px; border-radius:999px; background:${PIN_TEAL_DEEP};"></span>
-      </div>`,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
-  });
-}
-
-// ── Stacked-pin spreading ────────────────────────────────────────────────────
-// Bulk-imported directory providers are often geocoded to the exact same
-// city-center point (e.g. ~15 Tallinn providers at 59.437242, 24.757269),
-// collapsing their pins into a single blob. When several items share
-// (near-)identical coordinates — equal after rounding to 5 decimals (~1 m) —
-// spread them deterministically in a small circle around the shared point.
-// Deterministic: members are ordered by sorted id, so a pin keeps its spot
-// across renders and refetches. Display-only: popups, links and the
-// underlying data keep the original coordinates.
-const METERS_PER_DEG_LAT = 111_320;
-
-function spreadGroupKey(lat: number, lng: number): string {
-  return `${lat.toFixed(5)},${lng.toFixed(5)}`;
-}
-
-/** Returns display coordinates for every item that needs to move; items in
- *  singleton groups are absent from the map (they render at their true spot). */
-function computeSpreadCoords(
-  items: { id: string; lat: number; lng: number }[],
-): Map<string, [number, number]> {
-  const groups = new Map<string, { id: string; lat: number; lng: number }[]>();
-  for (const item of items) {
-    if (!Number.isFinite(item.lat) || !Number.isFinite(item.lng)) continue;
-    const key = spreadGroupKey(item.lat, item.lng);
-    const group = groups.get(key);
-    if (group) group.push(item);
-    else groups.set(key, [item]);
-  }
-
-  const spread = new Map<string, [number, number]>();
-  for (const group of groups.values()) {
-    if (group.length < 2) continue;
-    const sorted = [...group].sort((a, b) => a.id.localeCompare(b.id));
-    const count = sorted.length;
-    // Radius grows gently with pile size: 120 m for a pair, capped at 250 m.
-    const radiusM = Math.min(250, 120 + (count - 2) * 12);
-    sorted.forEach((item, index) => {
-      const angle = (index / count) * 2 * Math.PI;
-      const dLat = (radiusM * Math.cos(angle)) / METERS_PER_DEG_LAT;
-      const dLng =
-        (radiusM * Math.sin(angle)) /
-        (METERS_PER_DEG_LAT * Math.max(0.2, Math.cos((item.lat * Math.PI) / 180)));
-      spread.set(item.id, [item.lat + dLat, item.lng + dLng]);
-    });
-  }
-  return spread;
-}
-
 function createLocationMarkerIcon(location: SupplierLocation, isSelected: boolean, _unitLabel = "units") {
-  // Directory profiles: brand dot — NO price, NO "0 available" bubble.
-  if (location.isDirectory) return directoryPinIcon(isSelected);
+  // Directory profiles: per-category pin — icon from the primary serviceType.
+  // NO price, NO "0 available" bubble.
+  if (location.isDirectory) {
+    return categoryPinIcon(location.serviceTypes?.[0] ?? "warehouse", isSelected);
+  }
 
   const label = location.priceFrom != null
     ? `€${location.priceFrom}`
@@ -264,6 +240,27 @@ function createLocationMarkerIcon(location: SupplierLocation, isSelected: boolea
   }
 
   return priceBubbleIcon(label, { featured, selected: isSelected });
+}
+
+/** Brand-navy round cluster bubble with a white count, sized by count. */
+function clusterIcon(cluster: L.MarkerCluster) {
+  const count = cluster.getChildCount();
+  const size = count < 10 ? 34 : count < 25 ? 40 : 46;
+  return L.divIcon({
+    className: "ruumly-cluster",
+    html: `
+      <div style="
+        display:flex; align-items:center; justify-content:center;
+        width:${size}px; height:${size}px; border-radius:999px;
+        background:${PIN_NAVY_INK}; color:#fff;
+        font-family:'Plus Jakarta Sans', sans-serif; font-weight:700;
+        font-size:${count < 100 ? 13 : 12}px; line-height:1;
+        box-shadow:0 0 0 3px rgba(255,255,255,.9), 0 6px 16px rgba(16,28,64,.28), 0 2px 6px rgba(16,28,64,.16);
+        cursor:pointer;
+      ">${count}</div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
 }
 
 function InteractiveMap({
@@ -322,7 +319,11 @@ function InteractiveMap({
 
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
+  // Marketplace listing pins live in a plain layer group (look unchanged);
+  // directory/location pins live in a cluster group — stacked identical coords
+  // collapse into a navy count bubble and spiderfy at max zoom (spec §1).
   const markersRef = useRef<L.LayerGroup | null>(null);
+  const clusterRef = useRef<L.MarkerClusterGroup | null>(null);
   const markerMap = useRef<Map<string, L.Marker>>(new Map());
   const prevListingsKey = useRef("");
 
@@ -358,11 +359,19 @@ function InteractiveMap({
     }).addTo(mapInstance.current);
 
     markersRef.current = L.layerGroup().addTo(mapInstance.current);
+    clusterRef.current = L.markerClusterGroup({
+      showCoverageOnHover: false,
+      maxClusterRadius: 50,
+      spiderfyOnMaxZoom: true,
+      iconCreateFunction: clusterIcon,
+    }).addTo(mapInstance.current);
 
     return () => {
       if (mapInstance.current) {
         mapInstance.current.remove();
         mapInstance.current = null;
+        markersRef.current = null;
+        clusterRef.current = null;
       }
     };
   }, []);
@@ -374,9 +383,10 @@ function InteractiveMap({
   }, [language]);
 
   useEffect(() => {
-    if (!mapInstance.current || !markersRef.current) return;
+    if (!mapInstance.current || !markersRef.current || !clusterRef.current) return;
 
     markersRef.current.clearLayers();
+    clusterRef.current.clearLayers();
     markerMap.current.clear();
     markerData.current.clear();
 
@@ -389,14 +399,6 @@ function InteractiveMap({
     const coveredListingIds = new Set<string>();
     locations.forEach((loc) => loc.units?.forEach((u) => coveredListingIds.add(u.id)));
 
-    // Display-only spread for pins stacked on (near-)identical coordinates.
-    const displayCoords = computeSpreadCoords([
-      ...locations.map((l) => ({ id: l.id, lat: l.lat, lng: l.lng })),
-      ...listings
-        .filter((l) => !coveredListingIds.has(l.id))
-        .map((l) => ({ id: l.id, lat: l.lat, lng: l.lng })),
-    ]);
-
     // Shared image placeholder — a brand warehouse glyph, not an emoji.
     const imgFallback = `<div style="width: 100%; height: 88px; background: #f1f5f9; border-radius: 8px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; color: #94a3b8;"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="11" rx="1"/><path d="M2 10l10-6 10 6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
 
@@ -407,13 +409,14 @@ function InteractiveMap({
       String(s ?? "").replace(/[&<>"']/g, (c) =>
         ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string);
 
-    // Render location markers
+    // Render location markers (clustered — true coordinates, no spreading;
+    // stacked pins spiderfy out at max zoom instead).
     locations.forEach((loc) => {
+      if (!Number.isFinite(loc.lat) || !Number.isFinite(loc.lng)) return;
       const icon = createLocationMarkerIcon(loc, loc.id === selectedId, tUnits);
       // Featured pins lift on top of the cluster (paid "Featured on map" boost).
       const locFeatured = (loc.units ?? []).some((u) => isFeaturedListing(u));
-      const [dispLat, dispLng] = displayCoords.get(loc.id) ?? [loc.lat, loc.lng];
-      const marker = L.marker([dispLat, dispLng], { icon, zIndexOffset: locFeatured ? 1000 : 0 });
+      const marker = L.marker([loc.lat, loc.lng], { icon, zIndexOffset: locFeatured ? 1000 : 0 });
 
       // Directory profile popup — supplier name + localized service chips +
       // partner-page link. No price, no availability, no booking.
@@ -453,23 +456,23 @@ function InteractiveMap({
         onLocationClickRef.current?.(loc);
       });
 
-      marker.addTo(markersRef.current!);
+      clusterRef.current!.addLayer(marker);
       markerMap.current.set(loc.id, marker);
       markerData.current.set(loc.id, { kind: "location", obj: loc });
-      bounds.push([dispLat, dispLng]);
+      bounds.push([loc.lat, loc.lng]);
     });
 
     // Render individual listing markers (skip those covered by locations)
     listings.forEach((listing) => {
       if (coveredListingIds.has(listing.id)) return;
-      
+      if (!Number.isFinite(listing.lat) || !Number.isFinite(listing.lng)) return;
+
       const icon = createMarkerIcon(listing, listing.id === selectedId);
       // Featured pins lift on top (paid "Featured on map" boost).
-      const [dispLat, dispLng] = displayCoords.get(listing.id) ?? [listing.lat, listing.lng];
-      const marker = L.marker([dispLat, dispLng], { icon, zIndexOffset: isFeaturedListing(listing) ? 1000 : 0 });
+      const marker = L.marker([listing.lat, listing.lng], { icon, zIndexOffset: isFeaturedListing(listing) ? 1000 : 0 });
 
       const typeName = typeLabels[listing.type] || listing.type;
-      const typeColor = typeColors[listing.type];
+      const typeColor = CATEGORY_COLORS[listing.type] ?? PIN_TEAL_DEEP;
 
       const popupHtml = `
         <div style="min-width: 200px; font-family: 'DM Sans', sans-serif;">
@@ -499,7 +502,7 @@ function InteractiveMap({
       marker.addTo(markersRef.current!);
       markerMap.current.set(listing.id, marker);
       markerData.current.set(listing.id, { kind: "listing", obj: listing });
-      bounds.push([dispLat, dispLng]);
+      bounds.push([listing.lat, listing.lng]);
     });
 
     // Only fit bounds when the set of items changes
@@ -540,8 +543,19 @@ function InteractiveMap({
     restyle(selectedId, true);
     const marker = markerMap.current.get(selectedId);
     if (marker) {
-      marker.openPopup();
-      mapInstance.current.panTo(marker.getLatLng(), { animate: true });
+      // A clustered marker may currently be hidden inside a count bubble —
+      // opening its popup would no-op. Pan to whatever is visible (the marker
+      // itself or its parent cluster) and only open the popup when the pin is
+      // actually on the map. No forced zoom on hover.
+      const data = markerData.current.get(selectedId);
+      const inCluster = data?.kind === "location" && clusterRef.current;
+      const visible = inCluster ? clusterRef.current!.getVisibleParent(marker) : marker;
+      if (visible === marker || visible == null) {
+        marker.openPopup();
+        mapInstance.current.panTo(marker.getLatLng(), { animate: true });
+      } else {
+        mapInstance.current.panTo(visible.getLatLng(), { animate: true });
+      }
     }
   }, [selectedId, tUnits]);
 
@@ -604,33 +618,21 @@ function InteractiveMap({
         }
       `}</style>
       <div ref={mapRef} className="h-full w-full" />
-      {/* Legend — lists the visible verticals. Swatches use teal-deep (the
-          default price-pin color) so they stay consistent with the new
-          price-bubble pins (which are color-coded by featured state, not type). */}
+      {/* Legend — every category swatch uses the SAME icon + color as its map
+          pin (spec §1), so a pin can be matched to its category at a glance. */}
       <div className="absolute bottom-3 left-3 z-[1000] flex max-w-[calc(100%-1.5rem)] flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-card/95 px-3 py-2 text-xs font-medium shadow-lg backdrop-blur-sm">
         {visibleServiceTypes.map((type) => (
           <span key={type} className="flex items-center gap-1.5">
-            <span
-              className="inline-flex h-6 w-6 items-center justify-center rounded-full"
-              style={{ background: PIN_TEAL_DEEP }}
-            >
-              <MarkerIcon type={type} />
-            </span>
-            {typeLabels[type]}
+            <CategorySwatch slug={type} />
+            {serviceTypeLabels?.[type] ?? typeLabels[type]}
           </span>
         ))}
-        {/* Directory event categories — rendered as brand dots on the map. */}
+        {/* Directory event categories — shown when directory pins are on the map. */}
         {locations.some((l) => l.isDirectory) && serviceTypeLabels &&
           DIRECTORY_LEGEND_SLUGS.map((slug) =>
             serviceTypeLabels[slug] ? (
               <span key={slug} className="flex items-center gap-1.5">
-                <span className="relative inline-flex h-4 w-4">
-                  <span
-                    className="absolute inset-0 rounded-full"
-                    style={{ background: PIN_NAVY_INK, boxShadow: "0 0 0 1.5px rgba(255,255,255,.9)" }}
-                  />
-                  <span className="absolute inset-[5px] rounded-full" style={{ background: PIN_TEAL_DEEP }} />
-                </span>
+                <CategorySwatch slug={slug} />
                 {serviceTypeLabels[slug]}
               </span>
             ) : null,
