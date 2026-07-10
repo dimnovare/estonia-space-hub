@@ -18,6 +18,11 @@ export default function FAQPage() {
       title: t("faq.general"),
       items: [
         { q: t("faq.whatIsRuumly"), a: t("faq.whatIsRuumlyA") },
+        // Concierge flow (2026-07 pivot): request → offers Q&As lead the list.
+        { q: t("faq.conciergeHow"), a: t("faq.conciergeHowA") },
+        { q: t("faq.offerSpeed"), a: t("faq.offerSpeedA") },
+        { q: t("faq.oneRequest"), a: t("faq.oneRequestA") },
+        { q: t("faq.freeService"), a: t("faq.freeServiceA") },
         { q: t("faq.whatStorage"), a: t("faq.whatStorageA") },
         { q: t("faq.isFree"), a: t("faq.isFreeA") },
         { q: t("faq.whichCities"), a: t("faq.whichCitiesA") },
@@ -48,6 +53,8 @@ export default function FAQPage() {
         { q: t("faq.howPaid"), a: t("faq.howPaidA") },
         { q: t("faq.joinCost"), a: t("faq.joinCostA") },
         { q: t("faq.canEditPrices"), a: t("faq.canEditPricesA") },
+        // Directory launch: unclaimed catalog profiles + free claim flow.
+        { q: t("faq.claimProfile"), a: t("faq.claimProfileA") },
       ],
     },
   ];

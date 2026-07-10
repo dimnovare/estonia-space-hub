@@ -56,6 +56,11 @@ const typeColors: Record<string, string> = {
   multi: PIN_TEAL_DEEP,
 };
 
+// Directory-only event categories (no price-pin vertical of their own). When
+// directory profiles are on the map, the legend lists them with the directory
+// dot swatch, labelled via the serviceTypeLabels prop (i18n serviceType.*).
+const DIRECTORY_LEGEND_SLUGS = ["cleaning", "packing", "vanrental", "insurance"] as const;
+
 // A listing is "featured" when it has the promoted boost, is a founding partner, or
 // carries an active paid visibility boost (featured_search / featured_map /
 // service_area_boost / pickup_location_boost — backend sets isFeatured).
@@ -179,6 +184,54 @@ function directoryPinIcon(selected: boolean) {
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
+}
+
+// ── Stacked-pin spreading ────────────────────────────────────────────────────
+// Bulk-imported directory providers are often geocoded to the exact same
+// city-center point (e.g. ~15 Tallinn providers at 59.437242, 24.757269),
+// collapsing their pins into a single blob. When several items share
+// (near-)identical coordinates — equal after rounding to 5 decimals (~1 m) —
+// spread them deterministically in a small circle around the shared point.
+// Deterministic: members are ordered by sorted id, so a pin keeps its spot
+// across renders and refetches. Display-only: popups, links and the
+// underlying data keep the original coordinates.
+const METERS_PER_DEG_LAT = 111_320;
+
+function spreadGroupKey(lat: number, lng: number): string {
+  return `${lat.toFixed(5)},${lng.toFixed(5)}`;
+}
+
+/** Returns display coordinates for every item that needs to move; items in
+ *  singleton groups are absent from the map (they render at their true spot). */
+function computeSpreadCoords(
+  items: { id: string; lat: number; lng: number }[],
+): Map<string, [number, number]> {
+  const groups = new Map<string, { id: string; lat: number; lng: number }[]>();
+  for (const item of items) {
+    if (!Number.isFinite(item.lat) || !Number.isFinite(item.lng)) continue;
+    const key = spreadGroupKey(item.lat, item.lng);
+    const group = groups.get(key);
+    if (group) group.push(item);
+    else groups.set(key, [item]);
+  }
+
+  const spread = new Map<string, [number, number]>();
+  for (const group of groups.values()) {
+    if (group.length < 2) continue;
+    const sorted = [...group].sort((a, b) => a.id.localeCompare(b.id));
+    const count = sorted.length;
+    // Radius grows gently with pile size: 120 m for a pair, capped at 250 m.
+    const radiusM = Math.min(250, 120 + (count - 2) * 12);
+    sorted.forEach((item, index) => {
+      const angle = (index / count) * 2 * Math.PI;
+      const dLat = (radiusM * Math.cos(angle)) / METERS_PER_DEG_LAT;
+      const dLng =
+        (radiusM * Math.sin(angle)) /
+        (METERS_PER_DEG_LAT * Math.max(0.2, Math.cos((item.lat * Math.PI) / 180)));
+      spread.set(item.id, [item.lat + dLat, item.lng + dLng]);
+    });
+  }
+  return spread;
 }
 
 function createLocationMarkerIcon(location: SupplierLocation, isSelected: boolean, _unitLabel = "units") {
@@ -334,6 +387,15 @@ function InteractiveMap({
 
     // Track which listing IDs are covered by locations
     const coveredListingIds = new Set<string>();
+    locations.forEach((loc) => loc.units?.forEach((u) => coveredListingIds.add(u.id)));
+
+    // Display-only spread for pins stacked on (near-)identical coordinates.
+    const displayCoords = computeSpreadCoords([
+      ...locations.map((l) => ({ id: l.id, lat: l.lat, lng: l.lng })),
+      ...listings
+        .filter((l) => !coveredListingIds.has(l.id))
+        .map((l) => ({ id: l.id, lat: l.lat, lng: l.lng })),
+    ]);
 
     // Shared image placeholder — a brand warehouse glyph, not an emoji.
     const imgFallback = `<div style="width: 100%; height: 88px; background: #f1f5f9; border-radius: 8px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; color: #94a3b8;"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="11" rx="1"/><path d="M2 10l10-6 10 6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
@@ -347,12 +409,11 @@ function InteractiveMap({
 
     // Render location markers
     locations.forEach((loc) => {
-      loc.units?.forEach(u => coveredListingIds.add(u.id));
-      
       const icon = createLocationMarkerIcon(loc, loc.id === selectedId, tUnits);
       // Featured pins lift on top of the cluster (paid "Featured on map" boost).
       const locFeatured = (loc.units ?? []).some((u) => isFeaturedListing(u));
-      const marker = L.marker([loc.lat, loc.lng], { icon, zIndexOffset: locFeatured ? 1000 : 0 });
+      const [dispLat, dispLng] = displayCoords.get(loc.id) ?? [loc.lat, loc.lng];
+      const marker = L.marker([dispLat, dispLng], { icon, zIndexOffset: locFeatured ? 1000 : 0 });
 
       // Directory profile popup — supplier name + localized service chips +
       // partner-page link. No price, no availability, no booking.
@@ -395,7 +456,7 @@ function InteractiveMap({
       marker.addTo(markersRef.current!);
       markerMap.current.set(loc.id, marker);
       markerData.current.set(loc.id, { kind: "location", obj: loc });
-      bounds.push([loc.lat, loc.lng]);
+      bounds.push([dispLat, dispLng]);
     });
 
     // Render individual listing markers (skip those covered by locations)
@@ -404,7 +465,8 @@ function InteractiveMap({
       
       const icon = createMarkerIcon(listing, listing.id === selectedId);
       // Featured pins lift on top (paid "Featured on map" boost).
-      const marker = L.marker([listing.lat, listing.lng], { icon, zIndexOffset: isFeaturedListing(listing) ? 1000 : 0 });
+      const [dispLat, dispLng] = displayCoords.get(listing.id) ?? [listing.lat, listing.lng];
+      const marker = L.marker([dispLat, dispLng], { icon, zIndexOffset: isFeaturedListing(listing) ? 1000 : 0 });
 
       const typeName = typeLabels[listing.type] || listing.type;
       const typeColor = typeColors[listing.type];
@@ -437,7 +499,7 @@ function InteractiveMap({
       marker.addTo(markersRef.current!);
       markerMap.current.set(listing.id, marker);
       markerData.current.set(listing.id, { kind: "listing", obj: listing });
-      bounds.push([listing.lat, listing.lng]);
+      bounds.push([dispLat, dispLng]);
     });
 
     // Only fit bounds when the set of items changes
@@ -557,6 +619,22 @@ function InteractiveMap({
             {typeLabels[type]}
           </span>
         ))}
+        {/* Directory event categories — rendered as brand dots on the map. */}
+        {locations.some((l) => l.isDirectory) && serviceTypeLabels &&
+          DIRECTORY_LEGEND_SLUGS.map((slug) =>
+            serviceTypeLabels[slug] ? (
+              <span key={slug} className="flex items-center gap-1.5">
+                <span className="relative inline-flex h-4 w-4">
+                  <span
+                    className="absolute inset-0 rounded-full"
+                    style={{ background: PIN_NAVY_INK, boxShadow: "0 0 0 1.5px rgba(255,255,255,.9)" }}
+                  />
+                  <span className="absolute inset-[5px] rounded-full" style={{ background: PIN_TEAL_DEEP }} />
+                </span>
+                {serviceTypeLabels[slug]}
+              </span>
+            ) : null,
+          )}
       </div>
     </div>
   );

@@ -1,9 +1,10 @@
-import { useState, lazy, Suspense, useEffect, useRef } from "react";
+import { useState, lazy, Suspense, useEffect, useMemo, useRef } from "react";
 import { Link, useNavigate } from "@/i18n/routing";
 import { Search, Warehouse, Truck, CarFront, ArrowRight, MapPin, ChevronDown, ChevronUp, CheckCircle, Phone, Map, ShieldCheck, CalendarCheck, Quote, Sparkles, Package, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useFeaturedListings, useAllListings, useCities } from "@/hooks/queries";
+import { useFeaturedListings, useAllListings, useCities, useLocations } from "@/hooks/queries";
+import { serviceTypeLabelMap } from "@/lib/serviceTypes";
 import ListingCard from "@/components/ListingCard";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -77,6 +78,14 @@ export default function HomePage() {
   const { data: citiesFromApi = [] } = useCities();
 
   const storageOnly        = !showMovingService && !showTrailerService;
+
+  // Homepage map: locations carry the directory providers (163 imported) and
+  // grouped multi-unit sites. Prod can have 0 active listings while the whole
+  // supply lives in locations — without this the map renders zero pins.
+  // Mirrors SearchPage's storage-only gate (server-side type filter).
+  const { data: homeLocations = [] } = useLocations(storageOnly ? { type: "warehouse" } : undefined);
+  // Stable label map so the memo()'d InteractiveMap isn't rebuilt each render.
+  const serviceTypeLabels = useMemo(() => serviceTypeLabelMap(t), [t]);
   // Concierge-first (flag-gated pivot): the hero leads with the /request demand
   // funnel — fixed request.* copy, deliberately IGNORING the heroSubtitle
   // platform-setting override in this branch. When the flag is off, everything
@@ -389,7 +398,7 @@ export default function HomePage() {
         <div className="relative overflow-hidden rounded-2xl shadow-card">
           <DeferUntilVisible minHeightClass="min-h-[280px] md:min-h-[350px]">
             <Suspense fallback={<div className="h-[280px] md:h-[350px] rounded-xl bg-secondary flex items-center justify-center text-muted-foreground">{t("map.loading")}</div>}>
-              <InteractiveMap listings={allListings} height="h-[280px] md:h-[350px]" language={language} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
+              <InteractiveMap listings={allListings} locations={homeLocations} height="h-[280px] md:h-[350px]" language={language} tUnits={t("location.units")} tFrom={t("location.from")} tPerMonth={t("location.perMonth")} tAllUnits={t("location.allUnits")} tSearch={t("hero.search")} tVerified={t("listing.badge.verified")} tFoundingPartner={t("listing.badge.foundingPartner")} tViewDetails={t("listing.viewDetails")} tViewLocation={t("location.viewLocation")} tViewProfile={t("detail.viewProfile")} tAvailable={t("location.available")} serviceTypeLabels={serviceTypeLabels} tTypeWarehouse={t("provider.listings.typeWarehouse")} tTypeMoving={t("provider.listings.typeMoving")} tTypeTrailer={t("provider.listings.typeTrailer")} />
             </Suspense>
           </DeferUntilVisible>
           {listingCount > 0 && (

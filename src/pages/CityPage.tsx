@@ -334,7 +334,7 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
       {/* CTA */}
       <section className="container-wide py-14 text-center">
         <h2 className="font-display text-2xl font-bold">{t("cityPage.ctaTitle")}</h2>
-        <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{t("cityPage.ctaDesc")}</p>
+        <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{t("cityPage.ctaDesc").replace("{city}", city)}</p>
         <Link to={`/search?city=${encodeURIComponent(city)}`}>
           <Button className="mt-5 h-11 px-6 font-semibold bg-accent text-accent-foreground hover:bg-accent/90">
             {t("cityPage.searchCta").replace("{city}", city)}

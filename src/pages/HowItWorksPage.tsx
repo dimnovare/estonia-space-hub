@@ -2,13 +2,12 @@ import { Link } from "@/i18n/routing";
 import {
   Search,
   CalendarCheck,
-  CreditCard,
-  FileSignature,
-  KeyRound,
+  Send,
+  Mail,
   ShieldCheck,
   BadgeCheck,
   Clock,
-  Lock,
+  MailCheck,
   ArrowRight,
   Store,
   Info,
@@ -21,17 +20,19 @@ import StorageSizeCalculator from "@/components/StorageSizeCalculator";
 export default function HowItWorksPage() {
   const { t } = useLanguage();
 
+  // Concierge flow (2026-07 pivot): request → we match → offers → confirm.
+  // hiw.step5* is retired from the page ("your move in four steps") — the
+  // translation keys remain so all 5 language blocks stay in parity.
   const steps = [
-    { icon: Search, title: t("hiw.step1cross"), desc: t("hiw.step1descCross") },
-    { icon: CalendarCheck, title: t("hiw.step2"), desc: t("hiw.step2desc") },
-    { icon: FileSignature, title: t("hiw.step3"), desc: t("hiw.step3desc") },
-    { icon: CreditCard, title: t("hiw.step4"), desc: t("hiw.step4desc") },
-    { icon: KeyRound, title: t("hiw.step5"), desc: t("hiw.step5desc") },
+    { icon: Send, title: t("hiw.step1cross"), desc: t("hiw.step1descCross") },
+    { icon: Search, title: t("hiw.step2"), desc: t("hiw.step2desc") },
+    { icon: Mail, title: t("hiw.step3"), desc: t("hiw.step3desc") },
+    { icon: CalendarCheck, title: t("hiw.step4"), desc: t("hiw.step4desc") },
   ];
 
   const features = [
     { icon: BadgeCheck, title: t("hiw.feat1"), desc: t("hiw.feat1desc") },
-    { icon: Lock, title: t("hiw.feat2"), desc: t("hiw.feat2desc") },
+    { icon: MailCheck, title: t("hiw.feat2"), desc: t("hiw.feat2desc") },
     { icon: ShieldCheck, title: t("hiw.feat3"), desc: t("hiw.feat3desc") },
     { icon: Clock, title: t("hiw.feat4"), desc: t("hiw.feat4desc") },
   ];

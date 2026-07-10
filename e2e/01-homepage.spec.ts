@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { stubCommon, stubListings, stubLoggedOut } from "./fixtures";
+import { stubCommon, stubListings, stubLoggedOut, stubLocations, directoryLocation } from "./fixtures";
 
 /**
  * 01 — Homepage smoke tests (/et)
@@ -59,6 +59,22 @@ test.describe("Homepage (concierge-first hero)", () => {
     await stubAll(page);
     await page.goto("/et");
     await expect(page.locator("header").first()).toBeVisible({ timeout: 15000 });
+  });
+
+  test("directory location pins render on the homepage map", async ({ page }) => {
+    // stubCommon defaults showMap to false — the map section is flag-gated.
+    await stubAll(page, { showMap: true });
+    // Register AFTER stubCommon so this /locations handler wins. Prod-shaped
+    // scenario: supply lives in locations (directory profiles), not listings.
+    await stubLocations(page, [directoryLocation()]);
+    await page.goto("/et");
+    // The map bundle is lazy and deferred until scrolled near the viewport.
+    const pin = page.locator(".ruumly-directory-pin");
+    for (let i = 0; i < 12 && (await pin.count()) === 0; i++) {
+      await page.mouse.wheel(0, 400);
+      await page.waitForTimeout(250);
+    }
+    await expect(pin.first()).toBeVisible({ timeout: 15000 });
   });
 });
 
