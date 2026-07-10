@@ -57,7 +57,13 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
       <SheetOverlay />
       <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
         {children}
-        <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity data-[state=open]:bg-secondary hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+        {/* Close: the visible glyph stays put, but the interactive area is a
+            44px target (a11y min). h-11 w-11 makes a 44px flex-centered box; the
+            -m-3.5 (-14px) shifts that box so its centre lands exactly where the
+            16px icon used to sit (right-4/top-4 → centre at 24px), so the glyph
+            doesn't move. The old data-[state=open]:bg-secondary was inert
+            (Radix Close has no data-state) — dropped, no visual change. */}
+        <SheetPrimitive.Close className="absolute right-4 top-4 -m-3.5 flex h-11 w-11 items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
           <X className="h-4 w-4" />
           <span className="sr-only">Close</span>
         </SheetPrimitive.Close>

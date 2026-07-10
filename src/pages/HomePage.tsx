@@ -12,6 +12,7 @@ import { serviceTypeLabelMap, SERVICE_TYPE_ICONS, visibleServiceSlugs } from "@/
 import ListingCard from "@/components/ListingCard";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { formatCount } from "@/i18n/plural";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
 import TrustBar from "@/components/TrustBar";
@@ -178,11 +179,11 @@ function ConciergeHome() {
 
   const trustItems = [
     ...(providerCount > 0
-      ? [{ icon: Users, text: t("home.trust.providers").replace("{count}", String(providerCount)) }]
+      ? [{ icon: Users, text: formatCount(language, providerCount, t("home.trust.providers")) }]
       : []),
-    { icon: LayoutGrid, text: t("home.trust.services").replace("{count}", String(serviceSlugs.length)) },
+    { icon: LayoutGrid, text: formatCount(language, serviceSlugs.length, t("home.trust.services")) },
     ...(cityCount > 0
-      ? [{ icon: MapPin, text: t("home.trust.cities").replace("{count}", String(cityCount)) }]
+      ? [{ icon: MapPin, text: formatCount(language, cityCount, t("home.trust.cities")) }]
       : []),
     { icon: CheckCircle, text: t("home.trust.free") },
     { icon: Clock, text: t("home.trust.response") },
@@ -343,7 +344,7 @@ function ConciergeHome() {
           {mapCount > 0 && (
             <div className="pointer-events-none absolute right-4 top-4 z-[400] inline-flex items-center gap-2 rounded-full bg-card/95 px-3.5 py-2 text-sm font-medium text-foreground shadow-elevated ring-1 ring-border backdrop-blur-sm">
               <Package className="h-4 w-4 text-teal-deep" />
-              {t("home.mapBadgeProviders").replace("{count}", String(mapCount))}
+              {formatCount(language, mapCount, t("home.mapBadgeProviders"))}
             </div>
           )}
         </div>
@@ -761,7 +762,7 @@ function MarketplaceHome() {
           {listingCount > 0 && (
             <div className="pointer-events-none absolute bottom-4 left-4 z-[400] inline-flex items-center gap-2 rounded-full bg-card/95 px-3.5 py-2 text-sm font-medium text-foreground shadow-elevated ring-1 ring-border backdrop-blur-sm">
               <Package className="h-4 w-4 text-teal-deep" />
-              {(storageOnly ? t("home.mapBadgeNew") : t("home.mapBadgeAll")).replace("{count}", String(listingCount))}
+              {formatCount(language, listingCount, storageOnly ? t("home.mapBadgeNew") : t("home.mapBadgeAll"))}
             </div>
           )}
         </div>

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { useListings } from "@/hooks/queries";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { formatCount } from "@/i18n/plural";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import type { Listing } from "@/services/types";
 import { SEO, verticalSeoMeta, type SeoVertical } from "@/components/SEO";
@@ -347,8 +348,7 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
           </h2>
           {providerCount > 0 && (
             <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-              {t("cityPage.providerCount")
-                .replace("{count}", String(providerCount))
+              {formatCount(language, providerCount, t("cityPage.providerCount"))
                 .replace("{city}", city)}
             </p>
           )}

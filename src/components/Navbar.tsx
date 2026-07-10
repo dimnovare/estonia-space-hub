@@ -75,6 +75,8 @@ export default function Navbar() {
   const [servicesOpen, setServicesOpen] = useState(false);
   const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
   const servicesTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const langTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const accountTriggerRef = useRef<HTMLButtonElement | null>(null);
   const location = useLocation();
   const { language, setLanguage, t } = useLanguage();
   const { user, isAuthenticated, role, logout } = useAuth();
@@ -100,14 +102,21 @@ export default function Navbar() {
     setServicesOpen(false);
   }, [location.pathname, location.search]);
 
-  // Close the hand-rolled menus on Escape (Radix-free a11y). Closing the
-  // Services panel with Escape returns focus to its trigger (spec §2).
+  // Close the hand-rolled menus on Escape (Radix-free a11y). Closing any of the
+  // three menus returns focus to the trigger that opened it (spec §2) so
+  // keyboard users aren't dropped at the top of the document.
   useEffect(() => {
     if (!langOpen && !userMenuOpen && !servicesOpen) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        setLangOpen(false);
-        setUserMenuOpen(false);
+        if (langOpen) {
+          setLangOpen(false);
+          langTriggerRef.current?.focus();
+        }
+        if (userMenuOpen) {
+          setUserMenuOpen(false);
+          accountTriggerRef.current?.focus();
+        }
         if (servicesOpen) {
           setServicesOpen(false);
           servicesTriggerRef.current?.focus();
@@ -249,6 +258,7 @@ export default function Navbar() {
           {/* Language selector — globe + 2-letter code + chevron (spec §7.1). */}
           <div className="relative">
             <button
+              ref={langTriggerRef}
               onClick={() => setLangOpen((prev) => !prev)}
               aria-haspopup="menu"
               aria-expanded={langOpen}
@@ -305,7 +315,7 @@ export default function Navbar() {
                     <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-accent-foreground">{unreadCount}</span>
                   )}
                 </Link>
-                <button onClick={() => setUserMenuOpen(!userMenuOpen)} aria-haspopup="menu" aria-expanded={userMenuOpen} aria-label={t("nav.myAccount")} className={`flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${onDark ? "hover:bg-white/10" : "hover:bg-secondary"}`}>
+                <button ref={accountTriggerRef} onClick={() => setUserMenuOpen(!userMenuOpen)} aria-haspopup="menu" aria-expanded={userMenuOpen} aria-label={t("nav.myAccount")} className={`flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${onDark ? "hover:bg-white/10" : "hover:bg-secondary"}`}>
                   <div className={`flex h-[34px] w-[34px] items-center justify-center rounded-full text-sm font-bold font-display text-white ${avatarTone}`}>
                     {user?.name?.charAt(0)?.toUpperCase() || "U"}
                   </div>
