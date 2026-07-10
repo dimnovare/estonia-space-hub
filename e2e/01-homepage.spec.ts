@@ -80,6 +80,49 @@ test.describe("Homepage (concierge-first hero)", () => {
   });
 });
 
+test.describe("Homepage sections (concierge redesign, spec §3)", () => {
+  test("renders the section stack: grid, steps, trust strip, FAQ, closing CTA", async ({ page }) => {
+    await stubAll(page);
+    await page.goto("/et");
+    // 2 — 7-service grid (5 categories with moving/trailer off in stubCommon)
+    await expect(page.getByRole("heading", { name: /kõik kolimiseks vajalik/i })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("heading", { name: "Hoiustamine", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Koristus", exact: true })).toBeVisible();
+    // 4 — concierge how-it-works steps (exact: the hero h1 contains the same phrase)
+    await expect(page.getByRole("heading", { name: "Ütle, mida vajad", exact: true })).toBeVisible();
+    // 5 — trust strip fixed promises
+    await expect(page.getByText("Kliendile tasuta").first()).toBeVisible();
+    await expect(page.getByText(/pakkumised tavaliselt 24 tunniga/i).first()).toBeVisible();
+    // 6 — FAQ + closing CTA
+    await expect(page.getByRole("heading", { name: /valmis alustama/i })).toBeVisible();
+  });
+
+  test("service-grid category card deep-links browse + get offers", async ({ page }) => {
+    await stubAll(page);
+    await page.goto("/et");
+    const grid = page.getByRole("heading", { name: /kõik kolimiseks vajalik/i }).locator("xpath=ancestor::section");
+    await expect(grid.getByRole("link", { name: "Sirvi" }).first()).toHaveAttribute("href", /\/et\/search\?type=warehouse/);
+    await grid.getByRole("link", { name: /küsi pakkumist/i }).first().click();
+    await page.waitForURL(/\/et\/request\?category=warehouse/, { timeout: 10000 });
+  });
+
+  test("popular-need chip prefills the request funnel category", async ({ page }) => {
+    await stubAll(page);
+    await page.goto("/et");
+    await page.getByRole("link", { name: /hoiuruum remondi ajaks/i }).click();
+    await page.waitForURL(/\/et\/request\?category=warehouse/, { timeout: 10000 });
+    // Step-1 card arrives preselected (aria-pressed=true).
+    await expect(page.locator('button[aria-pressed="true"]').first()).toBeVisible({ timeout: 15000 });
+  });
+
+  test("moving-gated need chips hidden when moving service is off", async ({ page }) => {
+    await stubAll(page); // stubCommon: showMovingService=false
+    await page.goto("/et");
+    await expect(page.getByRole("link", { name: /hoiuruum remondi ajaks/i })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("link", { name: /kolin uude koju/i })).toHaveCount(0);
+  });
+});
+
 test.describe("Homepage (marketplace hero, conciergeFirst=false)", () => {
   test("search card renders and search navigates to /et/search", async ({ page }) => {
     await stubAll(page, { conciergeFirst: "false" });

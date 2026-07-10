@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Link } from "@/i18n/routing";
+import { Link, useSearchParams } from "@/i18n/routing";
 import {
   Warehouse, Truck, Caravan, Sparkles, Package, Bus, Shield,
   ArrowRight, ArrowLeft, CheckCircle, Check,
@@ -11,8 +11,20 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
 import { leadService, type ConciergeCategory } from "@/services";
+import { SERVICE_TYPE_SLUGS } from "@/lib/serviceTypes";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Parse ?category=… (repeatable or comma-separated) into valid category slugs.
+ *  Deep links come from the homepage need-chips / service grid and the navbar. */
+function parseCategoryParams(params: URLSearchParams): ConciergeCategory[] {
+  const raw = params.getAll("category").flatMap((v) => v.split(","));
+  const valid = raw
+    .map((v) => v.trim().toLowerCase())
+    .filter((v): v is ConciergeCategory =>
+      (SERVICE_TYPE_SLUGS as readonly string[]).includes(v));
+  return [...new Set(valid)];
+}
 
 /**
  * /request — the concierge demand funnel ("tell us what you need, we find you
@@ -24,9 +36,14 @@ export default function RequestPage() {
   const settings = usePlatformSettings();
   const { showMovingService, showTrailerService } = settings;
 
+  // Prefill from deep-link params (?category=moving&city=Tallinn) — the
+  // homepage popular-need chips and service-grid "Get offers" links use these.
+  // Lazy initializers: read once on mount, then the user owns the state.
+  const [searchParams] = useSearchParams();
   const [step, setStep] = useState(0);
-  const [categories, setCategories] = useState<ConciergeCategory[]>([]);
-  const [city, setCity] = useState("");
+  const [categories, setCategories] = useState<ConciergeCategory[]>(
+    () => parseCategoryParams(searchParams));
+  const [city, setCity] = useState(() => searchParams.get("city")?.trim() ?? "");
   const [toCity, setToCity] = useState("");
   const [needDate, setNeedDate] = useState("");
   const [details, setDetails] = useState("");
