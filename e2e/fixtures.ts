@@ -296,6 +296,45 @@ export async function stubAdminLeads(
   });
 }
 
+/** Public offer fixture (GET /offers/{token} shape per overhaul spec §5.1). */
+export function publicOffer(over: Json = {}): Json {
+  return {
+    status: "sent",
+    language: "et",
+    customerNote: "Mõlemad partnerid saavad su soovitud ajal.",
+    sentAt: "2026-07-10T09:00:00Z",
+    chosenOptionId: null,
+    lead: { category: "warehouse", city: "Tallinn", toCity: null, needDate: "2026-08-01", details: "u 20 m2" },
+    options: [
+      { id: "opt-1", title: "Miniladu 10 m² kesklinnas", priceAmount: 89, priceUnit: "€/kuu", notes: "24/7 ligipääs", supplierName: "Acme Storage" },
+      { id: "opt-2", title: "Laopind 20 m² Lasnamäel", priceAmount: 129, priceUnit: "€/kuu", notes: null, supplierName: null },
+    ],
+    ...over,
+  };
+}
+
+/**
+ * Stub the public offer endpoints: GET /offers/{token} (pass a non-2xx
+ * `getStatus` for invalid/expired tokens) and POST /offers/{token}/choose.
+ */
+export async function stubPublicOffer(
+  page: Page,
+  opts: { offer?: Json; getStatus?: number; chooseStatus?: number } = {},
+): Promise<void> {
+  const offer = opts.offer ?? publicOffer();
+  await page.route(/\/offers\/[^/?]+(\/choose)?(\?|$)/, (route) => {
+    const req = route.request();
+    if (req.method() === "POST" && /\/choose/.test(req.url())) {
+      const status = opts.chooseStatus ?? 200;
+      if (status !== 200) return json(route, { message: "conflict" }, status);
+      const body = req.postDataJSON() as { optionId?: string };
+      return json(route, { ok: true, chosenOptionId: body?.optionId ?? "opt-1", chosenAt: "2026-07-10T10:00:00Z" });
+    }
+    const status = opts.getStatus ?? 200;
+    return status === 200 ? json(route, offer) : json(route, { message: "not found" }, status);
+  });
+}
+
 /** Stub POST /bookings to return a created booking. */
 export async function stubBookingCreate(
   page: Page,

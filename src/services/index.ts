@@ -597,6 +597,138 @@ export const adminLeadService = {
   },
 };
 
+// ─── Offer loop (overhaul spec §5, contract §5.1 as built) ───────────────────
+// Admin builds an offer (draft → send) for a DemandLead; the customer opens
+// /{lang}/offer/{token} and chooses an option. Statuses serialize lowercase.
+
+export type OfferStatus = "draft" | "sent" | "viewed" | "chosen" | "expired";
+export type OutreachStatus = "sent" | "replied" | "declined" | "noanswer";
+
+export interface AdminOfferOption {
+  id: string;
+  supplierId: string | null;
+  supplierName: string | null;
+  supplierLocationId: string | null;
+  title: string;
+  priceAmount: number | null;
+  priceUnit: string | null;
+  notes: string | null;
+  sortOrder: number;
+}
+
+export interface AdminOffer {
+  id: string;
+  demandLeadId: string;
+  token: string;
+  status: OfferStatus;
+  language: string;
+  customerNote: string | null;
+  createdAt: string;
+  sentAt: string | null;
+  viewedAt: string | null;
+  chosenAt: string | null;
+  chosenOptionId: string | null;
+  createdBy: string | null;
+  options: AdminOfferOption[];
+}
+
+/** Option payload for create/update (replace-set semantics on PATCH). */
+export interface OfferOptionInput {
+  title: string;
+  supplierId?: string | null;
+  supplierLocationId?: string | null;
+  priceAmount?: number | null;
+  priceUnit?: string | null;
+  notes?: string | null;
+  sortOrder?: number;
+}
+
+export interface ProviderOutreachRow {
+  id: string;
+  demandLeadId: string;
+  supplierId: string;
+  supplierName: string | null;
+  sentTo: string;
+  sentAt: string;
+  status: OutreachStatus;
+  note: string | null;
+}
+
+export interface OutreachResult {
+  sent: ProviderOutreachRow[];
+  skipped: { supplierId: string; supplierName: string | null; reason: "no_email" | "not_found" }[];
+}
+
+export const adminOfferService = {
+  async listForLead(leadId: string): Promise<AdminOffer[]> {
+    const res = await apiClient.get<AdminOffer[] | { items: AdminOffer[] }>(`/admin/leads/${leadId}/offers`);
+    return Array.isArray(res) ? res : res.items ?? [];
+  },
+  async create(
+    leadId: string,
+    body: { language?: string; customerNote?: string; options?: OfferOptionInput[] },
+  ): Promise<AdminOffer> {
+    return apiClient.post<AdminOffer>(`/admin/leads/${leadId}/offers`, body);
+  },
+  async get(id: string): Promise<AdminOffer> {
+    return apiClient.get<AdminOffer>(`/admin/offers/${id}`);
+  },
+  async update(
+    id: string,
+    body: { customerNote?: string | null; language?: string; status?: OfferStatus; options?: OfferOptionInput[] },
+  ): Promise<AdminOffer> {
+    return apiClient.patch<AdminOffer>(`/admin/offers/${id}`, body);
+  },
+  async send(id: string): Promise<AdminOffer> {
+    return apiClient.post<AdminOffer>(`/admin/offers/${id}/send`, {});
+  },
+  async outreach(leadId: string, supplierIds: string[]): Promise<OutreachResult> {
+    return apiClient.post<OutreachResult>(`/admin/leads/${leadId}/outreach`, { supplierIds });
+  },
+  async listOutreach(leadId: string): Promise<ProviderOutreachRow[]> {
+    const res = await apiClient.get<ProviderOutreachRow[] | { items: ProviderOutreachRow[] }>(`/admin/leads/${leadId}/outreach`);
+    return Array.isArray(res) ? res : res.items ?? [];
+  },
+  async updateOutreach(id: string, body: { status?: OutreachStatus; note?: string }): Promise<ProviderOutreachRow> {
+    return apiClient.patch<ProviderOutreachRow>(`/admin/outreach/${id}`, body);
+  },
+};
+
+// Public offer page (anonymous, rate-limited; 404 for unknown/draft/expired).
+export interface PublicOfferOption {
+  id: string;
+  title: string;
+  priceAmount: number | null;
+  priceUnit: string | null;
+  notes: string | null;
+  supplierName: string | null;
+}
+
+export interface PublicOffer {
+  status: OfferStatus;
+  language: string;
+  customerNote: string | null;
+  sentAt: string | null;
+  chosenOptionId: string | null;
+  lead: {
+    category: string;
+    city: string;
+    toCity?: string | null;
+    needDate?: string | null;
+    details?: string | null;
+  };
+  options: PublicOfferOption[];
+}
+
+export const offerService = {
+  async get(token: string): Promise<PublicOffer> {
+    return apiClient.get<PublicOffer>(`/offers/${encodeURIComponent(token)}`);
+  },
+  async choose(token: string, optionId: string): Promise<{ ok: boolean; chosenOptionId: string; chosenAt: string }> {
+    return apiClient.post(`/offers/${encodeURIComponent(token)}/choose`, { optionId });
+  },
+};
+
 // ─── Dispute Service ─────────────────────────────────────────────────────────
 // Trust-and-safety claims (damage / no-show / deposit) against a booking/order.
 export type DisputeType = "damage" | "noshow" | "deposit" | "other";

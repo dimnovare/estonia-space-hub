@@ -3762,6 +3762,23 @@ const et: Record<string, string> = {
     "cityPage.faq4.a": "Saada päring ja kirjelda oma kolimist. Tallinnas ja Harjumaal korraldame pakkumised täisteenusena; mujal Eestis aitab kataloog leida kohalikud partnerid, kellega otse ühendust võtta.",
     "cityPage.services.title": "Teenused — {city}",
     "cityPage.providerCount": "Ruumly kataloogis on {count} teenusepakkujat piirkonnas {city}.",
+    // ── Public offer page /offer/{token} (overhaul §5) ──
+    "offer.seo.title": "Sinu pakkumised",
+    "offer.title": "Sinu valikud: {category} — {city}",
+    "offer.subtitle": "Vali sobiv pakkumine — kinnitame partneriga ja anname sulle teada.",
+    "offer.noteLabel": "Meie märkus",
+    "offer.choose": "Vali see pakkumine",
+    "offer.confirmTitle": "Kinnita valik",
+    "offer.confirmBody": "Valid pakkumise „{title}“. Kinnitame partneriga ja võtame sinuga ühendust.",
+    "offer.confirmCta": "Jah, valin selle",
+    "offer.confirmCancel": "Tühista",
+    "offer.successTitle": "Valik kinnitatud!",
+    "offer.successBody": "Kinnitame partneriga ja anname sulle peagi teada.",
+    "offer.chosenBadge": "Sinu valik",
+    "offer.alreadyChosen": "Oled valiku juba teinud. Kui soovid seda muuta, kirjuta meile.",
+    "offer.invalidTitle": "Seda pakkumist ei leitud",
+    "offer.invalidBody": "Link võib olla aegunud või vale. Saada uus päring — leiame sulle värsked pakkumised.",
+    "offer.help": "Küsimusi? Kirjuta meile: {email}",
 };
 
 const en: Record<string, string> = {
@@ -7482,6 +7499,23 @@ const en: Record<string, string> = {
     "cityPage.faq4.a": "Send a request and describe your move. In Tallinn and Harjumaa we arrange the offers as a full service; elsewhere in Estonia the directory helps you find local partners to contact directly.",
     "cityPage.services.title": "Services in {city}",
     "cityPage.providerCount": "The Ruumly directory lists {count} providers in the {city} area.",
+    // ── Public offer page /offer/{token} (overhaul §5) ──
+    "offer.seo.title": "Your offers",
+    "offer.title": "Your options for {category} in {city}",
+    "offer.subtitle": "Pick the offer that fits — we'll confirm with the provider and let you know.",
+    "offer.noteLabel": "A note from us",
+    "offer.choose": "Choose this option",
+    "offer.confirmTitle": "Confirm your choice",
+    "offer.confirmBody": "You're choosing \"{title}\". We'll confirm with the provider and get back to you.",
+    "offer.confirmCta": "Yes, choose it",
+    "offer.confirmCancel": "Cancel",
+    "offer.successTitle": "Choice confirmed!",
+    "offer.successBody": "We'll confirm with the provider and get back to you shortly.",
+    "offer.chosenBadge": "Your choice",
+    "offer.alreadyChosen": "You've already made your choice. If you'd like to change it, write to us.",
+    "offer.invalidTitle": "This offer isn't available",
+    "offer.invalidBody": "The link may have expired or be incorrect. Send a new request — we'll find you fresh offers.",
+    "offer.help": "Questions? Write to us: {email}",
 };
 
 const ru: Record<string, string> = {
@@ -11201,6 +11235,23 @@ const ru: Record<string, string> = {
     "cityPage.faq4.a": "Отправьте заявку и опишите свой переезд. В Таллинне и Харьюмаа мы организуем предложения как полный сервис; в остальной Эстонии каталог поможет найти местных партнёров для прямого контакта.",
     "cityPage.services.title": "Услуги — {city}",
     "cityPage.providerCount": "В каталоге Ruumly {count} поставщиков услуг в районе {city}.",
+    // ── Public offer page /offer/{token} (overhaul §5) ──
+    "offer.seo.title": "Ваши предложения",
+    "offer.title": "Ваши варианты: {category} — {city}",
+    "offer.subtitle": "Выберите подходящее предложение — мы подтвердим с партнёром и сообщим вам.",
+    "offer.noteLabel": "Наш комментарий",
+    "offer.choose": "Выбрать это предложение",
+    "offer.confirmTitle": "Подтвердите выбор",
+    "offer.confirmBody": "Вы выбираете «{title}». Мы подтвердим с партнёром и свяжемся с вами.",
+    "offer.confirmCta": "Да, выбираю",
+    "offer.confirmCancel": "Отмена",
+    "offer.successTitle": "Выбор подтверждён!",
+    "offer.successBody": "Мы подтвердим с партнёром и скоро дадим вам знать.",
+    "offer.chosenBadge": "Ваш выбор",
+    "offer.alreadyChosen": "Вы уже сделали выбор. Если хотите его изменить, напишите нам.",
+    "offer.invalidTitle": "Это предложение недоступно",
+    "offer.invalidBody": "Ссылка могла устареть или быть неверной. Отправьте новую заявку — мы найдём вам свежие предложения.",
+    "offer.help": "Есть вопросы? Напишите нам: {email}",
 };
 
 
@@ -14859,6 +14910,23 @@ const lv: Record<string, string> = {
     "cityPage.faq4.a": "Nosūti pieprasījumu un apraksti savu pārvākšanos. Tallinā un Harju apriņķī piedāvājumus nokārtojam kā pilnu servisu; citur Igaunijā katalogs palīdz atrast vietējos partnerus, ar kuriem sazināties tieši.",
     "cityPage.services.title": "Pakalpojumi — {city}",
     "cityPage.providerCount": "Ruumly katalogā ir {count} pakalpojumu sniedzēji {city} apkaimē.",
+    // ── Public offer page /offer/{token} (overhaul §5) ──
+    "offer.seo.title": "Tavi piedāvājumi",
+    "offer.title": "Tavas izvēles: {category} — {city}",
+    "offer.subtitle": "Izvēlies piemērotāko piedāvājumu — apstiprināsim ar partneri un tev paziņosim.",
+    "offer.noteLabel": "Mūsu piezīme",
+    "offer.choose": "Izvēlēties šo piedāvājumu",
+    "offer.confirmTitle": "Apstiprini izvēli",
+    "offer.confirmBody": "Tu izvēlies piedāvājumu “{title}”. Apstiprināsim ar partneri un sazināsimies ar tevi.",
+    "offer.confirmCta": "Jā, izvēlos šo",
+    "offer.confirmCancel": "Atcelt",
+    "offer.successTitle": "Izvēle apstiprināta!",
+    "offer.successBody": "Apstiprināsim ar partneri un drīz tev paziņosim.",
+    "offer.chosenBadge": "Tava izvēle",
+    "offer.alreadyChosen": "Tu jau esi izdarījis izvēli. Ja vēlies to mainīt, raksti mums.",
+    "offer.invalidTitle": "Šis piedāvājums nav pieejams",
+    "offer.invalidBody": "Saite var būt novecojusi vai nepareiza. Nosūti jaunu pieprasījumu — atradīsim tev svaigus piedāvājumus.",
+    "offer.help": "Jautājumi? Raksti mums: {email}",
 };
 // ── Lithuanian ──────────────────────────
 const lt: Record<string, string> = {
@@ -18514,6 +18582,23 @@ const lt: Record<string, string> = {
     "cityPage.faq4.a": "Išsiųskite prašymą ir aprašykite savo kraustymąsi. Taline ir Harju apskrityje pasiūlymus suorganizuojame kaip visą paslaugą; kitur Estijoje katalogas padeda rasti vietinius partnerius tiesioginiam kontaktui.",
     "cityPage.services.title": "Paslaugos — {city}",
     "cityPage.providerCount": "Ruumly kataloge yra {count} paslaugų teikėjų {city} apylinkėse.",
+    // ── Public offer page /offer/{token} (overhaul §5) ──
+    "offer.seo.title": "Jūsų pasiūlymai",
+    "offer.title": "Jūsų pasirinkimai: {category} — {city}",
+    "offer.subtitle": "Išsirinkite tinkamiausią pasiūlymą — patvirtinsime su partneriu ir jums pranešime.",
+    "offer.noteLabel": "Mūsų pastaba",
+    "offer.choose": "Pasirinkti šį pasiūlymą",
+    "offer.confirmTitle": "Patvirtinkite pasirinkimą",
+    "offer.confirmBody": "Renkatės pasiūlymą „{title}“. Patvirtinsime su partneriu ir su jumis susisieksime.",
+    "offer.confirmCta": "Taip, renkuosi šį",
+    "offer.confirmCancel": "Atšaukti",
+    "offer.successTitle": "Pasirinkimas patvirtintas!",
+    "offer.successBody": "Patvirtinsime su partneriu ir netrukus jums pranešime.",
+    "offer.chosenBadge": "Jūsų pasirinkimas",
+    "offer.alreadyChosen": "Jūs jau padarėte pasirinkimą. Jei norite jį pakeisti, parašykite mums.",
+    "offer.invalidTitle": "Šis pasiūlymas nepasiekiamas",
+    "offer.invalidBody": "Nuoroda gali būti pasenusi arba neteisinga. Išsiųskite naują prašymą — rasime jums naujus pasiūlymus.",
+    "offer.help": "Turite klausimų? Parašykite mums: {email}",
 };
 const translations: Record<Language, Record<string, string>> = { et, en, ru, lv, lt };
 

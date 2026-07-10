@@ -36,6 +36,7 @@ import CookiePage from "@/pages/CookiePage";
 import NotFound from "@/pages/NotFound";
 const ProviderPage = lazy(() => import("@/pages/ProviderPage"));
 const RequestPage = lazy(() => import("@/pages/RequestPage"));
+const OfferPage = lazy(() => import("@/pages/OfferPage"));
 import RequestDetailPage from "@/pages/RequestDetailPage";
 import VerifyEmailPage from "@/pages/VerifyEmailPage";
 import { Loader2 } from "lucide-react";
@@ -147,7 +148,11 @@ const PageLoader = () => (
 function AppContent() {
   const { maintenanceMode, apiUnreachable } = usePlatformSettings();
   const { role, isInitializing } = useAuth();
+  const location = useLocation();
   const isLoginPage = /^\/[a-z]{2}\/login$/i.test(window.location.pathname) || window.location.pathname === "/login";
+  // The public offer page is a clean, no-nav-noise surface (overhaul §5):
+  // it renders its own slim logo header instead of the full Navbar.
+  const isOfferPage = /^\/[a-z]{2}\/offer\//i.test(location.pathname);
 
   // Auto-reload once on chunk load failure (stale deployment cache)
   useEffect(() => {
@@ -179,13 +184,17 @@ function AppContent() {
   return (
     <>
       <ScrollToTop />
-      <Navbar />
+      {!isOfferPage && <Navbar />}
       <main id="main-content">
         <Suspense fallback={<PageLoader />}>
           <Routes>
           <Route path="/:lang" element={<LangParamGuard><Outlet /></LangParamGuard>}>
             <Route element={<NoFooter />}>
               <Route path="search" element={<SearchPage />} />
+              {/* Public concierge offer page — anonymous, token-keyed, noindex.
+                  Minimal chrome: the page brings its own slim header (the
+                  global Navbar is suppressed below). */}
+              <Route path="offer/:token" element={<OfferPage />} />
               {/* SEO keyword landings → canonical storage search */}
               <Route path="laopind" element={<StorageKeywordRedirect />} />
               <Route path="miniladu" element={<StorageKeywordRedirect />} />
