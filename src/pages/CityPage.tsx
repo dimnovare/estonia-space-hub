@@ -184,18 +184,52 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
   const providerCount = locations.length;
   const isOpsArea = city === "Tallinn";
 
+  // Structured data (overhaul §4). Emit as a JSON-LD array:
+  //  1. SearchResultsPage — the city hub itself.
+  //  2. FAQPage — built from the same faq1-4 Q&As the page renders, so the
+  //     rich-result answers match the visible copy (Google requires parity).
+  //  3. ItemList — the top provider/location cards, giving Google an ordered
+  //     list of the deep links this hub surfaces (skipped when the city is empty).
+  const cityUrl = `https://ruumly.eu/${language}/${urlSegment}/${slug}`;
+  const cityStructuredData: object[] = [
+    {
+      "@context": "https://schema.org",
+      "@type": "SearchResultsPage",
+      name: seoTitle.replace(" — Ruumly", ""),
+      url: cityUrl,
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faqs.map((faq) => ({
+        "@type": "Question",
+        name: faq.q,
+        acceptedAnswer: { "@type": "Answer", text: faq.a },
+      })),
+    },
+    ...(topItems.length > 0
+      ? [
+          {
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            itemListElement: topItems.map((it: any, i: number) => ({
+              "@type": "ListItem",
+              position: i + 1,
+              name: it.name,
+              url: `https://ruumly.eu/${language}${it.href}`,
+            })),
+          },
+        ]
+      : []),
+  ];
+
   return (
     <div>
       <SEO
         title={seoTitle}
         description={seoDesc}
         path={`/${urlSegment}/${slug}`}
-        structuredData={{
-          "@context": "https://schema.org",
-          "@type": "SearchResultsPage",
-          name: seoTitle.replace(" — Ruumly", ""),
-          url: `https://ruumly.eu/${language}/${urlSegment}/${slug}`,
-        }}
+        structuredData={cityStructuredData}
       />
 
       {/* Hero — the 72px navbar is absolute/transparent over this surface-dark

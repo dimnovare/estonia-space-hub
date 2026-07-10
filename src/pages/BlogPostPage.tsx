@@ -7,7 +7,31 @@ import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { getPostBySlug, getRelatedPosts, parseArticles, articlesToPosts } from "@/lib/blog";
 import { SEO } from "@/components/SEO";
 import NotFound from "@/pages/NotFound";
-import { Helmet } from "react-helmet-async";
+import { useHead } from "@unhead/react";
+
+/**
+ * Extra Open-Graph `article:*` meta for a blog post. Kept as its own component
+ * so its `useHead` hook runs unconditionally (BlogPostPage early-returns before
+ * the post is known); the SEO component owns the core title/description/OG tags.
+ */
+function ArticleMeta({
+  publishedAt,
+  author,
+  tags,
+}: {
+  publishedAt: string;
+  author?: string;
+  tags: string[];
+}) {
+  useHead({
+    meta: [
+      { property: "article:published_time", content: new Date(publishedAt).toISOString() },
+      ...(author ? [{ property: "article:author", content: author }] : []),
+      ...tags.map((tag) => ({ property: "article:tag", content: tag })),
+    ],
+  });
+  return null;
+}
 
 export default function BlogPostPage() {
   const { slug = "" } = useParams<{ slug: string }>();
@@ -59,13 +83,11 @@ export default function BlogPostPage() {
         type="article"
         structuredData={articleStructuredData}
       />
-      <Helmet>
-        <meta property="article:published_time" content={new Date(post.publishedAt).toISOString()} />
-        {post.author && <meta property="article:author" content={post.author} />}
-        {post.tags.map((tag) => (
-          <meta key={tag} property="article:tag" content={tag} />
-        ))}
-      </Helmet>
+      <ArticleMeta
+        publishedAt={post.publishedAt}
+        author={post.author}
+        tags={post.tags}
+      />
 
       <div className="container-wide py-12 md:py-16">
         <Link

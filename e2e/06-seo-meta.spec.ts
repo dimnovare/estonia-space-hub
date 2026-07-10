@@ -4,13 +4,19 @@ import { stubCommon, stubListings, stubLoggedOut } from "./fixtures";
 /**
  * 06 — SEO meta-tag tests
  *
- * The <SEO> component (react-helmet-async) injects <title>,
+ * The <SEO> component (@unhead/react) injects <title>,
  * meta[name="description"], meta[property="og:title"],
  * link[rel="canonical"] (href under https://ruumly.eu) and hreflang
  * <link rel="alternate"> tags into <head> after React mounts. We poll until
  * <title> is non-empty, then assert presence. All API calls are mocked via the
  * shared fixtures so the pages render (a wrong-shape endpoint → ErrorBoundary →
  * no <SEO> emitted).
+ *
+ * NOTE: this suite runs against the DEV server. The dedicated PRODUCTION-build
+ * head-in-DOM gate lives in e2e-prod/head-in-dom.spec.ts (playwright.prod.config.ts) —
+ * the react-helmet-async defect only reproduced in the minified prod bundle.
+ * unhead dedupes the static index.html tags, so these selectors resolve to a
+ * single element (no [data-rh] marker anymore).
  */
 
 async function stubAll(page: import("@playwright/test").Page) {
@@ -39,7 +45,7 @@ test.describe("SEO meta tags", () => {
     await waitForTitle(page);
 
     const description = await page
-      .locator('meta[name="description"][data-rh="true"]')
+      .locator('meta[name="description"]')
       .getAttribute("content");
     expect(description?.trim().length).toBeGreaterThan(10);
   });
@@ -50,7 +56,7 @@ test.describe("SEO meta tags", () => {
     await waitForTitle(page);
 
     const ogTitle = await page
-      .locator('meta[property="og:title"][data-rh="true"]')
+      .locator('meta[property="og:title"]')
       .getAttribute("content");
     expect(ogTitle?.trim().length).toBeGreaterThan(0);
   });

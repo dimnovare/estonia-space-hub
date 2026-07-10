@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import { HelmetProvider } from "react-helmet-async";
+import { createHead, UnheadProvider } from "@unhead/react/client";
 import App from "./App.tsx";
 import "./index.css";
 import { initGA } from "./lib/analytics";
@@ -35,8 +35,15 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+// @unhead/react head manager. Replaces react-helmet-async (archived; silently
+// failed to flush any tags to document.head in the Vite production build with
+// React 18 createRoot — every per-page title/description/canonical/hreflang/
+// JSON-LD was inert). @unhead writes to the DOM via a maintained client head
+// instance and is SSR-ready for the future ruumly-next migration.
+const head = createHead();
+
 createRoot(document.getElementById("root")!).render(
-  <HelmetProvider>
+  <UnheadProvider head={head}>
     {/*
       GoogleOAuthProvider is intentionally NOT mounted at the root.
       It loads accounts.google.com/gsi/client (sets ~25 third-party cookies)
@@ -45,5 +52,5 @@ createRoot(document.getElementById("root")!).render(
       <GoogleAuthScope> only when the user reaches a sign-in surface.
     */}
     <App />
-  </HelmetProvider>
+  </UnheadProvider>
 );

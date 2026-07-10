@@ -116,8 +116,8 @@ export default defineConfig(({ mode }) => ({
           }
 
           // Everything else third-party (always-loaded misc deps such as
-          // react-helmet-async, use-sync-external-store, react-is, sonner deps,
-          // etc.) is folded into the React common chunk. These are loaded on
+          // @unhead/react + unhead, use-sync-external-store, react-is, sonner
+          // deps, etc.) is folded into the React common chunk. These are loaded on
           // every page anyway, and co-locating them with React avoids a
           // cross-chunk circular reference (a separate generic "vendor" chunk
           // both depends on and is depended upon by vendor-react). The result
