@@ -22,8 +22,8 @@ test.describe("Request funnel", () => {
     await stubConciergeLead(page, 200);
     await page.goto("/et/request");
 
-    // Step 1 — select storage ("Hoiuruum")
-    const storageCard = page.getByRole("button", { name: /hoiuruum/i }).first();
+    // Step 1 — select storage ("Hoiustamine" — canonical serviceType.warehouse)
+    const storageCard = page.getByRole("button", { name: /hoiustamine/i }).first();
     await expect(storageCard).toBeVisible({ timeout: 15000 });
     await storageCard.click();
     await page.getByRole("button", { name: /edasi/i }).click();
@@ -48,7 +48,7 @@ test.describe("Request funnel", () => {
   test("step 1 requires at least one service", async ({ page }) => {
     await stubAll(page);
     await page.goto("/et/request");
-    await expect(page.getByRole("button", { name: /hoiuruum/i }).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("button", { name: /hoiustamine/i }).first()).toBeVisible({ timeout: 15000 });
     await page.getByRole("button", { name: /edasi/i }).click();
     await expect(page.getByText(/vali vähemalt üks teenus/i)).toBeVisible();
   });
@@ -56,7 +56,7 @@ test.describe("Request funnel", () => {
   test("invalid email shows a validation error", async ({ page }) => {
     await stubAll(page);
     await page.goto("/et/request");
-    await page.getByRole("button", { name: /hoiuruum/i }).first().click();
+    await page.getByRole("button", { name: /hoiustamine/i }).first().click();
     await page.getByRole("button", { name: /edasi/i }).click();
     await page.locator("#req-city").fill("Tallinn");
     await page.getByRole("button", { name: /edasi/i }).click();
@@ -69,7 +69,7 @@ test.describe("Request funnel", () => {
     await stubAll(page);
     await stubConciergeLead(page, 429);
     await page.goto("/et/request");
-    await page.getByRole("button", { name: /hoiuruum/i }).first().click();
+    await page.getByRole("button", { name: /hoiustamine/i }).first().click();
     await page.getByRole("button", { name: /edasi/i }).click();
     await page.locator("#req-city").fill("Tallinn");
     await page.getByRole("button", { name: /edasi/i }).click();

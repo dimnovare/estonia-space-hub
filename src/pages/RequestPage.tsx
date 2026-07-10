@@ -2,16 +2,16 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useSearchParams } from "@/i18n/routing";
 import {
-  Warehouse, Truck, Caravan, Sparkles, Package, Bus, Shield,
   ArrowRight, ArrowLeft, CheckCircle, Check,
   MapPin, CalendarDays, Loader2, AlertCircle,
+  type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
 import { leadService, type ConciergeCategory } from "@/services";
-import { SERVICE_TYPE_SLUGS } from "@/lib/serviceTypes";
+import { SERVICE_TYPE_SLUGS, SERVICE_TYPE_ICONS } from "@/lib/serviceTypes";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -72,23 +72,24 @@ export default function RequestPage() {
     onError: () => {},
   });
 
+  // Canonical service copy (overhaul §4): the step-1 cards use the SAME
+  // serviceType.{slug}(.desc) keys + icons as the navbar mega-menu, homepage
+  // grid, search chips and footer — one name + one-liner per service, verbatim.
   const needOptions: {
     key: ConciergeCategory;
-    icon: typeof Warehouse;
+    icon: LucideIcon;
     title: string;
     desc: string;
     show: boolean;
-  }[] = [
-    { key: "warehouse", icon: Warehouse, title: t("request.need.storage"), desc: t("request.need.storage.desc"), show: true },
-    { key: "moving",    icon: Truck,     title: t("request.need.moving"),  desc: t("request.need.moving.desc"),  show: showMovingService },
-    { key: "trailer",   icon: Caravan,   title: t("request.need.trailer"), desc: t("request.need.trailer.desc"), show: showTrailerService },
-    // Moving-event categories (directory verticals) — always visible, worked
-    // manually by the concierge match loop; no platform-setting gate.
-    { key: "cleaning",  icon: Sparkles,  title: t("request.need.cleaning"),  desc: t("request.need.cleaning.desc"),  show: true },
-    { key: "packing",   icon: Package,   title: t("request.need.packing"),   desc: t("request.need.packing.desc"),   show: true },
-    { key: "vanrental", icon: Bus,       title: t("request.need.vanrental"), desc: t("request.need.vanrental.desc"), show: true },
-    { key: "insurance", icon: Shield,    title: t("request.need.insurance"), desc: t("request.need.insurance.desc"), show: true },
-  ];
+  }[] = SERVICE_TYPE_SLUGS.map((slug) => ({
+    key: slug,
+    icon: SERVICE_TYPE_ICONS[slug],
+    title: t(`serviceType.${slug}`),
+    desc: t(`serviceType.${slug}.desc`),
+    // moving/trailer honor the admin platform toggles; the 4 moving-event
+    // categories are always visible (worked manually by the concierge loop).
+    show: slug === "moving" ? showMovingService : slug === "trailer" ? showTrailerService : true,
+  }));
 
   const toggleCategory = (key: ConciergeCategory) => {
     setStepError(null);
@@ -199,6 +200,8 @@ export default function RequestPage() {
                 <legend className="font-display text-lg font-semibold text-navy-ink">
                   {t("request.steps.step1")}
                 </legend>
+                {/* Multi-select nudge — bundling is the funnel's superpower. */}
+                <p className="mt-1.5 text-sm text-muted-foreground">{t("request.need.hint")}</p>
                 {/* 7 categories → compact 2-col multi-select grid (also 2-col on
                     mobile, so the step never scrolls past the fold). */}
                 <div className="mt-4 grid grid-cols-2 gap-3">

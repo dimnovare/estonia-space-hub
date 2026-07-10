@@ -324,6 +324,16 @@ export default function SearchPage() {
   // user sees and the empty/notify state can never disagree.
   const totalCount = filtered.length + displayLocations.length;
 
+  // Concierge deep link (overhaul §4) — the results banner and the empty state
+  // both convert into the /request funnel, carrying the active type + city.
+  const requestPrefill = (() => {
+    const p = new URLSearchParams();
+    if (activeType !== "all") p.set("category", activeType);
+    if (cityFilter) p.set("city", cityFilter);
+    const qs = p.toString();
+    return qs ? `/request?${qs}` : "/request";
+  })();
+
   const handleNotifySubmit = async () => {
     if (!notifyEmail.includes("@")) {
       setNotifyError(true);
@@ -866,6 +876,20 @@ export default function SearchPage() {
                 {t("search.resultsFound").replace("{count}", String(totalCount))}{query && ` ${t("search.forQuery")} "${query}"`}
               </p>
 
+              {/* Concierge request banner (overhaul §4) — every results view
+                  offers the funnel; type + city prefill the request. */}
+              {totalCount > 0 && (
+                <div className="mb-5 flex flex-col gap-2.5 rounded-xl border border-accent/25 bg-accent/5 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm font-medium text-foreground">{t("search.requestBanner")}</p>
+                  <Link
+                    to={requestPrefill}
+                    className="inline-flex min-h-[40px] shrink-0 items-center justify-center rounded-md bg-accent px-4 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                  >
+                    {t("search.requestBannerCta")}
+                  </Link>
+                </div>
+              )}
+
               {/* Location cards */}
               {displayLocations.length > 0 && (
                 <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
@@ -1032,10 +1056,21 @@ export default function SearchPage() {
                       return <EmptyIcon className="h-6 w-6 text-muted-foreground" />;
                     })()}
                   </div>
-                  <h2 className="mt-4 font-display text-lg font-semibold text-foreground">{t("empty.search.title")}</h2>
-                  <p className="mt-1.5 text-sm text-muted-foreground">{t("search.empty.notifyDesc")}</p>
+                  <h2 className="mt-4 font-display text-lg font-semibold text-foreground">{t("search.empty.requestTitle")}</h2>
+                  <p className="mt-1.5 text-sm text-muted-foreground">{t("search.empty.requestDesc")}</p>
 
-                  {/* Demand-lead capture — primary action of the empty state */}
+                  {/* Primary action (overhaul §4): the concierge request funnel
+                      with the active type + city prefilled. */}
+                  <Button
+                    asChild
+                    className="mt-5 min-h-[44px] w-full bg-accent px-5 font-display text-accent-foreground hover:bg-accent/90 sm:w-auto"
+                  >
+                    <Link to={requestPrefill}>{t("search.empty.requestCta")}</Link>
+                  </Button>
+
+                  <p className="mt-6 w-full border-t border-line pt-5 text-sm text-muted-foreground">{t("search.empty.notifyDesc")}</p>
+
+                  {/* Secondary: demand-lead email capture ("notify me") */}
                   {notifySuccess ? (
                     <p className="mt-6 inline-flex items-center gap-2 rounded-full bg-success/10 px-4 py-2 text-sm font-medium text-success">
                       {t("search.notifySuccess")}

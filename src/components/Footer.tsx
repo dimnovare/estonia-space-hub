@@ -3,6 +3,7 @@ import { Facebook, Instagram, Linkedin } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { useDirectoryCities } from "@/hooks/queries";
+import { visibleServiceSlugs } from "@/lib/serviceTypes";
 // Footer lockup (00-foundations §1.2): ruumly-mark.png icon (30px) + live white
 // "Ruumly" wordmark.
 
@@ -16,11 +17,14 @@ export default function Footer() {
   const blogInFooter = String(settings.blog?.showInFooter ?? "true") !== "false";
   const showBlog = blogEnabled && blogInFooter;
 
-  // Services column — the three verticals + the map (spec §7.2).
+  // Services column — the 7 canonical categories (overhaul §4: same
+  // serviceType.* names as navbar/home/search/request) + the map link.
+  // moving/trailer honor the admin platform toggles.
   const serviceLinks = [
-    { label: t("footer.storage"), to: "/search?type=warehouse" },
-    ...(showMovingService ? [{ label: t("footer.movingService"), to: "/search?type=moving" }] : []),
-    ...(showTrailerService ? [{ label: t("footer.trailerRental"), to: "/search?type=trailer" }] : []),
+    ...visibleServiceSlugs(showMovingService, showTrailerService).map((slug) => ({
+      label: t(`serviceType.${slug}`),
+      to: `/search?type=${slug}`,
+    })),
     { label: t("footer.findOnMap"), to: "/search" },
   ];
 

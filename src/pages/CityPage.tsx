@@ -14,6 +14,7 @@ import { queryKeys } from "@/services/queryKeys";
 import { formatPriceUnit } from "@/lib/priceUnit";
 import MovingRoutePage, { parseRouteSlug } from "@/pages/MovingRoutePage";
 import { getPopularRoutesFrom } from "@/lib/cities";
+import { visibleServiceSlugs } from "@/lib/serviceTypes";
 
 const CITY_MAP: Record<string, string> = {
   tallinn: "Tallinn",
@@ -160,18 +161,28 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
     .replace("{city}", city)
     .replace("{count}", String(topItems.length || ""));
 
-  // FAQ. faq1 (storage pricing "€29/month") and faq3 (storage security) are
+  // FAQ. faq1 (storage pricing) and faq3 (storage security) are
   // storage-specific, so they only show on the warehouse hub. faq2 (online
-  // booking) is generic and shown on every vertical.
-  const faqs = vertical === "warehouse"
-    ? [
-        { q: t("cityPage.faq1.q").replace("{city}", city), a: t("cityPage.faq1.a").replace("{city}", city) },
-        { q: t("cityPage.faq2.q").replace("{city}", city), a: t("cityPage.faq2.a").replace("{city}", city) },
-        { q: t("cityPage.faq3.q").replace("{city}", city), a: t("cityPage.faq3.a").replace("{city}", city) },
-      ]
-    : [
-        { q: t("cityPage.faq2.q").replace("{city}", city), a: t("cityPage.faq2.a").replace("{city}", city) },
-      ];
+  // booking) is generic; faq4 (can Ruumly organise my move here — the
+  // concierge answer carrying the geography-honesty rule) shows everywhere.
+  const faqs = [
+    ...(vertical === "warehouse"
+      ? [{ q: t("cityPage.faq1.q").replace("{city}", city), a: t("cityPage.faq1.a").replace("{city}", city) }]
+      : []),
+    { q: t("cityPage.faq2.q").replace("{city}", city), a: t("cityPage.faq2.a").replace("{city}", city) },
+    ...(vertical === "warehouse"
+      ? [{ q: t("cityPage.faq3.q").replace("{city}", city), a: t("cityPage.faq3.a").replace("{city}", city) }]
+      : []),
+    { q: t("cityPage.faq4.q").replace("{city}", city), a: t("cityPage.faq4.a").replace("{city}", city) },
+  ];
+
+  // SEO content block (overhaul §4; GSC: Tallinn = biggest opportunity):
+  // live provider count, canonical category links scoped to this city, and
+  // internal links home ↔ /locations hub. Ops-geography note for cities
+  // outside the Tallinn/Harjumaa full-service area (honesty rule).
+  const seoBlockSlugs = visibleServiceSlugs(showMovingService, showTrailerService);
+  const providerCount = locations.length;
+  const isOpsArea = city === "Tallinn";
 
   return (
     <div>
@@ -286,6 +297,54 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
               {t("cityPage.viewAll").replace("{city}", city)} <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
+        </div>
+      </section>
+
+      {/* SEO content block (overhaul §4) — services in this city (canonical
+          category links), live provider count, ops-geography note, and
+          internal links back to the homepage + the /locations hub index. */}
+      <section className="border-t border-border px-4 py-10">
+        <div className="container-wide">
+          <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">
+            {t("home.services.eyebrow")}
+          </p>
+          <h2 className="mt-1.5 font-display text-xl font-bold">
+            {t("cityPage.services.title").replace("{city}", city)}
+          </h2>
+          {providerCount > 0 && (
+            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+              {t("cityPage.providerCount")
+                .replace("{count}", String(providerCount))
+                .replace("{city}", city)}
+            </p>
+          )}
+          <div className="mt-5 flex flex-wrap gap-3">
+            {seoBlockSlugs.map((s) => (
+              <Link
+                key={s}
+                to={`/search?type=${s}&city=${encodeURIComponent(city)}`}
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold text-navy-ink transition-colors hover:border-accent hover:text-accent"
+              >
+                {t(`serviceType.${s}`)}
+              </Link>
+            ))}
+          </div>
+          {!isOpsArea && (
+            <p className="mt-5 max-w-2xl text-sm text-muted-foreground">
+              {t("cityPage.opsNote").replace("{city}", city)}
+            </p>
+          )}
+          <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm font-medium">
+            <Link to="/" className="text-teal-deep hover:text-primary hover:underline">
+              {t("nav.home")}
+            </Link>
+            <Link to="/locations" className="text-teal-deep hover:text-primary hover:underline">
+              {t("footer.allLocations")}
+            </Link>
+            <Link to={`/request?city=${encodeURIComponent(city)}`} className="text-teal-deep hover:text-primary hover:underline">
+              {t("nav.getOffers")}
+            </Link>
+          </div>
         </div>
       </section>
 
