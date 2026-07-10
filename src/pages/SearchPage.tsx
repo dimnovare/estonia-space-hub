@@ -1,6 +1,6 @@
 import { useState, useMemo, lazy, Suspense, useCallback, useRef, useEffect } from "react";
 import { useSearchParams, Link } from "@/i18n/routing";
-import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers, Package, Warehouse, Truck, CarFront, Star, Building2, Calculator, LocateFixed, Bookmark } from "lucide-react";
+import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers, Package, Warehouse, Truck, CarFront, Star, Building2, Calculator, LocateFixed, Bookmark, Sparkles, Bus, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from "@/components/ui/drawer";
 import { useListings, useLocations } from "@/hooks/queries";
@@ -28,6 +28,10 @@ const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 const VALID_SORTS: ListingFilters["sort"][] = ["best", "cheapest", "rating", "newest"];
 const VALID_SIZE_CATS: ListingFilters["sizeCategory"][] = ["XS", "S", "M", "L", "XL"];
 
+// Directory-only event categories (no ListingType of their own): selectable as
+// type chips, filter /locations server-side, and never match any listing.
+const DIRECTORY_ONLY_TYPES = ["cleaning", "packing", "vanrental", "insurance"] as const;
+
 // Squared-equirectangular approximation — cheap and monotonic, which is all we
 // need to rank results by proximity to the user (no real distance reported).
 function distanceSq(aLat: number, aLng: number, bLat: number, bLng: number): number {
@@ -54,8 +58,13 @@ export default function SearchPage() {
     staleTime: 5 * 60_000,
   });
 
-  // All filter state derived from URL
-  const activeType = (searchParams.get("type") as ListingType | "all") || "all";
+  // All filter state derived from URL. Beyond the marketplace verticals
+  // (warehouse/moving/trailer) the type param also accepts the directory-only
+  // event-category slugs (cleaning/packing/vanrental/insurance).
+  const activeType = searchParams.get("type") || "all";
+  // Directory-only categories have no marketplace listings vertical — supply
+  // comes exclusively from directory profiles via /locations?type={slug}.
+  const isDirectoryOnlyType = (DIRECTORY_ONLY_TYPES as readonly string[]).includes(activeType);
   const sort = searchParams.get("sort") || "best";
   const cityFilter = searchParams.get("city") || "";
   const priceMax = searchParams.get("priceMax") || "";
@@ -103,7 +112,9 @@ export default function SearchPage() {
 
   // Build filters for the service layer
   const filters: ListingFilters = useMemo(() => ({
-    type: activeType !== "all" ? activeType as ListingType : undefined,
+    // Directory-only slugs are not a ListingType — never send them to /listings
+    // (their results are blanked client-side below; supply comes from /locations).
+    type: activeType !== "all" && !isDirectoryOnlyType ? activeType as ListingType : undefined,
     query: debouncedQ || undefined,
     city: cityFilter || undefined,
     priceMax: debouncedPriceMax ? parseInt(debouncedPriceMax) : undefined,
@@ -161,7 +172,9 @@ export default function SearchPage() {
 
   // Client-side post-filters for dynamic feature booleans
   const filtered = useMemo(() => {
-    let results = serverFiltered;
+    // Directory-only category selected: listings can never match — only the
+    // directory location cards (fetched with the same type slug) are shown.
+    let results = isDirectoryOnlyType ? [] : serverFiltered;
     // Storage-only gating: never surface a disabled service type in the results,
     // not even in the "all" view (the API returns every type regardless of flags).
     if (!showMovingService)  results = results.filter(l => l.type !== "moving");
@@ -385,6 +398,12 @@ export default function SearchPage() {
     { value: "warehouse", label: t("search.type.warehouse"), Icon: Warehouse },
     ...(showMovingService  ? [{ value: "moving",  label: t("search.type.moving"),  Icon: Truck    }] : []),
     ...(showTrailerService ? [{ value: "trailer", label: t("search.type.trailer"), Icon: CarFront }] : []),
+    // Directory event categories — always visible: unclaimed directory
+    // providers exist for these even without an enabled marketplace vertical.
+    { value: "cleaning",  label: t("serviceType.cleaning"),  Icon: Sparkles    },
+    { value: "packing",   label: t("serviceType.packing"),   Icon: Package     },
+    { value: "vanrental", label: t("serviceType.vanrental"), Icon: Bus         },
+    { value: "insurance", label: t("serviceType.insurance"), Icon: ShieldCheck },
   ];
 
   // Map overlay badge: list the publicly visible verticals (honors admin toggles).
@@ -855,8 +874,22 @@ export default function SearchPage() {
                     >
                       <div className="p-4">
                         <div className="flex items-start gap-3">
-                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                            <Building2 className="h-[22px] w-[22px] text-primary" />
+                          {/* Supplier logo thumb — the generic building icon is
+                              only a fallback (no logo set, or the URL 404s). */}
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/10">
+                            {loc.supplierLogoUrl && (
+                              <img
+                                src={loc.supplierLogoUrl}
+                                alt=""
+                                loading="lazy"
+                                className="h-full w-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = "none";
+                                  e.currentTarget.nextElementSibling?.classList.remove("hidden");
+                                }}
+                              />
+                            )}
+                            <Building2 className={`h-[22px] w-[22px] text-primary ${loc.supplierLogoUrl ? "hidden" : ""}`} />
                           </div>
                           <div className="min-w-0 flex-1">
                             <h3 className="truncate font-sans text-sm font-semibold text-foreground">

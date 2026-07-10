@@ -111,10 +111,21 @@
     @apply border-border;
   }
 
+  html {
+    /* Mobile guard: the page must never scroll horizontally. body already has
+       overflow-x hidden, but Android lets the <html> element itself scroll
+       sideways when any child leaks past the viewport. `clip` kills that
+       without creating a scroll container (so position: sticky keeps working);
+       the `hidden` line is the fallback for engines without `clip`. */
+    overflow-x: hidden;
+    overflow-x: clip;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'DM Sans', system-ui, sans-serif;
     overflow-x: hidden;
+    overflow-x: clip;
   }
 
   h1, h2, h3, h4, h5, h6 {

@@ -407,6 +407,8 @@ export interface SupplierLocation {
   supplierSlug?: string | null;
   /** Service slugs: warehouse|moving|trailer|cleaning|packing|vanrental|insurance */
   serviceTypes?: string[];
+  /** Supplier logo, when set — shown on search cards instead of the generic icon. */
+  supplierLogoUrl?: string | null;
 }
 
 export interface WarehouseListing extends ListingBase {

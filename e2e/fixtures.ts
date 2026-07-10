@@ -84,6 +84,7 @@ export function apiLocation(over: Json = {}): Json {
     isDirectory: false,
     supplierSlug: null,
     serviceTypes: [],
+    supplierLogoUrl: null,
     ...over,
   };
 }

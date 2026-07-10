@@ -262,6 +262,9 @@ export default function PartnerPage() {
   const saveKey = partner ? `partner:${partner.slug}` : "";
   const saved = saveKey ? isFavorite(saveKey) : false;
   const [contactOpen, setContactOpen] = useState(false);
+  // Broken logo URLs (imported directory data can 404) fall back to the
+  // monogram tile instead of the browser's broken-image glyph.
+  const [logoFailed, setLogoFailed] = useState(false);
 
   const handleSave = () => {
     if (!saveKey) return;
@@ -314,10 +317,17 @@ export default function PartnerPage() {
       >
         <div className="container-wide flex flex-wrap items-start justify-between gap-6">
           <div className="flex min-w-0 items-start gap-5">
-            {/* 72px white rounded-14px monogram tile, navy letter */}
-            <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-[14px] bg-white shadow-card">
-              {partner.logoUrl ? (
-                <img src={partner.logoUrl} alt={t("partner.logoAlt").replace("{name}", partner.name)} className="h-12 w-12 object-contain" />
+            {/* 72px rounded-14px logo tile. Logos fill the tile (object-cover,
+                subtle translucent bg for transparent PNGs — no fat white frame);
+                the white monogram tile is the fallback for missing/broken logos. */}
+            <div className={`flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-[14px] shadow-card ${partner.logoUrl && !logoFailed ? "bg-white/10" : "bg-white"}`}>
+              {partner.logoUrl && !logoFailed ? (
+                <img
+                  src={partner.logoUrl}
+                  alt={t("partner.logoAlt").replace("{name}", partner.name)}
+                  className="h-full w-full object-cover"
+                  onError={() => setLogoFailed(true)}
+                />
               ) : (
                 <span className="font-display text-[28px] font-extrabold text-primary">
                   {partner.name.charAt(0).toUpperCase()}
