@@ -38,3 +38,42 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  head-gate:
+    # Production-build SEO gate: asserts per-page <head> tags (title, description,
+    # canonical, hreflang, JSON-LD) reach the DOM in the REAL minified bundle served
+    # by `vite preview`. This is its own job (not a step) so it runs even when the
+    # dev-server e2e above fails — it guards the exact react-helmet-async→@unhead
+    # class of regression that dev-server tests cannot catch (head flushed in dev,
+    # emitted nothing in the prod bundle).
+    name: SEO head-in-DOM (prod build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run production head-in-DOM gate
+        run: npm run test:e2e:prod
+        env:
+          CI: "true"
+
+      - name: Upload head-gate report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: head-gate-report
+          path: playwright-report/
+          retention-days: 7

@@ -51,7 +51,11 @@ The wrappers automatically prepend the active language to any absolute path.
 
 All user-facing strings live in `src/i18n/translations.ts`. Every key **must** exist in all
 5 language blocks (et, en, ru, lv, lt) or the TypeScript union type will catch it.
-Geography differs by language: et=Estonia, en/ru=Baltics, lv=Latvia, lt=Lithuania.
+Geography-honesty rule (2026-07 overhaul, supersedes the old per-language convention):
+copy in **all** languages says the directory covers **all of Estonia** and the concierge
+ops run **Tallinn/Harjumaa first** — never claim Latvia/Lithuania/Baltics coverage the
+business doesn't have. Counted-noun strings use the CLDR plural helper (`src/i18n/plural.ts`,
+`|`-separated forms) so RU/LT numeral agreement is correct — don't hand-write `{count}` nouns.
 
 ## API client and service layer
 
