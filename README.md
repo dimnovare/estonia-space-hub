@@ -373,7 +373,7 @@ Cloudflare sits in front of Vercel as DNS and CDN. The backend API (`api.ruumly.
 
 ### SEO
 
-- Per-route `<title>` and `<meta>` tags via `react-helmet-async` (`<SEO />` component).
+- Per-route `<title>` and `<meta>` tags via `@unhead/react` (`<SEO />` component).
 - Open Graph (`og:url`, `og:locale`, `og:image`) and Twitter Card tags in `index.html`.
 - Google site verification meta tag present.
 - `sitemap.xml` and `robots.txt` served dynamically by the backend `SitemapController`.
