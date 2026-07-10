@@ -3725,6 +3725,17 @@ const et: Record<string, string> = {
     "partner.claim.body": "Võta profiil üle tasuta — päringud tulevad otse sinule ja vahendustasu on 0%.",
     "partner.claim.cta": "Võta profiil üle",
     "admin.leads.matchDirectory": "Kataloogi ettevõte",
+    // ── Services mega-menu + canonical service one-liners (overhaul §2/§4) ──
+    "nav.services": "Teenused",
+    "nav.getOffers": "Küsi pakkumist",
+    "nav.servicesCta": "Pole kindel? Ütle, mida vajad →",
+    "serviceType.warehouse.desc": "Panipaigad, minilaod ja laopinnad",
+    "serviceType.moving.desc": "Kolijad koos kaubikuga — ukselt uksele",
+    "serviceType.trailer.desc": "Rendi haagis tunni või päeva kaupa",
+    "serviceType.cleaning.desc": "Kolimiskoristus vanas või uues kodus",
+    "serviceType.packing.desc": "Kastid, pakkematerjal ja pakkimisabi",
+    "serviceType.vanrental.desc": "Rendi kaubik, kui kolid ise",
+    "serviceType.insurance.desc": "Vara kaitse kolimise ja hoiustamise ajaks",
 };
 
 const en: Record<string, string> = {
@@ -7408,6 +7419,17 @@ const en: Record<string, string> = {
     "partner.claim.body": "Claim this profile for free — requests go straight to you, with 0% commission.",
     "partner.claim.cta": "Claim this profile",
     "admin.leads.matchDirectory": "Directory company",
+    // ── Services mega-menu + canonical service one-liners (overhaul §2/§4) ──
+    "nav.services": "Services",
+    "nav.getOffers": "Get offers",
+    "nav.servicesCta": "Not sure? Tell us what you need →",
+    "serviceType.warehouse.desc": "Storage units, mini-warehouses and warehouse space",
+    "serviceType.moving.desc": "Movers with a van — door to door",
+    "serviceType.trailer.desc": "Rent a trailer by the hour or day",
+    "serviceType.cleaning.desc": "Move-out or move-in cleaning",
+    "serviceType.packing.desc": "Boxes, materials and packing help",
+    "serviceType.vanrental.desc": "Van rental for a DIY move",
+    "serviceType.insurance.desc": "Cover for your things in transit and storage",
 };
 
 const ru: Record<string, string> = {
@@ -11090,6 +11112,17 @@ const ru: Record<string, string> = {
     "partner.claim.body": "Заберите профиль бесплатно — заявки будут приходить напрямую вам, комиссия 0%.",
     "partner.claim.cta": "Забрать профиль",
     "admin.leads.matchDirectory": "Компания из каталога",
+    // ── Services mega-menu + canonical service one-liners (overhaul §2/§4) ──
+    "nav.services": "Услуги",
+    "nav.getOffers": "Получить предложения",
+    "nav.servicesCta": "Не уверены? Расскажите, что вам нужно →",
+    "serviceType.warehouse.desc": "Кладовки, мини-склады и складские площади",
+    "serviceType.moving.desc": "Грузчики с фургоном — от двери до двери",
+    "serviceType.trailer.desc": "Аренда прицепа на час или день",
+    "serviceType.cleaning.desc": "Уборка при выезде или заселении",
+    "serviceType.packing.desc": "Коробки, материалы и помощь с упаковкой",
+    "serviceType.vanrental.desc": "Аренда фургона для самостоятельного переезда",
+    "serviceType.insurance.desc": "Защита вещей при перевозке и хранении",
 };
 
 
@@ -14711,6 +14744,17 @@ const lv: Record<string, string> = {
     "partner.claim.body": "Pārņemiet profilu bez maksas — pieprasījumi nonāks tieši pie jums, komisija 0%.",
     "partner.claim.cta": "Pārņemt profilu",
     "admin.leads.matchDirectory": "Kataloga uzņēmums",
+    // ── Services mega-menu + canonical service one-liners (overhaul §2/§4) ──
+    "nav.services": "Pakalpojumi",
+    "nav.getOffers": "Saņemt piedāvājumus",
+    "nav.servicesCta": "Neesi pārliecināts? Pastāsti, kas tev vajadzīgs →",
+    "serviceType.warehouse.desc": "Noliktavas, mini noliktavas un uzglabāšanas telpas",
+    "serviceType.moving.desc": "Pārcēlāji ar busiņu — no durvīm līdz durvīm",
+    "serviceType.trailer.desc": "Īrē piekabi uz stundu vai dienu",
+    "serviceType.cleaning.desc": "Uzkopšana izvācoties vai ievācoties",
+    "serviceType.packing.desc": "Kastes, materiāli un palīdzība ar iepakošanu",
+    "serviceType.vanrental.desc": "Busiņa noma, ja pārvācies pats",
+    "serviceType.insurance.desc": "Mantu aizsardzība pārvākšanās un uzglabāšanas laikā",
 };
 // ── Lithuanian ──────────────────────────
 const lt: Record<string, string> = {
@@ -18329,6 +18373,17 @@ const lt: Record<string, string> = {
     "partner.claim.body": "Perimkite profilį nemokamai — užklausos keliaus tiesiai jums, komisinis mokestis 0%.",
     "partner.claim.cta": "Perimti profilį",
     "admin.leads.matchDirectory": "Katalogo įmonė",
+    // ── Services mega-menu + canonical service one-liners (overhaul §2/§4) ──
+    "nav.services": "Paslaugos",
+    "nav.getOffers": "Gauti pasiūlymus",
+    "nav.servicesCta": "Nesate tikri? Pasakykite, ko jums reikia →",
+    "serviceType.warehouse.desc": "Sandėliukai, mini sandėliai ir sandėliavimo plotai",
+    "serviceType.moving.desc": "Perkraustytojai su furgonu — nuo durų iki durų",
+    "serviceType.trailer.desc": "Išsinuomokite priekabą valandai ar dienai",
+    "serviceType.cleaning.desc": "Valymas išsikraustant ar įsikraustant",
+    "serviceType.packing.desc": "Dėžės, medžiagos ir pagalba pakuojant",
+    "serviceType.vanrental.desc": "Furgono nuoma, jei kraustotės patys",
+    "serviceType.insurance.desc": "Daiktų apsauga kraustantis ir sandėliuojant",
 };
 const translations: Record<Language, Record<string, string>> = { et, en, ru, lv, lt };
 

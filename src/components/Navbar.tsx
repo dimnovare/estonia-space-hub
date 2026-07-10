@@ -1,7 +1,10 @@
 import "flag-icons/css/flag-icons.min.css";
-import { Link, useLocation, useSearchParams, stripLang } from "@/i18n/routing";
-import { Menu, User, LogIn, LogOut, ChevronDown, Bell, LayoutDashboard, Shield, Check, Globe } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Link, useLocation, stripLang } from "@/i18n/routing";
+import {
+  Menu, User, LogIn, LogOut, ChevronDown, Bell, LayoutDashboard,
+  Shield, Check, Globe, ArrowRight,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import type { Language } from "@/i18n/translations";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -10,6 +13,7 @@ import { LANGUAGES } from "@/i18n/translations";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { SERVICE_TYPE_ICONS, visibleServiceSlugs } from "@/lib/serviceTypes";
 // Logo lockup (00-foundations §1.2) = ruumly-mark.png icon + live "Ruumly" text.
 // The icon is the ONLY image; the word is typeset so its colour adapts to the
 // background (navy on light, white on dark). Served from /public.
@@ -38,41 +42,19 @@ function LangFlag({ code, className = "" }: { code: string; className?: string }
   );
 }
 
-// Free partner-acquisition marketplace (CLAUDE.md): all three verticals are
-// public nav links, gated by platform toggles. Storage points at /search
-// (storage results); Moving / Trailer rental at /search?type=… . Then the two
-// static links. Order: Storage, Moving, Trailer rental, How it works, For partners.
+// Event-first nav (overhaul spec §2): top level is Services ▾ · How it works ·
+// Blog (gated) · [lang/auth] · CTA "Get offers" → /request. The old per-vertical
+// Storage / Moving / Trailer top-level links are gone — the 7 canonical service
+// categories live in the Services mega-menu instead. The provider entry point
+// stays reachable via the footer + the mobile drawer.
 interface NavLink {
   to: string;
   tKey: string;
-  // "Storage" is active on the home page and storage search results.
-  matchStorage?: boolean;
-  // Moving / Trailer rental are active when /search?type= matches this value.
-  matchType?: string;
-  isProviderLink?: boolean;
 }
 
-// SearchPage reads the vertical from ?type= (warehouse|moving|trailer), the same
-// param Footer.tsx links to — so these deep-links actually drive the filter.
-const STORAGE_LINK: NavLink = { to: "/search", tKey: "nav.storage", matchStorage: true };
-const MOVING_LINK: NavLink = { to: "/search?type=moving", tKey: "nav.moving", matchType: "moving" };
-const TRAILER_LINK: NavLink = { to: "/search?type=trailer", tKey: "nav.trailer", matchType: "trailer" };
 const STATIC_NAV_LINKS: NavLink[] = [
   { to: "/how-it-works", tKey: "nav.howItWorks" },
-  { to: "/provider", tKey: "nav.forProviders", isProviderLink: true },
 ];
-
-function isLinkActive(link: NavLink, pathname: string, searchType: string | null): boolean {
-  const stripped = stripLang(pathname);
-  if (link.matchStorage) {
-    // "Storage" is active on the home page and on storage search results.
-    return stripped === "/" || (stripped === "/search" && (searchType === null || searchType === "warehouse" || searchType === "all"));
-  }
-  if (link.matchType) {
-    return stripped === "/search" && searchType === link.matchType;
-  }
-  return stripped === link.to;
-}
 
 // Routes whose top section is a navy dark hero — the nav sits ABSOLUTE and
 // transparent over them with white links (spec §7.1). Everywhere else it is the
@@ -90,9 +72,10 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const [servicesOpen, setServicesOpen] = useState(false);
+  const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
+  const servicesTriggerRef = useRef<HTMLButtonElement | null>(null);
   const location = useLocation();
-  const [searchParams] = useSearchParams();
-  const currentType = searchParams.get("type");
   const { language, setLanguage, t } = useLanguage();
   const { user, isAuthenticated, role, logout } = useAuth();
   const { data: notifications = [] } = useNotifications();
@@ -101,38 +84,43 @@ export default function Navbar() {
   const { showMovingService, showTrailerService } = settings;
   const blogEnabled = String(settings.blog?.enabled ?? "false") === "true";
   const blogInNav = String(settings.blog?.showInNav ?? "false") === "true";
-  // Storage, then the verticals enabled by admin toggles, then the static links.
+  const serviceSlugs = visibleServiceSlugs(showMovingService, showTrailerService);
   const navLinks: NavLink[] = [
-    STORAGE_LINK,
-    ...(showMovingService ? [MOVING_LINK] : []),
-    ...(showTrailerService ? [TRAILER_LINK] : []),
     ...STATIC_NAV_LINKS,
     ...(blogEnabled && blogInNav ? [{ to: "/blog", tKey: "blog.title" }] : []),
   ];
 
   const onDark = isDarkHeroRoute(location.pathname);
+  const strippedPath = stripLang(location.pathname);
+  const servicesActive = strippedPath === "/search";
 
-  // Close the hand-rolled language / user menus on Escape (Radix-free a11y).
+  // Close the mega-menu whenever the route changes (panel links are plain
+  // anchors — SPA navigation must not leave a stale open panel behind).
   useEffect(() => {
-    if (!langOpen && !userMenuOpen) return;
+    setServicesOpen(false);
+  }, [location.pathname, location.search]);
+
+  // Close the hand-rolled menus on Escape (Radix-free a11y). Closing the
+  // Services panel with Escape returns focus to its trigger (spec §2).
+  useEffect(() => {
+    if (!langOpen && !userMenuOpen && !servicesOpen) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setLangOpen(false);
         setUserMenuOpen(false);
+        if (servicesOpen) {
+          setServicesOpen(false);
+          servicesTriggerRef.current?.focus();
+        }
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [langOpen, userMenuOpen]);
+  }, [langOpen, userMenuOpen, servicesOpen]);
 
   const handleLogout = () => {
     logout();
     setUserMenuOpen(false);
-  };
-
-  const getLinkHref = (link: NavLink) => {
-    if (link.isProviderLink && role === "provider") return "/provider/dashboard";
-    return link.to;
   };
 
   // Admin avatars are navy (#173B8D); everyone else green (#0A9881) — spec §1.3.
@@ -165,13 +153,81 @@ export default function Navbar() {
         </Link>
 
         <nav className="hidden items-center gap-1.5 min-[820px]:flex">
+          {/* Services mega-menu trigger */}
+          <div className="relative">
+            <button
+              ref={servicesTriggerRef}
+              onClick={() => setServicesOpen((prev) => !prev)}
+              aria-expanded={servicesOpen}
+              aria-controls="services-mega-menu"
+              aria-haspopup="true"
+              className={`flex items-center gap-1 rounded-md px-3.5 py-2 text-[14.5px] font-medium font-display transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+                onDark
+                  ? servicesActive || servicesOpen
+                    ? "bg-white/15 text-white"
+                    : "text-white/80 hover:bg-white/10 hover:text-white"
+                  : servicesActive || servicesOpen
+                    ? "bg-secondary text-navy-ink"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+              }`}
+            >
+              {t("nav.services")}
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${servicesOpen ? "rotate-180" : ""}`} />
+            </button>
+
+            {servicesOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setServicesOpen(false)} />
+                <div
+                  id="services-mega-menu"
+                  className="absolute left-0 top-full z-50 mt-2 w-[560px] rounded-2xl border border-border bg-card p-3 shadow-elevated"
+                >
+                  <ul className="grid grid-cols-2 gap-1">
+                    {serviceSlugs.map((slug) => {
+                      const Icon = SERVICE_TYPE_ICONS[slug];
+                      return (
+                        <li key={slug}>
+                          <Link
+                            to={`/search?type=${slug}`}
+                            onClick={() => setServicesOpen(false)}
+                            className="flex items-start gap-3 rounded-xl p-3 transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                          >
+                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal/[0.14]">
+                              <Icon className="h-5 w-5 text-teal-deep" aria-hidden />
+                            </span>
+                            <span className="min-w-0">
+                              <span className="block font-display text-sm font-semibold text-foreground">
+                                {t(`serviceType.${slug}`)}
+                              </span>
+                              <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">
+                                {t(`serviceType.${slug}.desc`)}
+                              </span>
+                            </span>
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  {/* CTA row — the concierge front door */}
+                  <Link
+                    to="/request"
+                    onClick={() => setServicesOpen(false)}
+                    className="mt-2 flex items-center justify-between gap-3 rounded-xl bg-accent/10 px-4 py-3 text-sm font-semibold text-accent transition-colors hover:bg-accent/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  >
+                    {t("nav.servicesCta")}
+                    <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
+                  </Link>
+                </div>
+              </>
+            )}
+          </div>
+
           {navLinks.map((l) => {
-            const href = getLinkHref(l);
-            const active = isLinkActive(l, location.pathname, currentType);
+            const active = strippedPath === l.to;
             return (
               <Link
                 key={l.tKey}
-                to={href}
+                to={l.to}
                 aria-current={active ? "page" : undefined}
                 className={`rounded-md px-3.5 py-2 text-[14.5px] font-medium font-display transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
                   onDark
@@ -290,15 +346,28 @@ export default function Navbar() {
           ) : (
             <Link
               to="/login"
-              className={`inline-flex h-11 items-center gap-2 rounded-md px-5 text-[14.5px] font-semibold font-display transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent ${
+              className={`inline-flex h-11 items-center gap-1.5 rounded-md px-3.5 text-[14.5px] font-medium font-display transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent ${
                 onDark
-                  ? "bg-white text-navy-ink hover:bg-secondary"
-                  : "bg-primary text-primary-foreground hover:bg-navy-ink"
+                  ? "text-white/85 hover:bg-white/10 hover:text-white"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
               }`}
             >
               <LogIn className="h-4 w-4" /> {t("nav.signIn")}
             </Link>
           )}
+
+          {/* Primary CTA — the concierge front door (spec §2). */}
+          <Link
+            to="/request"
+            className={`inline-flex h-11 items-center gap-1.5 rounded-md px-5 text-[14.5px] font-semibold font-display transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent ${
+              onDark
+                ? "bg-white text-navy-ink hover:bg-secondary"
+                : "bg-accent text-accent-foreground hover:bg-accent/90"
+            }`}
+          >
+            {t("nav.getOffers")}
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
 
         {/* Single 820px breakpoint → hamburger opens the right drawer. */}
@@ -327,13 +396,59 @@ export default function Navbar() {
                 </SheetTitle>
               </SheetHeader>
               <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
+                {/* Primary CTA first — mirrors the desktop "Get offers" button. */}
+                <Link to="/request" className="block" onClick={() => setOpen(false)}>
+                  <Button className="w-full h-11 font-display bg-accent text-accent-foreground hover:bg-accent/90">
+                    {t("nav.getOffers")}
+                    <ArrowRight className="ml-1.5 h-4 w-4" />
+                  </Button>
+                </Link>
+
+                {/* Services accordion — the same 7 categories as the desktop panel. */}
+                <button
+                  onClick={() => setMobileServicesOpen((prev) => !prev)}
+                  aria-expanded={mobileServicesOpen}
+                  aria-controls="mobile-services-list"
+                  className="flex w-full items-center justify-between rounded-md px-3 py-3 text-sm font-medium font-display text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                >
+                  {t("nav.services")}
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${mobileServicesOpen ? "rotate-180" : ""}`} />
+                </button>
+                {mobileServicesOpen && (
+                  <ul id="mobile-services-list" className="space-y-0.5 border-l-2 border-border ml-3 pl-1">
+                    {serviceSlugs.map((slug) => {
+                      const Icon = SERVICE_TYPE_ICONS[slug];
+                      return (
+                        <li key={slug}>
+                          <Link
+                            to={`/search?type=${slug}`}
+                            onClick={() => setOpen(false)}
+                            className="flex items-center gap-2.5 rounded-md px-3 py-2.5 text-sm text-foreground transition-colors hover:bg-secondary"
+                          >
+                            <Icon className="h-4 w-4 shrink-0 text-teal-deep" aria-hidden />
+                            {t(`serviceType.${slug}`)}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                    <li>
+                      <Link
+                        to="/request"
+                        onClick={() => setOpen(false)}
+                        className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-semibold text-accent transition-colors hover:bg-accent/10"
+                      >
+                        {t("nav.servicesCta")}
+                      </Link>
+                    </li>
+                  </ul>
+                )}
+
                 {navLinks.map((l) => {
-                  const href = getLinkHref(l);
-                  const active = isLinkActive(l, location.pathname, currentType);
+                  const active = strippedPath === l.to;
                   return (
                     <Link
                       key={l.tKey}
-                      to={href}
+                      to={l.to}
                       onClick={() => setOpen(false)}
                       aria-current={active ? "page" : undefined}
                       className={`block rounded-md px-3 py-3 text-sm font-medium font-display transition-colors active:bg-secondary ${
@@ -344,6 +459,15 @@ export default function Navbar() {
                     </Link>
                   );
                 })}
+
+                {/* Provider entry point stays reachable in the drawer (spec §2). */}
+                <Link
+                  to={role === "provider" ? "/provider/dashboard" : "/provider"}
+                  onClick={() => setOpen(false)}
+                  className="block rounded-md px-3 py-3 text-sm font-medium font-display text-foreground transition-colors hover:bg-secondary active:bg-secondary"
+                >
+                  {t("nav.forProviders")}
+                </Link>
 
                 <div className="pt-3 mt-3 border-t border-border">
                   <p className="px-3 pb-2 font-mono-label text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
@@ -390,7 +514,7 @@ export default function Navbar() {
                   </>
                 ) : (
                   <Link to="/login" className="block" onClick={() => setOpen(false)}>
-                    <Button className="w-full h-11 font-display bg-primary text-primary-foreground hover:bg-navy-ink">
+                    <Button variant="outline" className="w-full h-11 font-display">
                       <LogIn className="h-4 w-4 mr-1.5" /> {t("nav.signIn")}
                     </Button>
                   </Link>
