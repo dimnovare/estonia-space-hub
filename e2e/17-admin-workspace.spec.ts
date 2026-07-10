@@ -106,6 +106,38 @@ test.describe("Admin lead workspace", () => {
     await expect(page.getByRole("button", { name: /kopeeri pakkumise link/i })).toHaveCount(0);
   });
 
+  test("edit request: opens the form, changes fields, and PATCHes only the diff", async ({ page }) => {
+    await openWorkspace(page);
+
+    // Capture every PATCH body to /admin/leads/{id} (NOT the offer/outreach paths).
+    const patchBodies: Record<string, unknown>[] = [];
+    page.on("request", (req) => {
+      if (req.method() === "PATCH" && /\/admin\/leads\/[^/]+$/.test(new URL(req.url()).pathname)) {
+        patchBodies.push((req.postDataJSON() ?? {}) as Record<string, unknown>);
+      }
+    });
+
+    // Toggle the inline edit form open.
+    await page.getByRole("button", { name: /muuda päringut/i }).first().click();
+
+    // Change the city and destination; leave everything else untouched.
+    const cityField = page.getByLabel("Linn", { exact: true });
+    await expect(cityField).toBeVisible({ timeout: 10000 });
+    await expect(cityField).toHaveValue("Tallinn");
+    await cityField.fill("Tartu");
+    await page.getByLabel("Sihtkoht", { exact: true }).fill("Pärnu");
+
+    // Save → PATCH fires with ONLY the two changed fields.
+    await page.getByRole("button", { name: /salvesta muudatused/i }).click();
+    await expect(page.getByText("Päring uuendatud")).toBeVisible({ timeout: 10000 });
+
+    const editPatch = patchBodies.at(-1)!;
+    expect(editPatch).toEqual({ city: "Tartu", toCity: "Pärnu" });
+    // Unchanged fields must NOT be sent (partial update).
+    expect(editPatch).not.toHaveProperty("email");
+    expect(editPatch).not.toHaveProperty("category");
+  });
+
   test("clearing the customer note sends an empty string, not null (Finding 4)", async ({ page }) => {
     await openWorkspace(page);
 

@@ -12,12 +12,13 @@ import {
 } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { serviceTypeLabel } from "@/lib/serviceTypes";
+import { serviceTypeLabel, SERVICE_TYPE_SLUGS } from "@/lib/serviceTypes";
 import { toast } from "sonner";
 import {
   Loader2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Megaphone,
   TrendingUp, Timer, CalendarCheck, Copy, Mail, Phone, MapPin, Send,
   Plus, ArrowUp, ArrowDown, Trash2, Eye, ExternalLink, Clock, CheckCircle,
+  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,6 +59,10 @@ const STATUS_LABEL_KEYS: Record<AdminLeadStatus, string> = {
 };
 
 const OUTREACH_STATUSES: OutreachStatus[] = ["sent", "replied", "declined", "noanswer"];
+
+// Category choices for the "Edit request" form: the wildcard plus the 7 canonical
+// service slugs the backend accepts (ServiceCategories + "any").
+const CATEGORY_OPTIONS = ["any", ...SERVICE_TYPE_SLUGS] as const;
 
 const LIMIT = 50;
 
@@ -188,6 +193,22 @@ function LeadWorkspace({ lead }: { lead: AdminLead }) {
   const [selectedSuppliers, setSelectedSuppliers] = useState<Set<string>>(new Set());
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
 
+  // ── Edit-request form (correct the customer's submission) ──
+  // The date <input> wants "yyyy-MM-dd"; the API returns an ISO instant. toISOString
+  // reads the UTC calendar date the backend stored (it normalizes to UTC midnight).
+  const leadEditSeed = () => ({
+    name:     lead.name ?? "",
+    email:    lead.email ?? "",
+    phone:    lead.phone ?? "",
+    category: lead.category ?? "any",
+    city:     lead.city ?? "",
+    toCity:   lead.toCity ?? "",
+    needDate: lead.needDate ? new Date(lead.needDate).toISOString().slice(0, 10) : "",
+    details:  lead.details ?? "",
+  });
+  const [editing, setEditing] = useState(false);
+  const [edit, setEdit] = useState(leadEditSeed);
+
   // ── Offer builder state (edit buffer over the latest server offer) ──
   const [options, setOptions] = useState<EditableOption[]>([]);
   const [customerNote, setCustomerNote] = useState("");
@@ -237,6 +258,38 @@ function LeadWorkspace({ lead }: { lead: AdminLead }) {
     },
     onError: (err: Error) => toast.error(err?.message || t("toast.error")),
   });
+
+  // Request-field corrections. Invalidating the adminLeads root refetches the list
+  // (the workspace re-renders from the fresh lead) AND the per-lead detail queries
+  // (matches/outreach/offers) whose keys share the "admin-leads" prefix — a fixed
+  // category re-runs the match suggestions.
+  const editMutation = useMutation({
+    mutationFn: (body: Record<string, string>) => adminLeadService.update(lead.id, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.adminLeads.root() });
+      setEditing(false);
+      toast.success(t("admin.leads.editSaved"));
+    },
+    onError: (err: Error) => toast.error(err?.message || t("toast.error")),
+  });
+
+  // PATCH only the fields the admin actually changed (partial update; the backend
+  // treats an omitted field as unchanged). needDate/email/category are validated
+  // server-side. No-op edits just close the form.
+  const submitEdit = () => {
+    const seed = leadEditSeed();
+    const body: Record<string, string> = {};
+    (Object.keys(seed) as (keyof typeof seed)[]).forEach((k) => {
+      const value = edit[k].trim();
+      if (value !== seed[k]) body[k] = value;
+    });
+    if (Object.keys(body).length === 0) { setEditing(false); return; }
+    editMutation.mutate(body);
+  };
+
+  const openEdit = () => { setEdit(leadEditSeed()); setEditing(true); };
+  const setEditField = (k: keyof ReturnType<typeof leadEditSeed>, v: string) =>
+    setEdit((prev) => ({ ...prev, [k]: v }));
 
   const statusMutation = useMutation({
     mutationFn: (status: AdminLeadStatus) => adminLeadService.update(lead.id, { status }),
@@ -464,7 +517,123 @@ function LeadWorkspace({ lead }: { lead: AdminLead }) {
         <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium uppercase">
           {lead.language}
         </span>
+        <Button
+          size="sm"
+          variant="outline"
+          className="ml-auto h-8 gap-1.5 px-2.5 text-xs"
+          aria-expanded={editing}
+          onClick={() => (editing ? setEditing(false) : openEdit())}
+        >
+          <Pencil className="h-3 w-3" />
+          {t("admin.leads.editRequest")}
+        </Button>
       </div>
+
+      {/* ── Edit-request form (correct what the customer submitted) ── */}
+      {editing && (
+        <div className="rounded-xl border border-border bg-card p-4">
+          <PanelHeading>{t("admin.leads.editRequest")}</PanelHeading>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <label className="block text-xs font-medium text-muted-foreground">
+              {t("admin.leads.editName")}
+              <input
+                type="text"
+                value={edit.name}
+                onChange={(e) => setEditField("name", e.target.value)}
+                className="mt-1 h-9 w-full rounded-md border border-border bg-background px-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+            </label>
+            <label className="block text-xs font-medium text-muted-foreground">
+              {t("admin.leads.editEmail")}
+              <input
+                type="email"
+                value={edit.email}
+                onChange={(e) => setEditField("email", e.target.value)}
+                className="mt-1 h-9 w-full rounded-md border border-border bg-background px-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+            </label>
+            <label className="block text-xs font-medium text-muted-foreground">
+              {t("admin.leads.editPhone")}
+              <input
+                type="text"
+                value={edit.phone}
+                onChange={(e) => setEditField("phone", e.target.value)}
+                className="mt-1 h-9 w-full rounded-md border border-border bg-background px-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+            </label>
+            <label className="block text-xs font-medium text-muted-foreground">
+              {t("admin.leads.editCategory")}
+              <select
+                value={edit.category}
+                onChange={(e) => setEditField("category", e.target.value)}
+                className="mt-1 h-9 w-full cursor-pointer rounded-md border border-border bg-background px-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+              >
+                {CATEGORY_OPTIONS.map((c) => (
+                  <option key={c} value={c}>
+                    {c === "any" ? t("admin.leads.editCategoryAny") : serviceTypeLabel(t, c)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-xs font-medium text-muted-foreground">
+              {t("admin.leads.editCity")}
+              <input
+                type="text"
+                value={edit.city}
+                onChange={(e) => setEditField("city", e.target.value)}
+                className="mt-1 h-9 w-full rounded-md border border-border bg-background px-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+            </label>
+            <label className="block text-xs font-medium text-muted-foreground">
+              {t("admin.leads.toCity")}
+              <input
+                type="text"
+                value={edit.toCity}
+                onChange={(e) => setEditField("toCity", e.target.value)}
+                className="mt-1 h-9 w-full rounded-md border border-border bg-background px-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+            </label>
+            <label className="block text-xs font-medium text-muted-foreground">
+              {t("admin.leads.needDate")}
+              <input
+                type="date"
+                value={edit.needDate}
+                onChange={(e) => setEditField("needDate", e.target.value)}
+                className="mt-1 h-9 w-full rounded-md border border-border bg-background px-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+            </label>
+          </div>
+          <label className="mt-3 block text-xs font-medium text-muted-foreground">
+            {t("admin.leads.editDetails")}
+            <textarea
+              value={edit.details}
+              rows={3}
+              onChange={(e) => setEditField("details", e.target.value)}
+              className="mt-1 w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+          </label>
+          <div className="mt-3 flex items-center gap-2">
+            <Button
+              size="sm"
+              className="h-9 bg-accent text-accent-foreground hover:bg-accent/90"
+              disabled={editMutation.isPending}
+              onClick={submitEdit}
+            >
+              {editMutation.isPending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+              {t("admin.leads.editSave")}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-9"
+              disabled={editMutation.isPending}
+              onClick={() => setEditing(false)}
+            >
+              {t("admin.leads.editCancel")}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Customer's free-text details — the core context for the manual match call */}
       {lead.details && (

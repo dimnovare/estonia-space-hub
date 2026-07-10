@@ -585,7 +585,24 @@ export const adminLeadService = {
     params.set("limit", String(limit));
     return apiClient.get<AdminLeadsResponse>(`/admin/leads?${params}`);
   },
-  async update(id: string, body: { status?: AdminLeadStatus; adminNotes?: string }): Promise<void> {
+  async update(
+    id: string,
+    // Status/notes lifecycle OR request-field corrections (name/email/phone/
+    // category/city/toCity/needDate/details). Partial: omit a field to leave it
+    // unchanged; the backend UTC-normalizes needDate and validates email/category.
+    body: {
+      status?: AdminLeadStatus;
+      adminNotes?: string;
+      name?: string;
+      email?: string;
+      phone?: string;
+      category?: string;
+      city?: string;
+      toCity?: string;
+      needDate?: string;
+      details?: string;
+    },
+  ): Promise<void> {
     await apiClient.patch(`/admin/leads/${id}`, body);
   },
   async metrics(): Promise<AdminLeadMetrics> {
