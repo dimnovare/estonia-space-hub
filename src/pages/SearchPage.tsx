@@ -10,6 +10,7 @@ import { apiClient } from "@/services/apiClient";
 import { useFeatureDefinitions, type FeatureDefinition } from "@/hooks/useFeatureDefinitions";
 import { useDebounce } from "@/hooks/useDebounce";
 import ListingCard from "@/components/ListingCard";
+import { LogoImage } from "@/components/LogoImage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO, verticalSeoMeta, type SeoVertical } from "@/components/SEO";
@@ -155,7 +156,12 @@ export default function SearchPage() {
   // Locations are useful for browse-by-area, not for narrow filters.
   // Hide whenever a filter applies to Listings only (not to Locations),
   // to avoid showing 3 location cards next to "1 listing found".
-  const hasRestrictiveFilter = !!debouncedQ
+  // Listings-only filters (query, size, price, availability) can never match a
+  // directory profile — when a directory-only category is active they must NOT
+  // blank the location cards, or ?q=…&type=cleaning becomes a guaranteed-false
+  // "0 results" that hides fetched providers.
+  const hasRestrictiveFilter = (!isDirectoryOnlyType && (
+    !!debouncedQ
     || !!sizeCategory
     || !!minSize
     || !!maxSize
@@ -163,6 +169,7 @@ export default function SearchPage() {
     || availableNow
     || !!availableFrom
     || !!availableTo
+  ))
     || !!supplierIdFilter
     || !!locationIdFilter;
   const locations = useMemo(
@@ -665,6 +672,7 @@ export default function SearchPage() {
               priceMax={priceMax}
               availableNow={availableNow}
               bookable={searchParams.get("bookable") === "true"}
+              showListingFilters={!isDirectoryOnlyType}
               updateFilters={updateFilters}
             />
           </div>
@@ -771,6 +779,7 @@ export default function SearchPage() {
                   priceMax={priceMax}
                   availableNow={availableNow}
                   bookable={searchParams.get("bookable") === "true"}
+                  showListingFilters={!isDirectoryOnlyType}
                   updateFilters={updateFilters}
                 />
 
@@ -874,15 +883,14 @@ export default function SearchPage() {
                     >
                       <div className="p-4">
                         <div className="flex items-start gap-3">
-                          {/* Supplier logo thumb — the generic building icon is
-                              only a fallback (no logo set, or the URL 404s). */}
+                          {/* Supplier logo thumb (aspect-aware fit) — the generic
+                              building icon is only a fallback (no logo, or 404). */}
                           <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/10">
                             {loc.supplierLogoUrl && (
-                              <img
+                              <LogoImage
                                 src={loc.supplierLogoUrl}
                                 alt=""
-                                loading="lazy"
-                                className="h-full w-full object-cover"
+                                padClass="p-1"
                                 onError={(e) => {
                                   e.currentTarget.style.display = "none";
                                   e.currentTarget.nextElementSibling?.classList.remove("hidden");
@@ -1115,6 +1123,9 @@ interface SecondaryFilterRowProps {
   priceMax: string;
   availableNow: boolean;
   bookable: boolean;
+  /** false when a directory-only category is active — max price / available
+   *  now / book online are listings-only and would dead-end the results. */
+  showListingFilters?: boolean;
   updateFilters: (u: Record<string, string>) => void;
 }
 
@@ -1122,7 +1133,7 @@ interface SecondaryFilterRowProps {
 // sticky header on desktop (lg+) and inside the filter Drawer on mobile/tablet.
 function SecondaryFilterRow({
   t, userLocation, geoLoading, handleNearMe, cityFilter, availableCities,
-  priceMax, availableNow, bookable, updateFilters,
+  priceMax, availableNow, bookable, showListingFilters = true, updateFilters,
 }: SecondaryFilterRowProps) {
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -1152,26 +1163,30 @@ function SecondaryFilterRow({
         </select>
         <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
       </div>
-      <input
-        aria-label={t("search.maxPrice")}
-        type="number"
-        min="0"
-        inputMode="numeric"
-        placeholder={t("search.maxPrice")}
-        value={priceMax}
-        onChange={(e) => updateFilters({ priceMax: e.target.value })}
-        className="min-h-[44px] w-28 rounded-full border border-line-2 bg-card px-3.5 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-accent lg:min-h-[36px] lg:py-1.5"
-      />
-      <FilterToggle
-        label={t("search.availableNow")}
-        active={availableNow}
-        onChange={(v) => updateFilters({ availableNow: v ? "true" : "" })}
-      />
-      <FilterToggle
-        label={t("search.bookOnline")}
-        active={bookable}
-        onChange={(v) => updateFilters({ bookable: v ? "true" : "" })}
-      />
+      {showListingFilters && (
+        <>
+          <input
+            aria-label={t("search.maxPrice")}
+            type="number"
+            min="0"
+            inputMode="numeric"
+            placeholder={t("search.maxPrice")}
+            value={priceMax}
+            onChange={(e) => updateFilters({ priceMax: e.target.value })}
+            className="min-h-[44px] w-28 rounded-full border border-line-2 bg-card px-3.5 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-accent lg:min-h-[36px] lg:py-1.5"
+          />
+          <FilterToggle
+            label={t("search.availableNow")}
+            active={availableNow}
+            onChange={(v) => updateFilters({ availableNow: v ? "true" : "" })}
+          />
+          <FilterToggle
+            label={t("search.bookOnline")}
+            active={bookable}
+            onChange={(v) => updateFilters({ bookable: v ? "true" : "" })}
+          />
+        </>
+      )}
     </div>
   );
 }

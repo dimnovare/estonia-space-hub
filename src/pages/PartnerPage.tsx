@@ -12,6 +12,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { SkeletonCard } from "@/components/SkeletonCard";
+import { LogoImage } from "@/components/LogoImage";
 import { SEO } from "@/components/SEO";
 import { ErrorState } from "@/components/ErrorState";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -317,15 +318,18 @@ export default function PartnerPage() {
       >
         <div className="container-wide flex flex-wrap items-start justify-between gap-6">
           <div className="flex min-w-0 items-start gap-5">
-            {/* 72px rounded-14px logo tile. Logos fill the tile (object-cover,
-                subtle translucent bg for transparent PNGs — no fat white frame);
-                the white monogram tile is the fallback for missing/broken logos. */}
+            {/* 72px rounded-14px logo tile. LogoImage picks the fit per image:
+                square-ish logos/photos fill the tile (object-cover, translucent
+                bg for transparent PNGs); wide wordmarks contain on a light bg —
+                no fat white frame either way. White monogram tile is the
+                fallback for missing/broken logos. */}
             <div className={`flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-[14px] shadow-card ${partner.logoUrl && !logoFailed ? "bg-white/10" : "bg-white"}`}>
               {partner.logoUrl && !logoFailed ? (
-                <img
+                <LogoImage
                   src={partner.logoUrl}
                   alt={t("partner.logoAlt").replace("{name}", partner.name)}
-                  className="h-full w-full object-cover"
+                  padClass="p-1.5"
+                  loading="eager"
                   onError={() => setLogoFailed(true)}
                 />
               ) : (

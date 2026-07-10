@@ -40,6 +40,19 @@ test.describe("Directory (search card)", () => {
     await expect(card).not.toContainText("€");
     await expect(card).not.toContainText(/saadaval/i);
   });
+
+  test("directory-only chip + text query still shows directory cards", async ({ page }) => {
+    // Regression: listings-only filters (q, price, availability) used to blank
+    // the location cards via hasRestrictiveFilter even when a directory-only
+    // category was active — a guaranteed-false "0 results".
+    await stubLoggedOut(page);
+    await stubCommon(page);
+    await stubListings(page, { items: [] });
+    await stubLocations(page, [directoryLocation()]);
+
+    await page.goto("/et/search?type=cleaning&q=kolimine");
+    await expect(page.getByTestId("directory-card")).toBeVisible({ timeout: 15000 });
+  });
 });
 
 test.describe("Directory (partner page)", () => {

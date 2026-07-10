@@ -72,7 +72,16 @@ export default function HomePage() {
   const hideDisabled = (l: { type?: string }) =>
     (showMovingService  || l.type !== "moving") &&
     (showTrailerService || l.type !== "trailer");
-  const allListings = (allResult?.data || []).filter(hideDisabled);
+  // Memoized: this array feeds the memo()'d InteractiveMap, whose marker-
+  // rebuild effect starts with clearLayers() — a fresh array identity on every
+  // homepage re-render (sticky-search scroll flips, footer observer, hero
+  // keystrokes, FAQ toggles) would close open pin popups and rebuild all ~163
+  // markers each time. Deps cover hideDisabled's inputs.
+  const allListings = useMemo(
+    () => (allResult?.data || []).filter(hideDisabled),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [allResult, showMovingService, showTrailerService],
+  );
   const featured = featuredRaw.filter(hideDisabled);
   const listingCount = allListings.length;
   const { data: citiesFromApi = [] } = useCities();
