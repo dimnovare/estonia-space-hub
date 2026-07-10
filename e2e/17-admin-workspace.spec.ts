@@ -81,9 +81,11 @@ test.describe("Admin lead workspace", () => {
     await expect(page.getByRole("alertdialog")).toBeVisible();
     await page.getByRole("alertdialog").getByRole("button", { name: /saada kliendile/i }).click();
 
-    // Sent: toast + status badge + timestamp + offer-page link + timeline event.
+    // Sent: toast + status badge + timestamp + copy-link (NOT a navigating
+    // anchor — Finding 7) + timeline event. The draft "open page" link is gone.
     await expect(page.getByText("Pakkumine saadetud", { exact: true })).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText(/ava pakkumise leht/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /kopeeri pakkumise link/i })).toBeVisible();
+    await expect(page.getByText(/ava pakkumise leht/i)).toHaveCount(0);
     await expect(page.getByText("Pakkumine saadetud kliendile")).toBeVisible();
   });
 
@@ -94,5 +96,44 @@ test.describe("Admin lead workspace", () => {
     await page.getByRole("button", { name: /pakkumisse/i }).click();
     await expect(page.getByRole("button", { name: /lisa valik/i })).toBeVisible({ timeout: 10000 });
     await expect(page.getByPlaceholder("Pealkiri").first()).toHaveValue("Miniladu 10 m²");
+  });
+
+  test("draft offer keeps a real 'open page' link (safe: draft 404s publicly)", async ({ page }) => {
+    // Finding 7: the read-receipt hazard only exists once SENT — draft may link.
+    await openWorkspace(page);
+    await page.getByRole("button", { name: /pakkumisse/i }).click();
+    await expect(page.getByRole("link", { name: /ava pakkumise leht/i })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("button", { name: /kopeeri pakkumise link/i })).toHaveCount(0);
+  });
+
+  test("clearing the customer note sends an empty string, not null (Finding 4)", async ({ page }) => {
+    await openWorkspace(page);
+
+    // Record every PATCH body to /admin/offers/{id}.
+    const patchNotes: unknown[] = [];
+    page.on("request", (req) => {
+      if (req.method() === "PATCH" && /\/admin\/offers\/[^/]+$/.test(new URL(req.url()).pathname)) {
+        patchNotes.push((req.postDataJSON() ?? {}).customerNote);
+      }
+    });
+
+    await page.getByRole("button", { name: /koosta pakkumine/i }).click();
+    const noteField = page.getByLabel(/üldine märkus kliendile/i);
+    await expect(noteField).toBeVisible({ timeout: 10000 });
+
+    // Write a note, save → PATCH carries the text.
+    await noteField.fill("Mõlemad partnerid saavad su ajal.");
+    await page.getByRole("button", { name: /salvesta mustand/i }).click();
+    await expect(page.getByText("Pakkumine salvestatud")).toBeVisible({ timeout: 10000 });
+
+    // Clear it, save again → PATCH must carry "" (backend Clamp("") → null clears).
+    await noteField.fill("");
+    await page.getByRole("button", { name: /salvesta mustand/i }).click();
+    await expect(page.getByText("Pakkumine salvestatud")).toBeVisible({ timeout: 10000 });
+
+    expect(patchNotes.length).toBeGreaterThanOrEqual(2);
+    expect(patchNotes.at(-1)).toBe(""); // empty string, NOT null / undefined
+    // The cleared note must not resurrect in the field after the save round-trip.
+    await expect(noteField).toHaveValue("");
   });
 });

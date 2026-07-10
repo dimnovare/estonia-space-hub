@@ -3,6 +3,7 @@ import { useParams, Link } from "@/i18n/routing";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   CheckCircle, MapPin, ArrowRight, CalendarDays, Loader2, LinkIcon,
+  AlertCircle, RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,31 +32,60 @@ export default function OfferPage() {
   const qc = useQueryClient();
   const [confirming, setConfirming] = useState<PublicOfferOption | null>(null);
   const [justChosen, setJustChosen] = useState(false);
+  // Inline banner for choose failures (the confirm dialog closes on error, so
+  // the message must live on the page itself).
+  const [chooseError, setChooseError] = useState<string | null>(null);
 
-  const { data: offer, isLoading, isError } = useQuery<PublicOffer>({
+  const { data: offer, isLoading, isError, error, refetch, isFetching } = useQuery<PublicOffer>({
     queryKey: queryKeys.offers.byToken(token),
     queryFn: () => offerService.get(token),
     enabled: token.length > 0,
     staleTime: 30_000,
-    retry: false,
+    // 4xx never succeeds on retry (404/expired/draft/malformed token); a
+    // transient 5xx / network blip on a VALID offer should retry so a real
+    // offer isn't shown a dead-end. Rate-limit (429) is transient too.
+    retry: (failureCount, err: Error & { status?: number }) => {
+      const s = err?.status;
+      if (typeof s === "number" && s >= 400 && s < 500 && s !== 429) return false;
+      return failureCount < 2;
+    },
   });
+  const getErrorStatus = (error as (Error & { status?: number }) | null)?.status;
+  // Only a real 404 (backend 404s unknown/draft/expired identically) is the
+  // terminal "invalid link" dead-end; anything else is retryable.
+  const isNotFound = isError && getErrorStatus === 404;
 
   const chooseMutation = useMutation({
     mutationFn: (optionId: string) => offerService.choose(token, optionId),
     onSuccess: (res) => {
       setJustChosen(true);
       setConfirming(null);
+      setChooseError(null);
       // Reflect the chosen state locally without waiting for a refetch.
       qc.setQueryData<PublicOffer>(queryKeys.offers.byToken(token), (prev) =>
         prev ? { ...prev, status: "chosen", chosenOptionId: res.chosenOptionId } : prev);
     },
     onError: (err: Error & { status?: number }) => {
       setConfirming(null);
-      // 409 = a different option was already chosen (e.g. second device) —
+      const s = err?.status;
+      // 409 = a different option was already chosen (e.g. a second device) —
       // refetch so the page shows the real chosen state.
-      if (err?.status === 409) {
+      if (s === 409) {
         qc.invalidateQueries({ queryKey: queryKeys.offers.byToken(token) });
+        setChooseError(null);
+        return;
       }
+      // 400 "Unknown option" — the backend regenerates option ids on every
+      // replace-set PATCH, so an offer the customer opened before an admin
+      // re-saved posts a stale optionId. Refetch to load fresh ids and tell
+      // the customer the offer changed.
+      if (s === 400) {
+        qc.invalidateQueries({ queryKey: queryKeys.offers.byToken(token) });
+        setChooseError(t("offer.staleOption"));
+        return;
+      }
+      // Everything else (429 / 5xx / network) — visible, retryable feedback.
+      setChooseError(t("offer.chooseError"));
     },
   });
 
@@ -104,8 +134,8 @@ export default function OfferPage() {
     );
   }
 
-  // ── Invalid / expired token ──
-  if (isError || !offer) {
+  // ── Invalid / expired token — ONLY a real 404 is this dead-end. ──
+  if (isNotFound) {
     return (
       <div className="min-h-screen surface-sunken">
         <SEO title={t("offer.invalidTitle")} description={t("offer.invalidBody")} path={`/offer/${token}`} noindex />
@@ -122,6 +152,35 @@ export default function OfferPage() {
                 {t("nav.getOffers")}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
+            </Button>
+            {helpFooter}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Retryable error (429 / 5xx / network) — a VALID offer must not be shown
+  //    the "invalid link" dead-end. Offer a Retry instead of forcing a re-submit.
+  if (isError || !offer) {
+    return (
+      <div className="min-h-screen surface-sunken">
+        <SEO title={t("offer.errorTitle")} description={t("offer.errorBody")} path={`/offer/${token}`} noindex />
+        {header}
+        <div className="container-wide flex min-h-[60vh] items-center justify-center py-16">
+          <div className="mx-auto max-w-md text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-secondary">
+              <AlertCircle className="h-7 w-7 text-muted-foreground" />
+            </div>
+            <h1 className="mt-5 font-display text-2xl font-bold text-navy-ink">{t("offer.errorTitle")}</h1>
+            <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">{t("offer.errorBody")}</p>
+            <Button
+              className="mt-6 h-12 gap-2 bg-accent px-6 font-display text-accent-foreground hover:bg-accent/90"
+              disabled={isFetching}
+              onClick={() => refetch()}
+            >
+              {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+              {t("offer.retry")}
             </Button>
             {helpFooter}
           </div>
@@ -168,6 +227,15 @@ export default function OfferPage() {
               </p>
               <p className="mt-0.5 text-sm text-muted-foreground">{t("offer.successBody")}</p>
             </div>
+          </div>
+        )}
+
+        {/* Choose failure banner — the confirm dialog closes on error, so the
+            feedback (stale-option / rate-limit / server / network) lives here. */}
+        {chooseError && !chosen && (
+          <div role="alert" className="mt-6 flex items-start gap-3 rounded-xl border border-destructive/25 bg-destructive/5 p-4">
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" aria-hidden />
+            <p className="text-sm font-medium text-destructive">{chooseError}</p>
           </div>
         )}
 

@@ -11,18 +11,23 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
 import { leadService, type ConciergeCategory } from "@/services";
-import { SERVICE_TYPE_SLUGS, SERVICE_TYPE_ICONS } from "@/lib/serviceTypes";
+import { SERVICE_TYPE_SLUGS, SERVICE_TYPE_ICONS, visibleServiceSlugs } from "@/lib/serviceTypes";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Parse ?category=… (repeatable or comma-separated) into valid category slugs.
- *  Deep links come from the homepage need-chips / service grid and the navbar. */
-function parseCategoryParams(params: URLSearchParams): ConciergeCategory[] {
+ *  Deep links come from the homepage need-chips / service grid and the navbar.
+ *  `allowed` gates the result to the platform-visible set — a stale
+ *  ?category=moving with moving disabled must NOT prefill a category whose
+ *  tile isn't rendered (invisible, undeselectable, would still submit). */
+function parseCategoryParams(
+  params: URLSearchParams,
+  allowed: readonly string[],
+): ConciergeCategory[] {
   const raw = params.getAll("category").flatMap((v) => v.split(","));
   const valid = raw
     .map((v) => v.trim().toLowerCase())
-    .filter((v): v is ConciergeCategory =>
-      (SERVICE_TYPE_SLUGS as readonly string[]).includes(v));
+    .filter((v): v is ConciergeCategory => allowed.includes(v));
   return [...new Set(valid)];
 }
 
@@ -42,7 +47,7 @@ export default function RequestPage() {
   const [searchParams] = useSearchParams();
   const [step, setStep] = useState(0);
   const [categories, setCategories] = useState<ConciergeCategory[]>(
-    () => parseCategoryParams(searchParams));
+    () => parseCategoryParams(searchParams, visibleServiceSlugs(showMovingService, showTrailerService)));
   const [city, setCity] = useState(() => searchParams.get("city")?.trim() ?? "");
   const [toCity, setToCity] = useState("");
   const [needDate, setNeedDate] = useState("");

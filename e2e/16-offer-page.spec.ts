@@ -64,6 +64,42 @@ test.describe("Public offer page", () => {
     await page.waitForURL(/\/et\/request/, { timeout: 10000 });
   });
 
+  test("retryable error (500) shows the error state with Retry, NOT the invalid state", async ({ page }) => {
+    // Finding 2: a transient 5xx on a valid offer must not read as a dead 404.
+    await stubAll(page);
+    await stubPublicOffer(page, { getStatus: 500 });
+    await page.goto("/et/offer/tok-abc123");
+    await expect(page.getByText("Midagi läks valesti")).toBeVisible({ timeout: 15000 });
+    // The invalid-link dead-end must NOT appear for a non-404.
+    await expect(page.getByText("Seda pakkumist ei leitud")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /proovi uuesti/i })).toBeVisible();
+  });
+
+  test("choose failure (stale option 400) shows a visible banner, not a silent close", async ({ page }) => {
+    // Finding 1: non-409 choose errors used to close the dialog with zero feedback.
+    await stubAll(page);
+    await stubPublicOffer(page, { chooseStatus: 400 });
+    await page.goto("/et/offer/tok-abc123");
+    await page.getByRole("button", { name: /vali see pakkumine/i }).first().click();
+    await page.getByRole("button", { name: /jah, valin selle/i }).click();
+    // Dialog closes AND an alert banner appears (offer.staleOption for 400).
+    await expect(page.getByRole("alertdialog")).toHaveCount(0);
+    await expect(page.getByRole("alert")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/pakkumist värskendati/i)).toBeVisible();
+    // The offer is still choosable (refetched fresh option ids).
+    await expect(page.getByRole("button", { name: /vali see pakkumine/i }).first()).toBeVisible();
+  });
+
+  test("choose failure (server 500) shows the generic retryable choose error", async ({ page }) => {
+    await stubAll(page);
+    await stubPublicOffer(page, { chooseStatus: 500 });
+    await page.goto("/et/offer/tok-abc123");
+    await page.getByRole("button", { name: /vali see pakkumine/i }).first().click();
+    await page.getByRole("button", { name: /jah, valin selle/i }).click();
+    await expect(page.getByRole("alert")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/valikut ei õnnestunud salvestada/i)).toBeVisible();
+  });
+
   test("minimal chrome: full navbar is suppressed, slim logo header instead", async ({ page }) => {
     await stubAll(page);
     await stubPublicOffer(page);

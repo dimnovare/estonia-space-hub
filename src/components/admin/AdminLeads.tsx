@@ -276,12 +276,28 @@ function LeadWorkspace({ lead }: { lead: AdminLead }) {
     onError: (err: Error) => toast.error(err?.message || t("toast.error")),
   });
 
+  // The customer left our workspace open and chose an option → the offer is now
+  // immutable server-side (PATCH/send → 409). Re-sync the cached offer so the
+  // editor locks and the Chosen badge/timestamps appear instead of silently
+  // failing on every retry. Used by both save and send onError.
+  const refreshOnConflict = (err: Error & { status?: number }) => {
+    if (err?.status === 409) {
+      qc.invalidateQueries({ queryKey: queryKeys.adminLeads.offers(lead.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.adminLeads.root() });
+    }
+  };
+
+  // customerNote is sent as a trimmed string (NOT `|| null`): the backend
+  // treats null as "unchanged" but Clamp("") → null, so an empty string is the
+  // ONLY way to clear a previously-saved note. `|| null` made deletion
+  // impossible (the old note resurrected from the response).
+  const offerPatchBody = () => ({
+    customerNote: customerNote.trim(),
+    options: options.filter((o) => o.title.trim()).map(toInput),
+  });
+
   const saveOfferMutation = useMutation({
-    mutationFn: () =>
-      adminOfferService.update(offer!.id, {
-        customerNote: customerNote.trim() || null,
-        options: options.filter((o) => o.title.trim()).map(toInput),
-      }),
+    mutationFn: () => adminOfferService.update(offer!.id, offerPatchBody()),
     onSuccess: (updated) => {
       toast.success(t("admin.leads.offerSaved"));
       setDirty(false);
@@ -290,16 +306,16 @@ function LeadWorkspace({ lead }: { lead: AdminLead }) {
       qc.setQueryData(queryKeys.adminLeads.offers(lead.id), (prev: AdminOffer[] | undefined) =>
         (prev ?? []).map((o) => (o.id === updated.id ? updated : o)));
     },
-    onError: (err: Error) => toast.error(err?.message || t("toast.error")),
+    onError: (err: Error & { status?: number }) => {
+      refreshOnConflict(err);
+      toast.error(err?.message || t("toast.error"));
+    },
   });
 
   const sendOfferMutation = useMutation({
     mutationFn: async () => {
       // Always persist the current buffer first (replace-set), then send.
-      await adminOfferService.update(offer!.id, {
-        customerNote: customerNote.trim() || null,
-        options: options.filter((o) => o.title.trim()).map(toInput),
-      });
+      await adminOfferService.update(offer!.id, offerPatchBody());
       return adminOfferService.send(offer!.id);
     },
     onSuccess: (sent) => {
@@ -311,8 +327,9 @@ function LeadWorkspace({ lead }: { lead: AdminLead }) {
       qc.invalidateQueries({ queryKey: queryKeys.adminLeads.offers(lead.id) });
       qc.invalidateQueries({ queryKey: queryKeys.adminLeads.root() }); // lead auto → quoted
     },
-    onError: (err: Error) => {
+    onError: (err: Error & { status?: number }) => {
       setConfirmSend(false);
+      refreshOnConflict(err);
       toast.error(err?.message || t("toast.error"));
     },
   });
@@ -374,6 +391,10 @@ function LeadWorkspace({ lead }: { lead: AdminLead }) {
   }, [lead.createdAt, outreachRows, offer, t]);
 
   const offerPagePath = offer ? `/${offer.language || lead.language || "et"}/offer/${offer.token}` : null;
+  // Absolute URL to copy/share (the public offer page lives on the prod site).
+  const offerFullUrl = offerPagePath
+    ? `${typeof window !== "undefined" ? window.location.origin : "https://ruumly.eu"}${offerPagePath}`
+    : null;
 
   return (
     <div className="space-y-5 bg-secondary/30 px-5 py-4">
@@ -619,16 +640,38 @@ function LeadWorkspace({ lead }: { lead: AdminLead }) {
                 </span>
               )}
             </div>
-            {offer && offerPagePath && offer.status !== "draft" && (
-              <a
-                href={offerPagePath}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
-              >
-                <ExternalLink className="h-3 w-3" />
-                {t("admin.leads.offerOpenPage")}
-              </a>
+            {/* Draft → a real preview link is safe (public GET 404s a draft, so
+                it can't flip Viewed). Once SENT, the first public GET stamps
+                Viewed/ViewedAt with no admin distinction — an admin opening it
+                would fabricate the customer read-receipt the ops loop trusts.
+                So for sent/viewed/chosen, copy the URL instead of navigating.
+                Content can still be checked via the inline preview below. */}
+            {offer && offerFullUrl && (
+              offer.status === "draft" ? (
+                <a
+                  href={offerPagePath!}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  {t("admin.leads.offerOpenPage")}
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(offerFullUrl);
+                      toast.success(t("admin.leads.copied"));
+                    } catch { /* clipboard unavailable (e.g. http) */ }
+                  }}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                >
+                  <Copy className="h-3 w-3" />
+                  {t("admin.leads.offerCopyLink")}
+                </button>
+              )
             )}
           </div>
 

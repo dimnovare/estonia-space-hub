@@ -29,8 +29,28 @@ export function trackEvent(name: string, params?: Record<string, string | number
   }
 }
 
+/**
+ * Redact secret path segments before anything reaches analytics.
+ * The public offer page lives at /{lang}/offer/{token} where the 32-byte
+ * token is the SOLE bearer credential (view details + choose → ops emails).
+ * gtag auto-attaches the full page_location URL to manual events, so the raw
+ * token would otherwise be harvestable from GA reports. Strip it here.
+ */
+export function redactAnalyticsPath(path: string): string {
+  return path.replace(/(\/offer\/)[^/?#]+/i, "$1redacted");
+}
+
 export function trackPageView(path: string) {
   if (typeof window !== "undefined" && window.gtag) {
-    window.gtag("event", "page_view", { page_path: path });
+    const safePath = redactAnalyticsPath(path);
+    // Override gtag's auto-populated page_location too (it defaults to the
+    // real window.location.href, which still carries the token).
+    const params: Record<string, string> = { page_path: safePath };
+    if (typeof window.location !== "undefined") {
+      params.page_location = `${window.location.origin}${redactAnalyticsPath(
+        window.location.pathname,
+      )}${window.location.search}${window.location.hash}`;
+    }
+    window.gtag("event", "page_view", params);
   }
 }

@@ -67,7 +67,11 @@ export default defineConfig(({ mode }) => ({
           }
 
           // Maps — large, only used on search/map routes (lazy).
-          if (/\/node_modules\/(leaflet|react-leaflet|@react-leaflet)\//.test(path)) {
+          // NB: match leaflet.markercluster too — the char after "leaflet" in
+          // node_modules/leaflet.markercluster/ is "." not "/", so a bare
+          // "leaflet\/" alternative misses it and it falls through to the eager
+          // vendor-react catch-all (downloaded + parsed on every page).
+          if (/\/node_modules\/(leaflet(\.markercluster)?|react-leaflet|@react-leaflet)\//.test(path)) {
             return "vendor-maps";
           }
 
