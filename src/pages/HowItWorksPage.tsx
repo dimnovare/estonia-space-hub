@@ -9,13 +9,18 @@ import {
   Clock,
   MailCheck,
   ArrowRight,
-  Store,
+  ChevronDown,
   Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
 import StorageSizeCalculator from "@/components/StorageSizeCalculator";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 export default function HowItWorksPage() {
   const { t } = useLanguage();
@@ -36,8 +41,6 @@ export default function HowItWorksPage() {
     { icon: ShieldCheck, title: t("hiw.feat3"), desc: t("hiw.feat3desc") },
     { icon: Clock, title: t("hiw.feat4"), desc: t("hiw.feat4desc") },
   ];
-
-  const partnerBullets = [t("hiw.partnerBullet1"), t("hiw.partnerBullet2"), t("hiw.partnerBullet3")];
 
   // HowTo structured data — helps Google render the step-by-step journey.
   const howToStructuredData = {
@@ -76,17 +79,17 @@ export default function HowItWorksPage() {
             {t("hiw.subtitleNew")}
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link to="/search">
+            <Link to="/request">
               <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                {t("hero.search")} <ArrowRight className="ml-2 h-4 w-4" />
+                {t("nav.getOffers")} <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
-            <Link to="/provider">
+            <Link to="/search">
               <Button
                 size="lg"
                 className="bg-white text-navy-ink hover:bg-secondary"
               >
-                {t("hiw.heroList")}
+                {t("hero.search")}
               </Button>
             </Link>
           </div>
@@ -130,17 +133,6 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      {/* Storage size calculator */}
-      <section className="container-wide border-t border-border py-16">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="font-display text-2xl font-bold">{t("calculator.pageTitle")}</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{t("calculator.pageDesc")}</p>
-        </div>
-        <div className="mx-auto mt-8 max-w-2xl">
-          <StorageSizeCalculator />
-        </div>
-      </section>
-
       {/* Trust */}
       <section className="surface-sunken py-16">
         <div className="container-wide">
@@ -168,32 +160,27 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      {/* List your space — partners (free listing, optional tools) */}
-      <section className="container-wide py-16">
-        <div className="card-elevated overflow-hidden">
-          <div className="grid items-center gap-8 p-8 md:grid-cols-2 md:p-12">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-navy-ink">
-                <Store className="h-3.5 w-3.5" /> {t("hiw.partnerBadge")}
-              </div>
-              <h2 className="mt-4 font-display text-2xl font-bold md:text-3xl">{t("hiw.partnerTitle")}</h2>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{t("hiw.partnerDescCross")}</p>
-              <Link to="/provider" className="inline-block">
-                <Button className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90" size="lg">
-                  {t("hiw.partnerCta")} <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-            <ul className="space-y-3">
-              {partnerBullets.map((b, i) => (
-                <li key={i} className="flex items-start gap-3 rounded-xl bg-secondary/50 p-4">
-                  <BadgeCheck className="mt-0.5 h-5 w-5 shrink-0 text-teal-deep" aria-hidden="true" />
-                  <span className="text-sm">{b}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+      {/* Storage size calculator — storage-only tool, gated below the fold behind
+          a closed disclosure so it doesn't dominate the 7-service event page. */}
+      <section className="container-wide py-12">
+        <Collapsible className="mx-auto max-w-2xl overflow-hidden rounded-xl border border-border bg-secondary/40">
+          <CollapsibleTrigger className="group flex w-full items-center justify-between gap-3 px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset">
+            <span className="font-display text-base font-semibold text-navy-ink">{t("calculator.pageTitle")}</span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="border-t border-border px-5 pb-6 pt-5">
+            <p className="mb-6 max-w-md text-sm text-muted-foreground">{t("calculator.pageDesc")}</p>
+            <StorageSizeCalculator />
+          </CollapsibleContent>
+        </Collapsible>
+      </section>
+
+      {/* Are you a provider? — single demoted link on this customer-facing page. */}
+      <section className="container-wide pb-4 text-center">
+        <Link to="/provider" className="inline-flex items-center gap-1.5 text-sm font-semibold text-teal-deep hover:text-primary hover:underline">
+          {t("hiw.providerLink")}
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </Link>
       </section>
 
       {/* Final CTA */}
@@ -201,14 +188,14 @@ export default function HowItWorksPage() {
         <h2 className="font-display text-2xl font-bold">{t("hiw.readyCta")}</h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{t("hiw.readyDescCross")}</p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <Link to="/search">
+          <Link to="/request">
             <Button className="bg-accent text-accent-foreground hover:bg-accent/90" size="lg">
-              {t("hero.search")} <ArrowRight className="ml-2 h-4 w-4" />
+              {t("nav.getOffers")} <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
-          <Link to="/faq">
+          <Link to="/search">
             <Button variant="outline" size="lg">
-              {t("hiw.readFaq")}
+              {t("hero.search")}
             </Button>
           </Link>
         </div>

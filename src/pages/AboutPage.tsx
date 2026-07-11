@@ -3,9 +3,6 @@ import {
   Mail,
   Linkedin,
   User as UserIcon,
-  Boxes,
-  Truck,
-  Caravan,
   ShieldCheck,
   Eye,
   Heart,
@@ -16,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { visibleServiceSlugs, SERVICE_TYPE_ICONS } from "@/lib/serviceTypes";
 import NotFound from "@/pages/NotFound";
 
 interface FounderL10n { et?: string; en?: string; ru?: string; lv?: string; lt?: string }
@@ -77,27 +75,17 @@ export default function AboutPage() {
 
   if (!enabled) return <NotFound />;
 
-  // Cross-vertical story — only show the verticals the platform has enabled.
-  const verticals = [
-    {
-      show: settings.showStorageService,
-      icon: Boxes,
-      title: t("about.vertical.storage"),
-      desc: t("about.vertical.storageDesc"),
-    },
-    {
-      show: settings.showMovingService,
-      icon: Truck,
-      title: t("about.vertical.moving"),
-      desc: t("about.vertical.movingDesc"),
-    },
-    {
-      show: settings.showTrailerService,
-      icon: Caravan,
-      title: t("about.vertical.trailers"),
-      desc: t("about.vertical.trailersDesc"),
-    },
-  ].filter((v) => v.show);
+  // The full moving-event service set — the "Seven services" header must match
+  // the content, so drive the grid off the canonical service list (same as the
+  // homepage / navbar / footer). Moving/trailer drop out when their flag is off.
+  const verticals = visibleServiceSlugs(
+    settings.showMovingService,
+    settings.showTrailerService,
+  ).map((s) => ({
+    icon: SERVICE_TYPE_ICONS[s],
+    title: t(`serviceType.${s}`),
+    desc: t(`serviceType.${s}.desc`),
+  }));
 
   const values = [
     { icon: Eye, title: t("about.value.transparency"), desc: t("about.value.transparencyDesc") },
@@ -295,13 +283,18 @@ export default function AboutPage() {
           {t("about.ctaDesc")}
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <Link to="/search">
+          <Link to="/request">
             <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
-              {t("about.ctaSearch")} <ArrowRight className="ml-2 h-4 w-4" />
+              {t("nav.getOffers")} <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+          <Link to="/search">
+            <Button size="lg" variant="outline">
+              {t("about.ctaSearch")}
             </Button>
           </Link>
           <Link to="/provider">
-            <Button size="lg" variant="outline">
+            <Button size="lg" variant="ghost">
               {t("about.ctaProvider")}
             </Button>
           </Link>

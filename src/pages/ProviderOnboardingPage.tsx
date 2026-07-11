@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "@/i18n/routing";
-import { Check, Warehouse, Truck, CarFront, Building2, User, CheckCircle, ChevronLeft, ArrowRight, Loader2, AlertCircle, Plus, Sparkles } from "lucide-react";
+import { Check, Building2, User, CheckCircle, ChevronLeft, ArrowRight, Loader2, AlertCircle, Plus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { visibleServiceSlugs, SERVICE_TYPE_ICONS } from "@/lib/serviceTypes";
 import { useAuth } from "@/contexts/AuthContext";
 import { providerService } from "@/services";
 import type { SupplierApplication } from "@/services";
@@ -51,11 +52,13 @@ export default function ProviderOnboardingPage() {
     { key: "sole", label: t("onboard.bizType.sole"), icon: User },
   ];
 
-  const serviceTypes = [
-    { key: "warehouse", label: t("onboard.service.warehouse"), icon: Warehouse },
-    ...(showMovingService  ? [{ key: "moving",  label: t("onboard.service.moving"),  icon: Truck    }] : []),
-    ...(showTrailerService ? [{ key: "trailer", label: t("onboard.service.trailer"), icon: CarFront }] : []),
-  ];
+  // Canonical 7-service event set (storage always on; moving/trailer flag-gated;
+  // the 4 event categories always available). Uses the shared serviceType.* keys.
+  const serviceTypes = visibleServiceSlugs(showMovingService, showTrailerService).map((slug) => ({
+    key: slug,
+    label: t(`serviceType.${slug}`),
+    icon: SERVICE_TYPE_ICONS[slug],
+  }));
 
   const { data: availableCities = [] } = useQuery({
     queryKey: queryKeys.cities.available(),
@@ -235,7 +238,7 @@ export default function ProviderOnboardingPage() {
                 <div>
                   <h2 className="font-display text-xl font-bold text-navy-ink">{t("onboard.step3.types")}</h2>
                   <p className="text-xs text-muted-foreground mt-1.5">{t("onboard.step3.typesHint")}</p>
-                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
                     {serviceTypes.map((st) => {
                       const Icon = st.icon;
                       const selected = selectedServices.includes(st.key);

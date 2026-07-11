@@ -246,12 +246,22 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
         <p className="mx-auto mt-3 max-w-lg text-sm text-white/80">
           {heroDesc}
         </p>
-        <Link to={`/search?city=${encodeURIComponent(city)}`}>
-          <Button className="mt-6 h-11 gap-2 bg-accent px-6 font-semibold text-accent-foreground hover:bg-accent/90">
-            <Search className="h-4 w-4" />
-            {t("cityPage.searchCta").replace("{city}", city)}
-          </Button>
-        </Link>
+        <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          {/* Primary: concierge — the heroDesc promises "send a request, we find 2-3 offers". */}
+          <Link to={`/request?city=${encodeURIComponent(city)}`}>
+            <Button className="h-11 gap-2 bg-accent px-6 font-semibold text-accent-foreground hover:bg-accent/90">
+              {t("nav.getOffers")}
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+          {/* Secondary: browse the directory yourself. */}
+          <Link to={`/search?city=${encodeURIComponent(city)}`}>
+            <Button variant="outline" className="h-11 gap-2 border-white/30 bg-transparent px-6 font-semibold text-white hover:bg-white/10 hover:text-white">
+              <Search className="h-4 w-4" />
+              {t("cityPage.searchCta").replace("{city}", city)}
+            </Button>
+          </Link>
+        </div>
       </section>
 
       {/* Top locations */}
@@ -428,11 +438,19 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
       <section className="container-wide py-14 text-center">
         <h2 className="font-display text-2xl font-bold">{t("cityPage.ctaTitle")}</h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{t("cityPage.ctaDesc").replace("{city}", city)}</p>
-        <Link to={`/search?city=${encodeURIComponent(city)}`}>
-          <Button className="mt-5 h-11 px-6 font-semibold bg-accent text-accent-foreground hover:bg-accent/90">
-            {t("cityPage.searchCta").replace("{city}", city)}
-          </Button>
-        </Link>
+        <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Link to={`/request?city=${encodeURIComponent(city)}`}>
+            <Button className="h-11 gap-2 px-6 font-semibold bg-accent text-accent-foreground hover:bg-accent/90">
+              {t("nav.getOffers")}
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+          <Link to={`/search?city=${encodeURIComponent(city)}`}>
+            <Button variant="outline" className="h-11 px-6 font-semibold">
+              {t("cityPage.searchCta").replace("{city}", city)}
+            </Button>
+          </Link>
+        </div>
       </section>
     </div>
   );

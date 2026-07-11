@@ -3,17 +3,35 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { cityBySlug } from "@/lib/cities";
 import { SEO, citySeoMeta } from "@/components/SEO";
-import { Boxes, Truck, Caravan, ArrowRight } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  visibleServiceSlugs,
+  SERVICE_TYPE_ICONS,
+  type ServiceTypeSlug,
+} from "@/lib/serviceTypes";
 
 /**
- * /locations/:slug — a per-city hub that presents all three verticals equally.
+ * /locations/:slug — a per-city hub that presents the full moving-event service
+ * set equally, led by the concierge CTA ("tell us what you need → 2-3 offers").
  *
- * This is an index/hub (links + short blurbs), NOT a listing page — it links out
- * to the single-vertical pages (/storage/<slug>, /moving/<slug>, /trailer/<slug>)
- * which carry the actual listings, so there's no duplicate content. Moving and
- * Trailer cards are gated behind the platform service flags, mirroring how
- * CityPage hides deep links to a disabled vertical.
+ * This is an index/hub (links + short blurbs), NOT a listing page. Storage,
+ * moving and trailer link to their single-vertical listing pages
+ * (/storage|/moving|/trailer/<slug>); the four event categories (cleaning,
+ * packing, van rental, insurance) have no dedicated city page yet, so they
+ * link to the city-scoped search filter. Moving/Trailer drop out when their
+ * service flag is off (never link to a disabled vertical) — the canonical
+ * visibleServiceSlugs() helper handles that gating (same as Footer/Navbar).
  */
+
+// Slugs that have a dedicated single-vertical city page; everything else
+// falls back to the city-scoped search filter.
+const HUB_ROUTE: Partial<Record<ServiceTypeSlug, string>> = {
+  warehouse: "storage",
+  moving: "moving",
+  trailer: "trailer",
+};
+
 export default function CityHubPage() {
   const { slug } = useParams<{ slug: string }>();
   const { t, language } = useLanguage();
@@ -33,35 +51,17 @@ export default function CityHubPage() {
 
   const seo = citySeoMeta(t, city);
 
-  // The three verticals. Each links to the existing single-vertical listing page.
-  // Moving/Trailer are dropped when their service flag is off (never link to a
-  // disabled vertical).
-  const verticals = [
-    {
-      key: "storage",
-      icon: Boxes,
-      label: t("nav.storage"),
-      blurb: t("home.vertical.storage.desc"),
-      to: `/storage/${slug}`,
-      enabled: true,
-    },
-    {
-      key: "moving",
-      icon: Truck,
-      label: t("nav.moving"),
-      blurb: t("city.movingDesc").replace("{city}", city),
-      to: `/moving/${slug}`,
-      enabled: showMovingService,
-    },
-    {
-      key: "trailer",
-      icon: Caravan,
-      label: t("nav.trailer"),
-      blurb: t("city.trailerDesc").replace("{city}", city),
-      to: `/trailer/${slug}`,
-      enabled: showTrailerService,
-    },
-  ].filter((v) => v.enabled);
+  // The full 7-service event set, gated by the platform flags. Same canonical
+  // list + icons the homepage / navbar / footer render.
+  const services = visibleServiceSlugs(showMovingService, showTrailerService).map((s) => ({
+    key: s,
+    icon: SERVICE_TYPE_ICONS[s],
+    label: t(`serviceType.${s}`),
+    blurb: t(`serviceType.${s}.desc`),
+    to: HUB_ROUTE[s]
+      ? `/${HUB_ROUTE[s]}/${slug}`
+      : `/search?type=${s}&city=${encodeURIComponent(city)}`,
+  }));
 
   return (
     <>
@@ -78,7 +78,7 @@ export default function CityHubPage() {
       />
 
       <div className="container-wide py-12 md:py-16">
-        <header className="mb-10 max-w-2xl animate-slide-up">
+        <header className="mb-8 max-w-2xl animate-slide-up">
           <p className="eyebrow mb-3">{t("locations.hub.eyebrow")}</p>
           <h1 className="font-display text-3xl font-bold tracking-tight text-navy-ink md:text-4xl">
             {city}
@@ -88,8 +88,32 @@ export default function CityHubPage() {
           </p>
         </header>
 
+        {/* Concierge lead — the demand-first front door for this city. */}
+        <div className="mb-10 overflow-hidden rounded-lg border border-accent/30 bg-gradient-to-br from-accent/[0.08] to-teal/[0.06] p-6 shadow-card animate-slide-up md:p-8">
+          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+            <div className="max-w-xl">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-accent to-teal-deep px-3 py-1 text-xs font-semibold text-white shadow-card">
+                <Sparkles className="h-3.5 w-3.5" />
+                {t("home.concierge.eyebrow")}
+              </span>
+              <h2 className="mt-3 font-display text-xl font-bold text-navy-ink md:text-2xl">
+                {t("locations.hub.conciergeTitle")}
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-ink-2">
+                {t("locations.hub.conciergeDesc")}
+              </p>
+            </div>
+            <Link to={`/request?city=${encodeURIComponent(city)}`} className="shrink-0">
+              <Button size="lg" className="gap-2 bg-accent px-6 font-semibold text-accent-foreground hover:bg-brand-greenDeep">
+                {t("nav.getOffers")}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {verticals.map((v, i) => {
+          {services.map((v, i) => {
             const Icon = v.icon;
             return (
               <Link
@@ -101,9 +125,9 @@ export default function CityHubPage() {
                 <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-secondary text-primary">
                   <Icon className="h-6 w-6" aria-hidden />
                 </span>
-                <h2 className="font-display text-xl font-bold text-navy-ink transition-colors group-hover:text-primary">
+                <h3 className="font-display text-xl font-bold text-navy-ink transition-colors group-hover:text-primary">
                   {v.label}
-                </h2>
+                </h3>
                 <p className="mt-2 flex-1 text-sm leading-relaxed text-ink-2">{v.blurb}</p>
                 <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-accent">
                   {t("locations.cardCta").replace("{city}", city)}

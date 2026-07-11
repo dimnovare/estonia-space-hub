@@ -72,8 +72,11 @@ test.describe("Directory (partner page)", () => {
     await expect(website).toHaveAttribute("rel", /noopener/);
     await expect(website).toHaveAttribute("rel", /noreferrer/);
 
-    // Directory note replaces the empty-listings block
-    await expect(page.getByText(/see ettevõte on ruumly kataloogis/i)).toBeVisible();
+    // Concierge CTA (scoped to the provider's primary service) replaces the old
+    // off-platform "contact the company directly" note — capture the lead first.
+    const conciergeCta = page.locator('a[href="/et/request?category=moving"]');
+    await expect(conciergeCta).toBeVisible();
+    await expect(conciergeCta).toContainText(/Küsi pakkumist/i);
     await expect(page.getByText(/avalikke kuulutusi veel pole/i)).not.toBeVisible();
 
     // Claim banner at the bottom with mailto CTA carrying the slug

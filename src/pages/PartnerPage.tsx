@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useParams, Link } from "@/i18n/routing";
-import { Loader2, MapPin, Clock, Star, ShieldCheck, Award, Box, MessageCircle, Heart, ExternalLink } from "lucide-react";
+import { Loader2, MapPin, Clock, Star, ShieldCheck, Award, Box, MessageCircle, Heart, ExternalLink, Sparkles, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { usePartnerGoogleReviews, type GoogleReview } from "@/hooks/usePartnerGoogleReviews";
@@ -301,6 +301,19 @@ export default function PartnerPage() {
     partner.tagline || `${partner.name} — ${partner.locationCount} ${t("partner.stats.locations")}, ${partner.country}.`;
   const city = partner.locations[0]?.city;
 
+  // Concierge CTA for unclaimed directory profiles — capture the lead on-platform
+  // (scoped to the provider's primary service + city) instead of pushing the
+  // customer off-site for pricing before a lead is captured.
+  const primarySlug = partner.serviceTypes?.[0];
+  const primaryServiceLabel = primarySlug ? serviceTypeLabel(t, primarySlug) : t("serviceType.warehouse");
+  const requestParams = new URLSearchParams();
+  if (primarySlug) requestParams.set("category", primarySlug);
+  if (city) requestParams.set("city", city);
+  const requestTo = `/request${requestParams.toString() ? `?${requestParams.toString()}` : ""}`;
+  const conciergeTitle = city
+    ? t("partner.directory.conciergeTitle").replace("{service}", primaryServiceLabel).replace("{city}", city)
+    : t("partner.directory.conciergeTitleNoCity").replace("{service}", primaryServiceLabel);
+
   return (
     <div>
       <SEO
@@ -441,13 +454,29 @@ export default function PartnerPage() {
           OR the "Available from {name}" listings grid */}
       {partner.isDirectory ? (
         <section className="container-wide py-14">
-          <div className="mx-auto flex max-w-md flex-col items-center rounded-[14px] border border-line bg-card p-10 text-center shadow-card">
-            <div className="flex h-[54px] w-[54px] items-center justify-center rounded-[14px] bg-secondary">
-              <Box className="h-[26px] w-[26px] text-muted-foreground" />
-            </div>
-            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              {t("partner.directory.note")}
+          <div className="mx-auto flex max-w-lg flex-col items-center rounded-[14px] border border-accent/30 bg-gradient-to-br from-accent/[0.08] to-teal/[0.06] p-8 text-center shadow-card md:p-10">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-accent to-teal-deep px-3 py-1 text-xs font-semibold text-white shadow-card">
+              <Sparkles className="h-3.5 w-3.5" />
+              {t("home.concierge.eyebrow")}
+            </span>
+            <h2 className="mt-3 font-display text-xl font-bold text-navy-ink md:text-2xl">
+              {conciergeTitle}
+            </h2>
+            <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
+              {t("partner.directory.conciergeBody")}
             </p>
+            <div className="mt-5 flex flex-col items-center gap-3 sm:flex-row">
+              <Button asChild className="min-h-[44px] gap-2 bg-accent px-6 font-semibold text-accent-foreground hover:bg-brand-greenDeep">
+                <Link to={requestTo}>
+                  {t("nav.getOffers")}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button variant="outline" className="min-h-[44px]" onClick={() => setContactOpen(true)}>
+                <MessageCircle className="mr-2 h-4 w-4" />
+                {t("partner.contact")}
+              </Button>
+            </div>
           </div>
         </section>
       ) : (
