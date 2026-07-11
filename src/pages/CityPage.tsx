@@ -15,7 +15,7 @@ import { queryKeys } from "@/services/queryKeys";
 import { formatPriceUnit } from "@/lib/priceUnit";
 import MovingRoutePage, { parseRouteSlug } from "@/pages/MovingRoutePage";
 import { getPopularRoutesFrom } from "@/lib/cities";
-import { visibleServiceSlugs } from "@/lib/serviceTypes";
+import { visibleServiceSlugs, serviceTypeLabel } from "@/lib/serviceTypes";
 
 const CITY_MAP: Record<string, string> = {
   tallinn: "Tallinn",
@@ -27,19 +27,35 @@ const CITY_MAP: Record<string, string> = {
   daugavpils: "Daugavpils",
 };
 
-/** Listing-type vertical this city hub is scoped to (storage = warehouse). */
-type CityVertical = "warehouse" | "moving" | "trailer";
+/** City-hub vertical: the 3 listing verticals (storage = warehouse) plus the 4
+ *  directory-only event categories the backend sitemap now emits city hubs for. */
+type CityVertical =
+  | "warehouse" | "moving" | "trailer"
+  | "cleaning" | "packing" | "vanrental" | "insurance";
+
+/** Directory-only event categories — providers here have no listings, only
+ *  directory locations tagged with the service slug (rendered as provider cards,
+ *  never a listing/booking branch). Slugs match the lowercase DemandLeadCategory
+ *  + the backend sitemap path segment exactly. */
+const DIRECTORY_EVENT_CATEGORIES = ["cleaning", "packing", "vanrental", "insurance"] as const;
+const isDirectoryCategoryVertical = (v: CityVertical): boolean =>
+  (DIRECTORY_EVENT_CATEGORIES as readonly string[]).includes(v);
 
 /**
  * Per-vertical constants. Each city hub renders for exactly one vertical:
- *  - `seoVertical` feeds verticalSeoMeta() (note plural "trailers").
+ *  - `seoVertical` feeds verticalSeoMeta() (only the 3 listing verticals have
+ *    templates; event categories build SEO from the serviceType label instead).
  *  - `urlSegment` is the canonical/structured-data path segment that must
- *    match the backend sitemap (/storage|/moving|/trailer).
+ *    match the backend sitemap (/storage|/moving|/trailer|/cleaning|…).
  */
-const VERTICAL_CONFIG: Record<CityVertical, { seoVertical: SeoVertical; urlSegment: string }> = {
+const VERTICAL_CONFIG: Record<CityVertical, { seoVertical?: SeoVertical; urlSegment: string }> = {
   warehouse: { seoVertical: "storage", urlSegment: "storage" },
   moving: { seoVertical: "moving", urlSegment: "moving" },
   trailer: { seoVertical: "trailers", urlSegment: "trailer" },
+  cleaning: { urlSegment: "cleaning" },
+  packing: { urlSegment: "packing" },
+  vanrental: { urlSegment: "vanrental" },
+  insurance: { urlSegment: "insurance" },
 };
 
 /**
@@ -67,6 +83,7 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
   const { t, language } = useLanguage();
   const { showMovingService, showTrailerService } = usePlatformSettings();
   const { seoVertical, urlSegment } = VERTICAL_CONFIG[vertical];
+  const isDirectoryCategory = isDirectoryCategoryVertical(vertical);
   // Unknown slugs (not in CITY_MAP) would otherwise render as the raw lowercase
   // slug (e.g. "rakvere" / "viljandi-keskus") in the H1 and <title>. Title-case
   // each hyphen/space-separated word so the visible name reads naturally.
@@ -111,7 +128,27 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
   // listings directly (filtered by type below).
   const useLocations = vertical === "warehouse" && locations.length > 0;
 
-  const topItems = useLocations
+  // Event-category hubs list the DIRECTORY locations tagged with this service
+  // (no listings/pricing/availability — provider cards linking to the profile).
+  const categoryLocations = isDirectoryCategory
+    ? locations.filter((l: any) => (l.serviceTypes ?? []).includes(vertical))
+    : [];
+
+  const topItems = isDirectoryCategory
+    ? categoryLocations.slice(0, 8).map((loc: any) => ({
+        id: loc.id,
+        name: loc.name,
+        images: loc.images,
+        address: loc.address,
+        city: loc.city,
+        // Directory providers have no availability or pricing — render clean.
+        availableUnits: undefined as number | undefined,
+        fullyBooked: false,
+        priceFrom: null as number | null,
+        priceUnit: undefined as string | undefined,
+        href: loc.supplierSlug ? `/partner/${loc.supplierSlug}` : `/location/${loc.id}`,
+      }))
+    : useLocations
     ? locations.slice(0, 4).map((loc: any) => ({
         id: loc.id,
         name: loc.name,
@@ -141,26 +178,47 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
         href: `/${l.type}/${l.id}`,
       }));
 
-  // SEO title/description. Storage keeps its existing, lighter copy unchanged;
-  // moving/trailer use the per-vertical verticalSeoMeta() city templates.
-  const storageSeoTitle = `${t("city.storageIn")} ${city} — Ruumly`;
-  const storageSeoDesc = t("city.seoDesc").replace("{city}", city);
-  const verticalMeta = verticalSeoMeta(t, seoVertical, city);
-  const seoTitle = vertical === "warehouse" ? storageSeoTitle : verticalMeta.title;
-  const seoDesc = vertical === "warehouse" ? storageSeoDesc : verticalMeta.description;
+  // Concierge primary CTA + browse secondary. Event-category hubs prefill the
+  // category on the request funnel and scope the search to that service type.
+  const requestHref = isDirectoryCategory
+    ? `/request?category=${vertical}&city=${encodeURIComponent(city)}`
+    : `/request?city=${encodeURIComponent(city)}`;
+  const searchHref = isDirectoryCategory
+    ? `/search?type=${vertical}&city=${encodeURIComponent(city)}`
+    : `/search?city=${encodeURIComponent(city)}`;
 
-  // Per-vertical H1 / hero. Storage reuses its existing cityPage.* copy verbatim;
-  // moving/trailer use "{label} {city}" headings plus a vertical description.
-  const heroTitle = vertical === "warehouse"
-    ? t("cityPage.heroTitle").replace("{city}", city)
-    : `${t(vertical === "moving" ? "city.movingIn" : "city.trailerIn")} ${city}`;
-  const heroDesc = vertical === "warehouse"
-    ? t("cityPage.heroDesc").replace("{city}", city)
-    : t(vertical === "moving" ? "city.movingDesc" : "city.trailerDesc").replace("{city}", city);
+  // Localized service label (used by event-category SEO/hero + the H1).
+  const serviceLabel = serviceTypeLabel(t, vertical);
 
-  const introText = t("city.introText")
-    .replace("{city}", city)
-    .replace("{count}", String(topItems.length || ""));
+  // SEO title/description + H1/hero. Three shapes:
+  //  - warehouse: existing lighter cityPage.*/city.* copy;
+  //  - moving/trailer: verticalSeoMeta() city templates;
+  //  - event categories: "{service} {city}" heading + concierge-framed copy.
+  let seoTitle: string;
+  let seoDesc: string;
+  let heroTitle: string;
+  let heroDesc: string;
+  let introText: string;
+  if (vertical === "warehouse") {
+    seoTitle = `${t("city.storageIn")} ${city} — Ruumly`;
+    seoDesc = t("city.seoDesc").replace("{city}", city);
+    heroTitle = t("cityPage.heroTitle").replace("{city}", city);
+    heroDesc = t("cityPage.heroDesc").replace("{city}", city);
+    introText = t("city.introText").replace("{city}", city).replace("{count}", String(topItems.length || ""));
+  } else if (isDirectoryCategory) {
+    seoTitle = `${serviceLabel} ${city} — Ruumly`;
+    seoDesc = t("cityPage.category.seoDesc").replace("{service}", serviceLabel).replace("{city}", city);
+    heroTitle = `${serviceLabel} ${city}`;
+    heroDesc = t("cityPage.category.heroDesc").replace("{city}", city);
+    introText = t("cityPage.category.intro").replace("{service}", serviceLabel).replace("{city}", city);
+  } else {
+    const verticalMeta = verticalSeoMeta(t, seoVertical as SeoVertical, city);
+    seoTitle = verticalMeta.title;
+    seoDesc = verticalMeta.description;
+    heroTitle = `${t(vertical === "moving" ? "city.movingIn" : "city.trailerIn")} ${city}`;
+    heroDesc = t(vertical === "moving" ? "city.movingDesc" : "city.trailerDesc").replace("{city}", city);
+    introText = t("city.introText").replace("{city}", city).replace("{count}", String(topItems.length || ""));
+  }
 
   // FAQ. faq1 (storage pricing) and faq3 (storage security) are
   // storage-specific, so they only show on the warehouse hub. faq2 (online
@@ -182,7 +240,7 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
   // internal links home ↔ /locations hub. Ops-geography note for cities
   // outside the Tallinn/Harjumaa full-service area (honesty rule).
   const seoBlockSlugs = visibleServiceSlugs(showMovingService, showTrailerService);
-  const providerCount = locations.length;
+  const providerCount = isDirectoryCategory ? categoryLocations.length : locations.length;
   const isOpsArea = city === "Tallinn";
 
   // Structured data (overhaul §4). Emit as a JSON-LD array:
@@ -248,14 +306,14 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
         </p>
         <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
           {/* Primary: concierge — the heroDesc promises "send a request, we find 2-3 offers". */}
-          <Link to={`/request?city=${encodeURIComponent(city)}`}>
+          <Link to={requestHref}>
             <Button className="h-11 gap-2 bg-accent px-6 font-semibold text-accent-foreground hover:bg-accent/90">
               {t("nav.getOffers")}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
           {/* Secondary: browse the directory yourself. */}
-          <Link to={`/search?city=${encodeURIComponent(city)}`}>
+          <Link to={searchHref}>
             <Button variant="outline" className="h-11 gap-2 border-white/30 bg-transparent px-6 font-semibold text-white hover:bg-white/10 hover:text-white">
               <Search className="h-4 w-4" />
               {t("cityPage.searchCta").replace("{city}", city)}
@@ -337,7 +395,7 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
         )}
 
         <div className="mt-8 text-center">
-          <Link to={`/search?city=${encodeURIComponent(city)}`}>
+          <Link to={searchHref}>
             <Button variant="outline" className="h-11 gap-2 px-5 font-semibold">
               {t("cityPage.viewAll").replace("{city}", city)} <ArrowRight className="h-4 w-4" />
             </Button>
@@ -385,7 +443,7 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
             <Link to="/locations" className="text-teal-deep hover:text-primary hover:underline">
               {t("footer.allLocations")}
             </Link>
-            <Link to={`/request?city=${encodeURIComponent(city)}`} className="text-teal-deep hover:text-primary hover:underline">
+            <Link to={requestHref} className="text-teal-deep hover:text-primary hover:underline">
               {t("nav.getOffers")}
             </Link>
           </div>
@@ -439,13 +497,13 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
         <h2 className="font-display text-2xl font-bold">{t("cityPage.ctaTitle")}</h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{t("cityPage.ctaDesc").replace("{city}", city)}</p>
         <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Link to={`/request?city=${encodeURIComponent(city)}`}>
+          <Link to={requestHref}>
             <Button className="h-11 gap-2 px-6 font-semibold bg-accent text-accent-foreground hover:bg-accent/90">
               {t("nav.getOffers")}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
-          <Link to={`/search?city=${encodeURIComponent(city)}`}>
+          <Link to={searchHref}>
             <Button variant="outline" className="h-11 px-6 font-semibold">
               {t("cityPage.searchCta").replace("{city}", city)}
             </Button>

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { stubCommon, stubListings, stubLoggedOut, stubLocations } from "./fixtures";
+import { stubCommon, stubListings, stubLoggedOut, stubLocations, directoryLocation } from "./fixtures";
 
 /**
  * 18 — Concierge CTA flips (direction alignment)
@@ -50,5 +50,25 @@ test.describe("Concierge CTAs", () => {
 
     // Search is demoted to the secondary button inside the hero.
     await expect(hero.locator('a[href="/et/search"]')).toBeVisible();
+  });
+
+  test("directory event-category city hub renders (not NotFound) with concierge CTA", async ({ page }) => {
+    // The backend sitemap now emits /{lang}/cleaning|packing|vanrental|insurance/{city};
+    // these must render a real directory hub, not fall through to the noindex 404.
+    await stubLoggedOut(page);
+    await stubCommon(page);
+    await stubListings(page, { items: [] });
+    // directoryLocation advertises ["moving","cleaning"] in Tallinn.
+    await stubLocations(page, [directoryLocation()]);
+
+    await page.goto("/en/cleaning/tallinn");
+
+    // Concierge primary CTA — prefilled with the category + city.
+    const concierge = page.locator('a[href="/en/request?category=cleaning&city=Tallinn"]').first();
+    await expect(concierge).toBeVisible({ timeout: 15000 });
+    await expect(concierge).toContainText(/Get offers/i);
+
+    // The directory provider for this category+city renders as a profile card.
+    await expect(page.locator('a[href="/en/partner/kolimisfirma"]').first()).toBeVisible();
   });
 });

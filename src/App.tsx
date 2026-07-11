@@ -227,6 +227,15 @@ function AppContent() {
               <Route path="storage/:slug" element={<CityPage vertical="warehouse" />} />
               <Route path="moving/:slug" element={<MovingSlugRoute />} />
               <Route path="trailer/:slug" element={<TrailerSlugRoute />} />
+              {/* Directory-only event-category city hubs. The backend sitemap
+                  emits /cleaning|/packing|/vanrental|/insurance/<city> for every
+                  directory city advertising that service — each renders CityPage
+                  as a directory event-category hub (providers + concierge CTA),
+                  never a soft-404. Slugs match the lowercase DemandLeadCategory. */}
+              <Route path="cleaning/:slug" element={<CityPage vertical="cleaning" />} />
+              <Route path="packing/:slug" element={<CityPage vertical="packing" />} />
+              <Route path="vanrental/:slug" element={<CityPage vertical="vanrental" />} />
+              <Route path="insurance/:slug" element={<CityPage vertical="insurance" />} />
               {/* City-pages SEO hub: /locations is the directory (internal-link
                   hub); /locations/<slug> is a per-city hub linking out to the
                   single-vertical pages above. The static "locations" route is
