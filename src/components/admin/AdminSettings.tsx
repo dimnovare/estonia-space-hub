@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Globe, ToggleLeft, Save, Loader2, Plus, Trash2, Eye, SlidersHorizontal,
-  Warehouse, Truck, CarFront, Building2,
+  Warehouse, Truck, CarFront, Building2, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -32,6 +32,9 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   showStorageService:     "true",
   showMovingService:      "true",
   showTrailerService:     "true",
+  // Concierge (demand-first) — hero flip + ops geography. FALLBACK true.
+  conciergeFirst:         "true",
+  conciergeCities:        "Tallinn, Harjumaa",
   "aboutPage.enabled":     "true",
   "aboutPage.showStats":   "false",
   "aboutPage.founders":    "[]",
@@ -87,6 +90,7 @@ export default function AdminSettings() {
     "showStorageService",
     "showMovingService",
     "showTrailerService",
+    "conciergeFirst",
     "blog.enabled",
     "blog.showInFooter",
   ]);
@@ -204,6 +208,31 @@ export default function AdminSettings() {
                 <Toggle k={key} />
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Concierge (demand-first) — hero flip + ops geography */}
+        <div className="rounded-xl border border-border bg-card p-5 shadow-card">
+          <h3 className="flex items-center gap-2 font-display text-base font-semibold text-navy-ink">
+            <Sparkles className="h-4 w-4 text-teal-deep" /> {t("admin.settings.conciergeTitle")}
+          </h3>
+          <p className="mt-1.5 text-sm text-muted-foreground">{t("admin.settings.conciergeDesc")}</p>
+          <div className="mt-4 space-y-3">
+            <ToggleRow
+              k="conciergeFirst"
+              label={t("admin.settings.conciergeFirstLabel")}
+              desc={t("admin.settings.conciergeFirstDesc")}
+            />
+            <div className="rounded-[10px] border border-border p-3">
+              <label className="text-xs font-medium text-ink-2">{t("admin.settings.conciergeCitiesLabel")}</label>
+              <input
+                className={inp}
+                value={String(settings.conciergeCities ?? "")}
+                onChange={e => set("conciergeCities", e.target.value)}
+                placeholder="Tallinn, Harjumaa"
+              />
+              <p className="mt-0.5 text-[10px] text-muted-foreground">{t("admin.settings.conciergeCitiesDesc")}</p>
+            </div>
           </div>
         </div>
 

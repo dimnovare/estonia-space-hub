@@ -143,7 +143,7 @@ export const queryKeys = {
   },
   adminLeads: {
     root:    () => ["admin-leads"] as const,
-    list:    (status: string, page: number) => ["admin-leads", "list", status, page] as const,
+    list:    (status: string, page: number, filters = "") => ["admin-leads", "list", status, page, filters] as const,
     metrics: () => ["admin-leads", "metrics"] as const,
     matches: (id: string) => ["admin-leads", "matches", id] as const,
     outreach: (id: string) => ["admin-leads", "outreach", id] as const,

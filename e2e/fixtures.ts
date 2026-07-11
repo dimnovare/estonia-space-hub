@@ -284,6 +284,7 @@ export async function stubAdminLeads(
     contactRate30d: 0.75,
     quoteRate30d: 0.5,
     bookingRate30d: 0.25,
+    matchRate30d: { matched: 9, total: 12, rate: 0.75 },
     medianFirstResponseMinutes: 42,
     ...(opts.metrics ?? {}),
   };

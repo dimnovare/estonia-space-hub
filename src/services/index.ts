@@ -557,7 +557,22 @@ export interface AdminLeadMetrics {
   contactRate30d: number;
   quoteRate30d: number;
   bookingRate30d: number;
+  /** Supplier match rate (30d): how many requests got at least one supplier
+   *  match. Object shape — bind the % to `.rate` (0-1); `matched/total` is the
+   *  subtitle. Optional so the UI tolerates a momentarily-absent field. */
+  matchRate30d?: { matched: number; total: number; rate: number };
   medianFirstResponseMinutes: number | null;
+}
+
+/** Optional GET /admin/leads filters (all ignored server-side if unsupported). */
+export interface AdminLeadListOpts {
+  /** Lead channel: "concierge" (demand funnel), "routed", "notify-interest". */
+  source?: string;
+  /** ServiceCategories slug or "any". */
+  category?: string;
+  city?: string;
+  /** SLA view: only Status==New && never contacted, oldest-first. */
+  needsResponse?: boolean;
 }
 
 /** Partner/listing suggestion for a lead (GET /admin/leads/{id}/matches, ≤10).
@@ -578,11 +593,21 @@ export interface AdminLeadMatch {
 }
 
 export const adminLeadService = {
-  async list(status: AdminLeadStatus | "all", page: number, limit = 50): Promise<AdminLeadsResponse> {
+  async list(
+    status: AdminLeadStatus | "all",
+    page: number,
+    limit = 50,
+    opts: AdminLeadListOpts = {},
+  ): Promise<AdminLeadsResponse> {
     const params = new URLSearchParams();
     if (status !== "all") params.set("status", status);
     params.set("page", String(page));
     params.set("limit", String(limit));
+    // Optional filters — backend added source/category/city/needsResponse.
+    if (opts.source) params.set("source", opts.source);
+    if (opts.category && opts.category !== "any") params.set("category", opts.category);
+    if (opts.city?.trim()) params.set("city", opts.city.trim());
+    if (opts.needsResponse) params.set("needsResponse", "true");
     return apiClient.get<AdminLeadsResponse>(`/admin/leads?${params}`);
   },
   async update(

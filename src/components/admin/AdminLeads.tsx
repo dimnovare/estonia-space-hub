@@ -1141,12 +1141,26 @@ export default function AdminLeads() {
   const { t } = useLanguage();
   const qc = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<AdminLeadStatus | "all">("all");
+  const [conciergeOnly, setConciergeOnly] = useState(false);
+  const [needsResponse, setNeedsResponse] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>("any");
+  const [cityFilter, setCityFilter] = useState("");
   const [page, setPage] = useState(1);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // Optional GetLeads filters (source/category/city/needsResponse). Guarded so
+  // nothing breaks if the backend ignores a param it doesn't support yet.
+  const listOpts = {
+    source: conciergeOnly ? "concierge" : undefined,
+    category: categoryFilter !== "any" ? categoryFilter : undefined,
+    city: cityFilter.trim() || undefined,
+    needsResponse: needsResponse || undefined,
+  };
+  const filterKey = JSON.stringify(listOpts);
+
   const { data, isLoading } = useQuery({
-    queryKey: queryKeys.adminLeads.list(statusFilter, page),
-    queryFn: () => adminLeadService.list(statusFilter, page, LIMIT),
+    queryKey: queryKeys.adminLeads.list(statusFilter, page, filterKey),
+    queryFn: () => adminLeadService.list(statusFilter, page, LIMIT, listOpts),
     staleTime: 30_000,
   });
 
@@ -1211,8 +1225,9 @@ export default function AdminLeads() {
         </Button>
       </div>
 
-      {/* Ops metrics (whole funnel, from /admin/leads/metrics) */}
-      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {/* Ops metrics (whole funnel, from /admin/leads/metrics). The 4 named
+          north-stars come first; contact rate is a secondary 5th card. */}
+      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard
           label={t("admin.leads.metricRequestsWeek")}
           value={metrics ? metrics.requestsThisWeek : "—"}
@@ -1220,9 +1235,14 @@ export default function AdminLeads() {
           icon={Megaphone}
         />
         <StatCard
-          label={t("admin.leads.metricContactRate")}
-          value={metrics ? pct(metrics.contactRate30d) : "—"}
-          icon={TrendingUp}
+          label={t("admin.leads.metricMatchRate")}
+          value={metrics?.matchRate30d?.rate != null ? pct(metrics.matchRate30d.rate) : "—"}
+          sub={metrics?.matchRate30d
+            ? t("admin.leads.matchRateSub")
+                .replace("{matched}", String(metrics.matchRate30d.matched ?? 0))
+                .replace("{total}", String(metrics.matchRate30d.total ?? 0))
+            : undefined}
+          icon={CheckCircle}
         />
         <StatCard
           label={t("admin.leads.metricQuoteToBooking")}
@@ -1236,6 +1256,11 @@ export default function AdminLeads() {
             ? t("admin.leads.minutes").replace("{min}", String(Math.round(metrics.medianFirstResponseMinutes)))
             : "—"}
           icon={Timer}
+        />
+        <StatCard
+          label={t("admin.leads.metricContactRate")}
+          value={metrics ? pct(metrics.contactRate30d) : "—"}
+          icon={TrendingUp}
         />
       </div>
 
@@ -1255,6 +1280,50 @@ export default function AdminLeads() {
             {t(opt.labelKey)}
           </button>
         ))}
+      </div>
+
+      {/* Extra filters: concierge channel, SLA "needs response" view, category + city */}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => { setConciergeOnly((v) => !v); setPage(1); }}
+          aria-pressed={conciergeOnly}
+          className={`min-h-[36px] rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+            conciergeOnly
+              ? "bg-accent text-accent-foreground"
+              : "border border-border bg-card text-muted-foreground hover:border-primary hover:text-primary"
+          }`}
+        >
+          {t("admin.leads.filterConcierge")}
+        </button>
+        <button
+          onClick={() => { setNeedsResponse((v) => !v); setPage(1); }}
+          aria-pressed={needsResponse}
+          className={`min-h-[36px] rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+            needsResponse
+              ? "bg-accent text-accent-foreground"
+              : "border border-border bg-card text-muted-foreground hover:border-primary hover:text-primary"
+          }`}
+        >
+          {t("admin.leads.filterNeedsResponse")}
+        </button>
+        <select
+          value={categoryFilter}
+          onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
+          aria-label={t("admin.leads.filterAllCategories")}
+          className="min-h-[36px] rounded-full border border-border bg-card px-3.5 py-1.5 text-[13px] font-medium text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <option value="any">{t("admin.leads.filterAllCategories")}</option>
+          {SERVICE_TYPE_SLUGS.map((s) => (
+            <option key={s} value={s}>{serviceTypeLabel(t, s)}</option>
+          ))}
+        </select>
+        <input
+          value={cityFilter}
+          onChange={(e) => { setCityFilter(e.target.value); setPage(1); }}
+          placeholder={t("admin.leads.filterCityPlaceholder")}
+          aria-label={t("admin.leads.filterCityPlaceholder")}
+          className="min-h-[36px] rounded-full border border-border bg-card px-3.5 py-1.5 text-[13px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        />
       </div>
 
       {/* Table */}
