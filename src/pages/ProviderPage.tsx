@@ -1,8 +1,8 @@
 import { Link } from "@/i18n/routing";
 import {
-  ArrowRight,
-  UserPlus, Box, Sparkles, Check, Globe, Map, ShieldCheck,
-  BarChart3, SlidersHorizontal, Megaphone, Settings, Boxes, Truck, Container,
+  ArrowRight, ChevronDown,
+  Inbox, Send, BadgeCheck, Sparkles, Check, Globe, Map, ShieldCheck,
+  Megaphone, Settings, Boxes, Truck, Container,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -14,6 +14,11 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 /* ── Optional-feature catalog (seed content lifted from prototype DATA.catalog) ──
@@ -105,18 +110,18 @@ export default function ProviderPage() {
   const catalog = getCatalog();
   const verticals = getVerticals(showMoving, showTrailer);
 
-  // "We do the marketing. You run your space." value cards
+  // Concierge match-loop value cards (qualify demand → you reply → pay for results)
   const valueCards = [
-    { icon: BarChart3,        titleKey: "provPage.value1.title", descKey: "provPage.value1.desc" },
-    { icon: SlidersHorizontal, titleKey: "provPage.value2.title", descKey: "provPage.value2.desc" },
-    { icon: Globe,            titleKey: "provPage.value3.title", descKey: "provPage.value3.desc" },
+    { icon: Inbox,     titleKey: "provPage.value1.title", descKey: "provPage.value1.desc" },
+    { icon: Send,      titleKey: "provPage.value2.title", descKey: "provPage.value2.desc" },
+    { icon: BadgeCheck, titleKey: "provPage.value3.title", descKey: "provPage.value3.desc" },
   ];
 
-  // "How free partnership works" steps
+  // "How the match loop works" steps
   const steps = [
-    { icon: UserPlus, titleKey: "provPage.step1.title", descKey: "provPage.step1.desc" },
-    { icon: Box,      titleKey: "provPage.step2.title", descKey: "provPage.step2.desc" },
-    { icon: Sparkles, titleKey: "provPage.step3.title", descKey: "provPage.step3.desc" },
+    { icon: Inbox,      titleKey: "provPage.step1.title", descKey: "provPage.step1.desc" },
+    { icon: Send,       titleKey: "provPage.step2.title", descKey: "provPage.step2.desc" },
+    { icon: BadgeCheck, titleKey: "provPage.step3.title", descKey: "provPage.step3.desc" },
   ];
 
   // q1's answer is reframed to "free always" (permanent) — override its answer key.
@@ -236,61 +241,63 @@ export default function ProviderPage() {
         </div>
       </section>
 
-      {/* ── Optional features catalog (secondary, never a plans table) ── */}
-      <section className="container-wide py-12 md:py-20">
-        <div className="mx-auto max-w-2xl text-center">
-          <span className="font-mono-label text-xs uppercase tracking-[0.2em] text-teal-deep">
-            {t("provPage.optional.eyebrow")}
-          </span>
-          <h2 className="mt-3 font-display text-2xl font-bold md:text-3xl">{t("provPage.optional.title")}</h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">{t("provPage.optional.subtitle")}</p>
-        </div>
-
-        <div className="mt-10 space-y-10">
-          {catalog.map((group) => {
-            const GroupIcon = group.icon;
-            return (
-              <div key={group.id}>
-                <div className="mb-5 flex items-center gap-3">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${tileClass[group.tile]}`}>
-                    <GroupIcon className="h-5 w-5" />
-                  </div>
-                  <h3 className="font-display text-lg font-bold md:text-xl">{t(group.titleKey)}</h3>
-                  <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
-                    {group.items.length}
-                  </span>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {group.items.map((it) => (
-                    <div
-                      key={it.id}
-                      className="group flex flex-col gap-3 rounded-[14px] border border-border bg-card p-5 shadow-card transition-all hover:-translate-y-0.5 hover:border-teal"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <h4 className="font-display text-[15.5px] font-semibold leading-snug">{t(it.nameKey)}</h4>
-                        {it.free && (
-                          <span className="inline-flex shrink-0 items-center rounded-full bg-gradient-to-r from-accent to-teal-deep px-2.5 py-0.5 text-xs font-semibold text-white">
-                            {t("provPage.tag.free")}
-                          </span>
-                        )}
+      {/* ── Optional add-ons (secondary, collapsed by default — NOT a storefront).
+             The real upsell lives in the logged-in ProviderBoosts dashboard. ── */}
+      <section className="container-wide py-12 md:py-16">
+        <Collapsible className="mx-auto max-w-3xl overflow-hidden rounded-[14px] border border-border bg-secondary/40">
+          <CollapsibleTrigger className="group flex w-full items-center justify-between gap-3 px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset">
+            <span className="text-sm font-medium text-muted-foreground">{t("provPage.optional.toggle")}</span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="border-t border-border px-5 pb-6 pt-5">
+            <p className="mb-6 max-w-xl text-sm leading-relaxed text-muted-foreground">{t("provPage.optional.subtitle")}</p>
+            <div className="space-y-10">
+              {catalog.map((group) => {
+                const GroupIcon = group.icon;
+                return (
+                  <div key={group.id}>
+                    <div className="mb-5 flex items-center gap-3">
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${tileClass[group.tile]}`}>
+                        <GroupIcon className="h-5 w-5" />
                       </div>
-                      <p className="flex-1 text-[13px] leading-relaxed text-muted-foreground">{t(it.descKey)}</p>
-                      <div className="mt-auto flex items-center justify-between gap-2">
-                        <span className="font-display text-base font-bold text-navy-ink">
-                          {it.price}
-                          {it.unitKey && <span className="ml-1 text-xs font-medium text-muted-foreground">{t(it.unitKey)}</span>}
-                        </span>
-                        <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
-                          {t(it.scopeKey)}
-                        </span>
-                      </div>
+                      <h3 className="font-display text-lg font-bold md:text-xl">{t(group.titleKey)}</h3>
+                      <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                        {group.items.length}
+                      </span>
                     </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {group.items.map((it) => (
+                        <div
+                          key={it.id}
+                          className="group flex flex-col gap-3 rounded-[14px] border border-border bg-card p-5 shadow-card transition-all hover:-translate-y-0.5 hover:border-teal"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <h4 className="font-display text-[15.5px] font-semibold leading-snug">{t(it.nameKey)}</h4>
+                            {it.free && (
+                              <span className="inline-flex shrink-0 items-center rounded-full bg-gradient-to-r from-accent to-teal-deep px-2.5 py-0.5 text-xs font-semibold text-white">
+                                {t("provPage.tag.free")}
+                              </span>
+                            )}
+                          </div>
+                          <p className="flex-1 text-[13px] leading-relaxed text-muted-foreground">{t(it.descKey)}</p>
+                          <div className="mt-auto flex items-center justify-between gap-2">
+                            <span className="font-display text-base font-bold text-navy-ink">
+                              {it.price}
+                              {it.unitKey && <span className="ml-1 text-xs font-medium text-muted-foreground">{t(it.unitKey)}</span>}
+                            </span>
+                            <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                              {t(it.scopeKey)}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
 
         {/* ── Built for each vertical ── */}
         <div className="mt-12 rounded-[14px] border border-border bg-secondary/60 p-6 md:p-8">
