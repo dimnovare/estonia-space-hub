@@ -125,4 +125,24 @@ describe("translation completeness", () => {
       values.forEach((value, index) => expect(languages[index][key]).toBe(value));
     });
   });
+
+  it("uses the approved active-draft offer-stage copy in every operator language", () => {
+    const offerCopy = {
+      "admin.leads.stageOffer": ["Koosta kliendi valikud", "Build customer options", "Создать варианты для клиента", "Izveidot klienta variantus", "Kurti variantus klientui"],
+      "admin.leads.activeDraft": ["Aktiivne mustand", "Active draft", "Активный черновик", "Aktīvais melnraksts", "Aktyvus juodraštis"],
+      "admin.leads.oneActiveDraft": ["Üks aktiivne mustand", "One active draft", "Один активный черновик", "Viens aktīvs melnraksts", "Vienas aktyvus juodraštis"],
+      "admin.leads.previousOffers": ["Varasemad pakkumised", "Previous offers", "Предыдущие предложения", "Iepriekšējie piedāvājumi", "Ankstesni pasiūlymai"],
+      "admin.leads.newDraft": ["Uus mustand", "New draft", "Новый черновик", "Jauns melnraksts", "Naujas juodraštis"],
+      "admin.leads.deleteDraft": ["Kustuta mustand", "Delete draft", "Удалить черновик", "Dzēst melnrakstu", "Ištrinti juodraštį"],
+      "admin.leads.deleteDraftTitle": ["Kas kustutada see mustand?", "Delete this draft?", "Удалить этот черновик?", "Dzēst šo melnrakstu?", "Ištrinti šį juodraštį?"],
+      "admin.leads.deleteDraftBody": ["Mustand ja selle valikud kustutatakse jäädavalt.", "The draft and its options will be permanently removed.", "Черновик и его варианты будут удалены безвозвратно.", "Melnraksts un tā varianti tiks neatgriezeniski dzēsti.", "Juodraštis ir jo variantai bus negrįžtamai ištrinti."],
+      "admin.leads.draftDeleted": ["Mustand kustutatud", "Draft deleted", "Черновик удалён", "Melnraksts dzēsts", "Juodraštis ištrintas"],
+      "admin.leads.addToOffer": ["Lisa pakkumisse", "Add to offer", "Добавить в предложение", "Pievienot piedāvājumam", "Pridėti prie pasiūlymo"],
+    } as const;
+    const languages = [translations.et, translations.en, translations.ru, translations.lv, translations.lt];
+
+    Object.entries(offerCopy).forEach(([key, values]) => {
+      values.forEach((value, index) => expect(languages[index][key]).toBe(value));
+    });
+  });
 });

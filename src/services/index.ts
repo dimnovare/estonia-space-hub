@@ -794,6 +794,9 @@ export const adminOfferService = {
   ): Promise<AdminOffer> {
     return apiClient.patch<AdminOffer>(`/admin/offers/${id}`, body);
   },
+  async remove(id: string): Promise<void> {
+    await apiClient.delete(`/admin/offers/${id}`);
+  },
   async send(id: string): Promise<AdminOffer> {
     return apiClient.post<AdminOffer>(`/admin/offers/${id}/send`, {});
   },

@@ -385,6 +385,8 @@ export async function stubOfferLoop(
     outreachStatus?: number;
     previewDelayMs?: number;
     sendSkipReasons?: Record<string, OutreachSkipReason>;
+    offerUpdateStatus?: number;
+    offerDeleteStatus?: number;
   } = {},
 ): Promise<void> {
   const offers: Json[] = [...(opts.offers ?? [])];
@@ -457,6 +459,8 @@ export async function stubOfferLoop(
 
       if (/\/admin\/leads\/[^/]+\/offers/.test(path)) {
         if (method === "POST") {
+          const existingDraft = offers.find((offer) => offer.status === "draft");
+          if (existingDraft) return json(route, existingDraft);
           const body = (req.postDataJSON() ?? {}) as { options?: Json[]; customerNote?: string };
           const created: Json = {
             id: `offer-${++seq}`, demandLeadId: "lead-1", token: "tok-e2e",
@@ -494,7 +498,19 @@ export async function stubOfferLoop(
       if (offerMatch) {
         const o = offers.find((x) => x.id === offerMatch[1]) as Json | undefined;
         if (!o) return json(route, { message: "not found" }, 404);
+        if (method === "DELETE") {
+          if (opts.offerDeleteStatus && opts.offerDeleteStatus >= 400) {
+            if (opts.offerDeleteStatus === 404) offers.splice(offers.indexOf(o), 1);
+            return json(route, { message: opts.offerDeleteStatus === 409 ? "Offer is no longer a draft." : "not found" }, opts.offerDeleteStatus);
+          }
+          if (o.status !== "draft") return json(route, { message: "Offer is no longer a draft." }, 409);
+          offers.splice(offers.indexOf(o), 1);
+          return route.fulfill({ status: 204 });
+        }
         if (method === "PATCH") {
+          if (opts.offerUpdateStatus && opts.offerUpdateStatus >= 400) {
+            return json(route, { message: opts.offerUpdateStatus === 409 ? "Offer is no longer a draft." : "update failed" }, opts.offerUpdateStatus);
+          }
           const body = (req.postDataJSON() ?? {}) as Json;
           if (body.customerNote !== undefined) o.customerNote = body.customerNote;
           if (Array.isArray(body.options)) {

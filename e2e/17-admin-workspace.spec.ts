@@ -263,12 +263,62 @@ test.describe("Admin lead workspace", () => {
     await expect(page.getByPlaceholder("Pealkiri").first()).toHaveValue("Miniladu 5 m²");
   });
 
-  test("draft offer keeps a real 'open page' link (safe: draft 404s publicly)", async ({ page }) => {
-    // Finding 7: the read-receipt hazard only exists once SENT — draft may link.
-    await openWorkspace(page);
-    await page.getByRole("listitem").filter({ hasText: "Rare Minilaod" }).getByRole("button", { name: /pakkumisse/i }).click();
-    await expect(page.getByRole("link", { name: /ava pakkumise leht/i })).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole("button", { name: /kopeeri pakkumise link/i })).toHaveCount(0);
+  test("draft is reused, has no public link, and can be deleted", async ({ page }) => {
+    await openEnglishWorkspace(page);
+    await page.getByRole("button", { name: /create offer/i }).click();
+    await page.getByRole("button", { name: /create offer/i }).click();
+    await expect(page.getByText(/one active draft/i)).toBeVisible();
+    await expect(page.getByRole("link", { name: /open offer page/i })).toHaveCount(0);
+    await page.getByRole("button", { name: /delete draft/i }).click();
+    await page.getByRole("alertdialog").getByRole("button", { name: /delete draft/i }).click();
+    await expect(page.getByText(/draft deleted/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /create offer/i })).toBeVisible();
+  });
+
+  test("sent offers remain in compact history while a new draft is edited", async ({ page }) => {
+    await openEnglishWorkspace(page, {
+      offers: [{
+        id: "offer-sent", demandLeadId: "lead-1", token: "tok-sent", status: "sent", language: "en",
+        customerNote: "Existing note", createdAt: "2026-07-10T09:40:00Z", sentAt: "2026-07-10T10:00:00Z",
+        viewedAt: null, chosenAt: null, chosenOptionId: null, createdBy: "admin@ruumly.eu", options: [],
+      }],
+    });
+    await page.getByRole("button", { name: /new draft/i }).click();
+    await expect(page.getByText(/previous offers/i)).toBeVisible();
+    await expect(page.getByText(/sent/i).last()).toBeVisible();
+    await expect(page.getByLabel(/customer note|note to the customer/i)).toHaveValue("");
+  });
+
+  test("save conflict keeps the unsaved draft buffer visible", async ({ page }) => {
+    await openEnglishWorkspace(page, { offerUpdateStatus: 409 });
+    await page.getByRole("button", { name: /create offer/i }).click();
+    await page.getByRole("button", { name: /add option/i }).click();
+    const title = page.getByLabel("Title").first();
+    await title.fill("Telephone quote");
+    await page.getByRole("button", { name: /save draft/i }).click();
+    await expect(page.getByText("Offer is no longer a draft.")).toBeVisible();
+    await expect(title).toHaveValue("Telephone quote");
+  });
+
+  test("delete conflict keeps the unsaved draft buffer visible", async ({ page }) => {
+    await openEnglishWorkspace(page, { offerDeleteStatus: 409 });
+    await page.getByRole("button", { name: /create offer/i }).click();
+    const note = page.getByLabel(/customer note|note to the customer/i);
+    await note.fill("Keep this draft");
+    await page.getByRole("button", { name: /delete draft/i }).click();
+    await page.getByRole("alertdialog").getByRole("button", { name: /delete draft/i }).click();
+    await expect(page.getByText("Offer is no longer a draft.")).toBeVisible();
+    await expect(note).toHaveValue("Keep this draft");
+  });
+
+  test("delete 404 clears the editor and refetches offers", async ({ page }) => {
+    await openEnglishWorkspace(page, { offerDeleteStatus: 404 });
+    await page.getByRole("button", { name: /create offer/i }).click();
+    await page.getByRole("button", { name: /delete draft/i }).click();
+    await page.getByRole("alertdialog").getByRole("button", { name: /delete draft/i }).click();
+    await expect(page.getByText(/draft deleted/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /create offer/i })).toBeVisible();
+    await expect(page.getByLabel(/customer note|note to the customer/i)).toHaveCount(0);
   });
 
   test("edit request: opens the form, changes fields, and PATCHes only the diff", async ({ page }) => {

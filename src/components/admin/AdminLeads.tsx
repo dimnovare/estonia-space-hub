@@ -16,11 +16,12 @@ import { toast } from "sonner";
 import {
   Loader2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Megaphone,
   TrendingUp, Timer, CalendarCheck, Copy, Mail, Phone, MapPin, Send,
-  Plus, ArrowUp, ArrowDown, Trash2, Eye, ExternalLink, Clock, CheckCircle,
+  Plus, ArrowUp, ArrowDown, Trash2, Eye, Clock, CheckCircle,
   Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LeadProviderStage } from "@/components/admin/leads/LeadProviderStage";
+import { LeadOfferStage } from "@/components/admin/leads/LeadOfferStage";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -183,6 +184,7 @@ function LeadWorkspace({ lead }: { lead: AdminLead }) {
   });
   const [editing, setEditing] = useState(false);
   const [edit, setEdit] = useState(leadEditSeed);
+  const [candidateToAdd, setCandidateToAdd] = useState<ProviderCandidate | null>(null);
 
   // ── Offer builder state (edit buffer over the latest server offer) ──
   const [options, setOptions] = useState<EditableOption[]>([]);
@@ -345,11 +347,7 @@ function LeadWorkspace({ lead }: { lead: AdminLead }) {
   };
 
   const addFromCandidate = (candidate: ProviderCandidate) => {
-    if (!offer) {
-      createOfferMutation.mutate([toInput(candidateToEditable(candidate), 0)]);
-    } else if (!locked) {
-      mutateOptions((prev) => [...prev, candidateToEditable(candidate)]);
-    }
+    setCandidateToAdd(candidate);
   };
 
   const moveOption = (index: number, dir: -1 | 1) =>
@@ -381,12 +379,6 @@ function LeadWorkspace({ lead }: { lead: AdminLead }) {
     }
     return events.filter((e) => !!e.at).sort((a, b) => a.at.localeCompare(b.at));
   }, [lead.createdAt, outreachRows, offer, t]);
-
-  const offerPagePath = offer ? `/${offer.language || lead.language || "et"}/offer/${offer.token}` : null;
-  // Absolute URL to copy/share (the public offer page lives on the prod site).
-  const offerFullUrl = offerPagePath
-    ? `${typeof window !== "undefined" ? window.location.origin : "https://ruumly.eu"}${offerPagePath}`
-    : null;
 
   return (
     <div className="space-y-5 bg-secondary/30 px-5 py-4">
@@ -593,281 +585,15 @@ function LeadWorkspace({ lead }: { lead: AdminLead }) {
           }}
         />
 
-        {/* Offer builder */}
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <PanelHeading>{t("admin.leads.offerTitle")}</PanelHeading>
-              {offer && (
-                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                  offer.status === "chosen" ? "bg-success/10 text-success"
-                  : offer.status === "sent" || offer.status === "viewed" ? "bg-accent/10 text-accent"
-                  : "bg-secondary text-muted-foreground"
-                }`}>
-                  {t(`admin.leads.offerStatus.${offer.status}`)}
-                </span>
-              )}
-            </div>
-            {/* Draft → a real preview link is safe (public GET 404s a draft, so
-                it can't flip Viewed). Once SENT, the first public GET stamps
-                Viewed/ViewedAt with no admin distinction — an admin opening it
-                would fabricate the customer read-receipt the ops loop trusts.
-                So for sent/viewed/chosen, copy the URL instead of navigating.
-                Content can still be checked via the inline preview below. */}
-            {offer && offerFullUrl && (
-              offer.status === "draft" ? (
-                <a
-                  href={offerPagePath!}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  {t("admin.leads.offerOpenPage")}
-                </a>
-              ) : (
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      await navigator.clipboard.writeText(offerFullUrl);
-                      toast.success(t("admin.leads.copied"));
-                    } catch { /* clipboard unavailable (e.g. http) */ }
-                  }}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-                >
-                  <Copy className="h-3 w-3" />
-                  {t("admin.leads.offerCopyLink")}
-                </button>
-              )
-            )}
-          </div>
+        <LeadOfferStage
+          lead={lead}
+          offers={offersQuery.data ?? []}
+          outreachRows={outreachRows}
+          candidateToAdd={candidateToAdd}
+          onCandidateConsumed={() => setCandidateToAdd(null)}
+          onOffersChanged={() => qc.invalidateQueries({ queryKey: queryKeys.adminLeads.offers(lead.id) })}
+        />
 
-          {!offer ? (
-            <div className="py-4">
-              <p className="text-sm text-muted-foreground">{t("admin.leads.offerEmpty")}</p>
-              <Button
-                size="sm"
-                className="mt-3 h-9 gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90"
-                disabled={createOfferMutation.isPending}
-                onClick={() => createOfferMutation.mutate(undefined)}
-              >
-                {createOfferMutation.isPending
-                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  : <Plus className="h-3.5 w-3.5" />}
-                {t("admin.leads.offerCreate")}
-              </Button>
-            </div>
-          ) : (
-            <>
-              {/* Sent / Viewed / Chosen timestamps after send */}
-              {(offer.sentAt || offer.viewedAt || offer.chosenAt) && (
-                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                  {offer.sentAt && (
-                    <span className="inline-flex items-center gap-1">
-                      <Send className="h-3 w-3" /> {t("admin.leads.offerStatus.sent")}: {fmtDateTime(offer.sentAt)}
-                    </span>
-                  )}
-                  {offer.viewedAt && (
-                    <span className="inline-flex items-center gap-1">
-                      <Eye className="h-3 w-3" /> {t("admin.leads.offerStatus.viewed")}: {fmtDateTime(offer.viewedAt)}
-                    </span>
-                  )}
-                  {offer.chosenAt && (
-                    <span className="inline-flex items-center gap-1 font-medium text-success">
-                      <CheckCircle className="h-3 w-3" /> {t("admin.leads.offerStatus.chosen")}: {fmtDateTime(offer.chosenAt)}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* Option editors */}
-              <div className="mt-3 space-y-3">
-                {options.map((o, i) => (
-                  <div key={o.localId} className="rounded-lg border border-border bg-background p-3">
-                    <div className="flex items-start gap-2">
-                      <div className="flex-1 space-y-2">
-                        <input
-                          type="text"
-                          aria-label={t("admin.leads.offerOptionTitle")}
-                          placeholder={t("admin.leads.offerOptionTitle")}
-                          value={o.title}
-                          disabled={locked}
-                          onChange={(e) => updateOption(o.localId, { title: e.target.value })}
-                          className="h-9 w-full rounded-md border border-border bg-card px-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-60"
-                        />
-                        <div className="flex flex-wrap gap-2">
-                          <input
-                            type="text"
-                            inputMode="decimal"
-                            aria-label={t("admin.leads.offerPrice")}
-                            placeholder={t("admin.leads.offerPrice")}
-                            value={o.price}
-                            disabled={locked}
-                            onChange={(e) => updateOption(o.localId, { price: e.target.value })}
-                            className="h-9 w-[110px] rounded-md border border-border bg-card px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-60"
-                          />
-                          <input
-                            type="text"
-                            aria-label={t("admin.leads.offerPriceUnit")}
-                            placeholder={t("admin.leads.offerPriceUnit")}
-                            value={o.priceUnit}
-                            disabled={locked}
-                            onChange={(e) => updateOption(o.localId, { priceUnit: e.target.value })}
-                            className="h-9 w-[140px] rounded-md border border-border bg-card px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-60"
-                          />
-                          {o.supplierName && (
-                            <span className="inline-flex h-9 items-center rounded-md bg-secondary px-2.5 text-xs font-medium text-muted-foreground">
-                              {o.supplierName}
-                            </span>
-                          )}
-                        </div>
-                        <textarea
-                          aria-label={t("admin.leads.offerNotes")}
-                          placeholder={t("admin.leads.offerNotes")}
-                          value={o.notes}
-                          rows={2}
-                          disabled={locked}
-                          onChange={(e) => updateOption(o.localId, { notes: e.target.value })}
-                          className="w-full rounded-md border border-border bg-card px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-60"
-                        />
-                      </div>
-                      <div className="flex shrink-0 flex-col gap-1">
-                        <button
-                          type="button"
-                          aria-label={t("admin.leads.offerMoveUp")}
-                          disabled={i === 0 || locked}
-                          onClick={() => moveOption(i, -1)}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-30"
-                        >
-                          <ArrowUp className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          aria-label={t("admin.leads.offerMoveDown")}
-                          disabled={i === options.length - 1 || locked}
-                          onClick={() => moveOption(i, 1)}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-30"
-                        >
-                          <ArrowDown className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          aria-label={t("admin.leads.offerRemoveOption")}
-                          disabled={locked}
-                          onClick={() => mutateOptions((prev) => prev.filter((p) => p.localId !== o.localId))}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-30"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <Button
-                size="sm"
-                variant="outline"
-                className="mt-3 h-9 gap-1.5"
-                disabled={locked}
-                onClick={() => mutateOptions((prev) => [...prev, {
-                  localId: nextLocalId(), supplierId: null, supplierName: null,
-                  supplierLocationId: null, title: "", price: "", priceUnit: "", notes: "",
-                }])}
-              >
-                <Plus className="h-3.5 w-3.5" />
-                {t("admin.leads.offerAddOption")}
-              </Button>
-
-              {/* Customer note */}
-              <div className="mt-3">
-                <label htmlFor={`offer-note-${lead.id}`} className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {t("admin.leads.offerCustomerNote")}
-                </label>
-                <textarea
-                  id={`offer-note-${lead.id}`}
-                  value={customerNote}
-                  rows={2}
-                  disabled={locked}
-                  onChange={(e) => { setCustomerNote(e.target.value); setDirty(true); }}
-                  className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-60"
-                />
-              </div>
-
-              {/* Actions: save / preview / send (with confirm) */}
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-9"
-                  disabled={saveOfferMutation.isPending || !dirty || locked}
-                  onClick={() => saveOfferMutation.mutate()}
-                >
-                  {saveOfferMutation.isPending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
-                  {t("admin.leads.offerSave")}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-9 gap-1.5"
-                  aria-pressed={showPreview}
-                  onClick={() => setShowPreview((v) => !v)}
-                >
-                  <Eye className="h-3.5 w-3.5" />
-                  {t("admin.leads.offerPreview")}
-                </Button>
-                <Button
-                  size="sm"
-                  className="h-9 gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90"
-                  disabled={sendOfferMutation.isPending || locked}
-                  onClick={() => {
-                    if (validOptionCount === 0) { toast.error(t("admin.leads.offerNoOptions")); return; }
-                    setConfirmSend(true);
-                  }}
-                >
-                  {sendOfferMutation.isPending
-                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    : <Send className="h-3.5 w-3.5" />}
-                  {t("admin.leads.offerSend")}
-                </Button>
-              </div>
-
-              {/* Live customer-facing preview — reuses the public page copy. */}
-              {showPreview && (
-                <div className="mt-4 rounded-lg border border-dashed border-border bg-background p-4">
-                  <p className="font-display text-base font-bold text-navy-ink">
-                    {t("offer.title")
-                      .replace("{category}", serviceTypeLabel(t, lead.category))
-                      .replace("{city}", lead.city)}
-                  </p>
-                  {customerNote.trim() && (
-                    <p className="mt-2 whitespace-pre-wrap rounded-md bg-secondary/60 px-3 py-2 text-xs text-foreground">{customerNote}</p>
-                  )}
-                  <div className="mt-3 space-y-2">
-                    {options.filter((o) => o.title.trim()).map((o) => (
-                      <div key={o.localId} className="rounded-lg border border-border bg-card p-3">
-                        <div className="flex items-baseline justify-between gap-3">
-                          <span className="text-sm font-semibold text-foreground">{o.title}</span>
-                          {parsePrice(o.price) != null && (
-                            <span className="shrink-0 font-display text-sm font-extrabold text-navy-ink">
-                              €{parsePrice(o.price)}{o.priceUnit && <span className="ml-1 text-xs font-medium text-muted-foreground">{o.priceUnit}</span>}
-                            </span>
-                          )}
-                        </div>
-                        {o.supplierName && <p className="mt-0.5 text-xs text-muted-foreground">{o.supplierName}</p>}
-                        {o.notes.trim() && <p className="mt-1 text-xs text-muted-foreground">{o.notes}</p>}
-                        <span className="mt-2 inline-flex rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground">
-                          {t("offer.choose")}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
       </div>
 
       {/* ── Admin notes (existing) ── */}
