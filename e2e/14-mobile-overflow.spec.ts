@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import {
   stubCommon, stubListings, stubLoggedOut, stubLocations, stubPartner,
-  apiLocation, directoryLocation, partnerProfile,
+  apiLocation, directoryLocation, partnerProfile, publicOffer, stubPublicOffer,
 } from "./fixtures";
 
 /**
@@ -90,6 +90,26 @@ test.describe("No horizontal page overflow at 375px", () => {
     await stubAll(page);
     await page.goto("/en/request");
     await expect(page.locator("h1").first()).toBeVisible({ timeout: 15000 });
+    await assertNoPageOverflow(page);
+  });
+
+  test("offer page with long customer content", async ({ page }) => {
+    await stubAll(page);
+    await stubPublicOffer(page, {
+      offer: publicOffer({
+        customerNote: "Partner kontrollib saadavust enne kinnitamist. See märkus peab säilitama\nrea vahetuse ka väiksel ekraanil ning jääma loetavaks.",
+        options: [{
+          id: "long-option",
+          title: "Väga pika kirjeldusega iseteeninduslik temperatuurikontrolliga hoiuruum Tallinna kesklinna lähedal",
+          supplierName: "Pika nimega partnerettevõte, kelle kontaktisik vastutab pakkumise saadavuse kinnitamise eest",
+          priceAmount: 123456.78,
+          priceUnit: "€/kuu",
+          notes: "Pika sisuga märkus, mis kirjeldab ligipääsu, turvalisust ja tingimusi kliendile arusaadavalt.",
+        }],
+      }),
+    });
+    await page.goto("/et/offer/tok-long-content");
+    await expect(page.getByTestId("offer-presentation")).toBeVisible({ timeout: 15000 });
     await assertNoPageOverflow(page);
   });
 });

@@ -18,6 +18,11 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+export function translateForLanguage(language: string, key: string): string {
+  const normalized: Language = isSupportedLang(language) ? language : DEFAULT_LANG;
+  return translations[normalized]?.[key] || translations.et[key] || key;
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -51,7 +56,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }, [location.pathname, location.search, location.hash, navigate]);
 
   const t = useCallback((key: string): string => {
-    return translations[language]?.[key] || translations.et[key] || key;
+    return translateForLanguage(language, key);
   }, [language]);
 
   return (

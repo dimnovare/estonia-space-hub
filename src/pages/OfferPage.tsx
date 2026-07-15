@@ -11,9 +11,10 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useLanguage } from "@/i18n/LanguageContext";
+import { translateForLanguage, useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
+import { OfferPresentation } from "@/components/offers/OfferPresentation";
 import { offerService, type PublicOffer, type PublicOfferOption } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
 import { serviceTypeLabel } from "@/lib/serviceTypes";
@@ -31,7 +32,6 @@ export default function OfferPage() {
   const settings = usePlatformSettings();
   const qc = useQueryClient();
   const [confirming, setConfirming] = useState<PublicOfferOption | null>(null);
-  const [justChosen, setJustChosen] = useState(false);
   // Inline banner for choose failures (the confirm dialog closes on error, so
   // the message must live on the page itself).
   const [chooseError, setChooseError] = useState<string | null>(null);
@@ -58,7 +58,6 @@ export default function OfferPage() {
   const chooseMutation = useMutation({
     mutationFn: (optionId: string) => offerService.choose(token, optionId),
     onSuccess: (res) => {
-      setJustChosen(true);
       setConfirming(null);
       setChooseError(null);
       // Reflect the chosen state locally without waiting for a refetch.
@@ -190,6 +189,7 @@ export default function OfferPage() {
   }
 
   const chosen = offer.status === "chosen";
+  const offerT = (key: string) => translateForLanguage(offer.language, key);
   const categoryLabel = serviceTypeLabel(t, offer.lead.category?.toLowerCase?.() ?? offer.lead.category);
   const title = t("offer.title")
     .replace("{category}", categoryLabel)
@@ -217,15 +217,15 @@ export default function OfferPage() {
           )}
         </div>
 
-        {/* Success banner (just chosen) / already-chosen note */}
+        {/* Pending request confirmation */}
         {chosen && (
           <div role="status" className="mt-6 flex items-start gap-3 rounded-xl border border-success/25 bg-success/5 p-4">
             <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-hidden />
             <div>
               <p className="font-display text-sm font-semibold text-foreground">
-                {justChosen ? t("offer.successTitle") : t("offer.alreadyChosen")}
+                {offerT("offer.requestSent")}
               </p>
-              <p className="mt-0.5 text-sm text-muted-foreground">{t("offer.successBody")}</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">{offerT("offer.requestSentBody")}</p>
             </div>
           </div>
         )}
@@ -239,82 +239,37 @@ export default function OfferPage() {
           </div>
         )}
 
-        {/* Concierge note */}
-        {offer.customerNote && (
-          <div className="mt-6 rounded-xl border border-border bg-card p-4">
-            <p className="font-mono-label text-[11px] font-medium uppercase tracking-[0.16em] text-teal-deep">{t("offer.noteLabel")}</p>
-            <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-foreground">{offer.customerNote}</p>
-          </div>
-        )}
-
-        {/* Option cards */}
-        <div className="mt-6 space-y-4">
-          {offer.options.map((opt) => {
-            const isChosenOption = chosen && offer.chosenOptionId === opt.id;
-            return (
-              <div
-                key={opt.id}
-                className={`rounded-2xl border bg-card p-5 shadow-card transition-all ${
-                  isChosenOption ? "border-success ring-1 ring-success" : chosen ? "border-border opacity-60" : "border-border"
-                }`}
-              >
-                <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
-                  <div className="min-w-0">
-                    <h2 className="font-display text-lg font-semibold text-foreground">{opt.title}</h2>
-                    {opt.supplierName && (
-                      <p className="mt-0.5 text-sm text-muted-foreground">{opt.supplierName}</p>
-                    )}
-                  </div>
-                  {opt.priceAmount != null && (
-                    <p className="shrink-0 font-display text-xl font-extrabold text-navy-ink">
-                      €{opt.priceAmount}
-                      {opt.priceUnit && <span className="ml-1 text-sm font-medium text-muted-foreground">{opt.priceUnit}</span>}
-                    </p>
-                  )}
-                </div>
-                {opt.notes && (
-                  <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">{opt.notes}</p>
-                )}
-                {isChosenOption ? (
-                  <p className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1.5 text-sm font-semibold text-success">
-                    <CheckCircle className="h-4 w-4" aria-hidden />
-                    {t("offer.chosenBadge")}
-                  </p>
-                ) : !chosen && (
-                  <Button
-                    className="mt-4 h-12 w-full bg-accent font-display text-accent-foreground hover:bg-accent/90 sm:w-auto sm:px-6"
-                    disabled={chooseMutation.isPending}
-                    onClick={() => setConfirming(opt)}
-                  >
-                    {chooseMutation.isPending && chooseMutation.variables === opt.id
-                      ? <Loader2 className="h-4 w-4 animate-spin" />
-                      : t("offer.choose")}
-                  </Button>
-                )}
-              </div>
-            );
-          })}
+        <div className="mt-6">
+          <OfferPresentation
+            offer={offer}
+            action={{
+              label: offerT("offer.requestThis"),
+              pendingOptionId: chooseMutation.isPending ? chooseMutation.variables ?? null : null,
+              disabled: chooseMutation.isPending,
+              onRequest: setConfirming,
+            }}
+          />
         </div>
 
         {helpFooter}
       </div>
 
-      {/* Choose confirmation */}
+      {/* Request confirmation */}
       <AlertDialog open={confirming != null} onOpenChange={(open) => { if (!open) setConfirming(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("offer.confirmTitle")}</AlertDialogTitle>
+            <AlertDialogTitle>{offerT("offer.requestConfirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("offer.confirmBody").replace("{title}", confirming?.title ?? "")}
+              {offerT("offer.requestConfirmBody")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t("offer.confirmCancel")}</AlertDialogCancel>
+            <AlertDialogCancel>{offerT("offer.confirmCancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-accent text-accent-foreground hover:bg-accent/90"
               onClick={() => confirming && chooseMutation.mutate(confirming.id)}
             >
-              {t("offer.confirmCta")}
+              {offerT("offer.requestConfirmAction")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
