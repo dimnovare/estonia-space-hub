@@ -5,10 +5,9 @@ import {
   adminOfferService,
   type AdminLead,
   type AdminLeadStatus,
-  type AdminLeadMatch,
   type AdminOffer,
   type OfferOptionInput,
-  type OutreachStatus,
+  type ProviderCandidate,
 } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -21,6 +20,7 @@ import {
   Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LeadProviderStage } from "@/components/admin/leads/LeadProviderStage";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -58,8 +58,6 @@ const STATUS_LABEL_KEYS: Record<AdminLeadStatus, string> = {
   unmatched: "admin.leads.statusUnmatched",
 };
 
-const OUTREACH_STATUSES: OutreachStatus[] = ["sent", "replied", "declined", "noanswer"];
-
 // Category choices for the "Edit request" form: the wildcard plus the 7 canonical
 // service slugs the backend accepts (ServiceCategories + "any").
 const CATEGORY_OPTIONS = ["any", ...SERVICE_TYPE_SLUGS] as const;
@@ -88,27 +86,6 @@ function StatCard({ label, value, sub, icon: Icon }: {
 }
 
 const pct = (fraction: number) => `${Math.round((fraction ?? 0) * 100)}%`;
-
-/** Copy-to-clipboard chip used for match contact details. */
-function CopyButton({ value, label, copiedLabel }: { value: string; label: string; copiedLabel: string }) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(value);
-          toast.success(copiedLabel);
-        } catch {
-          /* clipboard unavailable (e.g. http) — nothing sensible to do */
-        }
-      }}
-      className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      <Copy className="h-3.5 w-3.5" />
-    </button>
-  );
-}
 
 /** Small section heading used across the workspace panels. */
 function PanelHeading({ children }: { children: React.ReactNode }) {
@@ -145,15 +122,15 @@ function toEditable(o: AdminOffer["options"][number]): EditableOption {
   };
 }
 
-function matchToEditable(m: AdminLeadMatch): EditableOption {
+function candidateToEditable(candidate: ProviderCandidate): EditableOption {
   return {
     localId: nextLocalId(),
-    supplierId: m.supplierId,
-    supplierName: m.supplierName,
-    supplierLocationId: null,
-    title: m.listingTitle ?? m.supplierName,
-    price: m.price != null ? String(m.price) : "",
-    priceUnit: m.priceUnit ?? "",
+    supplierId: candidate.supplierId,
+    supplierName: candidate.supplierName,
+    supplierLocationId: candidate.locationId,
+    title: candidate.listingTitle ?? candidate.supplierName,
+    price: candidate.price != null ? String(candidate.price) : "",
+    priceUnit: candidate.priceUnit ?? "",
     notes: "",
   };
 }
@@ -190,8 +167,6 @@ function LeadWorkspace({ lead }: { lead: AdminLead }) {
   const { t } = useLanguage();
   const qc = useQueryClient();
   const [notes, setNotes] = useState(lead.adminNotes ?? "");
-  const [selectedSuppliers, setSelectedSuppliers] = useState<Set<string>>(new Set());
-  const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
 
   // ── Edit-request form (correct the customer's submission) ──
   // The date <input> wants "yyyy-MM-dd"; the API returns an ISO instant. toISOString
@@ -217,11 +192,6 @@ function LeadWorkspace({ lead }: { lead: AdminLead }) {
   const [confirmSend, setConfirmSend] = useState(false);
 
   // ── Queries ──
-  const matchesQuery = useQuery<AdminLeadMatch[]>({
-    queryKey: queryKeys.adminLeads.matches(lead.id),
-    queryFn: () => adminLeadService.matches(lead.id),
-    staleTime: 60_000,
-  });
   const outreachQuery = useQuery({
     queryKey: queryKeys.adminLeads.outreach(lead.id),
     queryFn: () => adminOfferService.listOutreach(lead.id),
@@ -300,28 +270,6 @@ function LeadWorkspace({ lead }: { lead: AdminLead }) {
     onError: (err: Error) => toast.error(err?.message || t("toast.error")),
   });
 
-  const outreachMutation = useMutation({
-    mutationFn: (supplierIds: string[]) => adminOfferService.outreach(lead.id, supplierIds),
-    onSuccess: (res) => {
-      toast.success(
-        t("admin.leads.outreachSentToast")
-          .replace("{sent}", String(res.sent?.length ?? 0))
-          .replace("{skipped}", String(res.skipped?.length ?? 0)),
-      );
-      setSelectedSuppliers(new Set());
-      qc.invalidateQueries({ queryKey: queryKeys.adminLeads.outreach(lead.id) });
-      qc.invalidateQueries({ queryKey: queryKeys.adminLeads.root() }); // lead auto → contacted
-    },
-    onError: (err: Error) => toast.error(err?.message || t("toast.error")),
-  });
-
-  const outreachUpdateMutation = useMutation({
-    mutationFn: ({ id, status, note }: { id: string; status?: OutreachStatus; note?: string }) =>
-      adminOfferService.updateOutreach(id, { status, note }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.adminLeads.outreach(lead.id) }),
-    onError: (err: Error) => toast.error(err?.message || t("toast.error")),
-  });
-
   const createOfferMutation = useMutation({
     mutationFn: (seed?: OfferOptionInput[]) =>
       adminOfferService.create(lead.id, seed?.length ? { options: seed } : {}),
@@ -388,28 +336,19 @@ function LeadWorkspace({ lead }: { lead: AdminLead }) {
   });
 
   // ── Helpers ──
-  const matches = matchesQuery.data ?? [];
   const outreachRows = outreachQuery.data ?? [];
   const validOptionCount = options.filter((o) => o.title.trim()).length;
-
-  const toggleSupplier = (id: string) =>
-    setSelectedSuppliers((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
 
   const mutateOptions = (updater: (prev: EditableOption[]) => EditableOption[]) => {
     setOptions(updater);
     setDirty(true);
   };
 
-  const addFromMatch = (m: AdminLeadMatch) => {
+  const addFromCandidate = (candidate: ProviderCandidate) => {
     if (!offer) {
-      // No draft yet — create one seeded with this match (create accepts options).
-      createOfferMutation.mutate([toInput(matchToEditable(m), 0)]);
+      createOfferMutation.mutate([toInput(candidateToEditable(candidate), 0)]);
     } else if (!locked) {
-      mutateOptions((prev) => [...prev, matchToEditable(m)]);
+      mutateOptions((prev) => [...prev, candidateToEditable(candidate)]);
     }
   };
 
@@ -642,157 +581,17 @@ function LeadWorkspace({ lead }: { lead: AdminLead }) {
         </p>
       )}
 
-      {/* ── Two-column work area: outreach (left) + offer builder (right) ── */}
+      {/* ── Two-column work area: provider discovery (left) + offer builder (right) ── */}
       <div className="grid gap-5 xl:grid-cols-2">
-        {/* Outreach panel */}
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <PanelHeading>{t("admin.leads.outreachTitle")}</PanelHeading>
-            <Button
-              size="sm"
-              className="h-9 gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90"
-              disabled={selectedSuppliers.size === 0 || outreachMutation.isPending}
-              onClick={() => outreachMutation.mutate([...selectedSuppliers])}
-            >
-              {outreachMutation.isPending
-                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                : <Send className="h-3.5 w-3.5" />}
-              {t("admin.leads.askAvailability")}
-              {selectedSuppliers.size > 0 && ` (${selectedSuppliers.size})`}
-            </Button>
-          </div>
-          <p className="mt-1.5 text-xs text-muted-foreground">{t("admin.leads.askAvailabilityHint")}</p>
-
-          {/* Suggested partners with selection checkboxes */}
-          {matchesQuery.isLoading ? (
-            <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" /> {t("admin.leads.findPartners")}…
-            </div>
-          ) : matches.length === 0 ? (
-            <p className="py-3 text-sm text-muted-foreground">{t("admin.leads.matchesEmpty")}</p>
-          ) : (
-            <ul className="mt-3 space-y-2">
-              {matches.map((m) => {
-                const hasEmail = !!m.contactEmail;
-                return (
-                  <li
-                    key={`${m.supplierId}-${m.listingId ?? "directory"}`}
-                    className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-border bg-background p-3 text-sm"
-                  >
-                    <input
-                      type="checkbox"
-                      aria-label={m.supplierName}
-                      className="h-4 w-4 shrink-0 accent-[hsl(var(--accent))]"
-                      disabled={!hasEmail}
-                      checked={selectedSuppliers.has(m.supplierId)}
-                      onChange={() => toggleSupplier(m.supplierId)}
-                    />
-                    <div className="min-w-[140px] flex-1">
-                      <div className="font-medium text-navy-ink">{m.supplierName}</div>
-                      {m.listingTitle == null ? (
-                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-                          <span className="rounded-full bg-teal/[0.14] px-2 py-0.5 font-semibold text-teal-deep">
-                            {t("admin.leads.matchDirectory")}
-                          </span>
-                          {(m.serviceTypes ?? []).map((st) => (
-                            <span key={st} className="rounded-full bg-secondary px-2 py-0.5 font-medium text-foreground">
-                              {serviceTypeLabel(t, st)}
-                            </span>
-                          ))}
-                          {m.listingCity && <span>· {m.listingCity}</span>}
-                        </div>
-                      ) : (
-                        <div className="text-xs text-muted-foreground">
-                          {m.listingTitle}
-                          {m.listingCity && <span> · {m.listingCity}</span>}
-                          {m.price != null && <span> · {m.price} {m.priceUnit ?? "€"}</span>}
-                        </div>
-                      )}
-                      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
-                        {hasEmail ? (
-                          <>
-                            <a href={`mailto:${m.contactEmail}`} className="inline-flex items-center gap-1 font-medium text-accent hover:underline">
-                              <Mail className="h-3 w-3" /> {m.contactEmail}
-                            </a>
-                            <CopyButton value={m.contactEmail} label={t("admin.leads.copy")} copiedLabel={t("admin.leads.copied")} />
-                          </>
-                        ) : (
-                          <span className="rounded-full bg-secondary px-2 py-0.5 font-medium text-muted-foreground">
-                            {t("admin.leads.noEmail")}
-                          </span>
-                        )}
-                        {m.contactPhone && (
-                          <a href={`tel:${m.contactPhone.replace(/\s/g, "")}`} className="inline-flex items-center gap-1 font-medium text-accent hover:underline">
-                            <Phone className="h-3 w-3" /> {m.contactPhone}
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 gap-1 px-2.5 text-xs"
-                      disabled={createOfferMutation.isPending || locked}
-                      onClick={() => addFromMatch(m)}
-                    >
-                      <Plus className="h-3 w-3" />
-                      {t("admin.leads.offerAddFromMatch")}
-                    </Button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-
-          {/* Sent outreach rows with manual status dropdowns */}
-          <div className="mt-4 border-t border-border pt-3">
-            {outreachRows.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("admin.leads.outreachEmpty")}</p>
-            ) : (
-              <ul className="space-y-2">
-                {outreachRows.map((r) => (
-                  <li key={r.id} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-border bg-background p-3 text-sm">
-                    <div className="min-w-[140px] flex-1">
-                      <div className="font-medium text-navy-ink">{r.supplierName ?? r.sentTo}</div>
-                      <div className="text-xs text-muted-foreground">{r.sentTo} · {fmtDateTime(r.sentAt)}</div>
-                    </div>
-                    <select
-                      value={r.status}
-                      aria-label={t("admin.leads.colStatus")}
-                      disabled={outreachUpdateMutation.isPending}
-                      onChange={(e) => outreachUpdateMutation.mutate({ id: r.id, status: e.target.value as OutreachStatus })}
-                      className="cursor-pointer rounded-full border-0 bg-secondary px-2.5 py-1 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-ring"
-                    >
-                      {OUTREACH_STATUSES.map((s) => (
-                        <option key={s} value={s}>{t(`admin.leads.outreachStatus.${s}`)}</option>
-                      ))}
-                    </select>
-                    <div className="flex w-full items-center gap-1.5 sm:w-auto">
-                      <input
-                        type="text"
-                        placeholder={t("admin.leads.outreachNotePlaceholder")}
-                        value={noteDrafts[r.id] ?? r.note ?? ""}
-                        onChange={(e) => setNoteDrafts((prev) => ({ ...prev, [r.id]: e.target.value }))}
-                        className="h-8 w-full min-w-[120px] rounded-md border border-border bg-card px-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-accent sm:w-[160px]"
-                      />
-                      {noteDrafts[r.id] != null && noteDrafts[r.id] !== (r.note ?? "") && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8 px-2.5 text-xs"
-                          disabled={outreachUpdateMutation.isPending}
-                          onClick={() => outreachUpdateMutation.mutate({ id: r.id, note: noteDrafts[r.id] })}
-                        >
-                          {t("admin.leads.save")}
-                        </Button>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
+        <LeadProviderStage
+          lead={lead}
+          outreachRows={outreachRows}
+          onAddCandidate={addFromCandidate}
+          onOutreachComplete={() => {
+            qc.invalidateQueries({ queryKey: queryKeys.adminLeads.outreach(lead.id) });
+            qc.invalidateQueries({ queryKey: queryKeys.adminLeads.root() });
+          }}
+        />
 
         {/* Offer builder */}
         <div className="rounded-xl border border-border bg-card p-4">

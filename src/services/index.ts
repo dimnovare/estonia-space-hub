@@ -592,6 +592,55 @@ export interface AdminLeadMatch {
   serviceTypes?: string[];
 }
 
+export interface ProviderCandidateLocation {
+  locationId: string;
+  locationName: string;
+  city: string;
+  address: string;
+  lat: number | null;
+  lng: number | null;
+  distanceKm: number | null;
+}
+
+export interface ProviderCandidate {
+  supplierId: string;
+  supplierName: string;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  serviceTypes: string[];
+  locationId: string | null;
+  locationName: string | null;
+  city: string | null;
+  address: string | null;
+  lat: number | null;
+  lng: number | null;
+  distanceKm: number | null;
+  isExactCity: boolean;
+  listingId: string | null;
+  listingTitle: string | null;
+  price: number | null;
+  priceUnit: string | null;
+  alreadyContacted: boolean;
+  lastOutreachAt: string | null;
+  otherLocations: ProviderCandidateLocation[];
+}
+
+export interface ProviderCandidateResponse {
+  items: ProviderCandidate[];
+  total: number;
+  scope: "nearby" | "all";
+  radiusKm: number;
+  anchor: { lat: number; lng: number } | null;
+}
+
+export interface ProviderCandidateSearch {
+  q?: string;
+  scope: "nearby" | "all";
+  category: "lead" | "any";
+  radiusKm: number;
+  limit: number;
+}
+
 export const adminLeadService = {
   async list(
     status: AdminLeadStatus | "all",
@@ -636,6 +685,16 @@ export const adminLeadService = {
   async matches(id: string): Promise<AdminLeadMatch[]> {
     const res = await apiClient.get<AdminLeadMatch[] | { items: AdminLeadMatch[] }>(`/admin/leads/${id}/matches`);
     return Array.isArray(res) ? res : res.items ?? [];
+  },
+  async candidates(id: string, opts: ProviderCandidateSearch): Promise<ProviderCandidateResponse> {
+    const params = new URLSearchParams({
+      scope: opts.scope,
+      category: opts.category,
+      radiusKm: String(opts.radiusKm),
+      limit: String(opts.limit),
+    });
+    if (opts.q?.trim()) params.set("q", opts.q.trim());
+    return apiClient.get<ProviderCandidateResponse>(`/admin/leads/${id}/provider-candidates?${params}`);
   },
 };
 
@@ -698,7 +757,21 @@ export interface ProviderOutreachRow {
 
 export interface OutreachResult {
   sent: ProviderOutreachRow[];
-  skipped: { supplierId: string; supplierName: string | null; reason: "no_email" | "not_found" }[];
+  skipped: { supplierId: string; supplierName: string | null; reason: "no_email" | "not_found" | "already_contacted" }[];
+}
+
+export interface OutreachPreviewItem {
+  supplierId: string;
+  supplierName: string | null;
+  email: string | null;
+  language: string | null;
+  subject: string | null;
+  textBody: string | null;
+  skipReason: "not_found" | "no_email" | "already_contacted" | null;
+}
+
+export interface OutreachPreviewResponse {
+  recipients: OutreachPreviewItem[];
 }
 
 export const adminOfferService = {
@@ -724,8 +797,11 @@ export const adminOfferService = {
   async send(id: string): Promise<AdminOffer> {
     return apiClient.post<AdminOffer>(`/admin/offers/${id}/send`, {});
   },
-  async outreach(leadId: string, supplierIds: string[]): Promise<OutreachResult> {
-    return apiClient.post<OutreachResult>(`/admin/leads/${leadId}/outreach`, { supplierIds });
+  async previewOutreach(leadId: string, supplierIds: string[]): Promise<OutreachPreviewResponse> {
+    return apiClient.post<OutreachPreviewResponse>(`/admin/leads/${leadId}/outreach/preview`, { supplierIds });
+  },
+  async outreach(leadId: string, supplierIds: string[], resend = false): Promise<OutreachResult> {
+    return apiClient.post<OutreachResult>(`/admin/leads/${leadId}/outreach`, { supplierIds, resend });
   },
   async listOutreach(leadId: string): Promise<ProviderOutreachRow[]> {
     const res = await apiClient.get<ProviderOutreachRow[] | { items: ProviderOutreachRow[] }>(`/admin/leads/${leadId}/outreach`);

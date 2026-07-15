@@ -97,4 +97,32 @@ describe("translation completeness", () => {
       "offer.yourRequest": "Jūsų užklausa",
     });
   });
+
+  it("uses the approved provider discovery and outreach review copy in every operator language", () => {
+    const providerCopy = {
+      "admin.leads.stageProviders": ["Leia ja võta partneritega ühendust", "Find and contact providers", "Найдите поставщиков и свяжитесь с ними", "Atrodi pakalpojumu sniedzējus un sazinies", "Raskite paslaugų teikėjus ir susisiekite"],
+      "admin.leads.searchProviders": ["Otsi partnereid, linnu, aadresse või kontakte", "Search providers, cities, addresses or contacts", "Поиск по поставщикам, городам, адресам или контактам", "Meklē pakalpojumu sniedzējus, pilsētas, adreses vai kontaktus", "Ieškokite paslaugų teikėjų, miestų, adresų ar kontaktų"],
+      "admin.leads.scopeNearby": ["Läheduses", "Nearby", "Рядом", "Tuvumā", "Netoliese"],
+      "admin.leads.scopeAll": ["Kogu Eesti", "All Estonia", "Вся Эстония", "Visa Igaunija", "Visa Estija"],
+      "admin.leads.allServices": ["Kõik teenused", "All services", "Все услуги", "Visi pakalpojumi", "Visos paslaugos"],
+      "admin.leads.radiusKm": ["{count} km", "{count} km", "{count} км", "{count} km", "{count} km"],
+      "admin.leads.distanceUnavailable": ["Vahemaa pole saadaval", "Distance unavailable", "Расстояние недоступно", "Attālums nav pieejams", "Atstumas nepasiekiamas"],
+      "admin.leads.otherLocations": ["Muud asukohad", "Other locations", "Другие адреса", "Citas atrašanās vietas", "Kitos vietos"],
+      "admin.leads.noEmail": ["E-posti aadress puudub", "No email address", "Нет адреса электронной почты", "Nav e-pasta adreses", "Nėra el. pašto adreso"],
+      "admin.leads.alreadyContacted": ["Juba ühendust võetud", "Already contacted", "Уже связались", "Jau sazinājāmies", "Jau susisiekta"],
+      "admin.leads.reviewProviders": ["Vaata üle sõnum {count} partnerile", "Review message to {count} providers", "Проверить сообщение для {count} поставщиков", "Pārskatīt ziņojumu {count} pakalpojumu sniedzējiem", "Peržiūrėti žinutę {count} paslaugų teikėjams"],
+      "admin.leads.reviewMessageTitle": ["Vaata partneripäring üle", "Review provider outreach", "Проверить обращение к поставщикам", "Pārskatīt ziņojumu pakalpojumu sniedzējiem", "Peržiūrėti užklausą paslaugų teikėjams"],
+      "admin.leads.recipient": ["Saaja", "Recipient", "Получатель", "Saņēmējs", "Gavėjas"],
+      "admin.leads.subject": ["Teema", "Subject", "Тема", "Temats", "Tema"],
+      "admin.leads.message": ["Sõnum", "Message", "Сообщение", "Ziņojums", "Žinutė"],
+      "admin.leads.sendOutreach": ["Saada saadavuspäring", "Send availability request", "Отправить запрос о доступности", "Nosūtīt pieejamības pieprasījumu", "Siųsti prieinamumo užklausą"],
+      "admin.leads.resendOutreach": ["Saada saadavuspäring uuesti", "Resend availability request", "Повторно отправить запрос о доступности", "Atkārtoti nosūtīt pieejamības pieprasījumu", "Pakartotinai siųsti prieinamumo užklausą"],
+      "admin.leads.skipAlreadyContacted": ["Varem kontaktitud partnerid jäetakse vahele", "Previously contacted providers will be skipped", "Ранее опрошенные поставщики будут пропущены", "Iepriekš uzrunātie pakalpojumu sniedzēji tiks izlaisti", "Anksčiau kontaktuoti paslaugų teikėjai bus praleisti"],
+    } as const;
+    const languages = [translations.et, translations.en, translations.ru, translations.lv, translations.lt];
+
+    Object.entries(providerCopy).forEach(([key, values]) => {
+      values.forEach((value, index) => expect(languages[index][key]).toBe(value));
+    });
+  });
 });

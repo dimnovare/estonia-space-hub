@@ -275,7 +275,7 @@ export async function stubConciergeLead(page: Page, status = 200): Promise<void>
 /** Stub the admin match-queue endpoints: list, metrics and per-lead matches. */
 export async function stubAdminLeads(
   page: Page,
-  opts: { items?: Json[]; metrics?: Json; matches?: Json[] } = {},
+  opts: { items?: Json[]; metrics?: Json; matches?: Json[]; candidates?: Json[]; candidateStatus?: number } = {},
 ): Promise<void> {
   const items = opts.items ?? [];
   const metrics = {
@@ -289,8 +289,26 @@ export async function stubAdminLeads(
     ...(opts.metrics ?? {}),
   };
   await page.route(/\/admin\/leads(\b|\/|\?|$)/, (route) => {
-    const path = new URL(route.request().url()).pathname;
+    const url = new URL(route.request().url());
+    const path = url.pathname;
     if (/\/admin\/leads\/metrics/.test(path)) return json(route, metrics);
+    if (/\/admin\/leads\/[^/]+\/provider-candidates/.test(path)) {
+      if (opts.candidateStatus && opts.candidateStatus >= 400) return json(route, { message: "candidate lookup failed" }, opts.candidateStatus);
+      const q = url.searchParams.get("q")?.toLowerCase().trim();
+      const candidates = (opts.candidates ?? []).filter((candidate) => {
+        if (!q) return true;
+        const fields = [candidate.supplierName, candidate.city, candidate.address, candidate.contactEmail, candidate.contactPhone]
+          .filter((value): value is string => typeof value === "string");
+        return fields.some((value) => value.toLowerCase().includes(q));
+      });
+      return json(route, {
+        items: candidates,
+        total: candidates.length,
+        scope: url.searchParams.get("scope") ?? "nearby",
+        radiusKm: Number(url.searchParams.get("radiusKm") ?? 25),
+        anchor: { lat: 58.3776, lng: 26.729 },
+      });
+    }
     if (/\/admin\/leads\/[^/]+\/matches/.test(path)) return json(route, opts.matches ?? []);
     if (route.request().method() === "PATCH") return json(route, { ok: true });
     return json(route, { total: items.length, page: 1, limit: 50, items });
@@ -337,6 +355,19 @@ export function adminMatch(over: Json = {}): Json {
   };
 }
 
+/** Seven varied providers around Tartu for discovery and outreach review tests. */
+export function tartuProviderCandidates(): Json[] {
+  return [
+    { supplierId: "sup-rare", supplierName: "Rare Minilaod", contactEmail: "hello@rare.ee", contactPhone: "+372 5111 0001", serviceTypes: ["warehouse"], locationId: "loc-rare", locationName: "Kesklinna ladu", city: "Tartu", address: "Riia 1, Tartu", lat: 58.378, lng: 26.73, distanceKm: 0.6, isExactCity: true, listingId: "listing-rare", listingTitle: "Miniladu 5 m²", price: 49, priceUnit: "€/kuu", alreadyContacted: false, lastOutreachAt: null, otherLocations: [] },
+    { supplierId: "sup-kapsel", supplierName: "Kapsel Minilaod", contactEmail: "info@kapsel.ee", contactPhone: "+372 5111 0002", serviceTypes: ["warehouse"], locationId: "loc-kapsel", locationName: "Annelinna ladu", city: "Tartu", address: "Kalda tee 4, Tartu", lat: 58.37, lng: 26.75, distanceKm: 1.8, isExactCity: true, listingId: "listing-kapsel", listingTitle: "Miniladu 8 m²", price: 69, priceUnit: "€/kuu", alreadyContacted: false, lastOutreachAt: null, otherLocations: [] },
+    { supplierId: "sup-panicom", supplierName: "Panicom Miniladu", contactEmail: "sales@panicom.ee", contactPhone: "+372 5111 0003", serviceTypes: ["warehouse"], locationId: "loc-panicom", locationName: "Ropka ladu", city: "Tartu", address: "Tehase 12, Tartu", lat: 58.35, lng: 26.72, distanceKm: 3.2, isExactCity: true, listingId: "listing-panicom", listingTitle: "Miniladu 10 m²", price: 89, priceUnit: "€/kuu", alreadyContacted: false, lastOutreachAt: null, otherLocations: [{ locationId: "loc-panicom-2", locationName: "Tamme ladu", city: "Tartu", address: "Tamme pst 9, Tartu", lat: 58.36, lng: 26.7, distanceKm: 4.1 }] },
+    { supplierId: "sup-north", supplierName: "North Storage", contactEmail: "hello@north.ee", contactPhone: null, serviceTypes: ["warehouse"], locationId: "loc-north", locationName: "Raadi ladu", city: "Tartu", address: "Narva mnt 99, Tartu", lat: 58.39, lng: 26.76, distanceKm: 4.7, isExactCity: true, listingId: null, listingTitle: null, price: null, priceUnit: null, alreadyContacted: false, lastOutreachAt: null, otherLocations: [] },
+    { supplierId: "sup-noemail", supplierName: "Emajõe Laod", contactEmail: null, contactPhone: "+372 5111 0005", serviceTypes: ["warehouse"], locationId: "loc-noemail", locationName: "Ihaste ladu", city: "Tartu", address: "Kalda tee 28, Tartu", lat: 58.34, lng: 26.78, distanceKm: 5.6, isExactCity: true, listingId: null, listingTitle: null, price: null, priceUnit: null, alreadyContacted: false, lastOutreachAt: null, otherLocations: [] },
+    { supplierId: "sup-contacted", supplierName: "Tartu Ladu", contactEmail: "contact@tartuladu.ee", contactPhone: "+372 5111 0006", serviceTypes: ["warehouse"], locationId: "loc-contacted", locationName: "Ravila ladu", city: "Tartu", address: "Ravila 53, Tartu", lat: 58.37, lng: 26.68, distanceKm: 6.9, isExactCity: true, listingId: "listing-contacted", listingTitle: "Laoboks 12 m²", price: 79, priceUnit: "€/kuu", alreadyContacted: true, lastOutreachAt: "2026-07-10T09:30:00Z", otherLocations: [] },
+    { supplierId: "sup-far", supplierName: "Lõuna Laoruum", contactEmail: "info@lounaladu.ee", contactPhone: "+372 5111 0007", serviceTypes: ["warehouse"], locationId: "loc-far", locationName: "Tõrvandi ladu", city: "Tõrvandi", address: "Ringtee 8, Tõrvandi", lat: 58.31, lng: 26.7, distanceKm: 8.4, isExactCity: false, listingId: "listing-far", listingTitle: "Ladu 15 m²", price: 99, priceUnit: "€/kuu", alreadyContacted: false, lastOutreachAt: null, otherLocations: [] },
+  ];
+}
+
 /**
  * Stateful stub for the admin offer loop (overhaul spec §5.1):
  * GET/POST /admin/leads/{id}/outreach, GET/POST /admin/leads/{id}/offers,
@@ -346,20 +377,35 @@ export function adminMatch(over: Json = {}): Json {
  */
 export async function stubOfferLoop(
   page: Page,
-  opts: { offers?: Json[]; outreach?: Json[] } = {},
+  opts: { offers?: Json[]; outreach?: Json[]; previewStatus?: number; outreachStatus?: number } = {},
 ): Promise<void> {
   const offers: Json[] = [...(opts.offers ?? [])];
   const outreach: Json[] = [...(opts.outreach ?? [])];
   let seq = 0;
   await page.route(
-    /\/admin\/(leads\/[^/]+\/(outreach|offers)|offers\/[^/]+(\/send)?|outreach\/[^/]+)(\?|$)/,
+    /\/admin\/(leads\/[^/]+\/(outreach(?:\/preview)?|offers)|offers\/[^/]+(\/send)?|outreach\/[^/]+)(\?|$)/,
     (route) => {
       const req = route.request();
       const path = new URL(req.url()).pathname;
       const method = req.method();
 
       if (/\/admin\/leads\/[^/]+\/outreach/.test(path)) {
+        if (/\/outreach\/preview$/.test(path) && method === "POST") {
+          if (opts.previewStatus && opts.previewStatus >= 400) return json(route, { message: "preview failed" }, opts.previewStatus);
+          const body = (req.postDataJSON() ?? {}) as { supplierIds?: string[] };
+          const recipients = (body.supplierIds ?? []).map((supplierId) => ({
+            supplierId,
+            supplierName: supplierId === "sup-panicom" ? "Panicom Miniladu" : "Acme Storage",
+            email: supplierId === "sup-panicom" ? "sales@panicom.ee" : "acme@example.com",
+            language: "en",
+            subject: "Ruumly availability request",
+            textBody: "Ruumly is looking for storage availability in Tartu.",
+            skipReason: null,
+          }));
+          return json(route, { recipients });
+        }
         if (method === "POST") {
+          if (opts.outreachStatus && opts.outreachStatus >= 400) return json(route, { message: "send failed" }, opts.outreachStatus);
           const body = (req.postDataJSON() ?? {}) as { supplierIds?: string[] };
           const rows = (body.supplierIds ?? []).map((sid) => ({
             id: `or-${++seq}`, demandLeadId: "lead-1", supplierId: sid,

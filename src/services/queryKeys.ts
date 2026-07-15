@@ -146,6 +146,10 @@ export const queryKeys = {
     list:    (status: string, page: number, filters = "") => ["admin-leads", "list", status, page, filters] as const,
     metrics: () => ["admin-leads", "metrics"] as const,
     matches: (id: string) => ["admin-leads", "matches", id] as const,
+    candidates: (
+      id: string,
+      filters: { q?: string; scope: "nearby" | "all"; category: "lead" | "any"; radiusKm: number; limit: number },
+    ) => ["admin-leads", "provider-candidates", id, filters.q ?? "", filters.scope, filters.category, filters.radiusKm, filters.limit] as const,
     outreach: (id: string) => ["admin-leads", "outreach", id] as const,
     offers:   (id: string) => ["admin-leads", "offers", id] as const,
   },
