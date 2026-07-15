@@ -797,10 +797,10 @@ export const adminOfferService = {
   async send(id: string): Promise<AdminOffer> {
     return apiClient.post<AdminOffer>(`/admin/offers/${id}/send`, {});
   },
-  async previewOutreach(leadId: string, supplierIds: string[]): Promise<OutreachPreviewResponse> {
+  async previewOutreach(leadId: string, supplierIds: readonly string[]): Promise<OutreachPreviewResponse> {
     return apiClient.post<OutreachPreviewResponse>(`/admin/leads/${leadId}/outreach/preview`, { supplierIds });
   },
-  async outreach(leadId: string, supplierIds: string[], resend = false): Promise<OutreachResult> {
+  async outreach(leadId: string, supplierIds: readonly string[], resend = false): Promise<OutreachResult> {
     return apiClient.post<OutreachResult>(`/admin/leads/${leadId}/outreach`, { supplierIds, resend });
   },
   async listOutreach(leadId: string): Promise<ProviderOutreachRow[]> {

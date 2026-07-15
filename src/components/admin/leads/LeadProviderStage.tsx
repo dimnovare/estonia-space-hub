@@ -6,6 +6,7 @@ import {
   adminLeadService,
   adminOfferService,
   type AdminLead,
+  type OutreachResult,
   type OutreachPreviewItem,
   type ProviderCandidate,
   type ProviderOutreachRow,
@@ -28,6 +29,11 @@ interface LeadProviderStageProps {
   onOutreachComplete(): void;
 }
 
+interface OutreachReview {
+  supplierIds: readonly string[];
+  recipients: OutreachPreviewItem[];
+}
+
 const RADIUS_KM = 25;
 const LIMIT = 50;
 
@@ -35,10 +41,6 @@ function formatDistance(value: number | null, t: (key: string) => string) {
   return value == null
     ? t("admin.leads.distanceUnavailable")
     : t("admin.leads.radiusKm").replace("{count}", String(value));
-}
-
-function skipReason(item: OutreachPreviewItem) {
-  return item.skipReason ?? "";
 }
 
 export function LeadProviderStage({ lead, outreachRows, onAddCandidate, onOutreachComplete }: LeadProviderStageProps) {
@@ -49,7 +51,8 @@ export function LeadProviderStage({ lead, outreachRows, onAddCandidate, onOutrea
   const [category, setCategory] = useState<"lead" | "any">("lead");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expandedLocations, setExpandedLocations] = useState<Set<string>>(new Set());
-  const [preview, setPreview] = useState<OutreachPreviewItem[] | null>(null);
+  const [review, setReview] = useState<OutreachReview | null>(null);
+  const [skippedResults, setSkippedResults] = useState<OutreachResult["skipped"]>([]);
   const [resendConfirmOpen, setResendConfirmOpen] = useState(false);
 
   useEffect(() => {
@@ -64,20 +67,22 @@ export function LeadProviderStage({ lead, outreachRows, onAddCandidate, onOutrea
     retry: false,
   });
   const previewMutation = useMutation({
-    mutationFn: () => adminOfferService.previewOutreach(lead.id, [...selected]),
-    onSuccess: ({ recipients }) => setPreview(recipients),
+    mutationFn: (supplierIds: readonly string[]) => adminOfferService.previewOutreach(lead.id, supplierIds),
+    onSuccess: ({ recipients }, supplierIds) => setReview({ supplierIds, recipients }),
     onError: (error: Error) => toast.error(error.message || t("toast.error")),
   });
   const sendMutation = useMutation({
-    mutationFn: (resend: boolean) => adminOfferService.outreach(lead.id, [...selected], resend),
+    mutationFn: ({ supplierIds, resend }: { supplierIds: readonly string[]; resend: boolean }) =>
+      adminOfferService.outreach(lead.id, supplierIds, resend),
     onSuccess: (result) => {
       toast.success(
         t("admin.leads.outreachSentToast")
           .replace("{sent}", String(result.sent.length))
           .replace("{skipped}", String(result.skipped.length)),
       );
+      setSkippedResults(result.skipped);
       setSelected(new Set());
-      setPreview(null);
+      setReview(null);
       setResendConfirmOpen(false);
       candidatesQuery.refetch();
       onOutreachComplete();
@@ -86,7 +91,7 @@ export function LeadProviderStage({ lead, outreachRows, onAddCandidate, onOutrea
   });
 
   const candidates = candidatesQuery.data?.items ?? [];
-  const hasAlreadyContacted = preview?.some((item) => item.skipReason === "already_contacted") ?? false;
+  const hasAlreadyContacted = review?.recipients.some((item) => item.skipReason === "already_contacted") ?? false;
   const toggleSelected = (supplierId: string) => setSelected((current) => {
     const next = new Set(current);
     if (next.has(supplierId)) next.delete(supplierId); else next.add(supplierId);
@@ -110,10 +115,10 @@ export function LeadProviderStage({ lead, outreachRows, onAddCandidate, onOutrea
           {t("admin.leads.stageProviders")}
         </h3>
         <div className="flex items-center gap-1 rounded-md border border-border bg-background p-1" role="group" aria-label={t("admin.leads.stageProviders")}>
-          <Button type="button" size="sm" variant={scope === "nearby" ? "default" : "ghost"} className="h-8" onClick={setNearby}>
+          <Button type="button" size="sm" variant={scope === "nearby" ? "default" : "ghost"} className="h-8" aria-pressed={scope === "nearby"} onClick={setNearby}>
             {t("admin.leads.scopeNearby")}
           </Button>
-          <Button type="button" size="sm" variant={scope === "all" ? "default" : "ghost"} className="h-8" onClick={setAllEstonia}>
+          <Button type="button" size="sm" variant={scope === "all" ? "default" : "ghost"} className="h-8" aria-pressed={scope === "all"} onClick={setAllEstonia}>
             {t("admin.leads.scopeAll")}
           </Button>
         </div>
@@ -128,16 +133,29 @@ export function LeadProviderStage({ lead, outreachRows, onAddCandidate, onOutrea
           placeholder={t("admin.leads.searchProviders")}
           className="h-10 min-w-0 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
-        <Button
-          type="button"
-          size="sm"
-          variant={category === "any" ? "default" : "outline"}
-          className="h-10"
-          disabled={scope !== "all"}
-          onClick={() => setCategory("any")}
-        >
-          {t("admin.leads.allServices")}
-        </Button>
+        <div className="flex items-center gap-1 rounded-md border border-border bg-background p-1" role="group" aria-label={t("admin.leads.allServices")}>
+          <Button
+            type="button"
+            size="sm"
+            variant={category === "lead" ? "default" : "ghost"}
+            className="h-8"
+            aria-pressed={category === "lead"}
+            onClick={() => setCategory("lead")}
+          >
+            {serviceTypeLabel(t, lead.category)}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={category === "any" ? "default" : "ghost"}
+            className="h-8"
+            aria-pressed={category === "any"}
+            disabled={scope !== "all"}
+            onClick={() => setCategory("any")}
+          >
+            {t("admin.leads.allServices")}
+          </Button>
+        </div>
       </div>
 
       {candidatesQuery.isLoading ? (
@@ -206,7 +224,7 @@ export function LeadProviderStage({ lead, outreachRows, onAddCandidate, onOutrea
         type="button"
         className="mt-4 h-10 w-full justify-center gap-2"
         disabled={selected.size === 0 || previewMutation.isPending}
-        onClick={() => previewMutation.mutate()}
+        onClick={() => previewMutation.mutate(Object.freeze([...selected]))}
       >
         {previewMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         {t("admin.leads.reviewProviders").replace("{count}", String(selected.size))}
@@ -230,32 +248,47 @@ export function LeadProviderStage({ lead, outreachRows, onAddCandidate, onOutrea
         )}
       </div>
 
-      <Dialog open={preview !== null} onOpenChange={(open) => { if (!open && !sendMutation.isPending) setPreview(null); }}>
+      {skippedResults.length > 0 && (
+        <div className="mt-4 border-t border-border pt-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("admin.leads.skippedOutreach")}</p>
+          <ul className="mt-2 divide-y divide-border text-sm">
+            {skippedResults.map((item) => (
+              <li key={`${item.supplierId}-${item.reason}`} className="flex min-w-0 flex-wrap items-center justify-between gap-2 py-2 first:pt-0 last:pb-0">
+                <span className="min-w-0 break-words font-medium text-navy-ink">{item.supplierName ?? item.supplierId}</span>
+                <code className="rounded bg-secondary px-2 py-0.5 text-xs text-muted-foreground">{item.reason}</code>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <Dialog open={review !== null} onOpenChange={(open) => { if (!open && !sendMutation.isPending) setReview(null); }}>
         <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
           <DialogHeader><DialogTitle>{t("admin.leads.reviewMessageTitle")}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            {preview?.map((item) => (
+            {review?.recipients.map((item) => (
               <article key={item.supplierId} className="border-b border-border pb-4 last:border-0 last:pb-0">
                 <div className="font-medium text-navy-ink">{item.supplierName ?? item.supplierId}</div>
-                {item.skipReason ? (
-                  <p className="mt-1 text-sm text-muted-foreground">{skipReason(item)}</p>
-                ) : (
-                  <>
+                {item.skipReason && <p className="mt-1 font-mono text-xs text-muted-foreground">{item.skipReason}</p>}
+                {(item.email || item.subject || item.textBody) && (
+                  <div>
                     <dl className="mt-2 grid gap-1 text-sm sm:grid-cols-[88px_minmax(0,1fr)]">
-                      <dt className="font-medium text-muted-foreground">{t("admin.leads.recipient")}</dt><dd className="break-words">{item.email}</dd>
+                      <dt className="font-medium text-muted-foreground">{t("admin.leads.recipient")}</dt><dd className="break-words">{item.email ?? "-"}</dd>
                       <dt className="font-medium text-muted-foreground">{t("admin.leads.subject")}</dt><dd className="break-words">{item.subject}</dd>
                     </dl>
                     <p className="mt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("admin.leads.message")}</p>
                     <pre className="mt-1 whitespace-pre-wrap break-words font-sans text-sm text-foreground">{item.textBody}</pre>
-                  </>
+                  </div>
                 )}
               </article>
             ))}
           </div>
-          {hasAlreadyContacted && <p className="text-sm text-muted-foreground">{t("admin.leads.skipAlreadyContacted")}</p>}
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button type="button" variant="outline" onClick={() => setPreview(null)} disabled={sendMutation.isPending}>{t("common.cancel")}</Button>
-            <Button type="button" className="w-full gap-2 sm:w-auto" disabled={sendMutation.isPending} onClick={() => hasAlreadyContacted ? setResendConfirmOpen(true) : sendMutation.mutate(false)}>
+            <Button type="button" variant="outline" onClick={() => setReview(null)} disabled={sendMutation.isPending}>{t("common.cancel")}</Button>
+            <Button type="button" className="w-full gap-2 sm:w-auto" disabled={sendMutation.isPending} onClick={() => {
+              if (hasAlreadyContacted) setResendConfirmOpen(true);
+              else if (review) sendMutation.mutate({ supplierIds: review.supplierIds, resend: false });
+            }}>
               {sendMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               {t(hasAlreadyContacted ? "admin.leads.resendOutreach" : "admin.leads.sendOutreach")}
             </Button>
@@ -267,11 +300,14 @@ export function LeadProviderStage({ lead, outreachRows, onAddCandidate, onOutrea
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t("admin.leads.resendOutreach")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("admin.leads.skipAlreadyContacted")}</AlertDialogDescription>
+            <AlertDialogDescription>{t("admin.leads.resendOutreachBody")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={sendMutation.isPending}>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction disabled={sendMutation.isPending} onClick={(event) => { event.preventDefault(); sendMutation.mutate(true); }}>
+            <AlertDialogAction disabled={sendMutation.isPending} onClick={(event) => {
+              event.preventDefault();
+              if (review) sendMutation.mutate({ supplierIds: review.supplierIds, resend: true });
+            }}>
               {t("admin.leads.resendOutreach")}
             </AlertDialogAction>
           </AlertDialogFooter>

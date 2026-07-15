@@ -19,6 +19,7 @@ import { Page, Route } from "@playwright/test";
  */
 
 type Json = Record<string, unknown>;
+type OutreachSkipReason = "no_email" | "not_found" | "already_contacted";
 
 const json = (route: Route, body: unknown, status = 200) =>
   route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
@@ -377,14 +378,23 @@ export function tartuProviderCandidates(): Json[] {
  */
 export async function stubOfferLoop(
   page: Page,
-  opts: { offers?: Json[]; outreach?: Json[]; previewStatus?: number; outreachStatus?: number } = {},
+  opts: {
+    offers?: Json[];
+    outreach?: Json[];
+    previewStatus?: number;
+    outreachStatus?: number;
+    previewDelayMs?: number;
+    sendSkipReasons?: Record<string, OutreachSkipReason>;
+  } = {},
 ): Promise<void> {
   const offers: Json[] = [...(opts.offers ?? [])];
   const outreach: Json[] = [...(opts.outreach ?? [])];
+  const candidates = tartuProviderCandidates();
+  const providerFor = (supplierId: string) => candidates.find((candidate) => candidate.supplierId === supplierId);
   let seq = 0;
   await page.route(
     /\/admin\/(leads\/[^/]+\/(outreach(?:\/preview)?|offers)|offers\/[^/]+(\/send)?|outreach\/[^/]+)(\?|$)/,
-    (route) => {
+    async (route) => {
       const req = route.request();
       const path = new URL(req.url()).pathname;
       const method = req.method();
@@ -393,27 +403,54 @@ export async function stubOfferLoop(
         if (/\/outreach\/preview$/.test(path) && method === "POST") {
           if (opts.previewStatus && opts.previewStatus >= 400) return json(route, { message: "preview failed" }, opts.previewStatus);
           const body = (req.postDataJSON() ?? {}) as { supplierIds?: string[] };
-          const recipients = (body.supplierIds ?? []).map((supplierId) => ({
-            supplierId,
-            supplierName: supplierId === "sup-panicom" ? "Panicom Miniladu" : "Acme Storage",
-            email: supplierId === "sup-panicom" ? "sales@panicom.ee" : "acme@example.com",
-            language: "en",
-            subject: "Ruumly availability request",
-            textBody: "Ruumly is looking for storage availability in Tartu.",
-            skipReason: null,
-          }));
+          if (opts.previewDelayMs) await new Promise((resolve) => setTimeout(resolve, opts.previewDelayMs));
+          const recipients = (body.supplierIds ?? []).map((supplierId) => {
+            const provider = providerFor(supplierId);
+            if (!provider) {
+              return { supplierId, supplierName: null, email: null, language: null, subject: null, textBody: null, skipReason: "not_found" };
+            }
+            const supplierName = String(provider.supplierName);
+            const email = typeof provider.contactEmail === "string" ? provider.contactEmail : null;
+            return {
+              supplierId,
+              supplierName,
+              email,
+              language: "en",
+              subject: `Ruumly availability request for ${supplierName}`,
+              textBody: `Exact reviewed outreach body for ${supplierName} in Tartu.`,
+              skipReason: !email ? "no_email" : provider.alreadyContacted ? "already_contacted" : null,
+            };
+          });
           return json(route, { recipients });
         }
         if (method === "POST") {
           if (opts.outreachStatus && opts.outreachStatus >= 400) return json(route, { message: "send failed" }, opts.outreachStatus);
-          const body = (req.postDataJSON() ?? {}) as { supplierIds?: string[] };
-          const rows = (body.supplierIds ?? []).map((sid) => ({
-            id: `or-${++seq}`, demandLeadId: "lead-1", supplierId: sid,
-            supplierName: "Acme Storage", sentTo: "acme@example.com",
-            sentAt: "2026-07-10T09:30:00Z", status: "sent", note: null,
-          }));
+          const body = (req.postDataJSON() ?? {}) as { supplierIds?: string[]; resend?: boolean };
+          const rows: Json[] = [];
+          const skipped: Json[] = [];
+          for (const supplierId of body.supplierIds ?? []) {
+            const provider = providerFor(supplierId);
+            const forcedReason = opts.sendSkipReasons?.[supplierId];
+            const naturalReason: OutreachSkipReason | null = !provider
+              ? "not_found"
+              : !provider.contactEmail
+                ? "no_email"
+                : provider.alreadyContacted && !body.resend
+                  ? "already_contacted"
+                  : null;
+            const reason = forcedReason ?? naturalReason;
+            if (reason) {
+              skipped.push({ supplierId, supplierName: provider?.supplierName ?? null, reason });
+              continue;
+            }
+            rows.push({
+              id: `or-${++seq}`, demandLeadId: "lead-1", supplierId,
+              supplierName: provider!.supplierName, sentTo: provider!.contactEmail,
+              sentAt: "2026-07-10T09:30:00Z", status: "sent", note: null,
+            });
+          }
           outreach.push(...rows);
-          return json(route, { sent: rows, skipped: [] });
+          return json(route, { sent: rows, skipped });
         }
         return json(route, outreach);
       }

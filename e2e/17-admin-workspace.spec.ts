@@ -29,7 +29,7 @@ async function openWorkspace(page: import("@playwright/test").Page) {
 
 async function openEnglishWorkspace(
   page: import("@playwright/test").Page,
-  failures: { candidateStatus?: number; previewStatus?: number; outreachStatus?: number } = {},
+  options: NonNullable<Parameters<typeof stubOfferLoop>[1]> & { candidateStatus?: number } = {},
 ) {
   await seedAuth(page, adminUser);
   await stubCommon(page);
@@ -38,9 +38,9 @@ async function openEnglishWorkspace(
     items: [adminLead({ city: "Tartu", language: "en" })],
     matches: [adminMatch()],
     candidates: tartuProviderCandidates(),
-    candidateStatus: failures.candidateStatus,
+    candidateStatus: options.candidateStatus,
   });
-  await stubOfferLoop(page, failures);
+  await stubOfferLoop(page, options);
   await page.goto("/en/admin?tab=leads");
   const acceptCookies = page.getByRole("button", { name: "Accept" });
   if (await acceptCookies.isVisible()) await acceptCookies.click();
@@ -92,6 +92,92 @@ test.describe("Admin lead workspace", () => {
     await expect(page.getByRole("dialog")).toContainText("sales@panicom.ee");
   });
 
+  test("outreach sends the immutable reviewed provider snapshot", async ({ page }) => {
+    await openEnglishWorkspace(page, { previewDelayMs: 400 });
+
+    await page.getByRole("checkbox", { name: "Panicom Miniladu" }).check();
+    await page.getByRole("button", { name: /review message to 1 provider/i }).click();
+    await page.getByRole("checkbox", { name: "Rare Minilaod" }).check();
+    await expect(page.getByRole("dialog")).toContainText("sales@panicom.ee");
+    await expect(page.getByRole("dialog")).not.toContainText("hello@rare.ee");
+
+    const sendRequest = page.waitForRequest((request) =>
+      request.method() === "POST" && new URL(request.url()).pathname.endsWith("/admin/leads/lead-1/outreach"));
+    await page.getByRole("dialog").getByRole("button", { name: "Send availability request" }).click();
+    expect((await sendRequest).postDataJSON()).toEqual({ supplierIds: ["sup-panicom"], resend: false });
+  });
+
+  test("already-contacted provider shows exact message and requires explicit resend", async ({ page }) => {
+    await openEnglishWorkspace(page);
+
+    await page.getByRole("checkbox", { name: "Tartu Ladu" }).check();
+    await page.getByRole("button", { name: /review message to 1 provider/i }).click();
+    const review = page.getByRole("dialog");
+    await expect(review).toContainText("contact@tartuladu.ee");
+    await expect(review).toContainText("Ruumly availability request for Tartu Ladu");
+    await expect(review).toContainText("Exact reviewed outreach body for Tartu Ladu in Tartu.");
+    await expect(review).toContainText("already_contacted");
+    await review.getByRole("button", { name: "Resend availability request" }).click();
+    const confirmation = page.getByRole("alertdialog");
+    await expect(confirmation).toContainText(/explicitly resends/i);
+
+    const resendRequest = page.waitForRequest((request) =>
+      request.method() === "POST" && new URL(request.url()).pathname.endsWith("/admin/leads/lead-1/outreach"));
+    await confirmation.getByRole("button", { name: "Resend availability request" }).click();
+    expect((await resendRequest).postDataJSON()).toEqual({ supplierIds: ["sup-contacted"], resend: true });
+    await expect(page.getByText("contact@tartuladu.ee").last()).toBeVisible();
+  });
+
+  test("partial outreach keeps every successful skip reason visible", async ({ page }) => {
+    await openEnglishWorkspace(page, {
+      sendSkipReasons: {
+        "sup-rare": "no_email",
+        "sup-kapsel": "not_found",
+        "sup-north": "already_contacted",
+      },
+    });
+
+    for (const provider of ["Panicom Miniladu", "Rare Minilaod", "Kapsel Minilaod", "North Storage"]) {
+      await page.getByRole("checkbox", { name: provider }).check();
+    }
+    await page.getByRole("button", { name: /review message to 4 providers/i }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Send availability request" }).click();
+
+    await expect(page.getByText("no_email", { exact: true })).toBeVisible();
+    await expect(page.getByText("not_found", { exact: true })).toBeVisible();
+    await expect(page.getByText("already_contacted", { exact: true })).toBeVisible();
+    await expect(page.getByText("sales@panicom.ee").last()).toBeVisible();
+  });
+
+  test("provider category control toggles both ways with pressed state", async ({ page }) => {
+    await openEnglishWorkspace(page);
+    const candidateUrls: string[] = [];
+    page.on("request", (request) => {
+      if (request.url().includes("provider-candidates")) candidateUrls.push(request.url());
+    });
+
+    const nearby = page.getByRole("button", { name: "Nearby", exact: true });
+    const allEstonia = page.getByRole("button", { name: "All Estonia", exact: true });
+    await expect(nearby).toHaveAttribute("aria-pressed", "true");
+    await expect(allEstonia).toHaveAttribute("aria-pressed", "false");
+    await allEstonia.click();
+    await expect(allEstonia).toHaveAttribute("aria-pressed", "true");
+
+    const allServices = page.getByRole("button", { name: "All services", exact: true });
+    const leadService = page.getByRole("button", { name: "Storage", exact: true });
+    const anyRequest = page.waitForRequest((request) => request.url().includes("provider-candidates") && request.url().includes("category=any"));
+    await allServices.click();
+    await anyRequest;
+    await expect(allServices).toHaveAttribute("aria-pressed", "true");
+    await expect(leadService).toHaveAttribute("aria-pressed", "false");
+
+    await leadService.click();
+    await expect(leadService).toHaveAttribute("aria-pressed", "true");
+    await expect(allServices).toHaveAttribute("aria-pressed", "false");
+    expect(candidateUrls.some((url) => url.includes("scope=all") && url.includes("category=lead"))).toBe(true);
+    expect(candidateUrls.some((url) => url.includes("scope=all") && url.includes("category=any"))).toBe(true);
+  });
+
   test("provider stage fits mobile without clipped primary action", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await openEnglishWorkspace(page);
@@ -128,14 +214,14 @@ test.describe("Admin lead workspace", () => {
     await expect(page.getByText(/saadavuspäringuid pole veel saadetud/i)).toBeVisible();
     await page.getByRole("checkbox", { name: "Rare Minilaod" }).check();
     await page.getByRole("button", { name: /vaata üle sõnum 1 partnerile/i }).click();
-    await expect(page.getByRole("dialog")).toContainText("acme@example.com");
+    await expect(page.getByRole("dialog")).toContainText("hello@rare.ee");
     await page.getByRole("dialog").getByRole("button", { name: /saada saadavuspäring/i }).click();
 
     // The stateful stub records the row; the stage refetches and lists it.
-    await expect(page.getByText("acme@example.com").last()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("hello@rare.ee").last()).toBeVisible({ timeout: 10000 });
     await expect(page.getByText("Saadetud").last()).toBeVisible();
     // Timeline picks up the outreach event.
-    await expect(page.getByText(/saadavuspäring → acme storage/i)).toBeVisible();
+    await expect(page.getByText(/saadavuspäring → rare minilaod/i)).toBeVisible();
   });
 
   test("offer builder: create → add option → save → send with confirm → sent badge", async ({ page }) => {
