@@ -934,6 +934,9 @@ export const locationService = {
     description?: string;
     vatRate?: number;
     pricesIncludeVat: boolean;
+    depositAmount?: number;
+    requiresLicenseCategory?: string;
+    minBookingMonths?: number;
     // Boolean feature toggles + string-valued vertical attributes (trailerType,
     // crewSize, vanSize) — all stored in the listing Features JSON.
     features?: Record<string, boolean | string>;

@@ -112,7 +112,7 @@ class ApiClient {
           // Surface a retryable error and KEEP the session — don't log the user out
           // on a server blip (mirrors AuthContext bootstrap's soft-failure tolerance).
           // Only a hard 401 from /auth/refresh (result.hardInvalid) clears below.
-          if (!result.ok && !result.hardInvalid) {
+          if (result.ok === false && !result.hardInvalid) {
             const transient = new Error("Temporary server error. Please try again.") as ApiError;
             transient.status = 503;
             throw transient;

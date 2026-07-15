@@ -44,6 +44,7 @@ function dateToIso(d: Date): string {
 }
 
 type SubmitPhase = "submitting" | "sending" | "waiting" | "done";
+type PaymentMethod = import("@/services/types").CreateBookingInput["paymentMethod"];
 
 function formatDuration(start: string, end: string, t: (k: string) => string): string {
   const s = new Date(start);
@@ -152,17 +153,20 @@ export default function BookingPage() {
   );
   const initialExtras = params.get("extras")?.split(",").filter(Boolean) || [];
   const [selectedExtras, setSelectedExtras] = useState<string[]>(initialExtras);
-  const [paymentMethod, setPaymentMethod] = useState("bank_transfer");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("bank_transfer");
   const [bankInstructions, setBankInstructions] = useState<import("@/services/types").BankTransferInstructions | null>(null);
   // Which payment methods this supplier + platform actually support. Bank transfer
   // (our IBAN, no PSP) when the platform has it enabled and the partner opted into
   // direct payment; card only if the partner has Ruumly/Montonio payments on (off
   // for now); pay-later when the partner accepts direct payment.
-  const availableMethods = [
+  const availableMethodCandidates: Array<PaymentMethod | null> = [
     bankTransferEnabled && supplier?.directPaymentEnabled ? "bank_transfer" : null,
     supplier?.ruumlyPaymentEnabled ? "card" : null,
     supplier?.directPaymentEnabled ? "later" : null,
-  ].filter(Boolean) as string[];
+  ];
+  const availableMethods = availableMethodCandidates.filter(
+    (method): method is PaymentMethod => method !== null,
+  );
   useEffect(() => {
     if (availableMethods.length > 0 && !availableMethods.includes(paymentMethod)) {
       setPaymentMethod(availableMethods[0]);
@@ -368,7 +372,7 @@ export default function BookingPage() {
       contactName: contactForm.getValues("name"),
       contactEmail: requestEmail,
       contactPhone: contactForm.getValues("phone"),
-      paymentMethod: isRebateModel ? "later" : (paymentMethod as "bank_transfer" | "card" | "later"),
+      paymentMethod: isRebateModel ? "later" : paymentMethod,
       notes: contactForm.getValues("notes"),
     }).then((bookingResult: any) => {
       // Record the email actually sent so payment retry can't drift to a stale value.
@@ -1013,11 +1017,17 @@ export default function BookingPage() {
                   </div>
                 ) : (
                 <div className="space-y-3" role="radiogroup" aria-labelledby="booking-payment-heading">
-                  {[
+                  {([
                     { id: "bank_transfer", icon: Building2, label: t("booking.bankTransfer"), desc: t("booking.bankTransferDesc"), recommended: true },
                     { id: "card", icon: CreditCard, label: t("booking.creditCard"), desc: t("booking.creditCardDesc") },
                     { id: "later", icon: Clock, label: t("booking.payLater"), desc: t("booking.payLaterDesc") },
-                  ].filter((pm) => availableMethods.includes(pm.id)).map((pm) => {
+                  ] satisfies Array<{
+                    id: PaymentMethod;
+                    icon: typeof Building2;
+                    label: string;
+                    desc: string;
+                    recommended?: boolean;
+                  }>).filter((pm) => availableMethods.includes(pm.id)).map((pm) => {
                     const Icon = pm.icon;
                     return (
                       <div key={pm.id}>

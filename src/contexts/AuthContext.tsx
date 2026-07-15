@@ -114,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               if (profile) setUser(profile);
             } catch {}
           }
-        } else if (!result.ok && result.hardInvalid) {
+        } else if (result.ok === false && result.hardInvalid) {
           // Truly invalid session (401) — clear as before.
           tokenStore.clear();
           localStorage.removeItem("ruumly-auth");
