@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import type { LucideIcon } from "lucide-react";
 
 /**
  * ONE status badge for the whole admin (kit spec §4): icon + text + a quiet
@@ -22,7 +22,7 @@ const TONE_CLS: Record<StatusTone, string> = {
 interface Props {
   tone: StatusTone;
   label: string;
-  icon?: ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
+  icon?: LucideIcon;
   className?: string;
 }
 

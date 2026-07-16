@@ -1,7 +1,8 @@
-import type { ComponentType, ReactNode } from "react";
+import type { ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
 
 interface Props {
-  icon?: ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
+  icon?: LucideIcon;
   title: string;
   description?: string;
   action?: ReactNode;

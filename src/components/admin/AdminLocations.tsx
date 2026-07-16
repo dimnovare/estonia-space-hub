@@ -16,6 +16,7 @@ import { apiClient } from "@/services/apiClient";
 import type { SupplierLocation } from "@/services/types";
 import { toast } from "sonner";
 import { queryKeys } from "@/services/queryKeys";
+import { AdminPageHeader } from "@/components/admin/kit";
 
 // ── Bulk Import types ──
 interface BulkUnitRow {
@@ -581,28 +582,25 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
   return (
     <div>
       {/* ── Page head ── */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <span className="font-mono-label text-[11.5px] uppercase tracking-[0.2em] text-teal-deep">
-            {t("admin.locations.eyebrow")}
-          </span>
-          <h1 className="mt-1 font-display text-2xl font-bold text-navy-ink md:text-[28px]">{t("admin.locations")}</h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            {t("admin.locations.subtitle")
-              .replace("{total}", String(locations.length))
-              .replace("{published}", String(publishedCount))}
-          </p>
-        </div>
-        <Button
-          onClick={() => { setNewLoc({ ...emptyLoc, supplierId: supplierId ?? (suppliers[0]?.id ?? "") }); setAddLocOpen(true); }}
-          className="h-11 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
-        >
-          <PlusCircle className="h-[18px] w-[18px]" /> {t("admin.locations.add")}
-        </Button>
-      </div>
+      <AdminPageHeader
+        eyebrow={t("admin.nav.groupSupply")}
+        title={t("admin.locations")}
+        subtitle={t("admin.locations.subtitle")
+          .replace("{total}", String(locations.length))
+          .replace("{published}", String(publishedCount))}
+        count={locations.length || undefined}
+        actions={
+          <Button
+            onClick={() => { setNewLoc({ ...emptyLoc, supplierId: supplierId ?? (suppliers[0]?.id ?? "") }); setAddLocOpen(true); }}
+            className="h-11 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            <PlusCircle className="h-[18px] w-[18px]" /> {t("admin.locations.add")}
+          </Button>
+        }
+      />
 
       {/* ── Toolbar: free-text location search + searchable partner filter ── */}
-      <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="relative w-full lg:max-w-xs">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-foreground/70" />
           <input

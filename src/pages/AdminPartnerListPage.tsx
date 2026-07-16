@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/SEO";
 import AdminShell from "@/components/admin/AdminShell";
+import { AdminPageHeader, FilterBar, FilterChip, EmptyState } from "@/components/admin/kit";
 import { supplierService } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -36,10 +37,10 @@ export default function AdminPartnerListPage() {
   const tierBadge = (tier?: string) => {
     const v = (tier ?? "starter").toLowerCase();
     const cls = v === "premium"
-      ? "bg-accent/10 text-accent"
+      ? "bg-success/10 text-success-text"
       : v === "standard"
         ? "bg-primary/10 text-primary"
-        : "bg-secondary text-muted-foreground";
+        : "bg-secondary text-ink-2";
     return (
       <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${cls}`}>
         {t("admin.partner.featureSetBadge").replace("{value}", t(`admin.partner.featureSet.${v}`))}
@@ -48,32 +49,31 @@ export default function AdminPartnerListPage() {
   };
 
   const pageStatus = (s: any) => {
-    if (!s.slug) return <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">{t("admin.partner.pageNone")}</span>;
-    if (s.isPartnerPagePublished) return <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">{t("admin.partner.pagePublished")}</span>;
-    return <span className="rounded-full bg-warning/10 px-2 py-0.5 text-[10px] font-semibold text-warning">{t("admin.partner.pageDraft")}</span>;
+    if (!s.slug) return <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-ink-2">{t("admin.partner.pageNone")}</span>;
+    if (s.isPartnerPagePublished) return <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success-text">{t("admin.partner.pagePublished")}</span>;
+    return <span className="rounded-full bg-warning/10 px-2 py-0.5 text-[10px] font-semibold text-warning-text">{t("admin.partner.pageDraft")}</span>;
   };
 
   return (
     <AdminShell active="partners">
       <SEO title={`${t("seo.adminPartners")} — Ruumly`} description="" noindex />
-        <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="font-display text-2xl font-bold">{t("admin.partners")}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {filtered.length} / {suppliers.length}
-            </p>
-          </div>
-          <Button asChild size="sm">
-            <Link to="/admin?tab=suppliers">
-              <Plus className="mr-1 h-4 w-4" />
-              {t("admin.addPartner")}
-            </Link>
-          </Button>
-        </header>
+        <AdminPageHeader
+          eyebrow={t("admin.nav.groupSupply")}
+          title={t("admin.partners")}
+          count={`${filtered.length} / ${suppliers.length}`}
+          actions={
+            <Button asChild size="sm">
+              <Link to="/admin?tab=suppliers">
+                <Plus className="mr-1 h-4 w-4" />
+                {t("admin.addPartner")}
+              </Link>
+            </Button>
+          }
+        />
 
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <FilterBar>
+          <div className="relative min-w-[200px] max-w-sm flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -82,16 +82,11 @@ export default function AdminPartnerListPage() {
             />
           </div>
           {(["all", "active", "withPage"] as Filter[]).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              aria-pressed={filter === f}
-              className={`rounded-full px-3 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-95 sm:py-1.5 ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}
-            >
+            <FilterChip key={f} active={filter === f} onClick={() => setFilter(f)}>
               {f === "all" ? t("admin.allPartners") : f === "active" ? t("admin.activePartners") : t("admin.partnerPages")}
-            </button>
+            </FilterChip>
           ))}
-        </div>
+        </FilterBar>
 
         {isLoading ? (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -100,21 +95,17 @@ export default function AdminPartnerListPage() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border bg-secondary/30 p-10 text-center">
-            <Building2 className="mx-auto h-12 w-12 text-muted-foreground/50" />
-            <p className="mt-3 text-sm font-medium">
-              {suppliers.length === 0
-                ? t("admin.noPartnersYet")
-                : t("admin.noPartnerMatches")}
-            </p>
-            {suppliers.length === 0 && (
-              <Button asChild size="sm" className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90">
+          <EmptyState
+            icon={Building2}
+            title={suppliers.length === 0 ? t("admin.noPartnersYet") : t("admin.noPartnerMatches")}
+            action={suppliers.length === 0 ? (
+              <Button asChild size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
                 <Link to="/admin?tab=suppliers">
                   {t("admin.approveApplication")}
                 </Link>
               </Button>
-            )}
-          </div>
+            ) : undefined}
+          />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {filtered.map((s: any) => {
@@ -157,8 +148,8 @@ export default function AdminPartnerListPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span><strong className="text-foreground">{s.listingCount ?? 0}</strong> {t("admin.listingsLabel")}</span>
-                    <span><strong className="text-foreground">{s.ordersTotal ?? 0}</strong> {t("admin.ordersLabel")}</span>
+                    <span><strong className="font-data text-foreground">{s.listingCount ?? 0}</strong> {t("admin.listingsLabel")}</span>
+                    <span><strong className="font-data text-foreground">{s.ordersTotal ?? 0}</strong> {t("admin.ordersLabel")}</span>
                   </div>
                 </Link>
               );

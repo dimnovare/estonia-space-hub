@@ -15,6 +15,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/services/queryKeys";
 import { toast } from "sonner";
 import { useNavigate } from "@/i18n/routing";
+import {
+  AdminPageHeader, StatCard, FilterBar, FilterChip,
+  DataTable, DataTableHead, Th, Tr, Td, StatusBadge,
+} from "@/components/admin/kit";
+import { HEALTH_STATUS_BADGE, USER_STATUS_BADGE, FALLBACK_STATUS_BADGE } from "@/components/admin/kit/statusMaps";
 
 const inp = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
 
@@ -181,48 +186,57 @@ export default function AdminSuppliers() {
     createMutation.mutate(data);
   };
 
-  const healthColor = (h: string) => h === "healthy" ? "bg-success/10 text-success" : h === "degraded" ? "bg-warning/10 text-warning" : "bg-destructive/10 text-destructive";
-  const healthLabel = (h: string) => h === "healthy" ? t("admin.healthy") : h === "degraded" ? t("admin.degraded") : t("admin.offline");
+  const healthBadge = (h: string) => {
+    const badge = HEALTH_STATUS_BADGE[h] ?? FALLBACK_STATUS_BADGE;
+    const label = h === "healthy" ? t("admin.healthy") : h === "degraded" ? t("admin.degraded") : t("admin.offline");
+    return <StatusBadge tone={badge.tone} icon={badge.icon} label={label} />;
+  };
+  const activeBadge = (isActive: boolean) => {
+    const badge = USER_STATUS_BADGE[isActive ? "active" : "blocked"];
+    return <StatusBadge tone={badge.tone} icon={badge.icon} label={isActive ? t("admin.active") : t("admin.inactive")} />;
+  };
   const intIcon = (tp: string) => tp === "api" ? <Zap className="h-3.5 w-3.5" /> : tp === "email" ? <Mail className="h-3.5 w-3.5" /> : <Hand className="h-3.5 w-3.5" />;
 
   if (isLoading) return <div className="flex items-center justify-center py-20"><RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold">{t("admin.applications")}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{t("admin.partners.freeListingDesc")}</p>
-        </div>
-        <Button onClick={() => { setCreateForm(emptyCreate); setCreateOpen(true); }} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
-          <PlusCircle className="mr-1 h-3.5 w-3.5" /> {t("admin.addPartner")}
-        </Button>
+      <AdminPageHeader
+        eyebrow={t("admin.nav.groupSupply")}
+        title={t("admin.applications")}
+        subtitle={t("admin.partners.freeListingDesc")}
+        count={suppliers.length || undefined}
+        actions={
+          <Button onClick={() => { setCreateForm(emptyCreate); setCreateOpen(true); }} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
+            <PlusCircle className="mr-1 h-3.5 w-3.5" /> {t("admin.addPartner")}
+          </Button>
+        }
+      />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatCard size="sm" label={t("admin.totalPartners")} value={suppliers.length} />
+        <StatCard size="sm" label={t("admin.activePartners")} value={suppliers.filter(s => s.isActive).length} />
+        <StatCard size="sm" label={t("admin.publishedPages")} value={suppliers.filter(s => s.isPartnerPagePublished).length} />
+        <StatCard size="sm" label={t("admin.optionalFeatureMrr")} value={`€${suppliers.reduce((s, sup) => s + sup.revenue, 0).toLocaleString()}`} />
       </div>
-      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="card-elevated p-4"><div className="text-sm text-muted-foreground">{t("admin.totalPartners")}</div><div className="mt-1 font-display text-2xl font-bold">{suppliers.length}</div></div>
-        <div className="card-elevated p-4"><div className="text-sm text-muted-foreground">{t("admin.activePartners")}</div><div className="mt-1 font-display text-2xl font-bold text-success">{suppliers.filter(s => s.isActive).length}</div></div>
-        <div className="card-elevated p-4"><div className="text-sm text-muted-foreground">{t("admin.publishedPages")}</div><div className="mt-1 font-display text-2xl font-bold">{suppliers.filter(s => s.isPartnerPagePublished).length}</div></div>
-        <div className="card-elevated p-4"><div className="text-sm text-muted-foreground">{t("admin.optionalFeatureMrr")}</div><div className="mt-1 font-display text-2xl font-bold">€{suppliers.reduce((s, sup) => s + sup.revenue, 0).toLocaleString()}</div></div>
-      </div>
-      <div className="mt-6 flex flex-wrap items-center gap-2">
+      <FilterBar className="mb-0 mt-6">
         {(["all", "active", "inactive"] as const).map(f => (
-          <button key={f} onClick={() => setFilter(f)} className={`rounded-full px-3 py-1.5 text-xs font-medium ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
+          <FilterChip key={f} active={filter === f} onClick={() => setFilter(f)}>
             {f === "all" ? t("admin.all") : f === "active" ? t("admin.active") : t("admin.inactive")}
-          </button>
+          </FilterChip>
         ))}
-        <select value={countryFilter} onChange={(e) => setCountryFilter(e.target.value as any)} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs">
+        <select value={countryFilter} onChange={(e) => setCountryFilter(e.target.value as any)} className="min-h-[36px] rounded-full border border-border bg-card px-3.5 py-1.5 text-[13px] font-medium text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <option value="all">{t("admin.allCountries")}</option>
           <option value="EE">{t("admin.countryEE")}</option>
           <option value="LV">{t("admin.countryLV")}</option>
           <option value="LT">{t("admin.countryLT")}</option>
         </select>
-        <select value={tierFilter} onChange={(e) => setTierFilter(e.target.value as any)} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs">
+        <select value={tierFilter} onChange={(e) => setTierFilter(e.target.value as any)} className="min-h-[36px] rounded-full border border-border bg-card px-3.5 py-1.5 text-[13px] font-medium text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <option value="all">{t("admin.allFeatureSets")}</option>
           <option value="starter">{t("admin.partner.featureSet.starter")}</option>
           <option value="standard">{t("admin.partner.featureSet.standard")}</option>
           <option value="premium">{t("admin.partner.featureSet.premium")}</option>
         </select>
-      </div>
+      </FilterBar>
       {/* Mobile cards */}
       <div className="mt-4 space-y-2 md:hidden">
         {filtered.map(s => (
@@ -232,13 +246,13 @@ export default function AdminSuppliers() {
                 <p className="text-sm font-medium">{s.name}</p>
                 <p className="text-[10px] text-muted-foreground">{s.contactEmail}</p>
               </div>
-              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s.isActive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{s.isActive ? t("admin.active") : t("admin.inactive")}</span>
+              {activeBadge(s.isActive)}
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${INTEGRATION_TYPE_CONFIG[s.integrationType].color}`}>{intIcon(s.integrationType)} {t(INTEGRATION_TYPE_CONFIG[s.integrationType].labelKey) || INTEGRATION_TYPE_CONFIG[s.integrationType].label}</span>
-              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${healthColor(s.integrationHealth)}`}>{healthLabel(s.integrationHealth)}</span>
-              <span className="text-xs text-muted-foreground">{s.listingCount} {t("admin.listingsLabel")}</span>
-              <span className="text-xs font-medium">€{s.revenue.toLocaleString()}</span>
+              {healthBadge(s.integrationHealth)}
+              <span className="text-xs text-muted-foreground"><span className="font-data">{s.listingCount}</span> {t("admin.listingsLabel")}</span>
+              <span className="font-data text-xs font-medium">€{s.revenue.toLocaleString()}</span>
               <span className="text-[10px] rounded-full bg-secondary text-muted-foreground px-2 py-0.5 font-medium">
                 {t(`admin.partner.featureSet.${(s.tier ?? "starter").toLowerCase()}`)}
               </span>
@@ -247,104 +261,98 @@ export default function AdminSuppliers() {
         ))}
       </div>
       {/* Desktop table */}
-      <div className="mt-4 hidden rounded-xl border border-border md:block">
-        <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="border-b border-border bg-secondary/50">
-            <tr>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.partner")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.contact")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.integration")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.health")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.listingsCount")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.ordersCount")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.stats.revenue")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.status")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.actions")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(s => (
-              <tr key={s.id} className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors">
-                <td className="px-4 py-3"><div className="font-medium">{s.name}{!s.isActive && <span className="ml-2 rounded-full bg-destructive/10 px-2 py-0.5 text-xs text-destructive">{t("admin.deactivated") || "Deactivated"}</span>}</div><div className="text-[10px] text-muted-foreground font-mono">{s.registryCode}</div></td>
-                <td className="px-4 py-3"><div className="text-xs">{s.contactName}</div><div className="text-[10px] text-muted-foreground">{s.contactEmail}</div></td>
-                <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${INTEGRATION_TYPE_CONFIG[s.integrationType].color}`}>{intIcon(s.integrationType)} {t(INTEGRATION_TYPE_CONFIG[s.integrationType].labelKey) || INTEGRATION_TYPE_CONFIG[s.integrationType].label}</span></td>
-                <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${healthColor(s.integrationHealth)}`}>{healthLabel(s.integrationHealth)}</span></td>
-                <td className="px-4 py-3 text-muted-foreground">{s.listingCount}</td>
-                <td className="px-4 py-3 text-muted-foreground">{s.ordersTotal}</td>
-                <td className="px-4 py-3 font-medium">€{s.revenue.toLocaleString()}</td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-wrap items-center gap-1">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s.isActive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{s.isActive ? t("admin.active") : t("admin.inactive")}</span>
-                    <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                      {t(`admin.partner.featureSet.${(s.tier ?? "starter").toLowerCase()}`)}
-                    </span>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-1">
-                    <Button variant="outline" size="sm" className="text-xs" onClick={() => { setSelected(s); setTestResult(null); }}>{t("admin.view")}</Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      title={t("admin.suppliers.viewDashboard")}
-                      onClick={(e) => { e.stopPropagation(); navigate(`/provider/dashboard?supplierId=${s.id}`); }}
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        </div>
-      </div>
+      <DataTable className="mt-4 hidden md:block">
+        <DataTableHead>
+          <tr>
+            <Th>{t("admin.partner")}</Th>
+            <Th>{t("admin.contact")}</Th>
+            <Th>{t("admin.integration")}</Th>
+            <Th>{t("admin.health")}</Th>
+            <Th align="right">{t("admin.listingsCount")}</Th>
+            <Th align="right">{t("admin.ordersCount")}</Th>
+            <Th align="right">{t("admin.stats.revenue")}</Th>
+            <Th>{t("admin.status")}</Th>
+            <Th>{t("admin.actions")}</Th>
+          </tr>
+        </DataTableHead>
+        <tbody>
+          {filtered.map(s => (
+            <Tr key={s.id}>
+              <Td><div className="font-medium">{s.name}{!s.isActive && <span className="ml-2 rounded-full bg-destructive/10 px-2 py-0.5 text-xs text-destructive-text">{t("admin.deactivated") || "Deactivated"}</span>}</div><div className="font-data text-[10px] text-muted-foreground">{s.registryCode}</div></Td>
+              <Td><div className="text-xs">{s.contactName}</div><div className="text-[10px] text-muted-foreground">{s.contactEmail}</div></Td>
+              <Td><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${INTEGRATION_TYPE_CONFIG[s.integrationType].color}`}>{intIcon(s.integrationType)} {t(INTEGRATION_TYPE_CONFIG[s.integrationType].labelKey) || INTEGRATION_TYPE_CONFIG[s.integrationType].label}</span></Td>
+              <Td>{healthBadge(s.integrationHealth)}</Td>
+              <Td data align="right" className="text-muted-foreground">{s.listingCount}</Td>
+              <Td data align="right" className="text-muted-foreground">{s.ordersTotal}</Td>
+              <Td data align="right" className="font-medium">€{s.revenue.toLocaleString()}</Td>
+              <Td>
+                <div className="flex flex-wrap items-center gap-1">
+                  {activeBadge(s.isActive)}
+                  <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-ink-2">
+                    {t(`admin.partner.featureSet.${(s.tier ?? "starter").toLowerCase()}`)}
+                  </span>
+                </div>
+              </Td>
+              <Td>
+                <div className="flex items-center gap-1">
+                  <Button variant="outline" size="sm" className="text-xs" onClick={() => { setSelected(s); setTestResult(null); }}>{t("admin.view")}</Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    title={t("admin.suppliers.viewDashboard")}
+                    onClick={(e) => { e.stopPropagation(); navigate(`/provider/dashboard?supplierId=${s.id}`); }}
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </Td>
+            </Tr>
+          ))}
+        </tbody>
+      </DataTable>
 
       {/* ── Pending Applications ── */}
       {pendingApplications.length > 0 && (
         <div className="mt-8">
           <h2 className="font-display text-lg font-semibold flex items-center gap-2">
             {t("admin.pendingApplications")}
-            <span className="rounded-full bg-warning/10 text-warning text-xs px-2 py-0.5 font-medium">
+            <span className="font-data rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning-text">
               {pendingApplications.length}
             </span>
           </h2>
-          <div className="mt-3 overflow-x-auto rounded-xl border border-border">
-            <table className="w-full text-sm">
-              <thead className="border-b border-border bg-secondary/50">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.company")}</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.contact")}</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.registryCode")}</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.actions")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pendingApplications.map(s => (
-                  <tr key={s.id} className="border-b border-border last:border-0">
-                    <td className="px-4 py-3 font-medium">{s.name}</td>
-                    <td className="px-4 py-3 text-xs">
-                      <div>{s.contactName}</div>
-                      <div className="text-muted-foreground">{s.contactEmail}</div>
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs">{s.registryCode}</td>
-                    <td className="px-4 py-3">
-                      <Button
-                        size="sm"
-                        className="bg-success text-success-foreground hover:bg-success/90 text-xs"
-                        onClick={() => approveMutation.mutate(s.id)}
-                        disabled={approveMutation.isPending}
-                      >
-                        {t("admin.approve")}
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable className="mt-3">
+            <DataTableHead>
+              <tr>
+                <Th>{t("admin.company")}</Th>
+                <Th>{t("admin.contact")}</Th>
+                <Th>{t("admin.registryCode")}</Th>
+                <Th>{t("admin.actions")}</Th>
+              </tr>
+            </DataTableHead>
+            <tbody>
+              {pendingApplications.map(s => (
+                <Tr key={s.id}>
+                  <Td className="font-medium">{s.name}</Td>
+                  <Td className="text-xs">
+                    <div>{s.contactName}</div>
+                    <div className="text-muted-foreground">{s.contactEmail}</div>
+                  </Td>
+                  <Td data className="text-xs">{s.registryCode}</Td>
+                  <Td>
+                    <Button
+                      size="sm"
+                      className="bg-success text-success-foreground hover:bg-success/90 text-xs"
+                      onClick={() => approveMutation.mutate(s.id)}
+                      disabled={approveMutation.isPending}
+                    >
+                      {t("admin.approve")}
+                    </Button>
+                  </Td>
+                </Tr>
+              ))}
+            </tbody>
+          </DataTable>
         </div>
       )}
 
@@ -538,7 +546,7 @@ export default function AdminSuppliers() {
                       <option value="api">{t(INTEGRATION_TYPE_CONFIG["api"].labelKey) || INTEGRATION_TYPE_CONFIG["api"].label}</option>
                     </select>
                   </div>
-                  <div><p className="text-xs text-muted-foreground">{t("admin.health")}</p><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${healthColor(selected.integrationHealth)}`}>{healthLabel(selected.integrationHealth)}</span></div>
+                  <div><p className="text-xs text-muted-foreground">{t("admin.health")}</p>{healthBadge(selected.integrationHealth)}</div>
                   {selected.apiEndpoint && (<div className="col-span-2"><p className="text-xs text-muted-foreground">{t("admin.apiEndpoint")}</p><p className="font-mono text-xs mt-0.5 rounded-md bg-secondary px-2 py-1">{selected.apiEndpoint}</p></div>)}
                 </div>
                 {selected.integrationType === "api" && (
@@ -548,7 +556,7 @@ export default function AdminSuppliers() {
                       {t("admin.testConnection")}
                     </Button>
                     {testResult && (
-                      <div className={`mt-2 rounded-lg p-2 text-xs font-medium ${testResult.success ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
+                      <div className={`mt-2 rounded-lg p-2 text-xs font-medium ${testResult.success ? "bg-success/10 text-success-text" : "bg-destructive/10 text-destructive-text"}`}>
                         {testResult.success
                           ? `✓ ${t("admin.connectionOk")} — ${testResult.latency}ms`
                           : `✗ ${t("admin.connectionFailed")}${testResult.message ? ` — ${testResult.message}` : ""}`}

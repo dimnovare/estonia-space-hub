@@ -18,6 +18,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { LeadWorkspace } from "@/components/admin/leads/LeadWorkspace";
 import { LEAD_STATUS_STYLE, StatusBadge } from "@/components/admin/leads/leadStatusStyles";
+import {
+  AdminPageHeader, StatCard, FilterBar, FilterChip, DataTable, DataTableHead, Th, EmptyState,
+} from "@/components/admin/kit";
 
 const STATUS_OPTIONS: { value: AdminLeadStatus | "all"; labelKey: string }[] = [
   { value: "all",       labelKey: "admin.leads.statusAll" },
@@ -30,27 +33,6 @@ const STATUS_OPTIONS: { value: AdminLeadStatus | "all"; labelKey: string }[] = [
 ];
 
 const LIMIT = 50;
-
-/* StatCard pattern copied from AdminMetrics — same visual language. */
-function StatCard({ label, value, sub, icon: Icon }: {
-  label: string;
-  value: string | number;
-  sub?: string;
-  icon: React.ComponentType<{ className?: string }>;
-}) {
-  return (
-    <div className="h-full rounded-xl border border-border bg-card p-5 shadow-card">
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">{label}</span>
-        <Icon className="h-[18px] w-[18px] text-muted-foreground/70" />
-      </div>
-      <div className="mt-2 font-display text-[30px] font-extrabold leading-none tracking-[-0.02em] text-navy-ink">
-        {value}
-      </div>
-      {sub && <div className="mt-1.5 text-[12.5px] text-muted-foreground">{sub}</div>}
-    </div>
-  );
-}
 
 const pct = (fraction: number) => `${Math.round((fraction ?? 0) * 100)}%`;
 
@@ -187,25 +169,23 @@ export default function AdminLeads() {
 
   return (
     <div>
-      {/* Page head */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <span className="font-mono-label text-[11.5px] uppercase tracking-[0.2em] text-teal-deep">
-            {t("admin.leads.eyebrow")}
-          </span>
-          <h1 className="mt-1 font-display text-2xl font-bold text-navy-ink md:text-[28px]">{t("admin.leads")}</h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{t("admin.leads.subtitle")}</p>
-        </div>
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-11"
-          onClick={exportCsv}
-          disabled={items.length === 0}
-        >
-          {t("admin.leads.export")}
-        </Button>
-      </div>
+      <AdminPageHeader
+        eyebrow={t("admin.nav.groupOperate")}
+        title={t("admin.leads")}
+        subtitle={t("admin.leads.subtitle")}
+        count={data ? data.total : undefined}
+        actions={
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-11"
+            onClick={exportCsv}
+            disabled={items.length === 0}
+          >
+            {t("admin.leads.export")}
+          </Button>
+        }
+      />
 
       {/* Ops metrics (whole funnel, from /admin/leads/metrics). The 4 named
           north-stars come first; contact rate is a secondary 5th card. */}
@@ -247,47 +227,32 @@ export default function AdminLeads() {
       </div>
 
       {/* Status filter buttons */}
-      <div className="mt-6 flex flex-wrap items-center gap-2">
+      <FilterBar className="mb-0 mt-6">
         {STATUS_OPTIONS.map((opt) => (
-          <button
+          <FilterChip
             key={opt.value}
+            active={statusFilter === opt.value}
             onClick={() => { setStatusFilter(opt.value); setPage(1); }}
-            aria-pressed={statusFilter === opt.value}
-            className={`min-h-[36px] rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-              statusFilter === opt.value
-                ? "bg-navy-ink text-white"
-                : "border border-border bg-card text-muted-foreground hover:border-primary hover:text-primary"
-            }`}
           >
             {t(opt.labelKey)}
-          </button>
+          </FilterChip>
         ))}
-      </div>
+      </FilterBar>
 
       {/* Extra filters: concierge channel, SLA "needs response" view, category + city */}
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <button
+      <FilterBar className="mb-0 mt-3">
+        <FilterChip
+          active={conciergeOnly}
           onClick={() => { setConciergeOnly((v) => !v); setPage(1); }}
-          aria-pressed={conciergeOnly}
-          className={`min-h-[36px] rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-            conciergeOnly
-              ? "bg-primary text-primary-foreground"
-              : "border border-border bg-card text-muted-foreground hover:border-primary hover:text-primary"
-          }`}
         >
           {t("admin.leads.filterConcierge")}
-        </button>
-        <button
+        </FilterChip>
+        <FilterChip
+          active={needsResponse}
           onClick={() => { setNeedsResponse((v) => !v); setPage(1); }}
-          aria-pressed={needsResponse}
-          className={`min-h-[36px] rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-            needsResponse
-              ? "bg-primary text-primary-foreground"
-              : "border border-border bg-card text-muted-foreground hover:border-primary hover:text-primary"
-          }`}
         >
           {t("admin.leads.filterNeedsResponse")}
-        </button>
+        </FilterChip>
         <select
           value={categoryFilter}
           onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
@@ -306,7 +271,7 @@ export default function AdminLeads() {
           aria-label={t("admin.leads.filterCityPlaceholder")}
           className="min-h-[36px] rounded-full border border-border bg-card px-3.5 py-1.5 text-[13px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
-      </div>
+      </FilterBar>
 
       {/* List — a full-width card stack below md, the eight-column table at md+ */}
       {isLoading ? (
@@ -314,9 +279,7 @@ export default function AdminLeads() {
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
       ) : items.length === 0 ? (
-        <div className="mt-4 rounded-[14px] border border-border bg-card px-5 py-12 text-center text-sm text-muted-foreground shadow-card">
-          {t("admin.leads.empty")}
-        </div>
+        <EmptyState className="mt-4" icon={Megaphone} title={t("admin.leads.empty")} />
       ) : isMobile ? (
         <div className="mt-4 space-y-3">
           {items.map((lead) => (
@@ -331,34 +294,32 @@ export default function AdminLeads() {
           ))}
         </div>
       ) : (
-        <div className="mt-4 overflow-x-auto rounded-[14px] border border-border bg-card shadow-card">
-          <table className="w-full text-sm">
-            <thead className="border-b border-border bg-secondary/40">
-              <tr>
-                <th className="px-5 py-3 text-left font-medium text-muted-foreground">{t("admin.leads.colEmail")}</th>
-                <th className="px-5 py-3 text-left font-medium text-muted-foreground">{t("admin.leads.colCity")}</th>
-                <th className="px-5 py-3 text-left font-medium text-muted-foreground">{t("admin.leads.colCategory")}</th>
-                <th className="px-5 py-3 text-left font-medium text-muted-foreground">{t("admin.leads.colQuery")}</th>
-                <th className="px-5 py-3 text-left font-medium text-muted-foreground">{t("admin.leads.colLanguage")}</th>
-                <th className="px-5 py-3 text-left font-medium text-muted-foreground">{t("admin.leads.colCreated")}</th>
-                <th className="px-5 py-3 text-left font-medium text-muted-foreground">{t("admin.leads.colStatus")}</th>
-                <th className="px-5 py-3 text-right font-medium text-muted-foreground">{t("admin.leads.colAction")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((lead) => (
-                <LeadRow
-                  key={lead.id}
-                  lead={lead}
-                  expanded={expandedId === lead.id}
-                  onToggle={() => toggleExpanded(lead.id)}
-                  onStatusChange={(status) => updateMutation.mutate({ id: lead.id, status })}
-                  statusPending={updateMutation.isPending}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable className="mt-4">
+          <DataTableHead>
+            <tr>
+              <Th className="px-5">{t("admin.leads.colEmail")}</Th>
+              <Th className="px-5">{t("admin.leads.colCity")}</Th>
+              <Th className="px-5">{t("admin.leads.colCategory")}</Th>
+              <Th className="px-5">{t("admin.leads.colQuery")}</Th>
+              <Th className="px-5">{t("admin.leads.colLanguage")}</Th>
+              <Th className="px-5">{t("admin.leads.colCreated")}</Th>
+              <Th className="px-5">{t("admin.leads.colStatus")}</Th>
+              <Th align="right" className="px-5">{t("admin.leads.colAction")}</Th>
+            </tr>
+          </DataTableHead>
+          <tbody>
+            {items.map((lead) => (
+              <LeadRow
+                key={lead.id}
+                lead={lead}
+                expanded={expandedId === lead.id}
+                onToggle={() => toggleExpanded(lead.id)}
+                onStatusChange={(status) => updateMutation.mutate({ id: lead.id, status })}
+                statusPending={updateMutation.isPending}
+              />
+            ))}
+          </tbody>
+        </DataTable>
       )}
 
       {/* Pagination */}
@@ -420,7 +381,7 @@ function LeadRow({ lead, expanded, onToggle, onStatusChange, statusPending }: {
         <td className="px-5 py-3.5 text-muted-foreground">
           {lead.category}
           {lead.quotedPrice != null && (
-            <span className="mt-0.5 block text-[11px] font-medium text-foreground">{lead.quotedPrice.toFixed(2)} €</span>
+            <span className="font-data mt-0.5 block text-[11px] font-medium text-foreground">{lead.quotedPrice.toFixed(2)} €</span>
           )}
         </td>
         <td className="px-5 py-3.5 max-w-[180px] truncate text-muted-foreground" title={lead.query}>
@@ -431,7 +392,7 @@ function LeadRow({ lead, expanded, onToggle, onStatusChange, statusPending }: {
             {lead.language}
           </span>
         </td>
-        <td className="px-5 py-3.5 whitespace-nowrap text-muted-foreground">
+        <td className="font-data whitespace-nowrap px-5 py-3.5 text-[13px] text-muted-foreground">
           {new Date(lead.createdAt).toLocaleDateString()}
         </td>
         <td className="px-5 py-3.5">

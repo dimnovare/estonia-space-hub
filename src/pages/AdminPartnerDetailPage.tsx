@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { SEO } from "@/components/SEO";
 import AdminShell from "@/components/admin/AdminShell";
+import { StatCard } from "@/components/admin/kit";
 import ProviderContractTemplate from "@/components/provider/ProviderContractTemplate";
 import { supplierService, providerPaidFeaturesService } from "@/services";
 import { apiClient } from "@/services/apiClient";
@@ -127,14 +128,14 @@ export default function AdminPartnerDetailPage() {
             <div>
               <h1 className="font-display text-2xl font-bold">{s.name}</h1>
               <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${s.isActive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${s.isActive ? "bg-success/10 text-success-text" : "bg-destructive/10 text-destructive-text"}`}>
                   {s.isActive ? t("common.active") : t("common.inactive")}
                 </span>
                 <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
                   {t("admin.partner.featureSetBadge").replace("{value}", t(`admin.partner.featureSet.${(s.tier ?? "starter").toLowerCase()}`))}
                 </span>
                 {s.isVerified && (
-                  <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">{t("listing.badge.verified")}</span>
+                  <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success-text">{t("listing.badge.verified")}</span>
                 )}
                 {s.isFoundingPartner && (
                   <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-300">
@@ -271,10 +272,7 @@ function OverviewTab({ supplier: s }: { supplier: any }) {
   });
 
   const Stat = ({ label, value }: { label: string; value: string | number }) => (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="mt-1 font-display text-2xl font-bold">{value}</div>
-    </div>
+    <StatCard size="sm" label={label} value={value} />
   );
 
   const checklist = [
@@ -316,7 +314,7 @@ function OverviewTab({ supplier: s }: { supplier: any }) {
             <h3 className="text-sm font-semibold">{t("admin.partner.recentSyncLog")}</h3>
             <button
               onClick={() => setLogOpen((v) => !v)}
-              className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
+              className="inline-flex items-center gap-1 text-xs text-teal-text hover:underline"
             >
               {logOpen ? t("common.showLess") : t("common.viewAll")}
               <ChevronDown className={`h-3 w-3 transition-transform ${logOpen ? "rotate-180" : ""}`} />
@@ -329,7 +327,7 @@ function OverviewTab({ supplier: s }: { supplier: any }) {
               (logOpen ? pollLog : pollLog.slice(0, 3)).map((entry, i) => (
                 <div key={i} className="flex items-center justify-between rounded-lg border border-border px-3 py-1.5">
                   <span className="text-muted-foreground">{new Date(entry.timestamp).toLocaleString()}</span>
-                  <span className={entry.status === "ok" ? "text-success" : entry.status === "error" ? "text-destructive" : "text-muted-foreground"}>
+                  <span className={entry.status === "ok" ? "text-success-text" : entry.status === "error" ? "text-destructive-text" : "text-muted-foreground"}>
                     {entry.status} {entry.durationMs != null ? `· ${entry.durationMs}ms` : ""}
                   </span>
                 </div>
@@ -887,7 +885,7 @@ function VisibilityTab({ supplier: s, onSave, pending }: { supplier: any; onSave
                     </div>
                   </div>
                 </div>
-                <Link to="/admin?tab=requests" className="text-xs font-semibold text-accent hover:underline">
+                <Link to="/admin?tab=requests" className="text-xs font-semibold text-teal-text hover:underline">
                   {t("admin.partner.reviewRequest")}
                 </Link>
               </li>
@@ -1187,7 +1185,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
                 {t("admin.partnerDetail.routing.testConnection")}
               </Button>
               {testResult && (
-                <span className={`text-xs font-medium ${testResult.ok ? "text-success" : "text-destructive"}`}>
+                <span className={`text-xs font-medium ${testResult.ok ? "text-success-text" : "text-destructive-text"}`}>
                   {testResult.ok ? `${t("admin.partnerDetail.routing.testOk")} — ${testResult.latency}ms` : `${t("admin.partnerDetail.routing.testError")} — ${testResult.message}`}
                 </span>
               )}
@@ -1197,7 +1195,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
             <button
               type="button"
               onClick={() => setLogOpen((v) => !v)}
-              className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
+              className="inline-flex items-center gap-1 text-xs text-teal-text hover:underline"
             >
               {logOpen ? t("admin.partnerDetail.routing.hideLog") : t("admin.partnerDetail.routing.showLog")}
               <ChevronDown className={`h-3 w-3 transition-transform ${logOpen ? "rotate-180" : ""}`} />
@@ -1210,7 +1208,7 @@ function IntegrationTab({ supplierId }: { supplierId: string }) {
                   pollLog.map((entry, i) => (
                     <div key={i} className="flex items-center justify-between rounded-lg border border-border px-3 py-1.5">
                       <span className="text-muted-foreground">{new Date(entry.timestamp).toLocaleString()}</span>
-                      <span className={entry.status === "ok" ? "text-success" : entry.status === "error" ? "text-destructive" : "text-muted-foreground"}>
+                      <span className={entry.status === "ok" ? "text-success-text" : entry.status === "error" ? "text-destructive-text" : "text-muted-foreground"}>
                         {entry.status} {entry.durationMs != null ? `· ${entry.durationMs}ms` : ""}
                       </span>
                     </div>

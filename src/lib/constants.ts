@@ -41,27 +41,29 @@ export const VAN_SIZE_OPTIONS = [
   { value: "boxtruck", labelKey: "vanSize.boxtruck" },
 ] as const;
 
+// Foregrounds are the AA *-text tokens — the raw fills (text-success etc.)
+// only reach ~3-4:1 as label text on a /10 tint, which fails WCAG AA.
 export const INTEGRATION_TYPE_CONFIG: Record<IntegrationType, { labelKey: string; label: string; color: string; description: string }> = {
-  api: { labelKey: "admin.integrationApi", label: "API", color: "bg-success/10 text-success", description: "Automatic API integration" },
-  email: { labelKey: "admin.integrationEmail", label: "Email", color: "bg-info/10 text-info", description: "Order sent via email" },
-  manual: { labelKey: "admin.integrationManual", label: "Manual", color: "bg-warning/10 text-warning", description: "Operator forwards manually" },
+  api: { labelKey: "admin.integrationApi", label: "API", color: "bg-success/10 text-success-text", description: "Automatic API integration" },
+  email: { labelKey: "admin.integrationEmail", label: "Email", color: "bg-info/10 text-info-text", description: "Order sent via email" },
+  manual: { labelKey: "admin.integrationManual", label: "Manual", color: "bg-warning/10 text-warning-text", description: "Operator forwards manually" },
 };
 
 export const ORDER_STATUS_CONFIG: Record<OrderStatus, { labelKey: string; label: string; color: string }> = {
-  created: { labelKey: "status.created", label: "Created", color: "bg-secondary text-muted-foreground" },
-  sending: { labelKey: "status.sending", label: "Sending", color: "bg-warning/10 text-warning" },
-  sent: { labelKey: "status.sent", label: "Sent", color: "bg-info/10 text-info" },
-  confirmed: { labelKey: "status.confirmed", label: "Confirmed", color: "bg-success/10 text-success" },
-  rejected: { labelKey: "status.rejected", label: "Rejected", color: "bg-destructive/10 text-destructive" },
-  active: { labelKey: "status.active", label: "Active", color: "bg-accent/10 text-accent" },
-  completed: { labelKey: "status.completed", label: "Completed", color: "bg-muted text-muted-foreground" },
-  cancelled: { labelKey: "status.cancelled", label: "Cancelled", color: "bg-destructive/10 text-destructive" },
-  failed: { labelKey: "status.failed", label: "Failed", color: "bg-destructive/10 text-destructive" },
+  created: { labelKey: "status.created", label: "Created", color: "bg-secondary text-ink-2" },
+  sending: { labelKey: "status.sending", label: "Sending", color: "bg-warning/10 text-warning-text" },
+  sent: { labelKey: "status.sent", label: "Sent", color: "bg-info/10 text-info-text" },
+  confirmed: { labelKey: "status.confirmed", label: "Confirmed", color: "bg-success/10 text-success-text" },
+  rejected: { labelKey: "status.rejected", label: "Rejected", color: "bg-destructive/10 text-destructive-text" },
+  active: { labelKey: "status.active", label: "Active", color: "bg-info/10 text-info-text" },
+  completed: { labelKey: "status.completed", label: "Completed", color: "bg-secondary text-ink-2" },
+  cancelled: { labelKey: "status.cancelled", label: "Cancelled", color: "bg-destructive/10 text-destructive-text" },
+  failed: { labelKey: "status.failed", label: "Failed", color: "bg-destructive/10 text-destructive-text" },
 };
 
 // Neutral fallback so a status the frontend hasn't been updated for never crashes
 // the orders list — always index as `ORDER_STATUS_CONFIG[s] ?? FALLBACK_ORDER_STATUS`.
-export const FALLBACK_ORDER_STATUS = { labelKey: "status.unknown", label: "—", color: "bg-secondary text-muted-foreground" };
+export const FALLBACK_ORDER_STATUS = { labelKey: "status.unknown", label: "—", color: "bg-secondary text-ink-2" };
 
 type EmailLabels = {
   greeting: string;

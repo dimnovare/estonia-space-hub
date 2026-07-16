@@ -11,6 +11,10 @@ import { toast } from "sonner";
 import { queryKeys } from "@/services/queryKeys";
 import AdminExtrasOverrides from "./AdminExtrasOverrides";
 import { GooglePlacesAutocomplete } from "./GooglePlacesAutocomplete";
+import {
+  AdminPageHeader, DataTable, DataTableHead, Th, Tr, Td, StatusBadge,
+} from "@/components/admin/kit";
+import { LISTING_STATUS_BADGE } from "@/components/admin/kit/statusMaps";
 
 // Row shape rendered by the admin listings table/cards, derived from how each
 // field is read below. The list endpoint returns priceFrom; legacy/mock shapes
@@ -250,15 +254,24 @@ export default function AdminListings() {
     </div>
   );
 
+  const listingBadge = (availableNow: boolean | undefined) => {
+    const badge = LISTING_STATUS_BADGE[availableNow === true ? "active" : "paused"];
+    return <StatusBadge tone={badge.tone} icon={badge.icon} label={availableNow === true ? t("admin.active") : t("admin.paused")} className="shrink-0" />;
+  };
+
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">{t("admin.listings")}</h1>
-        <div className="flex items-center gap-2">
-          <Button onClick={openBulk} size="sm" variant="outline"><Upload className="mr-1 h-3.5 w-3.5" /> {t("admin.bulkImport")}</Button>
-          <Button onClick={openNew} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90"><PlusCircle className="mr-1 h-3.5 w-3.5" /> {t("admin.addListing")}</Button>
-        </div>
-      </div>
+      <AdminPageHeader
+        eyebrow={t("admin.nav.groupSupply")}
+        title={t("admin.listings")}
+        count={total || undefined}
+        actions={
+          <>
+            <Button onClick={openBulk} size="sm" variant="outline"><Upload className="mr-1 h-3.5 w-3.5" /> {t("admin.bulkImport")}</Button>
+            <Button onClick={openNew} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90"><PlusCircle className="mr-1 h-3.5 w-3.5" /> {t("admin.addListing")}</Button>
+          </>
+        }
+      />
       {/* Mobile cards */}
       <div className="mt-4 space-y-2 sm:hidden">
         {listings.map((l: AdminListingRow) => {
@@ -270,10 +283,10 @@ export default function AdminListings() {
                   <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <span className="text-sm font-medium truncate">{l.title}</span>
                 </div>
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${l.availableNow === true ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>{l.availableNow === true ? t("admin.active") : t("admin.paused")}</span>
+                {listingBadge(l.availableNow)}
               </div>
               <div className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
-                <span>{l.city} · {l.price ?? l.priceFrom}€ · {l.views ?? 0} {t("admin.views").toLowerCase()}</span>
+                <span>{l.city} · <span className="font-data">{l.price ?? l.priceFrom}€</span> · <span className="font-data">{l.views ?? 0}</span> {t("admin.views").toLowerCase()}</span>
                 <div className="flex items-center gap-1">
                   <button aria-label={t("admin.edit")} onClick={() => openEdit(l)} className="rounded p-1 hover:bg-secondary"><Edit className="h-3.5 w-3.5 text-muted-foreground" /></button>
                   <button aria-label={t("admin.delete")} onClick={() => handleDelete(l.id)} className="rounded p-1 hover:bg-secondary"><Trash2 className="h-3.5 w-3.5 text-destructive" /></button>
@@ -284,42 +297,40 @@ export default function AdminListings() {
         })}
       </div>
       {/* Desktop table */}
-      <div className="mt-6 hidden overflow-x-auto rounded-xl border border-border sm:block">
-        <table className="w-full text-sm">
-          <thead className="border-b border-border bg-secondary/50">
-            <tr>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.title_field")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.type")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.city")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.price")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.status")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.views")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.actions")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {listings.map((l: AdminListingRow) => {
-              const Icon = typeIcons[l.type] || Warehouse;
-              return (
-                <tr key={l.id} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3 font-medium">{l.title}</td>
-                  <td className="px-4 py-3"><Icon className="h-4 w-4 text-muted-foreground" /></td>
-                  <td className="px-4 py-3 text-muted-foreground">{l.city}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{l.price ?? l.priceFrom}€</td>
-                  <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${l.availableNow === true ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>{l.availableNow === true ? t("admin.active") : t("admin.paused")}</span></td>
-                  <td className="px-4 py-3 text-muted-foreground">{l.views ?? 0}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
-                      <button aria-label={t("admin.edit")} onClick={() => openEdit(l)} className="rounded p-1 hover:bg-secondary"><Edit className="h-3.5 w-3.5 text-muted-foreground" /></button>
-                      <button aria-label={t("admin.delete")} onClick={() => handleDelete(l.id)} className="rounded p-1 hover:bg-secondary"><Trash2 className="h-3.5 w-3.5 text-destructive" /></button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <DataTable className="mt-6 hidden sm:block">
+        <DataTableHead>
+          <tr>
+            <Th>{t("admin.title_field")}</Th>
+            <Th>{t("admin.type")}</Th>
+            <Th>{t("admin.city")}</Th>
+            <Th align="right">{t("admin.price")}</Th>
+            <Th>{t("admin.status")}</Th>
+            <Th align="right">{t("admin.views")}</Th>
+            <Th>{t("admin.actions")}</Th>
+          </tr>
+        </DataTableHead>
+        <tbody>
+          {listings.map((l: AdminListingRow) => {
+            const Icon = typeIcons[l.type] || Warehouse;
+            return (
+              <Tr key={l.id}>
+                <Td className="font-medium">{l.title}</Td>
+                <Td><Icon className="h-4 w-4 text-muted-foreground" /></Td>
+                <Td className="text-muted-foreground">{l.city}</Td>
+                <Td data align="right" className="text-muted-foreground">{l.price ?? l.priceFrom}€</Td>
+                <Td>{listingBadge(l.availableNow)}</Td>
+                <Td data align="right" className="text-muted-foreground">{l.views ?? 0}</Td>
+                <Td>
+                  <div className="flex items-center gap-1">
+                    <button aria-label={t("admin.edit")} onClick={() => openEdit(l)} className="rounded p-1.5 hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Edit className="h-3.5 w-3.5 text-muted-foreground" /></button>
+                    <button aria-label={t("admin.delete")} onClick={() => handleDelete(l.id)} className="rounded p-1.5 hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Trash2 className="h-3.5 w-3.5 text-destructive" /></button>
+                  </div>
+                </Td>
+              </Tr>
+            );
+          })}
+        </tbody>
+      </DataTable>
 
       {/* Pagination */}
       {total > limit && (
