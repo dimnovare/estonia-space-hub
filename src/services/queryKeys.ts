@@ -158,6 +158,10 @@ export const queryKeys = {
   offers: {
     byToken: (token: string) => ["offers", token] as const,
   },
+  // Public provider quote page (/quote/{token}) — anonymous, token-keyed.
+  quotes: {
+    byToken: (token: string) => ["quote", token] as const,
+  },
   supplierTeam: {
     byId: (id: string | null) => ["supplier-team", id] as const,
   },

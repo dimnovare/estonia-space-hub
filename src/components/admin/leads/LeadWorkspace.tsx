@@ -15,6 +15,7 @@ import { queryKeys } from "@/services/queryKeys";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { serviceTypeLabel, SERVICE_TYPE_SLUGS } from "@/lib/serviceTypes";
 import { Button } from "@/components/ui/button";
+import { LEAD_STATUS_STYLE } from "./leadStatusStyles";
 import { LeadProviderStage } from "./LeadProviderStage";
 import { LeadOfferStage } from "./LeadOfferStage";
 import { LeadDeliveryReview } from "./LeadDeliveryReview";
@@ -33,15 +34,6 @@ const STATUS_LABEL_KEYS: Record<AdminLeadStatus, string> = {
   dismissed: "admin.leads.statusDismissed",
   unmatched: "admin.leads.statusUnmatched",
 };
-const STATUS_COLORS: Record<AdminLeadStatus, string> = {
-  new: "bg-info/10 text-info",
-  contacted: "bg-warning/10 text-warning-text",
-  quoted: "bg-accent/10 text-accent",
-  converted: "bg-success/10 text-success",
-  dismissed: "bg-secondary text-muted-foreground",
-  unmatched: "bg-destructive/10 text-destructive",
-};
-
 // Category choices for the "Edit request" form: the wildcard plus the 7 canonical
 // service slugs the backend accepts (ServiceCategories + "any").
 const CATEGORY_OPTIONS = ["any", ...SERVICE_TYPE_SLUGS] as const;
@@ -201,31 +193,36 @@ export function LeadWorkspace({ lead }: { lead: AdminLead }) {
           {/* Converted: read-only outcome — only booking confirmation sets it. */}
           <span
             title={t("admin.leads.confirmBookingBody")}
-            className={`min-h-[36px] inline-flex items-center rounded-full px-3.5 py-1.5 text-[13px] font-medium ${
+            className={`min-h-[36px] inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium ${
               lead.status === "converted"
-                ? `${STATUS_COLORS.converted} ring-1 ring-border`
+                ? `${LEAD_STATUS_STYLE.converted.badge} ring-1 ring-border`
                 : "border border-dashed border-border bg-card text-muted-foreground/60"
             }`}
           >
+            {(() => { const Icon = LEAD_STATUS_STYLE.converted.icon; return <Icon className="h-3.5 w-3.5" aria-hidden />; })()}
             {t(STATUS_LABEL_KEYS.converted)}
           </span>
           <span className="mx-2 h-5 w-px bg-border" aria-hidden />
-          {TERMINAL.map((s) => (
-            <button
-              key={s}
-              type="button"
-              disabled={statusMutation.isPending || lead.status === s}
-              aria-pressed={lead.status === s}
-              onClick={() => statusMutation.mutate(s)}
-              className={`mr-1.5 min-h-[36px] rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                lead.status === s
-                  ? `${STATUS_COLORS[s]} ring-1 ring-border`
-                  : "border border-border bg-card text-muted-foreground hover:border-destructive/50 hover:text-destructive"
-              }`}
-            >
-              {t(STATUS_LABEL_KEYS[s])}
-            </button>
-          ))}
+          {TERMINAL.map((s) => {
+            const Icon = LEAD_STATUS_STYLE[s].icon;
+            return (
+              <button
+                key={s}
+                type="button"
+                disabled={statusMutation.isPending || lead.status === s}
+                aria-pressed={lead.status === s}
+                onClick={() => statusMutation.mutate(s)}
+                className={`mr-1.5 min-h-[36px] inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  lead.status === s
+                    ? `${LEAD_STATUS_STYLE[s].badge} ring-1 ring-border`
+                    : "border border-border bg-card text-muted-foreground hover:border-destructive/50 hover:text-destructive"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" aria-hidden />
+                {t(STATUS_LABEL_KEYS[s])}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -299,7 +296,7 @@ export function LeadWorkspace({ lead }: { lead: AdminLead }) {
             <textarea value={edit.details} rows={3} onChange={(e) => setEditField("details", e.target.value)} className="mt-1 w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent" />
           </label>
           <div className="mt-3 flex items-center gap-2">
-            <Button size="sm" className="h-9 bg-accent text-accent-foreground hover:bg-accent/90" disabled={editMutation.isPending} onClick={submitEdit}>
+            <Button size="sm" className="h-9 bg-primary text-primary-foreground hover:bg-primary/90" disabled={editMutation.isPending} onClick={submitEdit}>
               {editMutation.isPending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
               {t("admin.leads.editSave")}
             </Button>
@@ -317,10 +314,13 @@ export function LeadWorkspace({ lead }: { lead: AdminLead }) {
         </p>
       )}
 
-      {/* ── Offer panel (three numbered stages) ── */}
+      {/* ── Offer panel — the three numbered stages read top-to-bottom as
+             full-width bands separated by dividers (design §C). Each stage owns
+             its band; only leaf rows (options, outreach) are cards, so nothing
+             is a card nested inside another card. ── */}
       <div>
         <PanelHeading>{t("admin.leads.offerTitle")}</PanelHeading>
-        <div className="mt-2 grid gap-5 xl:grid-cols-2">
+        <div className="mt-2 space-y-5">
           <LeadProviderStage
             lead={lead}
             onAddCandidate={(candidate) => setCandidateToAdd(candidate)}
@@ -329,21 +329,19 @@ export function LeadWorkspace({ lead }: { lead: AdminLead }) {
               qc.invalidateQueries({ queryKey: queryKeys.adminLeads.root() });
             }}
           />
-          <div className="space-y-5">
-            <LeadOfferStage
-              lead={lead}
-              offers={offers}
-              outreachRows={outreachRows}
-              candidateToAdd={candidateToAdd}
-              onCandidateConsumed={() => setCandidateToAdd(null)}
-              onOffersChanged={invalidateOffers}
-            />
-            <LeadDeliveryReview
-              lead={lead}
-              offers={offers}
-              onOffersChanged={invalidateOffers}
-            />
-          </div>
+          <LeadOfferStage
+            lead={lead}
+            offers={offers}
+            outreachRows={outreachRows}
+            candidateToAdd={candidateToAdd}
+            onCandidateConsumed={() => setCandidateToAdd(null)}
+            onOffersChanged={invalidateOffers}
+          />
+          <LeadDeliveryReview
+            lead={lead}
+            offers={offers}
+            onOffersChanged={invalidateOffers}
+          />
         </div>
       </div>
 

@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import {
   stubCommon, stubListings, stubLoggedOut, stubLocations, stubPartner,
   apiLocation, directoryLocation, partnerProfile, publicOffer, stubPublicOffer,
+  publicQuote, stubQuote,
 } from "./fixtures";
 
 /**
@@ -110,6 +111,25 @@ test.describe("No horizontal page overflow at 375px", () => {
     });
     await page.goto("/et/offer/tok-long-content");
     await expect(page.getByTestId("offer-presentation")).toBeVisible({ timeout: 15000 });
+    await assertNoPageOverflow(page);
+  });
+
+  test("provider quote page with long content", async ({ page }) => {
+    await stubAll(page);
+    await stubQuote(page, {
+      quote: publicQuote({
+        provider: { name: "Väga pika nimega partnerettevõte, kelle kontaktisik vastutab hinnapakkumise eest" },
+        lead: {
+          category: "warehouse",
+          city: "Tallinn-Lasnamäe-Priisle",
+          toCity: "Tartu-Annelinn-Ropka",
+          needDate: "2026-08-01",
+          details: "Pikk kirjeldus, mis peab murduma väiksel ekraanil ega tohi lehte horisontaalselt kerima panna, isegi kui üksainus sõna on ebatavaliselt-pikk-ja-sidekriipsudeta.",
+        },
+      }),
+    });
+    await page.goto("/et/quote/tok-long-content");
+    await expect(page.getByRole("heading", { name: /esita oma hind/i })).toBeVisible({ timeout: 15000 });
     await assertNoPageOverflow(page);
   });
 });

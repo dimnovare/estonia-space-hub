@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import {
   stubCommon, stubListings, seedAuth, adminUser,
   stubAdminLeads, stubOfferLoop, adminLead, adminMatch, tartuProviderCandidates,
-  draftOfferWithOption, chosenOffer,
+  draftOfferWithOption, chosenOffer, quotedOutreachRow, quoteSeededDraftOffer,
 } from "./fixtures";
 
 /**
@@ -80,6 +80,86 @@ const openWorkspaceWithChosenOffer = (page: import("@playwright/test").Page, loo
   openWorkspaceWithOffer(page, chosenOffer(), { status: "quoted" }, loopOpts);
 
 test.describe("Admin lead workspace", () => {
+  // ── Feature A: instant alert deep link + 1-click quick-send (human-gated) ──
+
+  test("?lead={id} deep-links straight into the lead workspace", async ({ page }) => {
+    // The instant-alert email links here; the workspace must already be open.
+    await seedAuth(page, adminUser);
+    await stubCommon(page);
+    await stubListings(page);
+    await stubAdminLeads(page, {
+      items: [adminLead({ city: "Tartu", language: "en" })],
+      matches: [adminMatch()],
+      candidates: tartuProviderCandidates(),
+    });
+    await stubOfferLoop(page);
+    await page.goto("/en/admin?tab=leads&lead=lead-1");
+
+    // Expanded with NO Details click.
+    await expect(page.getByText(/find and contact providers/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("button", { name: /details/i }).first()).toHaveAttribute("aria-expanded", "true");
+  });
+
+  test("quick-send pre-selects the emailable nearby providers and opens the review sheet", async ({ page }) => {
+    await openEnglishWorkspace(page);
+
+    // Quick-send is a shortcut over the multi-select — never an auto-send.
+    let sendCalls = 0;
+    page.on("request", (req) => {
+      if (req.method() === "POST" && /\/admin\/leads\/[^/]+\/outreach$/.test(new URL(req.url()).pathname)) sendCalls += 1;
+    });
+
+    // 5 of the 7 candidates qualify: no-email and already-contacted are excluded.
+    const quick = page.getByRole("button", { name: /send outreach to 5 matched providers/i });
+    await expect(quick).toBeVisible();
+    await quick.click();
+
+    const review = page.getByRole("dialog");
+    await expect(review).toContainText("sales@panicom.ee");
+    await expect(review).toContainText("hello@rare.ee");
+    await expect(review).not.toContainText("Emajõe Laod");        // no email
+    await expect(review).not.toContainText("contact@tartuladu.ee"); // already contacted
+    // Human gate intact: nothing sent by opening the sheet.
+    expect(sendCalls).toBe(0);
+
+    // Backing out leaves the pre-selection on the manual multi-select, so the
+    // operator can adjust it rather than start over. (The dialog hides the page
+    // from the a11y tree, so this is asserted once it is closed.)
+    await review.getByRole("button", { name: "Cancel" }).click();
+    await expect(page.getByRole("checkbox", { name: "Rare Minilaod" })).toBeChecked();
+    await expect(page.getByRole("checkbox", { name: "Tartu Ladu" })).not.toBeChecked();
+  });
+
+  test("the outreach review warns that the previewed quote link is a per-recipient sample", async ({ page }) => {
+    // Tokens are minted at SEND time, so the previewed body carries a throwaway
+    // sample link that would 404 — it must be plain text with an explicit note.
+    await openEnglishWorkspace(page);
+    await page.getByRole("checkbox", { name: "Panicom Miniladu" }).check();
+    await page.getByRole("button", { name: /review message to 1 provider/i }).click();
+
+    const review = page.getByRole("dialog");
+    await expect(review).toContainText(/each provider gets their own unique link/i);
+    // The previewed body must never be a clickable link.
+    await expect(review.locator("pre a")).toHaveCount(0);
+  });
+
+  test("quick-send is offered only on a new / uncontacted lead", async ({ page }) => {
+    await openWorkspaceWithOffer(page, draftOfferWithOption(), { status: "contacted" });
+    await expect(page.getByRole("button", { name: /send outreach to/i })).toHaveCount(0);
+  });
+
+  // ── Feature B: provider quote surfacing ──
+
+  test("outreach history shows the price the provider submitted via their quote link", async ({ page }) => {
+    await openEnglishWorkspace(page, { outreach: [quotedOutreachRow()] });
+    await expect(page.getByText(/quoted 89 kuu/i)).toBeVisible();
+  });
+
+  test("an auto-seeded offer option is badged as coming from a provider quote", async ({ page }) => {
+    await openWorkspaceWithOffer(page, quoteSeededDraftOffer(), {});
+    await expect(page.getByText(/from provider quote/i)).toBeVisible();
+  });
+
   test("nearby provider discovery filters and reviews outreach before send", async ({ page }) => {
     await openEnglishWorkspace(page);
 
@@ -247,9 +327,14 @@ test.describe("Admin lead workspace", () => {
     await expect(page.getByRole("dialog")).toContainText("hello@rare.ee");
     await page.getByRole("dialog").getByRole("button", { name: /saada saadavuspäring/i }).click();
 
-    // The stateful stub records the row; the stage refetches and lists it.
-    await expect(page.getByText("hello@rare.ee").last()).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText("Saadetud").last()).toBeVisible();
+    // The stateful stub records the row; the stage refetches and lists it with
+    // status Sent. Assert the row's own status control: a loose getByText("Sent")
+    // races the refetch — before the row lands it settles on the send toast, and
+    // after it lands the only match is the closed select's hidden <option>.
+    const sentRow = page.getByRole("combobox", { name: /rare minilaod/i });
+    await expect(sentRow).toBeVisible({ timeout: 10000 });
+    await expect(sentRow).toHaveValue("sent");
+    await expect(page.getByText("hello@rare.ee").last()).toBeVisible();
     // Timeline picks up the outreach event.
     await expect(page.getByText(/saadavuspäring → rare minilaod/i)).toBeVisible();
   });
@@ -402,15 +487,25 @@ test.describe("Admin lead workspace", () => {
     const noteField = page.getByLabel(/üldine märkus kliendile/i);
     await expect(noteField).toBeVisible({ timeout: 10000 });
 
+    // Sync on the PATCH round-trips, not on the toast: two saves land well inside
+    // the toast's dwell time, so both "Pakkumine salvestatud" toasts are on screen
+    // at once and a plain getByText would be a strict-mode violation.
+    const offerPatch = () => page.waitForRequest((req) =>
+      req.method() === "PATCH" && /\/admin\/offers\/[^/]+$/.test(new URL(req.url()).pathname));
+    const save = page.getByRole("button", { name: /salvesta mustand/i });
+
     // Write a note, save → PATCH carries the text.
+    const firstPatch = offerPatch();
     await noteField.fill("Mõlemad partnerid saavad su ajal.");
-    await page.getByRole("button", { name: /salvesta mustand/i }).click();
-    await expect(page.getByText("Pakkumine salvestatud")).toBeVisible({ timeout: 10000 });
+    await save.click();
+    await firstPatch;
+    await expect(page.getByText("Pakkumine salvestatud").first()).toBeVisible({ timeout: 10000 });
 
     // Clear it, save again → PATCH must carry "" (backend Clamp("") → null clears).
+    const secondPatch = offerPatch();
     await noteField.fill("");
-    await page.getByRole("button", { name: /salvesta mustand/i }).click();
-    await expect(page.getByText("Pakkumine salvestatud")).toBeVisible({ timeout: 10000 });
+    await save.click();
+    await secondPatch;
 
     expect(patchNotes.length).toBeGreaterThanOrEqual(2);
     expect(patchNotes.at(-1)).toBe(""); // empty string, NOT null / undefined

@@ -89,6 +89,14 @@ export function LeadProviderStage({ lead, onAddCandidate, onOutreachComplete }: 
   });
 
   const candidates = candidatesQuery.data?.items ?? [];
+  // 1-click quick-send (Feature A2): on a New / uncontacted lead, the email-having
+  // nearby providers that haven't been contacted yet are the default outreach set.
+  // The action pre-selects them and opens the SAME review sheet — never auto-sends.
+  const quickSendIds = useMemo(
+    () => candidates.filter((c) => c.contactEmail && !c.alreadyContacted).map((c) => c.supplierId),
+    [candidates],
+  );
+  const showQuickSend = lead.status === "new" && scope === "nearby" && quickSendIds.length > 0;
   const hasAlreadyContacted = review?.recipients.some((item) => item.skipReason === "already_contacted") ?? false;
   const toggleSelected = (supplierId: string) => setSelected((current) => {
     const next = new Set(current);
@@ -121,6 +129,25 @@ export function LeadProviderStage({ lead, onAddCandidate, onOutreachComplete }: 
           </Button>
         </div>
       </div>
+
+      {showQuickSend && (
+        <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
+          <Button
+            type="button"
+            className="h-11 w-full justify-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+            disabled={previewMutation.isPending}
+            onClick={() => {
+              const ids = Object.freeze([...quickSendIds]);
+              setSelected(new Set(quickSendIds));
+              previewMutation.mutate(ids);
+            }}
+          >
+            {previewMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            {t("admin.leads.quickSend").replace("{count}", String(quickSendIds.length))}
+          </Button>
+          <p className="mt-1.5 text-center text-xs text-muted-foreground">{t("admin.leads.quickSendHint")}</p>
+        </div>
+      )}
 
       <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
         <label className="sr-only" htmlFor={`provider-search-${lead.id}`}>{t("admin.leads.searchProviders")}</label>
@@ -195,12 +222,12 @@ export function LeadProviderStage({ lead, onAddCandidate, onOutreachComplete }: 
                     </div>
                     <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
                       {candidate.serviceTypes.map((serviceType) => <span key={serviceType} className="rounded-full bg-secondary px-2 py-0.5 text-foreground">{serviceTypeLabel(t, serviceType)}</span>)}
-                      {candidate.contactEmail && <a href={`mailto:${candidate.contactEmail}`} className="inline-flex items-center gap-1 font-medium text-accent hover:underline"><Mail className="h-3 w-3" />{candidate.contactEmail}</a>}
-                      {candidate.contactPhone && <a href={`tel:${candidate.contactPhone.replace(/\s/g, "")}`} className="inline-flex items-center gap-1 font-medium text-accent hover:underline"><Phone className="h-3 w-3" />{candidate.contactPhone}</a>}
+                      {candidate.contactEmail && <a href={`mailto:${candidate.contactEmail}`} className="inline-flex items-center gap-1 font-medium text-teal-deep hover:underline"><Mail className="h-3 w-3" />{candidate.contactEmail}</a>}
+                      {candidate.contactPhone && <a href={`tel:${candidate.contactPhone.replace(/\s/g, "")}`} className="inline-flex items-center gap-1 font-medium text-teal-deep hover:underline"><Phone className="h-3 w-3" />{candidate.contactPhone}</a>}
                     </div>
                     {candidate.otherLocations.length > 0 && (
                       <div className="mt-2">
-                        <button type="button" className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline" onClick={() => toggleLocations(candidate.supplierId)} aria-expanded={locationsExpanded}>
+                        <button type="button" className="inline-flex items-center gap-1 text-xs font-medium text-teal-deep hover:underline" onClick={() => toggleLocations(candidate.supplierId)} aria-expanded={locationsExpanded}>
                           {locationsExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                           {t("admin.leads.otherLocations")}
                         </button>
@@ -245,6 +272,12 @@ export function LeadProviderStage({ lead, onAddCandidate, onOutreachComplete }: 
       <Dialog open={review !== null} onOpenChange={(open) => { if (!open && !sendMutation.isPending) setReview(null); }}>
         <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
           <DialogHeader><DialogTitle>{t("admin.leads.reviewMessageTitle")}</DialogTitle></DialogHeader>
+          {/* Quote tokens are minted per recipient at SEND time, so the link in
+              this previewed body is a throwaway sample that would 404. The body
+              is rendered as plain, non-clickable text below — never linkified. */}
+          <p className="rounded-lg border border-border bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
+            {t("admin.leads.sampleQuoteLink")}
+          </p>
           <div className="space-y-4">
             {review?.recipients.map((item) => (
               <article key={item.supplierId} className="border-b border-border pb-4 last:border-0 last:pb-0">

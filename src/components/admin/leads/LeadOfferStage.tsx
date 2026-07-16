@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, Copy, Eye, Loader2, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Copy, Eye, Loader2, Plus, Quote, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   adminOfferService,
@@ -19,6 +19,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { candidateToEditable, nextLocalId, parsePrice, toEditable, toInput, type EditableOption } from "./leadWorkspaceModels";
+import { OFFER_STATUS_STYLE, StatusBadge } from "./leadStatusStyles";
 
 interface LeadOfferStageProps {
   lead: AdminLead;
@@ -33,11 +34,6 @@ type ApiFailure = Error & { status?: number };
 
 const formatDateTime = (iso: string) =>
   new Date(iso).toLocaleString(undefined, { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-
-const statusClass = (status: AdminOffer["status"]) =>
-  status === "chosen" ? "bg-success/10 text-success"
-    : status === "sent" || status === "viewed" ? "bg-accent/10 text-accent"
-      : "bg-secondary text-muted-foreground";
 
 export function LeadOfferStage({
   lead, offers, outreachRows, candidateToAdd, onCandidateConsumed, onOffersChanged,
@@ -191,7 +187,7 @@ export function LeadOfferStage({
   const hasEditor = editingDraftId !== null;
 
   return (
-    <section className="rounded-xl border border-border bg-card p-4" aria-label={t("admin.leads.stageOffer")}>
+    <section className="w-full max-w-[calc(100vw-3rem)] border-b border-border pb-5 xl:max-w-none" aria-label={t("admin.leads.stageOffer")}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("admin.leads.stageOffer")}</span>
@@ -203,7 +199,7 @@ export function LeadOfferStage({
             {t("admin.leads.offerCreate")}
           </Button>
         ) : (
-          <Button type="button" size="sm" className="h-9 gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90" disabled={createMutation.isPending} onClick={() => createMutation.mutate(undefined)}>
+          <Button type="button" size="sm" className="h-9 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90" disabled={createMutation.isPending} onClick={() => createMutation.mutate(undefined)}>
             {createMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
             {history.length ? t("admin.leads.newDraft") : t("admin.leads.offerCreate")}
           </Button>
@@ -219,7 +215,7 @@ export function LeadOfferStage({
             {history.map((offer) => (
               <li key={offer.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm first:pt-0 last:pb-0">
                 <div className="min-w-0">
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusClass(offer.status)}`}>{t(`admin.leads.offerStatus.${offer.status}`)}</span>
+                  <StatusBadge style={OFFER_STATUS_STYLE[offer.status]} label={t(`admin.leads.offerStatus.${offer.status}`)} />
                   <span className="ml-2 text-xs text-muted-foreground">{formatDateTime(offer.sentAt ?? offer.createdAt)}</span>
                 </div>
                 <Button type="button" size="sm" variant="ghost" className="h-8 gap-1.5 px-2 text-xs" onClick={async () => {
@@ -246,6 +242,15 @@ export function LeadOfferStage({
                 <div className="min-w-0">
                   <p className="font-medium text-navy-ink">{row.supplierName ?? row.sentTo}</p>
                   <p className="break-words text-xs text-muted-foreground">{row.sentTo}</p>
+                  {row.quotedAmount != null && (
+                    <p className="mt-1 inline-flex items-center gap-1 rounded-md bg-success/10 px-1.5 py-0.5 text-xs font-medium text-success">
+                      <Quote className="h-3 w-3" aria-hidden />
+                      {t("admin.leads.quotedAmount")
+                        .replace("{amount}", String(row.quotedAmount))
+                        .replace("{unit}", (row.quotedUnit ?? "").replace(/^€\s*\/?\s*/, "").replace(/^\/\s*/, ""))}
+                      {row.quotedAt && <span className="ml-1 font-normal text-muted-foreground">· {formatDateTime(row.quotedAt)}</span>}
+                    </p>
+                  )}
                 </div>
                 <select aria-label={`${row.supplierName ?? row.sentTo} ${t("admin.leads.outreachStatus.sent")}`} value={row.status} onChange={(event) => outreachMutation.mutate({ id: row.id, body: { status: event.target.value as OutreachStatus } })} className="h-9 rounded-md border border-border bg-card px-2 text-sm">
                   {(["sent", "replied", "declined", "noanswer"] as const).map((status) => <option key={status} value={status}>{t(`admin.leads.outreachStatus.${status}`)}</option>)}
@@ -282,6 +287,11 @@ export function LeadOfferStage({
                       <input type="text" inputMode="decimal" aria-label={t("admin.leads.offerPrice")} placeholder={t("admin.leads.offerPrice")} value={option.price} onChange={(event) => updateOption(option.localId, { price: event.target.value })} className="h-9 w-[110px] rounded-md border border-border bg-card px-2.5 text-sm" />
                       <input type="text" aria-label={t("admin.leads.offerPriceUnit")} placeholder={t("admin.leads.offerPriceUnit")} value={option.priceUnit} onChange={(event) => updateOption(option.localId, { priceUnit: event.target.value })} className="h-9 w-[140px] rounded-md border border-border bg-card px-2.5 text-sm" />
                       {option.supplierName && <span className="inline-flex h-9 items-center rounded-md bg-secondary px-2.5 text-xs font-medium text-muted-foreground">{option.supplierName}</span>}
+                      {option.fromProviderQuote && (
+                        <span className="inline-flex h-9 items-center gap-1 rounded-md bg-success/10 px-2.5 text-xs font-medium text-success">
+                          <Quote className="h-3 w-3" aria-hidden />{t("admin.leads.fromProviderQuote")}
+                        </span>
+                      )}
                     </div>
                     <textarea aria-label={t("admin.leads.offerNotes")} placeholder={t("admin.leads.offerNotes")} value={option.notes} rows={2} onChange={(event) => updateOption(option.localId, { notes: event.target.value })} className="w-full rounded-md border border-border bg-card px-2.5 py-2 text-sm" />
                   </div>
@@ -295,7 +305,7 @@ export function LeadOfferStage({
             ))}
           </div>
 
-          <Button type="button" size="sm" variant="outline" className="mt-3 h-9 gap-1.5" onClick={() => mutateOptions((previous) => [...previous, { localId: nextLocalId(), supplierId: null, supplierName: null, supplierLocationId: null, title: "", price: "", priceUnit: "", notes: "" }])}><Plus className="h-3.5 w-3.5" />{t("admin.leads.offerAddOption")}</Button>
+          <Button type="button" size="sm" variant="outline" className="mt-3 h-9 gap-1.5" onClick={() => mutateOptions((previous) => [...previous, { localId: nextLocalId(), supplierId: null, supplierName: null, supplierLocationId: null, title: "", price: "", priceUnit: "", notes: "", fromProviderQuote: false }])}><Plus className="h-3.5 w-3.5" />{t("admin.leads.offerAddOption")}</Button>
           <div className="mt-3"><label htmlFor={`offer-note-${lead.id}`} className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("admin.leads.offerCustomerNote")}</label><textarea id={`offer-note-${lead.id}`} value={customerNote} rows={2} onChange={(event) => { setCustomerNote(event.target.value); setDirty(true); }} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></div>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <Button type="button" size="sm" variant="outline" className="h-9" disabled={saveMutation.isPending || !dirty} onClick={() => saveMutation.mutate()}>{saveMutation.isPending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}{t("admin.leads.offerSave")}</Button>

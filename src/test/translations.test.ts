@@ -146,6 +146,44 @@ describe("translation completeness", () => {
     });
   });
 
+  it("uses the approved provider-quote page copy in every provider language", () => {
+    // The tokenized quote page is public and provider-facing; the link language
+    // follows the SUPPLIER's country, so all five must read natively.
+    const quoteCopy = {
+      "quote.title": ["Esita oma hind Ruumlyle", "Submit your quote for Ruumly", "Отправьте свою цену для Ruumly", "Iesniedziet savu cenu Ruumly", "Pateikite savo kainą Ruumly"],
+      "quote.askTitle": ["Mille kohta hinda küsime", "What you're quoting for", "На что вы даёте цену", "Par ko sniedzat cenu", "Už ką teikiate kainą"],
+      "quote.submitCta": ["Saada hind", "Send quote", "Отправить цену", "Nosūtīt cenu", "Siųsti kainą"],
+      "quote.updateCta": ["Uuenda oma hinda", "Update your quote", "Обновить цену", "Atjaunināt cenu", "Atnaujinti kainą"],
+      "quote.thanksTitle": ["Aitäh! Sinu hind on saadetud", "Thank you! Your quote is in", "Спасибо! Ваша цена принята", "Paldies! Jūsu cena ir saņemta", "Ačiū! Jūsų kaina gauta"],
+      "quote.invalidTitle": ["Seda päringut ei leitud", "This request wasn't found", "Запрос не найден", "Pieprasījums netika atrasts", "Užklausa nerasta"],
+      "quote.rateLimitTitle": ["Liiga palju katseid", "Too many attempts", "Слишком много попыток", "Pārāk daudz mēģinājumu", "Per daug bandymų"],
+      // The PII promise must be explicit in every language.
+      "quote.noPii": ["Me ei jaga sinuga kliendi kontaktandmeid.", "We don't share the customer's contact details with you.", "Мы не передаём вам контактные данные клиента.", "Mēs nedalāmies ar klienta kontaktinformāciju.", "Mes nesidaliname kliento kontaktiniais duomenimis."],
+    } as const;
+    const languages = [translations.et, translations.en, translations.ru, translations.lv, translations.lt];
+
+    Object.entries(quoteCopy).forEach(([key, values]) => {
+      values.forEach((value, index) => expect(languages[index][key]).toBe(value));
+    });
+  });
+
+  it("uses the approved quick-send and quote-surfacing copy in every operator language", () => {
+    const opsCopy = {
+      "admin.leads.quickSend": ["Saada päring {count} sobivale partnerile", "Send outreach to {count} matched providers", "Отправить запрос {count} подходящим поставщикам", "Nosūtīt pieprasījumu {count} atbilstošiem pakalpojumu sniedzējiem", "Siųsti užklausą {count} tinkamiems paslaugų teikėjams"],
+      "admin.leads.quickSendHint": ["Valib e-postiga lähedased partnerid — vaatad üle enne saatmist", "Pre-selects nearby providers with email — you review before sending", "Выбирает ближайших поставщиков с эл. почтой — вы проверяете перед отправкой", "Izvēlas tuvumā esošos pakalpojumu sniedzējus ar e-pastu — jūs pārskatāt pirms nosūtīšanas", "Parenka netoliese esančius paslaugų teikėjus su el. paštu — peržiūrite prieš siųsdami"],
+      "admin.leads.fromProviderQuote": ["partneri hinnast", "from provider quote", "из цены поставщика", "no pakalpojumu sniedzēja cenas", "iš teikėjo kainos"],
+      "admin.leads.quotedAmount": ["Pakkus {amount} {unit}", "Quoted {amount} {unit}", "Предложил {amount} {unit}", "Piedāvāja {amount} {unit}", "Pasiūlė {amount} {unit}"],
+      // Quote tokens are minted per recipient at send time, so the preview link
+      // is a sample — every operator language must say so.
+      "admin.leads.sampleQuoteLink": ["Sõnumis olev hinnalink on näidis — iga partner saab saatmisel oma unikaalse lingi.", "The quote link in this message is a sample — each provider gets their own unique link when you send.", "Ссылка на цену в этом сообщении — образец: при отправке каждый поставщик получит свою уникальную ссылку.", "Cenas saite šajā ziņojumā ir paraugs — nosūtot katrs pakalpojumu sniedzējs saņem savu unikālo saiti.", "Kainos nuoroda šioje žinutėje yra pavyzdys — išsiuntus kiekvienas paslaugų teikėjas gauna savo unikalią nuorodą."],
+    } as const;
+    const languages = [translations.et, translations.en, translations.ru, translations.lv, translations.lt];
+
+    Object.entries(opsCopy).forEach(([key, values]) => {
+      values.forEach((value, index) => expect(languages[index][key]).toBe(value));
+    });
+  });
+
   it("uses the approved delivery-review and booking-confirmation copy in every operator language", () => {
     const deliveryCopy = {
       "admin.leads.stageDelivery": ["Vaata üle ja saada", "Review and send", "Проверить и отправить", "Pārskatīt un nosūtīt", "Peržiūrėti ir siųsti"],

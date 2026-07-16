@@ -9,6 +9,9 @@ export interface EditableOption {
   price: string;
   priceUnit: string;
   notes: string;
+  /** Backend-derived: this option was auto-seeded from a provider's tokenized
+   *  quote (Feature B). Surfaced as a badge; never sent back on save. */
+  fromProviderQuote: boolean;
 }
 
 let localSeq = 0;
@@ -25,6 +28,7 @@ export function toEditable(option: AdminOffer["options"][number]): EditableOptio
     price: option.priceAmount != null ? String(option.priceAmount) : "",
     priceUnit: option.priceUnit ?? "",
     notes: option.notes ?? "",
+    fromProviderQuote: option.fromProviderQuote ?? false,
   };
 }
 
@@ -38,6 +42,7 @@ export function candidateToEditable(candidate: ProviderCandidate): EditableOptio
     price: candidate.price != null ? String(candidate.price) : "",
     priceUnit: candidate.priceUnit ?? "",
     notes: "",
+    fromProviderQuote: false,
   };
 }
 

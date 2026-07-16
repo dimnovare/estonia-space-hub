@@ -147,7 +147,7 @@ export function LeadDeliveryReview({ lead, offers, onOffersChanged }: LeadDelive
   };
 
   return (
-    <section className="rounded-xl border border-border bg-card p-4" aria-label={t("admin.leads.stageDelivery")}>
+    <section className="w-full max-w-[calc(100vw-3rem)] xl:max-w-none" aria-label={t("admin.leads.stageDelivery")}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("admin.leads.stageDelivery")}</span>
         {isChosen && (
@@ -162,7 +162,7 @@ export function LeadDeliveryReview({ lead, offers, onOffersChanged }: LeadDelive
           <Button
             type="button"
             size="sm"
-            className="h-9 gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90"
+            className="h-9 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
             disabled={!hasSendableOptions}
             onClick={openReview}
           >
@@ -202,7 +202,7 @@ export function LeadDeliveryReview({ lead, offers, onOffersChanged }: LeadDelive
           <Button
             type="button"
             size="sm"
-            className="h-9 gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90"
+            className="h-9 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
             disabled={confirmMutation.isPending}
             onClick={() => setConfirmOpen(true)}
           >
@@ -263,7 +263,7 @@ export function LeadDeliveryReview({ lead, offers, onOffersChanged }: LeadDelive
             <Button type="button" variant="outline" onClick={() => setReviewOpen(false)} disabled={sendMutation.isPending}>{t("common.cancel")}</Button>
             <Button
               type="button"
-              className="w-full gap-2 bg-accent text-accent-foreground hover:bg-accent/90 sm:w-auto"
+              className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 sm:w-auto"
               disabled={sendMutation.isPending || !preview}
               onClick={() => sendMutation.mutate()}
             >
@@ -283,7 +283,7 @@ export function LeadDeliveryReview({ lead, offers, onOffersChanged }: LeadDelive
           <AlertDialogFooter>
             <AlertDialogCancel disabled={confirmMutation.isPending}>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-accent text-accent-foreground hover:bg-accent/90"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
               disabled={confirmMutation.isPending}
               onClick={(event) => { event.preventDefault(); confirmMutation.mutate(); }}
             >

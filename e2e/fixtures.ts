@@ -616,6 +616,33 @@ export function draftOfferWithOption(over: Json = {}): Json {
   };
 }
 
+/** Outreach row whose provider submitted a price via the tokenized quote page
+ *  (Feature B): Status=Replied plus the stored quote fields. */
+export function quotedOutreachRow(over: Json = {}): Json {
+  return {
+    id: "or-quoted", demandLeadId: "lead-1", supplierId: "sup-panicom",
+    supplierName: "Panicom Miniladu", sentTo: "sales@panicom.ee",
+    sentAt: "2026-07-10T09:30:00Z", status: "replied", note: null,
+    quotedAmount: 89, quotedUnit: "€/kuu", quotedAvailability: "From Aug 1",
+    quotedNote: "24/7 access", quotedAt: "2026-07-10T12:15:00Z",
+    ...over,
+  };
+}
+
+/** Draft offer whose option the backend auto-seeded from a provider quote
+ *  (Feature B) — the admin surfaces it with a "from provider quote" badge. */
+export function quoteSeededDraftOffer(over: Json = {}): Json {
+  return draftOfferWithOption({
+    options: [{
+      id: "oopt-quote-1", supplierId: "sup-panicom", supplierName: "Panicom Miniladu",
+      supplierLocationId: "loc-panicom", title: "Panicom Miniladu — Tallinn",
+      priceAmount: 89, priceUnit: "€/kuu", notes: "24/7 access", sortOrder: 0,
+      fromProviderQuote: true,
+    }],
+    ...over,
+  });
+}
+
 /** Chosen offer — a pending customer preference awaiting provider confirmation (Task 8). */
 export function chosenOffer(over: Json = {}): Json {
   return {
@@ -668,6 +695,59 @@ export async function stubPublicOffer(
     const status = opts.getStatus ?? 200;
     return status === 200 ? json(route, offer) : json(route, { message: "not found" }, status);
   });
+}
+
+/** Public provider quote fixture (GET /quote/{token} shape per spec §B). NO PII. */
+export function publicQuote(over: Json = {}): Json {
+  return {
+    provider: { name: "Panicom Miniladu" },
+    lead: { category: "warehouse", city: "Tallinn", toCity: null, needDate: "2026-08-01", details: "u 20 m2, augusti algusest" },
+    currency: "EUR",
+    alreadySubmitted: false,
+    existing: null,
+    ...over,
+  };
+}
+
+/**
+ * Stateful stub for the public provider quote page (Feature B):
+ * GET /quote/{token} (pass a non-2xx `getStatus` for invalid/expired tokens)
+ * and POST /quote/{token}. A successful POST flips the GET to alreadySubmitted
+ * with the submitted values (mirrors the real re-submit prefill).
+ *
+ * The matcher is a pathname predicate rather than a plain regex: the API path
+ * ({VITE_API_URL}/quote/{token} → /api/quote/{token}) and the SPA page path
+ * (/{lang}/quote/{token}) share the "/quote/" segment, so the lang-prefixed
+ * page navigation is explicitly excluded and can never be answered with JSON.
+ */
+export async function stubQuote(
+  page: Page,
+  opts: { quote?: Json; getStatus?: number; submitStatus?: number } = {},
+): Promise<void> {
+  const state: Json = { ...(opts.quote ?? publicQuote()) };
+  await page.route(
+    (url) => /\/quote\/[^/]+$/.test(url.pathname) && !/^\/[a-z]{2}\/quote\//.test(url.pathname),
+    (route) => {
+      const req = route.request();
+      if (req.method() === "POST") {
+        const status = opts.submitStatus ?? 200;
+        if (status !== 200) return json(route, { message: "error" }, status);
+        const body = (req.postDataJSON() ?? {}) as {
+          priceAmount?: number; priceUnit?: string; availability?: string; note?: string;
+        };
+        state.alreadySubmitted = true;
+        state.existing = {
+          amount: body.priceAmount ?? null,
+          unit: body.priceUnit ?? null,
+          availability: body.availability ?? null,
+          note: body.note ?? null,
+        };
+        return json(route, { ok: true });
+      }
+      const status = opts.getStatus ?? 200;
+      return status === 200 ? json(route, state) : json(route, { message: "not found" }, status);
+    },
+  );
 }
 
 /** Stub POST /bookings to return a created booking. */

@@ -715,6 +715,9 @@ export interface AdminOfferOption {
   priceUnit: string | null;
   notes: string | null;
   sortOrder: number;
+  /** True when the backend auto-seeded this option from a provider's tokenized
+   *  quote submission (Feature B). Surfaced as a "from provider quote" badge. */
+  fromProviderQuote?: boolean;
 }
 
 export interface AdminOffer {
@@ -753,6 +756,14 @@ export interface ProviderOutreachRow {
   sentAt: string;
   status: OutreachStatus;
   note: string | null;
+  /** Provider self-service quote (Feature B) — populated when the provider
+   *  submitted a price via the tokenized /quote/{token} page. When present the
+   *  outreach-history row shows "Quoted {amount} {unit}" with QuotedAt. */
+  quotedAmount?: number | null;
+  quotedUnit?: string | null;
+  quotedAvailability?: string | null;
+  quotedNote?: string | null;
+  quotedAt?: string | null;
 }
 
 export interface OutreachResult {
@@ -865,6 +876,59 @@ export const offerService = {
   },
   async choose(token: string, optionId: string): Promise<{ ok: boolean; chosenOptionId: string; chosenAt: string }> {
     return apiClient.post(`/offers/${encodeURIComponent(token)}/choose`, { optionId });
+  },
+};
+
+// ─── Provider quote page (Feature B — tokenized, anonymous, rate-limited) ──────
+// A provider opens /{lang}/quote/{token} from the outreach email and submits a
+// price. NO customer PII is exposed — only what they are quoting. Submitting
+// marks the outreach Replied and auto-seeds the lead's draft offer server-side.
+// 404 for unknown/expired tokens (mirrors the offer page dead-end).
+export interface PublicQuoteExisting {
+  amount: number | null;
+  unit: string | null;
+  availability: string | null;
+  note: string | null;
+}
+
+export interface PublicQuote {
+  provider: { name: string };
+  lead: {
+    category: string;
+    city: string;
+    toCity?: string | null;
+    needDate?: string | null;
+    details?: string | null;
+  };
+  currency: string; // "EUR"
+  alreadySubmitted: boolean;
+  existing?: PublicQuoteExisting | null;
+}
+
+export interface QuoteSubmitInput {
+  priceAmount: number;
+  priceUnit?: string | null;
+  availability?: string | null;
+  note?: string | null;
+}
+
+/** Thank-you DTO — the backend echoes the stored (trimmed/clamped) quote back.
+ *  400 on a negative amount or `<`/`>` in any string; 404 unknown token; 429
+ *  when the anonymous public-email rate limit (5 req / 10 min per IP) trips. */
+export interface QuoteSubmitResult {
+  ok: boolean;
+  amount: number | null;
+  unit: string | null;
+  availability: string | null;
+  note: string | null;
+}
+
+export const quoteService = {
+  async get(token: string): Promise<PublicQuote> {
+    return apiClient.get<PublicQuote>(`/quote/${encodeURIComponent(token)}`);
+  },
+  async submit(token: string, body: QuoteSubmitInput): Promise<QuoteSubmitResult> {
+    return apiClient.post<QuoteSubmitResult>(`/quote/${encodeURIComponent(token)}`, body);
   },
 };
 

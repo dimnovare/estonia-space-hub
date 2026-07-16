@@ -37,6 +37,7 @@ import NotFound from "@/pages/NotFound";
 const ProviderPage = lazy(() => import("@/pages/ProviderPage"));
 const RequestPage = lazy(() => import("@/pages/RequestPage"));
 const OfferPage = lazy(() => import("@/pages/OfferPage"));
+const QuotePage = lazy(() => import("@/pages/QuotePage"));
 import RequestDetailPage from "@/pages/RequestDetailPage";
 import VerifyEmailPage from "@/pages/VerifyEmailPage";
 import { Loader2 } from "lucide-react";
@@ -150,9 +151,10 @@ function AppContent() {
   const { role, isInitializing } = useAuth();
   const location = useLocation();
   const isLoginPage = /^\/[a-z]{2}\/login$/i.test(window.location.pathname) || window.location.pathname === "/login";
-  // The public offer page is a clean, no-nav-noise surface (overhaul §5):
-  // it renders its own slim logo header instead of the full Navbar.
-  const isOfferPage = /^\/[a-z]{2}\/offer\//i.test(location.pathname);
+  // The public offer + provider-quote pages are clean, no-nav-noise surfaces
+  // (offer overhaul §5 / quote Feature B): each renders its own slim logo
+  // header instead of the full Navbar.
+  const isOfferPage = /^\/[a-z]{2}\/(offer|quote)\//i.test(location.pathname);
 
   // Auto-reload once on chunk load failure (stale deployment cache)
   useEffect(() => {
@@ -195,6 +197,10 @@ function AppContent() {
                   Minimal chrome: the page brings its own slim header (the
                   global Navbar is suppressed below). */}
               <Route path="offer/:token" element={<OfferPage />} />
+              {/* Public provider quote page — anonymous, token-keyed, noindex.
+                  Minimal chrome: the page brings its own slim header (the
+                  global Navbar is suppressed above). Feature B. */}
+              <Route path="quote/:token" element={<QuotePage />} />
               {/* SEO keyword landings → canonical storage search */}
               <Route path="laopind" element={<StorageKeywordRedirect />} />
               <Route path="miniladu" element={<StorageKeywordRedirect />} />

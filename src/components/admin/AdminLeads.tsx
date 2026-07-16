@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "@/i18n/routing";
 import {
   adminLeadService,
   type AdminLead,
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LeadWorkspace } from "@/components/admin/leads/LeadWorkspace";
+import { LEAD_STATUS_STYLE, StatusBadge } from "@/components/admin/leads/leadStatusStyles";
 
 const STATUS_OPTIONS: { value: AdminLeadStatus | "all"; labelKey: string }[] = [
   { value: "all",       labelKey: "admin.leads.statusAll" },
@@ -26,15 +28,6 @@ const STATUS_OPTIONS: { value: AdminLeadStatus | "all"; labelKey: string }[] = [
   { value: "dismissed", labelKey: "admin.leads.statusDismissed" },
   { value: "unmatched", labelKey: "admin.leads.statusUnmatched" },
 ];
-
-const STATUS_COLORS: Record<AdminLeadStatus, string> = {
-  new: "bg-info/10 text-info",
-  contacted: "bg-warning/10 text-warning-text",
-  quoted: "bg-accent/10 text-accent",
-  converted: "bg-success/10 text-success",
-  dismissed: "bg-secondary text-muted-foreground",
-  unmatched: "bg-destructive/10 text-destructive",
-};
 
 const LIMIT = 50;
 
@@ -73,11 +66,7 @@ function LeadStatusControl({ lead, onStatusChange, statusPending }: {
 }) {
   const { t } = useLanguage();
   if (lead.status === "converted") {
-    return (
-      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_COLORS.converted}`}>
-        {t("admin.leads.statusConverted")}
-      </span>
-    );
+    return <StatusBadge style={LEAD_STATUS_STYLE.converted} label={t("admin.leads.statusConverted")} className="px-2.5 py-1 text-xs" />;
   }
   return (
     <select
@@ -85,7 +74,7 @@ function LeadStatusControl({ lead, onStatusChange, statusPending }: {
       disabled={statusPending}
       aria-label={t("admin.leads.colStatus")}
       onChange={(e) => onStatusChange(e.target.value as AdminLeadStatus)}
-      className={`rounded-full px-2.5 py-1 text-xs font-medium border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring ${STATUS_COLORS[lead.status] ?? STATUS_COLORS.new}`}
+      className={`rounded-full px-2.5 py-1 text-xs font-medium border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring ${(LEAD_STATUS_STYLE[lead.status] ?? LEAD_STATUS_STYLE.new).badge}`}
     >
       <option value="new">{t("admin.leads.statusNew")}</option>
       <option value="contacted">{t("admin.leads.statusContacted")}</option>
@@ -106,7 +95,10 @@ export default function AdminLeads() {
   const [categoryFilter, setCategoryFilter] = useState<string>("any");
   const [cityFilter, setCityFilter] = useState("");
   const [page, setPage] = useState(1);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  // Deep link: /admin?tab=leads&lead={id} auto-expands that lead's workspace on
+  // load (Feature A) — the instant-alert email links straight into the lead.
+  const [searchParams] = useSearchParams();
+  const [expandedId, setExpandedId] = useState<string | null>(() => searchParams.get("lead"));
 
   // Optional GetLeads filters (source/category/city/needsResponse). Guarded so
   // nothing breaks if the backend ignores a param it doesn't support yet.
@@ -250,7 +242,7 @@ export default function AdminLeads() {
           aria-pressed={conciergeOnly}
           className={`min-h-[36px] rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
             conciergeOnly
-              ? "bg-accent text-accent-foreground"
+              ? "bg-primary text-primary-foreground"
               : "border border-border bg-card text-muted-foreground hover:border-primary hover:text-primary"
           }`}
         >
@@ -261,7 +253,7 @@ export default function AdminLeads() {
           aria-pressed={needsResponse}
           className={`min-h-[36px] rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
             needsResponse
-              ? "bg-accent text-accent-foreground"
+              ? "bg-primary text-primary-foreground"
               : "border border-border bg-card text-muted-foreground hover:border-primary hover:text-primary"
           }`}
         >
