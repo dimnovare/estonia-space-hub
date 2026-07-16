@@ -254,7 +254,7 @@ test.describe("Admin lead workspace", () => {
     await expect(page.getByText(/saadavuspäring → rare minilaod/i)).toBeVisible();
   });
 
-  test("offer builder: create → add option → save → send with confirm → sent badge", async ({ page }) => {
+  test("offer builder: create → add option → save → review delivery → sent badge", async ({ page }) => {
     await openWorkspace(page);
 
     // Create the draft.
@@ -271,10 +271,14 @@ test.describe("Admin lead workspace", () => {
     await page.getByRole("button", { name: /salvesta mustand/i }).click();
     await expect(page.getByText("Pakkumine salvestatud")).toBeVisible({ timeout: 10000 });
 
-    // Send with confirm.
-    await page.getByRole("button", { name: /saada kliendile/i }).click();
-    await expect(page.getByRole("alertdialog")).toBeVisible();
-    await page.getByRole("alertdialog").getByRole("button", { name: /saada kliendile/i }).click();
+    // Send is available ONLY through Stage 3 "Review delivery", which states the
+    // exact effects (recipient, page, side-effects) before dispatch — there is no
+    // count-only quick-send that bypasses the review.
+    await page.getByRole("button", { name: /vaata saatmine üle/i }).click();
+    const review = page.getByRole("dialog");
+    await expect(review).toContainText("mari@example.com"); // exact recipient shown
+    await expect(review).toContainText(/muuda päringu staatuseks hinnastatud/i); // effect bullet
+    await review.getByRole("button", { name: /saada kliendile/i }).click();
 
     // Sent: toast + status badge + timestamp + copy-link (NOT a navigating
     // anchor — Finding 7) + timeline event. The draft "open page" link is gone.

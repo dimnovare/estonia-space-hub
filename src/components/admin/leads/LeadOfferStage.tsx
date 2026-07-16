@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, CheckCircle, Copy, Eye, Loader2, Plus, Send, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Copy, Eye, Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   adminOfferService,
@@ -56,7 +56,6 @@ export function LeadOfferStage({
   const [customerNote, setCustomerNote] = useState("");
   const [dirty, setDirty] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [confirmSend, setConfirmSend] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [outreachNotes, setOutreachNotes] = useState<Record<string, string>>({});
   const dismissedDraftId = useRef<string | null>(null);
@@ -144,27 +143,6 @@ export function LeadOfferStage({
     },
   });
 
-  const sendMutation = useMutation({
-    mutationFn: async () => {
-      await adminOfferService.update(editingDraftId!, offerPatchBody());
-      return adminOfferService.send(editingDraftId!);
-    },
-    onSuccess: () => {
-      setConfirmSend(false);
-      setEditingDraftId(null);
-      setOptions([]);
-      setCustomerNote("");
-      setDirty(false);
-      toast.success(t("admin.leads.offerSentToast"));
-      refreshOffers();
-    },
-    onError: (error: ApiFailure) => {
-      setConfirmSend(false);
-      refreshOnConflict(error);
-      toast.error(error.message || t("toast.error"));
-    },
-  });
-
   const deleteMutation = useMutation({
     mutationFn: () => adminOfferService.remove(activeDraft!.id),
     onSuccess: () => {
@@ -210,7 +188,6 @@ export function LeadOfferStage({
       [next[index], next[target]] = [next[target], next[index]];
       return next;
     });
-  const validOptionCount = options.filter((option) => option.title.trim()).length;
   const hasEditor = editingDraftId !== null;
 
   return (
@@ -323,7 +300,6 @@ export function LeadOfferStage({
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <Button type="button" size="sm" variant="outline" className="h-9" disabled={saveMutation.isPending || !dirty} onClick={() => saveMutation.mutate()}>{saveMutation.isPending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}{t("admin.leads.offerSave")}</Button>
             <Button type="button" size="sm" variant="outline" className="h-9 gap-1.5" aria-pressed={showPreview} onClick={() => setShowPreview((visible) => !visible)}><Eye className="h-3.5 w-3.5" />{t("admin.leads.offerPreview")}</Button>
-            <Button type="button" size="sm" className="h-9 gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90" disabled={sendMutation.isPending} onClick={() => { if (validOptionCount === 0) { toast.error(t("admin.leads.offerNoOptions")); return; } setConfirmSend(true); }}><Send className="h-3.5 w-3.5" />{t("admin.leads.offerSend")}</Button>
             {activeDraft && <Button type="button" size="sm" variant="outline" className="h-9 gap-1.5 text-destructive hover:text-destructive" disabled={deleteMutation.isPending} onClick={() => setConfirmDelete(true)}><Trash2 className="h-3.5 w-3.5" />{t("admin.leads.deleteDraft")}</Button>}
           </div>
 
@@ -331,7 +307,6 @@ export function LeadOfferStage({
         </>
       )}
 
-      <AlertDialog open={confirmSend} onOpenChange={setConfirmSend}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{t("admin.leads.offerSendConfirmTitle")}</AlertDialogTitle><AlertDialogDescription>{t("admin.leads.offerSendConfirmBody").replace("{count}", String(validOptionCount))}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{t("offer.confirmCancel")}</AlertDialogCancel><AlertDialogAction className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={(event) => { event.preventDefault(); sendMutation.mutate(); }}>{t("admin.leads.offerSend")}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{t("admin.leads.deleteDraftTitle")}</AlertDialogTitle><AlertDialogDescription>{t("admin.leads.deleteDraftBody")}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel disabled={deleteMutation.isPending}>{t("common.cancel")}</AlertDialogCancel><AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={deleteMutation.isPending} onClick={(event) => { event.preventDefault(); deleteMutation.mutate(); }}>{t("admin.leads.deleteDraft")}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
     </section>
   );
