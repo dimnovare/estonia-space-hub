@@ -764,6 +764,12 @@ export interface AdminOffer {
   chosenOptionId: string | null;
   createdBy: string | null;
   options: AdminOfferOption[];
+  /** Optimistic-concurrency token. PATCH is a replace-set, so a provider quote
+   *  landing between our fetch and the admin's save would silently delete the
+   *  auto-seeded option. Echo this back on every PATCH: a stale value 409s
+   *  instead of clobbering. Backend treats it as optional, so the protection
+   *  only exists because we send it. */
+  version?: number;
 }
 
 /** Option payload for create/update (replace-set semantics on PATCH). */
@@ -837,9 +843,18 @@ export const adminOfferService = {
   async get(id: string): Promise<AdminOffer> {
     return apiClient.get<AdminOffer>(`/admin/offers/${id}`);
   },
+  /** Replace-set update. ALWAYS pass `version` (from the offer you fetched) —
+   *  omitting it disables the concurrency check and re-opens the silent
+   *  delete-a-provider-quote hole. A stale version returns 409. */
   async update(
     id: string,
-    body: { customerNote?: string | null; language?: string; status?: OfferStatus; options?: OfferOptionInput[] },
+    body: {
+      customerNote?: string | null;
+      language?: string;
+      status?: OfferStatus;
+      options?: OfferOptionInput[];
+      version?: number;
+    },
   ): Promise<AdminOffer> {
     return apiClient.patch<AdminOffer>(`/admin/offers/${id}`, body);
   },
@@ -933,7 +948,14 @@ export interface PublicQuote {
   currency: string; // "EUR"
   alreadySubmitted: boolean;
   existing?: PublicQuoteExisting | null;
+  /** The lead is Converted / Dismissed / Unmatched — quoting is over. Show the
+   *  closed state instead of the form so the provider learns it upfront rather
+   *  than by failing a submit (POST would 409 with reason "lead_closed"). */
+  closed?: boolean;
 }
+
+/** `reason` discriminator on a 409 from POST /quote/{token}. */
+export type QuoteConflictReason = "lead_closed";
 
 export interface QuoteSubmitInput {
   priceAmount: number;

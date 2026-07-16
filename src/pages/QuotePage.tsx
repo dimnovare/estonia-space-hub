@@ -3,16 +3,17 @@ import { useParams, Link } from "@/i18n/routing";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   CheckCircle, MapPin, ArrowRight, CalendarDays, Loader2, LinkIcon,
-  AlertCircle, RotateCcw, Send, Tag, Clock,
+  AlertCircle, RotateCcw, Send, Tag, Clock, CircleSlash,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
-import { quoteService, type PublicQuote, type QuoteSubmitInput } from "@/services";
+import { quoteService, type PublicQuote, type QuoteSubmitInput, type QuoteSubmitResult } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
 import { serviceTypeLabel } from "@/lib/serviceTypes";
+import { parseMoney } from "@/lib/parseMoney";
 import type { BillingPeriod } from "@/lib/priceUnit";
 
 /**
@@ -45,7 +46,11 @@ export default function QuotePage() {
   const [availability, setAvailability] = useState("");
   const [note, setNote] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [result, setResult] = useState<QuoteSubmitResult | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  // The lead closed while this page was open: the GET said it was quotable but
+  // the POST came back 409 lead_closed. Same destination as quote.closed.
+  const [closedOnSubmit, setClosedOnSubmit] = useState(false);
   const seededRef = useRef(false);
 
   // Mirrors provider/ProviderListings.priceUnitOptionsFor: keep the stored value
@@ -94,18 +99,33 @@ export default function QuotePage() {
 
   const submitMutation = useMutation({
     mutationFn: (body: QuoteSubmitInput) => quoteService.submit(token, body),
-    onSuccess: () => {
+    onSuccess: (res) => {
       setFormError(null);
+      // Keep the server's echo: the thank-you screen shows the amount that was
+      // actually STORED, so a provider can spot a mis-read price themselves
+      // instead of finding out when the customer is quoted the wrong number.
+      setResult(res ?? null);
       setSubmitted(true);
     },
-    onError: (err: Error & { status?: number }) => {
+    onError: (err: Error & { status?: number; body?: unknown; retryAfter?: number }) => {
       // The form state is never cleared on failure — the provider must not have
       // to retype their price because of a transient/validation error.
       const s = err?.status;
+      // 409 + reason "lead_closed": the lead was closed while this page was
+      // open. That is a dead end, not a bad link and not a generic failure.
+      const reason = (err?.body as { reason?: string } | undefined)?.reason;
+      if (s === 409 && reason === "lead_closed") { setClosedOnSubmit(true); return; }
       if (s === 404) { setFormError(t("quote.expiredError")); return; }
-      if (s === 429) { setFormError(t("quote.rateLimitError")); return; }
-      // 400 = server-side validation (negative amount, `<`/`>` in a string).
-      // Surface the backend's exact reason inline beside the field.
+      if (s === 429) {
+        // Prefer the server's own Retry-After over a vague "wait a bit".
+        const secs = err.retryAfter;
+        setFormError(secs && secs > 0
+          ? t("quote.rateLimitRetryAfter").replace("{seconds}", String(Math.ceil(secs)))
+          : t("quote.rateLimitError"));
+        return;
+      }
+      // 400 = server-side validation (negative amount, amount > 1,000,000,
+      // `<`/`>` in a string). Surface the backend's exact reason by the field.
       if (s === 400) { setFormError(err.message || t("quote.submitError")); return; }
       setFormError(t("quote.submitError"));
     },
@@ -243,6 +263,29 @@ export default function QuotePage() {
   const categorySlug = quote.lead.category?.toLowerCase?.() ?? quote.lead.category;
   const categoryLabel = categorySlug === "any" ? t("quote.categoryAny") : serviceTypeLabel(t, categorySlug);
 
+  // ── Closed lead — quoting is over (spec Fix 7). Reached either upfront from
+  //    the GET (`closed`), or from a 409 lead_closed if it closed mid-visit.
+  //    Deliberately NOT the invalid-link state: the link is fine, the job is
+  //    gone, and telling a provider their link is broken would be a lie. ──
+  if (quote.closed || closedOnSubmit) {
+    return (
+      <div className="min-h-screen surface-sunken">
+        <SEO title={t("quote.closedTitle")} description={t("quote.closedBody")} path={`/quote/${token}`} noindex />
+        {header}
+        <div className="container-wide flex min-h-[60vh] items-center justify-center py-16">
+          <div className="mx-auto max-w-md text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-secondary">
+              <CircleSlash className="h-7 w-7 text-muted-foreground" />
+            </div>
+            <h1 className="mt-5 font-display text-2xl font-bold text-navy-ink">{t("quote.closedTitle")}</h1>
+            <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">{t("quote.closedBody")}</p>
+            {helpFooter}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ── Thank-you state ──
   if (submitted) {
     return (
@@ -255,6 +298,16 @@ export default function QuotePage() {
               <CheckCircle className="mt-0.5 h-6 w-6 shrink-0 text-success" aria-hidden />
               <div>
                 <h1 className="font-display text-xl font-bold text-navy-ink">{t("quote.thanksTitle")}</h1>
+                {/* Echo what the server STORED, not what was typed — the only
+                    way a provider can catch a mis-read price themselves. */}
+                {result?.amount != null && (
+                  <p className="mt-2 font-display text-base font-bold text-navy-ink">
+                    {t("quote.thanksAmount").replace(
+                      "{price}",
+                      `€${result.amount}${result.unit ? ` ${result.unit.replace(/^€\s*\/?\s*/, "/ ").replace(/^\/\s*/, "/ ")}` : ""}`,
+                    )}
+                  </p>
+                )}
                 <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{t("quote.thanksBody")}</p>
               </div>
             </div>
@@ -266,8 +319,11 @@ export default function QuotePage() {
   }
 
   const submit = () => {
-    const amount = parseFloat(price.replace(",", ".").trim());
-    if (!Number.isFinite(amount) || amount < 0) { setFormError(t("quote.priceRequired")); return; }
+    // Strict: parseFloat prefix-parsed "1 200,50" to 1 and every guard passed it,
+    // so the provider got a success screen while €1 went to the customer. Bad
+    // input must be a visible error, never a quietly different number.
+    const amount = parseMoney(price);
+    if (amount === null) { setFormError(t("quote.priceRequired")); return; }
     setFormError(null);
     submitMutation.mutate({
       priceAmount: amount,

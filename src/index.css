@@ -29,8 +29,9 @@
     --accent: 170 88% 32%;           /* #0A9881 */
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 3 67% 54%;        /* #D8453C */
+    --destructive: 3 67% 54%;        /* #D8453C — fill */
     --destructive-foreground: 0 0% 100%;
+    --destructive-text: 3 67% 40%;   /* ≈6.9:1 on white (the fill is ~3.9:1) */
 
     --border: 222 33% 91%;           /* #E6EAF3 */
     --input: 224 35% 89%;            /* #D8DEEC */
@@ -51,16 +52,24 @@
     /* Raw brand palette (HSL) for direct use */
     --teal: 184 56% 57%;             /* #51CDD4 */
     --teal-deep: 183 70% 40%;        /* #1FA6AE */
+    /* Teal that reads as TEXT on light surfaces (≈5.5:1 on white). --teal-deep
+       is a brand/glyph colour and only reaches ~2.9:1 as text, which fails AA —
+       use this for teal LINKS and any teal body text. */
+    --teal-text: 183 70% 28%;
     --navy-ink: 224 72% 20%;         /* #0E2156 */
     --navy-deep: 227 63% 12%;        /* #0B1330 */
 
-    /* Custom tokens */
-    --success: 162 83% 34%;          /* #0F9D6E */
+    /* Custom tokens.
+       Each semantic colour has a FILL variant (solid, used behind white text)
+       and a *-text variant dark enough to be readable AS text on a light /10
+       tint (WCAG AA, ≥4.5:1). The fills are NOT AA as text — --success is only
+       ~3:1 on white — so never use them for label text. */
+    --success: 162 83% 34%;          /* #0F9D6E — fill */
     --success-foreground: 0 0% 100%;
-    --warning: 33 83% 43%;           /* #C97A12 */
+    --success-text: 162 84% 24%;     /* ≈6:1 on white */
+    --warning: 33 83% 43%;           /* #C97A12 — fill */
     --warning-foreground: 0 0% 100%;
-    /* Amber that reads as TEXT on light surfaces (≈5:1 on white). */
-    --warning-text: 32 95% 38%;
+    --warning-text: 32 95% 32%;      /* ≈5.5:1 on white (was 38% ≈4.1:1, failed AA) */
     --info: 215 67% 51%;             /* #2F77D6 */
     --info-foreground: 0 0% 100%;
 
@@ -101,8 +110,12 @@
     --border: 213 20% 20%;
     --input: 213 20% 20%;
     --ring: 174 65% 47%;
-    /* On dark surfaces a lighter amber (amber-400) keeps warning text legible. */
+    /* On dark surfaces the *-text variants invert: they must be LIGHTER than the
+       fill to stay legible against a dark tint. */
     --warning-text: 43 96% 56%;
+    --success-text: 162 60% 58%;
+    --destructive-text: 3 85% 72%;
+    --teal-text: 183 60% 62%;
   }
 }
 

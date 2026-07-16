@@ -17,10 +17,14 @@ export interface StatusStyle {
   badge: string;
 }
 
-const SLATE = "bg-secondary text-muted-foreground";
+// Foregrounds are the AA-readable *-text variants, NOT the solid fills: the
+// fills are meant to sit behind white text and only reach ~3:1 as label text on
+// a /10 tint, which fails WCAG AA. Darkening the foreground keeps the restrained
+// look (the tint stays quiet) while making the label actually readable.
+const SLATE = "bg-secondary text-ink-2";
 const AMBER = "bg-warning/10 text-warning-text";
-const GREEN = "bg-success/10 text-success";
-const RED = "bg-destructive/10 text-destructive";
+const GREEN = "bg-success/10 text-success-text";
+const RED = "bg-destructive/10 text-destructive-text";
 
 export const LEAD_STATUS_STYLE: Record<AdminLeadStatus, StatusStyle> = {
   new:       { icon: Circle,       badge: SLATE },

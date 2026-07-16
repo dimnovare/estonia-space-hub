@@ -408,6 +408,80 @@ test.describe("Admin lead workspace", () => {
     await expect(page.getByLabel(/customer note|note to the customer/i)).toHaveValue("");
   });
 
+  // ── Offer concurrency: the replace-set PATCH must not silently delete an
+  //    option a provider's quote seeded while the admin was editing. ──
+
+  test("every offer save echoes the version it loaded", async ({ page }) => {
+    // The backend's version check is omitted-safe, so the protection exists ONLY
+    // while the client sends it. If this assertion ever goes green-by-absence,
+    // the silent-delete hole is open again.
+    await openWorkspaceWithDraft(page);
+
+    const patchBodies: Record<string, unknown>[] = [];
+    page.on("request", (req) => {
+      if (req.method() === "PATCH" && /\/admin\/offers\/[^/]+$/.test(new URL(req.url()).pathname)) {
+        patchBodies.push((req.postDataJSON() ?? {}) as Record<string, unknown>);
+      }
+    });
+
+    await page.getByLabel(/customer note|note to the customer/i).fill("Ready to send");
+    await page.getByRole("button", { name: /save draft/i }).click();
+    await expect(page.getByText("Offer saved")).toBeVisible({ timeout: 10000 });
+
+    expect(patchBodies).toHaveLength(1);
+    expect(patchBodies[0].version).toBe(1); // draftOfferWithOption loads at version 1
+  });
+
+  test("a save consecutive to another adopts the new version rather than 409ing", async ({ page }) => {
+    // A successful write advances the server's version; the client must adopt the
+    // returned value or the very next save would falsely conflict.
+    await openWorkspaceWithDraft(page);
+    const versions: unknown[] = [];
+    page.on("request", (req) => {
+      if (req.method() === "PATCH" && /\/admin\/offers\/[^/]+$/.test(new URL(req.url()).pathname)) {
+        versions.push((req.postDataJSON() ?? {}).version);
+      }
+    });
+
+    const note = page.getByLabel(/customer note|note to the customer/i);
+    const save = page.getByRole("button", { name: /save draft/i });
+    const patch = () => page.waitForRequest((req) =>
+      req.method() === "PATCH" && /\/admin\/offers\/[^/]+$/.test(new URL(req.url()).pathname));
+
+    const first = patch();
+    await note.fill("First");
+    await save.click();
+    await first;
+    await expect(page.getByText("Offer saved").first()).toBeVisible({ timeout: 10000 });
+
+    const second = patch();
+    await note.fill("Second");
+    await save.click();
+    await second;
+
+    expect(versions).toEqual([1, 2]);
+    // No conflict toast: the second save applied cleanly.
+    await expect(page.getByText(/changed since you loaded it/i)).toHaveCount(0);
+  });
+
+  test("a provider quote landing mid-edit conflicts instead of deleting the seeded option", async ({ page }) => {
+    // The exact data-loss scenario: the admin loaded the draft, a quote seeded a
+    // new option server-side, and the admin's replace-set save would have wiped
+    // it. The echoed version turns that into a 409.
+    await openWorkspaceWithDraft(page, { quoteLandsBeforeFirstPatch: true });
+
+    const title = page.getByLabel("Title").first();
+    await expect(title).toHaveValue("Miniladu 10 m² kesklinnas", { timeout: 10000 });
+    await title.fill("Admin edited title");
+    await page.getByRole("button", { name: /save draft/i }).click();
+
+    // The save is refused, not silently applied.
+    await expect(page.getByText(/changed since you loaded it/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("Offer saved")).toHaveCount(0);
+    // The admin's unsaved work survives the conflict.
+    await expect(title).toHaveValue("Admin edited title");
+  });
+
   test("save conflict keeps the unsaved draft buffer visible", async ({ page }) => {
     await openEnglishWorkspace(page, { offerUpdateStatus: 409 });
     await page.getByRole("button", { name: /create offer/i }).click();

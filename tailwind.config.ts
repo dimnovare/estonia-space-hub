@@ -35,6 +35,8 @@ export default {
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
+          // AA-readable as text on a light tint; the DEFAULT fill is not.
+          text: "hsl(var(--destructive-text))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
@@ -65,6 +67,8 @@ export default {
         success: {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
+          // AA-readable as text on a light tint; the DEFAULT fill is not.
+          text: "hsl(var(--success-text))",
         },
         warning: {
           DEFAULT: "hsl(var(--warning))",
@@ -75,7 +79,9 @@ export default {
           DEFAULT: "hsl(var(--info))",
           foreground: "hsl(var(--info-foreground))",
         },
-        teal: { DEFAULT: "hsl(var(--teal))", deep: "hsl(var(--teal-deep))" },
+        // `deep` is the brand/glyph teal (~2.9:1 — NOT AA as text); `text` is the
+        // AA-readable teal for links and body copy.
+        teal: { DEFAULT: "hsl(var(--teal))", deep: "hsl(var(--teal-deep))", text: "hsl(var(--teal-text))" },
         navy: { ink: "hsl(var(--navy-ink))", deep: "hsl(var(--navy-deep))" },
         brand: {
           navy: "#173B8D",

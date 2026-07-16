@@ -48,6 +48,12 @@ export function LeadOfferStage({
     [offers],
   );
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
+  // The version the editor buffer is based on. Deliberately NOT refreshed from
+  // background refetches: it must describe what the admin actually edited, or
+  // the concurrency check silently passes and a provider quote gets clobbered.
+  // It moves only when the buffer is (re)seeded from the server: draft load,
+  // create, and a successful save.
+  const [editingVersion, setEditingVersion] = useState<number | undefined>(undefined);
   const [options, setOptions] = useState<EditableOption[]>([]);
   const [customerNote, setCustomerNote] = useState("");
   const [dirty, setDirty] = useState(false);
@@ -59,6 +65,7 @@ export function LeadOfferStage({
   useEffect(() => {
     if (activeDraft && activeDraft.id !== editingDraftId && activeDraft.id !== dismissedDraftId.current) {
       setEditingDraftId(activeDraft.id);
+      setEditingVersion(activeDraft.version);
       setOptions(activeDraft.options.map(toEditable));
       setCustomerNote(activeDraft.customerNote ?? "");
       setDirty(false);
@@ -95,6 +102,7 @@ export function LeadOfferStage({
     },
     onSuccess: (draft, candidate) => {
       setEditingDraftId(draft.id);
+      setEditingVersion(draft.version);
       setOptions(draft.options.map(toEditable));
       setCustomerNote(draft.customerNote ?? "");
       setDirty(false);
@@ -122,11 +130,15 @@ export function LeadOfferStage({
   const offerPatchBody = () => ({
     customerNote: customerNote.trim(),
     options: options.filter((option) => option.title.trim()).map(toInput),
+    // Concurrency guard — see editingVersion. Without this the replace-set can
+    // silently delete an option a provider's quote seeded since we loaded.
+    version: editingVersion,
   });
 
   const saveMutation = useMutation({
     mutationFn: () => adminOfferService.update(editingDraftId!, offerPatchBody()),
     onSuccess: (updated) => {
+      setEditingVersion(updated.version);
       setOptions(updated.options.map(toEditable));
       setCustomerNote(updated.customerNote ?? "");
       setDirty(false);

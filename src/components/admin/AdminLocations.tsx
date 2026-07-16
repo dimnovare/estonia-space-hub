@@ -120,6 +120,10 @@ function StatusTag({ kind, children }: { kind: "ok" | "warn" | "muted"; children
   );
 }
 
+/** Joins a partner's name and id into a unique cmdk value. U+241F is a control
+ *  picture no one can type, so it can never collide with a partner's name. */
+const PARTNER_VALUE_SEPARATOR = "␟";
+
 /**
  * Searchable partner filter (design §C).
  *
@@ -146,7 +150,10 @@ function PartnerFilter({ options, value, onChange }: {
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            aria-label={t("admin.locations.filterByPartner")}
+            // Include the current selection: a bare purpose label overrides the
+            // button's text for assistive tech, so a screen-reader user would be
+            // told what the control is for but never which partner is active.
+            aria-label={`${t("admin.locations.filterByPartner")}: ${label}`}
             className="h-11 w-full justify-between gap-2 border-line-2 bg-card font-normal lg:w-[280px]"
           >
             <span className="truncate">{label}</span>
@@ -154,7 +161,16 @@ function PartnerFilter({ options, value, onChange }: {
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[280px] p-0" align="end">
-          <Command>
+          <Command
+            filter={(itemValue, search) => {
+              // Match partner NAMES only. The id is appended to the value to keep
+              // same-named partners distinct, but leaving it searchable meant a
+              // typed GUID fragment scored against random partners.
+              const name = itemValue.split(PARTNER_VALUE_SEPARATOR)[0];
+              const q = search.trim().toLowerCase();
+              return !q || name.toLowerCase().includes(q) ? 1 : 0;
+            }}
+          >
             <CommandInput placeholder={t("admin.locations.partnerSearchPlaceholder")} />
             <CommandList>
               <CommandEmpty>{t("admin.locations.noPartnerMatches")}</CommandEmpty>
@@ -169,9 +185,10 @@ function PartnerFilter({ options, value, onChange }: {
                 {options.map((o) => (
                   <CommandItem
                     key={o.id}
-                    // cmdk filters on `value`; the id keeps same-named partners
-                    // distinct so neither can shadow the other.
-                    value={`${o.name} ${o.id}`}
+                    // The id keeps same-named partners distinct so neither can
+                    // shadow the other; the custom filter above searches only the
+                    // name half, so the id is never matched against the query.
+                    value={`${o.name}${PARTNER_VALUE_SEPARATOR}${o.id}`}
                     onSelect={() => { onChange(o.id); setOpen(false); }}
                   >
                     <Check className={`mr-2 h-4 w-4 shrink-0 ${value === o.id ? "opacity-100" : "opacity-0"}`} aria-hidden />

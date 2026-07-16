@@ -4,6 +4,18 @@ export interface ApiError extends Error {
   status?: number;
   code?: string;
   body?: unknown;
+  /** Seconds from a `Retry-After` response header, when the server sent one and
+   *  it was a delta-seconds value (the HTTP-date form is ignored). Lets a 429
+   *  tell the user how long to wait instead of guessing. */
+  retryAfter?: number;
+}
+
+/** Parse `Retry-After` delta-seconds. Returns undefined for absent/HTTP-date/junk. */
+function parseRetryAfter(res: Response): number | undefined {
+  const raw = res.headers.get("retry-after");
+  if (!raw) return undefined;
+  const seconds = Number(raw.trim());
+  return Number.isFinite(seconds) && seconds >= 0 ? seconds : undefined;
 }
 
 // ── In-memory token store ──────────────────
@@ -167,6 +179,8 @@ class ApiClient {
               err.status = retry.status;
               if (errorCode) err.code = errorCode;
               if (errorBodyRaw !== undefined) err.body = errorBodyRaw;
+              const retryAfterSecs = parseRetryAfter(retry);
+              if (retryAfterSecs !== undefined) err.retryAfter = retryAfterSecs;
               throw err;
             }
             // retry is AGAIN 401 — fall through to the genuine-expired-session
@@ -207,6 +221,8 @@ class ApiClient {
       err.status = response.status;
       if (errorCode) err.code = errorCode;
       if (errorBodyRaw !== undefined) err.body = errorBodyRaw;
+      const retryAfterSecs = parseRetryAfter(response);
+      if (retryAfterSecs !== undefined) err.retryAfter = retryAfterSecs;
       throw err;
     }
     // 204 No Content or empty body — return undefined safely

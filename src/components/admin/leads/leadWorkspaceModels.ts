@@ -1,4 +1,5 @@
 import type { AdminOffer, OfferOptionInput, ProviderCandidate } from "@/services";
+import { parseMoney } from "@/lib/parseMoney";
 
 export interface EditableOption {
   localId: string;
@@ -46,9 +47,10 @@ export function candidateToEditable(candidate: ProviderCandidate): EditableOptio
   };
 }
 
+/** Strict — see lib/parseMoney. parseFloat used to prefix-parse "1 200,50" to 1
+ *  and this value flows straight to the customer's offer. */
 export function parsePrice(value: string): number | null {
-  const parsed = parseFloat(value.replace(",", ".").trim());
-  return Number.isFinite(parsed) ? parsed : null;
+  return parseMoney(value);
 }
 
 export function toInput(option: EditableOption, index: number): OfferOptionInput {

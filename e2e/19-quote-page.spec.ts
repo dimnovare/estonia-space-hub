@@ -103,6 +103,82 @@ test.describe("Public provider quote page", () => {
     expect((await submit).postDataJSON()).toMatchObject({ priceAmount: 250, priceUnit: "onetime" });
   });
 
+  test("an Estonian grouped price submits at full value and is echoed back", async ({ page }) => {
+    // Regression: parseFloat prefix-parsed "1 200,50" to 1. The provider saw the
+    // green thank-you, €1 was stored and auto-seeded, and the customer was
+    // quoted €1 — with no error and nothing echoed to notice it by.
+    await stubAll(page);
+    await stubQuote(page);
+    await page.goto("/en/quote/tok-quote-1");
+    await expect(page.getByLabel("Price")).toBeVisible({ timeout: 15000 });
+
+    const submit = page.waitForRequest((r) =>
+      r.method() === "POST" && new URL(r.url()).pathname.endsWith("/quote/tok-quote-1"));
+    await page.getByLabel("Price").fill("1 200,50");
+    await page.getByRole("button", { name: /send quote/i }).click();
+    expect((await submit).postDataJSON().priceAmount).toBe(1200.5);
+
+    // The thank-you now echoes the STORED amount — the provider's detection path.
+    await expect(page.getByText(/your submitted price/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/1200\.5/)).toBeVisible();
+  });
+
+  test("an ambiguous grouped price is rejected rather than guessed at", async ({ page }) => {
+    // "1,200" is 1200 to a US reader and 1.200 to an EU one — refuse to pick.
+    await stubAll(page);
+    await stubQuote(page);
+    await page.goto("/en/quote/tok-quote-1");
+    await expect(page.getByLabel("Price")).toBeVisible({ timeout: 15000 });
+
+    let posts = 0;
+    page.on("request", (r) => {
+      if (r.method() === "POST" && new URL(r.url()).pathname.endsWith("/quote/tok-quote-1")) posts += 1;
+    });
+    await page.getByLabel("Price").fill("1,200");
+    await page.getByRole("button", { name: /send quote/i }).click();
+    await expect(page.getByText(/please enter a valid price/i)).toBeVisible();
+    expect(posts).toBe(0);
+  });
+
+  test("a closed lead shows the closed state upfront instead of the form", async ({ page }) => {
+    await stubAll(page);
+    await stubQuote(page, { quote: publicQuote({ closed: true }) });
+    await page.goto("/en/quote/tok-quote-1");
+
+    await expect(page.getByText(/this request is already closed/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("button", { name: /send quote/i })).toHaveCount(0);
+    await expect(page.getByLabel("Price")).toHaveCount(0);
+    // NOT the dead-link state: the link is fine, the job is gone.
+    await expect(page.getByText(/this request wasn't found/i)).toHaveCount(0);
+  });
+
+  test("a lead that closes mid-visit shows the closed state, not a generic error", async ({ page }) => {
+    await stubAll(page);
+    await stubQuote(page, { closeOnSubmit: true }); // GET quotable, POST 409 lead_closed
+    await page.goto("/en/quote/tok-quote-1");
+    await expect(page.getByLabel("Price")).toBeVisible({ timeout: 15000 });
+
+    await page.getByLabel("Price").fill("89");
+    await page.getByRole("button", { name: /send quote/i }).click();
+
+    await expect(page.getByText(/this request is already closed/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/couldn't send your quote/i)).toHaveCount(0);
+    await expect(page.getByText(/this request wasn't found/i)).toHaveCount(0);
+  });
+
+  test("a 429 with Retry-After tells the provider how long to wait", async ({ page }) => {
+    await stubAll(page);
+    await stubQuote(page, { submitStatus: 429, retryAfterSeconds: 45 });
+    await page.goto("/en/quote/tok-quote-1");
+    await expect(page.getByLabel("Price")).toBeVisible({ timeout: 15000 });
+
+    await page.getByLabel("Price").fill("89");
+    await page.getByRole("button", { name: /send quote/i }).click();
+
+    await expect(page.getByRole("alert")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/try again in 45s/i)).toBeVisible();
+  });
+
   test("invalid/expired token shows the clean invalid state", async ({ page }) => {
     await stubAll(page);
     await stubQuote(page, { getStatus: 404 });

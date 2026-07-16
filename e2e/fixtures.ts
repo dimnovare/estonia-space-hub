@@ -444,6 +444,10 @@ export async function stubOfferLoop(
     /** Lead rows shared with stubAdminLeads (same array ref) so confirm-booking
      *  can flip the mocked lead to Converted in place. */
     leadItems?: Json[];
+    /** Simulate a provider quote arriving between the admin's load and their
+     *  first save: the offer gains an auto-seeded option and its version moves
+     *  on, so a client that echoes the version it loaded gets a 409. */
+    quoteLandsBeforeFirstPatch?: boolean;
   } = {},
 ): Promise<void> {
   const offers: Json[] = [...(opts.offers ?? [])];
@@ -451,6 +455,7 @@ export async function stubOfferLoop(
   const candidates = tartuProviderCandidates();
   const providerFor = (supplierId: string) => candidates.find((candidate) => candidate.supplierId === supplierId);
   let seq = 0;
+  let quoteLanded = false;
   await page.route(
     /\/admin\/(leads\/[^/]+\/(outreach(?:\/preview)?|offers)|offers\/[^/]+(\/send|\/delivery-preview|\/confirm-booking)?|outreach\/[^/]+)(\?|$)/,
     async (route) => {
@@ -535,6 +540,7 @@ export async function stubOfferLoop(
               notes: (o as Json).notes ?? null,
               sortOrder: (o as Json).sortOrder ?? i,
             })),
+            version: 1,
           };
           offers.push(created);
           return json(route, created);
@@ -620,6 +626,26 @@ export async function stubOfferLoop(
             return json(route, { message: opts.offerUpdateStatus === 409 ? "Offer is no longer a draft." : "update failed" }, opts.offerUpdateStatus);
           }
           const body = (req.postDataJSON() ?? {}) as Json;
+          // Simulate a provider quote landing between the admin's load and their
+          // save: the server's offer moves on (new option, bumped version) before
+          // this PATCH is evaluated, so a client echoing the version it loaded
+          // gets a 409 instead of silently deleting the seeded option.
+          if (opts.quoteLandsBeforeFirstPatch && !quoteLanded) {
+            quoteLanded = true;
+            o.options = [...((o.options as Json[]) ?? []), {
+              id: "oopt-provider-quote", supplierId: "sup-panicom",
+              supplierName: "Panicom Miniladu", supplierLocationId: "loc-panicom",
+              title: "Panicom Miniladu — Tartu", priceAmount: 89, priceUnit: "€/kuu",
+              notes: null, sortOrder: 9, fromProviderQuote: true,
+            }];
+            o.version = (typeof o.version === "number" ? o.version : 0) + 1;
+          }
+          // Optimistic concurrency, mirroring the backend: a stale version 409s.
+          // Omitted-safe — no version sent means no check (which is exactly the
+          // hole the client is responsible for closing by always sending it).
+          if (body.version !== undefined && body.version !== o.version) {
+            return json(route, { message: "This offer changed since you loaded it. Reload and try again." }, 409);
+          }
           if (body.customerNote !== undefined) o.customerNote = body.customerNote;
           if (Array.isArray(body.options)) {
             o.options = (body.options as Json[]).map((op, i) => ({
@@ -634,6 +660,9 @@ export async function stubOfferLoop(
               sortOrder: op.sortOrder ?? i,
             }));
           }
+          // A successful write advances the version, so the client must adopt the
+          // returned value or its next save will 409.
+          o.version = (typeof o.version === "number" ? o.version : 0) + 1;
         }
         return json(route, o);
       }
@@ -657,6 +686,7 @@ export async function stubOfferLoop(
 export function draftOfferWithOption(over: Json = {}): Json {
   return {
     id: "offer-draft", demandLeadId: "lead-1", token: "tok-draft", status: "draft", language: "en",
+    version: 1,
     customerNote: "Both providers can host on your date.", createdAt: "2026-07-10T09:40:00Z",
     sentAt: null, viewedAt: null, chosenAt: null, chosenOptionId: null, createdBy: "admin@ruumly.eu",
     options: [
@@ -697,6 +727,7 @@ export function quoteSeededDraftOffer(over: Json = {}): Json {
 export function chosenOffer(over: Json = {}): Json {
   return {
     id: "offer-chosen", demandLeadId: "lead-1", token: "tok-chosen", status: "chosen", language: "en",
+    version: 1,
     customerNote: null, createdAt: "2026-07-10T09:40:00Z", sentAt: "2026-07-10T10:00:00Z",
     viewedAt: "2026-07-10T11:00:00Z", chosenAt: "2026-07-11T08:00:00Z", chosenOptionId: "oopt-chosen-1",
     createdBy: "admin@ruumly.eu",
@@ -755,6 +786,7 @@ export function publicQuote(over: Json = {}): Json {
     currency: "EUR",
     alreadySubmitted: false,
     existing: null,
+    closed: false,
     ...over,
   };
 }
@@ -772,7 +804,25 @@ export function publicQuote(over: Json = {}): Json {
  */
 export async function stubQuote(
   page: Page,
-  opts: { quote?: Json; getStatus?: number; submitStatus?: number } = {},
+  opts: {
+    quote?: Json;
+    getStatus?: number;
+    submitStatus?: number;
+    /**
+     * Seconds echoed in a `Retry-After` header alongside a 429.
+     *
+     * The stub also sends `Access-Control-Expose-Headers: Retry-After`, and it
+     * must: `Retry-After` is NOT CORS-safelisted, and the API is a different
+     * origin from the app (api.ruumly.eu vs ruumly.eu), so without that header
+     * the browser hides it from JS entirely. The client degrades to a generic
+     * "wait a bit" message — the countdown cannot appear in production until
+     * the backend exposes the header.
+     */
+    retryAfterSeconds?: number;
+    /** The lead closed while the page was open: the GET says quotable, the POST
+     *  409s with reason "lead_closed" (the real backend's Fix-7 behaviour). */
+    closeOnSubmit?: boolean;
+  } = {},
 ): Promise<void> {
   const state: Json = { ...(opts.quote ?? publicQuote()) };
   await page.route(
@@ -780,8 +830,24 @@ export async function stubQuote(
     (route) => {
       const req = route.request();
       if (req.method() === "POST") {
+        if (opts.closeOnSubmit) {
+          return json(route, { error: "This request is already closed.", reason: "lead_closed" }, 409);
+        }
         const status = opts.submitStatus ?? 200;
-        if (status !== 200) return json(route, { message: "error" }, status);
+        if (status !== 200) {
+          if (status === 429 && opts.retryAfterSeconds !== undefined) {
+            return route.fulfill({
+              status,
+              contentType: "application/json",
+              headers: {
+                "retry-after": String(opts.retryAfterSeconds),
+                "access-control-expose-headers": "Retry-After",
+              },
+              body: JSON.stringify({ message: "Too many requests." }),
+            });
+          }
+          return json(route, { message: "error" }, status);
+        }
         const body = (req.postDataJSON() ?? {}) as {
           priceAmount?: number; priceUnit?: string; availability?: string; note?: string;
         };
@@ -792,7 +858,15 @@ export async function stubQuote(
           availability: body.availability ?? null,
           note: body.note ?? null,
         };
-        return json(route, { ok: true });
+        // The real POST echoes what it STORED — the page shows this back so a
+        // provider can catch a mis-read price themselves.
+        return json(route, {
+          ok: true,
+          amount: body.priceAmount ?? null,
+          unit: body.priceUnit ?? null,
+          availability: body.availability ?? null,
+          note: body.note ?? null,
+        });
       }
       const status = opts.getStatus ?? 200;
       return status === 200 ? json(route, state) : json(route, { message: "not found" }, status);

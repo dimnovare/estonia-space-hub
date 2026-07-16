@@ -95,6 +95,10 @@ export function LeadDeliveryReview({ lead, offers, onOffersChanged }: LeadDelive
       await adminOfferService.update(deliveryOffer!.id, {
         customerNote: deliveryOffer!.customerNote ?? undefined,
         options: toInputs(deliveryOffer!),
+        // Same replace-set hazard as the draft save: this persists the offer
+        // exactly as we fetched it, so a provider quote that landed since would
+        // be wiped. The version makes that a 409 (handled below) instead.
+        version: deliveryOffer!.version,
       });
       return adminOfferService.send(deliveryOffer!.id);
     },

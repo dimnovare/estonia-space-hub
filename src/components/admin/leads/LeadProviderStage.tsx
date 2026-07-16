@@ -222,12 +222,12 @@ export function LeadProviderStage({ lead, onAddCandidate, onOutreachComplete }: 
                     </div>
                     <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
                       {candidate.serviceTypes.map((serviceType) => <span key={serviceType} className="rounded-full bg-secondary px-2 py-0.5 text-foreground">{serviceTypeLabel(t, serviceType)}</span>)}
-                      {candidate.contactEmail && <a href={`mailto:${candidate.contactEmail}`} className="inline-flex items-center gap-1 font-medium text-teal-deep hover:underline"><Mail className="h-3 w-3" />{candidate.contactEmail}</a>}
-                      {candidate.contactPhone && <a href={`tel:${candidate.contactPhone.replace(/\s/g, "")}`} className="inline-flex items-center gap-1 font-medium text-teal-deep hover:underline"><Phone className="h-3 w-3" />{candidate.contactPhone}</a>}
+                      {candidate.contactEmail && <a href={`mailto:${candidate.contactEmail}`} className="inline-flex items-center gap-1 font-medium text-teal-text hover:underline"><Mail className="h-3 w-3" />{candidate.contactEmail}</a>}
+                      {candidate.contactPhone && <a href={`tel:${candidate.contactPhone.replace(/\s/g, "")}`} className="inline-flex items-center gap-1 font-medium text-teal-text hover:underline"><Phone className="h-3 w-3" />{candidate.contactPhone}</a>}
                     </div>
                     {candidate.otherLocations.length > 0 && (
                       <div className="mt-2">
-                        <button type="button" className="inline-flex items-center gap-1 text-xs font-medium text-teal-deep hover:underline" onClick={() => toggleLocations(candidate.supplierId)} aria-expanded={locationsExpanded}>
+                        <button type="button" className="inline-flex items-center gap-1 text-xs font-medium text-teal-text hover:underline" onClick={() => toggleLocations(candidate.supplierId)} aria-expanded={locationsExpanded}>
                           {locationsExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                           {t("admin.leads.otherLocations")}
                         </button>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "@/i18n/routing";
 import {
@@ -99,6 +99,10 @@ export default function AdminLeads() {
   // load (Feature A) — the instant-alert email links straight into the lead.
   const [searchParams] = useSearchParams();
   const [expandedId, setExpandedId] = useState<string | null>(() => searchParams.get("lead"));
+  // Only the lead the URL pointed at is scrolled to, and only once — a manual
+  // expand must never yank the page around.
+  const deepLinkIdRef = useRef<string | null>(searchParams.get("lead"));
+  const didScrollToDeepLinkRef = useRef(false);
 
   // Optional GetLeads filters (source/category/city/needsResponse). Guarded so
   // nothing breaks if the backend ignores a param it doesn't support yet.
@@ -136,6 +140,18 @@ export default function AdminLeads() {
   const items = data?.items ?? [];
   const totalPages = data ? Math.max(1, Math.ceil(data.total / LIMIT)) : 1;
   const toggleExpanded = (id: string) => setExpandedId((cur) => (cur === id ? null : id));
+
+  // ?lead={id} opens the workspace, but the row can sit far below the metrics —
+  // the admin arrives from the alert email and sees no sign anything happened.
+  // Bring it into view once the list has rendered.
+  useEffect(() => {
+    const target = deepLinkIdRef.current;
+    if (!target || didScrollToDeepLinkRef.current || items.length === 0) return;
+    const row = document.getElementById(`lead-row-${target}`);
+    if (!row) return;
+    didScrollToDeepLinkRef.current = true;
+    row.scrollIntoView({ block: "center" });
+  }, [items]);
 
   const exportCsv = () => {
     const header = ["email", "city", "category", "query", "language", "created", "status"];
@@ -376,7 +392,7 @@ function LeadRow({ lead, expanded, onToggle, onStatusChange, statusPending }: {
   const { t } = useLanguage();
   return (
     <>
-      <tr className="border-b border-border last:border-0 transition-colors hover:bg-secondary/30">
+      <tr id={`lead-row-${lead.id}`} className="border-b border-border last:border-0 transition-colors hover:bg-secondary/30">
         <td className="px-5 py-3.5 font-medium text-navy-ink">
           {lead.name ? <span className="block">{lead.name}</span> : null}
           <span className={lead.name ? "block text-xs font-normal text-muted-foreground" : ""}>{lead.email}</span>
@@ -443,7 +459,7 @@ function LeadCard({ lead, expanded, onToggle, onStatusChange, statusPending }: {
 }) {
   const { t } = useLanguage();
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-card">
+    <div id={`lead-row-${lead.id}`} className="overflow-hidden rounded-xl border border-border bg-card shadow-card">
       <div className="flex items-start justify-between gap-3 p-3.5">
         <div className="min-w-0">
           {lead.name && <p className="font-medium text-navy-ink">{lead.name}</p>}
