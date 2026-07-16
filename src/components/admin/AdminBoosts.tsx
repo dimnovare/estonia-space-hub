@@ -7,6 +7,10 @@ import { Loader2, Zap, CheckCircle, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { PaidFeatureRequest } from "@/services/types";
+import {
+  AdminPageHeader, FilterBar, FilterChip, DataTable, DataTableHead, Th, Tr, Td, EmptyState, StatusBadge,
+} from "@/components/admin/kit";
+import { BOOST_STATUS_BADGE, FALLBACK_STATUS_BADGE } from "@/components/admin/kit/statusMaps";
 
 const inp =
   "mt-1 w-full rounded-[10px] border border-input bg-card px-3.5 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15";
@@ -14,13 +18,6 @@ const inp =
 type StatusFilter = "all" | "new" | "approved" | "activated" | "dismissed";
 
 const FILTERS: StatusFilter[] = ["all", "new", "approved", "activated", "dismissed"];
-
-const STATUS_PILL: Record<string, string> = {
-  new: "bg-info/10 text-info",
-  approved: "bg-teal/15 text-teal-deep",
-  activated: "bg-success/10 text-success",
-  dismissed: "bg-secondary text-muted-foreground",
-};
 
 function formatPrice(amount: number, currency: string, interval: string, freeLabel: string) {
   if (amount <= 0) return freeLabel;
@@ -87,43 +84,26 @@ export default function AdminBoosts() {
   return (
     <div>
       {/* Page head */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <span className="font-mono-label text-[11.5px] uppercase tracking-[0.2em] text-teal-deep">
-            {t("admin.boosts.eyebrow")}
-          </span>
-          <h1 className="mt-1 font-display text-2xl font-bold text-navy-ink md:text-[28px]">
-            {t("admin.boosts.title")}
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            {t("admin.boosts.subtitle")}
-          </p>
-        </div>
-        {pendingCount > 0 && (
+      <AdminPageHeader
+        eyebrow={t("admin.nav.groupCommerce")}
+        title={t("admin.boosts.title")}
+        subtitle={t("admin.boosts.subtitle")}
+        actions={pendingCount > 0 ? (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-warning/10 px-3 py-1 text-xs font-semibold text-warning-text">
             <Zap className="h-3.5 w-3.5" />
             {t("admin.boosts.pendingCount").replace("{count}", String(pendingCount))}
           </span>
-        )}
-      </div>
+        ) : undefined}
+      />
 
       {/* Status filters */}
-      <div className="mt-6 flex flex-wrap items-center gap-2">
+      <FilterBar className="mb-0">
         {FILTERS.map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            aria-pressed={filter === f}
-            className={`min-h-[36px] rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-              filter === f
-                ? "bg-navy-ink text-white"
-                : "border border-border bg-card text-muted-foreground hover:border-primary hover:text-primary"
-            }`}
-          >
+          <FilterChip key={f} active={filter === f} onClick={() => setFilter(f)}>
             {t(`admin.boosts.filter.${f}`)}
-          </button>
+          </FilterChip>
         ))}
-      </div>
+      </FilterBar>
 
       {/* Table */}
       {isLoading ? (
@@ -131,62 +111,62 @@ export default function AdminBoosts() {
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
       ) : requests.length === 0 ? (
-        <div className="mt-6 flex flex-col items-center rounded-[14px] border border-dashed border-border bg-card px-6 py-16 text-center shadow-card">
-          <div className="flex h-14 w-14 items-center justify-center rounded-[14px] bg-secondary">
-            <Zap className="h-6 w-6 text-teal-deep" />
-          </div>
-          <h3 className="mt-4 font-display text-lg font-semibold text-navy-ink">{t("admin.boosts.emptyTitle")}</h3>
-          <p className="mt-1.5 max-w-md text-sm text-muted-foreground">{t("admin.boosts.emptyDesc")}</p>
-        </div>
+        <EmptyState
+          className="mt-6"
+          icon={Zap}
+          title={t("admin.boosts.emptyTitle")}
+          description={t("admin.boosts.emptyDesc")}
+        />
       ) : (
-        <div className="mt-4 overflow-x-auto rounded-[14px] border border-border bg-card shadow-card">
-          <table className="w-full text-sm">
-            <thead className="border-b border-border bg-secondary/40">
-              <tr>
-                <th className="px-5 py-3 text-left font-medium text-muted-foreground">{t("admin.boosts.colPartner")}</th>
-                <th className="px-5 py-3 text-left font-medium text-muted-foreground">{t("admin.boosts.colFeature")}</th>
-                <th className="px-5 py-3 text-left font-medium text-muted-foreground">{t("admin.boosts.colScope")}</th>
-                <th className="px-5 py-3 text-left font-medium text-muted-foreground">{t("admin.boosts.colPrice")}</th>
-                <th className="px-5 py-3 text-left font-medium text-muted-foreground">{t("admin.boosts.colRequested")}</th>
-                <th className="px-5 py-3 text-left font-medium text-muted-foreground">{t("admin.boosts.colStatus")}</th>
-                <th className="px-5 py-3 text-right font-medium text-muted-foreground">{t("admin.boosts.colAction")}</th>
-              </tr>
-            </thead>
-            <tbody>
+        <DataTable className="mt-4">
+          <DataTableHead>
+            <tr>
+              <Th className="px-5">{t("admin.boosts.colPartner")}</Th>
+              <Th className="px-5">{t("admin.boosts.colFeature")}</Th>
+              <Th className="px-5">{t("admin.boosts.colScope")}</Th>
+              <Th align="right" className="px-5">{t("admin.boosts.colPrice")}</Th>
+              <Th className="px-5">{t("admin.boosts.colRequested")}</Th>
+              <Th className="px-5">{t("admin.boosts.colStatus")}</Th>
+              <Th align="right" className="px-5">{t("admin.boosts.colAction")}</Th>
+            </tr>
+          </DataTableHead>
+          <tbody>
               {requests.map((r) => (
-                <tr key={r.id} className="border-b border-border last:border-0 transition-colors hover:bg-secondary/30">
-                  <td className="px-5 py-3.5">
+                <Tr key={r.id}>
+                  <Td className="px-5">
                     <div className="flex items-center gap-2.5">
                       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy-ink text-[12px] font-semibold text-white">
                         {(r.supplierName ?? "?").slice(0, 1).toUpperCase()}
                       </span>
                       <span className="font-medium text-navy-ink">{r.supplierName ?? t("admin.boosts.unknownPartner")}</span>
                     </div>
-                  </td>
-                  <td className="px-5 py-3.5">
+                  </Td>
+                  <Td className="px-5">
                     <div className="font-medium text-navy-ink">{r.paidFeature.name}</div>
                     {r.paidFeature.priceAmount > 0 && (
-                      <div className="mt-0.5 font-mono text-[11px] text-muted-foreground">{t("admin.boosts.ref")}: RUUMLY-{r.id.slice(0, 8).toUpperCase()}</div>
+                      <div className="font-data mt-0.5 text-[11px] text-muted-foreground">{t("admin.boosts.ref")}: RUUMLY-{r.id.slice(0, 8).toUpperCase()}</div>
                     )}
                     {r.message && <div className="mt-0.5 max-w-xs truncate text-xs text-muted-foreground" title={r.message}>{r.message}</div>}
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                  </Td>
+                  <Td className="px-5">
+                    <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-ink-2">
                       {scopeTarget(r)}
                     </span>
-                  </td>
-                  <td className="px-5 py-3.5 font-display font-bold text-navy-ink">
+                  </Td>
+                  <Td data align="right" className="px-5 font-semibold text-navy-ink">
                     {formatPrice(r.paidFeature.priceAmount, r.paidFeature.priceCurrency, r.paidFeature.billingInterval, t("admin.boosts.free"))}
-                  </td>
-                  <td className="px-5 py-3.5 whitespace-nowrap text-muted-foreground">
+                  </Td>
+                  <Td data className="px-5 text-muted-foreground">
                     {new Date(r.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_PILL[r.status] ?? "bg-secondary text-muted-foreground"}`}>
-                      {t(`admin.boosts.status.${r.status}`)}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3.5">
+                  </Td>
+                  <Td className="px-5">
+                    <StatusBadge
+                      tone={(BOOST_STATUS_BADGE[r.status] ?? FALLBACK_STATUS_BADGE).tone}
+                      icon={(BOOST_STATUS_BADGE[r.status] ?? FALLBACK_STATUS_BADGE).icon}
+                      label={t(`admin.boosts.status.${r.status}`)}
+                    />
+                  </Td>
+                  <Td className="px-5">
                     <div className="flex items-center justify-end gap-2">
                       {r.status === "new" || r.status === "approved" ? (
                         <>
@@ -212,12 +192,11 @@ export default function AdminBoosts() {
                         <span className="text-xs text-muted-foreground">{t("admin.boosts.noAction")}</span>
                       )}
                     </div>
-                  </td>
-                </tr>
+                  </Td>
+                </Tr>
               ))}
-            </tbody>
-          </table>
-        </div>
+          </tbody>
+        </DataTable>
       )}
 
       {/* Activate modal — scope display + optional end date + notes */}

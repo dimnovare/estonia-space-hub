@@ -5,6 +5,8 @@ import { Loader2, ShieldAlert, Check, X, Banknote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { disputeService, type AdminDispute, type DisputeStatus } from "@/services";
+import { AdminPageHeader, FilterBar, FilterChip, EmptyState, StatusBadge } from "@/components/admin/kit";
+import { DISPUTE_STATUS_BADGE, FALLBACK_STATUS_BADGE } from "@/components/admin/kit/statusMaps";
 
 const STATUS_FILTERS: { value: DisputeStatus | "all"; labelKey:
   "admin.disputes.all" | "admin.disputes.open" | "admin.disputes.inreview" | "admin.disputes.resolved" | "admin.disputes.rejected" }[] = [
@@ -14,13 +16,6 @@ const STATUS_FILTERS: { value: DisputeStatus | "all"; labelKey:
   { value: "resolved", labelKey: "admin.disputes.resolved" },
   { value: "rejected", labelKey: "admin.disputes.rejected" },
 ];
-
-const STATUS_COLORS: Record<DisputeStatus, string> = {
-  open: "bg-warning/10 text-warning-text",
-  inreview: "bg-info/10 text-info",
-  resolved: "bg-success/10 text-success",
-  rejected: "bg-secondary text-muted-foreground",
-};
 
 const TYPE_KEYS: Record<string, "dispute.type.damage" | "dispute.type.noshow" | "dispute.type.deposit" | "dispute.type.other"> = {
   damage: "dispute.type.damage",
@@ -41,35 +36,25 @@ export default function AdminDisputes() {
 
   return (
     <div>
-      <header className="mb-5 flex items-center gap-2">
-        <ShieldAlert className="h-5 w-5 text-navy-ink" />
-        <div>
-          <h1 className="font-display text-2xl font-bold text-navy-ink">{t("admin.disputes.title")}</h1>
-          <p className="text-sm text-muted-foreground">{t("admin.disputes.desc")}</p>
-        </div>
-      </header>
+      <AdminPageHeader
+        eyebrow={t("admin.nav.groupCommerce")}
+        title={t("admin.disputes.title")}
+        subtitle={t("admin.disputes.desc")}
+        count={items.length || undefined}
+      />
 
-      <div className="mb-4 flex flex-wrap gap-1.5">
+      <FilterBar>
         {STATUS_FILTERS.map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() => setStatusFilter(opt.value)}
-            aria-pressed={statusFilter === opt.value}
-            className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-              statusFilter === opt.value ? "bg-navy-ink text-white" : "border border-line-2 text-muted-foreground hover:text-navy-ink"
-            }`}
-          >
+          <FilterChip key={opt.value} active={statusFilter === opt.value} onClick={() => setStatusFilter(opt.value)}>
             {t(opt.labelKey)}
-          </button>
+          </FilterChip>
         ))}
-      </div>
+      </FilterBar>
 
       {isLoading ? (
         <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
       ) : items.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border py-16 text-center text-sm text-muted-foreground">
-          {t("admin.disputes.empty")}
-        </div>
+        <EmptyState icon={ShieldAlert} title={t("admin.disputes.empty")} />
       ) : (
         <ul className="space-y-3">
           {items.map((d) => <DisputeCard key={d.id} dispute={d} typeLabel={(ty) => t(TYPE_KEYS[ty] ?? "dispute.type.other")} />)}
@@ -110,16 +95,19 @@ function DisputeCard({ dispute, typeLabel }: { dispute: AdminDispute; typeLabel:
             {dispute.listingTitle && ` · ${dispute.listingTitle}`}
           </p>
         </div>
-        <span className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[dispute.status]}`}>
-          {t(STATUS_FILTERS.find((s) => s.value === dispute.status)?.labelKey ?? "admin.disputes.open")}
-        </span>
+        <StatusBadge
+          className="shrink-0"
+          tone={(DISPUTE_STATUS_BADGE[dispute.status] ?? FALLBACK_STATUS_BADGE).tone}
+          icon={(DISPUTE_STATUS_BADGE[dispute.status] ?? FALLBACK_STATUS_BADGE).icon}
+          label={t(STATUS_FILTERS.find((s) => s.value === dispute.status)?.labelKey ?? "admin.disputes.open")}
+        />
       </div>
 
       {dispute.description && <p className="mt-3 whitespace-pre-wrap rounded-lg bg-secondary/40 p-3 text-sm text-foreground/90">{dispute.description}</p>}
 
       <div className="mt-2 flex flex-wrap gap-x-4 text-xs text-muted-foreground">
-        {dispute.amountClaimed != null && <span>{t("admin.disputes.amount")}: <strong className="text-foreground">{dispute.amountClaimed.toFixed(2)} €</strong></span>}
-        <span>{new Date(dispute.createdAt).toLocaleString()}</span>
+        {dispute.amountClaimed != null && <span>{t("admin.disputes.amount")}: <strong className="font-data text-foreground">{dispute.amountClaimed.toFixed(2)} €</strong></span>}
+        <span className="font-data">{new Date(dispute.createdAt).toLocaleString()}</span>
         {dispute.evidence && dispute.evidence.length > 0 && <span>{t("admin.disputes.evidence")}: {dispute.evidence.join(", ")}</span>}
       </div>
 

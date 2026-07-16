@@ -1,9 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
-import { Loader2, Search, Check, Banknote } from "lucide-react";
+import { Loader2, Search, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiClient } from "@/services/apiClient";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
+import {
+  AdminPageHeader, StatCard, FilterBar, DataTable, DataTableHead, Th, Tr, Td,
+  DataTableEmptyRow, StatusBadge,
+} from "@/components/admin/kit";
+import { PAYOUT_STATUS_BADGE, FALLBACK_STATUS_BADGE } from "@/components/admin/kit/statusMaps";
 
 const localeMap: Record<string, string> = {
   et: "et-EE",
@@ -93,47 +98,53 @@ export default function AdminPayouts({ supplierId }: { supplierId?: string }) {
     </div>
   );
 
+  const payoutLabel = (status: Payout["status"]) =>
+    status === "paid"
+      ? t("admin.payouts.paid")
+      : status === "accrued"
+        ? t("admin.payouts.accrued")
+        : status === "disputed"
+          ? t("admin.payouts.disputed")
+          : status === "cancelled"
+            ? t("admin.payouts.cancelled")
+            : t("admin.payouts.unpaid");
+  const payoutBadge = (status: Payout["status"]) => {
+    const badge = PAYOUT_STATUS_BADGE[status] ?? FALLBACK_STATUS_BADGE;
+    return <StatusBadge tone={badge.tone} icon={badge.icon} label={payoutLabel(status)} />;
+  };
+
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">{t("admin.payouts.title")}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        {t("admin.payouts.desc")}
-      </p>
+      <AdminPageHeader
+        eyebrow={t("admin.nav.groupCommerce")}
+        title={t("admin.payouts.title")}
+        subtitle={t("admin.payouts.desc")}
+        count={payouts.length || undefined}
+      />
 
       {/* Summary cards */}
-      <div className="mt-6 grid grid-cols-3 gap-4">
-        <div className="rounded-xl border border-border p-4">
-          <p className="text-xs font-medium text-muted-foreground">{t("admin.payouts.unpaid")}</p>
-          <p className="mt-1 text-2xl font-bold text-foreground">{summary.totalPending.toFixed(2)}€</p>
-        </div>
-        <div className="rounded-xl border border-border p-4">
-          <p className="text-xs font-medium text-muted-foreground">{t("admin.payouts.paid")}</p>
-          <p className="mt-1 text-2xl font-bold text-success">{summary.totalPaid.toFixed(2)}€</p>
-        </div>
-        <div className="rounded-xl border border-border p-4">
-          <p className="text-xs font-medium text-muted-foreground">{t("admin.payouts.totalMargin")}</p>
-          <p className="mt-1 text-2xl font-bold text-accent">{summary.totalMargin.toFixed(2)}€</p>
-        </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <StatCard size="sm" label={t("admin.payouts.unpaid")} value={`${summary.totalPending.toFixed(2)}€`} />
+        <StatCard size="sm" label={t("admin.payouts.paid")} value={`${summary.totalPaid.toFixed(2)}€`} />
+        <StatCard size="sm" label={t("admin.payouts.totalMargin")} value={`${summary.totalMargin.toFixed(2)}€`} />
       </div>
 
       {/* Filters */}
-      <div className="mt-6 flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2">
-          <select
-            className={inp + " w-auto"}
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value as any)}
-          >
-            <option value="all">{t("admin.payouts.allStatuses")}</option>
-            <option value="accrued">{t("admin.payouts.accrued")}</option>
-            <option value="pending">{t("admin.payouts.unpaid")}</option>
-            <option value="paid">{t("admin.payouts.paid")}</option>
-            <option value="disputed">{t("admin.payouts.disputed")}</option>
-            <option value="cancelled">{t("admin.payouts.cancelled")}</option>
-          </select>
-        </div>
-        <div className="relative flex-1 min-w-[200px] max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <FilterBar className="mb-0 mt-6">
+        <select
+          className={inp + " w-auto"}
+          value={statusFilter}
+          onChange={e => setStatusFilter(e.target.value as any)}
+        >
+          <option value="all">{t("admin.payouts.allStatuses")}</option>
+          <option value="accrued">{t("admin.payouts.accrued")}</option>
+          <option value="pending">{t("admin.payouts.unpaid")}</option>
+          <option value="paid">{t("admin.payouts.paid")}</option>
+          <option value="disputed">{t("admin.payouts.disputed")}</option>
+          <option value="cancelled">{t("admin.payouts.cancelled")}</option>
+        </select>
+        <div className="relative min-w-[200px] max-w-xs flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             className={inp + " pl-9"}
             placeholder={t("admin.payouts.searchPartner")}
@@ -141,100 +152,72 @@ export default function AdminPayouts({ supplierId }: { supplierId?: string }) {
             onChange={e => setSupplierFilter(e.target.value)}
           />
         </div>
-      </div>
+      </FilterBar>
 
       {/* Table */}
-      <div className="mt-4 overflow-x-auto rounded-xl border border-border">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-secondary/50">
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.payouts.partner")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.payouts.order")}</th>
-              <th className="px-4 py-3 text-right font-medium text-muted-foreground">{t("admin.payouts.partnerAmount")}</th>
-              <th className="px-4 py-3 text-right font-medium text-muted-foreground">{t("admin.payouts.margin")}</th>
-              <th className="px-4 py-3 text-center font-medium text-muted-foreground">{t("admin.payouts.status")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.payouts.paidDate")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.payouts.action")}</th>
-            </tr>
-          </thead>
+      <DataTable className="mt-4">
+        <DataTableHead>
+          <tr>
+            <Th>{t("admin.payouts.partner")}</Th>
+            <Th>{t("admin.payouts.order")}</Th>
+            <Th align="right">{t("admin.payouts.partnerAmount")}</Th>
+            <Th align="right">{t("admin.payouts.margin")}</Th>
+            <Th align="center">{t("admin.payouts.status")}</Th>
+            <Th>{t("admin.payouts.paidDate")}</Th>
+            <Th>{t("admin.payouts.action")}</Th>
+          </tr>
+        </DataTableHead>
+        {filtered.length === 0 ? (
+          <DataTableEmptyRow cols={7}>{t("admin.payouts.notFound")}</DataTableEmptyRow>
+        ) : (
           <tbody>
-            {filtered.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
-                  {t("admin.payouts.notFound")}
-                </td>
-              </tr>
-            ) : (
-              filtered.map(p => (
-                <tr key={p.id} className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors">
-                  <td className="px-4 py-3 font-medium text-foreground">{p.supplierName}</td>
-                  <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{p.orderId}</td>
-                  <td className="px-4 py-3 text-right text-foreground">{p.supplierAmount.toFixed(2)}€</td>
-                  <td className="px-4 py-3 text-right text-accent font-medium">{p.platformMargin.toFixed(2)}€</td>
-                  <td className="px-4 py-3 text-center">
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                      p.status === "paid"
-                        ? "bg-success/10 text-success"
-                        : p.status === "accrued"
-                          ? "bg-muted text-muted-foreground"
-                          : p.status === "disputed"
-                            ? "bg-warning/10 text-warning-text"
-                            : p.status === "cancelled"
-                              ? "bg-secondary text-muted-foreground"
-                              : "bg-warning/10 text-warning"
-                    }`}>
-                      {p.status === "paid"
-                        ? t("admin.payouts.paid")
-                        : p.status === "accrued"
-                          ? t("admin.payouts.accrued")
-                          : p.status === "disputed"
-                            ? t("admin.payouts.disputed")
-                            : p.status === "cancelled"
-                              ? t("admin.payouts.cancelled")
-                              : t("admin.payouts.unpaid")}
+            {filtered.map(p => (
+              <Tr key={p.id}>
+                <Td className="font-medium text-foreground">{p.supplierName}</Td>
+                <Td data className="text-xs text-muted-foreground">{p.orderId}</Td>
+                <Td data align="right" className="text-foreground">{p.supplierAmount.toFixed(2)}€</Td>
+                <Td data align="right" className="font-medium text-success-text">{p.platformMargin.toFixed(2)}€</Td>
+                <Td align="center">{payoutBadge(p.status)}</Td>
+                <Td data className="text-xs text-muted-foreground">
+                  {p.paidAt ? new Date(p.paidAt).toLocaleDateString(locale) : "—"}
+                </Td>
+                <Td>
+                  {p.status === "pending" ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        className="w-28 rounded border border-border bg-card px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
+                        placeholder={t("admin.payouts.reference")}
+                        value={references[p.id] || ""}
+                        onChange={e => setReferences(prev => ({ ...prev, [p.id]: e.target.value }))}
+                      />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 gap-1 text-xs"
+                        disabled={markingId === p.id}
+                        onClick={() => markAsPaid(p.id)}
+                      >
+                        {markingId === p.id
+                          ? <Loader2 className="h-3 w-3 animate-spin" />
+                          : <Check className="h-3 w-3" />}
+                        {t("admin.payouts.markPaid")}
+                      </Button>
+                    </div>
+                  ) : p.status === "accrued" ? (
+                    <span className="text-xs italic text-muted-foreground">
+                      {t("admin.payouts.accruedHint")}
                     </span>
-                  </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">
-                    {p.paidAt ? new Date(p.paidAt).toLocaleDateString(locale) : "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    {p.status === "pending" ? (
-                      <div className="flex items-center gap-2">
-                        <input
-                          className="rounded border border-border bg-card px-2 py-1 text-xs w-28 focus:outline-none focus:ring-1 focus:ring-accent"
-                          placeholder={t("admin.payouts.reference")}
-                          value={references[p.id] || ""}
-                          onChange={e => setReferences(prev => ({ ...prev, [p.id]: e.target.value }))}
-                        />
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs gap-1"
-                          disabled={markingId === p.id}
-                          onClick={() => markAsPaid(p.id)}
-                        >
-                          {markingId === p.id
-                            ? <Loader2 className="h-3 w-3 animate-spin" />
-                            : <Check className="h-3 w-3" />}
-                          {t("admin.payouts.markPaid")}
-                        </Button>
-                      </div>
-                    ) : p.status === "accrued" ? (
-                      <span className="text-xs text-muted-foreground italic">
-                        {t("admin.payouts.accruedHint")}
-                      </span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">
-                        {p.paymentReference || "—"}
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
+                  ) : (
+                    <span className="font-data text-xs text-muted-foreground">
+                      {p.paymentReference || "—"}
+                    </span>
+                  )}
+                </Td>
+              </Tr>
+            ))}
           </tbody>
-        </table>
-      </div>
+        )}
+      </DataTable>
     </div>
   );
 }

@@ -5,8 +5,12 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import {
   Loader2, Sparkles, ShieldCheck, Megaphone, Settings, PlusCircle, Save,
+  CheckCircle2, XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AdminPageHeader, DataTableHead, Th, Tr, Td, EmptyState, StatusBadge,
+} from "@/components/admin/kit";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { PaidFeature } from "@/services/types";
@@ -158,43 +162,33 @@ export default function AdminPaidFeatures() {
   return (
     <div>
       {/* Page head */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <span className="font-mono-label text-[11.5px] uppercase tracking-[0.2em] text-teal-deep">
-            {t("admin.paidFeatures.eyebrow")}
-          </span>
-          <h1 className="mt-1 font-display text-2xl font-bold text-navy-ink md:text-[28px]">
-            {t("admin.paidFeatures.title")}
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            {t("admin.paidFeatures.subtitle")}
-          </p>
-        </div>
-        <Button
-          size="sm"
-          className="h-11 bg-accent text-accent-foreground hover:bg-accent/90"
-          onClick={() => setCreating({ ...EMPTY_CREATE })}
-        >
-          <PlusCircle className="mr-1.5 h-4 w-4" /> {t("admin.paidFeatures.add")}
-        </Button>
-      </div>
+      <AdminPageHeader
+        eyebrow={t("admin.nav.groupCommerce")}
+        title={t("admin.paidFeatures.title")}
+        subtitle={t("admin.paidFeatures.subtitle")}
+        count={catalog.length || undefined}
+        actions={
+          <Button
+            size="sm"
+            className="h-11 bg-accent text-accent-foreground hover:bg-accent/90"
+            onClick={() => setCreating({ ...EMPTY_CREATE })}
+          >
+            <PlusCircle className="mr-1.5 h-4 w-4" /> {t("admin.paidFeatures.add")}
+          </Button>
+        }
+      />
 
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
       ) : catalog.length === 0 ? (
-        <div className="mt-8 flex flex-col items-center rounded-[14px] border border-dashed border-border bg-card px-6 py-16 text-center shadow-card">
-          <div className="flex h-14 w-14 items-center justify-center rounded-[14px] bg-secondary">
-            <Sparkles className="h-6 w-6 text-teal-deep" />
-          </div>
-          <h3 className="mt-4 font-display text-lg font-semibold text-navy-ink">
-            {t("admin.paidFeatures.emptyTitle")}
-          </h3>
-          <p className="mt-1.5 max-w-md text-sm text-muted-foreground">
-            {t("admin.paidFeatures.emptyDesc")}
-          </p>
-        </div>
+        <EmptyState
+          className="mt-8"
+          icon={Sparkles}
+          title={t("admin.paidFeatures.emptyTitle")}
+          description={t("admin.paidFeatures.emptyDesc")}
+        />
       ) : (
         <div className="mt-6 space-y-6">
           {grouped.map(([category, items]) => {
@@ -212,56 +206,50 @@ export default function AdminPaidFeatures() {
                   <h2 className="font-display text-base font-semibold text-navy-ink">
                     {t(`admin.paidFeatures.category.${category}`)}
                   </h2>
-                  <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                  <span className="font-data inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-ink-2">
                     {items.length}
                   </span>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="border-b border-border bg-secondary/40">
+                    <DataTableHead>
                       <tr>
-                        <th className="px-5 py-3 text-left font-medium text-muted-foreground">{t("admin.paidFeatures.colFeature")}</th>
-                        <th className="px-5 py-3 text-left font-medium text-muted-foreground">{t("admin.paidFeatures.colScope")}</th>
-                        <th className="px-5 py-3 text-left font-medium text-muted-foreground">{t("admin.paidFeatures.colPrice")}</th>
-                        <th className="px-5 py-3 text-left font-medium text-muted-foreground">{t("admin.paidFeatures.colStatus")}</th>
-                        <th className="px-5 py-3 text-right font-medium text-muted-foreground">{t("admin.paidFeatures.colActions")}</th>
+                        <Th className="px-5">{t("admin.paidFeatures.colFeature")}</Th>
+                        <Th className="px-5">{t("admin.paidFeatures.colScope")}</Th>
+                        <Th align="right" className="px-5">{t("admin.paidFeatures.colPrice")}</Th>
+                        <Th className="px-5">{t("admin.paidFeatures.colStatus")}</Th>
+                        <Th align="right" className="px-5">{t("admin.paidFeatures.colActions")}</Th>
                       </tr>
-                    </thead>
+                    </DataTableHead>
                     <tbody>
                       {items.map((f) => (
-                        <tr key={f.id} className="border-b border-border last:border-0 transition-colors hover:bg-secondary/30">
-                          <td className="px-5 py-3.5 align-top">
+                        <Tr key={f.id}>
+                          <Td className="px-5 align-top">
                             <div className="font-medium text-navy-ink">{f.name}</div>
                             {f.description && (
                               <div className="mt-0.5 max-w-md text-xs text-muted-foreground">{f.description}</div>
                             )}
-                          </td>
-                          <td className="px-5 py-3.5 align-top">
-                            <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                          </Td>
+                          <Td className="px-5 align-top">
+                            <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-ink-2">
                               {t(`admin.paidFeatures.scope.${f.scope}`)}
                             </span>
-                          </td>
-                          <td className="px-5 py-3.5 align-top">
-                            <span className="font-display font-bold text-navy-ink">
+                          </Td>
+                          <Td data align="right" className="px-5 align-top">
+                            <span className="font-semibold text-navy-ink">
                               {formatPrice(f.priceAmount, f.priceCurrency, f.billingInterval, t("admin.paidFeatures.free"), t("account.perMonthShort"), t("admin.partner.feature.perYear"))}
                             </span>
-                          </td>
-                          <td className="px-5 py-3.5 align-top">
+                          </Td>
+                          <Td className="px-5 align-top">
                             {isFree(f) ? (
-                              <span className="inline-flex items-center rounded-full bg-gradient-to-r from-accent to-teal-deep px-2 py-0.5 text-[11px] font-semibold text-white">
-                                {t("admin.paidFeatures.free")}
-                              </span>
+                              <StatusBadge tone="green" icon={Sparkles} label={t("admin.paidFeatures.free")} />
                             ) : f.isActive ? (
-                              <span className="inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-semibold text-success">
-                                {t("admin.paidFeatures.live")}
-                              </span>
+                              <StatusBadge tone="green" icon={CheckCircle2} label={t("admin.paidFeatures.live")} />
                             ) : (
-                              <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
-                                {t("admin.paidFeatures.disabled")}
-                              </span>
+                              <StatusBadge tone="slate" icon={XCircle} label={t("admin.paidFeatures.disabled")} />
                             )}
-                          </td>
-                          <td className="px-5 py-3.5 align-top">
+                          </Td>
+                          <Td className="px-5 align-top">
                             <div className="flex items-center justify-end gap-3">
                               <Switch
                                 checked={f.isActive}
@@ -290,8 +278,8 @@ export default function AdminPaidFeatures() {
                                 {t("admin.paidFeatures.edit")}
                               </Button>
                             </div>
-                          </td>
-                        </tr>
+                          </Td>
+                        </Tr>
                       ))}
                     </tbody>
                   </table>

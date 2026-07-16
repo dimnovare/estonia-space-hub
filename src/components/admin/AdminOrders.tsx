@@ -24,6 +24,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { queryKeys } from "@/services/queryKeys";
 import { toast } from "sonner";
+import {
+  AdminPageHeader, FilterBar, FilterChip, DataTable, DataTableHead, Th, Tr, Td, StatusBadge,
+} from "@/components/admin/kit";
+import { ORDER_STATUS_BADGE, FALLBACK_STATUS_BADGE } from "@/components/admin/kit/statusMaps";
 
 export default function AdminOrders({ supplierId }: { supplierId?: string }) {
   const { t, language } = useLanguage();
@@ -124,16 +128,27 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
   const totalPages = Math.max(1, Math.ceil(total / pageLimit));
   const goToStatus = (f: "all" | OrderStatus) => { setFilter(f); setPage(1); };
 
+  const orderBadge = (status: OrderStatus) => {
+    const conf = ORDER_STATUS_CONFIG[status] ?? FALLBACK_ORDER_STATUS;
+    const badge = ORDER_STATUS_BADGE[status] ?? FALLBACK_STATUS_BADGE;
+    return <StatusBadge tone={badge.tone} icon={badge.icon} label={t(conf.labelKey) || conf.label} />;
+  };
+
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">{t("admin.orders")}</h1>
-      <div className="mt-4 flex gap-2 overflow-x-auto">
+      <AdminPageHeader
+        eyebrow={t("admin.nav.groupCommerce")}
+        title={t("admin.orders")}
+        count={counts.all ?? undefined}
+      />
+      <FilterBar className="mb-0 flex-nowrap overflow-x-auto sm:flex-wrap">
         {(["all", "created", "sending", "sent", "confirmed", "rejected", "active", "completed", "cancelled", "failed"] as const).map((f) => (
-          <button key={f} onClick={() => goToStatus(f)} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
-            {f === "all" ? `${t("admin.all")} (${counts.all ?? 0})` : `${t(ORDER_STATUS_CONFIG[f].labelKey) || ORDER_STATUS_CONFIG[f].label} (${counts[f] ?? 0})`}
-          </button>
+          <FilterChip key={f} active={filter === f} onClick={() => goToStatus(f)} className="text-xs">
+            {f === "all" ? t("admin.all") : (t(ORDER_STATUS_CONFIG[f].labelKey) || ORDER_STATUS_CONFIG[f].label)}
+            <span className="font-data ml-1 text-[11px] opacity-80">({(f === "all" ? counts.all : counts[f]) ?? 0})</span>
+          </FilterChip>
         ))}
-      </div>
+      </FilterBar>
 
       {isLoading && (
         <div className="mt-6">
@@ -143,64 +158,56 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
 
       {/* Mobile cards */}
       <div className="mt-6 space-y-2 md:hidden">
-        {filtered.map((o) => {
-          const statusConf = ORDER_STATUS_CONFIG[o.status] ?? FALLBACK_ORDER_STATUS;
-          return (
-            <button key={o.id} onClick={() => setViewOrder(o)} className="w-full rounded-xl border border-border p-3 text-left hover:bg-secondary/50 transition-colors">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-mono text-muted-foreground">{o.id}</span>
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${statusConf.color}`}>{t(statusConf.labelKey) || statusConf.label}</span>
-              </div>
-              <p className="mt-1 text-sm font-medium truncate">{o.listingTitle}</p>
-              <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-                <span>{o.customerName}</span>
-                <span className="font-medium text-foreground">€{o.total}</span>
-              </div>
-            </button>
-          );
-        })}
+        {filtered.map((o) => (
+          <button key={o.id} onClick={() => setViewOrder(o)} className="w-full rounded-xl border border-border p-3 text-left hover:bg-secondary/50 transition-colors">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-data text-xs text-muted-foreground">{o.id}</span>
+              {orderBadge(o.status)}
+            </div>
+            <p className="mt-1 text-sm font-medium truncate">{o.listingTitle}</p>
+            <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+              <span>{o.customerName}</span>
+              <span className="font-data font-medium text-foreground">€{o.total}</span>
+            </div>
+          </button>
+        ))}
       </div>
 
       {/* Desktop table */}
-      <div className="mt-6 hidden rounded-xl border border-border md:block">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b border-border bg-secondary/50">
-              <tr>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">ID</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.client")}</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.service")}</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.partner")}</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.integration")}</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.amount")}</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.margin")}</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.status")}</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.actions")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((o) => {
-                const intConf = INTEGRATION_TYPE_CONFIG[o.integrationType];
-                const statusConf = ORDER_STATUS_CONFIG[o.status] ?? FALLBACK_ORDER_STATUS;
-                const IntIcon = o.integrationType === "api" ? Wifi : o.integrationType === "email" ? Mail : Hand;
-                return (
-                  <tr key={o.id} className="border-b border-border last:border-0">
-                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{o.id}</td>
-                    <td className="px-4 py-3 font-medium">{o.customerName}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{o.listingTitle}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{o.supplierName}</td>
-                    <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${intConf.color}`}><IntIcon className="h-3 w-3" />{t(intConf.labelKey) || intConf.label}</span></td>
-                    <td className="px-4 py-3 font-medium">€{o.total}</td>
-                    <td className="px-4 py-3 text-success font-medium">€{o.margin}</td>
-                    <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${statusConf.color}`}>{t(statusConf.labelKey) || statusConf.label}</span></td>
-                    <td className="px-4 py-3"><Button variant="outline" size="sm" onClick={() => setViewOrder(o)}>{t("admin.view")}</Button></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DataTable className="mt-6 hidden md:block">
+        <DataTableHead>
+          <tr>
+            <Th>ID</Th>
+            <Th>{t("admin.client")}</Th>
+            <Th>{t("admin.service")}</Th>
+            <Th>{t("admin.partner")}</Th>
+            <Th>{t("admin.integration")}</Th>
+            <Th align="right">{t("admin.amount")}</Th>
+            <Th align="right">{t("admin.margin")}</Th>
+            <Th>{t("admin.status")}</Th>
+            <Th>{t("admin.actions")}</Th>
+          </tr>
+        </DataTableHead>
+        <tbody>
+          {filtered.map((o) => {
+            const intConf = INTEGRATION_TYPE_CONFIG[o.integrationType];
+            const IntIcon = o.integrationType === "api" ? Wifi : o.integrationType === "email" ? Mail : Hand;
+            return (
+              <Tr key={o.id}>
+                <Td data className="text-xs text-muted-foreground">{o.id}</Td>
+                <Td className="font-medium">{o.customerName}</Td>
+                <Td className="text-muted-foreground">{o.listingTitle}</Td>
+                <Td className="text-muted-foreground">{o.supplierName}</Td>
+                <Td><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${intConf.color}`}><IntIcon className="h-3 w-3" />{t(intConf.labelKey) || intConf.label}</span></Td>
+                <Td data align="right" className="font-medium">€{o.total}</Td>
+                <Td data align="right" className="font-medium text-success-text">€{o.margin}</Td>
+                <Td>{orderBadge(o.status)}</Td>
+                <Td><Button variant="outline" size="sm" onClick={() => setViewOrder(o)}>{t("admin.view")}</Button></Td>
+              </Tr>
+            );
+          })}
+        </tbody>
+      </DataTable>
 
       {/* Pagination */}
       {total > pageLimit && (

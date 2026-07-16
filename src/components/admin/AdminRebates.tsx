@@ -7,6 +7,11 @@ import { Loader2, FileText, CheckCircle, Send, Receipt } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { queryKeys } from "@/services/queryKeys";
 import type { RebateInvoice } from "@/services/types";
+import {
+  AdminPageHeader, DataTable, DataTableHead, Th, Tr, Td, EmptyState, StatusBadge,
+  type StatusTone,
+} from "@/components/admin/kit";
+import { Circle, AlertTriangle, CheckCircle2, type LucideIcon } from "lucide-react";
 
 function getPrevMonth(): string {
   const d = new Date();
@@ -36,11 +41,11 @@ function formatPeriod(year: number, month: number): string {
   return `${year}-${String(month).padStart(2, "0")}`;
 }
 
-const statusMap: Record<string, { labelKey: string; label: string; className: string }> = {
-  draft: { labelKey: "rebate.draft", label: "Draft", className: "bg-secondary text-muted-foreground" },
-  sent: { labelKey: "rebate.sent", label: "Sent", className: "bg-info/10 text-info" },
-  paid: { labelKey: "rebate.paid", label: "Paid", className: "bg-success/10 text-success" },
-  overdue: { labelKey: "rebate.overdue", label: "Overdue", className: "bg-destructive/10 text-destructive" },
+const statusMap: Record<string, { labelKey: string; label: string; tone: StatusTone; icon: LucideIcon }> = {
+  draft: { labelKey: "rebate.draft", label: "Draft", tone: "slate", icon: Circle },
+  sent: { labelKey: "rebate.sent", label: "Sent", tone: "info", icon: Send },
+  paid: { labelKey: "rebate.paid", label: "Paid", tone: "green", icon: CheckCircle2 },
+  overdue: { labelKey: "rebate.overdue", label: "Overdue", tone: "red", icon: AlertTriangle },
 };
 
 export default function AdminRebates({ supplierId }: { supplierId?: string }) {
@@ -98,15 +103,12 @@ export default function AdminRebates({ supplierId }: { supplierId?: string }) {
   return (
     <div>
       {/* Page head */}
-      <div>
-        <span className="font-mono-label text-[11.5px] uppercase tracking-[0.2em] text-teal-deep">
-          {t("admin.rebates.eyebrow")}
-        </span>
-        <h1 className="mt-1 font-display text-2xl font-bold text-navy-ink md:text-[28px]">
-          {t("admin.rebates.title")}
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{t("admin.rebates.desc")}</p>
-      </div>
+      <AdminPageHeader
+        eyebrow={t("admin.nav.groupCommerce")}
+        title={t("admin.rebates.title")}
+        subtitle={t("admin.rebates.desc")}
+        count={invoices.length || undefined}
+      />
 
       {/* Generate card */}
       <div className="mt-6 rounded-[14px] border border-border bg-card p-6 shadow-card">
@@ -170,96 +172,75 @@ export default function AdminRebates({ supplierId }: { supplierId?: string }) {
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : invoices.length === 0 ? (
-        <div className="mt-6 flex flex-col items-center justify-center gap-3 rounded-[14px] border border-border bg-card py-16 text-center shadow-card">
-          <div className="flex h-[54px] w-[54px] items-center justify-center rounded-2xl bg-secondary">
-            <Receipt className="h-[26px] w-[26px] text-muted-foreground" />
-          </div>
-          <h3 className="font-display text-lg font-semibold text-navy-ink">{t("admin.rebates.noInvoices")}</h3>
-          <p className="max-w-xs text-sm text-muted-foreground">{t("admin.rebates.emptyDesc")}</p>
-        </div>
+        <EmptyState
+          className="mt-6"
+          icon={Receipt}
+          title={t("admin.rebates.noInvoices")}
+          description={t("admin.rebates.emptyDesc")}
+        />
       ) : (
-        <div className="mt-6 overflow-x-auto rounded-[14px] border border-border bg-card shadow-card">
-          <table className="w-full text-sm">
-            <thead className="border-b border-border bg-secondary/40">
-              <tr>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t("admin.rebates.partner")}
-                </th>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t("admin.rebates.period")}
-                </th>
-                <th className="hidden px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:table-cell">
-                  {t("admin.rebates.bookingsCount")}
-                </th>
-                <th className="hidden px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:table-cell">
-                  {t("admin.rebates.totalAmount")}
-                </th>
-                <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t("admin.rebates.rebateAmount")}
-                </th>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t("admin.rebates.status")}
-                </th>
-                <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t("admin.rebates.actions")}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {invoices.map((inv: any) => {
-                const sc = statusMap[inv.status] || statusMap.draft;
-                return (
-                  <tr key={inv.id} className="border-b border-border transition-colors last:border-0 hover:bg-secondary/30">
-                    <td className="px-5 py-3.5 font-medium text-navy-ink">{inv.supplierName}</td>
-                    <td className="px-5 py-3.5 font-mono text-xs text-muted-foreground">{inv.period}</td>
-                    <td className="hidden px-5 py-3.5 text-right text-muted-foreground sm:table-cell">
-                      {inv.bookingCount ?? inv.bookingsCount}
-                    </td>
-                    <td className="hidden px-5 py-3.5 text-right text-muted-foreground sm:table-cell">
-                      €{inv.totalBookingValue ?? inv.totalValue}
-                    </td>
-                    <td className="px-5 py-3.5 text-right font-semibold text-navy-ink">
-                      €{inv.rebateAmount ?? inv.amount}
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${sc.className}`}
-                      >
-                        {t(sc.labelKey) || sc.label}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <div className="flex justify-end gap-2">
-                        {inv.status === "draft" && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-9 gap-1.5"
-                            onClick={() => markSentMut.mutate(inv.id)}
-                            disabled={markSentMut.isPending}
-                          >
-                            <Send className="h-3.5 w-3.5" /> {t("admin.rebates.send")}
-                          </Button>
-                        )}
-                        {inv.status === "sent" && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-9 gap-1.5"
-                            onClick={() => markPaidMut.mutate(inv.id)}
-                            disabled={markPaidMut.isPending}
-                          >
-                            <CheckCircle className="h-3.5 w-3.5" /> {t("admin.rebates.markPaid")}
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <DataTable className="mt-6">
+          <DataTableHead>
+            <tr>
+              <Th className="px-5">{t("admin.rebates.partner")}</Th>
+              <Th className="px-5">{t("admin.rebates.period")}</Th>
+              <Th align="right" className="hidden px-5 sm:table-cell">{t("admin.rebates.bookingsCount")}</Th>
+              <Th align="right" className="hidden px-5 sm:table-cell">{t("admin.rebates.totalAmount")}</Th>
+              <Th align="right" className="px-5">{t("admin.rebates.rebateAmount")}</Th>
+              <Th className="px-5">{t("admin.rebates.status")}</Th>
+              <Th align="right" className="px-5">{t("admin.rebates.actions")}</Th>
+            </tr>
+          </DataTableHead>
+          <tbody>
+            {invoices.map((inv: any) => {
+              const sc = statusMap[inv.status] || statusMap.draft;
+              return (
+                <Tr key={inv.id}>
+                  <Td className="px-5 font-medium text-navy-ink">{inv.supplierName}</Td>
+                  <Td data className="px-5 text-xs text-muted-foreground">{inv.period}</Td>
+                  <Td data align="right" className="hidden px-5 text-muted-foreground sm:table-cell">
+                    {inv.bookingCount ?? inv.bookingsCount}
+                  </Td>
+                  <Td data align="right" className="hidden px-5 text-muted-foreground sm:table-cell">
+                    €{inv.totalBookingValue ?? inv.totalValue}
+                  </Td>
+                  <Td data align="right" className="px-5 font-semibold text-navy-ink">
+                    €{inv.rebateAmount ?? inv.amount}
+                  </Td>
+                  <Td className="px-5">
+                    <StatusBadge tone={sc.tone} icon={sc.icon} label={t(sc.labelKey) || sc.label} />
+                  </Td>
+                  <Td className="px-5">
+                    <div className="flex justify-end gap-2">
+                      {inv.status === "draft" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 gap-1.5"
+                          onClick={() => markSentMut.mutate(inv.id)}
+                          disabled={markSentMut.isPending}
+                        >
+                          <Send className="h-3.5 w-3.5" /> {t("admin.rebates.send")}
+                        </Button>
+                      )}
+                      {inv.status === "sent" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 gap-1.5"
+                          onClick={() => markPaidMut.mutate(inv.id)}
+                          disabled={markPaidMut.isPending}
+                        >
+                          <CheckCircle className="h-3.5 w-3.5" /> {t("admin.rebates.markPaid")}
+                        </Button>
+                      )}
+                    </div>
+                  </Td>
+                </Tr>
+              );
+            })}
+          </tbody>
+        </DataTable>
       )}
     </div>
   );
