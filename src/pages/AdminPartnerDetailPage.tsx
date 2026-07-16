@@ -13,7 +13,7 @@ import {
   AlertDialogTitle, AlertDialogDescription, AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { SEO } from "@/components/SEO";
-import AdminSidebar from "@/components/admin/AdminSidebar";
+import AdminShell from "@/components/admin/AdminShell";
 import ProviderContractTemplate from "@/components/provider/ProviderContractTemplate";
 import { supplierService, providerPaidFeaturesService } from "@/services";
 import { apiClient } from "@/services/apiClient";
@@ -84,12 +84,11 @@ export default function AdminPartnerDetailPage() {
 
   if (isLoading || !supplier) {
     return (
-      <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
-        <AdminSidebar activeTab="partners" />
-        <div className="flex flex-1 min-w-0 items-center justify-center">
+      <AdminShell active="partners">
+        <div className="flex min-h-[40vh] items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
-      </div>
+      </AdminShell>
     );
   }
 
@@ -107,10 +106,8 @@ export default function AdminPartnerDetailPage() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
+    <AdminShell active="partners">
       <SEO title={`${s.name} — Ruumly Admin`} description="" noindex />
-      <AdminSidebar activeTab="partners" />
-      <div className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6">
         <Link
           to="/admin/partners"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
@@ -200,7 +197,6 @@ export default function AdminPartnerDetailPage() {
         {tab === "visibility" && <VisibilityTab supplier={s} onSave={(p) => updateMutation.mutate(p)} pending={updateMutation.isPending} />}
         {tab === "integration" && <IntegrationTab supplierId={s.id} />}
         {tab === "contracts" && <ProviderContractTemplate supplierId={s.id} />}
-      </div>
 
       {/* Hard-delete confirmation — irreversible, distinct from the reversible
           "Remove from marketplace" hide on the Visibility tab. */}
@@ -254,7 +250,7 @@ export default function AdminPartnerDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </AdminShell>
   );
 }
 

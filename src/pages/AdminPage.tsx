@@ -6,7 +6,7 @@ import { supplierService } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { SEO } from "@/components/SEO";
-import AdminSidebar from "@/components/admin/AdminSidebar";
+import AdminShell from "@/components/admin/AdminShell";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminOrders from "@/components/admin/AdminOrders";
 import AdminSuppliers from "@/components/admin/AdminSuppliers";
@@ -51,11 +51,9 @@ export default function AdminPage() {
   const [filterSupplierId, setFilterSupplierId] = useState<string>("");
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
+    <AdminShell active={activeTab}>
       <SEO title={`${t("seo.admin")} — Ruumly`} description="" noindex={true} />
-      <AdminSidebar activeTab={activeTab} />
-      <div className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6">
-        {PARTNER_FILTER_TABS.includes(activeTab) && (
+      {PARTNER_FILTER_TABS.includes(activeTab) && (
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <label htmlFor="admin-partner-filter" className="text-sm font-medium text-muted-foreground">{t("admin.filterByPartner")}</label>
             <select
@@ -105,7 +103,6 @@ export default function AdminPage() {
         {activeTab === "settings" && <AdminSettings />}
         {activeTab === "ops" && <AdminOps />}
         {activeTab === "metrics" && <AdminMetrics />}
-      </div>
-    </div>
+    </AdminShell>
   );
 }

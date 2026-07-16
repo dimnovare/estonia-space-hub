@@ -78,6 +78,8 @@ export default {
         info: {
           DEFAULT: "hsl(var(--info))",
           foreground: "hsl(var(--info-foreground))",
+          // AA-readable as text on a light tint; the DEFAULT fill is not.
+          text: "hsl(var(--info-text))",
         },
         // `deep` is the brand/glyph teal (~2.9:1 — NOT AA as text); `text` is the
         // AA-readable teal for links and body copy.

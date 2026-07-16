@@ -85,19 +85,32 @@ function LeadStatusControl({ lead, onStatusChange, statusPending }: {
   );
 }
 
+const VALID_STATUS_PARAMS: (AdminLeadStatus | "all")[] = [
+  "all", "new", "contacted", "quoted", "converted", "dismissed", "unmatched",
+];
+
 export default function AdminLeads() {
   const { t } = useLanguage();
   const qc = useQueryClient();
   const isMobile = useIsMobile();
-  const [statusFilter, setStatusFilter] = useState<AdminLeadStatus | "all">("all");
-  const [conciergeOnly, setConciergeOnly] = useState(false);
-  const [needsResponse, setNeedsResponse] = useState(false);
-  const [categoryFilter, setCategoryFilter] = useState<string>("any");
-  const [cityFilter, setCityFilter] = useState("");
-  const [page, setPage] = useState(1);
-  // Deep link: /admin?tab=leads&lead={id} auto-expands that lead's workspace on
-  // load (Feature A) — the instant-alert email links straight into the lead.
+  // Deep links: /admin?tab=leads&lead={id} auto-expands that lead's workspace
+  // (the instant-alert email links straight in); status/category/city/
+  // needsResponse params seed the filters so the cockpit's supply-gap chips
+  // and "view all" land on the exact filtered view. Params seed INITIAL state
+  // only — the filter buttons then behave exactly as before.
   const [searchParams] = useSearchParams();
+  const [statusFilter, setStatusFilter] = useState<AdminLeadStatus | "all">(() => {
+    const s = searchParams.get("status") as AdminLeadStatus | "all" | null;
+    return s && VALID_STATUS_PARAMS.includes(s) ? s : "all";
+  });
+  const [conciergeOnly, setConciergeOnly] = useState(false);
+  const [needsResponse, setNeedsResponse] = useState(() => {
+    const v = searchParams.get("needsResponse");
+    return v === "1" || v === "true";
+  });
+  const [categoryFilter, setCategoryFilter] = useState<string>(() => searchParams.get("category") || "any");
+  const [cityFilter, setCityFilter] = useState(() => searchParams.get("city") || "");
+  const [page, setPage] = useState(1);
   const [expandedId, setExpandedId] = useState<string | null>(() => searchParams.get("lead"));
   // Only the lead the URL pointed at is scrolled to, and only once — a manual
   // expand must never yank the page around.

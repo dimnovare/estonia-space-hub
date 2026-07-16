@@ -72,6 +72,7 @@
     --warning-text: 32 95% 32%;      /* ≈5.5:1 on white (was 38% ≈4.1:1, failed AA) */
     --info: 215 67% 51%;             /* #2F77D6 */
     --info-foreground: 0 0% 100%;
+    --info-text: 215 67% 38%;        /* ≈6:1 on white (the fill is only ~4:1 as text) */
 
     --surface-elevated: 0 0% 100%;
     --surface-sunken: 222 35% 95%;   /* #EEF1F8 */
@@ -84,6 +85,9 @@
     --gradient-hero: radial-gradient(120% 120% at 78% 10%, #1B4AA8 0%, #0E2156 44%, #0B1330 100%);
     --gradient-accent: linear-gradient(135deg, hsl(170 88% 32%), hsl(183 70% 40%));
     --gradient-surface: linear-gradient(180deg, hsl(222 39% 97%), hsl(222 35% 95%));
+
+    /* Control-room data font (admin spec §1): the stack behind .font-data. */
+    --font-data: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
   }
 
   .dark {
@@ -227,6 +231,16 @@
 
   .font-mono-label {
     font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  /* Control-room data font (admin redesign §1): ALL numerics in the admin —
+     KPI values, counts, money, table dates — render in JetBrains Mono with
+     tabular figures so columns of numbers align into an instrument-panel
+     read. This is THE design signature; don't use it for prose. */
+  .font-data {
+    font-family: var(--font-data);
+    font-variant-numeric: tabular-nums lining-nums;
+    letter-spacing: -0.01em;
   }
 
   /* Brand wordmark — live typeset text "Ruumly" (00-foundations §1.2):

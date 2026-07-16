@@ -5,7 +5,7 @@ import { Search, Building2, ExternalLink, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/SEO";
-import AdminSidebar from "@/components/admin/AdminSidebar";
+import AdminShell from "@/components/admin/AdminShell";
 import { supplierService } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -54,10 +54,8 @@ export default function AdminPartnerListPage() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
+    <AdminShell active="partners">
       <SEO title={`${t("seo.adminPartners")} — Ruumly`} description="" noindex />
-      <AdminSidebar activeTab="partners" />
-      <div className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="font-display text-2xl font-bold">{t("admin.partners")}</h1>
@@ -167,7 +165,6 @@ export default function AdminPartnerListPage() {
             })}
           </div>
         )}
-      </div>
-    </div>
+    </AdminShell>
   );
 }
