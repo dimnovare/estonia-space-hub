@@ -29,6 +29,17 @@ import AdminListings from "@/components/admin/AdminListings";
 import AdminIntegrations from "@/components/admin/AdminIntegrations";
 import AdminBlogPage from "@/components/admin/AdminBlogPage";
 
+/**
+ * Tabs whose content is scoped server-side by this page's partner <select>.
+ *
+ * "locations" is deliberately absent: that tab owns a searchable partner
+ * combobox (the directory is 163 partners deep), and two near-identical
+ * "All partners" controls on one screen read worse than the chip wall they
+ * replaced. Locations loads unscoped and filters client-side, which is cheap at
+ * this size. Don't add "locations" back without removing the combobox first.
+ */
+const PARTNER_FILTER_TABS = ["orders", "payouts", "rebates"];
+
 export default function AdminPage() {
   const [searchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "dashboard";
@@ -44,7 +55,7 @@ export default function AdminPage() {
       <SEO title={`${t("seo.admin")} — Ruumly`} description="" noindex={true} />
       <AdminSidebar activeTab={activeTab} />
       <div className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6">
-        {["locations", "orders", "payouts", "rebates"].includes(activeTab) && (
+        {PARTNER_FILTER_TABS.includes(activeTab) && (
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <label htmlFor="admin-partner-filter" className="text-sm font-medium text-muted-foreground">{t("admin.filterByPartner")}</label>
             <select
@@ -72,7 +83,11 @@ export default function AdminPage() {
         {activeTab === "dashboard" && <AdminDashboard />}
         {activeTab === "catalog" && <AdminPaidFeatures />}
         {activeTab === "requests" && <AdminBoosts />}
-        {activeTab === "locations" && <AdminLocations supplierId={filterSupplierId || undefined} />}
+        {/* No supplierId: the partner <select> above is not rendered for this
+            tab, so a filterSupplierId left over from orders/payouts/rebates
+            must not silently pre-filter a list with no visible control to
+            clear it. Locations loads unscoped; its own combobox filters. */}
+        {activeTab === "locations" && <AdminLocations />}
         {activeTab === "listings" && <AdminListings />}
         {activeTab === "orders" && <AdminOrders supplierId={filterSupplierId || undefined} />}
         {activeTab === "suppliers" && <AdminSuppliers />}

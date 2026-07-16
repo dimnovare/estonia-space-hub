@@ -170,6 +170,12 @@ export async function stubCommon(page: Page, opts: CommonOpts = {}): Promise<voi
     conciergeCities: "Tallinn, Harjumaa",
     ...(opts.settings ?? {}),
   };
+  // Leaflet basemap tiles (InteractiveMap → basemaps.cartocdn.com). An e2e run
+  // must never depend on a third-party CDN being reachable. Blocked centrally
+  // rather than per spec because several surfaces mount the map: SearchPage at
+  // lg+ (no showMap gate), HomePage when showMap is on, and the admin Locations
+  // tab unconditionally. Leaflet just leaves unfetched tiles blank.
+  await page.route(/basemaps\.cartocdn\.com|tile\.openstreetmap\.org/, (r) => r.abort());
   await page.route(/\/settings\/public/, (r) => json(r, settings));
   await page.route(/\/settings\/pricing/, (r) => json(r, pricingConfig()));
   await page.route(/\/features(\b|\/|\?|$)/, (r) => json(r, {}));

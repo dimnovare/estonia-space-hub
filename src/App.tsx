@@ -155,6 +155,13 @@ function AppContent() {
   // (offer overhaul §5 / quote Feature B): each renders its own slim logo
   // header instead of the full Navbar.
   const isOfferPage = /^\/[a-z]{2}\/(offer|quote)\//i.test(location.pathname);
+  // The consent banner is fixed to the bottom of the viewport, so on admin it
+  // simply covers the end of every long list (locations, leads, orders) until
+  // someone accepts. Admin is an authenticated internal surface, not public
+  // marketing: it sets no analytics of its own, and the banner still appears on
+  // every public route, so consent is unaffected — it just stops overlaying the
+  // ops UI.
+  const isAdminRoute = /^\/[a-z]{2}\/admin(\/|$)/i.test(location.pathname);
 
   // Auto-reload once on chunk load failure (stale deployment cache)
   useEffect(() => {
@@ -267,7 +274,7 @@ function AppContent() {
           </Routes>
         </Suspense>
       </main>
-      <CookieConsent />
+      {!isAdminRoute && <CookieConsent />}
     </>
   );
 }

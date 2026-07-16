@@ -16,23 +16,11 @@ import {
  */
 
 async function stubAll(page: Page) {
+  // stubCommon also blocks the Leaflet basemap tiles this tab's map would fetch.
   await stubCommon(page);
   await stubListings(page);
-  // The Locations tab mounts a Leaflet map. Cut its tile fetches off: an e2e run
-  // must not depend on openstreetmap.org being reachable. Leaflet simply leaves
-  // unfetched tiles blank, which is all these assertions need.
-  await page.route(/tile\.openstreetmap\.org/, (route) => route.abort());
 }
 
-/**
- * The consent banner is fixed to the bottom of the viewport. The "show more"
- * control lives at the end of a very long list, so scrolling it into view lands
- * it directly under the banner and the click is intercepted. Dismiss it first.
- */
-async function dismissCookies(page: Page) {
-  const accept = page.getByRole("button", { name: "Accept" });
-  if (await accept.isVisible().catch(() => false)) await accept.click();
-}
 
 test.describe("Admin partners list", () => {
   test("lists every partner across pages, not just the first page", async ({ page }) => {
@@ -74,7 +62,6 @@ test.describe("Admin locations partner filter", () => {
     await stubAll(page);
     await stubLocations(page, locationsAcrossPartners(60));
     await page.goto("/en/admin?tab=locations");
-    await dismissCookies(page);
 
     const trigger = page.getByRole("combobox", { name: /filter locations by partner/i });
     await expect(trigger).toBeVisible({ timeout: 15000 });
@@ -98,7 +85,6 @@ test.describe("Admin locations partner filter", () => {
     await stubAll(page);
     await stubLocations(page, locationsAcrossPartners(60));
     await page.goto("/en/admin?tab=locations");
-    await dismissCookies(page);
 
     const trigger = page.getByRole("combobox", { name: /filter locations by partner/i });
     await expect(trigger).toBeVisible({ timeout: 15000 });
@@ -116,15 +102,52 @@ test.describe("Admin locations partner filter", () => {
     await stubAll(page);
     await stubLocations(page, locationsAcrossPartners(60));
     await page.goto("/en/admin?tab=locations");
-    await dismissCookies(page);
 
     // 50 of 60 mounted, the rest behind an explicit action.
     const showMore = page.getByRole("button", { name: /show more \(10\)/i });
     await expect(showMore).toBeVisible({ timeout: 15000 });
     await expect(page.getByText("Ladu 55", { exact: true })).toHaveCount(0);
 
+    // This click also proves the consent banner is not covering the end of the
+    // list: the button sits ~6400px down, exactly where the fixed banner used to
+    // intercept it.
     await showMore.click();
     await expect(page.getByText("Ladu 55", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: /show more/i })).toHaveCount(0);
+  });
+
+  test("the tab has exactly one partner filter — the searchable one", async ({ page }) => {
+    // AdminPage renders its own plain "Filter by partner" select for the
+    // orders/payouts/rebates tabs; on locations it must stand down so there is
+    // not a second, near-identical "All partners" control.
+    await seedAuth(page, adminUser);
+    await stubAll(page);
+    await stubLocations(page, locationsAcrossPartners(60));
+    await page.goto("/en/admin?tab=locations");
+
+    await expect(page.getByRole("combobox", { name: /filter locations by partner/i })).toBeVisible({ timeout: 15000 });
+    await expect(page.locator("#admin-partner-filter")).toHaveCount(0);
+    await expect(page.getByRole("combobox")).toHaveCount(1);
+  });
+});
+
+test.describe("Admin chrome", () => {
+  test("the cookie consent banner never overlays admin content", async ({ page }) => {
+    // It is fixed to the viewport bottom, so on admin it just covers the end of
+    // every long list until accepted. Admin is authenticated internal tooling.
+    await seedAuth(page, adminUser);
+    await stubAll(page);
+    await stubLocations(page, locationsAcrossPartners(60));
+    await page.goto("/en/admin?tab=locations");
+
+    await expect(page.getByRole("combobox", { name: /filter locations by partner/i })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("button", { name: "Accept" })).toHaveCount(0);
+  });
+
+  test("the cookie consent banner still appears on public routes", async ({ page }) => {
+    // Suppressing it on admin must not suppress it where consent actually matters.
+    await stubAll(page);
+    await page.goto("/en/");
+    await expect(page.getByRole("button", { name: "Accept" })).toBeVisible({ timeout: 15000 });
   });
 });
