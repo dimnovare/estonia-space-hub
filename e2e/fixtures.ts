@@ -198,6 +198,50 @@ export async function stubLocations(page: Page, items: Json[]): Promise<void> {
   });
 }
 
+/**
+ * Stub GET /admin/suppliers with REAL server pagination semantics: an
+ * { data, total, page, limit, hasMore } envelope whose `limit` is capped at 100
+ * exactly like the backend. supplierService.getAll must page through it — a
+ * single unpaged fetch used to truncate the directory to the first page.
+ * Register AFTER stubCommon (later route wins).
+ */
+export async function stubAdminSuppliersPaged(page: Page, total: number): Promise<void> {
+  await page.route(/\/admin\/suppliers(\b|\?|$)/, (route) => {
+    const url = new URL(route.request().url());
+    // Leave the single-supplier detail route (/admin/suppliers/{id}) alone.
+    if (/\/admin\/suppliers\/[^/]+/.test(url.pathname)) return route.continue();
+    const limit = Math.min(Number(url.searchParams.get("limit") ?? 50), 100); // server caps at 100
+    const pageNo = Number(url.searchParams.get("page") ?? 1);
+    const start = (pageNo - 1) * limit;
+    const data = Array.from({ length: Math.max(0, Math.min(limit, total - start)) }, (_, i) => ({
+      id: `sup-${start + i}`,
+      name: `Partner ${start + i}`,
+      isActive: true,
+      slug: null,
+      tier: "starter",
+      listingCount: 0,
+      ordersTotal: 0,
+    }));
+    return json(route, { data, total, page: pageNo, limit, hasMore: start + data.length < total });
+  });
+}
+
+/** N locations spread across N distinct partners — the input that turned the
+ *  old per-partner filter row into a wall of chips. */
+export function locationsAcrossPartners(count: number): Json[] {
+  return Array.from({ length: count }, (_, i) =>
+    apiLocation({
+      id: `loc-${i}`,
+      supplierId: `sup-${i}`,
+      supplierName: `Partner ${i}`,
+      name: `Ladu ${i}`,
+      city: "Tallinn",
+      lat: 59.43 + i * 0.001,
+      lng: 24.75 + i * 0.001,
+    }),
+  );
+}
+
 /** Stub GET /suppliers/by-slug/{slug}. Register AFTER stubCommon (later route wins). */
 export async function stubPartner(page: Page, profile: Json): Promise<void> {
   await page.route(/\/suppliers\/by-slug\//, (r) => json(r, profile));

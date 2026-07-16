@@ -1,10 +1,14 @@
-import { useMemo, useState } from "react";
-import { PlusCircle, MapPin, Save, Loader2, Edit, X, Warehouse, Truck, CarFront, Trash2, Upload, CheckCircle, AlertCircle, Search, Pin, CheckCircle2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { PlusCircle, MapPin, Save, Loader2, Edit, X, Warehouse, Truck, CarFront, Trash2, Upload, CheckCircle, AlertCircle, Search, Pin, CheckCircle2, Check, ChevronsUpDown, EyeOff } from "lucide-react";
 import ImageUploader from "./ImageUploader";
 import GeocodeLookup from "./AdminLocationsGeocode";
 import InteractiveMap from "@/components/InteractiveMap";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
+} from "@/components/ui/command";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { locationService, supplierService } from "@/services";
@@ -113,6 +117,85 @@ function StatusTag({ kind, children }: { kind: "ok" | "warn" | "muted"; children
     <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-display text-[11.5px] font-semibold ${styles[kind]}`}>
       {children}
     </span>
+  );
+}
+
+/**
+ * Searchable partner filter (design §C).
+ *
+ * Replaces the previous one-chip-per-partner row: with 163 partners in the
+ * directory that rendered a wall of chips that pushed the actual content off
+ * screen. Same `partnerFilter` state and filtering logic — only the control
+ * changed: type-to-filter, shows the current selection, and clearable.
+ */
+function PartnerFilter({ options, value, onChange }: {
+  options: { id: string; name: string }[];
+  value: string;
+  onChange: (next: string) => void;
+}) {
+  const { t } = useLanguage();
+  const [open, setOpen] = useState(false);
+  const selected = options.find((o) => o.id === value);
+  const label = value === "all" || !selected ? t("admin.locations.allPartners") : selected.name;
+
+  return (
+    <div className="flex items-center gap-2">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            aria-label={t("admin.locations.filterByPartner")}
+            className="h-11 w-full justify-between gap-2 border-line-2 bg-card font-normal lg:w-[280px]"
+          >
+            <span className="truncate">{label}</span>
+            <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" aria-hidden />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[280px] p-0" align="end">
+          <Command>
+            <CommandInput placeholder={t("admin.locations.partnerSearchPlaceholder")} />
+            <CommandList>
+              <CommandEmpty>{t("admin.locations.noPartnerMatches")}</CommandEmpty>
+              <CommandGroup>
+                <CommandItem
+                  value={t("admin.locations.allPartners")}
+                  onSelect={() => { onChange("all"); setOpen(false); }}
+                >
+                  <Check className={`mr-2 h-4 w-4 shrink-0 ${value === "all" ? "opacity-100" : "opacity-0"}`} aria-hidden />
+                  {t("admin.locations.allPartners")}
+                </CommandItem>
+                {options.map((o) => (
+                  <CommandItem
+                    key={o.id}
+                    // cmdk filters on `value`; the id keeps same-named partners
+                    // distinct so neither can shadow the other.
+                    value={`${o.name} ${o.id}`}
+                    onSelect={() => { onChange(o.id); setOpen(false); }}
+                  >
+                    <Check className={`mr-2 h-4 w-4 shrink-0 ${value === o.id ? "opacity-100" : "opacity-0"}`} aria-hidden />
+                    <span className="truncate">{o.name}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+      {value !== "all" && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-11 w-11 shrink-0 px-0"
+          aria-label={t("admin.locations.clearPartnerFilter")}
+          onClick={() => onChange("all")}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      )}
+    </div>
   );
 }
 
@@ -269,6 +352,9 @@ function isGeocoded(loc: { lat: number; lng: number }): boolean {
   return Number(loc.lat) !== 0 && Number(loc.lng) !== 0;
 }
 
+/** How many location cards to mount at once before "show more". */
+const LOCATION_PAGE_SIZE = 50;
+
 export default function AdminLocations({ supplierId }: { supplierId?: string }) {
   const { t, language } = useLanguage();
   const qc = useQueryClient();
@@ -293,6 +379,10 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
   const [search, setSearch] = useState("");
   const [partnerFilter, setPartnerFilter] = useState<string>("all");
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(LOCATION_PAGE_SIZE);
+
+  // Any filter change starts the list back at the first page.
+  useEffect(() => { setVisibleCount(LOCATION_PAGE_SIZE); }, [search, partnerFilter]);
 
   const selected = locations.find((l) => l.id === selectedId);
 
@@ -454,6 +544,12 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
     return matchesSearch && matchesPartner;
   });
 
+  // The card list is capped and extended on demand so a large directory doesn't
+  // mount hundreds of cards at once. The MAP still plots every match — a map
+  // that hid pins behind a "show more" would be lying about coverage.
+  const visibleLocations = filtered.slice(0, visibleCount);
+  const remainingCount = filtered.length - visibleLocations.length;
+
   // Counts for the page subtitle / status overview.
   const publishedCount = locations.filter((l) => l.isActive).length;
 
@@ -482,13 +578,13 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
         </div>
         <Button
           onClick={() => { setNewLoc({ ...emptyLoc, supplierId: supplierId ?? (suppliers[0]?.id ?? "") }); setAddLocOpen(true); }}
-          className="h-11 gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90"
+          className="h-11 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
         >
           <PlusCircle className="h-[18px] w-[18px]" /> {t("admin.locations.add")}
         </Button>
       </div>
 
-      {/* ── Toolbar: search + per-partner filter chips ── */}
+      {/* ── Toolbar: free-text location search + searchable partner filter ── */}
       <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="relative w-full lg:max-w-xs">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-foreground/70" />
@@ -501,33 +597,7 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
         </div>
 
         {partnerOptions.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => setPartnerFilter("all")}
-              aria-pressed={partnerFilter === "all"}
-              className={`min-h-[36px] rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                partnerFilter === "all"
-                  ? "bg-navy-ink text-white"
-                  : "border border-line-2 bg-card text-muted-foreground hover:border-primary hover:text-primary"
-              }`}
-            >
-              {t("admin.locations.allPartners")}
-            </button>
-            {partnerOptions.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => setPartnerFilter(p.id)}
-                aria-pressed={partnerFilter === p.id}
-                className={`min-h-[36px] rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                  partnerFilter === p.id
-                    ? "bg-navy-ink text-white"
-                    : "border border-line-2 bg-card text-muted-foreground hover:border-primary hover:text-primary"
-                }`}
-              >
-                {p.name}
-              </button>
-            ))}
-          </div>
+          <PartnerFilter options={partnerOptions} value={partnerFilter} onChange={setPartnerFilter} />
         )}
       </div>
 
@@ -541,7 +611,7 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
               <p className="text-sm text-muted-foreground">{t("admin.locations.noLocations")}</p>
             </div>
           ) : (
-            filtered.map((loc) => {
+            visibleLocations.map((loc) => {
               const geocoded = isGeocoded(loc);
               const active = selectedId === loc.id;
               return (
@@ -557,7 +627,7 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
                     <span className="truncate font-display text-[15px] font-semibold text-navy-ink">{loc.name}</span>
                     {loc.isActive
                       ? <StatusTag kind="ok"><CheckCircle2 className="h-3 w-3" />{t("admin.locations.tagPublished")}</StatusTag>
-                      : <StatusTag kind="muted">{t("admin.locations.tagHidden")}</StatusTag>}
+                      : <StatusTag kind="muted"><EyeOff className="h-3 w-3" />{t("admin.locations.tagHidden")}</StatusTag>}
                   </div>
                   <div className="mt-1 flex items-center gap-1.5 text-[13px] text-muted-foreground">
                     <MapPin className="h-3.5 w-3.5 shrink-0" />
@@ -577,6 +647,17 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
                 </button>
               );
             })
+          )}
+
+          {remainingCount > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 w-full"
+              onClick={() => setVisibleCount((c) => c + LOCATION_PAGE_SIZE)}
+            >
+              {t("admin.locations.showMore").replace("{count}", String(remainingCount))}
+            </Button>
           )}
         </div>
 
@@ -677,7 +758,7 @@ export default function AdminLocations({ supplierId }: { supplierId?: string }) 
                       <h2 className="font-display text-lg font-bold text-navy-ink">{selected.name}</h2>
                       {selected.isActive
                         ? <StatusTag kind="ok"><CheckCircle2 className="h-3 w-3" />{t("admin.locations.tagPublished")}</StatusTag>
-                        : <StatusTag kind="muted">{t("admin.locations.tagHidden")}</StatusTag>}
+                        : <StatusTag kind="muted"><EyeOff className="h-3 w-3" />{t("admin.locations.tagHidden")}</StatusTag>}
                       {isGeocoded(selected)
                         ? <StatusTag kind="ok"><Pin className="h-3 w-3" />{t("admin.locations.tagGeocoded")}</StatusTag>
                         : <StatusTag kind="warn"><AlertCircle className="h-3 w-3" />{t("admin.locations.tagNotGeocoded")}</StatusTag>}

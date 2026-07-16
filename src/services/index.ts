@@ -169,10 +169,40 @@ export const userService = {
 };
 
 // ─── Supplier Service ───────────────────────────────────────────────────────────
+
+// GET /admin/suppliers is paginated server-side and caps `limit` at 100
+// (limit=200 echoes 100). A single unpaged request therefore returned only the
+// first page and silently truncated the directory — the Partners page read
+// "50 / 50" against 163 real partners. Page through and return the whole set.
+const SUPPLIERS_PAGE_LIMIT = 100;
+// Runaway guard: 20 × 100 is far beyond any real partner count, and bounds the
+// loop even if a server stopped honouring `page`.
+const SUPPLIERS_MAX_PAGES = 20;
+
 export const supplierService = {
+  /**
+   * Every partner, following server pagination to the end.
+   *
+   * Takes NO arguments on purpose: several call sites pass this as a bare
+   * `queryFn: supplierService.getAll`, which TanStack Query invokes with a
+   * QueryFunctionContext — any parameter added here would silently receive that
+   * object instead of a caller's value.
+   */
   async getAll(): Promise<Supplier[]> {
-    const res = await apiClient.get<any>("/admin/suppliers");
-    return unwrapPaginated<Supplier>(res);
+    const all: Supplier[] = [];
+    for (let page = 1; page <= SUPPLIERS_MAX_PAGES; page++) {
+      const res = await apiClient.get<any>(`/admin/suppliers?page=${page}&limit=${SUPPLIERS_PAGE_LIMIT}`);
+      const batch = unwrapPaginated<Supplier>(res);
+      all.push(...batch);
+      // A bare array carries no pagination metadata — it is already the whole set.
+      if (Array.isArray(res)) break;
+      // Stop as soon as the server says there is no more, we have collected the
+      // reported total, or the page came back short (which also covers empty).
+      if (res?.hasMore === false) break;
+      if (typeof res?.total === "number" && all.length >= res.total) break;
+      if (batch.length < SUPPLIERS_PAGE_LIMIT) break;
+    }
+    return all;
   },
   async getById(id: string): Promise<Supplier | undefined> {
     return apiClient.get<Supplier>(`/admin/suppliers/${id}`);
