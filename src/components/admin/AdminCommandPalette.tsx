@@ -8,7 +8,7 @@ import {
   CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator,
 } from "@/components/ui/command";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { adminLeadService, supplierService } from "@/services";
+import { adminLeadService, supplierService, type AdminLead } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
 import { serviceTypeLabel } from "@/lib/serviceTypes";
 import { ADMIN_NAV_GROUPS } from "@/components/admin/adminNav";
@@ -55,10 +55,27 @@ export default function AdminCommandPalette({ open, onOpenChange }: Props) {
     enabled: open,
   });
 
-  const { data: leadPage } = useQuery({
-    queryKey: [...queryKeys.adminLeads.root(), "palette"],
-    queryFn: () => adminLeadService.list("all", 1, 50),
-    staleTime: 30_000,
+  // Lead corpus: name/email aren't server-searchable, so page the newest leads
+  // into a local corpus (up to ~300, newest-first) and filter locally. The
+  // window is finite by design — the empty state says so honestly below.
+  const LEAD_CORPUS_CAP = 300;
+  const { data: leadCorpus } = useQuery({
+    queryKey: [...queryKeys.adminLeads.root(), "palette-corpus"],
+    queryFn: async () => {
+      const items: AdminLead[] = [];
+      let total = Infinity;
+      // Sequential pages; tolerant of a server-side limit cap (the page size
+      // we get back may be smaller than requested — pages stay consistent as
+      // long as the same limit is echoed, and the hard stop bounds the loop).
+      for (let page = 1; page <= 6 && items.length < Math.min(total, LEAD_CORPUS_CAP); page++) {
+        const res = await adminLeadService.list("all", page, 100);
+        total = res.total;
+        if (res.items.length === 0) break;
+        items.push(...res.items);
+      }
+      return { items: items.slice(0, LEAD_CORPUS_CAP), total };
+    },
+    staleTime: 60_000,
     retry: 1,
     enabled: open && searching,
   });
@@ -67,10 +84,13 @@ export default function AdminCommandPalette({ open, onOpenChange }: Props) {
     ? suppliers.filter((s) => s.name?.toLowerCase().includes(q)).slice(0, 8)
     : [];
   const leadHits = searching
-    ? (leadPage?.items ?? [])
+    ? (leadCorpus?.items ?? [])
         .filter((l) => [l.name, l.email, l.city].some((v) => v?.toLowerCase().includes(q)))
         .slice(0, 8)
     : [];
+  // The corpus is windowed: a zero-hit search may simply be older than the
+  // window. Say so instead of implying the lead doesn't exist.
+  const leadWindowLimited = (leadCorpus?.total ?? 0) > (leadCorpus?.items.length ?? 0);
 
   const navGroups = ADMIN_NAV_GROUPS.map((group) => ({
     ...group,
@@ -99,7 +119,9 @@ export default function AdminCommandPalette({ open, onOpenChange }: Props) {
             placeholder={t("admin.cmdk.placeholder")}
           />
           <CommandList className="max-h-[400px]">
-            <CommandEmpty>{t("admin.cmdk.empty")}</CommandEmpty>
+            <CommandEmpty>
+              {searching && leadWindowLimited ? t("admin.cmdk.recentOnly") : t("admin.cmdk.empty")}
+            </CommandEmpty>
             {navGroups.map((group) => (
               <CommandGroup
                 key={group.id}

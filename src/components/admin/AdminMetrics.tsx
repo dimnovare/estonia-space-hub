@@ -65,7 +65,7 @@ function StatCard({ label, value, sub, icon, highlight, highlightWhenPositive, h
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-3 font-mono-label text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+    <h2 className="mb-3 font-mono-label text-[11px] font-medium uppercase tracking-[0.18em] text-ink-2">
       {children}
     </h2>
   );

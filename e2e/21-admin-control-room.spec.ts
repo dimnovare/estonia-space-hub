@@ -1,5 +1,5 @@
 import { test, expect, Page, Route } from "@playwright/test";
-import { stubCommon, seedAuth, adminUser, stubAdminLeads, adminLead } from "./fixtures";
+import { stubCommon, seedAuth, adminUser, stubAdminLeads, adminLead, stubOfferLoop } from "./fixtures";
 
 /**
  * 21 — Admin control-room shell (2026-07-16 redesign spec §2-3)
@@ -142,6 +142,37 @@ test.describe("Admin control room", () => {
     await leadItem.click();
     await expect.poll(() => page.url(), { timeout: 8000 }).toContain("tab=leads");
     expect(page.url()).toContain("lead=lead-1");
+  });
+
+  test("Cmd+K lead jump works FROM the Leads tab: same-tab param change expands the workspace", async ({ page }) => {
+    // Regression guard: AdminPage renders <AdminLeads/> unkeyed, so a palette
+    // jump while already on ?tab=leads arrives as a searchParams change, not a
+    // remount — the workspace must still expand (and re-target on A → B).
+    await setupAdmin(page);
+    await stubOfferLoop(page); // workspace outreach/offers endpoints
+    await page.goto("/et/admin?tab=leads");
+    await expect(page.getByTestId("admin-cmdk-trigger")).toBeVisible({ timeout: 8000 });
+
+    // Jump 1: search Jaan from the Leads tab itself.
+    await page.keyboard.press("Control+k");
+    const input = page.getByPlaceholder(/otsi lehte/i);
+    await expect(input).toBeVisible();
+    await input.fill("jaan");
+    await page.locator("[cmdk-item]").filter({ hasText: "Jaan Tamm" }).click();
+    await expect.poll(() => page.url(), { timeout: 8000 }).toContain("lead=lead-2");
+    const row2Details = page.locator("#lead-row-lead-2").getByRole("button", { name: /detailid|details/i });
+    await expect(row2Details).toHaveAttribute("aria-expanded", "true", { timeout: 8000 });
+
+    // Jump 2: ?lead=A → ?lead=B re-targets the expansion.
+    await page.keyboard.press("Control+k");
+    await expect(page.getByPlaceholder(/otsi lehte/i)).toBeVisible();
+    await page.getByPlaceholder(/otsi lehte/i).fill("mari");
+    await page.locator("[cmdk-item]").filter({ hasText: "Mari Maasikas" }).click();
+    await expect.poll(() => page.url(), { timeout: 8000 }).toContain("lead=lead-1");
+    await expect(
+      page.locator("#lead-row-lead-1").getByRole("button", { name: /detailid|details/i }),
+    ).toHaveAttribute("aria-expanded", "true", { timeout: 8000 });
+    await expect(row2Details).toHaveAttribute("aria-expanded", "false");
   });
 
   test("Today cockpit renders north-star metrics, the needs-response queue and the sidebar badge", async ({ page }) => {

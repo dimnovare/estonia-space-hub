@@ -125,11 +125,11 @@ export default function AdminSidebar({ activeTab, activeSection }: Props) {
     const open = isOperate || !!expanded[group.id];
     const headCls = onDark
       ? "text-white/60 hover:text-white"
-      : "text-muted-foreground/80 hover:text-foreground";
+      : "text-ink-2 hover:text-foreground";
     return (
       <div key={group.id} data-nav-group={group.id}>
         {isOperate ? (
-          <div className={`px-3 pb-1 pt-0.5 font-mono-label text-[11px] font-medium uppercase tracking-[0.18em] ${onDark ? "text-white/60" : "text-muted-foreground/80"}`}>
+          <div className={`px-3 pb-1 pt-0.5 font-mono-label text-[11px] font-medium uppercase tracking-[0.18em] ${onDark ? "text-white/60" : "text-ink-2"}`}>
             {t(group.labelKey)}
           </div>
         ) : (

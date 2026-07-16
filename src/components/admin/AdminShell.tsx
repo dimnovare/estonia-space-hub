@@ -50,7 +50,7 @@ export default function AdminShell({ active, children }: Props) {
             <Search aria-hidden className="h-3.5 w-3.5 shrink-0" />
             <span className="hidden sm:inline">{t("admin.cmdk.trigger")}</span>
             <kbd aria-hidden className="font-data hidden rounded border border-border bg-secondary px-1.5 py-0.5 text-[10px] leading-none text-muted-foreground sm:inline-block">
-              {navigator.platform?.toUpperCase().includes("MAC") ? "⌘K" : "Ctrl K"}
+              {/(mac|iphone|ipad)/i.test(navigator.userAgent) ? "⌘K" : "Ctrl K"}
             </kbd>
           </button>
         </header>

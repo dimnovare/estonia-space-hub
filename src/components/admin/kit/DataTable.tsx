@@ -35,7 +35,7 @@ export function Th({ children, align = "left", className = "", ...rest }: ThProp
   const alignCls = align === "right" ? "text-right" : align === "center" ? "text-center" : "text-left";
   return (
     <th
-      className={`whitespace-nowrap px-4 py-2.5 font-mono-label text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground ${alignCls} ${className}`}
+      className={`whitespace-nowrap px-4 py-2.5 font-mono-label text-[11px] font-medium uppercase tracking-[0.08em] text-ink-2 ${alignCls} ${className}`}
       {...rest}
     >
       {children}

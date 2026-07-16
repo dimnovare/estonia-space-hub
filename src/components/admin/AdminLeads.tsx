@@ -76,10 +76,14 @@ export default function AdminLeads() {
   const qc = useQueryClient();
   const isMobile = useIsMobile();
   // Deep links: /admin?tab=leads&lead={id} auto-expands that lead's workspace
-  // (the instant-alert email links straight in); status/category/city/
-  // needsResponse params seed the filters so the cockpit's supply-gap chips
-  // and "view all" land on the exact filtered view. Params seed INITIAL state
-  // only — the filter buttons then behave exactly as before.
+  // (the instant-alert email + Cmd+K palette link straight in); status/
+  // category/city/needsResponse params seed the filters so the cockpit's
+  // supply-gap chips and "view all" land on the exact filtered view.
+  // Initializers cover the mount; the effects below cover SAME-TAB param
+  // changes — AdminPage renders this component unkeyed, so a palette jump
+  // while already on the Leads tab arrives as a searchParams change, never a
+  // remount. A present param wins when it changes; absent params leave the
+  // admin's local filter state alone.
   const [searchParams] = useSearchParams();
   const [statusFilter, setStatusFilter] = useState<AdminLeadStatus | "all">(() => {
     const s = searchParams.get("status") as AdminLeadStatus | "all" | null;
@@ -94,10 +98,41 @@ export default function AdminLeads() {
   const [cityFilter, setCityFilter] = useState(() => searchParams.get("city") || "");
   const [page, setPage] = useState(1);
   const [expandedId, setExpandedId] = useState<string | null>(() => searchParams.get("lead"));
-  // Only the lead the URL pointed at is scrolled to, and only once — a manual
-  // expand must never yank the page around.
+  // Only the lead the URL pointed at is scrolled to, and only once per target —
+  // a manual expand must never yank the page around.
   const deepLinkIdRef = useRef<string | null>(searchParams.get("lead"));
   const didScrollToDeepLinkRef = useRef(false);
+
+  const leadParam = searchParams.get("lead");
+  const statusParam = searchParams.get("status");
+  const categoryParam = searchParams.get("category");
+  const cityParam = searchParams.get("city");
+  const needsResponseParam = searchParams.get("needsResponse");
+
+  // ?lead= changed while mounted (palette jump from this very tab, or
+  // ?lead=A → ?lead=B): expand the new target and re-arm the one-shot scroll.
+  useEffect(() => {
+    if (!leadParam) return;
+    setExpandedId(leadParam);
+    deepLinkIdRef.current = leadParam;
+    didScrollToDeepLinkRef.current = false;
+  }, [leadParam]);
+
+  // Filter params changed while mounted (cockpit chips / view-all): apply them.
+  useEffect(() => {
+    let touched = false;
+    if (statusParam && VALID_STATUS_PARAMS.includes(statusParam as AdminLeadStatus | "all")) {
+      setStatusFilter(statusParam as AdminLeadStatus | "all");
+      touched = true;
+    }
+    if (categoryParam) { setCategoryFilter(categoryParam); touched = true; }
+    if (cityParam) { setCityFilter(cityParam); touched = true; }
+    if (needsResponseParam !== null) {
+      setNeedsResponse(needsResponseParam === "1" || needsResponseParam === "true");
+      touched = true;
+    }
+    if (touched) setPage(1);
+  }, [statusParam, categoryParam, cityParam, needsResponseParam]);
 
   // Optional GetLeads filters (source/category/city/needsResponse). Guarded so
   // nothing breaks if the backend ignores a param it doesn't support yet.
@@ -138,7 +173,9 @@ export default function AdminLeads() {
 
   // ?lead={id} opens the workspace, but the row can sit far below the metrics —
   // the admin arrives from the alert email and sees no sign anything happened.
-  // Bring it into view once the list has rendered.
+  // Bring it into view once the list has rendered. Re-keyed on leadParam so a
+  // same-tab jump (which re-arms the refs above) scrolls even when the list
+  // itself didn't refetch.
   useEffect(() => {
     const target = deepLinkIdRef.current;
     if (!target || didScrollToDeepLinkRef.current || items.length === 0) return;
@@ -146,7 +183,7 @@ export default function AdminLeads() {
     if (!row) return;
     didScrollToDeepLinkRef.current = true;
     row.scrollIntoView({ block: "center" });
-  }, [items]);
+  }, [items, leadParam]);
 
   const exportCsv = () => {
     const header = ["email", "city", "category", "query", "language", "created", "status"];

@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Link } from "@/i18n/routing";
 import {
   Megaphone, CheckCircle, CheckCircle2, CalendarCheck, Timer, ChevronRight,
-  Loader2,
+  Loader2, AlertTriangle,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useSuppliers } from "@/hooks/queries";
@@ -46,6 +46,30 @@ function ageClass(iso: string): string {
   return "text-muted-foreground";
 }
 
+/**
+ * Retryable per-section error state (never render success/empty copy on a
+ * failed fetch — an ops cockpit must not lie green).
+ */
+function SectionError({ label, retryLabel, onRetry }: {
+  label: string;
+  retryLabel: string;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="px-5 py-10 text-center" role="alert">
+      <AlertTriangle className="mx-auto h-6 w-6 text-warning-text" aria-hidden />
+      <p className="mt-2 text-sm text-muted-foreground">{label}</p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-3 inline-flex min-h-[36px] items-center rounded-md border border-border bg-card px-3 py-1.5 text-[13px] font-medium text-foreground transition-colors hover:border-navy-ink/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        {retryLabel}
+      </button>
+    </div>
+  );
+}
+
 /** Localized relative timestamp for the activity strip. */
 function useRelativeTime() {
   const { language } = useLanguage();
@@ -78,7 +102,9 @@ export default function AdminDashboard() {
   });
 
   // Needs-response queue: uncontacted leads, oldest-first server-side.
-  const { data: queueData, isLoading: queueLoading } = useQuery({
+  const {
+    data: queueData, isLoading: queueLoading, isError: queueError, refetch: refetchQueue,
+  } = useQuery({
     queryKey: [...queryKeys.adminLeads.root(), "cockpit-queue"],
     queryFn: () => adminLeadService.list("all", 1, 9, { needsResponse: true }),
     staleTime: 60_000,
@@ -87,7 +113,9 @@ export default function AdminDashboard() {
 
   // Activity fallback allowed by spec §3.3: the most recent leads with their
   // current status summary (deriving per-offer events would need N extra calls).
-  const { data: recentData } = useQuery({
+  const {
+    data: recentData, isError: recentError, refetch: refetchRecent,
+  } = useQuery({
     queryKey: [...queryKeys.adminLeads.root(), "cockpit-recent"],
     queryFn: () => adminLeadService.list("all", 1, 6),
     staleTime: 60_000,
@@ -95,7 +123,9 @@ export default function AdminDashboard() {
   });
 
   // Supply gaps: unmatched leads 30d grouped by category+city, client-side.
-  const { data: unmatchedData } = useQuery({
+  const {
+    data: unmatchedData, isError: unmatchedError, refetch: refetchUnmatched,
+  } = useQuery({
     queryKey: [...queryKeys.adminLeads.root(), "cockpit-unmatched"],
     queryFn: () => adminLeadService.list("unmatched", 1, 50),
     staleTime: 60_000,
@@ -224,7 +254,9 @@ export default function AdminDashboard() {
               {t("common.viewAll")}
             </Link>
           </div>
-          {queueLoading ? (
+          {queueError ? (
+            <SectionError label={t("admin.today.loadError")} retryLabel={t("common.retry")} onRetry={() => refetchQueue()} />
+          ) : queueLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
@@ -264,7 +296,13 @@ export default function AdminDashboard() {
           <div className="flex min-h-[48px] items-center justify-between gap-3 border-b border-border px-4 py-2.5">
             <h2 className="font-display text-[15px] font-semibold text-navy-ink">{t("admin.today.activity")}</h2>
           </div>
-          {recent.length === 0 ? (
+          {recentError ? (
+            <SectionError label={t("admin.today.loadError")} retryLabel={t("common.retry")} onRetry={() => refetchRecent()} />
+          ) : !recentData ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : recent.length === 0 ? (
             <div className="px-5 py-12 text-center text-sm text-muted-foreground">{t("admin.leads.empty")}</div>
           ) : (
             <div>
@@ -291,10 +329,23 @@ export default function AdminDashboard() {
 
       {/* Supply gaps (spec §3.4): unmatched demand by category + city, 30d. */}
       <section data-testid="cockpit-gaps" className="mt-6">
-        <h2 className="font-mono-label text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+        <h2 className="font-mono-label text-[11px] font-medium uppercase tracking-[0.18em] text-ink-2">
           {t("admin.today.supplyGaps")}
         </h2>
-        {gaps.length === 0 ? (
+        {unmatchedError ? (
+          <p className="mt-2 text-sm text-muted-foreground" role="alert">
+            {t("admin.today.loadError")}{" "}
+            <button
+              type="button"
+              onClick={() => refetchUnmatched()}
+              className="font-medium text-teal-text underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {t("common.retry")}
+            </button>
+          </p>
+        ) : !unmatchedData ? (
+          <p className="mt-2 text-sm text-muted-foreground">…</p>
+        ) : gaps.length === 0 ? (
           <p className="mt-2 text-sm text-muted-foreground">{t("admin.today.noGaps")}</p>
         ) : (
           <div className="mt-2 flex flex-wrap gap-2">
@@ -315,7 +366,7 @@ export default function AdminDashboard() {
 
       {/* Platform strip (spec §3.5): marketplace stats compacted, secondary. */}
       <section data-testid="cockpit-platform" className="mt-8">
-        <h2 className="font-mono-label text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+        <h2 className="font-mono-label text-[11px] font-medium uppercase tracking-[0.18em] text-ink-2">
           {t("admin.nav.groupPlatform")}
         </h2>
         <div className="mt-2 grid grid-cols-2 gap-px overflow-hidden rounded-[14px] border border-border bg-border shadow-card sm:grid-cols-3 xl:grid-cols-5">
