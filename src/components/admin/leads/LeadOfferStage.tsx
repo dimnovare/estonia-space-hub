@@ -221,12 +221,12 @@ export function LeadOfferStage({
           {activeDraft && <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">{t("admin.leads.activeDraft")}</span>}
         </div>
         {activeDraft ? (
-          <Button type="button" size="sm" variant="outline" className="h-9 gap-1.5" disabled={createMutation.isPending} onClick={() => createMutation.mutate()}>
+          <Button type="button" size="sm" variant="outline" className="h-9 gap-1.5" disabled={createMutation.isPending} onClick={() => createMutation.mutate(undefined)}>
             {createMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
             {t("admin.leads.offerCreate")}
           </Button>
         ) : (
-          <Button type="button" size="sm" className="h-9 gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90" disabled={createMutation.isPending} onClick={() => createMutation.mutate()}>
+          <Button type="button" size="sm" className="h-9 gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90" disabled={createMutation.isPending} onClick={() => createMutation.mutate(undefined)}>
             {createMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
             {history.length ? t("admin.leads.newDraft") : t("admin.leads.offerCreate")}
           </Button>

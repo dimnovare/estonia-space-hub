@@ -9,7 +9,6 @@ import {
   type OutreachResult,
   type OutreachPreviewItem,
   type ProviderCandidate,
-  type ProviderOutreachRow,
 } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -24,7 +23,6 @@ import {
 
 interface LeadProviderStageProps {
   lead: AdminLead;
-  outreachRows: ProviderOutreachRow[];
   onAddCandidate(candidate: ProviderCandidate): void;
   onOutreachComplete(): void;
 }
@@ -43,7 +41,7 @@ function formatDistance(value: number | null, t: (key: string) => string) {
     : t("admin.leads.radiusKm").replace("{count}", String(value));
 }
 
-export function LeadProviderStage({ lead, outreachRows, onAddCandidate, onOutreachComplete }: LeadProviderStageProps) {
+export function LeadProviderStage({ lead, onAddCandidate, onOutreachComplete }: LeadProviderStageProps) {
   const { t } = useLanguage();
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
@@ -229,24 +227,6 @@ export function LeadProviderStage({ lead, outreachRows, onAddCandidate, onOutrea
         {previewMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         {t("admin.leads.reviewProviders").replace("{count}", String(selected.size))}
       </Button>
-
-      <div className="mt-4 border-t border-border pt-3">
-        {outreachRows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("admin.leads.outreachEmpty")}</p>
-        ) : (
-          <ul className="divide-y divide-border text-sm">
-            {outreachRows.map((row) => (
-              <li key={row.id} className="flex min-w-0 flex-wrap items-center justify-between gap-2 py-2 first:pt-0 last:pb-0">
-                <div className="min-w-0">
-                  <div className="font-medium text-navy-ink">{row.supplierName ?? row.sentTo}</div>
-                  <div className="break-words text-xs text-muted-foreground">{row.sentTo}</div>
-                </div>
-                <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">{t(`admin.leads.outreachStatus.${row.status}`)}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
 
       {skippedResults.length > 0 && (
         <div className="mt-4 border-t border-border pt-3">

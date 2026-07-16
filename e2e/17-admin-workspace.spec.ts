@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import {
   stubCommon, stubListings, seedAuth, adminUser,
   stubAdminLeads, stubOfferLoop, adminLead, adminMatch, tartuProviderCandidates,
+  draftOfferWithOption, chosenOffer,
 } from "./fixtures";
 
 /**
@@ -48,6 +49,35 @@ async function openEnglishWorkspace(
   await expect(details).toBeVisible({ timeout: 15000 });
   await details.click();
 }
+
+// Open the English workspace with a pre-seeded offer (draft or chosen). Shares
+// the SAME lead-items array with the offer loop so confirm-booking can flip the
+// mocked lead to Converted in place.
+async function openWorkspaceWithOffer(
+  page: import("@playwright/test").Page,
+  offer: Record<string, unknown>,
+  leadOver: Record<string, unknown>,
+  loopOpts: Parameters<typeof stubOfferLoop>[1] = {},
+) {
+  const leadItems = [adminLead({ city: "Tartu", language: "en", ...leadOver })];
+  await seedAuth(page, adminUser);
+  await stubCommon(page);
+  await stubListings(page);
+  await stubAdminLeads(page, { items: leadItems, matches: [adminMatch()], candidates: tartuProviderCandidates() });
+  await stubOfferLoop(page, { offers: [offer], leadItems, ...loopOpts });
+  await page.goto("/en/admin?tab=leads");
+  const acceptCookies = page.getByRole("button", { name: "Accept" });
+  if (await acceptCookies.isVisible()) await acceptCookies.click();
+  const details = page.getByRole("button", { name: /details/i }).first();
+  await expect(details).toBeVisible({ timeout: 15000 });
+  await details.click();
+}
+
+const openWorkspaceWithDraft = (page: import("@playwright/test").Page, loopOpts: Parameters<typeof stubOfferLoop>[1] = {}) =>
+  openWorkspaceWithOffer(page, draftOfferWithOption(), {}, loopOpts);
+
+const openWorkspaceWithChosenOffer = (page: import("@playwright/test").Page, loopOpts: Parameters<typeof stubOfferLoop>[1] = {}) =>
+  openWorkspaceWithOffer(page, chosenOffer(), { status: "quoted" }, loopOpts);
 
 test.describe("Admin lead workspace", () => {
   test("nearby provider discovery filters and reviews outreach before send", async ({ page }) => {
@@ -383,4 +413,88 @@ test.describe("Admin lead workspace", () => {
     // The cleared note must not resurrect in the field after the save round-trip.
     await expect(noteField).toHaveValue("");
   });
+
+  // ── Task 8: stage 3 delivery review + booking confirmation ──
+
+  test("review delivery shows exact email and page before sending", async ({ page }) => {
+    await openWorkspaceWithDraft(page);
+
+    // The offer must NOT be sent until the explicit final action.
+    let sendCalls = 0;
+    page.on("request", (req) => {
+      if (req.method() === "POST" && /\/admin\/offers\/[^/]+\/send$/.test(new URL(req.url()).pathname)) sendCalls += 1;
+    });
+
+    await page.getByRole("button", { name: /review delivery/i }).click();
+    const dialog = page.getByRole("dialog");
+    // Exact email: recipient + exact subject from the backend preview.
+    await expect(dialog).toContainText("mari@example.com");
+    await expect(dialog).toContainText("Your Ruumly options");
+    // Effect bullets state the exact consequences before sending.
+    await expect(dialog).toContainText(/move the lead to quoted/i);
+    await expect(dialog).toContainText(/not take payment or create a confirmed booking/i);
+    // Previewing is side-effect-free — no send fired.
+    expect(sendCalls).toBe(0);
+
+    // Customer-page tab renders the same sanitized public component with the option.
+    await dialog.getByRole("tab", { name: /customer page/i }).click();
+    await expect(dialog.getByText("Miniladu 10 m² kesklinnas")).toBeVisible();
+
+    await dialog.getByRole("button", { name: /send to customer/i }).click();
+    await expect(page.getByText("Offer sent", { exact: true })).toBeVisible();
+    expect(sendCalls).toBe(1);
+  });
+
+  test("preview failure keeps the draft and offers an in-dialog retry", async ({ page }) => {
+    await openWorkspaceWithDraft(page, { deliveryPreviewStatus: 500 });
+
+    await page.getByRole("button", { name: /review delivery/i }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByRole("button", { name: /retry/i })).toBeVisible();
+    // Draft untouched: the send action is not available while the preview failed.
+    await expect(dialog.getByRole("button", { name: /send to customer/i })).toBeDisabled();
+  });
+
+  test("chosen preference needs explicit provider confirmation", async ({ page }) => {
+    await openWorkspaceWithChosenOffer(page);
+
+    let confirmCalls = 0;
+    page.on("request", (req) => {
+      if (req.method() === "POST" && /\/admin\/offers\/[^/]+\/confirm-booking$/.test(new URL(req.url()).pathname)) confirmCalls += 1;
+    });
+
+    await expect(page.getByText(/customer requested/i).first()).toBeVisible();
+    // No booking is confirmed just by opening the workspace.
+    expect(confirmCalls).toBe(0);
+
+    await page.getByRole("button", { name: /confirm with provider and mark booked/i }).click();
+    const confirm = page.getByRole("alertdialog");
+    await expect(confirm).toContainText(/only after the provider confirms availability/i);
+    await confirm.getByRole("button", { name: /mark booked/i }).click();
+
+    await expect(page.getByText("Booking outcome confirmed")).toBeVisible();
+    expect(confirmCalls).toBe(1);
+  });
+
+  test("confirm conflict keeps the lead quoted without a success toast", async ({ page }) => {
+    await openWorkspaceWithChosenOffer(page, { confirmStatus: 409 });
+
+    await page.getByRole("button", { name: /confirm with provider and mark booked/i }).click();
+    await page.getByRole("alertdialog").getByRole("button", { name: /mark booked/i }).click();
+
+    await expect(page.getByText("The chosen option no longer exists.")).toBeVisible();
+    await expect(page.getByText("Booking outcome confirmed")).toHaveCount(0);
+  });
+
+  for (const viewport of [{ width: 375, height: 812 }, { width: 1440, height: 900 }]) {
+    test(`guided workspace fits ${viewport.width}px without clipped actions`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await openWorkspaceWithDraft(page);
+
+      await expect(page.getByText(/find and contact providers/i)).toBeVisible();
+      await expect(page.getByRole("button", { name: /review delivery/i })).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      await page.screenshot({ path: `test-results/lead-workspace-${viewport.width}.png`, fullPage: true });
+    });
+  }
 });

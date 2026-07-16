@@ -152,6 +152,7 @@ export const queryKeys = {
     ) => ["admin-leads", "provider-candidates", id, filters.q ?? "", filters.scope, filters.category, filters.radiusKm, filters.limit] as const,
     outreach: (id: string) => ["admin-leads", "outreach", id] as const,
     offers:   (id: string) => ["admin-leads", "offers", id] as const,
+    deliveryPreview: (id: string) => ["admin-leads", "delivery-preview", id] as const,
   },
   // Public offer page (/offer/{token}) — anonymous, token-keyed.
   offers: {

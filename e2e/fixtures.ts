@@ -387,6 +387,13 @@ export async function stubOfferLoop(
     sendSkipReasons?: Record<string, OutreachSkipReason>;
     offerUpdateStatus?: number;
     offerDeleteStatus?: number;
+    /** Delivery-preview (GET /admin/offers/{id}/delivery-preview) failure code. */
+    deliveryPreviewStatus?: number;
+    /** confirm-booking (POST /admin/offers/{id}/confirm-booking) failure code. */
+    confirmStatus?: number;
+    /** Lead rows shared with stubAdminLeads (same array ref) so confirm-booking
+     *  can flip the mocked lead to Converted in place. */
+    leadItems?: Json[];
   } = {},
 ): Promise<void> {
   const offers: Json[] = [...(opts.offers ?? [])];
@@ -395,7 +402,7 @@ export async function stubOfferLoop(
   const providerFor = (supplierId: string) => candidates.find((candidate) => candidate.supplierId === supplierId);
   let seq = 0;
   await page.route(
-    /\/admin\/(leads\/[^/]+\/(outreach(?:\/preview)?|offers)|offers\/[^/]+(\/send)?|outreach\/[^/]+)(\?|$)/,
+    /\/admin\/(leads\/[^/]+\/(outreach(?:\/preview)?|offers)|offers\/[^/]+(\/send|\/delivery-preview|\/confirm-booking)?|outreach\/[^/]+)(\?|$)/,
     async (route) => {
       const req = route.request();
       const path = new URL(req.url()).pathname;
@@ -485,6 +492,57 @@ export async function stubOfferLoop(
         return json(route, offers);
       }
 
+      // Side-effect-free delivery preview (Task 3). NEVER mutates offer status
+      // and NEVER marks the offer viewed — the operator can preview a draft
+      // repeatedly before sending. `page` mirrors the sanitized public DTO.
+      const previewMatch = path.match(/\/admin\/offers\/([^/]+)\/delivery-preview/);
+      if (previewMatch && method === "GET") {
+        if (opts.deliveryPreviewStatus && opts.deliveryPreviewStatus >= 400) {
+          return json(route, { message: "preview failed" }, opts.deliveryPreviewStatus);
+        }
+        const o = offers.find((x) => x.id === previewMatch[1]) as Json | undefined;
+        if (!o) return json(route, { message: "not found" }, 404);
+        return json(route, {
+          recipient: { name: "Mari Maasikas", email: "mari@example.com" },
+          email: {
+            subject: "Your Ruumly options",
+            textBody: "Hi Mari,\n\nHere are the storage options we found for you.\nOpen your page to choose the one you like.\n\nRuumly",
+          },
+          page: {
+            status: o.status,
+            language: o.language,
+            customerNote: o.customerNote,
+            sentAt: o.sentAt,
+            chosenOptionId: o.chosenOptionId,
+            lead: { category: "warehouse", city: "Tallinn", toCity: null, needDate: "2026-08-01", details: null },
+            options: (((o.options as Json[]) ?? [])).map((op) => ({
+              id: (op as Json).id,
+              title: (op as Json).title,
+              priceAmount: (op as Json).priceAmount ?? null,
+              priceUnit: (op as Json).priceUnit ?? null,
+              notes: (op as Json).notes ?? null,
+              supplierName: (op as Json).supplierName ?? null,
+            })),
+          },
+        });
+      }
+
+      // Admin booking confirmation (Task 4): requires a Chosen offer; on success
+      // converts the mocked lead in place. Idempotent success stays 200.
+      const confirmMatch = path.match(/\/admin\/offers\/([^/]+)\/confirm-booking/);
+      if (confirmMatch && method === "POST") {
+        if (opts.confirmStatus && opts.confirmStatus >= 400) {
+          return json(route, { message: opts.confirmStatus === 409 ? "The chosen option no longer exists." : "confirm failed" }, opts.confirmStatus);
+        }
+        const o = offers.find((x) => x.id === confirmMatch[1]) as Json | undefined;
+        if (!o) return json(route, { message: "not found" }, 404);
+        if (o.status !== "chosen") return json(route, { message: "Confirm the customer's chosen offer instead." }, 409);
+        for (const lead of opts.leadItems ?? []) {
+          if ((lead as Json).id === o.demandLeadId) (lead as Json).status = "converted";
+        }
+        return json(route, o);
+      }
+
       const sendMatch = path.match(/\/admin\/offers\/([^/]+)\/send/);
       if (sendMatch && method === "POST") {
         const o = offers.find((x) => x.id === sendMatch[1]) as Json | undefined;
@@ -543,6 +601,34 @@ export async function stubOfferLoop(
       return route.continue();
     },
   );
+}
+
+/** Draft offer carrying one ready option — the input to delivery review (Task 8). */
+export function draftOfferWithOption(over: Json = {}): Json {
+  return {
+    id: "offer-draft", demandLeadId: "lead-1", token: "tok-draft", status: "draft", language: "en",
+    customerNote: "Both providers can host on your date.", createdAt: "2026-07-10T09:40:00Z",
+    sentAt: null, viewedAt: null, chosenAt: null, chosenOptionId: null, createdBy: "admin@ruumly.eu",
+    options: [
+      { id: "oopt-draft-1", supplierId: "sup-panicom", supplierName: "Panicom Miniladu", supplierLocationId: "loc-panicom", title: "Miniladu 10 m² kesklinnas", priceAmount: 89, priceUnit: "€/kuu", notes: "24/7 access", sortOrder: 0 },
+    ],
+    ...over,
+  };
+}
+
+/** Chosen offer — a pending customer preference awaiting provider confirmation (Task 8). */
+export function chosenOffer(over: Json = {}): Json {
+  return {
+    id: "offer-chosen", demandLeadId: "lead-1", token: "tok-chosen", status: "chosen", language: "en",
+    customerNote: null, createdAt: "2026-07-10T09:40:00Z", sentAt: "2026-07-10T10:00:00Z",
+    viewedAt: "2026-07-10T11:00:00Z", chosenAt: "2026-07-11T08:00:00Z", chosenOptionId: "oopt-chosen-1",
+    createdBy: "admin@ruumly.eu",
+    options: [
+      { id: "oopt-chosen-1", supplierId: "sup-panicom", supplierName: "Panicom Miniladu", supplierLocationId: "loc-panicom", title: "Miniladu 10 m² kesklinnas", priceAmount: 89, priceUnit: "€/kuu", notes: "24/7 access", sortOrder: 0 },
+      { id: "oopt-chosen-2", supplierId: null, supplierName: null, supplierLocationId: null, title: "Laopind 20 m² Lasnamäel", priceAmount: 129, priceUnit: "€/kuu", notes: null, sortOrder: 1 },
+    ],
+    ...over,
+  };
 }
 
 /** Public offer fixture (GET /offers/{token} shape per overhaul spec §5.1). */

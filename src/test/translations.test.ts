@@ -145,4 +145,31 @@ describe("translation completeness", () => {
       values.forEach((value, index) => expect(languages[index][key]).toBe(value));
     });
   });
+
+  it("uses the approved delivery-review and booking-confirmation copy in every operator language", () => {
+    const deliveryCopy = {
+      "admin.leads.stageDelivery": ["Vaata üle ja saada", "Review and send", "Проверить и отправить", "Pārskatīt un nosūtīt", "Peržiūrėti ir siųsti"],
+      "admin.leads.reviewDelivery": ["Vaata saatmine üle", "Review delivery", "Проверить отправку", "Pārskatīt nosūtīšanu", "Peržiūrėti siuntimą"],
+      "admin.leads.emailPreview": ["E-kiri", "Email", "Электронное письмо", "E-pasts", "El. laiškas"],
+      "admin.leads.pagePreview": ["Kliendi leht", "Customer page", "Страница клиента", "Klienta lapa", "Kliento puslapis"],
+      "admin.leads.sendEffectsTitle": ["Saatmisel toimub:", "Sending will:", "При отправке произойдёт следующее:", "Nosūtot notiks:", "Išsiuntus bus:"],
+      "admin.leads.effectEmail": ["Saada e-kiri aadressile {email}", "Send email to {email}", "Отправить письмо на {email}", "Nosūtīt e-pastu uz {email}", "Siųsti el. laišką adresu {email}"],
+      "admin.leads.effectLive": ["Muuda kliendi link aktiivseks", "Make the customer link live", "Активировать ссылку клиента", "Aktivizēt klienta saiti", "Aktyvinti kliento nuorodą"],
+      "admin.leads.effectQuoted": ["Muuda päringu staatuseks Hinnastatud", "Move the lead to Quoted", "Перевести запрос в статус «Предложение отправлено»", "Mainīt pieprasījuma statusu uz Piedāvāts", "Pakeisti užklausos būseną į Pasiūlyta"],
+      "admin.leads.effectViewed": ["Märgi avatuks, kui klient lingi avab", "Record Viewed when the customer opens the link", "Отметить просмотр, когда клиент откроет ссылку", "Atzīmēt kā skatītu, kad klients atver saiti", "Pažymėti kaip peržiūrėtą, kai klientas atidaro nuorodą"],
+      "admin.leads.effectRequested": ["Salvesta ootel soov ja teavita Ruumlyt", "Record a pending preference and alert Ruumly", "Сохранить ожидающий выбор и уведомить Ruumly", "Saglabāt gaidošu izvēli un paziņot Ruumly", "Išsaugoti laukiamą pasirinkimą ir pranešti Ruumly"],
+      "admin.leads.effectNoBooking": ["Makset ei võeta ega kinnitatud broneeringut ei looda", "Not take payment or create a confirmed booking", "Не списывать оплату и не создавать подтверждённое бронирование", "Neiekasēt maksājumu un neveidot apstiprinātu rezervāciju", "Nenuskaityti mokėjimo ir nekurti patvirtinto užsakymo"],
+      "admin.leads.customerRequested": ["Klient soovis seda valikut", "Customer requested this option", "Клиент запросил этот вариант", "Klients pieprasīja šo variantu", "Klientas užklausė šio varianto"],
+      "admin.leads.confirmBooking": ["Kinnita partneriga ja märgi broneerituks", "Confirm with provider and mark booked", "Подтвердить у поставщика и отметить забронированным", "Apstiprināt ar pakalpojumu sniedzēju un atzīmēt kā rezervētu", "Patvirtinti su paslaugų teikėju ir pažymėti užsakytu"],
+      "admin.leads.confirmBookingTitle": ["Kas kinnitada broneeringu tulemus?", "Confirm this booking outcome?", "Подтвердить результат бронирования?", "Apstiprināt rezervācijas rezultātu?", "Patvirtinti užsakymo rezultatą?"],
+      "admin.leads.confirmBookingBody": ["Kasuta seda ainult pärast seda, kui partner on saadavuse kinnitanud.", "Use this only after the provider confirms availability.", "Используйте это только после подтверждения доступности поставщиком.", "Izmanto tikai pēc tam, kad pakalpojumu sniedzējs ir apstiprinājis pieejamību.", "Naudokite tik paslaugų teikėjui patvirtinus prieinamumą."],
+      "admin.leads.markBooked": ["Märgi broneerituks", "Mark booked", "Отметить забронированным", "Atzīmēt kā rezervētu", "Pažymėti užsakytu"],
+      "admin.leads.bookingConfirmed": ["Broneeringu tulemus kinnitatud", "Booking outcome confirmed", "Результат бронирования подтверждён", "Rezervācijas rezultāts apstiprināts", "Užsakymo rezultatas patvirtintas"],
+    } as const;
+    const languages = [translations.et, translations.en, translations.ru, translations.lv, translations.lt];
+
+    Object.entries(deliveryCopy).forEach(([key, values]) => {
+      values.forEach((value, index) => expect(languages[index][key]).toBe(value));
+    });
+  });
 });

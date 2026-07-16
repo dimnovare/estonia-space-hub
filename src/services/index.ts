@@ -774,6 +774,14 @@ export interface OutreachPreviewResponse {
   recipients: OutreachPreviewItem[];
 }
 
+/** Exact admin delivery preview (GET /admin/offers/{id}/delivery-preview, Task 3).
+ *  `page` is the SAME sanitized DTO the public offer page renders. Side-effect-free. */
+export interface OfferDeliveryPreview {
+  recipient: { name: string | null; email: string };
+  email: { subject: string; textBody: string };
+  page: PublicOffer;
+}
+
 export const adminOfferService = {
   async listForLead(leadId: string): Promise<AdminOffer[]> {
     const res = await apiClient.get<AdminOffer[] | { items: AdminOffer[] }>(`/admin/leads/${leadId}/offers`);
@@ -799,6 +807,16 @@ export const adminOfferService = {
   },
   async send(id: string): Promise<AdminOffer> {
     return apiClient.post<AdminOffer>(`/admin/offers/${id}/send`, {});
+  },
+  /** Side-effect-free admin preview of the exact email + public page for an offer.
+   *  Never marks the offer Viewed and never sends. */
+  async deliveryPreview(id: string): Promise<OfferDeliveryPreview> {
+    return apiClient.get<OfferDeliveryPreview>(`/admin/offers/${id}/delivery-preview`);
+  },
+  /** Confirm a customer's chosen option with the provider and convert the lead.
+   *  Requires a Chosen offer with a still-existing chosen option; idempotent 200. */
+  async confirmBooking(id: string): Promise<AdminOffer> {
+    return apiClient.post<AdminOffer>(`/admin/offers/${id}/confirm-booking`, {});
   },
   async previewOutreach(leadId: string, supplierIds: readonly string[]): Promise<OutreachPreviewResponse> {
     return apiClient.post<OutreachPreviewResponse>(`/admin/leads/${leadId}/outreach/preview`, { supplierIds });
