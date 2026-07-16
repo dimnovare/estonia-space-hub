@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { Loader2, AlertTriangle, Activity, Package, Clock, RefreshCw, ExternalLink } from "lucide-react";
+import { AlertTriangle, Package, Clock, RefreshCw, ExternalLink } from "lucide-react";
 import { Link } from "@/i18n/routing";
+import { AdminPageHeader, StatCard, DataTable, DataTableHead, Th, Tr, Td } from "@/components/admin/kit";
 
 interface OpsHealth {
   activeListings: number;
@@ -31,17 +32,11 @@ interface StuckData {
   failedWebhooks: number;
 }
 
-function StatCard({ label, value, icon: Icon, highlight }: { label: string; value: number | string; icon: React.ComponentType<any>; highlight?: boolean }) {
+function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
-    <div className={`rounded-xl border p-5 ${highlight && Number(value) > 0 ? "border-warning/30 bg-warning/5" : "border-border bg-card"}`}>
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">{label}</span>
-        <Icon className={`h-4 w-4 ${highlight && Number(value) > 0 ? "text-warning" : "text-muted-foreground"}`} />
-      </div>
-      <div className={`mt-2 font-display text-2xl font-bold ${highlight && Number(value) > 0 ? "text-warning" : ""}`}>
-        {value}
-      </div>
-    </div>
+    <h2 className="mb-3 font-mono-label text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+      {children}
+    </h2>
   );
 }
 
@@ -71,10 +66,11 @@ export default function AdminOps() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center gap-2">
-        <Activity className="h-5 w-5 text-accent" />
-        <h1 className="font-display text-2xl font-bold">{t("admin.ops")}</h1>
-      </div>
+      <AdminPageHeader
+        eyebrow={t("admin.nav.groupPlatform")}
+        title={t("admin.ops")}
+        className="mb-0"
+      />
 
       {anyEndpointMissing ? (
         <div className="rounded-xl border border-dashed border-border bg-secondary/30 p-10 text-center">
@@ -85,7 +81,7 @@ export default function AdminOps() {
         <>
           {/* Health stat cards */}
           <section>
-            <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wider">{t("admin.ops.health")}</h2>
+            <SectionHeader>{t("admin.ops.health")}</SectionHeader>
             {healthLoading ? (
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {Array.from({ length: 4 }).map((_, i) => (
@@ -100,15 +96,15 @@ export default function AdminOps() {
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <StatCard label={t("admin.ops.activeListings")} value={health.activeListings} icon={Package} />
                 <StatCard label={t("admin.ops.openOrders")} value={health.openOrders} icon={Clock} />
-                <StatCard label={t("admin.ops.stuckCount")} value={health.stuckOrders} icon={AlertTriangle} highlight />
-                <StatCard label={t("admin.ops.pendingRefundCount")} value={health.pendingRefunds} icon={RefreshCw} highlight />
+                <StatCard label={t("admin.ops.stuckCount")} value={health.stuckOrders} icon={AlertTriangle} tone={health.stuckOrders > 0 ? "warning" : "default"} />
+                <StatCard label={t("admin.ops.pendingRefundCount")} value={health.pendingRefunds} icon={RefreshCw} tone={health.pendingRefunds > 0 ? "warning" : "default"} />
               </div>
             ) : null}
           </section>
 
           {/* Stuck orders */}
           <section>
-            <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wider">{t("admin.ops.stuckOrders")}</h2>
+            <SectionHeader>{t("admin.ops.stuckOrders")}</SectionHeader>
             {stuckLoading ? (
               <div className="space-y-2">
                 {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-14 animate-pulse rounded-xl bg-secondary" />)}
@@ -118,50 +114,48 @@ export default function AdminOps() {
                 {t("admin.ops.comingSoon")}
               </div>
             ) : stuck.length === 0 ? (
-              <div className="rounded-lg border border-border bg-success/5 p-4 text-center text-sm text-success">
+              <div className="rounded-lg border border-border bg-success/5 p-4 text-center text-sm text-success-text">
                 {t("admin.ops.noStuckOrders")}
               </div>
             ) : (
-              <div className="overflow-x-auto rounded-xl border border-border">
-                <table className="w-full text-sm">
-                  <thead className="border-b border-border bg-secondary/50">
-                    <tr>
-                      {[t("admin.ops.bookingId"), t("admin.ops.supplier"), t("admin.ops.amount"), t("admin.ops.stuckSince"), ""].map((h, i) => (
-                        <th key={i} className="px-4 py-2 text-left font-medium text-muted-foreground">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {stuck.map((order) => (
-                      <tr key={order.bookingId} className="border-b border-border/50 last:border-0">
-                        <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{order.bookingId.slice(0, 8)}…</td>
-                        <td className="px-4 py-3 font-medium">{order.supplierName}</td>
-                        <td className="px-4 py-3">€{order.amount}</td>
-                        <td className="px-4 py-3">
-                          <span className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning">
-                            <AlertTriangle className="h-3 w-3" />
-                            {t("admin.ops.minutesAgo").replace("{n}", String(order.stuckSinceMinutes))}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <Link
-                            to={`/admin?tab=orders`}
-                            className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
-                          >
-                            {t("admin.ops.openOrder")} <ExternalLink className="h-3 w-3" />
-                          </Link>
-                        </td>
-                      </tr>
+              <DataTable>
+                <DataTableHead>
+                  <tr>
+                    {[t("admin.ops.bookingId"), t("admin.ops.supplier"), t("admin.ops.amount"), t("admin.ops.stuckSince"), ""].map((h, i) => (
+                      <Th key={i}>{h}</Th>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </tr>
+                </DataTableHead>
+                <tbody>
+                  {stuck.map((order) => (
+                    <Tr key={order.bookingId}>
+                      <Td data className="text-xs text-muted-foreground">{order.bookingId.slice(0, 8)}…</Td>
+                      <Td className="font-medium">{order.supplierName}</Td>
+                      <Td data>€{order.amount}</Td>
+                      <Td>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning-text">
+                          <AlertTriangle className="h-3 w-3" aria-hidden />
+                          {t("admin.ops.minutesAgo").replace("{n}", String(order.stuckSinceMinutes))}
+                        </span>
+                      </Td>
+                      <Td>
+                        <Link
+                          to={`/admin?tab=orders`}
+                          className="inline-flex items-center gap-1 text-xs text-teal-text hover:underline"
+                        >
+                          {t("admin.ops.openOrder")} <ExternalLink className="h-3 w-3" />
+                        </Link>
+                      </Td>
+                    </Tr>
+                  ))}
+                </tbody>
+              </DataTable>
             )}
           </section>
 
           {/* Pending refunds */}
           <section>
-            <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wider">{t("admin.ops.pendingRefunds")}</h2>
+            <SectionHeader>{t("admin.ops.pendingRefunds")}</SectionHeader>
             {refundsLoading ? (
               <div className="space-y-2">
                 {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-14 animate-pulse rounded-xl bg-secondary" />)}
@@ -171,38 +165,36 @@ export default function AdminOps() {
                 {t("admin.ops.comingSoon")}
               </div>
             ) : refunds.length === 0 ? (
-              <div className="rounded-lg border border-border bg-success/5 p-4 text-center text-sm text-success">
+              <div className="rounded-lg border border-border bg-success/5 p-4 text-center text-sm text-success-text">
                 {t("admin.ops.noPendingRefunds")}
               </div>
             ) : (
-              <div className="overflow-x-auto rounded-xl border border-border">
-                <table className="w-full text-sm">
-                  <thead className="border-b border-border bg-secondary/50">
-                    <tr>
-                      {[t("admin.ops.bookingId"), t("admin.ops.amount"), t("admin.ops.cancelledAt"), ""].map((h, i) => (
-                        <th key={i} className="px-4 py-2 text-left font-medium text-muted-foreground">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {refunds.map((r) => (
-                      <tr key={r.bookingId} className="border-b border-border/50 last:border-0">
-                        <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{r.bookingId.slice(0, 8)}…</td>
-                        <td className="px-4 py-3">€{r.amount}</td>
-                        <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(r.cancelledAt).toLocaleDateString()}</td>
-                        <td className="px-4 py-3">
-                          <Link
-                            to={`/admin?tab=orders`}
-                            className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
-                          >
-                            {t("admin.ops.openOrder")} <ExternalLink className="h-3 w-3" />
-                          </Link>
-                        </td>
-                      </tr>
+              <DataTable>
+                <DataTableHead>
+                  <tr>
+                    {[t("admin.ops.bookingId"), t("admin.ops.amount"), t("admin.ops.cancelledAt"), ""].map((h, i) => (
+                      <Th key={i}>{h}</Th>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </tr>
+                </DataTableHead>
+                <tbody>
+                  {refunds.map((r) => (
+                    <Tr key={r.bookingId}>
+                      <Td data className="text-xs text-muted-foreground">{r.bookingId.slice(0, 8)}…</Td>
+                      <Td data>€{r.amount}</Td>
+                      <Td data className="text-xs text-muted-foreground">{new Date(r.cancelledAt).toLocaleDateString()}</Td>
+                      <Td>
+                        <Link
+                          to={`/admin?tab=orders`}
+                          className="inline-flex items-center gap-1 text-xs text-teal-text hover:underline"
+                        >
+                          {t("admin.ops.openOrder")} <ExternalLink className="h-3 w-3" />
+                        </Link>
+                      </Td>
+                    </Tr>
+                  ))}
+                </tbody>
+              </DataTable>
             )}
           </section>
         </>

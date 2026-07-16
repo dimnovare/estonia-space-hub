@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { integrationSettingsService } from "@/services";
 import type { PartnerIntegrationSettings, ApprovalMode, PostingMode } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { AdminPageHeader } from "@/components/admin/kit";
 import { toast } from "sonner";
 import { queryKeys } from "@/services/queryKeys";
 
@@ -34,7 +35,7 @@ export default function AdminIntegrations() {
 
   const approvalLabel = (m: ApprovalMode) => m === "auto" ? t("admin.approvalAuto") : m === "admin" ? t("admin.approvalAdmin") : t("admin.approvalProvider");
   const postingLabel = (m: PostingMode) => m === "api" ? "API" : m === "email" ? t("admin.postingEmail") : t("admin.postingManual");
-  const approvalColor = (m: ApprovalMode) => m === "auto" ? "bg-success/10 text-success" : m === "admin" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent";
+  const approvalColor = (m: ApprovalMode) => m === "auto" ? "bg-success/10 text-success-text" : m === "admin" ? "bg-primary/10 text-primary" : "bg-info/10 text-info-text";
 
   const openEdit = (item: PartnerIntegrationSettings) => { setEditItem({ ...item }); setEditOpen(true); };
   const handleSave = () => {
@@ -50,10 +51,14 @@ export default function AdminIntegrations() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">{t("admin.integrationTitle")}</h1>
-      <p className="mt-1 text-sm text-muted-foreground">{t("admin.integrationDesc")}</p>
+      <AdminPageHeader
+        eyebrow={t("admin.nav.groupPlatform")}
+        title={t("admin.integrationTitle")}
+        subtitle={t("admin.integrationDesc")}
+        count={settings.length || undefined}
+      />
 
-      <div className="mt-6 space-y-3">
+      <div className="space-y-3">
         {settings.map(s => (
           <div key={s.id} className={`rounded-xl border p-4 transition-colors ${s.isActive ? "border-border" : "border-border bg-muted/30 opacity-60"}`}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -62,7 +67,7 @@ export default function AdminIntegrations() {
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm font-semibold truncate">{s.supplierName}</span>
-                    {!s.isActive && <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-medium text-destructive shrink-0">{t("admin.integrations.inactiveBadge")}</span>}
+                    {!s.isActive && <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-medium text-destructive-text shrink-0">{t("admin.integrations.inactiveBadge")}</span>}
                   </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${approvalColor(s.approvalMode)}`}>{approvalLabel(s.approvalMode)}</span>
@@ -74,7 +79,7 @@ export default function AdminIntegrations() {
               </div>
               <div className="flex items-center gap-2 sm:shrink-0">
                 {s.lastTestResult && (
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium shrink-0 ${s.lastTestResult === "success" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium shrink-0 ${s.lastTestResult === "success" ? "bg-success/10 text-success-text" : "bg-destructive/10 text-destructive-text"}`}>
                     {s.lastTestResult === "success" ? `✓ ${t("admin.integrations.testOk")}` : `✗ ${t("admin.integrations.testFail")}`}
                   </span>
                 )}
@@ -82,7 +87,7 @@ export default function AdminIntegrations() {
               </div>
             </div>
             {s.lastTestedAt && (
-              <p className="mt-2 text-[10px] text-muted-foreground">{t("admin.lastTested")}: {s.lastTestedAt}</p>
+              <p className="mt-2 text-[10px] text-muted-foreground">{t("admin.lastTested")}: <span className="font-data">{s.lastTestedAt}</span></p>
             )}
           </div>
         ))}

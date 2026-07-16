@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { AdminPageHeader } from "@/components/admin/kit";
 import { apiClient } from "@/services/apiClient";
 import { queryKeys } from "@/services/queryKeys";
 import { toast } from "sonner";
@@ -146,13 +147,13 @@ export default function AdminBlogPage() {
 
   return (
     <div>
-      <span className="font-mono-label text-[11.5px] uppercase tracking-[0.2em] text-teal-deep">
-        {t("admin.blog.eyebrow")}
-      </span>
-      <h1 className="mt-1 font-display text-2xl font-bold text-navy-ink">{t("admin.blog.title")}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">{t("admin.blog.subtitle")}</p>
+      <AdminPageHeader
+        eyebrow={t("admin.nav.groupPlatform")}
+        title={t("admin.blog.title")}
+        subtitle={t("admin.blog.subtitle")}
+      />
 
-      <div className="mt-6 space-y-6">
+      <div className="space-y-6">
         {/* Visibility toggles */}
         <div className="rounded-xl border border-border bg-card p-5 shadow-card">
           <h3 className="font-display text-base font-semibold text-navy-ink">{t("admin.blog.visibilityTitle")}</h3>

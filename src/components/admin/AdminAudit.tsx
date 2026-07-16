@@ -7,15 +7,16 @@ import { queryKeys } from "@/services/queryKeys";
 import type { AuditLogEntry } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDebounce } from "@/hooks/useDebounce";
+import { AdminPageHeader, FilterBar, FilterChip } from "@/components/admin/kit";
 
 type TagTone = "ok" | "danger" | "warn" | "info" | "neutral";
 
 const TONE_CLASS: Record<TagTone, string> = {
-  ok: "bg-success/10 text-success",
-  danger: "bg-destructive/10 text-destructive",
+  ok: "bg-success/10 text-success-text",
+  danger: "bg-destructive/10 text-destructive-text",
   warn: "bg-warning/10 text-warning-text",
-  info: "bg-info/10 text-info",
-  neutral: "bg-secondary text-muted-foreground",
+  info: "bg-info/10 text-info-text",
+  neutral: "bg-secondary text-ink-2",
 };
 
 const DOT_CLASS: Record<TagTone, string> = {
@@ -116,30 +117,27 @@ export default function AdminAudit() {
   return (
     <div>
       {/* Page head */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <span className="font-mono-label text-[11.5px] uppercase tracking-[0.2em] text-teal-deep">
-            {t("admin.audit.eyebrow")}
-          </span>
-          <h1 className="mt-1 font-display text-2xl font-bold text-navy-ink md:text-[28px]">
-            {t("admin.auditTitle")}
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{t("admin.auditDesc")}</p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-11 gap-2"
-          onClick={() => refetch()}
-          disabled={isFetching}
-        >
-          <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
-          {t("admin.audit.refresh")}
-        </Button>
-      </div>
+      <AdminPageHeader
+        eyebrow={t("admin.nav.groupPlatform")}
+        title={t("admin.auditTitle")}
+        subtitle={t("admin.auditDesc")}
+        count={result.total || undefined}
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-11 gap-2"
+            onClick={() => refetch()}
+            disabled={isFetching}
+          >
+            <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+            {t("admin.audit.refresh")}
+          </Button>
+        }
+      />
 
       {/* Server-side filter controls */}
-      <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
         <input
           value={actorInput}
           onChange={(e) => setActorInput(e.target.value)}
@@ -201,22 +199,13 @@ export default function AdminAudit() {
       </div>
 
       {/* Filter chips */}
-      <div className="mt-4 flex flex-wrap items-center gap-2">
+      <FilterBar className="mb-0 mt-4">
         {toneFilters.map((f) => (
-          <button
-            key={f.value}
-            onClick={() => setTone(f.value)}
-            aria-pressed={tone === f.value}
-            className={`min-h-[36px] rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-              tone === f.value
-                ? "bg-navy-ink text-white"
-                : "border border-line-2 bg-card text-muted-foreground hover:border-primary hover:text-primary"
-            }`}
-          >
+          <FilterChip key={f.value} active={tone === f.value} onClick={() => setTone(f.value)}>
             {t(f.labelKey)}
-          </button>
+          </FilterChip>
         ))}
-      </div>
+      </FilterBar>
 
       {/* Timeline card */}
       <div className="mt-5 rounded-[14px] border border-border bg-card p-2 shadow-card sm:p-3">
@@ -247,7 +236,7 @@ export default function AdminAudit() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-[11px] font-medium ${TONE_CLASS[tn]}`}
+                        className={`font-data inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${TONE_CLASS[tn]}`}
                       >
                         {log.action}
                       </span>
@@ -257,7 +246,7 @@ export default function AdminAudit() {
                     {log.detail && (
                       <p className="mt-1 text-[13px] text-muted-foreground">{log.detail}</p>
                     )}
-                    <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                    <p className="font-data mt-1 text-[11px] text-muted-foreground">
                       {log.createdAt} · {log.actor}
                     </p>
                   </div>

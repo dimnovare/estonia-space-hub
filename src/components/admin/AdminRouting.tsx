@@ -8,6 +8,7 @@ import type { OrderRoutingRule } from "@/services/types";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import { queryKeys } from "@/services/queryKeys";
+import { AdminPageHeader } from "@/components/admin/kit";
 
 export default function AdminRouting() {
   const { t } = useLanguage();
@@ -94,20 +95,17 @@ export default function AdminRouting() {
   return (
     <div>
       {/* Page head */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <span className="font-mono-label text-[11.5px] uppercase tracking-[0.2em] text-teal-deep">
-            {t("admin.routing.eyebrow")}
-          </span>
-          <h1 className="mt-1 font-display text-2xl font-bold text-navy-ink md:text-[28px]">
-            {t("admin.routingTitle")}
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{t("admin.routingDesc")}</p>
-        </div>
-        <Button onClick={openNew} className="h-11 gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
-          <PlusCircle className="h-4 w-4" /> {t("admin.addRule")}
-        </Button>
-      </div>
+      <AdminPageHeader
+        eyebrow={t("admin.nav.groupPlatform")}
+        title={t("admin.routingTitle")}
+        subtitle={t("admin.routingDesc")}
+        count={sorted.length || undefined}
+        actions={
+          <Button onClick={openNew} className="h-11 gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
+            <PlusCircle className="h-4 w-4" /> {t("admin.addRule")}
+          </Button>
+        }
+      />
 
       {/* Rules list */}
       {sorted.length === 0 ? (
@@ -155,12 +153,12 @@ export default function AdminRouting() {
                       )}
                       <span
                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
-                          r.requiresApproval ? "bg-warning/10 text-warning-text" : "bg-success/10 text-success"
+                          r.requiresApproval ? "bg-warning/10 text-warning-text" : "bg-success/10 text-success-text"
                         }`}
                       >
                         {r.requiresApproval ? `${t("admin.requiresApproval")}: ${r.approverRole}` : t("admin.approvalAuto")}
                       </span>
-                      <span className="inline-flex items-center rounded-full bg-teal/15 px-2.5 py-0.5 text-[11px] font-medium text-teal-deep">
+                      <span className="font-data inline-flex items-center rounded-full bg-teal/15 px-2.5 py-0.5 text-[11px] font-medium text-teal-text">
                         → {r.postingChannel.toUpperCase()}
                       </span>
                     </div>

@@ -1,11 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "@/i18n/routing";
 import { apiClient } from "@/services/apiClient";
 import { queryKeys } from "@/services/queryKeys";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   AlertTriangle,
-  BarChart2,
   CalendarCheck,
   CreditCard,
   FileSignature,
@@ -14,6 +12,7 @@ import {
   Map as MapIcon,
   Megaphone,
 } from "lucide-react";
+import { AdminPageHeader, StatCard as KitStatCard } from "@/components/admin/kit";
 
 interface AdminMetricsData {
   bookings: {
@@ -54,49 +53,19 @@ interface StatCardProps {
   href?: string;
 }
 
-function StatCard({ label, value, sub, icon: Icon, highlight, highlightWhenPositive, href }: StatCardProps) {
-  const isWarning = highlight && Number(value) > 0;
-  const isPositive = highlightWhenPositive && Number(value) > 0;
-  const card = (
-    <div
-      className={`h-full rounded-xl border p-5 shadow-card transition-colors ${
-        isWarning
-          ? "border-warning/30 bg-warning/5"
-          : isPositive
-          ? "border-success/30 bg-success/5"
-          : "border-border bg-card"
-      }`}
-    >
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">{label}</span>
-        <Icon
-          className={`h-[18px] w-[18px] ${
-            isWarning
-              ? "text-warning-text"
-              : isPositive
-              ? "text-success"
-              : "text-muted-foreground/70"
-          }`}
-        />
-      </div>
-      <div
-        className={`mt-2 font-display text-[30px] font-extrabold leading-none tracking-[-0.02em] ${
-          isWarning ? "text-warning-text" : isPositive ? "text-success" : "text-navy-ink"
-        }`}
-      >
-        {value}
-      </div>
-      {sub && <div className="mt-1.5 text-[12.5px] text-muted-foreground">{sub}</div>}
-    </div>
-  );
-  return href
-    ? <Link to={href} className="block rounded-xl transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">{card}</Link>
-    : card;
+/** Thin adapter over the kit StatCard: maps the legacy highlight flags to tones. */
+function StatCard({ label, value, sub, icon, highlight, highlightWhenPositive, href }: StatCardProps) {
+  const tone = highlight && Number(value) > 0
+    ? "warning"
+    : highlightWhenPositive && Number(value) > 0
+      ? "positive"
+      : "default";
+  return <KitStatCard label={label} value={value} sub={sub} icon={icon} href={href} tone={tone} />;
 }
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-3 font-mono-label text-[11.5px] uppercase tracking-[0.2em] text-teal-deep">
+    <h2 className="mb-3 font-mono-label text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
       {children}
     </h2>
   );
@@ -122,16 +91,12 @@ export default function AdminMetrics() {
   });
 
   const heading = (
-    <div>
-      <span className="font-mono-label text-[11.5px] uppercase tracking-[0.2em] text-teal-deep">
-        {t("admin.health.eyebrow")}
-      </span>
-      <div className="mt-1 flex items-center gap-2">
-        <BarChart2 className="h-5 w-5 text-teal-deep" />
-        <h1 className="font-display text-2xl font-bold text-navy-ink">{t("admin.health.title")}</h1>
-      </div>
-      <p className="mt-1 text-sm text-muted-foreground">{t("admin.health.subtitle")}</p>
-    </div>
+    <AdminPageHeader
+      eyebrow={t("admin.nav.groupPlatform")}
+      title={t("admin.health.title")}
+      subtitle={t("admin.health.subtitle")}
+      className="mb-0"
+    />
   );
 
   if (isLoading) {

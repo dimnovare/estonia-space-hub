@@ -12,6 +12,10 @@ import { toast } from "sonner";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useAdminUsers } from "@/hooks/useAdminUsers";
 import { queryKeys } from "@/services/queryKeys";
+import {
+  AdminPageHeader, FilterBar, DataTable, DataTableHead, Th, Tr, Td, StatusBadge,
+} from "@/components/admin/kit";
+import { USER_STATUS_BADGE, USER_ROLE_BADGE, FALLBACK_STATUS_BADGE } from "@/components/admin/kit/statusMaps";
 
 export default function AdminUsers() {
   const { t } = useLanguage();
@@ -55,23 +59,36 @@ export default function AdminUsers() {
 
   if (loading) return <div className="flex items-center justify-center py-20"><RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
 
+  const statusBadge = (status: string) => {
+    const badge = USER_STATUS_BADGE[status] ?? FALLBACK_STATUS_BADGE;
+    return <StatusBadge className="shrink-0" tone={badge.tone} icon={badge.icon} label={status === "active" ? t("admin.active") : t("admin.blocked")} />;
+  };
+  const roleBadge = (role: string) => {
+    const badge = USER_ROLE_BADGE[role] ?? FALLBACK_STATUS_BADGE;
+    return <StatusBadge tone={badge.tone} icon={badge.icon} label={roleLabel(role)} />;
+  };
+
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold">{t("admin.users")}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">{total} {t("admin.usersTotal")}</p>
-      <div className="mt-4 flex flex-wrap items-center gap-2 sm:gap-3">
-        <div className="relative w-full sm:flex-1 sm:min-w-[200px] sm:w-auto">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input value={searchInput} onChange={e => setSearchInput(e.target.value)} placeholder={t("admin.searchUsers")} className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm" />
+      <AdminPageHeader
+        eyebrow={t("admin.nav.groupPlatform")}
+        title={t("admin.users")}
+        subtitle={`${total} ${t("admin.usersTotal")}`}
+        count={total || undefined}
+      />
+      <FilterBar>
+        <div className="relative w-full sm:w-auto sm:min-w-[200px] sm:flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input value={searchInput} onChange={e => setSearchInput(e.target.value)} placeholder={t("admin.searchUsers")} className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
         </div>
-        <select value={filterRole} onChange={e => setFilterRole(e.target.value)} className="rounded-lg border border-border bg-card px-3 py-2 text-sm">
+        <select value={filterRole} onChange={e => setFilterRole(e.target.value)} className="rounded-lg border border-border bg-card px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <option value="all">{t("admin.allRoles")}</option><option value="customer">{t("admin.customer")}</option><option value="provider">{t("admin.provider")}</option><option value="admin">{t("admin.title")}</option>
         </select>
-        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="rounded-lg border border-border bg-card px-3 py-2 text-sm">
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="rounded-lg border border-border bg-card px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <option value="all">{t("admin.allStatuses")}</option><option value="active">{t("admin.active")}</option><option value="blocked">{t("admin.blocked")}</option>
         </select>
-        <span className="text-xs text-muted-foreground">{filtered.length} {t("admin.usersFound")}</span>
-      </div>
+        <span className="text-xs text-muted-foreground"><span className="font-data">{filtered.length}</span> {t("admin.usersFound")}</span>
+      </FilterBar>
       {/* Mobile cards */}
       <div className="mt-4 space-y-2 md:hidden">
         {filtered.map(u => (
@@ -81,58 +98,54 @@ export default function AdminUsers() {
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">{u.name.split(" ").map(n => n[0]).join("")}</div>
                 <div className="min-w-0"><p className="text-sm font-medium truncate">{u.name}</p><p className="text-[10px] text-muted-foreground truncate">{u.email}</p></div>
               </div>
-              <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${u.status === "active" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{u.status === "active" ? t("admin.active") : t("admin.blocked")}</span>
+              {statusBadge(u.status)}
             </div>
             <div className="mt-2 flex items-center gap-2">
-              <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${u.role === "admin" ? "bg-primary/10 text-primary" : u.role === "provider" ? "bg-accent/10 text-accent" : "bg-secondary text-muted-foreground"}`}>{roleLabel(u.role)}</span>
-              <span className="text-[10px] text-muted-foreground">{u.bookingsCount} {t("admin.bookings")}</span>
+              {roleBadge(u.role)}
+              <span className="text-[10px] text-muted-foreground"><span className="font-data">{u.bookingsCount}</span> {t("admin.bookings")}</span>
             </div>
           </button>
         ))}
       </div>
       {/* Desktop table */}
-      <div className="mt-4 hidden rounded-xl border border-border md:block">
-        <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="border-b border-border bg-secondary/50">
-            <tr>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.name")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.email")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.role")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.registered")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.lastLogin")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.bookings")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.status")}</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("admin.actions")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(u => (
-              <tr key={u.id} className="border-b border-border last:border-0">
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">{u.name.split(" ").map(n => n[0]).join("")}</div>
-                    <span className="font-medium">{u.name}</span>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
-                <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${u.role === "admin" ? "bg-primary/10 text-primary" : u.role === "provider" ? "bg-accent/10 text-accent" : "bg-secondary text-muted-foreground"}`}>{roleLabel(u.role)}</span></td>
-                <td className="px-4 py-3 text-muted-foreground text-xs">{u.registeredAt}</td>
-                <td className="px-4 py-3 text-muted-foreground text-xs">{u.lastLoginAt || "—"}</td>
-                <td className="px-4 py-3 text-muted-foreground">{u.bookingsCount}</td>
-                <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${u.status === "active" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{u.status === "active" ? t("admin.active") : t("admin.blocked")}</span></td>
-                <td className="px-4 py-3"><Button variant="outline" size="sm" className="text-xs" onClick={() => setSelectedUser(u)}>{t("admin.view")}</Button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        </div>
-      </div>
+      <DataTable className="mt-4 hidden md:block">
+        <DataTableHead>
+          <tr>
+            <Th>{t("admin.name")}</Th>
+            <Th>{t("admin.email")}</Th>
+            <Th>{t("admin.role")}</Th>
+            <Th>{t("admin.registered")}</Th>
+            <Th>{t("admin.lastLogin")}</Th>
+            <Th align="right">{t("admin.bookings")}</Th>
+            <Th>{t("admin.status")}</Th>
+            <Th>{t("admin.actions")}</Th>
+          </tr>
+        </DataTableHead>
+        <tbody>
+          {filtered.map(u => (
+            <Tr key={u.id}>
+              <Td>
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">{u.name.split(" ").map(n => n[0]).join("")}</div>
+                  <span className="font-medium">{u.name}</span>
+                </div>
+              </Td>
+              <Td className="text-muted-foreground">{u.email}</Td>
+              <Td>{roleBadge(u.role)}</Td>
+              <Td data className="text-xs text-muted-foreground">{u.registeredAt}</Td>
+              <Td data className="text-xs text-muted-foreground">{u.lastLoginAt || "—"}</Td>
+              <Td data align="right" className="text-muted-foreground">{u.bookingsCount}</Td>
+              <Td>{statusBadge(u.status)}</Td>
+              <Td><Button variant="outline" size="sm" className="text-xs" onClick={() => setSelectedUser(u)}>{t("admin.view")}</Button></Td>
+            </Tr>
+          ))}
+        </tbody>
+      </DataTable>
 
       {/* Pagination */}
       <div className="mt-4 flex items-center justify-between gap-2">
         <span className="text-xs text-muted-foreground">
-          {t("admin.page") || "Page"} {page}
+          {t("admin.page") || "Page"} <span className="font-data">{page}</span>
         </span>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" aria-label={t("admin.prev")} disabled={page <= 1 || loading} onClick={() => setPage(p => Math.max(1, p - 1))}>

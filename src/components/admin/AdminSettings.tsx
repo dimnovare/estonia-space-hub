@@ -9,6 +9,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { apiClient } from "@/services/apiClient";
 import { toast } from "sonner";
 import AdminAboutPage from "./AdminAboutPage";
+import { AdminPageHeader } from "@/components/admin/kit";
 import { queryKeys } from "@/services/queryKeys";
 
 const DEFAULT_SETTINGS: Record<string, string> = {
@@ -180,13 +181,13 @@ export default function AdminSettings() {
 
   return (
     <div>
-      <span className="font-mono-label text-[11.5px] uppercase tracking-[0.2em] text-teal-deep">
-        {t("admin.settings.eyebrow")}
-      </span>
-      <h1 className="mt-1 font-display text-2xl font-bold text-navy-ink">{t("admin.settingsTitle")}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">{t("admin.settings.subtitle")}</p>
+      <AdminPageHeader
+        eyebrow={t("admin.nav.groupPlatform")}
+        title={t("admin.settingsTitle")}
+        subtitle={t("admin.settings.subtitle")}
+      />
 
-      <div className="mt-6 space-y-6">
+      <div className="space-y-6">
         {/* Public service visibility */}
         <div className="rounded-xl border border-border bg-card p-5 shadow-card">
           <h3 className="flex items-center gap-2 font-display text-base font-semibold text-navy-ink">
