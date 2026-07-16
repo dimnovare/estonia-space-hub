@@ -166,7 +166,7 @@ export default function AdminPartnerDetailPage() {
             <Button
               size="sm"
               variant="outline"
-              className="border-destructive/30 text-destructive hover:bg-destructive/10"
+              className="border-destructive/30 text-destructive-text hover:bg-destructive/10"
               disabled={deleteMutation.isPending}
               onClick={() => { setConfirmText(""); setDeleteOpen(true); }}
             >

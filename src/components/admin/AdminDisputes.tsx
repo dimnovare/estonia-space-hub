@@ -147,7 +147,7 @@ function DisputeCard({ dispute, typeLabel }: { dispute: AdminDispute; typeLabel:
             {/* Admin-confirmed refund: only for disputes tied to a booking. Resolves
                 AND marks the paid invoice for refund + cancels the supplier payout. */}
             {dispute.bookingId && (
-              <Button size="sm" className="h-10 gap-1 bg-warning text-warning-foreground hover:bg-warning/90" disabled={update.isPending}
+              <Button size="sm" className="h-10 gap-1 bg-warning-text text-white hover:bg-warning-text/90" disabled={update.isPending}
                 onClick={() => {
                   if (!window.confirm(t("admin.disputes.refundConfirm"))) return;
                   update.mutate({ status: "resolved", resolution: resolution.trim() || undefined, adminNotes: notes.trim() || undefined, issueRefund: true });

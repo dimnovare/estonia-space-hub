@@ -110,7 +110,7 @@ const fieldLabel = "text-[13px] font-semibold text-ink-2";
 // ── Status tag (00-foundations §2 tag colorways) ──
 function StatusTag({ kind, children }: { kind: "ok" | "warn" | "muted"; children: React.ReactNode }) {
   const styles: Record<string, string> = {
-    ok: "bg-success/10 text-success",
+    ok: "bg-success/10 text-success-text",
     warn: "bg-warning/10 text-warning-text",
     muted: "bg-secondary text-muted-foreground",
   };
@@ -300,10 +300,10 @@ function BulkImportDialog({ open, onOpenChange, locationId }: { open: boolean; o
           {/* Parse errors */}
           {parseResult && parseResult.errors.length > 0 && (
             <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm">
-              <p className="flex items-center gap-1 font-medium text-destructive">
+              <p className="flex items-center gap-1 font-medium text-destructive-text">
                 <AlertCircle className="h-4 w-4" /> {t("admin.bulkImportErrors")}
               </p>
-              <ul className="mt-1 list-inside list-disc space-y-0.5 text-xs text-destructive/80">
+              <ul className="mt-1 list-inside list-disc space-y-0.5 text-xs text-destructive-text">
                 {parseResult.errors.map((e, i) => <li key={i}>{e}</li>)}
               </ul>
             </div>

@@ -198,13 +198,13 @@ export default function AdminAboutPage({ settings, set, setBool }: Props) {
         </div>
 
         {isEmpty && showHint && (
-          <div className="mb-2 rounded-lg bg-accent/5 border border-accent/20 p-3 text-xs text-accent">
+          <div className="mb-2 rounded-lg bg-accent/5 border border-accent/20 p-3 text-xs text-success-text">
             {t("admin.about.sampleFounderHint")}
           </div>
         )}
 
         {error && (
-          <div className="mb-3 rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-xs text-destructive">
+          <div className="mb-3 rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-xs text-destructive-text">
             {error}
           </div>
         )}

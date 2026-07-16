@@ -16,10 +16,11 @@ export function DataTable({ children, className = "", ...rest }: HTMLAttributes<
   );
 }
 
-/** thead with the instrument-panel header row. */
+/** thead with the instrument-panel header row. Sticky so it pins when a
+ *  parent constrains the table height (no effect in page-scroll layouts). */
 export function DataTableHead({ children, className = "", ...rest }: HTMLAttributes<HTMLTableSectionElement>) {
   return (
-    <thead className={`border-b border-border bg-secondary/50 ${className}`} {...rest}>
+    <thead className={`sticky top-0 z-[1] border-b border-border bg-secondary/50 ${className}`} {...rest}>
       {children}
     </thead>
   );

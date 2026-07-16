@@ -636,7 +636,7 @@ export default function AdminSuppliers() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex-1 border-destructive/30 text-destructive hover:bg-destructive/10"
+                  className="flex-1 border-destructive/30 text-destructive-text hover:bg-destructive/10"
                   onClick={() => { setConfirmText(""); setDeleteTarget(selected); }}
                 >
                   <Trash2 className="mr-1 h-3.5 w-3.5" /> {t("admin.deletePartner")}

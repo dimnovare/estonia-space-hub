@@ -373,7 +373,7 @@ export default function AdminListings() {
               <div className="rounded-lg border border-border p-3 text-sm">
                 <p className="font-medium">{t("admin.bulkImportResult").replace("{created}", String(bulkResult.created)).replace("{failed}", String(bulkResult.failed))}</p>
                 {bulkResult.results.filter(r => !r.ok).length > 0 && (
-                  <ul className="mt-2 space-y-1 text-xs text-destructive">
+                  <ul className="mt-2 space-y-1 text-xs text-destructive-text">
                     {bulkResult.results.filter(r => !r.ok).map(r => (
                       <li key={r.index}>#{r.index + 1} {r.title || "—"}: {r.error}</li>
                     ))}

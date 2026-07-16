@@ -371,7 +371,7 @@ function LeadRow({ lead, expanded, onToggle, onStatusChange, statusPending }: {
           {lead.name ? <span className="block">{lead.name}</span> : null}
           <span className={lead.name ? "block text-xs font-normal text-muted-foreground" : ""}>{lead.email}</span>
           {lead.supplierName && (
-            <span className="mt-0.5 block text-[11px] font-normal text-accent">→ {lead.supplierName}</span>
+            <span className="mt-0.5 block text-[11px] font-normal text-success-text">→ {lead.supplierName}</span>
           )}
         </td>
         <td className="px-5 py-3.5 text-muted-foreground">
@@ -438,7 +438,7 @@ function LeadCard({ lead, expanded, onToggle, onStatusChange, statusPending }: {
         <div className="min-w-0">
           {lead.name && <p className="font-medium text-navy-ink">{lead.name}</p>}
           <p className="break-all text-sm text-muted-foreground">{lead.email}</p>
-          {lead.supplierName && <p className="mt-0.5 text-[11px] text-accent">→ {lead.supplierName}</p>}
+          {lead.supplierName && <p className="mt-0.5 text-[11px] text-success-text">→ {lead.supplierName}</p>}
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-muted-foreground">
             <span className="inline-flex min-w-0 items-center gap-1">
               <MapPin className="h-3 w-3 shrink-0" />{lead.city}{lead.toCity ? ` → ${lead.toCity}` : ""}

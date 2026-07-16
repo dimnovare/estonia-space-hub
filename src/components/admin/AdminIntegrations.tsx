@@ -140,7 +140,7 @@ export default function AdminIntegrations() {
                     </label>
                     <button
                       type="button"
-                      className="text-[10px] text-accent hover:underline"
+                      className="text-[10px] text-teal-text hover:underline"
                       onClick={() => setEditItem({
                         ...editItem,
                         mappingProfile: JSON.stringify({

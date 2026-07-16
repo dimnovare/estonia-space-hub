@@ -280,7 +280,7 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
                     variant="outline"
                     size="sm"
                     disabled={cancelAndRefund.isPending}
-                    className="text-destructive border-destructive/40 hover:bg-destructive/10"
+                    className="text-destructive-text border-destructive/40 hover:bg-destructive/10"
                     onClick={() => { if (window.confirm(t("admin.cancelAndRefundConfirm"))) cancelAndRefund.mutate(viewOrder.id); }}
                   >
                     {cancelAndRefund.isPending ? "..." : t("admin.cancelAndRefund")}
@@ -301,7 +301,7 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
                     variant="outline"
                     size="sm"
                     disabled={markPaidByWire.isPending}
-                    className="text-destructive border-destructive/40 hover:bg-destructive/10"
+                    className="text-destructive-text border-destructive/40 hover:bg-destructive/10"
                     onClick={() => { setWireReference(""); setWireNote(""); setWireDialogOpen(true); }}
                   >
                     {markPaidByWire.isPending ? "..." : t("admin.markPaidByWire")}
@@ -380,7 +380,7 @@ export default function AdminOrders({ supplierId }: { supplierId?: string }) {
                       { id: viewOrder.id, reason: rejectReason.trim() },
                       { onSuccess: (updated) => { setRejectReason(""); setViewOrder(updated); } }
                     )}
-                    className="mt-2 text-destructive border-destructive/40 hover:bg-destructive/10"
+                    className="mt-2 text-destructive-text border-destructive/40 hover:bg-destructive/10"
                   >
                     {rejectOrder.isPending ? "..." : t("admin.markRejected")}
                   </Button>

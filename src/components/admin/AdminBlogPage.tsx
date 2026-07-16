@@ -176,7 +176,7 @@ export default function AdminBlogPage() {
           </div>
 
           {error && (
-            <div className="mb-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+            <div className="mb-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive-text">
               {error}
             </div>
           )}

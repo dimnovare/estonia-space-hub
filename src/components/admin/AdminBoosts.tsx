@@ -181,7 +181,7 @@ export default function AdminBoosts() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="h-9 border-destructive/30 text-destructive hover:bg-destructive/10"
+                            className="h-9 border-destructive/30 text-destructive-text hover:bg-destructive/10"
                             disabled={declineMutation.isPending}
                             onClick={() => declineMutation.mutate(r.id)}
                           >
