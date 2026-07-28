@@ -50,6 +50,28 @@ describe("translation completeness", () => {
     expect(ltKeys.length).toBe(etKeys.length);
   });
 
+  it("uses Diip Solutions as the legal operator in every language", () => {
+    const languages = [translations.et, translations.en, translations.ru, translations.lv, translations.lt];
+
+    languages.forEach(language => {
+      const legalCopy = [
+        language["footer.entity"],
+        language["footer.operatedBy"],
+        language["footer.legalEntity"],
+        language["terms.s1.text"],
+        language["privacy.s1.text"],
+        language["invoice.notVatRegistered"],
+      ].join(" ");
+
+      expect(legalCopy).toContain("Diip Solutions OÜ");
+      expect(legalCopy).toContain("17527757");
+      expect(language["invoice.address"]).toContain("Uus-Sadama tn 15-2");
+      expect(language["terms.validFrom"]).toContain("28");
+      expect(language["privacy.validFrom"]).toContain("28");
+      expect(legalCopy).not.toMatch(/Valguse Kodu|14621591|EE102246089|Narva mnt 128-4/);
+    });
+  });
+
   it("uses the approved pending-offer request copy in every customer language", () => {
     expect(translations.et).toMatchObject({
       "offer.requestThis": "Küsi seda pakkumist",

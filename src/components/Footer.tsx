@@ -159,7 +159,7 @@ export default function Footer() {
           </span>
           <span>{t("footer.freeListingsAlways")}</span>
         </div>
-        {/* Legally-required operator identification (Valguse Kodu OÜ). */}
+        {/* Legally required operator identification (Diip Solutions OÜ). */}
         <p className="mt-3 text-xs text-white/45">{t("footer.operatedBy")}</p>
       </div>
     </footer>

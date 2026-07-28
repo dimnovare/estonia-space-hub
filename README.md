@@ -159,7 +159,7 @@ All variables are `VITE_`-prefixed so Vite exposes them to the browser bundle. C
 | `VITE_MAP_TILE_URL` | no | OpenStreetMap tiles | Leaflet tile URL template |
 | `VITE_GA_ID` | no | — | GA4 measurement ID — only injected after cookie consent |
 | `VITE_ENABLE_PAYMENTS` | no | `false` | Feature flag to enable live Montonio payment flow |
-| `VITE_LEGAL_ENTITY_NAME` | no | `Ruumly` | Legal entity name shown in footer/terms |
+| `VITE_LEGAL_ENTITY_NAME` | no | `Diip Solutions OÜ` | Legal entity name shown on generated invoices |
 
 ---
 
