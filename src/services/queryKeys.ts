@@ -93,7 +93,8 @@ export const queryKeys = {
     bySupplierId: (id: string) => ["admin-contract-templates", id] as const,
   },
   cities: {
-    available: () => ["available-cities"] as const,
+    /** scope = service slug the dropdown is filtered to ("all" = every service). */
+    available: (scope = "all") => ["available-cities", scope] as const,
   },
   directoryCities: {
     all: () => ["directory-cities"] as const,

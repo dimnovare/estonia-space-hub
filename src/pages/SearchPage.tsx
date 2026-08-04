@@ -18,7 +18,6 @@ import { trackEvent } from "@/lib/analytics";
 import { toast } from "sonner";
 import { SizeBucketFilter } from "@/components/search/SizeBucketFilter";
 import StorageSizeCalculator from "@/components/StorageSizeCalculator";
-import SizeGuide from "@/components/SizeGuide";
 import { queryKeys } from "@/services/queryKeys";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { TRAILER_TYPE_OPTIONS, CREW_SIZE_OPTIONS, VAN_SIZE_OPTIONS } from "@/lib/constants";
@@ -53,12 +52,6 @@ export default function SearchPage() {
   // Localized service-type labels for directory map pins. Memoized so the
   // memo()'d InteractiveMap isn't torn down / rebuilt on every render.
   const serviceTypeLabels = useMemo(() => serviceTypeLabelMap(t), [t]);
-  const { data: availableCities = [] } = useQuery({
-    queryKey: queryKeys.cities.available(),
-    queryFn: () => apiClient.get<{ city: string; country: string }[]>("/locations/cities"),
-    staleTime: 5 * 60_000,
-  });
-
   // All filter state derived from URL. Beyond the marketplace verticals
   // (warehouse/moving/trailer) the type param also accepts the directory-only
   // event-category slugs (cleaning/packing/vanrental/insurance).
@@ -66,6 +59,18 @@ export default function SearchPage() {
   // Directory-only categories have no marketplace listings vertical — supply
   // comes exclusively from directory profiles via /locations?type={slug}.
   const isDirectoryOnlyType = (DIRECTORY_ONLY_TYPES as readonly string[]).includes(activeType);
+
+  // Cities we actually have supply in, scoped to the active service so the
+  // dropdown never offers a city that returns nothing on this tab. The backend
+  // unions directory profiles + marketplace listings (it used to read Listings
+  // alone, which returns an EMPTY dropdown in production).
+  const { data: availableCities = [] } = useQuery({
+    queryKey: queryKeys.cities.available(activeType),
+    queryFn: () => apiClient.get<{ city: string; country: string }[]>(
+      activeType === "all" ? "/locations/cities" : `/locations/cities?type=${encodeURIComponent(activeType)}`,
+    ),
+    staleTime: 5 * 60_000,
+  });
   const sort = searchParams.get("sort") || "best";
   const cityFilter = searchParams.get("city") || "";
   const priceMax = searchParams.get("priceMax") || "";
@@ -142,6 +147,36 @@ export default function SearchPage() {
   const { data: result, isLoading } = useListings(filters);
   const serverFiltered = result?.data || [];
 
+  // ── Filter facets ────────────────────────────────────────────────────────
+  // Which filters are worth rendering at all. Derived from the UNFILTERED pool
+  // for the active vertical, so a control never appears when nothing behind it
+  // carries that data. Production supply is the provider directory — no prices,
+  // no m², no crew/van/trailer attributes — so price/size/date/attribute filters
+  // could only ever produce a guaranteed-empty result set. Scoped to `type` only
+  // (not city/query) so the filter row doesn't flicker as the user narrows.
+  const facetFilters: ListingFilters = useMemo(() => ({
+    type: activeType !== "all" && !isDirectoryOnlyType ? activeType as ListingType : undefined,
+    limit: 200,
+  }), [activeType, isDirectoryOnlyType]);
+  const { data: facetResult } = useListings(facetFilters);
+  const facets = useMemo(() => {
+    const pool = isDirectoryOnlyType ? [] : (facetResult?.data ?? []);
+    const distinct = (get: (l: Listing) => unknown) => Array.from(new Set(
+      pool.map(get).filter((v): v is string => typeof v === "string" && v.length > 0),
+    ));
+    return {
+      // Any listing with a real price / footprint to filter on.
+      price: pool.some(l => (l.priceFrom ?? 0) > 0),
+      size:  pool.some(l => ((l as { sizeM2?: number }).sizeM2 ?? 0) > 0),
+      // Date windows and the booking toggle need bookable inventory to mean anything.
+      availability: pool.length > 0,
+      bookable: pool.some(l => !!(l as { bookingEnabled?: boolean }).bookingEnabled),
+      trailerTypes: distinct(l => (l as { trailerType?: string }).trailerType),
+      crewSizes:    distinct(l => (l as { crewSize?: string }).crewSize),
+      vanSizes:     distinct(l => (l as { vanSize?: string }).vanSize),
+    };
+  }, [facetResult, isDirectoryOnlyType]);
+
   // Storage-only gating: in the "all" view the API would otherwise return
   // moving/trailer-only location cards. When both verticals are off, scope the
   // query to warehouse so those cards never render.
@@ -161,8 +196,7 @@ export default function SearchPage() {
   // blank the location cards, or ?q=…&type=cleaning becomes a guaranteed-false
   // "0 results" that hides fetched providers.
   const hasRestrictiveFilter = (!isDirectoryOnlyType && (
-    !!debouncedQ
-    || !!sizeCategory
+    !!sizeCategory
     || !!minSize
     || !!maxSize
     || !!debouncedPriceMax
@@ -172,10 +206,20 @@ export default function SearchPage() {
   ))
     || !!supplierIdFilter
     || !!locationIdFilter;
-  const locations = useMemo(
-    () => (hasRestrictiveFilter ? [] : locationsRaw),
-    [hasRestrictiveFilter, locationsRaw],
-  );
+  const locations = useMemo(() => {
+    if (hasRestrictiveFilter) return [];
+    const q = debouncedQ.trim().toLowerCase();
+    if (!q) return locationsRaw;
+    // A text query used to blank the directory outright, because it only ever
+    // filtered Listings. With the directory as the supply that made every
+    // keyword search a guaranteed "0 results" — match the provider's own name,
+    // city and address client-side instead.
+    return locationsRaw.filter(l =>
+      l.name?.toLowerCase().includes(q)
+      || l.supplierName?.toLowerCase().includes(q)
+      || l.city?.toLowerCase().includes(q)
+      || l.address?.toLowerCase().includes(q));
+  }, [hasRestrictiveFilter, locationsRaw, debouncedQ]);
 
   // Client-side post-filters for dynamic feature booleans
   const filtered = useMemo(() => {
@@ -463,6 +507,27 @@ export default function SearchPage() {
     }
   }, [activeType, trailerType, crewSize, vanSize]);
 
+  // Drop params whose filter no longer renders because nothing has that data.
+  // Without this a shared/bookmarked URL (or the size calculator's own
+  // ?minSize=&maxSize= CTA) would keep filtering against an invisible control
+  // and show a permanent, unexplainable "0 results".
+  useEffect(() => {
+    const stale: Record<string, string> = {};
+    if (!facets.price && priceMax) stale.priceMax = "";
+    if (!facets.size && (sizeCategory || minSize || maxSize)) {
+      stale.sizeCategory = ""; stale.minSize = ""; stale.maxSize = "";
+    }
+    if (!facets.availability && (availableNow || availableFrom || availableTo)) {
+      stale.availableNow = ""; stale.availableFrom = ""; stale.availableTo = "";
+    }
+    if (!facets.bookable && searchParams.get("bookable") === "true") stale.bookable = "";
+    if (trailerType && facets.trailerTypes.length === 0) stale.trailerType = "";
+    if (crewSize && facets.crewSizes.length === 0) stale.crewSize = "";
+    if (vanSize && facets.vanSizes.length === 0) stale.vanSize = "";
+    if (Object.keys(stale).length > 0) updateFilters(stale);
+  }, [facets, priceMax, sizeCategory, minSize, maxSize, availableNow, availableFrom,
+      availableTo, trailerType, crewSize, vanSize, searchParams]);
+
   const activeFiltersCount = Object.values(featureDefs)
     .flat()
     .filter(f => searchParams.get(f.key) === "true").length
@@ -662,7 +727,7 @@ export default function SearchPage() {
           {/* Size buckets (storage scope) — warehouse tab only. On the mixed
               'all' view these storage-only tools are misleading next to
               trailer/moving results, so they are not shown there. */}
-          {activeType === "warehouse" && (
+          {activeType === "warehouse" && facets.size && (
             <div className="hidden lg:block">
               <SizeBucketFilter
                 selectedCode={sizeCategory}
@@ -683,14 +748,17 @@ export default function SearchPage() {
               availableNow={availableNow}
               bookable={searchParams.get("bookable") === "true"}
               showListingFilters={!isDirectoryOnlyType}
+              facets={facets}
               updateFilters={updateFilters}
             />
           </div>
 
           {/* Date-availability — trailer (from/to range) and moving (single
               service date) only. Storage is open-ended monthly, and the mixed
-              'all' view spans verticals, so a date window isn't shown there. */}
-          {(activeType === "trailer" || activeType === "moving") && (
+              'all' view spans verticals, so a date window isn't shown there.
+              Also needs bookable inventory: filtering a directory profile by
+              date can only ever return nothing. */}
+          {(activeType === "trailer" || activeType === "moving") && facets.availability && (
             <div className="hidden lg:block">
               <DateAvailabilityFilter
                 t={t}
@@ -705,40 +773,38 @@ export default function SearchPage() {
 
           {/* Vertical attribute filters — trailer body type (chips) and moving
               crew/van size (dropdowns). Stored in the listing Features JSON.
-              Gated to their vertical; hidden on storage/'all'. */}
+              Gated to their vertical, and to the values actually present in the
+              inventory (the component renders nothing when none are). */}
           {(activeType === "trailer" || activeType === "moving") && (
-            <div className="hidden lg:block">
+            <div className="hidden lg:block empty:hidden">
               <VerticalAttributeFilter
                 t={t}
                 vertical={activeType}
                 trailerType={trailerType}
                 crewSize={crewSize}
                 vanSize={vanSize}
+                facets={facets}
                 updateFilters={updateFilters}
               />
             </div>
           )}
 
-          {/* Storage-size calculator — subtle helper below the filter row, so it
-              guides the search without interrupting the result list. Warehouse
-              tab only: a storage-size calculator is meaningless on the mixed
-              'all' view (and for trailer/moving). */}
-          {activeType === "warehouse" && (
+          {/* Storage-size helper — ONE entry point (the calculator; the separate
+              "what size do I need" modal duplicated it). Warehouse tab only, and
+              only when sized inventory exists: its CTA searches ?minSize=&maxSize=,
+              which dead-ends on a directory with no m² recorded. */}
+          {activeType === "warehouse" && facets.size && (
             <div className="hidden lg:block">
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
-                <button
-                  type="button"
-                  aria-expanded={calcOpen}
-                  onClick={() => setCalcOpen(!calcOpen)}
-                  className="inline-flex items-center gap-1.5 rounded text-[13px] font-medium text-brand-tealDeep transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-                >
-                  <Calculator className="h-3.5 w-3.5" />
-                  {t("search.sizeHelper")}
-                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${calcOpen ? "rotate-180" : ""}`} />
-                </button>
-                {/* "What size do I need?" → visual m² reference modal (SizeGuide). */}
-                <SizeGuide variant="link" />
-              </div>
+              <button
+                type="button"
+                aria-expanded={calcOpen}
+                onClick={() => setCalcOpen(!calcOpen)}
+                className="inline-flex items-center gap-1.5 rounded text-[13px] font-medium text-brand-tealDeep transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+              >
+                <Calculator className="h-3.5 w-3.5" />
+                {t("search.sizeHelper")}
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${calcOpen ? "rotate-180" : ""}`} />
+              </button>
               {calcOpen && (
                 <div className="mt-3 rounded-[14px] border border-line bg-card p-4 shadow-card">
                   <StorageSizeCalculator />
@@ -754,7 +820,7 @@ export default function SearchPage() {
             <div className="mt-3 hidden space-y-3 border-t border-border pt-3 lg:block">
               <FilterContent
                 t={t} language={language} cityFilter={cityFilter} priceMax={priceMax} availableNow={availableNow}
-                activeType={activeType} featureDefs={featureDefs}
+                activeType={activeType} featureDefs={featureDefs} facets={facets}
                 activeFiltersCount={activeFiltersCount} updateFilters={updateFilters} clearAll={clearAll}
                 availableCities={availableCities} searchParams={searchParams}
               />
@@ -790,11 +856,12 @@ export default function SearchPage() {
                   availableNow={availableNow}
                   bookable={searchParams.get("bookable") === "true"}
                   showListingFilters={!isDirectoryOnlyType}
+                  facets={facets}
                   updateFilters={updateFilters}
                 />
 
                 {/* Date-availability — trailer/moving only (see desktop note) */}
-                {(activeType === "trailer" || activeType === "moving") && (
+                {(activeType === "trailer" || activeType === "moving") && facets.availability && (
                   <DateAvailabilityFilter
                     t={t}
                     vertical={activeType}
@@ -813,12 +880,13 @@ export default function SearchPage() {
                     trailerType={trailerType}
                     crewSize={crewSize}
                     vanSize={vanSize}
+                    facets={facets}
                     updateFilters={updateFilters}
                   />
                 )}
 
                 {/* Size buckets (storage scope) */}
-                {(activeType === "all" || activeType === "warehouse") && (
+                {(activeType === "all" || activeType === "warehouse") && facets.size && (
                   <SizeBucketFilter
                     selectedCode={sizeCategory}
                     onChange={(code) => updateFilters({ sizeCategory: code ?? "" })}
@@ -827,7 +895,7 @@ export default function SearchPage() {
 
                 <FilterContent
                   t={t} language={language} cityFilter={cityFilter} priceMax={priceMax} availableNow={availableNow}
-                  activeType={activeType} featureDefs={featureDefs}
+                  activeType={activeType} featureDefs={featureDefs} facets={facets}
                   activeFiltersCount={activeFiltersCount} updateFilters={updateFilters} clearAll={clearAll}
                   availableCities={availableCities} searchParams={searchParams}
                 />
@@ -1148,6 +1216,18 @@ function FilterToggle({ label, active, onChange }: { label: string; active: bool
   );
 }
 
+/** What the current inventory can actually be filtered by. A control is only
+ *  rendered when its facet is true — see the facet derivation in SearchPage. */
+interface SearchFacets {
+  price: boolean;
+  size: boolean;
+  availability: boolean;
+  bookable: boolean;
+  trailerTypes: string[];
+  crewSizes: string[];
+  vanSizes: string[];
+}
+
 interface SecondaryFilterRowProps {
   t: (key: string) => string;
   userLocation: [number, number] | null;
@@ -1161,6 +1241,7 @@ interface SecondaryFilterRowProps {
   /** false when a directory-only category is active — max price / available
    *  now / book online are listings-only and would dead-end the results. */
   showListingFilters?: boolean;
+  facets: SearchFacets;
   updateFilters: (u: Record<string, string>) => void;
 }
 
@@ -1168,7 +1249,7 @@ interface SecondaryFilterRowProps {
 // sticky header on desktop (lg+) and inside the filter Drawer on mobile/tablet.
 function SecondaryFilterRow({
   t, userLocation, geoLoading, handleNearMe, cityFilter, availableCities,
-  priceMax, availableNow, bookable, showListingFilters = true, updateFilters,
+  priceMax, availableNow, bookable, showListingFilters = true, facets, updateFilters,
 }: SecondaryFilterRowProps) {
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -1198,29 +1279,34 @@ function SecondaryFilterRow({
         </select>
         <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
       </div>
-      {showListingFilters && (
-        <>
-          <input
-            aria-label={t("search.maxPrice")}
-            type="number"
-            min="0"
-            inputMode="numeric"
-            placeholder={t("search.maxPrice")}
-            value={priceMax}
-            onChange={(e) => updateFilters({ priceMax: e.target.value })}
-            className="min-h-[44px] w-28 rounded-full border border-line-2 bg-card px-3.5 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-accent lg:min-h-[36px] lg:py-1.5"
-          />
-          <FilterToggle
-            label={t("search.availableNow")}
-            active={availableNow}
-            onChange={(v) => updateFilters({ availableNow: v ? "true" : "" })}
-          />
-          <FilterToggle
-            label={t("search.bookOnline")}
-            active={bookable}
-            onChange={(v) => updateFilters({ bookable: v ? "true" : "" })}
-          />
-        </>
+      {/* Each listings-only control also needs data behind it: a max-price box
+          over inventory that records no price (or an availability toggle over
+          the directory) can only ever return zero results. */}
+      {showListingFilters && facets.price && (
+        <input
+          aria-label={t("search.maxPrice")}
+          type="number"
+          min="0"
+          inputMode="numeric"
+          placeholder={t("search.maxPrice")}
+          value={priceMax}
+          onChange={(e) => updateFilters({ priceMax: e.target.value })}
+          className="min-h-[44px] w-28 rounded-full border border-line-2 bg-card px-3.5 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-accent lg:min-h-[36px] lg:py-1.5"
+        />
+      )}
+      {showListingFilters && facets.availability && (
+        <FilterToggle
+          label={t("search.availableNow")}
+          active={availableNow}
+          onChange={(v) => updateFilters({ availableNow: v ? "true" : "" })}
+        />
+      )}
+      {showListingFilters && facets.bookable && (
+        <FilterToggle
+          label={t("search.bookOnline")}
+          active={bookable}
+          onChange={(v) => updateFilters({ bookable: v ? "true" : "" })}
+        />
       )}
     </div>
   );
@@ -1297,6 +1383,7 @@ interface VerticalAttributeFilterProps {
   trailerType: string;
   crewSize: string;
   vanSize: string;
+  facets: SearchFacets;
   updateFilters: (u: Record<string, string>) => void;
 }
 
@@ -1305,20 +1392,26 @@ interface VerticalAttributeFilterProps {
 //   moving  → crew size + van size as dropdowns
 // Rendered inline on desktop (lg+) and inside the filter Drawer on mobile,
 // gated to trailer/moving by the caller.
+// Every option list is intersected with the values the inventory actually
+// carries, and the whole control disappears when that intersection is empty —
+// a "Trailer type: closed/open/box/flatbed" row over stock that records no body
+// type is four buttons that each guarantee "0 results".
 function VerticalAttributeFilter({
-  t, vertical, trailerType, crewSize, vanSize, updateFilters,
+  t, vertical, trailerType, crewSize, vanSize, facets, updateFilters,
 }: VerticalAttributeFilterProps) {
   const selectClass =
     "min-h-[44px] appearance-none rounded-full border border-line-2 bg-card py-2 pl-3.5 pr-8 text-[13px] font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-accent lg:min-h-[36px] lg:py-1.5";
 
   if (vertical === "trailer") {
+    const options = TRAILER_TYPE_OPTIONS.filter(o => facets.trailerTypes.includes(o.value));
+    if (options.length === 0) return null;
     return (
       <div className="flex flex-col gap-1.5">
         <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           {t("search.trailerTypeLabel")}
         </label>
         <div className="flex flex-wrap items-center gap-2">
-          {TRAILER_TYPE_OPTIONS.map((o) => (
+          {options.map((o) => (
             <FilterToggle
               key={o.value}
               label={t(o.labelKey)}
@@ -1333,48 +1426,56 @@ function VerticalAttributeFilter({
   }
 
   // moving — crew size + van size dropdowns
+  const crewOptions = CREW_SIZE_OPTIONS.filter(o => facets.crewSizes.includes(o.value));
+  const vanOptions  = VAN_SIZE_OPTIONS.filter(o => facets.vanSizes.includes(o.value));
+  if (crewOptions.length === 0 && vanOptions.length === 0) return null;
+
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="filter-crew" className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {t("search.crewSizeLabel")}
-        </label>
-        <div className="relative">
-          <select
-            id="filter-crew"
-            aria-label={t("search.crewSizeLabel")}
-            value={crewSize || "any"}
-            onChange={(e) => updateFilters({ crewSize: e.target.value === "any" ? "" : e.target.value })}
-            className={selectClass}
-          >
-            <option value="any">{t("search.anyOption")}</option>
-            {CREW_SIZE_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{t(o.labelKey)}</option>
-            ))}
-          </select>
-          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+      {crewOptions.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="filter-crew" className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {t("search.crewSizeLabel")}
+          </label>
+          <div className="relative">
+            <select
+              id="filter-crew"
+              aria-label={t("search.crewSizeLabel")}
+              value={crewSize || "any"}
+              onChange={(e) => updateFilters({ crewSize: e.target.value === "any" ? "" : e.target.value })}
+              className={selectClass}
+            >
+              <option value="any">{t("search.anyOption")}</option>
+              {crewOptions.map((o) => (
+                <option key={o.value} value={o.value}>{t(o.labelKey)}</option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+          </div>
         </div>
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="filter-van" className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {t("search.vanSizeLabel")}
-        </label>
-        <div className="relative">
-          <select
-            id="filter-van"
-            aria-label={t("search.vanSizeLabel")}
-            value={vanSize || "any"}
-            onChange={(e) => updateFilters({ vanSize: e.target.value === "any" ? "" : e.target.value })}
-            className={selectClass}
-          >
-            <option value="any">{t("search.anyOption")}</option>
-            {VAN_SIZE_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{t(o.labelKey)}</option>
-            ))}
-          </select>
-          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+      )}
+      {vanOptions.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="filter-van" className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {t("search.vanSizeLabel")}
+          </label>
+          <div className="relative">
+            <select
+              id="filter-van"
+              aria-label={t("search.vanSizeLabel")}
+              value={vanSize || "any"}
+              onChange={(e) => updateFilters({ vanSize: e.target.value === "any" ? "" : e.target.value })}
+              className={selectClass}
+            >
+              <option value="any">{t("search.anyOption")}</option>
+              {vanOptions.map((o) => (
+                <option key={o.value} value={o.value}>{t(o.labelKey)}</option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -1385,6 +1486,7 @@ interface FilterContentProps {
   cityFilter: string; priceMax: string; availableNow: boolean;
   activeType: string;
   featureDefs: Record<string, FeatureDefinition[]>;
+  facets: SearchFacets;
   activeFiltersCount: number;
   updateFilters: (u: Record<string, string>) => void;
   clearAll: () => void;
@@ -1394,11 +1496,12 @@ interface FilterContentProps {
 
 function FilterContent({
   t, language, activeType,
-  featureDefs, activeFiltersCount, updateFilters, clearAll, searchParams,
+  featureDefs, facets, activeFiltersCount, updateFilters, clearAll, searchParams,
 }: FilterContentProps) {
   return (
     <>
-      {(activeType === "all" || activeType === "warehouse") && (
+      {/* Advanced m² range — needs inventory that records a footprint. */}
+      {(activeType === "all" || activeType === "warehouse") && facets.size && (
         <div className="space-y-2">
           <h4 className="text-sm font-medium">{t("filters.size.advanced")}</h4>
           <div className="flex items-center gap-2">
