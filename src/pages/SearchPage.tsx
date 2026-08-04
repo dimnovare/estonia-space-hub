@@ -41,6 +41,26 @@ function distanceSq(aLat: number, aLng: number, bLat: number, bLng: number): num
   return dLat * dLat + dLng * dLng;
 }
 
+/** A city we have supply in, with its averaged centre (null when un-geocoded). */
+interface AvailableCity {
+  city: string;
+  country: string;
+  lat?: number | null;
+  lng?: number | null;
+}
+
+/** Real great-circle kilometres — this one IS shown to the user, so the cheap
+ *  monotonic approximation above won't do. */
+function distanceKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const R = 6371;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(bLat - aLat);
+  const dLng = toRad(bLng - aLng);
+  const h = Math.sin(dLat / 2) ** 2
+    + Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
@@ -66,7 +86,7 @@ export default function SearchPage() {
   // alone, which returns an EMPTY dropdown in production).
   const { data: availableCities = [] } = useQuery({
     queryKey: queryKeys.cities.available(activeType),
-    queryFn: () => apiClient.get<{ city: string; country: string }[]>(
+    queryFn: () => apiClient.get<AvailableCity[]>(
       activeType === "all" ? "/locations/cities" : `/locations/cities?type=${encodeURIComponent(activeType)}`,
     ),
     staleTime: 5 * 60_000,
@@ -87,6 +107,37 @@ export default function SearchPage() {
   const vanSize = searchParams.get("vanSize") || "";
   const supplierIdFilter = searchParams.get("supplierId") || "";
   const locationIdFilter = searchParams.get("locationId") || "";
+
+  // Cities across ALL services. A town the visitor asked for may have no supply
+  // in the ACTIVE service — so it is absent from availableCities — but we still
+  // know where it is, which is what lets us answer "nothing in Elva; nearest is
+  // Tartu, 25 km" instead of an empty page. Search Console shows Google
+  // crawling exactly these: ?type=insurance&city=Elva, ?city=Voru, ?city=Rapla.
+  const { data: allCities = [] } = useQuery({
+    queryKey: queryKeys.cities.available("all"),
+    queryFn: () => apiClient.get<AvailableCity[]>("/locations/cities"),
+    staleTime: 5 * 60_000,
+    enabled: activeType !== "all",
+  });
+  const cityGazetteer = activeType === "all" ? availableCities : allCities;
+
+  const nearestCities = useMemo(() => {
+    const norm = (s: string) => s.trim().toLowerCase();
+    const candidates = availableCities.filter(c => norm(c.city) !== norm(cityFilter));
+    const origin = cityFilter
+      ? cityGazetteer.find(c => norm(c.city) === norm(cityFilter))
+      : undefined;
+    // Unknown or un-geocoded origin: still offer somewhere to go, just without
+    // a distance we can't honestly compute.
+    if (!origin || origin.lat == null || origin.lng == null) {
+      return candidates.slice(0, 5).map(c => ({ city: c.city, km: null as number | null }));
+    }
+    return candidates
+      .filter((c): c is AvailableCity & { lat: number; lng: number } => c.lat != null && c.lng != null)
+      .map(c => ({ city: c.city, km: Math.round(distanceKm(origin.lat!, origin.lng!, c.lat, c.lng)) as number | null }))
+      .sort((a, b) => (a.km ?? 0) - (b.km ?? 0))
+      .slice(0, 5);
+  }, [cityFilter, cityGazetteer, availableCities]);
 
   const debouncedPriceMax = useDebounce(priceMax, 400);
 
@@ -1176,15 +1227,33 @@ export default function SearchPage() {
                     </div>
                   )}
 
-                  {/* Secondary: try nearby cities + clear filters */}
-                  {availableCities.length > 0 && (
+                  {/* Secondary: nearest cities that DO have supply + clear filters.
+                      When the visitor named a town we can't serve, say so plainly
+                      and rank the alternatives by real distance from it — an
+                      empty page is the one answer that helps nobody. */}
+                  {nearestCities.length > 0 && (
                     <div className="mt-6 w-full border-t border-line pt-5">
-                      <p className="text-sm text-muted-foreground">{t("search.tryNearby")}</p>
+                      {/* The named-service line only makes sense on a service tab —
+                          the mixed 'all' view has no single noun to put in it. */}
+                      {cityFilter && serviceTypeLabels[activeType] && (
+                        <p className="text-sm font-medium text-foreground">
+                          {t("search.noSupplyCity")
+                            .replace("{service}", serviceTypeLabels[activeType].toLowerCase())
+                            .replace("{city}", cityFilter)}
+                        </p>
+                      )}
+                      <p className={`text-sm text-muted-foreground ${cityFilter ? "mt-1" : ""}`}>
+                        {cityFilter ? t("search.nearestCities") : t("search.tryNearby")}
+                      </p>
                       <div className="mt-2.5 flex flex-wrap justify-center gap-2">
-                        {availableCities.slice(0, 5).map(c => (
+                        {nearestCities.map(c => (
                           <button key={c.city} onClick={() => updateFilters({ city: c.city })}
                             className="min-h-[36px] rounded-full border border-line-2 bg-card px-3.5 py-2 text-[13px] font-medium text-foreground transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
-                            {c.city}
+                            {c.km == null
+                              ? c.city
+                              : t("search.nearestCityKm")
+                                  .replace("{city}", c.city)
+                                  .replace("{km}", String(c.km))}
                           </button>
                         ))}
                       </div>
