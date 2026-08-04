@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useSearchParams } from "@/i18n/routing";
 import {
@@ -32,6 +32,29 @@ function parseCategoryParams(
 }
 
 /**
+ * Scoping questions asked in step 2, one set per selected service.
+ *
+ * Everything past the city used to be optional, so requests arrived with no
+ * size, duration or scope — and the lead's `details` is exactly what
+ * ProviderOutreachComposer pastes into the email we send providers. It printed
+ * "—", which nobody can quote against, so the concierge could not return the
+ * 2-3 offers the funnel promises.
+ *
+ * These are required, but they are one-tap chips and the LAST option of every
+ * group means "not sure". Nobody is ever hard-blocked: "not sure" is itself a
+ * fact the concierge can work with, unlike a blank field.
+ */
+const SCOPE_QUESTIONS: Record<ConciergeCategory, { id: string; options: number }[]> = {
+  warehouse: [{ id: "warehouseSize", options: 6 }, { id: "warehouseDuration", options: 5 }],
+  moving:    [{ id: "movingSize", options: 6 }],
+  trailer:   [{ id: "trailerDuration", options: 5 }],
+  vanrental: [{ id: "vanrentalDuration", options: 5 }],
+  cleaning:  [{ id: "cleaningType", options: 5 }],
+  packing:   [{ id: "packingRooms", options: 5 }],
+  insurance: [{ id: "insuranceValue", options: 5 }],
+};
+
+/**
  * /request — the concierge demand funnel ("tell us what you need, we find you
  * 2-3 offers"). Three steps: what → details → contact. Submits to
  * POST /leads/request; the admin match queue works the lead from there.
@@ -52,6 +75,8 @@ export default function RequestPage() {
   const [toCity, setToCity] = useState("");
   const [needDate, setNeedDate] = useState("");
   const [details, setDetails] = useState("");
+  // questionId → 1-based index of the chosen option.
+  const [scope, setScope] = useState<Record<string, number>>({});
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -59,6 +84,21 @@ export default function RequestPage() {
   const [emailError, setEmailError] = useState<string | null>(null);
 
   const movingSelected = categories.includes("moving");
+
+  const activeQuestions = useMemo(
+    () => categories.flatMap((c) => SCOPE_QUESTIONS[c] ?? []),
+    [categories],
+  );
+
+  /** Fold the chip answers into `details`, above whatever the visitor wrote.
+   *  No migration needed — the outreach email already prints this field, so a
+   *  readable "question: answer" summary reaches providers as-is. */
+  const composeDetails = (): string | undefined => {
+    const answered = activeQuestions
+      .filter((q) => scope[q.id])
+      .map((q) => `${t(`request.scope.${q.id}.label`)} ${t(`request.scope.${q.id}.opt${scope[q.id]}`)}`);
+    return [answered.join("\n"), details.trim()].filter(Boolean).join("\n\n") || undefined;
+  };
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -70,7 +110,7 @@ export default function RequestPage() {
         city: city.trim(),
         toCity: movingSelected && toCity.trim() ? toCity.trim() : undefined,
         needDate: needDate || undefined,
-        details: details.trim() || undefined,
+        details: composeDetails(),
         language,
       }),
     // Global mutation onError shows a toast; we render an inline error instead.
@@ -107,9 +147,16 @@ export default function RequestPage() {
       setStepError(t("request.errors.category"));
       return;
     }
-    if (step === 1 && !city.trim()) {
-      setStepError(t("request.errors.required"));
-      return;
+    if (step === 1) {
+      if (!city.trim()) {
+        setStepError(t("request.errors.required"));
+        return;
+      }
+      // Every scoping question needs an answer — "not sure" counts as one.
+      if (activeQuestions.some((q) => !scope[q.id])) {
+        setStepError(t("request.errors.scope"));
+        return;
+      }
     }
     setStepError(null);
     setStep((s) => Math.min(2, s + 1));
@@ -287,6 +334,43 @@ export default function RequestPage() {
                         placeholder={t("request.toCity.placeholder")}
                         className="h-12 w-full rounded-lg border border-border bg-card px-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                       />
+                    </div>
+                  )}
+                  {/* Scoping questions — one set per selected service. Required,
+                      but one tap each, and every group ends in "not sure". */}
+                  {activeQuestions.length > 0 && (
+                    <div className="space-y-4 rounded-xl border border-line bg-secondary/30 p-4">
+                      <p className="text-xs text-muted-foreground">{t("request.scope.hint")}</p>
+                      {activeQuestions.map((q) => (
+                        <fieldset key={q.id}>
+                          <legend className="mb-1.5 text-sm font-medium text-foreground">
+                            {t(`request.scope.${q.id}.label`)} <span className="text-destructive">*</span>
+                          </legend>
+                          <div className="flex flex-wrap gap-2">
+                            {Array.from({ length: q.options }, (_, i) => i + 1).map((n) => {
+                              const active = scope[q.id] === n;
+                              return (
+                                <button
+                                  key={n}
+                                  type="button"
+                                  aria-pressed={active}
+                                  onClick={() => {
+                                    setScope((s) => ({ ...s, [q.id]: n }));
+                                    setStepError(null);
+                                  }}
+                                  className={`min-h-[40px] rounded-full border px-3.5 py-2 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+                                    active
+                                      ? "border-navy-ink bg-navy-ink text-white"
+                                      : "border-line-2 bg-card text-foreground hover:border-primary hover:text-primary"
+                                  }`}
+                                >
+                                  {t(`request.scope.${q.id}.opt${n}`)}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </fieldset>
+                      ))}
                     </div>
                   )}
                   <div>
