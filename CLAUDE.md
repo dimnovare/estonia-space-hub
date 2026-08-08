@@ -51,10 +51,22 @@ The wrappers automatically prepend the active language to any absolute path.
 
 All user-facing strings live in `src/i18n/translations.ts`. Every key **must** exist in all
 5 language blocks (et, en, ru, lv, lt) or the TypeScript union type will catch it.
-Geography-honesty rule (2026-07 overhaul, supersedes the old per-language convention):
-copy in **all** languages says the directory covers **all of Estonia** and the concierge
-ops run **Tallinn/Harjumaa first** — never claim Latvia/Lithuania/Baltics coverage the
-business doesn't have. Counted-noun strings use the CLDR plural helper (`src/i18n/plural.ts`,
+Geography-honesty rule (rewritten 2026-08 when the LV/LT directory went live; supersedes
+the Estonia-only wording). Two claims live in this copy and they have **different**
+footprints — keep them apart:
+- **Directory** = what a visitor can browse, compare, find and contact (map, search, city
+  counts, verified partners, claimable profiles). This now spans **Estonia, Latvia and
+  Lithuania** and may say so.
+- **Concierge** = what we do for them ("send one request, we bring 2–3 offers", the 24-hour
+  promise). Still run **out of Estonia, Tallinn/Harjumaa first**. Never phrase it so a Rīga
+  or Vilnius visitor reads full-service parity into it. Where one sentence carries both,
+  attach the country list to the directory noun and leave the offer promise country-free.
+
+Per-service reality check before naming a country: coverage is uneven. Storage and moving
+exist in all three; **vanrental is EE-heavy and has zero Lithuanian providers**, trailers
+only three. For those, say "the Baltics" — do not enumerate Lithuania. Verify against
+`GET /api/locations` rather than assuming; the honest claim changes as supply lands.
+Never fabricate social proof: testimonials stay Estonian because the customers are. Counted-noun strings use the CLDR plural helper (`src/i18n/plural.ts`,
 `|`-separated forms) so RU/LT numeral agreement is correct — don't hand-write `{count}` nouns.
 
 ## API client and service layer
