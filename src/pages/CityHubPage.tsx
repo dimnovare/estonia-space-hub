@@ -17,9 +17,9 @@ import {
  *
  * This is an index/hub (links + short blurbs), NOT a listing page. Storage,
  * moving and trailer link to their single-vertical listing pages
- * (/storage|/moving|/trailer/<slug>); the four event categories (cleaning,
- * packing, van rental, insurance) have no dedicated city page yet, so they
- * link to the city-scoped search filter. Moving/Trailer drop out when their
+ * (/storage|/moving|/trailer/<slug>); the event categories (cleaning, van
+ * rental) have no dedicated city page yet, so they link to the city-scoped
+ * search filter. Moving/Trailer drop out when their
  * service flag is off (never link to a disabled vertical) — the canonical
  * visibleServiceSlugs() helper handles that gating (same as Footer/Navbar).
  */
@@ -51,8 +51,8 @@ export default function CityHubPage() {
 
   const seo = citySeoMeta(t, city);
 
-  // The full 7-service event set, gated by the platform flags. Same canonical
-  // list + icons the homepage / navbar / footer render.
+  // The public service set, gated by the platform flags. Same canonical list
+  // + icons the homepage / navbar / footer render.
   const services = visibleServiceSlugs(showMovingService, showTrailerService).map((s) => ({
     key: s,
     icon: SERVICE_TYPE_ICONS[s],

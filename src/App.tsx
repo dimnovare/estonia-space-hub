@@ -43,6 +43,7 @@ import VerifyEmailPage from "@/pages/VerifyEmailPage";
 import { Loader2 } from "lucide-react";
 import { trackPageView } from "@/lib/analytics";
 import { LangParamGuard, LangRedirect, Navigate } from "@/i18n/routing";
+import { RETIRED_SLUG_HUB_ROUTE, type RetiredServiceTypeSlug } from "@/lib/serviceTypes";
 
 // Lazy-loaded heavy pages
 const AdminPage = lazy(() => import("@/pages/AdminPage"));
@@ -139,6 +140,19 @@ const NoFooter = () => <Outlet />;
 const StorageKeywordRedirect = () => (
   <Navigate to="/search?type=warehouse" replace />
 );
+
+// Retired consumer categories (2026-08): packing is only ever sold inside a
+// mover's offer, and "insurance" here is B2B carrier liability, not a household
+// product. Their per-city SEO hubs are already indexed, so the routes STAY and
+// redirect rather than falling through to the noindex 404:
+//   /packing/<city>   → /moving/<city>     (movers are who quote packing)
+//   /insurance/<city> → /locations/<city>  (generic all-services city hub)
+// vercel.json carries the matching permanent 301s, which is what crawlers act
+// on; this SPA route covers dev, in-app navigation and stale bookmarks.
+function RetiredHubRedirect({ category }: { category: RetiredServiceTypeSlug }) {
+  const { slug } = useParams<{ slug: string }>();
+  return <Navigate to={RETIRED_SLUG_HUB_ROUTE[category](slug ?? "")} replace />;
+}
 
 const PageLoader = () => (
   <div className="flex min-h-screen items-center justify-center">
@@ -241,14 +255,15 @@ function AppContent() {
               <Route path="moving/:slug" element={<MovingSlugRoute />} />
               <Route path="trailer/:slug" element={<TrailerSlugRoute />} />
               {/* Directory-only event-category city hubs. The backend sitemap
-                  emits /cleaning|/packing|/vanrental|/insurance/<city> for every
-                  directory city advertising that service — each renders CityPage
-                  as a directory event-category hub (providers + concierge CTA),
-                  never a soft-404. Slugs match the lowercase DemandLeadCategory. */}
+                  emits /cleaning|/vanrental/<city> for every directory city
+                  advertising that service — each renders CityPage as a directory
+                  event-category hub (providers + concierge CTA), never a
+                  soft-404. Slugs match the lowercase DemandLeadCategory. */}
               <Route path="cleaning/:slug" element={<CityPage vertical="cleaning" />} />
-              <Route path="packing/:slug" element={<CityPage vertical="packing" />} />
               <Route path="vanrental/:slug" element={<CityPage vertical="vanrental" />} />
-              <Route path="insurance/:slug" element={<CityPage vertical="insurance" />} />
+              {/* Retired categories — kept as redirects for the indexed URLs. */}
+              <Route path="packing/:slug" element={<RetiredHubRedirect category="packing" />} />
+              <Route path="insurance/:slug" element={<RetiredHubRedirect category="insurance" />} />
               {/* City-pages SEO hub: /locations is the directory (internal-link
                   hub); /locations/<slug> is a per-city hub linking out to the
                   single-vertical pages above. The static "locations" route is

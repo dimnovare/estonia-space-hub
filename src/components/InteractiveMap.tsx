@@ -147,7 +147,10 @@ function CategorySwatch({ slug }: { slug: string }) {
 // Directory-only event categories (no price-pin vertical of their own). When
 // directory profiles are on the map, the legend lists them with their category
 // swatch, labelled via the serviceTypeLabels prop (i18n serviceType.*).
-const DIRECTORY_LEGEND_SLUGS = ["cleaning", "packing", "vanrental", "insurance"] as const;
+// Retired categories (packing/insurance) keep their colors + glyphs above so a
+// legacy-tagged profile still draws a correct pin, but they are not legended —
+// a visitor can no longer filter or request them.
+const DIRECTORY_LEGEND_SLUGS = ["cleaning", "vanrental"] as const;
 
 // A listing is "featured" when it has the promoted boost, is a founding partner, or
 // carries an active paid visibility boost (featured_search / featured_map /

@@ -52,8 +52,9 @@ export default function ProviderOnboardingPage() {
     { key: "sole", label: t("onboard.bizType.sole"), icon: User },
   ];
 
-  // Canonical 7-service event set (storage always on; moving/trailer flag-gated;
-  // the 4 event categories always available). Uses the shared serviceType.* keys.
+  // Canonical public service set (storage always on; moving/trailer flag-gated;
+  // cleaning + van rental always available). Uses the shared serviceType.* keys.
+  // Packing is not offered standalone — movers price it inside a moving offer.
   const serviceTypes = visibleServiceSlugs(showMovingService, showTrailerService).map((slug) => ({
     key: slug,
     label: t(`serviceType.${slug}`),

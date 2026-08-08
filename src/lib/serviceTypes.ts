@@ -3,9 +3,15 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-// Directory service-type slugs — the full moving-event category set the backend
-// exposes on GET /locations (serviceTypes), GET /suppliers/by-slug/{slug} and
+// Directory service-type slugs — every category the backend KNOWS about on
+// GET /locations (serviceTypes), GET /suppliers/by-slug/{slug} and the
 // POST /leads/request categories. Keep in sync with i18n "serviceType.*" keys.
+//
+// This list is the LABELLING vocabulary (admin lead queue, supplier profiles,
+// map pins): historical leads and imported directory profiles still carry the
+// retired slugs below and must render a real name, never a raw slug. For
+// anything a visitor can pick, use PUBLIC_SERVICE_TYPE_SLUGS /
+// visibleServiceSlugs() instead.
 export const SERVICE_TYPE_SLUGS = [
   "warehouse",
   "moving",
@@ -17,6 +23,53 @@ export const SERVICE_TYPE_SLUGS = [
 ] as const;
 
 export type ServiceTypeSlug = (typeof SERVICE_TYPE_SLUGS)[number];
+
+/**
+ * Categories retired from the consumer-facing funnel (2026-08 founder call,
+ * backed by market research across EE/LV/LT):
+ *
+ *  - `packing` is never sold standalone in the Baltics — it is a line item
+ *    inside a mover's offer. Advertising it as its own bookable service sent
+ *    people into a dead end no supplier could quote. It now lives on as an
+ *    OPTIONAL add-on question inside the moving request (see RequestPage).
+ *  - `insurance` in this market is CMR carrier-liability cover sold B2B to
+ *    hauliers, not something a household moving flat can buy. Wrong customer,
+ *    thinnest vertical (one city). Dropped entirely.
+ *
+ * They stay in SERVICE_TYPE_SLUGS so existing leads/profiles still label, and
+ * old indexed URLs get redirected rather than 404'd (see RETIRED_SLUG_HUB_ROUTE
+ * / RETIRED_SEARCH_TYPE).
+ */
+export const RETIRED_SERVICE_TYPE_SLUGS = ["packing", "insurance"] as const;
+
+export type RetiredServiceTypeSlug = (typeof RETIRED_SERVICE_TYPE_SLUGS)[number];
+
+export function isRetiredServiceSlug(slug: string): slug is RetiredServiceTypeSlug {
+  return (RETIRED_SERVICE_TYPE_SLUGS as readonly string[]).includes(slug);
+}
+
+/** The categories a visitor can actually pick: nav, footer, homepage grid,
+ *  /request step 1, search chips, city hubs, provider onboarding. */
+export const PUBLIC_SERVICE_TYPE_SLUGS = SERVICE_TYPE_SLUGS.filter(
+  (s) => !isRetiredServiceSlug(s),
+) as readonly Exclude<ServiceTypeSlug, RetiredServiceTypeSlug>[];
+
+export type PublicServiceTypeSlug = (typeof PUBLIC_SERVICE_TYPE_SLUGS)[number];
+
+/** Where an old `/{lang}/{slug}/{city}` SEO hub should land now. Packing keeps
+ *  its audience (movers quote packing), insurance falls back to the generic
+ *  per-city hub. Mirrored by the 301s in vercel.json for crawlers. */
+export const RETIRED_SLUG_HUB_ROUTE: Record<RetiredServiceTypeSlug, (citySlug: string) => string> = {
+  packing:   (citySlug) => `/moving/${citySlug}`,
+  insurance: (citySlug) => `/locations/${citySlug}`,
+};
+
+/** Where an old `?type=` search param should resolve. `null` = drop the filter
+ *  (generic search), preserving whatever city/query the URL carried. */
+export const RETIRED_SEARCH_TYPE: Record<RetiredServiceTypeSlug, PublicServiceTypeSlug | null> = {
+  packing:   "moving",
+  insurance: null,
+};
 
 /** Canonical Lucide icon per service category (overhaul spec §1/§2) — the SAME
  *  glyph set is used by map pins, the navbar mega-menu, the homepage service
@@ -31,14 +84,14 @@ export const SERVICE_TYPE_ICONS: Record<ServiceTypeSlug, LucideIcon> = {
   insurance: Shield,
 };
 
-/** The 7 canonical slugs minus admin-disabled verticals (moving / trailer are
- *  the only platform-toggle-gated categories; the 4 event categories and
- *  storage are always visible). */
+/** The public slugs minus admin-disabled verticals (moving / trailer are the
+ *  only platform-toggle-gated categories; cleaning, van rental and storage are
+ *  always visible). Retired categories are never returned. */
 export function visibleServiceSlugs(
   showMovingService: boolean,
   showTrailerService: boolean,
-): ServiceTypeSlug[] {
-  return SERVICE_TYPE_SLUGS.filter(
+): PublicServiceTypeSlug[] {
+  return PUBLIC_SERVICE_TYPE_SLUGS.filter(
     (s) => (s !== "moving" || showMovingService) && (s !== "trailer" || showTrailerService),
   );
 }

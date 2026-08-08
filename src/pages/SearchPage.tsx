@@ -1,6 +1,6 @@
 import { useState, useMemo, lazy, Suspense, useCallback, useRef, useEffect } from "react";
 import { useSearchParams, Link } from "@/i18n/routing";
-import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers, Package, Warehouse, Truck, CarFront, Star, Building2, Calculator, LocateFixed, Bookmark, Sparkles, Bus, ShieldCheck } from "lucide-react";
+import { SlidersHorizontal, X, ChevronDown, List, MapIcon, Loader2, MapPin, Layers, Package, Warehouse, Truck, CarFront, Star, Building2, Calculator, LocateFixed, Bookmark, Sparkles, Bus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from "@/components/ui/drawer";
 import { useListings, useLocations } from "@/hooks/queries";
@@ -21,7 +21,9 @@ import StorageSizeCalculator from "@/components/StorageSizeCalculator";
 import { queryKeys } from "@/services/queryKeys";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { TRAILER_TYPE_OPTIONS, CREW_SIZE_OPTIONS, VAN_SIZE_OPTIONS } from "@/lib/constants";
-import { serviceTypeLabelMap, serviceTypeLabel } from "@/lib/serviceTypes";
+import {
+  serviceTypeLabelMap, serviceTypeLabel, isRetiredServiceSlug, RETIRED_SEARCH_TYPE,
+} from "@/lib/serviceTypes";
 
 const InteractiveMap = lazy(() => import("@/components/InteractiveMap"));
 
@@ -30,7 +32,7 @@ const VALID_SIZE_CATS: ListingFilters["sizeCategory"][] = ["XS", "S", "M", "L", 
 
 // Directory-only event categories (no ListingType of their own): selectable as
 // type chips, filter /locations server-side, and never match any listing.
-const DIRECTORY_ONLY_TYPES = ["cleaning", "packing", "vanrental", "insurance"] as const;
+const DIRECTORY_ONLY_TYPES = ["cleaning", "vanrental"] as const;
 
 // Squared-equirectangular approximation — cheap and monotonic, which is all we
 // need to rank results by proximity to the user (no real distance reported).
@@ -74,8 +76,22 @@ export default function SearchPage() {
   const serviceTypeLabels = useMemo(() => serviceTypeLabelMap(t), [t]);
   // All filter state derived from URL. Beyond the marketplace verticals
   // (warehouse/moving/trailer) the type param also accepts the directory-only
-  // event-category slugs (cleaning/packing/vanrental/insurance).
-  const activeType = searchParams.get("type") || "all";
+  // event-category slugs (cleaning/vanrental).
+  //
+  // Retired categories still have indexed URLs (Search Console shows Google on
+  // ?type=insurance&city=Elva), so they RESOLVE instead of rendering a chipless
+  // dead tab: packing → moving (the people who actually quote packing),
+  // insurance → the generic all-services view. The city/query stay untouched,
+  // and the effect below rewrites the address bar to the canonical params.
+  const rawType = searchParams.get("type") || "all";
+  const activeType = (() => {
+    if (!isRetiredServiceSlug(rawType)) return rawType;
+    const mapped = RETIRED_SEARCH_TYPE[rawType];
+    // Never resolve onto a vertical the admin has switched off.
+    if (mapped === "moving" && !showMovingService) return "all";
+    if (mapped === "trailer" && !showTrailerService) return "all";
+    return mapped ?? "all";
+  })();
   // Directory-only categories have no marketplace listings vertical — supply
   // comes exclusively from directory profiles via /locations?type={slug}.
   const isDirectoryOnlyType = (DIRECTORY_ONLY_TYPES as readonly string[]).includes(activeType);
@@ -112,7 +128,8 @@ export default function SearchPage() {
   // in the ACTIVE service — so it is absent from availableCities — but we still
   // know where it is, which is what lets us answer "nothing in Elva; nearest is
   // Tartu, 25 km" instead of an empty page. Search Console shows Google
-  // crawling exactly these: ?type=insurance&city=Elva, ?city=Voru, ?city=Rapla.
+  // crawling exactly these long-tail city URLs: ?city=Voru, ?city=Rapla, and
+  // (pre-retirement) ?type=insurance&city=Elva, which now resolves to "all".
   const { data: allCities = [] } = useQuery({
     queryKey: queryKeys.cities.available("all"),
     queryFn: () => apiClient.get<AvailableCity[]>("/locations/cities"),
@@ -513,9 +530,7 @@ export default function SearchPage() {
     // Directory event categories — always visible: unclaimed directory
     // providers exist for these even without an enabled marketplace vertical.
     { value: "cleaning",  label: t("serviceType.cleaning"),  Icon: Sparkles    },
-    { value: "packing",   label: t("serviceType.packing"),   Icon: Package     },
     { value: "vanrental", label: t("serviceType.vanrental"), Icon: Bus         },
-    { value: "insurance", label: t("serviceType.insurance"), Icon: ShieldCheck },
   ];
 
   // Map overlay badge: list the publicly visible verticals (honors admin toggles).
@@ -533,6 +548,16 @@ export default function SearchPage() {
       updateFilters({ type: "" });
     }
   }, [showMovingService, showTrailerService, searchParams]);
+
+  // Rewrite a retired ?type= to the category it resolved to (replace, so no
+  // extra history entry and Back still works). The page already RENDERS the
+  // resolved type above — this only stops the stale slug being copied, shared
+  // or re-crawled from the address bar.
+  useEffect(() => {
+    if (isRetiredServiceSlug(rawType)) {
+      updateFilters({ type: activeType === "all" ? "" : activeType });
+    }
+  }, [rawType, activeType]);
 
   // Date availability is trailer/moving-only. Drop stale date params when the
   // active vertical can't use them, so switching to storage/'all' (or from

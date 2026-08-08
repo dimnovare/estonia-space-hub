@@ -290,7 +290,7 @@ function ConciergeHome() {
         </div>
       </section>
 
-      {/* 2 ── 7-service grid (canonical name + one-liner per category) */}
+      {/* 2 ── service grid (canonical name + one-liner per category) */}
       <section className="container-wide section-y">
         <div className="text-center">
           <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">{t("home.services.eyebrow")}</p>

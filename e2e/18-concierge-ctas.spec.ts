@@ -53,7 +53,7 @@ test.describe("Concierge CTAs", () => {
   });
 
   test("directory event-category city hub renders (not NotFound) with concierge CTA", async ({ page }) => {
-    // The backend sitemap now emits /{lang}/cleaning|packing|vanrental|insurance/{city};
+    // The backend sitemap now emits /{lang}/cleaning|vanrental/{city};
     // these must render a real directory hub, not fall through to the noindex 404.
     await stubLoggedOut(page);
     await stubCommon(page);

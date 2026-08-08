@@ -11,7 +11,10 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
 import { leadService, type ConciergeCategory } from "@/services";
-import { SERVICE_TYPE_SLUGS, SERVICE_TYPE_ICONS, visibleServiceSlugs } from "@/lib/serviceTypes";
+import {
+  PUBLIC_SERVICE_TYPE_SLUGS, SERVICE_TYPE_ICONS, visibleServiceSlugs,
+  isRetiredServiceSlug, RETIRED_SEARCH_TYPE,
+} from "@/lib/serviceTypes";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -19,7 +22,12 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  *  Deep links come from the homepage need-chips / service grid and the navbar.
  *  `allowed` gates the result to the platform-visible set — a stale
  *  ?category=moving with moving disabled must NOT prefill a category whose
- *  tile isn't rendered (invisible, undeselectable, would still submit). */
+ *  tile isn't rendered (invisible, undeselectable, would still submit).
+ *
+ *  Retired categories (packing / insurance) still exist as indexed deep links,
+ *  so they are REMAPPED rather than dropped: ?category=packing selects moving
+ *  (a mover is who quotes packing) and ?category=insurance falls away, leaving
+ *  the visitor on a normal, answerable step 1 instead of an empty selection. */
 function parseCategoryParams(
   params: URLSearchParams,
   allowed: readonly string[],
@@ -27,8 +35,18 @@ function parseCategoryParams(
   const raw = params.getAll("category").flatMap((v) => v.split(","));
   const valid = raw
     .map((v) => v.trim().toLowerCase())
-    .filter((v): v is ConciergeCategory => allowed.includes(v));
+    .map((v) => (isRetiredServiceSlug(v) ? RETIRED_SEARCH_TYPE[v] : v))
+    .filter((v): v is ConciergeCategory => !!v && allowed.includes(v));
   return [...new Set(valid)];
+}
+
+/** True when the visitor arrived from a retired packing deep link — we preselect
+ *  the moving flow AND its packing add-on so the intent survives the remap. */
+function cameFromPackingLink(params: URLSearchParams): boolean {
+  return params
+    .getAll("category")
+    .flatMap((v) => v.split(","))
+    .some((v) => v.trim().toLowerCase() === "packing");
 }
 
 /**
@@ -44,15 +62,27 @@ function parseCategoryParams(
  * group means "not sure". Nobody is ever hard-blocked: "not sure" is itself a
  * fact the concierge can work with, unlike a blank field.
  */
-const SCOPE_QUESTIONS: Record<ConciergeCategory, { id: string; options: number }[]> = {
+interface ScopeQuestion { id: string; options: number }
+
+const SCOPE_QUESTIONS: Partial<Record<ConciergeCategory, ScopeQuestion[]>> = {
   warehouse: [{ id: "warehouseSize", options: 6 }, { id: "warehouseDuration", options: 5 }],
   moving:    [{ id: "movingSize", options: 6 }],
   trailer:   [{ id: "trailerDuration", options: 5 }],
   vanrental: [{ id: "vanrentalDuration", options: 5 }],
   cleaning:  [{ id: "cleaningType", options: 5 }],
-  packing:   [{ id: "packingRooms", options: 5 }],
-  insurance: [{ id: "insuranceValue", options: 5 }],
 };
+
+/**
+ * OPTIONAL add-on shown inside the moving flow only.
+ *
+ * Packing is never sold standalone in the Baltics — it is a line item in a
+ * mover's offer — so it is no longer a top-level category. Asking it here means
+ * the mover we contact can price the packing in the same quote, and the answer
+ * rides along in `details` exactly like the required scoping answers do.
+ *
+ * Deliberately NOT part of `activeQuestions`: it must never block Next.
+ */
+const PACKING_ADDON: ScopeQuestion = { id: "packingHelp", options: 4 };
 
 /**
  * /request — the concierge demand funnel ("tell us what you need, we find you
@@ -75,8 +105,10 @@ export default function RequestPage() {
   const [toCity, setToCity] = useState("");
   const [needDate, setNeedDate] = useState("");
   const [details, setDetails] = useState("");
-  // questionId → 1-based index of the chosen option.
-  const [scope, setScope] = useState<Record<string, number>>({});
+  // questionId → 1-based index of the chosen option. A ?category=packing deep
+  // link lands on moving with the packing add-on already answered "yes".
+  const [scope, setScope] = useState<Record<string, number>>(
+    () => (cameFromPackingLink(searchParams) ? { [PACKING_ADDON.id]: 1 } : {}));
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -85,16 +117,25 @@ export default function RequestPage() {
 
   const movingSelected = categories.includes("moving");
 
+  /** Required scoping questions — these gate the Next button. */
   const activeQuestions = useMemo(
     () => categories.flatMap((c) => SCOPE_QUESTIONS[c] ?? []),
     [categories],
+  );
+
+  /** Everything that may end up in `details`: the required questions plus the
+   *  optional moving add-on. Deselecting moving drops the add-on answer from
+   *  the summary even if the chip was tapped earlier. */
+  const detailQuestions = useMemo(
+    () => (movingSelected ? [...activeQuestions, PACKING_ADDON] : activeQuestions),
+    [activeQuestions, movingSelected],
   );
 
   /** Fold the chip answers into `details`, above whatever the visitor wrote.
    *  No migration needed — the outreach email already prints this field, so a
    *  readable "question: answer" summary reaches providers as-is. */
   const composeDetails = (): string | undefined => {
-    const answered = activeQuestions
+    const answered = detailQuestions
       .filter((q) => scope[q.id])
       .map((q) => `${t(`request.scope.${q.id}.label`)} ${t(`request.scope.${q.id}.opt${scope[q.id]}`)}`);
     return [answered.join("\n"), details.trim()].filter(Boolean).join("\n\n") || undefined;
@@ -126,13 +167,13 @@ export default function RequestPage() {
     title: string;
     desc: string;
     show: boolean;
-  }[] = SERVICE_TYPE_SLUGS.map((slug) => ({
+  }[] = PUBLIC_SERVICE_TYPE_SLUGS.map((slug) => ({
     key: slug,
     icon: SERVICE_TYPE_ICONS[slug],
     title: t(`serviceType.${slug}`),
     desc: t(`serviceType.${slug}.desc`),
-    // moving/trailer honor the admin platform toggles; the 4 moving-event
-    // categories are always visible (worked manually by the concierge loop).
+    // moving/trailer honor the admin platform toggles; cleaning and van rental
+    // are always visible (worked manually by the concierge loop).
     show: slug === "moving" ? showMovingService : slug === "trailer" ? showTrailerService : true,
   }));
 
@@ -254,8 +295,8 @@ export default function RequestPage() {
                 </legend>
                 {/* Multi-select nudge — bundling is the funnel's superpower. */}
                 <p className="mt-1.5 text-sm text-muted-foreground">{t("request.need.hint")}</p>
-                {/* 7 categories → compact 2-col multi-select grid (also 2-col on
-                    mobile, so the step never scrolls past the fold). */}
+                {/* Compact 2-col multi-select grid (also 2-col on mobile, so the
+                    step never scrolls past the fold). */}
                 <div className="mt-4 grid grid-cols-2 gap-3">
                   {needOptions.filter((o) => o.show).map((opt) => {
                     const Icon = opt.icon;
@@ -371,6 +412,50 @@ export default function RequestPage() {
                           </div>
                         </fieldset>
                       ))}
+                    </div>
+                  )}
+                  {/* Optional packing add-on — moving only. Packing is never
+                      sold standalone here, so we ask it where a mover can price
+                      it. No asterisk, not in the required gate: skipping it
+                      just leaves the line out of the provider outreach. */}
+                  {movingSelected && (
+                    <div className="space-y-4 rounded-xl border border-line bg-secondary/30 p-4">
+                      <fieldset>
+                        <legend className="mb-1.5 text-sm font-medium text-foreground">
+                          {t(`request.scope.${PACKING_ADDON.id}.label`)}
+                        </legend>
+                        <p className="mb-2 text-xs text-muted-foreground">{t("request.scope.packingHelp.hint")}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {Array.from({ length: PACKING_ADDON.options }, (_, i) => i + 1).map((n) => {
+                            const active = scope[PACKING_ADDON.id] === n;
+                            return (
+                              <button
+                                key={n}
+                                type="button"
+                                aria-pressed={active}
+                                onClick={() =>
+                                  // Second tap on the active chip clears it — the
+                                  // question is optional, so "no answer" must stay
+                                  // reachable once something has been picked.
+                                  setScope((s) => {
+                                    const next = { ...s };
+                                    if (next[PACKING_ADDON.id] === n) delete next[PACKING_ADDON.id];
+                                    else next[PACKING_ADDON.id] = n;
+                                    return next;
+                                  })
+                                }
+                                className={`min-h-[40px] rounded-full border px-3.5 py-2 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+                                  active
+                                    ? "border-navy-ink bg-navy-ink text-white"
+                                    : "border-line-2 bg-card text-foreground hover:border-primary hover:text-primary"
+                                }`}
+                              >
+                                {t(`request.scope.${PACKING_ADDON.id}.opt${n}`)}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </fieldset>
                     </div>
                   )}
                   <div>

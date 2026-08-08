@@ -29,6 +29,10 @@
   "redirects": [
     { "source": "/:lang(et|en|ru|lv|lt)/",        "destination": "/:lang",        "permanent": true },
     { "source": "/:lang(et|en|ru|lv|lt)/:path+/", "destination": "/:lang/:path+", "permanent": true },
+    { "source": "/:lang(et|en|ru|lv|lt)/packing/:slug",   "destination": "/:lang/moving/:slug",    "permanent": true },
+    { "source": "/:lang(et|en|ru|lv|lt)/insurance/:slug", "destination": "/:lang/locations/:slug", "permanent": true },
+    { "source": "/packing/:slug",   "destination": "/et/moving/:slug",    "permanent": true },
+    { "source": "/insurance/:slug", "destination": "/et/locations/:slug", "permanent": true },
     { "source": "/storage/:slug",  "destination": "/et/storage/:slug",  "permanent": true },
     { "source": "/search",         "destination": "/et/search",         "permanent": true },
     { "source": "/listing/:id",    "destination": "/et/listing/:id",    "permanent": true },

@@ -17,7 +17,7 @@ export default function Footer() {
   const blogInFooter = String(settings.blog?.showInFooter ?? "true") !== "false";
   const showBlog = blogEnabled && blogInFooter;
 
-  // Services column — the 7 canonical categories (overhaul §4: same
+  // Services column — the canonical public categories (overhaul §4: same
   // serviceType.* names as navbar/home/search/request) + the map link.
   // moving/trailer honor the admin platform toggles.
   const serviceLinks = [

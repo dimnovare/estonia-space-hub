@@ -27,17 +27,19 @@ const CITY_MAP: Record<string, string> = {
   daugavpils: "Daugavpils",
 };
 
-/** City-hub vertical: the 3 listing verticals (storage = warehouse) plus the 4
- *  directory-only event categories the backend sitemap now emits city hubs for. */
+/** City-hub vertical: the 3 listing verticals (storage = warehouse) plus the
+ *  directory-only event categories the backend sitemap emits city hubs for.
+ *  Packing and insurance were retired in 2026-08 — App.tsx redirects their old
+ *  hub URLs instead of rendering them (see RETIRED_SLUG_HUB_ROUTE). */
 type CityVertical =
   | "warehouse" | "moving" | "trailer"
-  | "cleaning" | "packing" | "vanrental" | "insurance";
+  | "cleaning" | "vanrental";
 
 /** Directory-only event categories — providers here have no listings, only
  *  directory locations tagged with the service slug (rendered as provider cards,
  *  never a listing/booking branch). Slugs match the lowercase DemandLeadCategory
  *  + the backend sitemap path segment exactly. */
-const DIRECTORY_EVENT_CATEGORIES = ["cleaning", "packing", "vanrental", "insurance"] as const;
+const DIRECTORY_EVENT_CATEGORIES = ["cleaning", "vanrental"] as const;
 const isDirectoryCategoryVertical = (v: CityVertical): boolean =>
   (DIRECTORY_EVENT_CATEGORIES as readonly string[]).includes(v);
 
@@ -53,9 +55,7 @@ const VERTICAL_CONFIG: Record<CityVertical, { seoVertical?: SeoVertical; urlSegm
   moving: { seoVertical: "moving", urlSegment: "moving" },
   trailer: { seoVertical: "trailers", urlSegment: "trailer" },
   cleaning: { urlSegment: "cleaning" },
-  packing: { urlSegment: "packing" },
   vanrental: { urlSegment: "vanrental" },
-  insurance: { urlSegment: "insurance" },
 };
 
 /**

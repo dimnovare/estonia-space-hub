@@ -405,7 +405,8 @@ export interface SupplierLocation {
   // profiles — public partner page + map pin, NO listings/units/pricing/booking.
   isDirectory?: boolean;
   supplierSlug?: string | null;
-  /** Service slugs: warehouse|moving|trailer|cleaning|packing|vanrental|insurance */
+  /** Service slugs: warehouse|moving|trailer|cleaning|vanrental (legacy rows may
+   *  still carry the retired packing|insurance slugs — see lib/serviceTypes). */
   serviceTypes?: string[];
   /** Supplier logo, when set — shown on search cards instead of the generic icon. */
   supplierLogoUrl?: string | null;

@@ -37,7 +37,8 @@ export interface PartnerProfile {
   // Provider directory: unclaimed company profile — public page + map pin,
   // no listings/pricing/booking. Claimable by the company later.
   isDirectory?: boolean;
-  /** Service slugs: warehouse|moving|trailer|cleaning|packing|vanrental|insurance */
+  /** Service slugs: warehouse|moving|trailer|cleaning|vanrental (legacy rows may
+   *  still carry the retired packing|insurance slugs — see lib/serviceTypes). */
   serviceTypes?: string[];
 }
 

@@ -75,8 +75,8 @@ export default function AboutPage() {
 
   if (!enabled) return <NotFound />;
 
-  // The full moving-event service set — the "Seven services" header must match
-  // the content, so drive the grid off the canonical service list (same as the
+  // The public moving-event service set — the section header must match the
+  // content, so drive the grid off the canonical service list (same as the
   // homepage / navbar / footer). Moving/trailer drop out when their flag is off.
   const verticals = visibleServiceSlugs(
     settings.showMovingService,
