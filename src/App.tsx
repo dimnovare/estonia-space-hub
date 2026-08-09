@@ -38,6 +38,7 @@ const ProviderPage = lazy(() => import("@/pages/ProviderPage"));
 const RequestPage = lazy(() => import("@/pages/RequestPage"));
 const OfferPage = lazy(() => import("@/pages/OfferPage"));
 const QuotePage = lazy(() => import("@/pages/QuotePage"));
+const ClaimPage = lazy(() => import("@/pages/ClaimPage"));
 import RequestDetailPage from "@/pages/RequestDetailPage";
 import VerifyEmailPage from "@/pages/VerifyEmailPage";
 import { Loader2 } from "lucide-react";
@@ -168,7 +169,7 @@ function AppContent() {
   // The public offer + provider-quote pages are clean, no-nav-noise surfaces
   // (offer overhaul §5 / quote Feature B): each renders its own slim logo
   // header instead of the full Navbar.
-  const isOfferPage = /^\/[a-z]{2}\/(offer|quote)\//i.test(location.pathname);
+  const isOfferPage = /^\/[a-z]{2}\/(offer|quote|claim)\//i.test(location.pathname);
   // The consent banner is fixed to the bottom of the viewport, so on admin it
   // simply covers the end of every long list (locations, leads, orders) until
   // someone accepts. Admin is an authenticated internal surface, not public
@@ -222,6 +223,12 @@ function AppContent() {
                   Minimal chrome: the page brings its own slim header (the
                   global Navbar is suppressed above). Feature B. */}
               <Route path="quote/:token" element={<QuotePage />} />
+              {/* Public "claim your profile" page — anonymous, slug-keyed,
+                  noindex. A directory provider arrives here from the
+                  introduction campaign, proves control of the contact email on
+                  their researched row (?token=… is the magic link), then edits
+                  it. Same minimal chrome as /offer and /quote. */}
+              <Route path="claim/:slug" element={<ClaimPage />} />
               {/* SEO keyword landings → canonical storage search */}
               <Route path="laopind" element={<StorageKeywordRedirect />} />
               <Route path="miniladu" element={<StorageKeywordRedirect />} />

@@ -87,13 +87,25 @@ class ApiClient {
     return tokenStore.getAccess();
   }
 
-  async request<T>(endpoint: string, config: { method?: string; body?: unknown } = {}): Promise<T> {
-    const { method = "GET", body } = config;
+  async request<T>(
+    endpoint: string,
+    config: { method?: string; body?: unknown; headers?: Record<string, string> } = {},
+  ): Promise<T> {
+    const { method = "GET", body, headers: extraHeaders } = config;
     const token = this.getToken();
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (token) headers["Authorization"] = `Bearer ${token}`;
     const lang = localStorage.getItem("ruumly-lang") || "et";
     headers["Accept-Language"] = lang;
+    // Per-call headers, e.g. the anonymous claim session (X-Claim-Session).
+    // Merged last but never able to displace Authorization for a logged-in user
+    // — an anonymous flow must not be able to spoof one.
+    if (extraHeaders) {
+      for (const [key, value] of Object.entries(extraHeaders)) {
+        if (key.toLowerCase() === "authorization") continue;
+        headers[key] = value;
+      }
+    }
     let response: Response;
     try {
       response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -239,8 +251,9 @@ class ApiClient {
     return response.json();
   }
 
-  get<T>(endpoint: string) { return this.request<T>(endpoint); }
-  post<T>(endpoint: string, body: unknown) { return this.request<T>(endpoint, { method: "POST", body }); }
+  get<T>(endpoint: string, headers?: Record<string, string>) { return this.request<T>(endpoint, { headers }); }
+  post<T>(endpoint: string, body: unknown, headers?: Record<string, string>) { return this.request<T>(endpoint, { method: "POST", body, headers }); }
+  put<T>(endpoint: string, body: unknown, headers?: Record<string, string>) { return this.request<T>(endpoint, { method: "PUT", body, headers }); }
   patch<T>(endpoint: string, body: unknown) { return this.request<T>(endpoint, { method: "PATCH", body }); }
   delete<T>(endpoint: string) { return this.request<T>(endpoint, { method: "DELETE" }); }
 

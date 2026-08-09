@@ -509,7 +509,9 @@ export default function PartnerPage() {
       <PartnerGoogleReviews partner={partner} />
 
       {/* Claim banner — free takeover pitch for the company that owns this
-          unclaimed directory profile. */}
+          unclaimed directory profile. This used to be a mailto: (a human read
+          the reply and edited the row by hand); it now opens the real
+          verification flow at /{lang}/claim/{slug}. */}
       {partner.isDirectory && (
         <section className="container-wide pb-14">
           <div className="rounded-[14px] border border-line bg-secondary/60 p-8 text-center shadow-card md:p-10">
@@ -523,9 +525,9 @@ export default function PartnerPage() {
               asChild
               className="mt-5 min-h-[44px] bg-accent px-6 font-semibold text-accent-foreground hover:bg-brand-greenDeep"
             >
-              <a href={`mailto:info@ruumly.eu?subject=${encodeURIComponent(`Profiili ülevõtmine: ${partner.slug}`)}`}>
+              <Link to={`/claim/${partner.slug}`}>
                 {t("partner.claim.cta")}
-              </a>
+              </Link>
             </Button>
           </div>
         </section>

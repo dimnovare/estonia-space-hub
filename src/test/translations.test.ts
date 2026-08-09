@@ -189,6 +189,43 @@ describe("translation completeness", () => {
     });
   });
 
+  it("uses the approved claim-your-profile copy in every provider language", () => {
+    // The claim page is reached from the introduction campaign, whose language
+    // follows the SUPPLIER's country — and most claimants are Latvian or
+    // Lithuanian, so those two have to read natively, not as translated English.
+    const claimCopy = {
+      "claim.title": ["{name} — võta profiil üle", "{name} — claim this profile", "{name} — заберите профиль", "{name} — pārņemiet profilu", "{name} — perimkite profilį"],
+      "claim.sendCta": ["Saada kinnituslink", "Send confirmation link", "Отправить ссылку для подтверждения", "Nosūtīt apstiprinājuma saiti", "Siųsti patvirtinimo nuorodą"],
+      "claim.sentTitle": ["Vaata oma postkasti", "Check your inbox", "Проверьте почту", "Pārbaudiet savu e-pastu", "Patikrinkite savo el. paštą"],
+      "claim.editTitle": ["Paranda oma andmed", "Correct your details", "Исправьте свои данные", "Izlabojiet savus datus", "Pataisykite savo duomenis"],
+      "claim.saveCta": ["Salvesta muudatused", "Save changes", "Сохранить изменения", "Saglabāt izmaiņas", "Išsaugoti pakeitimus"],
+    } as const;
+    const languages = [translations.et, translations.en, translations.ru, translations.lv, translations.lt];
+
+    Object.entries(claimCopy).forEach(([key, values]) => {
+      values.forEach((value, index) => expect(languages[index][key]).toBe(value));
+    });
+  });
+
+  it("never promises the claim page will confirm which address is on file", () => {
+    // The API answers identically whether or not the typed address matches, so
+    // the copy must not let a visitor infer a match. If this ever regresses, the
+    // page becomes an oracle for the directory's scraped contact data.
+    const languages = [translations.et, translations.en, translations.ru, translations.lv, translations.lt];
+
+    languages.forEach(language => {
+      // Every language states the condition ("IF that address is the one we
+      // have") rather than asserting delivery.
+      expect(language["claim.sentBody"].length).toBeGreaterThan(40);
+      expect(language["claim.privacyNote"]).toBeTruthy();
+      // "we sent it to you" / "your address is correct" style promises are the
+      // exact failure mode — the confirmation must stay conditional.
+      expect(language["claim.sentBody"]).not.toMatch(
+        /we have sent it to your|nous avons|адрес подтверждён|adrese ir pareiza/i,
+      );
+    });
+  });
+
   it("uses the approved quick-send and quote-surfacing copy in every operator language", () => {
     const opsCopy = {
       "admin.leads.quickSend": ["Saada päring {count} sobivale partnerile", "Send outreach to {count} matched providers", "Отправить запрос {count} подходящим поставщикам", "Nosūtīt pieprasījumu {count} atbilstošiem pakalpojumu sniedzējiem", "Siųsti užklausą {count} tinkamiems paslaugų teikėjams"],

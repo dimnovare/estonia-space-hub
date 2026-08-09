@@ -163,6 +163,10 @@ export const queryKeys = {
   quotes: {
     byToken: (token: string) => ["quote", token] as const,
   },
+  // Public "claim your profile" page (/claim/{slug}) — anonymous, slug-keyed.
+  claims: {
+    bySlug: (slug: string) => ["claim", slug] as const,
+  },
   supplierTeam: {
     byId: (id: string | null) => ["supplier-team", id] as const,
   },

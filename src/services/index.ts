@@ -984,6 +984,84 @@ export const quoteService = {
   },
 };
 
+// ─── Claim Service ───────────────────────────────────────────────────────────
+// Public "claim your profile" flow for directory providers (/{lang}/claim/{slug}).
+// A provider proves control of the contact email already on their researched
+// row, then edits that row — no account, no password.
+
+/** What an UNVERIFIED visitor may see. Deliberately no contact email or phone:
+ *  the directory's scraped contact data must never be readable back out. */
+export interface PublicClaimProfile {
+  slug: string;
+  name: string;
+  city?: string | null;
+  country: string;
+  serviceTypes: string[];
+  isClaimed: boolean;
+}
+
+/** The editable surface, only ever returned to a verified claimant. */
+export interface ClaimEditableProfile {
+  slug: string;
+  name: string;
+  contactPhone?: string | null;
+  contactEmail?: string | null;
+  websiteUrl?: string | null;
+  address?: string | null;
+  city?: string | null;
+  country: string;
+  serviceTypes: string[];
+  description?: string | null;
+  claimedAt?: string | null;
+}
+
+export interface ClaimSession {
+  sessionToken: string;
+  expiresAt: string;
+  profile: ClaimEditableProfile;
+}
+
+export interface ClaimUpdateInput {
+  name: string;
+  contactPhone: string | null;
+  contactEmail: string;
+  websiteUrl: string | null;
+  address: string | null;
+  serviceTypes: string[];
+  description: string | null;
+}
+
+/** Header the backend reads the claim session from (ClaimController.SessionHeader). */
+const CLAIM_SESSION_HEADER = "X-Claim-Session";
+
+export const claimService = {
+  async get(slug: string): Promise<PublicClaimProfile> {
+    return apiClient.get<PublicClaimProfile>(`/claim/${encodeURIComponent(slug)}`);
+  },
+  /** Always resolves the same way whether or not the address is on file — the
+   *  UI must not try to infer a match from the response. */
+  async requestLink(slug: string, email: string, language: string): Promise<void> {
+    await apiClient.post(`/claim/${encodeURIComponent(slug)}/request`, { email, language });
+  },
+  async verify(token: string): Promise<ClaimSession> {
+    return apiClient.post<ClaimSession>("/claim/verify", { token });
+  },
+  async getProfile(slug: string, sessionToken: string): Promise<ClaimEditableProfile> {
+    return apiClient.get<ClaimEditableProfile>(
+      `/claim/${encodeURIComponent(slug)}/profile`,
+      { [CLAIM_SESSION_HEADER]: sessionToken },
+    );
+  },
+  async updateProfile(
+    slug: string, sessionToken: string, body: ClaimUpdateInput,
+  ): Promise<ClaimEditableProfile> {
+    return apiClient.put<ClaimEditableProfile>(
+      `/claim/${encodeURIComponent(slug)}/profile`, body,
+      { [CLAIM_SESSION_HEADER]: sessionToken },
+    );
+  },
+};
+
 // ─── Dispute Service ─────────────────────────────────────────────────────────
 // Trust-and-safety claims (damage / no-show / deposit) against a booking/order.
 export type DisputeType = "damage" | "noshow" | "deposit" | "other";
