@@ -57,7 +57,11 @@ export interface PlatformSettings {
 const FALLBACK = {
   siteName:              "Ruumly",
   siteEmail:             "info@ruumly.eu",
-  sitePhone:             "+372 5649 7933",
+  // Deliberately empty: this default renders before the API responds, and every
+  // consumer guards on a falsy value to hide the phone entirely. Never hard-code a
+  // real personal number here — it ships to the browser even when the platform
+  // setting is blank.
+  sitePhone:             "",
   openHours:             "E–R 9–18",
   openHoursSat:          "",
   inviteCodeRequired:    false,

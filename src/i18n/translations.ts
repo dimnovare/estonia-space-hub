@@ -3778,7 +3778,7 @@ const et: Record<string, string> = {
     "serviceType.vanrental.desc": "Rendi kaubik, kui kolid ise",
     "serviceType.insurance.desc": "Vara kaitse kolimise ja hoiustamise ajaks",
     // ── Concierge-first homepage (overhaul §3) ──
-    "request.hero.trustChips": "Tasuta · 7 teenust ühe päringuga · 2–3 pakkumist · Tavaliselt 24 h",
+    "request.hero.trustChips": "Tasuta · Kõik kolimisteenused ühe päringuga · 2–3 pakkumist · Tavaliselt 24 h",
     "home.need.label": "Populaarsed vajadused:",
     "home.need.movingHome": "Kolin uude koju",
     "home.need.renovation": "Hoiuruum remondi ajaks",
@@ -7745,7 +7745,7 @@ const en: Record<string, string> = {
     "serviceType.vanrental.desc": "Van rental for a DIY move",
     "serviceType.insurance.desc": "Cover for your things in transit and storage",
     // ── Concierge-first homepage (overhaul §3) ──
-    "request.hero.trustChips": "Free · 7 services, one request · 2–3 offers · Usually 24 h",
+    "request.hero.trustChips": "Free · Every moving service, one request · 2–3 offers · Usually 24 h",
     "home.need.label": "Popular needs:",
     "home.need.movingHome": "Moving home",
     "home.need.renovation": "Storage while renovating",
@@ -11711,7 +11711,7 @@ const ru: Record<string, string> = {
     "serviceType.vanrental.desc": "Аренда фургона для самостоятельного переезда",
     "serviceType.insurance.desc": "Защита вещей при перевозке и хранении",
     // ── Concierge-first homepage (overhaul §3) ──
-    "request.hero.trustChips": "Бесплатно · 7 услуг, одна заявка · 2–3 предложения · Обычно 24 ч",
+    "request.hero.trustChips": "Бесплатно · Все услуги переезда по одной заявке · 2–3 предложения · Обычно 24 ч",
     "home.need.label": "Частые запросы:",
     "home.need.movingHome": "Переезжаю в новый дом",
     "home.need.renovation": "Хранение на время ремонта",
@@ -15616,7 +15616,7 @@ const lv: Record<string, string> = {
     "serviceType.vanrental.desc": "Busiņa noma, ja pārvācies pats",
     "serviceType.insurance.desc": "Mantu aizsardzība pārvākšanās un uzglabāšanas laikā",
     // ── Concierge-first homepage (overhaul §3) ──
-    "request.hero.trustChips": "Bez maksas · 7 pakalpojumi, viens pieprasījums · 2–3 piedāvājumi · Parasti 24 h",
+    "request.hero.trustChips": "Bez maksas · Visi pārvākšanās pakalpojumi vienā pieprasījumā · 2–3 piedāvājumi · Parasti 24 h",
     "home.need.label": "Populāras vajadzības:",
     "home.need.movingHome": "Pārvācos uz jaunu mājokli",
     "home.need.renovation": "Uzglabāšana remonta laikā",
@@ -19518,7 +19518,7 @@ const lt: Record<string, string> = {
     "serviceType.vanrental.desc": "Furgono nuoma, jei kraustotės patys",
     "serviceType.insurance.desc": "Daiktų apsauga kraustantis ir sandėliuojant",
     // ── Concierge-first homepage (overhaul §3) ──
-    "request.hero.trustChips": "Nemokamai · 7 paslaugos, viena užklausa · 2–3 pasiūlymai · Paprastai 24 val.",
+    "request.hero.trustChips": "Nemokamai · Visos perkraustymo paslaugos viena užklausa · 2–3 pasiūlymai · Paprastai 24 val.",
     "home.need.label": "Dažni poreikiai:",
     "home.need.movingHome": "Kraustausi į naujus namus",
     "home.need.renovation": "Sandėliavimas remonto metu",
