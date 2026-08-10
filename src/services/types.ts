@@ -105,6 +105,12 @@ export interface Supplier {
   rating?: number | null;
   isPartnerPagePublished?: boolean;
   country?: string;                    // "EE" | "LV" | "LT" — default "EE"
+  /** Contact address hard-bounced or drew a spam complaint (Resend webhook).
+   *  Outreach skips this partner until an admin saves a working address. */
+  contactEmailUnusable?: boolean;
+  contactEmailBouncedAt?: string | null;
+  contactEmailBounceType?: "hard" | "soft" | "complaint" | null;
+  contactEmailBounceReason?: string | null;
 }
 
 export interface PartnerIntegrationSettings {

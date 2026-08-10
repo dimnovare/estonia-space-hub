@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ChevronDown, ChevronUp, Loader2, Mail, MapPin, Phone, Plus, Send } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, Mail, MailX, MapPin, Phone, Plus, Send } from "lucide-react";
 import { toast } from "sonner";
 import {
   adminLeadService,
   adminOfferService,
+  supplierService,
   type AdminLead,
   type OutreachResult,
   type OutreachPreviewItem,
@@ -52,6 +53,9 @@ export function LeadProviderStage({ lead, onAddCandidate, onOutreachComplete }: 
   const [review, setReview] = useState<OutreachReview | null>(null);
   const [skippedResults, setSkippedResults] = useState<OutreachResult["skipped"]>([]);
   const [resendConfirmOpen, setResendConfirmOpen] = useState(false);
+  // Feature 2: the address ops just got on the phone, typed inline. Keyed by
+  // supplier so several rows can be open at once without losing each other.
+  const [emailDrafts, setEmailDrafts] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const timeout = window.setTimeout(() => setDebouncedQ(q), 300);
@@ -87,13 +91,32 @@ export function LeadProviderStage({ lead, onAddCandidate, onOutreachComplete }: 
     },
     onError: (error: Error) => toast.error(error.message || t("toast.error")),
   });
+  // Feature 2: save an address captured on a call without leaving the workspace.
+  // The backend clears the bounce verdict when the address actually changes, so a
+  // saved row becomes selectable again on the very next refetch.
+  const emailMutation = useMutation({
+    mutationFn: ({ supplierId, email }: { supplierId: string; email: string }) =>
+      supplierService.update(supplierId, { contactEmail: email }),
+    onSuccess: (_result, { supplierId }) => {
+      toast.success(t("admin.leads.contactEmailSaved"));
+      setEmailDrafts((current) => {
+        const next = { ...current };
+        delete next[supplierId];
+        return next;
+      });
+      candidatesQuery.refetch();
+    },
+    onError: (error: Error) => toast.error(error.message || t("toast.error")),
+  });
 
   const candidates = candidatesQuery.data?.items ?? [];
-  // 1-click quick-send (Feature A2): on a New / uncontacted lead, the email-having
+  // 1-click quick-send (Feature A2): on a New / uncontacted lead, the reachable
   // nearby providers that haven't been contacted yet are the default outreach set.
-  // The action pre-selects them and opens the SAME review sheet — never auto-sends.
+  // A bounced address is excluded — the backend would skip it anyway.
   const quickSendIds = useMemo(
-    () => candidates.filter((c) => c.contactEmail && !c.alreadyContacted).map((c) => c.supplierId),
+    () => candidates
+      .filter((c) => c.contactEmail && !c.contactEmailUnusable && !c.alreadyContacted)
+      .map((c) => c.supplierId),
     [candidates],
   );
   const showQuickSend = lead.status === "new" && scope === "nearby" && quickSendIds.length > 0;
@@ -197,6 +220,14 @@ export function LeadProviderStage({ lead, onAddCandidate, onOutreachComplete }: 
           {candidates.map((candidate) => {
             const selectedCandidate = selected.has(candidate.supplierId);
             const hasEmail = !!candidate.contactEmail;
+            // Two different gaps, one consequence: we cannot email them. The badge
+            // says which, so ops knows whether to call or just fix the address.
+            const bounced = candidate.contactEmailUnusable;
+            const unreachable = !hasEmail || bounced;
+            const draft = emailDrafts[candidate.supplierId];
+            const capturing = draft !== undefined;
+            const savingEmail = emailMutation.isPending
+              && emailMutation.variables?.supplierId === candidate.supplierId;
             const locationsExpanded = expandedLocations.has(candidate.supplierId);
             return (
               <li key={candidate.supplierId} className="py-3 first:pt-0 last:pb-0">
@@ -204,7 +235,7 @@ export function LeadProviderStage({ lead, onAddCandidate, onOutreachComplete }: 
                   <Checkbox
                     id={`provider-${candidate.supplierId}`}
                     checked={selectedCandidate}
-                    disabled={!hasEmail}
+                    disabled={unreachable}
                     onCheckedChange={() => toggleSelected(candidate.supplierId)}
                     aria-label={candidate.supplierName}
                     className="mt-1"
@@ -214,7 +245,17 @@ export function LeadProviderStage({ lead, onAddCandidate, onOutreachComplete }: 
                       <label htmlFor={`provider-${candidate.supplierId}`} className="font-medium text-navy-ink">{candidate.supplierName}</label>
                       <span className="text-xs text-muted-foreground">{formatDistance(candidate.distanceKm, t)}</span>
                       {candidate.alreadyContacted && <span className="text-xs font-medium text-warning-text">{t("admin.leads.alreadyContacted")}</span>}
-                      {!hasEmail && <span className="text-xs font-medium text-muted-foreground">{t("admin.leads.noEmail")}</span>}
+                      {bounced ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">
+                          <MailX className="h-3 w-3" aria-hidden />
+                          {t("admin.leads.emailBounced")}
+                        </span>
+                      ) : !hasEmail && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 text-xs font-semibold text-warning-text">
+                          <Phone className="h-3 w-3" aria-hidden />
+                          {t("admin.leads.phoneOnly")}
+                        </span>
+                      )}
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                       {(candidate.locationName || candidate.city || candidate.address) && <span className="inline-flex min-w-0 items-center gap-1"><MapPin className="h-3 w-3 shrink-0" />{[candidate.locationName, candidate.city, candidate.address].filter(Boolean).join(" · ")}</span>}
@@ -225,6 +266,75 @@ export function LeadProviderStage({ lead, onAddCandidate, onOutreachComplete }: 
                       {candidate.contactEmail && <a href={`mailto:${candidate.contactEmail}`} className="inline-flex items-center gap-1 font-medium text-teal-text hover:underline"><Mail className="h-3 w-3" />{candidate.contactEmail}</a>}
                       {candidate.contactPhone && <a href={`tel:${candidate.contactPhone.replace(/\s/g, "")}`} className="inline-flex items-center gap-1 font-medium text-teal-text hover:underline"><Phone className="h-3 w-3" />{candidate.contactPhone}</a>}
                     </div>
+
+                    {/* Feature 2 — the whole fix is one field and a save. Ops is
+                        already on the phone with these providers during the match
+                        loop; making them open the partner record loses the address. */}
+                    {unreachable && (
+                      <div className="mt-2">
+                        {!capturing ? (
+                          <button
+                            type="button"
+                            className="inline-flex min-h-[32px] items-center gap-1 text-xs font-medium text-teal-text hover:underline"
+                            onClick={() => setEmailDrafts((current) => ({
+                              ...current,
+                              [candidate.supplierId]: bounced ? (candidate.contactEmail ?? "") : "",
+                            }))}
+                          >
+                            <Mail className="h-3.5 w-3.5" aria-hidden />
+                            {t(bounced ? "admin.leads.fixContactEmail" : "admin.leads.addContactEmail")}
+                          </button>
+                        ) : (
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                            <label className="sr-only" htmlFor={`capture-email-${candidate.supplierId}`}>
+                              {t("admin.leads.addContactEmail")}
+                            </label>
+                            <input
+                              id={`capture-email-${candidate.supplierId}`}
+                              type="email"
+                              value={draft}
+                              autoFocus
+                              placeholder={t("admin.leads.contactEmailPlaceholder")}
+                              onChange={(event) => setEmailDrafts((current) => ({
+                                ...current, [candidate.supplierId]: event.target.value,
+                              }))}
+                              className="h-9 min-w-0 flex-1 rounded-md border border-border bg-background px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                            />
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                size="sm"
+                                className="h-9"
+                                disabled={!draft.trim() || savingEmail}
+                                onClick={() => emailMutation.mutate({
+                                  supplierId: candidate.supplierId, email: draft.trim(),
+                                })}
+                              >
+                                {savingEmail && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+                                {t("admin.leads.save")}
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="h-9"
+                                disabled={savingEmail}
+                                onClick={() => setEmailDrafts((current) => {
+                                  const next = { ...current };
+                                  delete next[candidate.supplierId];
+                                  return next;
+                                })}
+                              >
+                                {t("common.cancel")}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {t(bounced ? "admin.leads.emailBouncedHint" : "admin.leads.phoneOnlyHint")}
+                        </p>
+                      </div>
+                    )}
                     {candidate.otherLocations.length > 0 && (
                       <div className="mt-2">
                         <button type="button" className="inline-flex items-center gap-1 text-xs font-medium text-teal-text hover:underline" onClick={() => toggleLocations(candidate.supplierId)} aria-expanded={locationsExpanded}>

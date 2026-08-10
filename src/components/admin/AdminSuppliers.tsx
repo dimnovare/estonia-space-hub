@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, Zap, Hand, RefreshCw, Server, PlusCircle, Save, Loader2, Trash2, Ban, CheckCircle, Star, ShieldCheck, Flag, ExternalLink, AlertTriangle } from "lucide-react";
+import { Mail, MailX, Phone, Zap, Hand, RefreshCw, Server, PlusCircle, Save, Loader2, Trash2, Ban, CheckCircle, Star, ShieldCheck, Flag, ExternalLink, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -196,6 +196,25 @@ export default function AdminSuppliers() {
     return <StatusBadge tone={badge.tone} icon={badge.icon} label={isActive ? t("admin.active") : t("admin.inactive")} />;
   };
   const intIcon = (tp: string) => tp === "api" ? <Zap className="h-3.5 w-3.5" /> : tp === "email" ? <Mail className="h-3.5 w-3.5" /> : <Hand className="h-3.5 w-3.5" />;
+  /**
+   * Why we cannot email this partner — the gap that used to be invisible.
+   * "bounced" is written back by the Resend webhook; "phone only" is a partner
+   * whose address was never captured (open the record to add one).
+   */
+  const reachBadge = (s: Supplier) => {
+    if (s.contactEmailUnusable) return (
+      <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive-text"
+            title={s.contactEmailBounceReason ?? undefined}>
+        <MailX className="h-3 w-3" aria-hidden />{t("admin.leads.emailBounced")}
+      </span>
+    );
+    if (!s.contactEmail?.trim()) return (
+      <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 text-[10px] font-semibold text-warning-text">
+        <Phone className="h-3 w-3" aria-hidden />{t("admin.leads.phoneOnly")}
+      </span>
+    );
+    return null;
+  };
 
   if (isLoading) return <div className="flex items-center justify-center py-20"><RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
 
@@ -245,6 +264,7 @@ export default function AdminSuppliers() {
               <div>
                 <p className="text-sm font-medium">{s.name}</p>
                 <p className="text-[10px] text-muted-foreground">{s.contactEmail}</p>
+                {reachBadge(s)}
               </div>
               {activeBadge(s.isActive)}
             </div>
@@ -279,7 +299,7 @@ export default function AdminSuppliers() {
           {filtered.map(s => (
             <Tr key={s.id}>
               <Td><div className="font-medium">{s.name}{!s.isActive && <span className="ml-2 rounded-full bg-destructive/10 px-2 py-0.5 text-xs text-destructive-text">{t("admin.deactivated") || "Deactivated"}</span>}</div><div className="font-data text-[10px] text-muted-foreground">{s.registryCode}</div></Td>
-              <Td><div className="text-xs">{s.contactName}</div><div className="text-[10px] text-muted-foreground">{s.contactEmail}</div></Td>
+              <Td><div className="text-xs">{s.contactName}</div><div className="text-[10px] text-muted-foreground">{s.contactEmail}</div>{reachBadge(s)}</Td>
               <Td><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${INTEGRATION_TYPE_CONFIG[s.integrationType].color}`}>{intIcon(s.integrationType)} {t(INTEGRATION_TYPE_CONFIG[s.integrationType].labelKey) || INTEGRATION_TYPE_CONFIG[s.integrationType].label}</span></Td>
               <Td>{healthBadge(s.integrationHealth)}</Td>
               <Td data align="right" className="text-muted-foreground">{s.listingCount}</Td>

@@ -652,6 +652,10 @@ export interface ProviderCandidate {
   priceUnit: string | null;
   alreadyContacted: boolean;
   lastOutreachAt: string | null;
+  /** The address bounced hard (or drew a complaint) — auto fan-out skips this
+   *  provider, so the workspace badges the row instead of hiding the gap. */
+  contactEmailUnusable: boolean;
+  contactEmailBouncedAt: string | null;
   otherLocations: ProviderCandidateLocation[];
 }
 
@@ -733,7 +737,11 @@ export const adminLeadService = {
 // /{lang}/offer/{token} and chooses an option. Statuses serialize lowercase.
 
 export type OfferStatus = "draft" | "sent" | "viewed" | "chosen" | "expired";
-export type OutreachStatus = "sent" | "replied" | "declined" | "noanswer";
+/** "bounced" / "complained" are set only by the Resend webhook — the email never
+ *  reached a human, which is a different fact from a provider staying silent. */
+export type OutreachStatus = "sent" | "replied" | "declined" | "noanswer" | "bounced" | "complained";
+/** The statuses an admin may pick by hand; the two delivery outcomes are system-set. */
+export const MANUAL_OUTREACH_STATUSES = ["sent", "replied", "declined", "noanswer"] as const;
 
 export interface AdminOfferOption {
   id: string;
@@ -802,9 +810,14 @@ export interface ProviderOutreachRow {
   quotedAt?: string | null;
 }
 
+/** Machine reasons the backend refused to email a selected provider.
+ *  "email_bounced" = the address is retired until an admin saves a new one. */
+export type OutreachSkipReason =
+  "no_email" | "not_found" | "already_contacted" | "email_bounced";
+
 export interface OutreachResult {
   sent: ProviderOutreachRow[];
-  skipped: { supplierId: string; supplierName: string | null; reason: "no_email" | "not_found" | "already_contacted" }[];
+  skipped: { supplierId: string; supplierName: string | null; reason: OutreachSkipReason }[];
 }
 
 export interface OutreachPreviewItem {
@@ -814,7 +827,7 @@ export interface OutreachPreviewItem {
   language: string | null;
   subject: string | null;
   textBody: string | null;
-  skipReason: "not_found" | "no_email" | "already_contacted" | null;
+  skipReason: OutreachSkipReason | null;
 }
 
 export interface OutreachPreviewResponse {

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, Copy, Eye, Loader2, Plus, Quote, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Copy, Eye, Loader2, MailX, Plus, Quote, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   adminOfferService,
+  MANUAL_OUTREACH_STATUSES,
   type AdminLead,
   type AdminOffer,
   type ProviderCandidate,
@@ -254,6 +255,16 @@ export function LeadOfferStage({
                 <div className="min-w-0">
                   <p className="font-medium text-navy-ink">{row.supplierName ?? row.sentTo}</p>
                   <p className="break-words text-xs text-muted-foreground">{row.sentTo}</p>
+                  {/* A bounce is not silence. Without this the row reads "sent"
+                      forever and a dead address looks like a provider who chose
+                      not to answer. Set only by the Resend webhook. */}
+                  {(row.status === "bounced" || row.status === "complained") && (
+                    <p className="mt-1 inline-flex items-center gap-1 rounded-md bg-destructive/10 px-1.5 py-0.5 text-xs font-semibold text-destructive">
+                      <MailX className="h-3 w-3" aria-hidden />
+                      {t(`admin.leads.outreachStatus.${row.status}`)}
+                      {row.note && <span className="ml-1 font-normal text-muted-foreground">· {row.note.split("\n").at(-1)}</span>}
+                    </p>
+                  )}
                   {row.quotedAmount != null && (
                     <p className="mt-1 inline-flex items-center gap-1 rounded-md bg-success/10 px-1.5 py-0.5 text-xs font-medium text-success">
                       <Quote className="h-3 w-3" aria-hidden />
@@ -265,14 +276,20 @@ export function LeadOfferStage({
                   )}
                 </div>
                 <select aria-label={`${row.supplierName ?? row.sentTo} ${t("admin.leads.outreachStatus.sent")}`} value={row.status} onChange={(event) => outreachMutation.mutate({ id: row.id, body: { status: event.target.value as OutreachStatus } })} className="h-9 rounded-md border border-border bg-card px-2 text-sm">
-                  {(["sent", "replied", "declined", "noanswer"] as const).map((status) => <option key={status} value={status}>{t(`admin.leads.outreachStatus.${status}`)}</option>)}
+                  {/* The delivery outcomes are system-set, so they are not offered
+                      as choices — but the current one must still be listed or the
+                      select renders blank on a bounced row. */}
+                  {(MANUAL_OUTREACH_STATUSES.includes(row.status as typeof MANUAL_OUTREACH_STATUSES[number])
+                    ? MANUAL_OUTREACH_STATUSES
+                    : [row.status, ...MANUAL_OUTREACH_STATUSES]
+                  ).map((status) => <option key={status} value={status}>{t(`admin.leads.outreachStatus.${status}`)}</option>)}
                 </select>
                 <div className="sm:col-span-2 flex flex-col gap-2 sm:flex-row">
                   <input aria-label={`${row.supplierName ?? row.sentTo} ${t("admin.leads.outreachNotePlaceholder")}`} value={outreachNotes[row.id] ?? row.note ?? ""} placeholder={t("admin.leads.outreachNotePlaceholder")} onChange={(event) => setOutreachNotes((previous) => ({ ...previous, [row.id]: event.target.value }))} className="h-9 min-w-0 flex-1 rounded-md border border-border bg-card px-2.5 text-sm" />
                   <Button type="button" size="sm" variant="outline" className="h-9" disabled={outreachMutation.isPending} onClick={() => outreachMutation.mutate({ id: row.id, body: { note: outreachNotes[row.id] ?? row.note ?? "" } })}>{t("admin.leads.save")}</Button>
                 </div>
                 {row.status === "replied" && <Button type="button" size="sm" className="h-9 gap-1.5 sm:col-span-2 sm:justify-self-start" onClick={() => {
-                  const candidate: ProviderCandidate = { supplierId: row.supplierId, supplierName: row.supplierName ?? row.sentTo, contactEmail: row.sentTo, contactPhone: null, serviceTypes: [], locationId: null, locationName: null, city: null, address: null, lat: null, lng: null, distanceKm: null, isExactCity: false, listingId: null, listingTitle: null, price: null, priceUnit: null, alreadyContacted: true, lastOutreachAt: row.sentAt, otherLocations: [] };
+                  const candidate: ProviderCandidate = { supplierId: row.supplierId, supplierName: row.supplierName ?? row.sentTo, contactEmail: row.sentTo, contactPhone: null, serviceTypes: [], locationId: null, locationName: null, city: null, address: null, lat: null, lng: null, distanceKm: null, isExactCity: false, listingId: null, listingTitle: null, price: null, priceUnit: null, alreadyContacted: true, lastOutreachAt: row.sentAt, contactEmailUnusable: false, contactEmailBouncedAt: null, otherLocations: [] };
                   if (hasEditor) {
                     mutateOptions((previous) => [...previous, candidateToEditable(candidate)]);
                   } else {

@@ -25,9 +25,13 @@ export function LeadActivityTimeline({ lead, outreachRows, offer }: LeadActivity
   const events = useMemo(() => {
     const entries: { at: string; label: string }[] = [
       { at: lead.createdAt, label: t("admin.leads.timeline.created") },
+      // A bounced request is still a real event at sentAt — but the history must
+      // say the mail never landed, not that we contacted them.
       ...outreachRows.map((row) => ({
         at: row.sentAt,
-        label: t("admin.leads.timeline.outreach").replace("{name}", row.supplierName ?? row.sentTo),
+        label: t(row.status === "bounced" || row.status === "complained"
+          ? "admin.leads.timeline.outreachBounced"
+          : "admin.leads.timeline.outreach").replace("{name}", row.supplierName ?? row.sentTo),
       })),
     ];
     if (offer) {

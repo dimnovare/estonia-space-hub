@@ -1,5 +1,5 @@
 import {
-  Circle, Send, FileText, CheckCircle2, XCircle, CircleDashed, Eye, Clock,
+  Circle, Send, FileText, CheckCircle2, XCircle, CircleDashed, Eye, Clock, MailX, ShieldAlert,
   type LucideIcon,
 } from "lucide-react";
 import type { AdminLeadStatus, OfferStatus, OutreachStatus } from "@/services";
@@ -40,6 +40,10 @@ export const OUTREACH_STATUS_STYLE: Record<OutreachStatus, StatusStyle> = {
   replied:  { icon: CheckCircle2, badge: GREEN },
   declined: { icon: XCircle,      badge: RED },
   noanswer: { icon: Clock,        badge: SLATE },
+  // Delivery failures (Resend webhook) — red, because nobody read the mail. This
+  // is a different fact from noanswer, which means a human ignored us.
+  bounced:    { icon: MailX,       badge: RED },
+  complained: { icon: ShieldAlert, badge: RED },
 };
 
 export const OFFER_STATUS_STYLE: Record<OfferStatus, StatusStyle> = {
