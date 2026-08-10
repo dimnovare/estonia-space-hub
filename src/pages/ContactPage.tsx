@@ -121,12 +121,16 @@ export default function ContactPage() {
 
         <div className="mt-12 grid gap-10 md:grid-cols-3">
           <div className="space-y-6">
+            {/* Blank settings drop out entirely: an icon and a "Phone" label
+                above an empty line reads as a broken page. sitePhone is empty
+                by default — the founder takes provider contact by email and
+                through the form beside this list. */}
             {[
               { icon: Mail, label: t("contact.email"), value: settings.siteEmail },
               { icon: Phone, label: t("contact.phone"), value: settings.sitePhone },
               { icon: MapPin, label: t("contact.location"), value: t("footer.location") },
               { icon: Clock, label: t("contact.support"), value: settings.openHours },
-            ].map((c, i) => {
+            ].filter(c => c.value?.trim()).map((c, i) => {
               const Icon = c.icon;
               return (
                 <div key={i} className="flex items-start gap-3">

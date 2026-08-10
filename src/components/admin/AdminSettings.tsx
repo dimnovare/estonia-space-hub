@@ -15,7 +15,10 @@ import { queryKeys } from "@/services/queryKeys";
 const DEFAULT_SETTINGS: Record<string, string> = {
   siteName:               "Ruumly",
   siteEmail:              "info@ruumly.eu",
-  sitePhone:              "+372 5649 7933",
+  // Blank by design. This map prefills the form before /admin/settings
+  // resolves, so a number here is one Save away from being published on the
+  // homepage — and Ruumly deliberately offers no phone channel (2026-08).
+  sitePhone:              "",
   openHours:              "E–R 10–17",
   defaultLanguage:        "et",
   currency:               "EUR",
