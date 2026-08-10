@@ -224,7 +224,7 @@ ${l.confirmHow}
 
 ${l.signoff}
 ${l.team}
-info@ruumly.eu | +372 5649 7933
+info@ruumly.eu | https://ruumly.eu/${lang}/contact
 `;
 }
 
