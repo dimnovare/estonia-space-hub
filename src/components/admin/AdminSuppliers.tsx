@@ -20,6 +20,7 @@ import {
   DataTable, DataTableHead, Th, Tr, Td, StatusBadge,
 } from "@/components/admin/kit";
 import { HEALTH_STATUS_BADGE, USER_STATUS_BADGE, FALLBACK_STATUS_BADGE } from "@/components/admin/kit/statusMaps";
+import ServiceTypePicker from "@/components/admin/ServiceTypePicker";
 
 const inp = "mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent";
 
@@ -52,6 +53,9 @@ export default function AdminSuppliers() {
     recipientEmail: "", partnerDiscountRate: "", notes: "",
     iban: "", bankAccountName: "", bankName: "", tier: "starter",
     billingModel: "marketplace" as "marketplace" | "rebate",
+    // No default: picking what the partner sells is the point. A partner saved
+    // with none can never be matched to a customer request.
+    serviceTypes: [] as string[],
   };
   const [createForm, setCreateForm] = useState(emptyCreate);
 
@@ -165,8 +169,13 @@ export default function AdminSuppliers() {
       toast.error(t("admin.nameRequired") || "Partner name is required");
       return;
     }
+    if (createForm.serviceTypes.length === 0) {
+      toast.error(t("admin.partner.serviceTypesRequired"));
+      return;
+    }
     const data: Record<string, unknown> = {
       name: createForm.name,
+      serviceTypes: createForm.serviceTypes,
       registryCode: createForm.registryCode,
       contactName: createForm.contactName,
       contactEmail: createForm.contactEmail,
@@ -681,6 +690,15 @@ export default function AdminSuppliers() {
               <label className="text-xs font-medium text-muted-foreground">{t("admin.registryCode")}</label>
               <input className={inp} value={createForm.registryCode} onChange={(e) => setCreateForm({ ...createForm, registryCode: e.target.value })} />
             </div>
+            <div>
+              <span className="text-xs font-medium text-muted-foreground">{t("admin.partner.serviceTypes")} *</span>
+              <div className="mt-1">
+                <ServiceTypePicker
+                  value={createForm.serviceTypes}
+                  onChange={(serviceTypes) => setCreateForm({ ...createForm, serviceTypes })}
+                />
+              </div>
+            </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label className="text-xs font-medium text-muted-foreground">{t("admin.contactPerson")}</label>
@@ -759,7 +777,7 @@ export default function AdminSuppliers() {
 
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => setCreateOpen(false)}>{t("admin.cancel")}</Button>
-              <Button onClick={handleCreate} disabled={createMutation.isPending || !createForm.name} className="bg-accent text-accent-foreground hover:bg-accent/90">
+              <Button onClick={handleCreate} disabled={createMutation.isPending || !createForm.name || createForm.serviceTypes.length === 0} className="bg-accent text-accent-foreground hover:bg-accent/90">
                 {createMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                 {t("admin.addPartner")}
               </Button>

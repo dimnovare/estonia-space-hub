@@ -16,6 +16,8 @@ import { SEO } from "@/components/SEO";
 import AdminShell from "@/components/admin/AdminShell";
 import { StatCard } from "@/components/admin/kit";
 import ProviderContractTemplate from "@/components/provider/ProviderContractTemplate";
+import ServiceTypePicker from "@/components/admin/ServiceTypePicker";
+import { isRetiredServiceSlug } from "@/lib/serviceTypes";
 import { supplierService, providerPaidFeaturesService } from "@/services";
 import { apiClient } from "@/services/apiClient";
 import { queryKeys } from "@/services/queryKeys";
@@ -351,10 +353,13 @@ function ProfileTab({ supplier, onSave, pending }: { supplier: any; onSave: (p: 
     country: supplier.country ?? "EE",
     registryCode: supplier.registryCode ?? "",
     notes: supplier.notes ?? "",
+    serviceTypes: (supplier.serviceTypes ?? []) as string[],
   }), [supplier]);
   const [form, setForm] = useState(initial);
   useEffect(() => setForm(initial), [initial]);
   const dirty = JSON.stringify(form) !== JSON.stringify(initial);
+  // Saving an empty list would make this partner unmatchable for every request.
+  const sellableCount = form.serviceTypes.filter((s) => !isRetiredServiceSlug(s)).length;
 
   return (
     <div className="rounded-xl border border-border bg-card p-5">
@@ -388,12 +393,21 @@ function ProfileTab({ supplier, onSave, pending }: { supplier: any; onSave: (p: 
           </select>
         </div>
         <div className="md:col-span-2">
+          <span className="text-xs font-medium">{t("admin.partner.serviceTypes")} *</span>
+          <div className="mt-1">
+            <ServiceTypePicker
+              value={form.serviceTypes}
+              onChange={(serviceTypes) => setForm({ ...form, serviceTypes })}
+            />
+          </div>
+        </div>
+        <div className="md:col-span-2">
           <label className="text-xs font-medium">{t("admin.profile.notes")}</label>
           <textarea className={`${inp} min-h-[80px] resize-y`} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
         </div>
       </div>
       <div className="mt-4 flex justify-end">
-        <Button onClick={() => onSave(form)} disabled={!dirty || pending}>
+        <Button onClick={() => onSave(form)} disabled={!dirty || pending || sellableCount === 0}>
           {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
           {t("common.saveChanges")}
         </Button>

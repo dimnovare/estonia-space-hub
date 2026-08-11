@@ -111,6 +111,12 @@ export interface Supplier {
   contactEmailBouncedAt?: string | null;
   contactEmailBounceType?: "hard" | "soft" | "complaint" | null;
   contactEmailBounceReason?: string | null;
+  /** What the partner sells. The lead-matching candidate finder filters on this
+   *  BEFORE location or radius, so an empty list means the partner can never be
+   *  offered to any customer request — the partner list flags that. Rows imported
+   *  before 2026-08 may still carry the retired packing|insurance slugs, which are
+   *  kept as metadata and never offered as a new choice (see lib/serviceTypes). */
+  serviceTypes?: string[];
 }
 
 export interface PartnerIntegrationSettings {

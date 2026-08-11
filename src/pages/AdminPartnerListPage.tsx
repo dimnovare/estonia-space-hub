@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@/i18n/routing";
-import { Search, Building2, ExternalLink, Plus } from "lucide-react";
+import { Search, Building2, ExternalLink, Plus, AlertTriangle } from "lucide-react";
+import { isRetiredServiceSlug } from "@/lib/serviceTypes";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/SEO";
@@ -11,7 +12,16 @@ import { supplierService } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
 import { useLanguage } from "@/i18n/LanguageContext";
 
-type Filter = "all" | "active" | "withPage";
+type Filter = "all" | "active" | "withPage" | "noServices";
+
+/**
+ * A partner with no service types can never be returned as a candidate for any
+ * customer request — the matcher filters on them before it looks at location or
+ * radius. Such a row still shows a name, an address and coordinates, so the only
+ * way to notice is to flag it here.
+ */
+const sellsNothing = (s: { serviceTypes?: string[] }) =>
+  (s.serviceTypes ?? []).filter((slug) => !isRetiredServiceSlug(slug)).length === 0;
 
 export default function AdminPartnerListPage() {
   const { t } = useLanguage();
@@ -30,9 +40,15 @@ export default function AdminPartnerListPage() {
       if (q && !s.name?.toLowerCase().includes(q)) return false;
       if (filter === "active" && !s.isActive) return false;
       if (filter === "withPage" && !s.slug) return false;
+      if (filter === "noServices" && !sellsNothing(s)) return false;
       return true;
     });
   }, [suppliers, search, filter]);
+
+  const unmatchableCount = useMemo(
+    () => suppliers.filter((s: any) => sellsNothing(s)).length,
+    [suppliers],
+  );
 
   const tierBadge = (tier?: string) => {
     const v = (tier ?? "starter").toLowerCase();
@@ -81,9 +97,15 @@ export default function AdminPartnerListPage() {
               className="pl-9"
             />
           </div>
-          {(["all", "active", "withPage"] as Filter[]).map((f) => (
+          {(["all", "active", "withPage", "noServices"] as Filter[]).map((f) => (
             <FilterChip key={f} active={filter === f} onClick={() => setFilter(f)}>
-              {f === "all" ? t("admin.allPartners") : f === "active" ? t("admin.activePartners") : t("admin.partnerPages")}
+              {f === "all"
+                ? t("admin.allPartners")
+                : f === "active"
+                  ? t("admin.activePartners")
+                  : f === "withPage"
+                    ? t("admin.partnerPages")
+                    : `${t("admin.partner.noServiceTypes")} (${unmatchableCount})`}
             </FilterChip>
           ))}
         </FilterBar>
@@ -132,6 +154,15 @@ export default function AdminPartnerListPage() {
                       <div className="mt-1 flex flex-wrap items-center gap-1.5">
                         {tierBadge(s.tier)}
                         {pageStatus(s)}
+                        {sellsNothing(s) && (
+                          <span
+                            title={t("admin.partner.noServiceTypesHint")}
+                            className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive-text"
+                          >
+                            <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+                            {t("admin.partner.noServiceTypes")}
+                          </span>
+                        )}
                       </div>
                     </div>
                     {s.slug && s.isPartnerPagePublished && (
