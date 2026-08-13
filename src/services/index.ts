@@ -1083,6 +1083,23 @@ export const claimService = {
       { [CLAIM_SESSION_HEADER]: sessionToken },
     );
   },
+
+  /**
+   * Turns the verified claim session into a real provider login.
+   *
+   * No email is sent: the server binds the account to the address the magic
+   * link was delivered to, which the same session may have rewritten on the
+   * profile moments earlier. The response carries that address back so the
+   * caller can sign in with it.
+   */
+  async createAccount(
+    slug: string, sessionToken: string, password: string,
+  ): Promise<{ user: { email: string } }> {
+    return apiClient.post<{ user: { email: string } }>(
+      `/claim/${encodeURIComponent(slug)}/account`, { password },
+      { [CLAIM_SESSION_HEADER]: sessionToken },
+    );
+  },
 };
 
 // ─── Dispute Service ─────────────────────────────────────────────────────────

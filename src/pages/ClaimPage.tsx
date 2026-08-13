@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useSearchParams, Link } from "@/i18n/routing";
+import { useParams, useSearchParams, Link, useNavigate } from "@/i18n/routing";
+import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   AlertCircle, ArrowRight, CheckCircle, Clock, LinkIcon, Loader2, MailCheck,
@@ -121,6 +122,30 @@ export default function ClaimPage() {
   const [form, setForm] = useState<ClaimEditableProfile | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+
+  // ── Optional provider account, offered after a successful save ──
+  const [password, setPassword] = useState("");
+  const [accountError, setAccountError] = useState<string | null>(null);
+  const [accountDone, setAccountDone] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const accountMutation = useMutation({
+    mutationFn: async () => {
+      const created = await claimService.createAccount(slug, session!.token, password);
+      // Sign in with the address the SERVER bound the account to. It is the one
+      // the magic link reached, which is not necessarily the contact email now
+      // on the profile — this same session is allowed to have changed that.
+      await login(created.user.email, password);
+      return created;
+    },
+    onSuccess: () => {
+      setAccountDone(true);
+      setPassword("");
+      navigate("/provider/dashboard");
+    },
+    onError: (err: Error) => setAccountError(err.message || t("claim.account.failed")),
+  });
   const seededRef = useRef(false);
 
   function seedForm(p: ClaimEditableProfile) {
@@ -343,6 +368,43 @@ export default function ClaimPage() {
                 {t("claim.viewProfile")}<ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
+          </div>
+        )}
+
+        {/* Offered only AFTER a successful save, never before: the provider has
+            just done the work, which is the one moment an account reads as
+            "keep what I did" rather than a hurdle. Entirely optional — the
+            introduction letter promises "no account to create" to 754
+            businesses, and claiming without one keeps working. */}
+        {saved && !accountDone && (
+          <div className="mt-4 rounded-xl border border-border bg-secondary/30 p-4">
+            <h2 className="font-display text-sm font-bold text-navy-ink">{t("claim.account.title")}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t("claim.account.body")}</p>
+            <form
+              className="mt-3 flex flex-wrap items-end gap-3"
+              onSubmit={(e) => { e.preventDefault(); accountMutation.mutate(); }}
+            >
+              <label className="block text-xs font-medium text-muted-foreground">
+                {t("claim.account.password")}
+                <input
+                  type="password" autoComplete="new-password" minLength={8}
+                  className="mt-1 w-56 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setAccountError(null); }} />
+              </label>
+              <Button type="submit" disabled={password.length < 8 || accountMutation.isPending}>
+                {accountMutation.isPending
+                  ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+                  : <ShieldCheck className="mr-2 h-4 w-4" aria-hidden />}
+                {t("claim.account.cta")}
+              </Button>
+            </form>
+            <p className="mt-2 text-xs text-muted-foreground">{t("claim.account.hint")}</p>
+            {accountError && (
+              <p role="alert" className="mt-2 flex items-start gap-2 text-sm text-destructive">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />{accountError}
+              </p>
+            )}
           </div>
         )}
 
