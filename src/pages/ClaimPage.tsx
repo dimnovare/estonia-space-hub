@@ -159,6 +159,11 @@ export default function ClaimPage() {
         address:      body.address?.trim() || null,
         serviceTypes: body.serviceTypes,
         description:  body.description?.trim() || null,
+        // "" clears the price; a blank input must not read as "leave unchanged",
+        // or a provider who deletes a wrong figure would find it still there.
+        priceFrom:    body.priceFrom ?? null,
+        priceUnit:    body.priceUnit?.trim() ?? "",
+        priceNote:    body.priceNote?.trim() ?? "",
       }),
     onSuccess: (result) => {
       setForm(result);
@@ -403,6 +408,42 @@ export default function ClaimPage() {
           <p className="mt-1.5 text-xs text-muted-foreground">
             {t("claim.form.descriptionHint").replace("{count}", String(160 - (form.description ?? "").length))}
           </p>
+
+          {/* Price. Set apart from the contact fields because it is the only thing
+              on this form we could not have filled in ourselves, and the only one
+              that changes whether we can answer a customer straight away. */}
+          <fieldset className="mt-6 rounded-lg border border-border bg-secondary/30 p-4">
+            <legend className="px-1 text-sm font-semibold text-foreground">{t("claim.form.priceLegend")}</legend>
+            <p className="mb-3 text-xs text-muted-foreground">{t("claim.form.priceIntro")}</p>
+
+            <div className="flex flex-wrap gap-3">
+              <label className="block text-xs font-medium text-muted-foreground">
+                {t("claim.form.priceFrom")}
+                <input
+                  type="number" inputMode="decimal" min={0} step="0.01"
+                  className="mt-1 w-32 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  value={form.priceFrom ?? ""}
+                  onChange={(e) => set({ priceFrom: e.target.value === "" ? null : Number(e.target.value) })} />
+              </label>
+              <label className="block text-xs font-medium text-muted-foreground">
+                {t("claim.form.priceUnit")}
+                <input
+                  type="text" maxLength={40} placeholder={t("claim.form.priceUnitPlaceholder")}
+                  className="mt-1 w-44 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  value={form.priceUnit ?? ""}
+                  onChange={(e) => set({ priceUnit: e.target.value })} />
+              </label>
+            </div>
+
+            <label className="mt-3 block text-xs font-medium text-muted-foreground">
+              {t("claim.form.priceNote")}
+              <textarea
+                className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                rows={2} maxLength={500} placeholder={t("claim.form.priceNotePlaceholder")}
+                value={form.priceNote ?? ""}
+                onChange={(e) => set({ priceNote: e.target.value })} />
+            </label>
+          </fieldset>
 
           {formError && (
             <p role="alert" className="mt-3 flex items-center gap-2 text-sm font-medium text-destructive">

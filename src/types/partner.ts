@@ -40,6 +40,11 @@ export interface PartnerProfile {
   /** Service slugs: warehouse|moving|trailer|cleaning|vanrental (legacy rows may
    *  still carry the retired packing|insurance slugs — see lib/serviceTypes). */
   serviceTypes?: string[];
+  /** Headline "from" price the provider set through the claim form. Null until
+   *  they give us one — the page renders nothing rather than a placeholder. */
+  priceFrom?: number | null;
+  priceUnit?: string | null;
+  priceNote?: string | null;
 }
 
 export interface FeaturedPartner {

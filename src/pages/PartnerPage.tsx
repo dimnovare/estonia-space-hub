@@ -426,6 +426,25 @@ export default function PartnerPage() {
                   ))}
                 </div>
               )}
+
+              {/* The provider's own headline rate, set through the claim form.
+                  Rendered only when they gave us one — no "price on request"
+                  placeholder, because an empty space is honest and an invented
+                  placeholder is not. */}
+              {partner.priceFrom != null && (
+                <div className="mt-3">
+                  <span className="text-xs uppercase tracking-wide" style={{ color: "rgba(255,255,255,.65)" }}>
+                    {t("partner.priceFromLabel")}
+                  </span>
+                  <span className="ml-2 text-lg font-bold text-white">
+                    {partner.priceFrom.toLocaleString(language, { style: "currency", currency: "EUR", maximumFractionDigits: 2 })}
+                    {partner.priceUnit ? <span className="ml-1 text-sm font-medium">{partner.priceUnit}</span> : null}
+                  </span>
+                  {partner.priceNote && (
+                    <p className="mt-1 max-w-2xl text-xs" style={{ color: "rgba(255,255,255,.75)" }}>{partner.priceNote}</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

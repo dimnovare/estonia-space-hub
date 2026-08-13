@@ -1025,6 +1025,13 @@ export interface ClaimEditableProfile {
   country: string;
   serviceTypes: string[];
   description?: string | null;
+  // The provider's own headline rate. Everything else on this form we could have
+  // filled in from public sources; the price is the one thing only they have,
+  // and it is what lets the concierge answer a customer instead of relaying a
+  // question back to them.
+  priceFrom?: number | null;
+  priceUnit?: string | null;
+  priceNote?: string | null;
   claimedAt?: string | null;
 }
 
@@ -1042,6 +1049,9 @@ export interface ClaimUpdateInput {
   address: string | null;
   serviceTypes: string[];
   description: string | null;
+  priceFrom: number | null;
+  priceUnit: string | null;
+  priceNote: string | null;
 }
 
 /** Header the backend reads the claim session from (ClaimController.SessionHeader). */
