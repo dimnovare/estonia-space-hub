@@ -296,7 +296,6 @@ export default function PartnerPage() {
   }
 
   const seoImage = partner.heroImageUrl || partner.logoUrl || undefined;
-  const seoTitle = `${partner.name} — ${t("partner.seoTitleSuffix")}`;
   const seoDescription =
     partner.tagline || `${partner.name} — ${partner.locationCount} ${t("partner.stats.locations")}, ${partner.country}.`;
   const city = partner.locations[0]?.city;
@@ -306,6 +305,19 @@ export default function PartnerPage() {
   // customer off-site for pricing before a lead is captured.
   const primarySlug = partner.serviceTypes?.[0];
   const primaryServiceLabel = primarySlug ? serviceTypeLabel(t, primarySlug) : t("serviceType.warehouse");
+
+  // The title says what this provider ACTUALLY does and where. It used to append
+  // a fixed "partner.seoTitleSuffix" — literally "Storage in Tallinn" in all five
+  // languages — so every one of ~1,200 partner pages was titled that in Google and
+  // in every social share: a Klaipėda trailer firm indexed as Tallinn storage.
+  //
+  // Service and city are joined with a dash rather than a preposition on purpose.
+  // Estonian, Latvian and Lithuanian would need the city in the locative
+  // ("Vilniuje", "Klaipėdoje", "Rīgā"), and we hold city names in the nominative,
+  // so any "{service} in {city}" template would be ungrammatical in three of the
+  // five languages. "Perkraustymas — Vilnius" is correct everywhere.
+  const seoSuffix = city ? `${primaryServiceLabel} — ${city}` : primaryServiceLabel;
+  const seoTitle = `${partner.name} — ${seoSuffix}`;
   const requestParams = new URLSearchParams();
   if (primarySlug) requestParams.set("category", primarySlug);
   if (city) requestParams.set("city", city);
