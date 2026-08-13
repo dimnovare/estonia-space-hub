@@ -17,7 +17,7 @@ import { SEO } from "@/components/SEO";
 import { OfferPresentation } from "@/components/offers/OfferPresentation";
 import { offerService, type PublicOffer, type PublicOfferOption } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
-import { serviceTypeLabel } from "@/lib/serviceTypes";
+import { leadCategoryLabel } from "@/lib/serviceTypes";
 
 /**
  * /offer/{token} — the public concierge offer page (overhaul spec §5).
@@ -190,7 +190,10 @@ export default function OfferPage() {
 
   const chosen = offer.status === "chosen";
   const offerT = (key: string) => translateForLanguage(offer.language, key);
-  const categoryLabel = serviceTypeLabel(t, offer.lead.category?.toLowerCase?.() ?? offer.lead.category);
+  // `category` is the lead's, not a directory tag, so it may be the wildcard
+  // "any" — a request that named several services. Left to serviceTypeLabel that
+  // echoed the raw slug into the headline the customer opens.
+  const categoryLabel = leadCategoryLabel(t, offer.lead.category, t("offer.categoryAny"));
   const title = t("offer.title")
     .replace("{category}", categoryLabel)
     .replace("{city}", offer.lead.city ?? "");

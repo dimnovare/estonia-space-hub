@@ -103,6 +103,33 @@ export function serviceTypeLabel(t: (key: string) => string, slug: string): stri
     : slug;
 }
 
+/** The backend's wildcard lead category (`ServiceCategories.SlugFor(Any)`). It is
+ *  not a directory service, so it is deliberately absent from SERVICE_TYPE_SLUGS. */
+export const ANY_CATEGORY_SLUG = "any";
+
+/**
+ * Localized label for a DemandLead's `category`, which — unlike a directory
+ * service slug — may be the wildcard "any": a concierge request that named
+ * several services (they do not fit the backend's single Category column) or
+ * none we could route.
+ *
+ * `serviceTypeLabel` falls back to echoing an unknown slug, which is right for a
+ * directory tag and wrong here: it printed the literal word at the customer —
+ * "Your options for any in Tallinn" — on the one page that exists to make them
+ * feel looked after. The wildcard copy is passed in rather than looked up,
+ * because the same lead is described differently to the two audiences: a
+ * provider is told what they are being asked to quote, the customer is shown
+ * what they asked for.
+ */
+export function leadCategoryLabel(
+  t: (key: string) => string,
+  category: string | null | undefined,
+  anyLabel: string,
+): string {
+  const slug = category?.toLowerCase?.() ?? "";
+  return !slug || slug === ANY_CATEGORY_SLUG ? anyLabel : serviceTypeLabel(t, slug);
+}
+
 /** slug → localized label map (e.g. for InteractiveMap popup HTML). Memoize at call site. */
 export function serviceTypeLabelMap(t: (key: string) => string): Record<string, string> {
   return Object.fromEntries(SERVICE_TYPE_SLUGS.map((s) => [s, t(`serviceType.${s}`)]));

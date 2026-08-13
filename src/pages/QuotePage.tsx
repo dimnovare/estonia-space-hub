@@ -12,7 +12,7 @@ import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
 import { quoteService, type PublicQuote, type QuoteSubmitInput, type QuoteSubmitResult } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
-import { serviceTypeLabel } from "@/lib/serviceTypes";
+import { leadCategoryLabel } from "@/lib/serviceTypes";
 import { parseMoney } from "@/lib/parseMoney";
 import type { BillingPeriod } from "@/lib/priceUnit";
 
@@ -259,9 +259,9 @@ export default function QuotePage() {
 
   // `category` is a ServiceCategories slug and may legitimately be the wildcard
   // "any" (a multi-category concierge request) — serviceTypeLabel would echo the
-  // raw slug, so give the provider a readable label instead.
-  const categorySlug = quote.lead.category?.toLowerCase?.() ?? quote.lead.category;
-  const categoryLabel = categorySlug === "any" ? t("quote.categoryAny") : serviceTypeLabel(t, categorySlug);
+  // raw slug, so give the provider a readable label instead. Shared with the
+  // customer-facing offer page, which was still echoing it.
+  const categoryLabel = leadCategoryLabel(t, quote.lead.category, t("quote.categoryAny"));
 
   // ── Closed lead — quoting is over (spec Fix 7). Reached either upfront from
   //    the GET (`closed`), or from a 409 lead_closed if it closed mid-visit.

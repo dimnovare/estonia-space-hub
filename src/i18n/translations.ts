@@ -3825,6 +3825,9 @@ const et: Record<string, string> = {
     // ── Public offer page /offer/{token} (overhaul §5) ──
     "offer.seo.title": "Sinu pakkumised",
     "offer.title": "Sinu valikud: {category} — {city}",
+    // Kui päring hõlmas mitut teenust, ei mahu see ühte kategooriasse — kliendile
+    // ei tohi näidata toorest märksõna "any".
+    "offer.categoryAny": "Mitu teenust",
     "offer.subtitle": "Vali sobiv pakkumine — kinnitame partneriga ja anname sulle teada.",
     "offer.noteLabel": "Meie märkus",
     "offer.choose": "Vali see pakkumine",
@@ -7876,6 +7879,8 @@ const en: Record<string, string> = {
     // ── Public offer page /offer/{token} (overhaul §5) ──
     "offer.seo.title": "Your offers",
     "offer.title": "Your options for {category} in {city}",
+    // Lowercase on purpose: unlike the other four, this one lands mid-sentence.
+    "offer.categoryAny": "several services",
     "offer.subtitle": "Pick the offer that fits — we'll confirm with the provider and let you know.",
     "offer.noteLabel": "A note from us",
     "offer.choose": "Choose this option",
@@ -11926,6 +11931,7 @@ const ru: Record<string, string> = {
     // ── Public offer page /offer/{token} (overhaul §5) ──
     "offer.seo.title": "Ваши предложения",
     "offer.title": "Ваши варианты: {category} — {city}",
+    "offer.categoryAny": "Несколько услуг",
     "offer.subtitle": "Выберите подходящее предложение — мы подтвердим с партнёром и сообщим вам.",
     "offer.noteLabel": "Наш комментарий",
     "offer.choose": "Выбрать это предложение",
@@ -15915,6 +15921,7 @@ const lv: Record<string, string> = {
     // ── Public offer page /offer/{token} (overhaul §5) ──
     "offer.seo.title": "Tavi piedāvājumi",
     "offer.title": "Tavas izvēles: {category} — {city}",
+    "offer.categoryAny": "Vairāki pakalpojumi",
     "offer.subtitle": "Izvēlies piemērotāko piedāvājumu — apstiprināsim ar partneri un tev paziņosim.",
     "offer.noteLabel": "Mūsu piezīme",
     "offer.choose": "Izvēlēties šo piedāvājumu",
@@ -16039,7 +16046,7 @@ const lv: Record<string, string> = {
     "claim.form.priceUnitPlaceholder": "piem., /stundā, /diennāktī, /m³ mēnesī",
     "claim.form.priceNote": "Precizējumi",
     "claim.form.priceNotePlaceholder": "Kas iekļauts cenā, vai pievieno PVN, drošības nauda, piemaksas (piem., klavieres +80 €).",
-    "claim.account.title": "Vēlaties labōt vēlāk?",
+    "claim.account.title": "Vēlaties labot vēlāk?",
     "claim.account.body": "Izveidojiet paroli un jebkurā brīdī varēsiet pārskatīt savu lapu, cenas un pakalpojumus — bez jaunas saites.",
     "claim.account.password": "Parole (vismaz 8 rakstzīmes)",
     "claim.account.cta": "Izveidot kontu",
@@ -19901,6 +19908,7 @@ const lt: Record<string, string> = {
     // ── Public offer page /offer/{token} (overhaul §5) ──
     "offer.seo.title": "Jūsų pasiūlymai",
     "offer.title": "Jūsų pasirinkimai: {category} — {city}",
+    "offer.categoryAny": "Kelios paslaugos",
     "offer.subtitle": "Išsirinkite tinkamiausią pasiūlymą — patvirtinsime su partneriu ir jums pranešime.",
     "offer.noteLabel": "Mūsų pastaba",
     "offer.choose": "Pasirinkti šį pasiūlymą",
