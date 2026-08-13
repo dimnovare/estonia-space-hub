@@ -35,20 +35,37 @@ import ProviderLeads from "@/components/provider/ProviderLeads";
 // Spec order (04-partner-dashboard.md): Overview · My listings · Incoming orders ·
 // Bookings · Calendar · Boosts & visibility · Analytics · Payouts & billing ·
 // Reviews · Company profile · Team. No standalone "Contract template" nav item.
+/// Sections a CLAIMED DIRECTORY provider never has anything in. They were
+/// imported from public research and arrived through the claim flow, so they
+/// have no orders, no bookings, no payouts, no calendar and no team — the
+/// marketplace relationship those sections manage does not exist for them.
+/// Showing the full set gives a provider a control panel for a business they do
+/// not do with us, which reads as broken rather than generous.
+///
+/// Hidden, not removed: the moment a directory provider takes a booking, the
+/// flag flips and the sections come back with their data intact.
+const MARKETPLACE_ONLY_TABS = new Set([
+  "orders", "bookings", "calendar", "billing", "analytics", "team",
+]);
+
 function useSidebarLinks() {
   const { t } = useLanguage();
+  // Ordered by what a provider actually came for. Requests first: it is the
+  // thing the introduction letter promised and the only section that puts work
+  // on their calendar. Profile and prices next, because that is what makes a
+  // request answerable. Everything commercial sits below.
   return [
     { id: "overview", label: t("provider.nav.overview"), icon: LayoutDashboard },
-    { id: "listings", label: t("provider.nav.listings"), icon: List },
-    { id: "orders", label: t("provider.nav.orders"), icon: Inbox },
     { id: "leads", label: t("provider.nav.leads"), icon: MessageSquare },
+    { id: "profile", label: t("provider.nav.profile"), icon: Building2 },
+    { id: "listings", label: t("provider.nav.listings"), icon: List },
+    { id: "boosts", label: t("provider.nav.boosts"), icon: Sparkles },
+    { id: "reviews", label: t("provider.nav.reviews"), icon: Star },
+    { id: "orders", label: t("provider.nav.orders"), icon: Inbox },
     { id: "bookings", label: t("provider.nav.bookings"), icon: Package },
     { id: "calendar", label: t("provider.nav.calendar"), icon: CalendarIcon },
-    { id: "boosts", label: t("provider.nav.boosts"), icon: Sparkles },
     { id: "analytics", label: t("provider.nav.analytics"), icon: BarChart3 },
     { id: "billing", label: t("provider.nav.billing"), icon: Wallet },
-    { id: "reviews", label: t("provider.nav.reviews"), icon: Star },
-    { id: "profile", label: t("provider.nav.profile"), icon: Building2 },
     { id: "team", label: t("provider.nav.team"), icon: Users },
   ];
 }
@@ -94,11 +111,19 @@ export default function ProviderDashboardPage() {
     user?.role === "admin" || (supplierProfile?.hasFullAnalytics ?? false);
   const adminNoSupplier = user?.role === "admin" && !supplierId;
   const supplierInactive = supplierProfile?.isActive === false;
+
+  // A claimed directory listing, not a signed-up marketplace partner. Defaults
+  // to FALSE while the profile is still loading and for any older response that
+  // predates the field, so the only way to lose a section is an explicit true —
+  // an existing partner can never have their dashboard quietly cut down.
+  const isDirectoryProvider = supplierProfile?.isDirectoryListing === true;
+
   const navItems = sidebarLinks.filter(
     (l) =>
       (l.id !== "analytics" || hasAnalyticsTier) &&
       (l.id !== "billing" || !adminNoSupplier) &&
-      (l.id !== "boosts" || !adminNoSupplier)
+      (l.id !== "boosts" || !adminNoSupplier) &&
+      !(isDirectoryProvider && MARKETPLACE_ONLY_TABS.has(l.id))
   );
 
   // "contract" is no longer a sidebar item but stays reachable via ?ptab=contract.
