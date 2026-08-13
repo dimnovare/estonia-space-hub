@@ -334,7 +334,7 @@ export function LeadOfferStage({
             ))}
           </div>
 
-          <Button type="button" size="sm" variant="outline" className="mt-3 h-9 gap-1.5" onClick={() => mutateOptions((previous) => [...previous, { localId: nextLocalId(), supplierId: null, supplierName: null, supplierLocationId: null, title: "", price: "", priceUnit: "", notes: "", fromProviderQuote: false }])}><Plus className="h-3.5 w-3.5" />{t("admin.leads.offerAddOption")}</Button>
+          <Button type="button" size="sm" variant="outline" className="mt-3 h-9 gap-1.5" onClick={() => mutateOptions((previous) => [...previous, { id: null, localId: nextLocalId(), supplierId: null, supplierName: null, supplierLocationId: null, title: "", price: "", priceUnit: "", notes: "", fromProviderQuote: false }])}><Plus className="h-3.5 w-3.5" />{t("admin.leads.offerAddOption")}</Button>
           <div className="mt-3"><label htmlFor={`offer-note-${lead.id}`} className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("admin.leads.offerCustomerNote")}</label><textarea id={`offer-note-${lead.id}`} value={customerNote} rows={2} onChange={(event) => { setCustomerNote(event.target.value); setDirty(true); }} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></div>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <Button type="button" size="sm" variant="outline" className="h-9" disabled={saveMutation.isPending || !dirty} onClick={() => saveMutation.mutate()}>{saveMutation.isPending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}{t("admin.leads.offerSave")}</Button>

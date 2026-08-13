@@ -30,8 +30,13 @@ type ApiFailure = Error & { status?: number };
 const formatDateTime = (iso: string) =>
   new Date(iso).toLocaleString(undefined, { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
+/** Every option here already exists on the server, so every one carries its id:
+ *  this PATCH runs before EVERY send, including sends where the admin changed
+ *  nothing, and an id-less payload would quietly re-mint the whole option set —
+ *  losing which prices came from real provider quotes. */
 const toInputs = (offer: AdminOffer): OfferOptionInput[] =>
   offer.options.map((option, index) => ({
+    id: option.id,
     title: option.title,
     supplierId: option.supplierId ?? undefined,
     supplierLocationId: option.supplierLocationId ?? undefined,

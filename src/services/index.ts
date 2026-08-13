@@ -789,6 +789,14 @@ export interface OfferOptionInput {
   priceUnit?: string | null;
   notes?: string | null;
   sortOrder?: number;
+  /** Which option this IS — echo back `AdminOfferOption.id` for anything the
+   *  server already knows about. PATCH rewrites the whole set, so an existing
+   *  option sent without its id is read as a NEW one: the old row is deleted
+   *  and the provenance stored on it goes too, which is what tells a provider's
+   *  later price correction that it already has an option here. Without it the
+   *  correction arrives as a second option and the customer sees one company
+   *  twice, at two prices. Omit only for options the admin just typed. */
+  id?: string;
 }
 
 export interface ProviderOutreachRow {
