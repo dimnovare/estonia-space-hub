@@ -236,7 +236,9 @@ function ConciergeHome() {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              {/* Trust chips: Free · 2–3 offers · Usually 24 h · Verified partners */}
+              {/* Trust chips from request.hero.trustChips: Free · Every moving
+                  service, one request · 2–3 offers · Usually 24 h. Keep every
+                  chip substantiable — no blanket "verified partners" claim. */}
               <p className="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm text-primary-foreground/75">
                 {trustChips.map((chip, i) => (
                   <span key={chip} className="inline-flex items-center gap-2">

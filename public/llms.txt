@@ -1,6 +1,6 @@
 # Ruumly
 
-> Storage-first marketplace for verified storage providers in the Baltics. Ruumly helps customers compare locations on a map, contact partners, and book online where the partner enables booking.
+> Directory and marketplace of local storage, moving and rental providers in the Baltics. Ruumly helps customers compare locations on a map, contact partners, and book online where the partner enables booking. Partners whose registry details, IBAN and physical location Ruumly has confirmed carry a verified-partner badge; most directory profiles are unclaimed listings built from public sources and carry no badge.
 
 ## Key pages
 

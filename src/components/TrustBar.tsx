@@ -4,7 +4,12 @@ import { useLanguage } from "@/i18n/LanguageContext";
 /**
  * Home trust strip (01-public §B): a single muted, centered row of four
  * icon+label items — NOT stat cards. Exact items per spec:
- *   Verified partners · Map + search visibility · Transparent pricing · Customer support
+ *   Verified-partner badge · Map + search visibility · Transparent pricing · Customer support
+ *
+ * The first item names the BADGE, not the directory. `Supplier.IsVerified`
+ * defaults to false and is only ever set by the admin verify endpoint, so
+ * almost none of the ~1,186 imported directory rows carry it — a strip that
+ * read "Verified partners" asserted something we cannot substantiate.
  */
 export default function TrustBar() {
   const { t } = useLanguage();
