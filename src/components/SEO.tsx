@@ -20,74 +20,18 @@ const BASE_URL = "https://ruumly.eu";
 const DEFAULT_IMAGE = `${BASE_URL}/ruumly-og.png?v=3`;
 const SITE_NAME = "Ruumly";
 
-/** Minimal translator shape (matches LanguageContext `t`). */
-type Translate = (key: string) => string;
-
-/** The three public verticals of the free marketplace. */
-export type SeoVertical = "storage" | "moving" | "trailers";
-
-/** Fill the {city} token in a localized SEO template. */
-function fillCity(template: string, city?: string): string {
-  return template.replace(/\{city\}/g, city ?? "");
-}
-
-/**
- * Per-vertical SEO title/description covering all three public services
- * (Storage, Moving, Trailers). Optionally scoped to a city. All copy comes
- * from t() keys so it stays localized in et/en/ru/lv/lt.
- *
- * Keys per vertical:
- *   seo.{vertical}.title / .titleCity / .description / .descriptionCity
- */
-export function verticalSeoMeta(
-  t: Translate,
-  vertical: SeoVertical,
-  city?: string,
-): { title: string; description: string } {
-  const base = `seo.${vertical}`;
-  if (city) {
-    return {
-      title: fillCity(t(`${base}.titleCity`), city),
-      description: fillCity(t(`${base}.descriptionCity`), city),
-    };
-  }
-  return {
-    title: t(`${base}.title`),
-    description: t(`${base}.description`),
-  };
-}
-
-/**
- * Per-city SEO title/description for a city hub page that surfaces all three
- * verticals. Uses t() keys with a {city} token.
- */
-export function citySeoMeta(
-  t: Translate,
-  city: string,
-): { title: string; description: string } {
-  return {
-    title: fillCity(t("seo.city.title"), city),
-    description: fillCity(t("seo.city.description"), city),
-  };
-}
-
-/**
- * Per-partner SEO title/description for a public partner page (the core
- * visibility/SEO asset). Uses t() keys with {partner} and {city} tokens.
- */
-export function partnerSeoMeta(
-  t: Translate,
-  partnerName: string,
-  city?: string,
-): { title: string; description: string } {
-  const title = t("seo.partner.title")
-    .replace(/\{partner\}/g, partnerName);
-  const description = fillCity(
-    t("seo.partner.description").replace(/\{partner\}/g, partnerName),
-    city,
-  );
-  return { title, description };
-}
+// The title/description derivation lives in `lib/seoMeta.ts` — a React-free
+// module — so the build-time prerenderer can import the SAME functions and the
+// crawler's <head> cannot drift from the visitor's. Re-exported here because
+// every existing call site imports these from "@/components/SEO".
+export {
+  verticalSeoMeta,
+  citySeoMeta,
+  partnerSeoMeta,
+  cityVerticalSeoMeta,
+  type SeoVertical,
+  type CityVertical,
+} from "@/lib/seoMeta";
 
 const OG_LOCALE: Record<Language, string> = {
   et: "et_EE",

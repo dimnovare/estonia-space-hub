@@ -6,7 +6,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { formatCount } from "@/i18n/plural";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import type { Listing } from "@/services/types";
-import { SEO, verticalSeoMeta, type SeoVertical } from "@/components/SEO";
+import { SEO, cityVerticalSeoMeta, type SeoVertical } from "@/components/SEO";
 import { MapPin, Layers, Search, ArrowRight, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -190,31 +190,28 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
   // Localized service label (used by event-category SEO/hero + the H1).
   const serviceLabel = serviceTypeLabel(t, vertical);
 
-  // SEO title/description + H1/hero. Three shapes:
+  // Title/description come from the shared, React-free derivation so this page
+  // and the build-time prerenderer (scripts/prerender-seo.mjs) emit the SAME
+  // <head> — a crawler must never read a different title than a visitor.
+  const { title: seoTitle, description: seoDesc } =
+    cityVerticalSeoMeta(t, vertical, city, serviceLabel);
+
+  // H1/hero/intro stay here: body content, not metadata. Three shapes:
   //  - warehouse: existing lighter cityPage.*/city.* copy;
-  //  - moving/trailer: verticalSeoMeta() city templates;
+  //  - moving/trailer: the "{service} in {city}" heading;
   //  - event categories: "{service} {city}" heading + concierge-framed copy.
-  let seoTitle: string;
-  let seoDesc: string;
   let heroTitle: string;
   let heroDesc: string;
   let introText: string;
   if (vertical === "warehouse") {
-    seoTitle = `${t("city.storageIn")} ${city} — Ruumly`;
-    seoDesc = t("city.seoDesc").replace("{city}", city);
     heroTitle = t("cityPage.heroTitle").replace("{city}", city);
     heroDesc = t("cityPage.heroDesc").replace("{city}", city);
     introText = t("city.introText").replace("{city}", city).replace("{count}", String(topItems.length || ""));
   } else if (isDirectoryCategory) {
-    seoTitle = `${serviceLabel} ${city} — Ruumly`;
-    seoDesc = t("cityPage.category.seoDesc").replace("{service}", serviceLabel).replace("{city}", city);
     heroTitle = `${serviceLabel} ${city}`;
     heroDesc = t("cityPage.category.heroDesc").replace("{city}", city);
     introText = t("cityPage.category.intro").replace("{service}", serviceLabel).replace("{city}", city);
   } else {
-    const verticalMeta = verticalSeoMeta(t, seoVertical as SeoVertical, city);
-    seoTitle = verticalMeta.title;
-    seoDesc = verticalMeta.description;
     heroTitle = `${t(vertical === "moving" ? "city.movingIn" : "city.trailerIn")} ${city}`;
     heroDesc = t(vertical === "moving" ? "city.movingDesc" : "city.trailerDesc").replace("{city}", city);
     introText = t("city.introText").replace("{city}", city).replace("{count}", String(topItems.length || ""));

@@ -31,13 +31,20 @@ export function trackEvent(name: string, params?: Record<string, string | number
 
 /**
  * Redact secret path segments before anything reaches analytics.
- * The public offer page lives at /{lang}/offer/{token} where the 32-byte
- * token is the SOLE bearer credential (view details + choose → ops emails).
- * gtag auto-attaches the full page_location URL to manual events, so the raw
- * token would otherwise be harvestable from GA reports. Strip it here.
+ *
+ * Two public pages are guarded by a token in the URL and nothing else:
+ *  - /{lang}/offer/{token} — the customer's offer page (view details + choose,
+ *    which alerts ops).
+ *  - /{lang}/quote/{token} — the provider's quote form. The per-recipient token
+ *    is what lets them submit a price AS that provider without an account, so
+ *    it is every bit as much a bearer credential as the offer token.
+ *
+ * gtag auto-attaches the full page_location URL to manual events, so a raw
+ * token would otherwise be harvestable from GA reports by anyone with report
+ * access. Strip both.
  */
 export function redactAnalyticsPath(path: string): string {
-  return path.replace(/(\/offer\/)[^/?#]+/i, "$1redacted");
+  return path.replace(/(\/(?:offer|quote)\/)[^/?#]+/i, "$1redacted");
 }
 
 export function trackPageView(path: string) {
