@@ -264,7 +264,7 @@ function ConciergeHome() {
                 <Link
                   key={chip.label}
                   to={chip.to}
-                  className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-primary-foreground backdrop-blur-sm transition-colors hover:border-white/40 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-[13px] font-medium text-primary-foreground backdrop-blur-sm transition-colors hover:border-white/40 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 >
                   {chip.label}
                 </Link>
@@ -316,13 +316,13 @@ function ConciergeHome() {
                 <div className="mt-4 flex items-center gap-4 text-sm font-semibold">
                   <Link
                     to={`/search?type=${slug}`}
-                    className="inline-flex min-h-[36px] items-center gap-1 rounded text-navy-ink underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                    className="inline-flex min-h-[44px] items-center gap-1 rounded text-navy-ink underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   >
                     {t("home.services.browse")}
                   </Link>
                   <Link
                     to={`/request?category=${slug}`}
-                    className="inline-flex min-h-[36px] items-center gap-1 rounded text-accent underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                    className="inline-flex min-h-[44px] items-center gap-1 rounded text-accent underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   >
                     {t("nav.getOffers")}
                     <ArrowRight className="h-3.5 w-3.5" aria-hidden />
@@ -698,7 +698,7 @@ function MarketplaceHome() {
                 <Link
                   key={chip.label}
                   to={`/search?${chip.params}`}
-                  className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-primary-foreground backdrop-blur-sm transition-colors hover:border-white/40 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-[13px] font-medium text-primary-foreground backdrop-blur-sm transition-colors hover:border-white/40 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 >
                   {chip.label}
                 </Link>

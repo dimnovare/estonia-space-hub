@@ -755,11 +755,11 @@ export default function SearchPage() {
               </span>
             </div>
             <div className="ml-auto flex items-center gap-2">
-              <button aria-label={t("search.saveSearch")} onClick={handleSaveSearch} className="flex min-h-[36px] items-center gap-1.5 rounded-lg border border-line-2 px-3 py-2 sm:py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+              <button aria-label={t("search.saveSearch")} onClick={handleSaveSearch} className="flex min-h-[44px] lg:min-h-[36px] items-center gap-1.5 rounded-lg border border-line-2 px-3 py-2 sm:py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
                 <Bookmark className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t("search.saveSearch")}</span>
               </button>
-              <button aria-label={t("search.filters")} onClick={() => isBelowLg ? setDrawerOpen(true) : setShowFilters(!showFilters)} className="flex min-h-[36px] items-center gap-1.5 rounded-lg border border-line-2 px-3 py-2 sm:py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+              <button aria-label={t("search.filters")} onClick={() => isBelowLg ? setDrawerOpen(true) : setShowFilters(!showFilters)} className="flex min-h-[44px] lg:min-h-[36px] items-center gap-1.5 rounded-lg border border-line-2 px-3 py-2 sm:py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t("search.filters")}</span>
                 {activeFiltersCount > 0 && (
@@ -767,7 +767,7 @@ export default function SearchPage() {
                 )}
               </button>
               <div className="relative">
-                <select aria-label={t("search.sort") || "Sort results"} value={sort} onChange={(e) => updateFilters({ sort: e.target.value })} className="min-h-[36px] appearance-none rounded-lg border border-line-2 bg-card py-2 sm:py-1.5 pl-3 pr-7 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-accent">
+                <select aria-label={t("search.sort") || "Sort results"} value={sort} onChange={(e) => updateFilters({ sort: e.target.value })} className="min-h-[44px] lg:min-h-[36px] appearance-none rounded-lg border border-line-2 bg-card py-2 sm:py-1.5 pl-3 pr-7 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-accent">
                   {sortOptions.map((s) => (
                     <option key={s.value} value={s.value}>{s.label}</option>
                   ))}
@@ -786,7 +786,7 @@ export default function SearchPage() {
                   key={tf.value}
                   aria-pressed={isActive}
                   onClick={() => updateFilters({ type: tf.value === "all" ? "" : tf.value })}
-                  className={`inline-flex min-h-[36px] shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 sm:py-1.5 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-95 ${isActive ? "border-navy-ink bg-navy-ink text-white" : "border-line-2 bg-card text-foreground hover:border-primary hover:text-primary"}`}
+                  className={`inline-flex min-h-[44px] lg:min-h-[36px] shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 sm:py-1.5 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-95 ${isActive ? "border-navy-ink bg-navy-ink text-white" : "border-line-2 bg-card text-foreground hover:border-primary hover:text-primary"}`}
                 >
                   {tf.Icon && <tf.Icon className="h-3.5 w-3.5" />}
                   {tf.label}
@@ -1273,7 +1273,7 @@ export default function SearchPage() {
                       <div className="mt-2.5 flex flex-wrap justify-center gap-2">
                         {nearestCities.map(c => (
                           <button key={c.city} onClick={() => updateFilters({ city: c.city })}
-                            className="min-h-[36px] rounded-full border border-line-2 bg-card px-3.5 py-2 text-[13px] font-medium text-foreground transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                            className="min-h-[44px] lg:min-h-[36px] rounded-full border border-line-2 bg-card px-3.5 py-2 text-[13px] font-medium text-foreground transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
                             {c.km == null
                               ? c.city
                               : t("search.nearestCityKm")
