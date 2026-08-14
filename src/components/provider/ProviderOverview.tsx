@@ -10,7 +10,31 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
 import { withSupplier } from "@/lib/withSupplier";
 import { queryKeys } from "@/services/queryKeys";
+import { leadService, type ProviderLead, type ProviderLeadStatus } from "@/services";
 import ProviderActivationChecklist from "./ProviderActivationChecklist";
+
+const REQUEST_LOCALE: Record<string, string> = {
+  et: "et-EE", en: "en-GB", ru: "ru-RU", lv: "lv-LV", lt: "lt-LT",
+};
+
+// Concierge lead statuses, styled to match the leads tab this card links into.
+const LEAD_STATUS_STYLE: Record<ProviderLeadStatus, string> = {
+  new:       "bg-info/10 text-info",
+  contacted: "bg-warning/10 text-warning-text",
+  quoted:    "bg-accent/10 text-accent",
+  converted: "bg-success/10 text-success",
+  dismissed: "bg-secondary text-muted-foreground",
+};
+
+/**
+ * Where "View all requests" goes. A claimed directory provider has no
+ * marketplace orders and no orders TAB — the dashboard strips it from the nav
+ * and rewrites the URL back to overview — so sending them there is a button
+ * that visibly does nothing. Their requests are concierge leads.
+ */
+export function requestsTabFor(isDirectoryProvider: boolean): string {
+  return isDirectoryProvider ? "leads" : "orders";
+}
 
 // Maps an OrderStatus to the lead-pipeline status tag shown in "Latest requests".
 function StatusTag({ status }: { status: string }) {
@@ -33,26 +57,46 @@ function StatusTag({ status }: { status: string }) {
   );
 }
 
-export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () => void }) {
-  const { t } = useLanguage();
+export default function ProviderOverview() {
+  const { t, language } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
   const supplierId = useImpersonatedSupplierId();
+  const goToTab = (id: string) =>
+    navigate(`/provider/dashboard?ptab=${id}${supplierId ? `&supplierId=${supplierId}` : ""}`);
   // Jump to the boosts & visibility tab, preserving the impersonation context.
-  const goToBoosts = () =>
-    navigate(`/provider/dashboard?ptab=boosts${supplierId ? `&supplierId=${supplierId}` : ""}`);
+  const goToBoosts = () => goToTab("boosts");
   // Jump to the My listings tab (used by the zero-listings first-run CTA).
-  const goToListings = () =>
-    navigate(`/provider/dashboard?ptab=listings${supplierId ? `&supplierId=${supplierId}` : ""}`);
+  const goToListings = () => goToTab("listings");
   const { data: allOrders = [], isLoading: ordersLoading } = useOrders(supplierId ?? undefined);
   const { data: locations = [] } = useLocations(supplierId ? { supplierId } : undefined);
-  const { data: supplierProfile } = useQuery<{ name?: string }>({
+  const { data: supplierProfile, isLoading: profileLoading } = useQuery<{
+    name?: string; isDirectoryListing?: boolean;
+  }>({
     queryKey: queryKeys.supplierProfile.byId(supplierId),
     queryFn: () => apiClient.get(withSupplier("/supplier/profile", supplierId)),
     enabled: !!user && (user.role !== "admin" || !!supplierId),
     staleTime: 30_000,
     retry: false,
   });
+
+  // A claimed directory profile has no marketplace relationship with us: no
+  // orders, no bookings, and no "Incoming orders" tab — the dashboard strips it
+  // from the nav. What they do have is concierge requests, which arrive as
+  // leads. So both the requests card and the button under it have to read and
+  // point at leads, or this whole corner of the page describes a business they
+  // do not do with us. Same defaulting rule as the dashboard's nav filter:
+  // false until the profile explicitly says otherwise, so nobody is downgraded
+  // by a slow response.
+  const isDirectoryProvider = supplierProfile?.isDirectoryListing === true;
+  // Same key and arguments as the leads tab, so the two share one cache entry.
+  const { data: leads = [], isLoading: leadsLoading } = useQuery<ProviderLead[]>({
+    queryKey: ["provider", "leads", supplierId, "all"],
+    queryFn: () => leadService.listForProvider(supplierId, "all"),
+    enabled: isDirectoryProvider,
+    staleTime: 30_000,
+  });
+  const goToRequests = () => goToTab(requestsTabFor(isDirectoryProvider));
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: queryKeys.supplierStats.byId(supplierId),
     queryFn: () => apiClient.get<{
@@ -66,16 +110,25 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
     }>(withSupplier("/supplier/stats", supplierId)),
     staleTime: 60_000,
   });
-  const isLoading = ordersLoading || statsLoading;
+  // profileLoading gates the two below it: which pipeline this provider is on
+  // is not known until the profile lands, and flashing an empty orders list
+  // before swapping it for their leads is worse than one more skeleton beat.
+  const isLoading = ordersLoading || statsLoading || profileLoading || leadsLoading;
   const pendingOrders = allOrders.filter(o => o.status === "sent" || o.status === "created");
 
   const partnerName = supplierProfile?.name || user?.company || user?.name || "";
   const listingCount    = stats?.totalUnits ?? 0;
-  const newRequestCount = pendingOrders.length;
+  const newRequestCount = isDirectoryProvider
+    ? leads.filter(l => l.status === "new").length
+    : pendingOrders.length;
   // Most recent 3 requests for the right-hand "Latest requests" card.
-  const latestRequests = [...allOrders]
+  const latestOrders = [...allOrders]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 3);
+  const latestLeads = [...leads]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 3);
+  const requestLocale = REQUEST_LOCALE[language] || "en-GB";
 
   if (isLoading) {
     return (
@@ -210,10 +263,28 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
         <div className="rounded-[14px] border border-border bg-card p-6 shadow-card">
           <h3 className="font-display text-[17px] font-bold text-navy-ink">{t("provider.overview.latestRequests")}</h3>
           <div className="mt-3.5 space-y-2.5">
-            {latestRequests.length === 0 ? (
+            {isDirectoryProvider ? (
+              latestLeads.length === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">{t("provider.overview.noRequestsYet")}</p>
+              ) : (
+                latestLeads.map((l) => (
+                  <div key={l.id} className="flex items-center justify-between gap-3 border-b border-border pb-2.5 last:border-0">
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-semibold text-foreground">{l.name || l.email}</div>
+                      <div className="truncate text-xs text-muted-foreground">
+                        {l.city} · {new Date(l.createdAt).toLocaleDateString(requestLocale)}
+                      </div>
+                    </div>
+                    <span className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${LEAD_STATUS_STYLE[l.status]}`}>
+                      {t(`provider.leads.status.${l.status}`)}
+                    </span>
+                  </div>
+                ))
+              )
+            ) : latestOrders.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted-foreground">{t("provider.overview.noRequestsYet")}</p>
             ) : (
-              latestRequests.map((o) => (
+              latestOrders.map((o) => (
                 <div key={o.id} className="flex items-center justify-between gap-3 border-b border-border pb-2.5 last:border-0">
                   <div className="min-w-0">
                     <div className="truncate text-sm font-semibold text-foreground">{o.customerName}</div>
@@ -225,7 +296,7 @@ export default function ProviderOverview({ onGoToOrders }: { onGoToOrders: () =>
             )}
           </div>
           <button
-            onClick={onGoToOrders}
+            onClick={goToRequests}
             className="mt-3.5 flex h-9 w-full items-center justify-center rounded-[10px] bg-secondary text-[13px] font-semibold text-navy-ink transition-colors hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
           >
             {t("provider.overview.viewAllRequests")}

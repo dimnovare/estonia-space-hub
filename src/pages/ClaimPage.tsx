@@ -62,6 +62,41 @@ function readSession(slug: string): StoredSession | null {
   }
 }
 
+/**
+ * Whether a failure means this claim session is finished, as opposed to merely
+ * unlucky. Everything behind it was bought with a single-use magic link, so the
+ * distinction is expensive: discarding a session costs the provider a whole new
+ * email, and most will not go and ask for one.
+ *
+ * 401 = expired or missing, 403 = a session scoped to a different profile,
+ * 404 = a row that stopped being claimable. None of those improve by holding on
+ * to the credential. A 502 mid-deploy or a 429 from the shared search limiter
+ * say nothing about the session at all.
+ *
+ * An anonymous 401 arrives as a bare Error("Unauthorized") carrying no status —
+ * the api client only attaches one on the logged-in refresh-and-retry path — so
+ * the message has to be read when the status is absent.
+ */
+export function isClaimSessionRejection(err: unknown): boolean {
+  const e = err as (Error & { status?: number }) | null | undefined;
+  const status = e?.status;
+  if (typeof status === "number") return status === 401 || status === 403 || status === 404;
+  return /unauthor/i.test(e?.message ?? "");
+}
+
+/**
+ * Both claim reads sit behind the "search" rate limiter, so a failure must not
+ * turn into a burst: a 429 answered with more requests is the one thing that
+ * guarantees it stays 429. Never retry a 4xx; give a 5xx or a dropped
+ * connection — what a Railway restart looks like from here — one more try.
+ */
+export function claimRetryPolicy(failureCount: number, err: unknown): boolean {
+  if (isClaimSessionRejection(err)) return false;
+  const status = (err as (Error & { status?: number }) | null)?.status;
+  if (typeof status === "number" && status >= 400 && status < 500) return false;
+  return failureCount < 2;
+}
+
 const inputCls =
   "h-11 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring";
 
@@ -86,11 +121,7 @@ export default function ClaimPage() {
       queryFn: () => claimService.get(slug),
       enabled: slug.length > 0,
       staleTime: 60_000,
-      retry: (failureCount, err: Error & { status?: number }) => {
-        const s = err?.status;
-        if (typeof s === "number" && s >= 400 && s < 500) return false;
-        return failureCount < 2;
-      },
+      retry: claimRetryPolicy,
     });
   const getStatus = (error as (Error & { status?: number }) | null)?.status;
 
@@ -122,6 +153,19 @@ export default function ClaimPage() {
   const [form, setForm] = useState<ClaimEditableProfile | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const savedRef = useRef<HTMLDivElement>(null);
+
+  // The confirmation and the account offer both render above a form that is
+  // about a full screen tall on a phone, so the provider who taps Save is
+  // several hundred pixels below the only two things that answer them — and the
+  // save button's own label is the same before and after. Failures render at
+  // the button, so without this the one person who sees nothing happen is
+  // precisely the one whose save worked. Same move as the contact form makes
+  // when it sends you to your first invalid field.
+  useEffect(() => {
+    if (!saved) return;
+    savedRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [saved]);
 
   // ── Optional provider account, offered after a successful save ──
   const [password, setPassword] = useState("");
@@ -154,25 +198,34 @@ export default function ClaimPage() {
   }
 
   // A returning tab has a session but no form yet — re-read it.
-  const { data: editable, isError: editableFailed } = useQuery<ClaimEditableProfile>({
+  const {
+    data: editable, error: editableError, isError: editableFailed,
+    refetch: refetchEditable, isFetching: editableFetching,
+  } = useQuery<ClaimEditableProfile>({
     queryKey: [...queryKeys.claims.bySlug(slug), "profile"],
     queryFn: () => claimService.getProfile(slug, session!.token),
     enabled: Boolean(session) && !seededRef.current && slug.length > 0,
-    retry: false,
+    retry: claimRetryPolicy,
   });
 
   useEffect(() => {
     if (editable && !seededRef.current) seedForm(editable);
   }, [editable]);
 
-  // The stored session no longer works (expired, or the profile changed state).
-  // Drop it so the page falls back to "ask for a link" instead of sitting on a
-  // credential that will only fail again on the next load.
+  const sessionRejected = editableFailed && isClaimSessionRejection(editableError);
+
+  // The stored session no longer works (expired, scoped elsewhere, or the
+  // profile changed state). Drop it so the page falls back to "ask for a link"
+  // instead of sitting on a credential that will only fail again on the next
+  // load — but ONLY for an answer that is actually about the session. The
+  // backend redeploys several times a day and this endpoint is rate limited,
+  // and a provider who verified thirty seconds ago must not be thrown out by a
+  // 502 or a 429; the link that got them here is spent.
   useEffect(() => {
-    if (!editableFailed) return;
+    if (!sessionRejected) return;
     try { sessionStorage.removeItem(sessionKey(slug)); } catch { /* private mode */ }
     setSession(null);
-  }, [editableFailed, slug]);
+  }, [sessionRejected, slug]);
 
   const saveMutation = useMutation({
     mutationFn: (body: ClaimEditableProfile) =>
@@ -197,10 +250,10 @@ export default function ClaimPage() {
     },
     onError: (err: Error & { status?: number }) => {
       setSaved(false);
-      // An anonymous 401 carries no status through the api client, so match the
-      // message too — an expired session must read as "ask for a new link",
-      // never as a mysterious save failure.
-      if (err?.status === 401 || /unauthor/i.test(err?.message ?? "")) {
+      // A dead session must read as "ask for a new link", never as a mysterious
+      // save failure. Shares one rule with the profile read above so the two
+      // cannot drift into disagreeing about what counts as expired.
+      if (isClaimSessionRejection(err)) {
         try { sessionStorage.removeItem(sessionKey(slug)); } catch { /* private mode */ }
         setSession(null);
         setForm(null);
@@ -278,7 +331,13 @@ export default function ClaimPage() {
   );
 
   // ── Loading ──
-  if (isLoading || (linkToken && verifyMutation.isPending)) {
+  // A held session with no form yet means the profile read is still in flight
+  // (it is the only thing that can be, since the query is enabled exactly
+  // then). Show the skeleton rather than falling through to "enter your
+  // business email" — asking a verified provider to re-prove themselves for the
+  // duration of a round trip, or of a retry after a blip, invites them to spend
+  // a second magic link they do not need.
+  if (isLoading || (linkToken && verifyMutation.isPending) || (session && !form && !editableFailed)) {
     return shell(t("claim.seo.title"), t("claim.subtitle"), (
       <div className="container-wide mx-auto max-w-xl py-10">
         <Skeleton className="h-8 w-3/4" />
@@ -324,6 +383,21 @@ export default function ClaimPage() {
         </Button>));
   }
 
+  // A live session whose profile read failed for a reason that was not about
+  // the session. The credential is still good, so offer the read again rather
+  // than dropping them on the "ask for a link" screen holding a link they
+  // already spent.
+  if (session && !form && editableFailed && !sessionRejected) {
+    return shell(t("claim.errorTitle"), t("claim.errorBody"),
+      centered(<AlertCircle className="h-7 w-7 text-muted-foreground" />,
+        t("claim.errorTitle"), t("claim.errorBody"),
+        <Button className="mt-6 h-12 gap-2 bg-primary px-6 font-display text-primary-foreground hover:bg-primary/90"
+          disabled={editableFetching} onClick={() => refetchEditable()}>
+          {editableFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+          {t("claim.retry")}
+        </Button>));
+  }
+
   // ── EDIT: a verified session is live ──
   if (session && form) {
     const toggleService = (slugValue: string) => {
@@ -359,7 +433,7 @@ export default function ClaimPage() {
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t("claim.editSubtitle")}</p>
 
         {saved && (
-          <div role="status" className="mt-5 flex items-start gap-3 rounded-xl border border-success/25 bg-success/5 p-4">
+          <div ref={savedRef} role="status" className="mt-5 flex items-start gap-3 rounded-xl border border-success/25 bg-success/5 p-4">
             <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-hidden />
             <div>
               <p className="font-display text-sm font-bold text-navy-ink">{t("claim.savedTitle")}</p>

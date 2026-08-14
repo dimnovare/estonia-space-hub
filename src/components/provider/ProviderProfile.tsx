@@ -16,8 +16,15 @@ export default function ProviderProfile() {
   const qc = useQueryClient();
   const supplierId = useImpersonatedSupplierId();
 
-  // Supplier profile holds company name + city; the partner-page record holds the
+  // Supplier profile holds the company name; the partner-page record holds the
   // public-page fields (tagline, about, founded, slug, publish/verify state).
+  //
+  // There is deliberately no city here. A Supplier has no city of its own — a
+  // provider's geography lives on its SupplierLocation and Listing rows, which
+  // carry coordinates, and those are what the concierge matches a request
+  // against. The field that used to sit beside "Founded" was read from a
+  // property the API never returns and PATCHed into a DTO with no member to
+  // bind it, so it rendered blank, saved nothing, and still toasted "saved".
   const { data: profile, isLoading: profileLoading, error: profileError } = useQuery({
     queryKey: queryKeys.supplierProfile.byId(supplierId),
     queryFn: () => apiClient.get<any>(withSupplier("/supplier/profile", supplierId)),
@@ -37,7 +44,6 @@ export default function ProviderProfile() {
     tagline: "",
     about: "",
     founded: "",
-    city: "",
   });
 
   useEffect(() => {
@@ -46,7 +52,6 @@ export default function ProviderProfile() {
       tagline: page?.tagline ?? "",
       about: page?.longDescription?.en ?? page?.longDescriptionEn ?? profile?.description ?? "",
       founded: page?.foundedYear ? String(page.foundedYear) : "",
-      city: profile?.city ?? "",
     });
   }, [profile, page]);
 
@@ -57,7 +62,6 @@ export default function ProviderProfile() {
     try {
       await apiClient.patch(withSupplier("/supplier/profile", supplierId), {
         name: formData.company,
-        city: formData.city,
       });
       await apiClient.patch(withSupplier("/provider/partner-page", supplierId), {
         tagline: formData.tagline,
@@ -139,15 +143,9 @@ export default function ProviderProfile() {
                 onChange={(e) => setFormData((p) => ({ ...p, about: e.target.value }))}
               />
             </div>
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <label className="text-[13px] font-semibold text-ink-2">{t("provider.profile.founded")}</label>
-                <input className={inp} value={formData.founded} onChange={(e) => setFormData((p) => ({ ...p, founded: e.target.value }))} />
-              </div>
-              <div className="flex-1">
-                <label className="text-[13px] font-semibold text-ink-2">{t("provider.profile.city")}</label>
-                <input className={inp} value={formData.city} onChange={(e) => setFormData((p) => ({ ...p, city: e.target.value }))} />
-              </div>
+            <div>
+              <label className="text-[13px] font-semibold text-ink-2">{t("provider.profile.founded")}</label>
+              <input className={inp} value={formData.founded} onChange={(e) => setFormData((p) => ({ ...p, founded: e.target.value }))} />
             </div>
             <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleSave}>
               {t("provider.profile.saveChanges")}

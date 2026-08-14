@@ -44,7 +44,12 @@ import ProviderLeads from "@/components/provider/ProviderLeads";
 ///
 /// Hidden, not removed: the moment a directory provider takes a booking, the
 /// flag flips and the sections come back with their data intact.
-const MARKETPLACE_ONLY_TABS = new Set([
+///
+/// Exported so anything that links INTO the dashboard can be checked against
+/// it: a control pointing at a tab in this set is dead for the very providers
+/// it was built for, and the routable-tab guard below rewrites the URL back to
+/// overview without a word.
+export const MARKETPLACE_ONLY_TABS = new Set([
   "orders", "bookings", "calendar", "billing", "analytics", "team",
 ]);
 
@@ -334,7 +339,7 @@ export default function ProviderDashboardPage() {
           </div>
         </div>
 
-        {tab === "overview" && <ProviderOverview onGoToOrders={() => setTab("orders")} />}
+        {tab === "overview" && <ProviderOverview />}
         {tab === "orders" && <ProviderIncomingOrders />}
         {tab === "leads" && <ProviderLeads />}
         {tab === "listings" && <ProviderListings />}
