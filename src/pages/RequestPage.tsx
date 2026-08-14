@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Link, useSearchParams } from "@/i18n/routing";
+import { Link, useNavigate, useSearchParams } from "@/i18n/routing";
 import {
   ArrowRight, ArrowLeft, CheckCircle, Check,
   MapPin, CalendarDays, Loader2, AlertCircle,
@@ -11,6 +11,8 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
 import { leadService, type ConciergeCategory } from "@/services";
+import { trackEvent } from "@/lib/analytics";
+import { getAttribution } from "@/lib/attribution";
 import {
   PUBLIC_SERVICE_TYPE_SLUGS, SERVICE_TYPE_ICONS, visibleServiceSlugs,
   isRetiredServiceSlug, RETIRED_SEARCH_TYPE,
@@ -66,11 +68,36 @@ interface ScopeQuestion { id: string; options: number }
 
 const SCOPE_QUESTIONS: Partial<Record<ConciergeCategory, ScopeQuestion[]>> = {
   warehouse: [{ id: "warehouseSize", options: 6 }, { id: "warehouseDuration", options: 5 }],
-  moving:    [{ id: "movingSize", options: 6 }],
-  trailer:   [{ id: "trailerDuration", options: 5 }],
-  vanrental: [{ id: "vanrentalDuration", options: 5 }],
-  cleaning:  [{ id: "cleaningType", options: 5 }],
+  // Floors and a lift are the single biggest price driver in a Baltic move —
+  // a mover who has the size but not this cannot give a number, only a range.
+  moving:    [{ id: "movingSize", options: 6 }, { id: "movingAccess", options: 5 }],
+  // "How long" alone does not describe a trailer. What is being hauled decides
+  // whether the provider even owns the right one.
+  trailer:   [{ id: "trailerDuration", options: 5 }, { id: "trailerType", options: 5 }],
+  vanrental: [{ id: "vanrentalDuration", options: 5 }, { id: "vanrentalSize", options: 4 }],
+  // Cleaning asked only WHAT KIND, never HOW BIG — so no cleaner could quote it.
+  // Size is the whole basis of a cleaning price.
+  cleaning:  [{ id: "cleaningType", options: 5 }, { id: "cleaningSize", options: 5 }],
 };
+
+/**
+ * Services whose providers cannot quote at all without a date — a van, a
+ * trailer and a moving crew are booked capacity on a specific day, and a
+ * cleaner's calendar works the same way. Storage is the exception: a unit is
+ * available continuously, so "I'm not sure yet" is a genuine answer there.
+ *
+ * The date used to be labelled "(optional)" for everything, and requests
+ * arrived with no date at all. `ProviderOutreachComposer` then printed "as soon
+ * as possible", which is not something a provider can price — so we spent the
+ * one cold contact we get with each of them on an unquotable ask.
+ *
+ * Nobody is hard-blocked: the flexible chip below is always available and is
+ * itself a fact a provider can work with, unlike a blank field.
+ */
+const DATE_REQUIRED_FOR: readonly ConciergeCategory[] = ["moving", "trailer", "vanrental", "cleaning"];
+
+/** sessionStorage key for the in-progress request (see `restoreDraft`). */
+const DRAFT_KEY = "ruumly-request-draft";
 
 /**
  * OPTIONAL add-on shown inside the moving flow only.
@@ -85,6 +112,56 @@ const SCOPE_QUESTIONS: Partial<Record<ConciergeCategory, ScopeQuestion[]>> = {
 const PACKING_ADDON: ScopeQuestion = { id: "packingHelp", options: 4 };
 
 /**
+ * Everything the visitor has typed so far, kept in `sessionStorage`.
+ *
+ * All of this lived in `useState` and nowhere else, so a refresh, a Back tap or
+ * a mis-swipe destroyed a completed three-step form. On mobile — where most of
+ * this traffic arrives — Back is a reflex, and the person who loses the form is
+ * the person who was one tap from becoming a request.
+ *
+ * Session-scoped, not local: this is a half-finished form, not a preference. It
+ * closes with the tab, and it is cleared the moment the request is submitted so
+ * the next visitor on a shared machine never inherits it.
+ */
+interface RequestDraft {
+  categories: ConciergeCategory[];
+  city: string;
+  toCity: string;
+  needDate: string;
+  dateFlexible: boolean;
+  details: string;
+  scope: Record<string, number>;
+  name: string;
+  phone: string;
+  // Deliberately NOT the email address: a restored form that pre-fills someone
+  // else's address on a shared device is worse than one extra field to retype.
+}
+
+function readDraft(): Partial<RequestDraft> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY);
+    return raw ? (JSON.parse(raw) as Partial<RequestDraft>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeDraft(draft: RequestDraft): void {
+  try {
+    sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    // Private mode / quota. Losing the draft is bad; breaking the form is worse.
+  }
+}
+
+function clearDraft(): void {
+  try {
+    sessionStorage.removeItem(DRAFT_KEY);
+  } catch { /* ignore */ }
+}
+
+/**
  * /request — the concierge demand funnel ("tell us what you need, we find you
  * 2-3 offers"). Three steps: what → details → contact. Submits to
  * POST /leads/request; the admin match queue works the lead from there.
@@ -97,25 +174,101 @@ export default function RequestPage() {
   // Prefill from deep-link params (?category=moving&city=Tallinn) — the
   // homepage popular-need chips and service-grid "Get offers" links use these.
   // Lazy initializers: read once on mount, then the user owns the state.
-  const [searchParams] = useSearchParams();
-  const [step, setStep] = useState(0);
-  const [categories, setCategories] = useState<ConciergeCategory[]>(
-    () => parseCategoryParams(searchParams, visibleServiceSlugs(showMovingService, showTrailerService)));
-  const [city, setCity] = useState(() => searchParams.get("city")?.trim() ?? "");
-  const [toCity, setToCity] = useState("");
-  const [needDate, setNeedDate] = useState("");
-  const [details, setDetails] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  // Read once on mount. A deep link always wins over a restored draft: someone
+  // who just clicked "storage in Tartu" means that, not what they abandoned
+  // twenty minutes ago.
+  const draft = useMemo(() => readDraft(), []);
+
+  // ── The step lives in the URL ──
+  //
+  // It used to be plain component state, so the browser Back button left the
+  // funnel entirely from step 2 or 3 — on mobile, where Back is a reflex and
+  // most of this traffic arrives, that reads as "the form threw me out". The
+  // draft made the answers survive, but the visitor still landed on step 1 and
+  // had to tap forward twice to find them.
+  //
+  // As a search param rather than a route segment: /request is one page and one
+  // canonical URL (the prerendered <head> and the sitemap both point at it), and
+  // a step is a position within it, not a resource. `replace` is deliberately
+  // NOT used — pushing is the whole point, since each push is what gives Back
+  // something to go back to.
+  const stepFromUrl = (() => {
+    const raw = Number(searchParams.get("step"));
+    return Number.isInteger(raw) && raw >= 1 && raw <= 3 ? raw - 1 : 0;
+  })();
+  const [step, setStep] = useState(stepFromUrl);
+  const [categories, setCategories] = useState<ConciergeCategory[]>(() => {
+    const fromLink = parseCategoryParams(searchParams, visibleServiceSlugs(showMovingService, showTrailerService));
+    return fromLink.length > 0 ? fromLink : (draft.categories ?? []);
+  });
+  const [city, setCity] = useState(() => searchParams.get("city")?.trim() || draft.city || "");
+  const [toCity, setToCity] = useState(() => draft.toCity ?? "");
+  const [needDate, setNeedDate] = useState(() => draft.needDate ?? "");
+  const [dateFlexible, setDateFlexible] = useState(() => draft.dateFlexible ?? false);
+  const [details, setDetails] = useState(() => draft.details ?? "");
   // questionId → 1-based index of the chosen option. A ?category=packing deep
   // link lands on moving with the packing add-on already answered "yes".
   const [scope, setScope] = useState<Record<string, number>>(
-    () => (cameFromPackingLink(searchParams) ? { [PACKING_ADDON.id]: 1 } : {}));
-  const [name, setName] = useState("");
+    () => (cameFromPackingLink(searchParams) ? { [PACKING_ADDON.id]: 1 } : (draft.scope ?? {})));
+  const [name, setName] = useState(() => draft.name ?? "");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState(() => draft.phone ?? "");
   const [stepError, setStepError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
+  // Guards the one-per-visit funnel-start event against React re-renders.
+  const startedRef = useRef(false);
+  // Honeypot. Never shown, never focusable, never autofilled (see the input at
+  // the bottom of the form) — a value here means something automated filled it.
+  const [website, setWebsite] = useState("");
+  // When this visitor opened the funnel. Submitting a three-step form seconds
+  // later is not something a person does. Deliberately NOT persisted with the
+  // draft: someone who comes back to a restored form and finishes it in four
+  // seconds is a returning human, not a bot, and must not be penalised for it.
+  const openedAtRef = useRef(Date.now());
 
   const movingSelected = categories.includes("moving");
+
+  /** True when at least one selected service cannot be quoted without a date. */
+  const dateRequired = useMemo(
+    () => categories.some((c) => DATE_REQUIRED_FOR.includes(c)),
+    [categories],
+  );
+
+  /** Move to a step and push it onto history, so Back returns here. */
+  const goToStep = (next: number) => {
+    setStep(next);
+    const params = new URLSearchParams(searchParams);
+    if (next === 0) params.delete("step");
+    else params.set("step", String(next + 1));
+    setSearchParams(params);
+  };
+
+  // Browser Back/Forward changes the URL without going through goToStep, so the
+  // rendered step follows the URL rather than the other way round.
+  useEffect(() => {
+    setStep(stepFromUrl);
+    setStepError(null);
+  }, [stepFromUrl]);
+
+  // ── Draft persistence ──
+  useEffect(() => {
+    writeDraft({ categories, city, toCity, needDate, dateFlexible, details, scope, name, phone });
+  }, [categories, city, toCity, needDate, dateFlexible, details, scope, name, phone]);
+
+  // ── Funnel analytics ──
+  // Until now the concierge funnel — the primary product — emitted nothing at
+  // all, while every GA event in the app belonged to the deprecated marketplace
+  // flow. That made "cost per qualified request" and every step-conversion
+  // question unanswerable, on the exact funnel we are about to buy traffic for.
+  useEffect(() => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    trackEvent("request_started", { deep_linked: categories.length > 0 });
+    // Intentionally mount-only: this is the funnel-entry event.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /** Required scoping questions — these gate the Next button. */
   const activeQuestions = useMemo(
@@ -150,12 +303,33 @@ export default function RequestPage() {
         categories,
         city: city.trim(),
         toCity: movingSelected && toCity.trim() ? toCity.trim() : undefined,
-        needDate: needDate || undefined,
+        // "Flexible" is an answer, not a date — send nothing and let the
+        // provider email say so in their own language.
+        needDate: dateFlexible ? undefined : (needDate || undefined),
         details: composeDetails(),
         language,
+        attribution: getAttribution(),
+        website,
+        elapsedMs: Date.now() - openedAtRef.current,
       }),
+    onSuccess: () => {
+      // The request is filed — the half-finished copy must not outlive it.
+      clearDraft();
+      trackEvent("request_submitted", {
+        services: categories.join(","),
+        service_count: categories.length,
+        has_date: !dateFlexible && !!needDate,
+        date_flexible: dateFlexible,
+        has_phone: !!phone.trim(),
+      });
+    },
     // Global mutation onError shows a toast; we render an inline error instead.
-    onError: () => {},
+    onError: (error: Error & { status?: number }) => {
+      // A submit that fails is the most expensive event in the funnel: the
+      // visitor did all the work and Ruumly got nothing. It has to be visible
+      // in the reports, not just in the console.
+      trackEvent("request_failed", { status: error?.status ?? 0 });
+    },
   });
 
   // Canonical service copy (overhaul §4): the step-1 cards use the SAME
@@ -179,8 +353,11 @@ export default function RequestPage() {
 
   const toggleCategory = (key: ConciergeCategory) => {
     setStepError(null);
-    setCategories((prev) =>
-      prev.includes(key) ? prev.filter((c) => c !== key) : [...prev, key]);
+    setCategories((prev) => {
+      const next = prev.includes(key) ? prev.filter((c) => c !== key) : [...prev, key];
+      trackEvent("request_service_selected", { service: key, selected: !prev.includes(key) });
+      return next;
+    });
   };
 
   const goNext = () => {
@@ -198,14 +375,28 @@ export default function RequestPage() {
         setStepError(t("request.errors.scope"));
         return;
       }
+      // A mover, a van, a trailer and a cleaner all sell a specific day. Asking
+      // for one of those without saying when is a request nobody can price —
+      // so either name a day or say plainly that you're flexible.
+      if (dateRequired && !needDate && !dateFlexible) {
+        setStepError(t("request.errors.date"));
+        return;
+      }
     }
     setStepError(null);
-    setStep((s) => Math.min(2, s + 1));
+    trackEvent("request_step_completed", { step: step + 1 });
+    goToStep(Math.min(2, step + 1));
   };
 
+  // Back uses browser history rather than setStep, so the in-page Back button
+  // and the browser's own Back button do the same thing — otherwise the two
+  // would drift apart and the history stack would fill with dead forward
+  // entries. Falls back to a direct move when there is nothing to pop (a visitor
+  // who deep-linked straight to ?step=2).
   const goBack = () => {
     setStepError(null);
-    setStep((s) => Math.max(0, s - 1));
+    if (stepFromUrl > 0) navigate(-1);
+    else setStep((s) => Math.max(0, s - 1));
   };
 
   const handleSubmit = () => {
@@ -233,7 +424,10 @@ export default function RequestPage() {
   if (mutation.isSuccess) {
     return (
       <div className="container-wide flex min-h-[70vh] items-center justify-center py-16">
-        <SEO title={`${t("request.seo.title")} — Ruumly`} description={t("request.seo.desc")} path="/request" />
+        {/* request.seo.title already ends in "| Ruumly", so appending the brand
+            again produced "… | Ruumly — Ruumly" in the tab and in every SERP
+            snippet. The SEO component only appends when the title lacks it. */}
+        <SEO title={t("request.seo.title")} description={t("request.seo.desc")} path="/request" />
         <div className="mx-auto max-w-md text-center animate-slide-up">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-success/10">
             <CheckCircle className="h-10 w-10 text-success" />
@@ -254,7 +448,10 @@ export default function RequestPage() {
 
   return (
     <div className="surface-sunken min-h-[calc(100vh-4rem)]">
-      <SEO title={`${t("request.seo.title")} — Ruumly`} description={t("request.seo.desc")} path="/request" />
+      {/* request.seo.title already ends in "| Ruumly", so appending the brand
+            again produced "… | Ruumly — Ruumly" in the tab and in every SERP
+            snippet. The SEO component only appends when the title lacks it. */}
+        <SEO title={t("request.seo.title")} description={t("request.seo.desc")} path="/request" />
       <div className="container-wide py-10 md:py-16">
         <div className="mx-auto max-w-xl">
           {/* Head */}
@@ -352,7 +549,10 @@ export default function RequestPage() {
                         value={city}
                         onChange={(e) => { setCity(e.target.value); setStepError(null); }}
                         placeholder={t("request.city.placeholder")}
-                        aria-invalid={!!stepError}
+                        // Only when the city is the thing that's wrong. Flagging
+                        // it for a missing scope answer sends a screen-reader
+                        // user to correct a field that was already fine.
+                        aria-invalid={!!stepError && !city.trim()}
                         className="h-12 w-full rounded-lg border border-border bg-card pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                       />
                     </div>
@@ -458,9 +658,17 @@ export default function RequestPage() {
                       </fieldset>
                     </div>
                   )}
+                  {/* Date. Required whenever a selected service is sold by the
+                      day (moving / trailer / van / cleaning) — a provider
+                      cannot quote those without one. "I'm flexible" is an
+                      explicit answer rather than a blank field, so nobody is
+                      ever hard-blocked and the concierge still knows which it
+                      was. Storage keeps the date optional: a unit is available
+                      continuously. */}
                   <div>
                     <label htmlFor="req-date" className="mb-1.5 block text-sm font-medium text-foreground">
-                      {t("request.date.label")}
+                      {dateRequired ? t("request.date.labelRequired") : t("request.date.label")}
+                      {dateRequired && <span className="text-destructive"> *</span>}
                     </label>
                     <div className="relative">
                       <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -469,10 +677,41 @@ export default function RequestPage() {
                         type="date"
                         value={needDate}
                         min={new Date().toLocaleDateString("sv-SE")}
-                        onChange={(e) => setNeedDate(e.target.value)}
+                        aria-describedby={dateRequired ? "req-date-hint" : undefined}
+                        onChange={(e) => {
+                          setNeedDate(e.target.value);
+                          // Naming a day supersedes "flexible" — they cannot both be true.
+                          if (e.target.value) setDateFlexible(false);
+                          setStepError(null);
+                        }}
                         className="h-12 w-full rounded-lg border border-border bg-card pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                       />
                     </div>
+                    {dateRequired && (
+                      <>
+                        <p id="req-date-hint" className="mt-1.5 text-xs text-muted-foreground">
+                          {t("request.date.hint")}
+                        </p>
+                        <button
+                          type="button"
+                          aria-pressed={dateFlexible}
+                          onClick={() => {
+                            setDateFlexible((prev) => {
+                              if (!prev) setNeedDate("");
+                              return !prev;
+                            });
+                            setStepError(null);
+                          }}
+                          className={`mt-2 min-h-[40px] rounded-full border px-3.5 py-2 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+                            dateFlexible
+                              ? "border-navy-ink bg-navy-ink text-white"
+                              : "border-line-2 bg-card text-foreground hover:border-primary hover:text-primary"
+                          }`}
+                        >
+                          {t("request.date.flexible")}
+                        </button>
+                      </>
+                    )}
                   </div>
                   <div>
                     <label htmlFor="req-details" className="mb-1.5 block text-sm font-medium text-foreground">
@@ -542,6 +781,28 @@ export default function RequestPage() {
                       className="h-12 w-full rounded-lg border border-border bg-card px-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                     />
                   </div>
+                </div>
+                {/* Honeypot. Since auto fan-out shipped, one submit emails up to
+                    six real businesses, so ordinary form spam became outbound-mail
+                    amplification pointed at the supply base. A bot fills this;
+                    a person never sees it.
+
+                    Hidden with absolute positioning rather than `display:none` or
+                    `type="hidden"`, both of which the better bots skip. It is
+                    removed from the accessibility tree, from the tab order and
+                    from autofill, so no screen-reader or keyboard user can reach
+                    it by accident and be silently flagged. */}
+                <div aria-hidden="true" className="absolute left-[-9999px] top-0 h-0 w-0 overflow-hidden">
+                  <label htmlFor="req-website">Website</label>
+                  <input
+                    id="req-website"
+                    name="website"
+                    type="text"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                  />
                 </div>
                 {submitErrorMessage && (
                   <div role="alert" className="mt-4 flex items-start gap-2.5 rounded-lg border border-destructive/25 bg-destructive/5 p-3.5 text-sm text-destructive">

@@ -525,6 +525,12 @@ export interface ConciergeRequestInput {
   needDate?: string;
   details?: string;
   language?: string;
+  /** Opaque first-touch marketing attribution — see `src/lib/attribution.ts`. */
+  attribution?: string;
+  /** Honeypot: always empty for a human. Any value marks the submit automated. */
+  website?: string;
+  /** Milliseconds between the funnel opening and this submit. */
+  elapsedMs?: number;
 }
 
 export const leadService = {

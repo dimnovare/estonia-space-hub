@@ -34,4 +34,26 @@ describe("redactAnalyticsPath — offer-token leakage guard", () => {
   it("does not treat 'offers' or other lookalikes as the offer route", () => {
     expect(redactAnalyticsPath("/et/offers-info")).toBe("/et/offers-info");
   });
+
+  // The provider quote page is guarded by a token and nothing else: whoever
+  // holds it can submit a price AS that provider, without an account. That is
+  // every bit as much a bearer credential as the offer token, and it was
+  // reaching GA reports in the clear.
+  it("redacts the provider quote token", () => {
+    expect(redactAnalyticsPath("/et/quote/AbC123def456GhI789jkl")).toBe("/et/quote/redacted");
+  });
+
+  it("redacts the quote token on every supported language prefix", () => {
+    for (const lang of ["et", "en", "ru", "lv", "lt"]) {
+      expect(redactAnalyticsPath(`/${lang}/quote/secret-token-value`)).toBe(`/${lang}/quote/redacted`);
+    }
+  });
+
+  it("redacts an unprefixed quote path too", () => {
+    expect(redactAnalyticsPath("/quote/secret-token-value")).toBe("/quote/redacted");
+  });
+
+  it("does not treat 'quotes' or other lookalikes as the quote route", () => {
+    expect(redactAnalyticsPath("/et/quotes-info")).toBe("/et/quotes-info");
+  });
 });

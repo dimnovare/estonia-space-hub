@@ -43,6 +43,7 @@ import RequestDetailPage from "@/pages/RequestDetailPage";
 import VerifyEmailPage from "@/pages/VerifyEmailPage";
 import { Loader2 } from "lucide-react";
 import { trackPageView } from "@/lib/analytics";
+import { captureAttribution } from "@/lib/attribution";
 import { LangParamGuard, LangRedirect, Navigate } from "@/i18n/routing";
 import { RETIRED_SLUG_HUB_ROUTE, type RetiredServiceTypeSlug } from "@/lib/serviceTypes";
 
@@ -124,6 +125,10 @@ function ScrollToTop() {
     if (!wasLangOnlyChange) {
       window.scrollTo(0, 0);
     }
+    // First touch wins and is never overwritten, so calling this on every
+    // navigation is safe — and necessary, because a visitor can arrive from an
+    // ad on ANY page, not only the ones that submit a request.
+    captureAttribution();
     trackPageView(pathname);
     prevPathRef.current = pathname;
   }, [pathname]);

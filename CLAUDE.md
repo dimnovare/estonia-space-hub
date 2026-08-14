@@ -11,7 +11,10 @@ The Cloudflare social-preview Worker lives in `../workers/social-preview/`.
 ```bash
 npm run dev          # Vite dev server at http://localhost:5173
 npm run build        # production build
-npx tsc --noEmit     # type-check (run before declaring any edit done)
+npm run typecheck    # type-check (run before declaring any edit done)
+#                      NOT `npx tsc --noEmit`: the root tsconfig.json is a
+#                      solution file (files: [], references: […]), so a bare
+#                      tsc checks ZERO files and exits 0. See below.
 npm run lint         # eslint
 npm run test         # vitest run (single pass)
 npm run test:watch   # vitest watch mode
@@ -99,7 +102,10 @@ Provider/supplier impersonation for admin: `useImpersonatedSupplierId()` +
 
 ## Conventions
 
-- `npx tsc --noEmit` must pass with zero errors before any edit is complete.
+- `npm run typecheck` must pass with zero errors before any edit is complete.
+  A bare `npx tsc --noEmit` type-checks NOTHING here (solution-style root tsconfig) and
+  exits 0; Vite/esbuild does not type-check either, so a real error can build and then
+  crash at runtime. Always go through the script.
 - All 5 language blocks in `translations.ts` must stay in sync (equal key count).
 - Admin UI is in `src/components/admin/` and `src/pages/Admin*.tsx`.
 - Provider portal UI is in `src/components/provider/` and `src/pages/Provider*.tsx`.

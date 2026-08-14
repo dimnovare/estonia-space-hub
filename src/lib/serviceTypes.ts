@@ -130,6 +130,39 @@ export function leadCategoryLabel(
   return !slug || slug === ANY_CATEGORY_SLUG ? anyLabel : serviceTypeLabel(t, slug);
 }
 
+/** The prefix the concierge intake stamps on every machine summary it writes
+ *  (backend `ServiceCategories.ConciergeQueryPrefix`). */
+const CONCIERGE_QUERY_PREFIX = "concierge: ";
+
+/**
+ * The services a concierge visitor actually selected, recovered from the lead's
+ * `query` machine summary — the mirror of the backend's
+ * `ServiceCategories.SelectedSlugs`.
+ *
+ * A lead carries ONE category while the intake invites the visitor to pick
+ * several, so a multi-service request collapses to the wildcard "any" and the
+ * column stops describing the request. The provider email already recovers the
+ * real list; the OPERATOR did not, and had to decode a raw machine string in the
+ * one place they decide what to do next.
+ *
+ * As strict as the backend for the same reason: only a query carrying the
+ * concierge prefix qualifies, and only the segment before the first " | " is
+ * read — everything after it interpolates the customer's own city, so no visitor
+ * can type a service list into a free-text field and have it read back as their
+ * selection. Retired slugs (packing / insurance) and the "+…" markers drop out
+ * because they are not public service slugs.
+ */
+export function leadRequestedServices(query: string | null | undefined): PublicServiceTypeSlug[] {
+  if (!query?.startsWith(CONCIERGE_QUERY_PREFIX)) return [];
+  const head = query.slice(CONCIERGE_QUERY_PREFIX.length).split(" | ")[0] ?? "";
+  const slugs = head
+    .split("+")
+    .map((token) => token.trim().toLowerCase())
+    .filter((token): token is PublicServiceTypeSlug =>
+      (PUBLIC_SERVICE_TYPE_SLUGS as readonly string[]).includes(token));
+  return [...new Set(slugs)];
+}
+
 /** slug → localized label map (e.g. for InteractiveMap popup HTML). Memoize at call site. */
 export function serviceTypeLabelMap(t: (key: string) => string): Record<string, string> {
   return Object.fromEntries(SERVICE_TYPE_SLUGS.map((s) => [s, t(`serviceType.${s}`)]));

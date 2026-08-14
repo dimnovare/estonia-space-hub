@@ -13,7 +13,7 @@ import {
 } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { serviceTypeLabel, SERVICE_TYPE_SLUGS } from "@/lib/serviceTypes";
+import { serviceTypeLabel, SERVICE_TYPE_SLUGS, leadRequestedServices } from "@/lib/serviceTypes";
 import { Button } from "@/components/ui/button";
 import { LEAD_STATUS_STYLE } from "./leadStatusStyles";
 import { LeadProviderStage } from "./LeadProviderStage";
@@ -89,6 +89,20 @@ export function LeadWorkspace({ lead }: { lead: AdminLead }) {
     [offers],
   );
 
+  /** What this request is actually FOR.
+   *
+   *  `lead.category` is the wildcard "any" whenever the visitor picked more than
+   *  one service — which the intake copy explicitly invites — so the header used
+   *  to read "Service" for exactly the requests that need the most thought. The
+   *  real pick survives in the query machine summary; the provider email already
+   *  reads it back, and now so does the operator. */
+  const serviceHeading = useMemo(() => {
+    const requested = leadRequestedServices(lead.query);
+    return requested.length > 0
+      ? requested.map((slug) => serviceTypeLabel(t, slug)).join(" + ")
+      : serviceTypeLabel(t, lead.category);
+  }, [lead.query, lead.category, t]);
+
   const ageLabel = useMemo(() => {
     const days = Math.floor((Date.now() - new Date(lead.createdAt).getTime()) / 86_400_000);
     try {
@@ -148,13 +162,21 @@ export function LeadWorkspace({ lead }: { lead: AdminLead }) {
     <div className="space-y-5 bg-secondary/30 px-5 py-4">
       {/* ── Header: lead age / service / route / date / SLA ── */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-xl border border-border bg-card px-4 py-3 text-sm">
-        <span className="font-display font-semibold text-navy-ink">{serviceTypeLabel(t, lead.category)}</span>
+        <span className="font-display font-semibold text-navy-ink">{serviceHeading}</span>
         <span className="inline-flex min-w-0 items-center gap-1.5 break-words text-muted-foreground">
           <MapPin className="h-3.5 w-3.5 shrink-0" />{lead.city}{lead.toCity ? ` → ${lead.toCity}` : ""}
         </span>
-        {lead.needDate && (
+        {lead.needDate ? (
           <span className="inline-flex items-center gap-1.5 text-muted-foreground">
             <CalendarCheck className="h-3.5 w-3.5" />{new Date(lead.needDate).toLocaleDateString()}
+          </span>
+        ) : (
+          /* A dateless request used to render NOTHING here, so it looked exactly
+             like a dated one — and a missing date is the single most common
+             reason a provider cannot quote. Name the gap where the operator
+             decides what to do next. */
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-warning/10 px-2 py-0.5 text-[11px] font-semibold uppercase text-warning-text">
+            <CalendarCheck className="h-3.5 w-3.5" />{t("admin.leads.noDate")}
           </span>
         )}
         <span className="inline-flex items-center gap-1.5 text-muted-foreground">
