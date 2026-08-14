@@ -107,6 +107,16 @@ function routesFor(t, { CURATED_CITIES, seoMeta }) {
     ["/faq",          `${t("seo.faq")} — Ruumly`,             t("seo.faqDesc")],
     ["/provider",     `${t("seo.providerProgram")} — Ruumly`, t("seo.providerProgramDesc")],
     ["/locations",    t("locations.dir.title"),               t("locations.dir.intro")],
+    ["/blog",         t("blog.title"),                        t("blog.subtitle")],
+
+    // Legal pages are noindex — but until now that was declared only by React,
+    // after hydration. A crawler that does not run JS saw an indexable page
+    // carrying the HOMEPAGE title, i.e. three more duplicates of the front page
+    // competing with it. Prerendering them with a real robots tag is strictly
+    // better than leaving the instruction in JavaScript.
+    ["/terms",   `${t("seo.terms")} — Ruumly`,   t("seo.termsDesc"),   { noindex: true }],
+    ["/privacy", `${t("seo.privacy")} — Ruumly`, t("seo.privacyDesc"), { noindex: true }],
+    ["/cookies", `${t("seo.cookies")} — Ruumly`, t("seo.cookiesDesc"), { noindex: true }],
   ];
 
   // Service × city hubs — the scalable SEO surface, bounded to the curated
@@ -135,16 +145,23 @@ function routesFor(t, { CURATED_CITIES, seoMeta }) {
  * than a template rebuild, so everything Vite injected (module scripts, the
  * stylesheet, the font preload, the verification meta) survives untouched.
  */
-function renderHead(shell, { lang, path, title, description }) {
+function renderHead(shell, { lang, path, title, description, noindex = false }) {
   const finalTitle = fullTitle(title);
   const url = `${BASE_URL}/${lang}${path === "/" ? "" : path}`;
+  // Mirrors components/SEO.tsx: hreflang alternates are emitted only for
+  // indexable pages, the canonical always.
   const alternates = [
-    ...LANGS.map(
-      (l) =>
-        `<link rel="alternate" hreflang="${l}" href="${attr(`${BASE_URL}/${l}${path === "/" ? "" : path}`)}" />`,
-    ),
-    `<link rel="alternate" hreflang="x-default" href="${attr(`${BASE_URL}/et${path === "/" ? "" : path}`)}" />`,
+    ...(noindex
+      ? []
+      : [
+          ...LANGS.map(
+            (l) =>
+              `<link rel="alternate" hreflang="${l}" href="${attr(`${BASE_URL}/${l}${path === "/" ? "" : path}`)}" />`,
+          ),
+          `<link rel="alternate" hreflang="x-default" href="${attr(`${BASE_URL}/et${path === "/" ? "" : path}`)}" />`,
+        ]),
     `<link rel="canonical" href="${attr(url)}" />`,
+    ...(noindex ? [`<meta name="robots" content="noindex,nofollow" />`] : []),
   ].join("\n    ");
 
   let html = shell;
@@ -215,8 +232,8 @@ async function main() {
       return value;
     };
 
-    for (const [path, title, description] of routesFor(t, { CURATED_CITIES, seoMeta })) {
-      const html = renderHead(shell, { lang, path, title, description });
+    for (const [path, title, description, opts] of routesFor(t, { CURATED_CITIES, seoMeta })) {
+      const html = renderHead(shell, { lang, path, title, description, ...opts });
       const routePath = `${lang}${path === "/" ? "" : path}`;
 
       // Written BOTH ways on purpose. Static hosts disagree about how a clean
