@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
+import { CitySuggestInput } from "@/components/CitySuggestInput";
 import { leadService, type ConciergeCategory } from "@/services";
 import { trackEvent } from "@/lib/analytics";
 import { getAttribution } from "@/lib/attribution";
@@ -358,6 +359,16 @@ export default function RequestPage() {
     [categories],
   );
 
+  /** The same questions kept with their service, so step 2 can say which
+   *  question belongs to what when more than one service is selected. */
+  const questionGroups = useMemo(
+    () =>
+      categories
+        .map((category) => ({ category, questions: SCOPE_QUESTIONS[category] ?? [] }))
+        .filter((group) => group.questions.length > 0),
+    [categories],
+  );
+
   /** Everything that may end up in `details`: the required questions plus the
    *  optional moving add-on. Deselecting moving drops the add-on answer from
    *  the summary even if the chip was tapped earlier. */
@@ -638,21 +649,23 @@ export default function RequestPage() {
                     <label htmlFor="req-city" className="mb-1.5 block text-sm font-medium text-foreground">
                       {t("request.city.label")} <span className="text-destructive">*</span>
                     </label>
-                    <div className="relative">
-                      <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <input
-                        id="req-city"
-                        type="text"
-                        value={city}
-                        onChange={(e) => { setCity(e.target.value); setStepError(null); }}
-                        placeholder={t("request.city.placeholder")}
-                        // Only when the city is the thing that's wrong. Flagging
-                        // it for a missing scope answer sends a screen-reader
-                        // user to correct a field that was already fine.
-                        aria-invalid={!!stepError && !city.trim()}
-                        className="h-12 w-full rounded-lg border border-border bg-card pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                      />
-                    </div>
+                    {/* Suggest-as-you-type, because a typo here is not a typo —
+                        it is a request that reaches nobody. The fan-out anchors
+                        on this string, and an unresolvable anchor returns zero
+                        providers while the customer still sees a success screen.
+                        Free text is still accepted: an unmatched town is a
+                        demand signal we want. See CitySuggestInput. */}
+                    <CitySuggestInput
+                      id="req-city"
+                      value={city}
+                      onChange={(next) => { setCity(next); setStepError(null); }}
+                      placeholder={t("request.city.placeholder")}
+                      // Only when the city is the thing that's wrong. Flagging
+                      // it for a missing scope answer sends a screen-reader
+                      // user to correct a field that was already fine.
+                      invalid={!!stepError && !city.trim()}
+                      unknownHint={t("request.city.unknown")}
+                    />
                     {settings.conciergeCities && (
                       <p className="mt-1.5 text-xs text-muted-foreground">
                         {t("request.city.hint").replace("{cities}", settings.conciergeCities)}
@@ -679,20 +692,37 @@ export default function RequestPage() {
                   {activeQuestions.length > 0 && (
                     <div className="space-y-4 rounded-xl border border-line bg-secondary/30 p-4">
                       <p className="text-xs text-muted-foreground">{t("request.scope.hint")}</p>
-                      {activeQuestions.map((q) => (
-                        <ScopeRadioGroup
-                          key={q.id}
-                          id={q.id}
-                          options={q.options}
-                          value={scope[q.id]}
-                          label={t(`request.scope.${q.id}.label`)}
-                          optionLabel={(n) => t(`request.scope.${q.id}.opt${n}`)}
-                          required
-                          onSelect={(n) => {
-                            setScope((s) => ({ ...s, [q.id]: n }));
-                            setStepError(null);
-                          }}
-                        />
+                      {/* Grouped per service, and labelled only when there is
+                          more than one — because with two services picked this
+                          was four unlabelled chip groups in a row, and nothing
+                          said which question belonged to which service.
+                          Deliberately NOT collapsed: these gate the Next button,
+                          and hiding a required field behind an extra tap is
+                          both more clicks and a worse form. */}
+                      {questionGroups.map((group) => (
+                        <div key={group.category} className={questionGroups.length > 1 ? "space-y-4" : "space-y-4"}>
+                          {questionGroups.length > 1 && (
+                            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-teal-deep">
+                              {(() => { const Icon = SERVICE_TYPE_ICONS[group.category]; return <Icon className="h-3.5 w-3.5" aria-hidden />; })()}
+                              {t(`serviceType.${group.category}`)}
+                            </p>
+                          )}
+                          {group.questions.map((q) => (
+                            <ScopeRadioGroup
+                              key={q.id}
+                              id={q.id}
+                              options={q.options}
+                              value={scope[q.id]}
+                              label={t(`request.scope.${q.id}.label`)}
+                              optionLabel={(n) => t(`request.scope.${q.id}.opt${n}`)}
+                              required
+                              onSelect={(n) => {
+                                setScope((s) => ({ ...s, [q.id]: n }));
+                                setStepError(null);
+                              }}
+                            />
+                          ))}
+                        </div>
                       ))}
                     </div>
                   )}
