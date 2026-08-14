@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Copy, Eye, Loader2, MailX, Plus, Quote, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -19,7 +19,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { candidateToEditable, nextLocalId, parsePrice, toEditable, toInput, type EditableOption } from "./leadWorkspaceModels";
+import { candidateToEditable, editingDraftClosed, nextLocalId, parsePrice, toEditable, toInput, type EditableOption } from "./leadWorkspaceModels";
 import { OFFER_STATUS_STYLE, StatusBadge } from "./leadStatusStyles";
 
 interface LeadOfferStageProps {
@@ -63,6 +63,14 @@ export function LeadOfferStage({
   const [outreachNotes, setOutreachNotes] = useState<Record<string, string>>({});
   const dismissedDraftId = useRef<string | null>(null);
 
+  const closeEditor = useCallback(() => {
+    setEditingDraftId(null);
+    setEditingVersion(undefined);
+    setOptions([]);
+    setCustomerNote("");
+    setDirty(false);
+  }, []);
+
   useEffect(() => {
     if (activeDraft && activeDraft.id !== editingDraftId && activeDraft.id !== dismissedDraftId.current) {
       setEditingDraftId(activeDraft.id);
@@ -70,8 +78,16 @@ export function LeadOfferStage({
       setOptions(activeDraft.options.map(toEditable));
       setCustomerNote(activeDraft.customerNote ?? "");
       setDirty(false);
+      return;
     }
-  }, [activeDraft, editingDraftId]);
+    // Sending the offer ends the editor, and nothing else here notices: without
+    // this the whole editor keeps rendering — live Save button and all — over an
+    // offer the customer is already reading. Letting go also hands the next
+    // provider quote back to the "no editor" branch, which opens a NEW draft.
+    // That is what the server does with a quote arriving after a send, so the
+    // "Add to offer" button below stops appending into a buffer nobody saves.
+    if (editingDraftClosed(offers, editingDraftId)) closeEditor();
+  }, [activeDraft, editingDraftId, offers, closeEditor]);
 
   const refreshOffers = () => {
     onOffersChanged();
@@ -89,10 +105,7 @@ export function LeadOfferStage({
 
   const clearDeletedDraft = () => {
     dismissedDraftId.current = activeDraft?.id ?? editingDraftId;
-    setEditingDraftId(null);
-    setOptions([]);
-    setCustomerNote("");
-    setDirty(false);
+    closeEditor();
     removeDraftFromCache();
   };
 

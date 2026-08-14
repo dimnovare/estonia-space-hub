@@ -57,6 +57,23 @@ export function candidateToEditable(candidate: ProviderCandidate): EditableOptio
   };
 }
 
+/** True once the offer the editor was seeded from has left draft — sent, viewed,
+ *  chosen or expired. That buffer is finished: sending bumps the offer's version
+ *  twice, so every save from it is rejected as stale, and the customer is
+ *  already reading the /offer/{token} a save would rewrite under them.
+ *
+ *  An id that is merely missing from the list is deliberately NOT closed: a
+ *  draft the admin just created sits in the editor a render before it reaches
+ *  the list, and reading that gap as "closed" would shut the editor the instant
+ *  it opened. Only a status we can actually see decides. */
+export function editingDraftClosed(
+  offers: readonly Pick<AdminOffer, "id" | "status">[],
+  editingDraftId: string | null,
+): boolean {
+  return editingDraftId !== null
+    && offers.some((offer) => offer.id === editingDraftId && offer.status !== "draft");
+}
+
 /** Strict — see lib/parseMoney. parseFloat used to prefix-parse "1 200,50" to 1
  *  and this value flows straight to the customer's offer. */
 export function parsePrice(value: string): number | null {

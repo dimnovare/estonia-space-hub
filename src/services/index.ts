@@ -819,9 +819,15 @@ export interface ProviderOutreachRow {
 }
 
 /** Machine reasons the backend refused to email a selected provider.
- *  "email_bounced" = the address is retired until an admin saves a new one. */
+ *  "email_bounced"   = the address is retired until an admin saves a new one.
+ *  "opted_out"       = the provider asked to be left alone.
+ *  "duplicate_email" = a branch of the same company already has this request;
+ *                      the directory holds one row per branch, so several rows
+ *                      can share one inbox. The freed slot goes to the next
+ *                      distinct company rather than shrinking the fan-out. */
 export type OutreachSkipReason =
-  "no_email" | "not_found" | "already_contacted" | "email_bounced";
+  | "no_email" | "not_found" | "already_contacted" | "email_bounced"
+  | "opted_out" | "duplicate_email";
 
 export interface OutreachResult {
   sent: ProviderOutreachRow[];

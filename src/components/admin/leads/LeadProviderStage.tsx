@@ -9,6 +9,7 @@ import {
   type AdminLead,
   type OutreachResult,
   type OutreachPreviewItem,
+  type OutreachSkipReason,
   type ProviderCandidate,
 } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
@@ -44,6 +45,16 @@ function formatDistance(value: number | null, t: (key: string) => string) {
 
 export function LeadProviderStage({ lead, onAddCandidate, onOutreachComplete }: LeadProviderStageProps) {
   const { t } = useLanguage();
+
+  // The backend owns this vocabulary and may add to it before the frontend
+  // knows the word. t() returns the key itself when it has no translation, so
+  // fall back to the raw machine reason — unhelpful, but it names the real
+  // cause, which "admin.leads.skip.something_new" does not.
+  const skipLabel = (reason: OutreachSkipReason) => {
+    const key = `admin.leads.skip.${reason}`;
+    const label = t(key);
+    return label === key ? reason : label;
+  };
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
   const [scope, setScope] = useState<"nearby" | "all">("nearby");
@@ -392,7 +403,9 @@ export function LeadProviderStage({ lead, onAddCandidate, onOutreachComplete }: 
             {review?.recipients.map((item) => (
               <article key={item.supplierId} className="border-b border-border pb-4 last:border-0 last:pb-0">
                 <div className="font-medium text-navy-ink">{item.supplierName ?? item.supplierId}</div>
-                {item.skipReason && <p className="mt-1 font-mono text-xs text-muted-foreground">{item.skipReason}</p>}
+                {item.skipReason && (
+                  <p className="mt-1 text-xs text-muted-foreground">{skipLabel(item.skipReason)}</p>
+                )}
                 {(item.email || item.subject || item.textBody) && (
                   <div>
                     <dl className="mt-2 grid gap-1 text-sm sm:grid-cols-[88px_minmax(0,1fr)]">
