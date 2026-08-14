@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "@/i18n/routing";
 import {
   ArrowRight, ArrowLeft, CheckCircle, Check,
-  MapPin, CalendarDays, Loader2, AlertCircle,
+  MapPin, CalendarDays, Loader2, AlertCircle, ShieldCheck, Mail,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -162,8 +162,90 @@ function clearDraft(): void {
 }
 
 /**
- * /request — the concierge demand funnel ("tell us what you need, we find you
- * 2-3 offers"). Three steps: what → details → contact. Submits to
+ * A single-choice chip group, with the semantics a single choice actually has.
+ *
+ * These were `<button aria-pressed>` inside a `fieldset`, which a screen reader
+ * announces as a row of independent toggle buttons — so nothing conveyed that
+ * picking one clears the others, how many options there are, or which position
+ * you are at. Keyboard users also had to Tab through every chip individually.
+ *
+ * `role="radiogroup"` + `role="radio"` fixes the announcement, and the roving
+ * tabindex below is what the pattern requires: the group is ONE tab stop, and
+ * arrows move within it. Arrow keys select as they move, which is standard radio
+ * behaviour and safe here because every group's last option means "not sure" —
+ * there is no destructive choice to land on by accident.
+ *
+ * Deliberately NOT used for the optional packing add-on: that one is clearable
+ * by tapping the active chip again, and a radio group cannot be un-set. It stays
+ * a toggle-button group, which is what it genuinely is.
+ */
+function ScopeRadioGroup({
+  id, options, value, label, optionLabel, onSelect, required = false,
+}: {
+  id: string;
+  options: number;
+  value: number | undefined;
+  label: string;
+  optionLabel: (n: number) => string;
+  onSelect: (n: number) => void;
+  required?: boolean;
+}) {
+  const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  const choices = Array.from({ length: options }, (_, i) => i + 1);
+  // The group's single tab stop: the chosen chip, or the first one when nothing
+  // is chosen yet.
+  const tabStop = value ?? 1;
+
+  const move = (to: number) => {
+    const next = ((to - 1 + options) % options) + 1;
+    onSelect(next);
+    refs.current[next - 1]?.focus();
+  };
+
+  const onKeyDown = (event: React.KeyboardEvent, n: number) => {
+    const key = event.key;
+    if (key === "ArrowRight" || key === "ArrowDown") { event.preventDefault(); move(n + 1); }
+    else if (key === "ArrowLeft" || key === "ArrowUp") { event.preventDefault(); move(n - 1); }
+    else if (key === "Home") { event.preventDefault(); move(1); }
+    else if (key === "End") { event.preventDefault(); move(options); }
+  };
+
+  return (
+    <div>
+      <p id={`${id}-label`} className="mb-1.5 text-sm font-medium text-foreground">
+        {label}{required && <span className="text-destructive"> *</span>}
+      </p>
+      <div role="radiogroup" aria-labelledby={`${id}-label`} aria-required={required || undefined} className="flex flex-wrap gap-2">
+        {choices.map((n) => {
+          const active = value === n;
+          return (
+            <button
+              key={n}
+              ref={(el) => { refs.current[n - 1] = el; }}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              tabIndex={tabStop === n ? 0 : -1}
+              onKeyDown={(e) => onKeyDown(e, n)}
+              onClick={() => onSelect(n)}
+              className={`min-h-[44px] rounded-full border px-3.5 py-2 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+                active
+                  ? "border-navy-ink bg-navy-ink text-white"
+                  : "border-line-2 bg-card text-foreground hover:border-primary hover:text-primary"
+              }`}
+            >
+              {optionLabel(n)}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * /request — the concierge demand funnel ("tell us what you need, we contact
+ * the providers that fit"). Three steps: what → details → contact. Submits to
  * POST /leads/request; the admin match queue works the lead from there.
  */
 export default function RequestPage() {
@@ -434,9 +516,24 @@ export default function RequestPage() {
           </div>
           <h1 className="mt-6 font-display text-3xl font-bold text-navy-ink">{t("request.success.title")}</h1>
           <p className="mt-3 text-base leading-relaxed text-muted-foreground">{t("request.success.body")}</p>
+
+          {/* The receipt is the real next step, not a link.
+              This screen's only outbound action used to be "browse the
+              directory" — sending someone who had just told us exactly what
+              they need back to self-serve search, which is the proposition
+              undercutting itself. Point at their inbox instead: it proves the
+              request landed, names the address so a typo is caught here rather
+              than in silence, and opens the reply channel the concierge depends
+              on when a date moves. */}
+          <p className="mt-6 flex items-start gap-2.5 rounded-xl border border-line bg-secondary/40 p-4 text-left text-sm leading-relaxed text-foreground">
+            <Mail className="mt-0.5 h-4 w-4 shrink-0 text-teal-deep" aria-hidden />
+            <span>{t("request.success.emailed").replace("{email}", email.trim())}</span>
+          </p>
+
+          {/* Browsing stays available, but as the quiet secondary it is. */}
           <Link
             to="/search"
-            className="mt-8 inline-flex min-h-[44px] items-center gap-1.5 text-sm font-semibold text-accent hover:underline"
+            className="mt-6 inline-flex min-h-[44px] items-center gap-1.5 text-sm font-medium text-muted-foreground underline-offset-4 hover:text-accent hover:underline"
           >
             {t("request.success.browse")}
             <ArrowRight className="h-4 w-4" />
@@ -583,34 +680,19 @@ export default function RequestPage() {
                     <div className="space-y-4 rounded-xl border border-line bg-secondary/30 p-4">
                       <p className="text-xs text-muted-foreground">{t("request.scope.hint")}</p>
                       {activeQuestions.map((q) => (
-                        <fieldset key={q.id}>
-                          <legend className="mb-1.5 text-sm font-medium text-foreground">
-                            {t(`request.scope.${q.id}.label`)} <span className="text-destructive">*</span>
-                          </legend>
-                          <div className="flex flex-wrap gap-2">
-                            {Array.from({ length: q.options }, (_, i) => i + 1).map((n) => {
-                              const active = scope[q.id] === n;
-                              return (
-                                <button
-                                  key={n}
-                                  type="button"
-                                  aria-pressed={active}
-                                  onClick={() => {
-                                    setScope((s) => ({ ...s, [q.id]: n }));
-                                    setStepError(null);
-                                  }}
-                                  className={`min-h-[40px] rounded-full border px-3.5 py-2 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
-                                    active
-                                      ? "border-navy-ink bg-navy-ink text-white"
-                                      : "border-line-2 bg-card text-foreground hover:border-primary hover:text-primary"
-                                  }`}
-                                >
-                                  {t(`request.scope.${q.id}.opt${n}`)}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </fieldset>
+                        <ScopeRadioGroup
+                          key={q.id}
+                          id={q.id}
+                          options={q.options}
+                          value={scope[q.id]}
+                          label={t(`request.scope.${q.id}.label`)}
+                          optionLabel={(n) => t(`request.scope.${q.id}.opt${n}`)}
+                          required
+                          onSelect={(n) => {
+                            setScope((s) => ({ ...s, [q.id]: n }));
+                            setStepError(null);
+                          }}
+                        />
                       ))}
                     </div>
                   )}
@@ -782,6 +864,17 @@ export default function RequestPage() {
                     />
                   </div>
                 </div>
+                {/* The highest-hesitation moment in the funnel: three personal
+                    fields, no account, no idea who ends up holding them. It
+                    said nothing at all here. This states the one fact that
+                    actually answers the worry — and it is a fact, guarded by a
+                    test: ProviderOutreachComposer never puts the customer's
+                    name, email or phone in a provider email. */}
+                <p className="mt-4 flex items-start gap-2 rounded-lg border border-line bg-secondary/40 p-3 text-xs leading-relaxed text-muted-foreground">
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-teal-deep" aria-hidden />
+                  {t("request.contact.reassure")}
+                </p>
+
                 {/* Honeypot. Since auto fan-out shipped, one submit emails up to
                     six real businesses, so ordinary form spam became outbound-mail
                     amplification pointed at the supply base. A bot fills this;

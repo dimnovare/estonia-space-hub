@@ -34,6 +34,32 @@ const STATUS_OPTIONS: { value: AdminLeadStatus | "all"; labelKey: string }[] = [
 
 const LIMIT = 50;
 
+/**
+ * Services sold as a specific day's capacity — a mover, a van, a trailer and a
+ * cleaner all price a slot, so a request without a date cannot be quoted at all.
+ * Storage is the exception: a unit is available continuously, so "no date yet"
+ * is a genuine answer there and must NOT be flagged as missing.
+ *
+ * Mirrors DATE_REQUIRED_FOR in pages/RequestPage.tsx, which is what the intake
+ * enforces.
+ */
+const DATE_DRIVEN_CATEGORIES = ["moving", "trailer", "vanrental", "cleaning"];
+
+/** The prefix SupportController writes when the automation gate held a lead. */
+const AUTO_HELD_PREFIX = "[auto] Held";
+
+/**
+ * True when this request cannot be worked as it stands — see the comment at the
+ * `visibleItems` filter for why these three, and why it is client-side.
+ */
+export function leadMissingInfo(lead: AdminLead): boolean {
+  const category = (lead.category ?? "").toLowerCase();
+  const needsDate = DATE_DRIVEN_CATEGORIES.includes(category) && !lead.needDate;
+  const noPhone = !lead.phone?.trim();
+  const autoHeld = (lead.adminNotes ?? "").startsWith(AUTO_HELD_PREFIX);
+  return needsDate || noPhone || autoHeld;
+}
+
 const pct = (fraction: number) => `${Math.round((fraction ?? 0) * 100)}%`;
 
 /**
@@ -90,6 +116,7 @@ export default function AdminLeads() {
     return s && VALID_STATUS_PARAMS.includes(s) ? s : "all";
   });
   const [conciergeOnly, setConciergeOnly] = useState(false);
+  const [missingInfoOnly, setMissingInfoOnly] = useState(false);
   const [needsResponse, setNeedsResponse] = useState(() => {
     const v = searchParams.get("needsResponse");
     return v === "1" || v === "true";
@@ -167,7 +194,22 @@ export default function AdminLeads() {
     onError: (err: Error) => toast.error(err?.message || t("toast.error")),
   });
 
-  const items = data?.items ?? [];
+  const allItems = data?.items ?? [];
+  // The queue an operator should work FIRST: requests that cannot be quoted as
+  // they stand. Three things stop the loop dead —
+  //   • no date, on a service sold by the day (a mover, van, trailer or cleaner
+  //     prices a specific slot; "as soon as possible" is not quotable);
+  //   • no phone, so chasing the gap means email round-trips;
+  //   • held by the automation gate, so nobody was contacted at all.
+  // Each is fixable in one call, and each is invisible in a list sorted by date.
+  //
+  // Derived client-side from fields the list already returns, so it needs no new
+  // API parameter. The trade-off is real and worth stating: it narrows the
+  // CURRENT PAGE, not the whole result set. At present volume (single-digit
+  // requests a week) that is the same thing. If the queue ever outgrows one
+  // page, this belongs in GetLeads as a real filter.
+  const visibleItems = missingInfoOnly ? allItems.filter(leadMissingInfo) : allItems;
+  const items = visibleItems;
   const totalPages = data ? Math.max(1, Math.ceil(data.total / LIMIT)) : 1;
   const toggleExpanded = (id: string) => setExpandedId((cur) => (cur === id ? null : id));
 
@@ -289,6 +331,12 @@ export default function AdminLeads() {
           onClick={() => { setNeedsResponse((v) => !v); setPage(1); }}
         >
           {t("admin.leads.filterNeedsResponse")}
+        </FilterChip>
+        <FilterChip
+          active={missingInfoOnly}
+          onClick={() => setMissingInfoOnly((v) => !v)}
+        >
+          {t("admin.leads.filterMissingInfo")}
         </FilterChip>
         <select
           value={categoryFilter}
