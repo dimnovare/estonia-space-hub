@@ -112,7 +112,7 @@ export default function Footer() {
               <h3 className="mb-4 font-mono-label text-[11px] font-medium uppercase tracking-[0.16em] text-white/50">
                 {col.title}
               </h3>
-              <ul className="space-y-1">
+              <ul className="space-y-2">
                 {col.links.map((l) => (
                   <li key={l.label}>
                     <Link
