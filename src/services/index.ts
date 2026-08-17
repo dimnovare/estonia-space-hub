@@ -531,11 +531,23 @@ export interface ConciergeRequestInput {
   website?: string;
   /** Milliseconds between the funnel opening and this submit. */
   elapsedMs?: number;
+  /** Private-bucket keys from POST /leads/photos, attached to this request. */
+  photoKeys?: string[];
   /** Visitor explicitly answered "my date is flexible" instead of naming a day. */
   dateFlexible?: boolean;
 }
 
 export const leadService = {
+  /**
+   * Upload one request photo before the lead exists. Returns the opaque
+   * private-bucket key, which is submitted with the request. Anonymous and
+   * tightly rate-limited server-side — see LeadPhotoController.
+   */
+  async uploadPhoto(file: File): Promise<{ key: string }> {
+    const form = new FormData();
+    form.append("file", file);
+    return apiClient.postForm<{ key: string }>("/leads/photos", form);
+  },
   async requestQuote(input: QuoteLeadInput): Promise<void> {
     await apiClient.post("/leads/quote", { ...input, language: input.language ?? "et" });
   },

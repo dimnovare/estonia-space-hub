@@ -11,6 +11,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
 import { CitySuggestInput } from "@/components/CitySuggestInput";
+import { RequestPhotoUpload, type Photo } from "@/components/RequestPhotoUpload";
 import { leadService, type ConciergeCategory } from "@/services";
 import { trackEvent } from "@/lib/analytics";
 import { getAttribution } from "@/lib/attribution";
@@ -312,6 +313,9 @@ export default function RequestPage() {
   const [needDate, setNeedDate] = useState(() => draft.needDate ?? "");
   const [dateFlexible, setDateFlexible] = useState(() => draft.dateFlexible ?? false);
   const [details, setDetails] = useState(() => draft.details ?? "");
+  // Deliberately NOT persisted with the draft: the keys would outlive the
+  // 30-day retention and the object URLs die with the page anyway.
+  const [photos, setPhotos] = useState<Photo[]>([]);
   // questionId → 1-based index of the chosen option. A ?category=packing deep
   // link lands on moving with the packing add-on already answered "yes".
   const [scope, setScope] = useState<Record<string, number>>(
@@ -427,6 +431,7 @@ export default function RequestPage() {
         details: composeDetails(),
         language,
         attribution: getAttribution(),
+        photoKeys: photos.length ? photos.map((p) => p.key) : undefined,
         website,
         elapsedMs: Date.now() - openedAtRef.current,
       }),
@@ -869,6 +874,12 @@ export default function RequestPage() {
                       className="w-full rounded-lg border border-border bg-card px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                     />
                   </div>
+
+                  {/* Optional photos. Last on the step because it is the only
+                      field that is genuinely optional for every service — and
+                      because a visitor who has already answered everything else
+                      is the one most likely to bother. */}
+                  <RequestPhotoUpload photos={photos} onChange={setPhotos} />
                 </div>
               </div>
             )}
