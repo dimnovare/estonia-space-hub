@@ -48,13 +48,25 @@ const DATE_DRIVEN_CATEGORIES = ["moving", "trailer", "vanrental", "cleaning"];
 /** The prefix SupportController writes when the automation gate held a lead. */
 const AUTO_HELD_PREFIX = "[auto] Held";
 
+/** The marker SupportController writes when the visitor said "my date is flexible". */
+const DATE_FLEXIBLE_MARKER = "+date-flexible";
+
+/** True when the visitor explicitly answered that any day suits them. */
+export function leadDateIsFlexible(lead: AdminLead): boolean {
+  const q = lead.query ?? "";
+  return q.startsWith("concierge: ") && q.split(" | ")[0].includes(DATE_FLEXIBLE_MARKER);
+}
+
 /**
  * True when this request cannot be worked as it stands — see the comment at the
  * `visibleItems` filter for why these three, and why it is client-side.
  */
 export function leadMissingInfo(lead: AdminLead): boolean {
   const category = (lead.category ?? "").toLowerCase();
-  const needsDate = DATE_DRIVEN_CATEGORIES.includes(category) && !lead.needDate;
+  // "Flexible" is an ANSWER, not a gap — flagging it would bury the queue in
+  // requests that are already workable.
+  const needsDate = DATE_DRIVEN_CATEGORIES.includes(category)
+    && !lead.needDate && !leadDateIsFlexible(lead);
   const noPhone = !lead.phone?.trim();
   const autoHeld = (lead.adminNotes ?? "").startsWith(AUTO_HELD_PREFIX);
   return needsDate || noPhone || autoHeld;

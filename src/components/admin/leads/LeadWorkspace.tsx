@@ -20,6 +20,7 @@ import { LeadProviderStage } from "./LeadProviderStage";
 import { LeadOfferStage } from "./LeadOfferStage";
 import { LeadDeliveryReview } from "./LeadDeliveryReview";
 import { LeadActivityTimeline } from "./LeadActivityTimeline";
+import { leadDateIsFlexible } from "@/components/admin/AdminLeads";
 
 // The concierge happy-path pipeline is now three clickable stages: converted is
 // removed as a manual jump — only booking confirmation (LeadDeliveryReview) may
@@ -175,8 +176,8 @@ export function LeadWorkspace({ lead }: { lead: AdminLead }) {
              like a dated one — and a missing date is the single most common
              reason a provider cannot quote. Name the gap where the operator
              decides what to do next. */
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-warning/10 px-2 py-0.5 text-[11px] font-semibold uppercase text-warning-text">
-            <CalendarCheck className="h-3.5 w-3.5" />{t("admin.leads.noDate")}
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase ${leadDateIsFlexible(lead) ? "bg-secondary text-muted-foreground" : "bg-warning/10 text-warning-text"}`}>
+            <CalendarCheck className="h-3.5 w-3.5" />{t(leadDateIsFlexible(lead) ? "admin.leads.dateFlexible" : "admin.leads.noDate")}
           </span>
         )}
         <span className="inline-flex items-center gap-1.5 text-muted-foreground">

@@ -101,6 +101,27 @@ const DATE_REQUIRED_FOR: readonly ConciergeCategory[] = ["moving", "trailer", "v
 const DRAFT_KEY = "ruumly-request-draft";
 
 /**
+ * True when the city field holds a street address rather than a place.
+ *
+ * On 2026-08-17 a real Haapsalu request arrived with the city
+ * "Haapsalu Lihula mnt 10". `CityMatcher` normalises that to
+ * "haapsalu lihula mnt 10", which equals no provider's "haapsalu", so no
+ * geographic anchor could be derived — and with a null anchor the finder keeps
+ * nothing and the 25 → 50 → 100 km widening is futile, every pass re-deriving
+ * the same null anchor. 34 movers sat within range of Haapsalu and the customer
+ * was told nothing. The autocomplete did not save them: free text is allowed by
+ * design, and the string even STARTS with a real city.
+ *
+ * A digit is the high-precision signal — no Estonian, Latvian or Lithuanian
+ * town has one in its name — so that alone is worth blocking on. Word count is
+ * deliberately NOT used to block: "Haapsalu linn", "Harju maakond" and
+ * "Klaipėdos rajonas" are all legitimate multi-word answers.
+ */
+function looksLikeStreetAddress(city: string): boolean {
+  return /\d/.test(city);
+}
+
+/**
  * OPTIONAL add-on shown inside the moving flow only.
  *
  * Packing is never sold standalone in the Baltics — it is a line item in a
@@ -399,6 +420,10 @@ export default function RequestPage() {
         // "Flexible" is an answer, not a date — send nothing and let the
         // provider email say so in their own language.
         needDate: dateFlexible ? undefined : (needDate || undefined),
+        // Sent even though needDate is omitted: "flexible" is an ANSWER, and it
+        // lets the provider email say something a mover can act on ("propose a
+        // day that suits you") instead of reporting silence.
+        dateFlexible: dateFlexible || undefined,
         details: composeDetails(),
         language,
         attribution: getAttribution(),
@@ -461,6 +486,12 @@ export default function RequestPage() {
     if (step === 1) {
       if (!city.trim()) {
         setStepError(t("request.errors.required"));
+        return;
+      }
+      // A street address here is not a cosmetic problem: it costs the whole
+      // request. See looksLikeStreetAddress.
+      if (looksLikeStreetAddress(city)) {
+        setStepError(t("request.errors.cityAddress"));
         return;
       }
       // Every scoping question needs an answer — "not sure" counts as one.

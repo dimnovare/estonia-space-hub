@@ -531,6 +531,8 @@ export interface ConciergeRequestInput {
   website?: string;
   /** Milliseconds between the funnel opening and this submit. */
   elapsedMs?: number;
+  /** Visitor explicitly answered "my date is flexible" instead of naming a day. */
+  dateFlexible?: boolean;
 }
 
 export const leadService = {
