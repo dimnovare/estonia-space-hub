@@ -12,7 +12,8 @@ import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
 import { CitySuggestInput } from "@/components/CitySuggestInput";
 import { RequestPhotoUpload, type Photo } from "@/components/RequestPhotoUpload";
-import { leadService, type ConciergeCategory } from "@/services";
+import { RequestScopeSections, type ScopeQuestion } from "@/components/RequestScopeSections";
+import { leadService, type ConciergeCategory, type ConciergeRequestInput } from "@/services";
 import { trackEvent } from "@/lib/analytics";
 import { getAttribution } from "@/lib/attribution";
 import {
@@ -66,20 +67,67 @@ function cameFromPackingLink(params: URLSearchParams): boolean {
  * group means "not sure". Nobody is ever hard-blocked: "not sure" is itself a
  * fact the concierge can work with, unlike a blank field.
  */
-interface ScopeQuestion { id: string; options: number }
-
 const SCOPE_QUESTIONS: Partial<Record<ConciergeCategory, ScopeQuestion[]>> = {
-  warehouse: [{ id: "warehouseSize", options: 6 }, { id: "warehouseDuration", options: 5 }],
-  // Floors and a lift are the single biggest price driver in a Baltic move —
-  // a mover who has the size but not this cannot give a number, only a range.
-  moving:    [{ id: "movingSize", options: 6 }, { id: "movingAccess", options: 5 }],
-  // "How long" alone does not describe a trailer. What is being hauled decides
-  // whether the provider even owns the right one.
-  trailer:   [{ id: "trailerDuration", options: 5 }, { id: "trailerType", options: 5 }],
-  vanrental: [{ id: "vanrentalDuration", options: 5 }, { id: "vanrentalSize", options: 4 }],
-  // Cleaning asked only WHAT KIND, never HOW BIG — so no cleaner could quote it.
-  // Size is the whole basis of a cleaning price.
-  cleaning:  [{ id: "cleaningType", options: 5 }, { id: "cleaningSize", options: 5 }],
+  warehouse: [
+    { id: "warehouseSize", options: 6 },
+    { id: "warehouseDuration", options: 5 },
+    // Size and duration describe a box, not a customer. A car, a boat or
+    // anything climate-sensitive changes WHICH unit can be offered at all —
+    // half the directory's storage is unheated and has no drive-in access, so
+    // sending those requests out un-flagged burns the contact on a "no".
+    { id: "warehouseGoods", options: 6 },
+  ],
+  moving: [
+    { id: "movingSize", options: 6 },
+    // Floors and a lift are the single biggest price driver in a Baltic move —
+    // a mover who has the size but not this cannot give a number, only a range.
+    //
+    // This was ONE question, and a move has two addresses. Adduco, a real
+    // Estonian mover, refused to quote a live Haapsalu job for exactly that
+    // reason ("Kas lähte ja sihtkoht on samal aadressil…"): carrying a sofa
+    // down four flights and carrying it up four more are two different prices,
+    // and one combined answer states neither.
+    { id: "movingAccessFrom", options: 5 },
+    { id: "movingAccessTo", options: 5 },
+    // The biggest single price driver after size and floor. A piano or a safe
+    // is a specialist sub-crew and gear, quoted separately or declined — a
+    // mover who discovers it on the day either re-prices in front of the
+    // customer or walks.
+    { id: "movingHeavyItems", options: 6 },
+  ],
+  trailer: [
+    { id: "trailerDuration", options: 5 },
+    // "How long" alone does not describe a trailer. What is being hauled decides
+    // whether the provider even owns the right one.
+    { id: "trailerType", options: 5 },
+    // Nothing anywhere in the funnel established that the customer can lawfully
+    // move the thing they are renting: no tow bar, no towing vehicle, no licence
+    // category (B covers a combination up to 750 kg, BE above it). We were able
+    // to route a request nobody could legally fulfil, and only find out after
+    // spending a provider contact on it. "No tow bar" is also the most useful
+    // answer we can get — that customer wants a van, not a trailer.
+    { id: "trailerTow", options: 5 },
+  ],
+  vanrental: [
+    // First, because it is the question that DEFINES the service and it was
+    // never asked. A van you drive and a van that arrives with a driver (and
+    // possibly loaders) are different products, from different providers, at
+    // different prices. A real request — "van rental + moving, Kristiine →
+    // Õismäe" — could not be classified at all for want of this one answer.
+    { id: "vanrentalDriver", options: 5 },
+    { id: "vanrentalDuration", options: 5 },
+    { id: "vanrentalSize", options: 4 },
+  ],
+  cleaning: [
+    // Cleaning asked only WHAT KIND, never HOW BIG — so no cleaner could quote it.
+    // Size is the whole basis of a cleaning price.
+    { id: "cleaningType", options: 5 },
+    { id: "cleaningSize", options: 5 },
+    // Windows, oven and fridge are priced as add-ons across the Baltics and
+    // together swing the total by 30-50%. Left unasked, every cleaning quote we
+    // relayed was provisional, and the correction landed on the customer.
+    { id: "cleaningExtras", options: 6 },
+  ],
 };
 
 /**
@@ -156,6 +204,11 @@ interface RequestDraft {
   scope: Record<string, number>;
   name: string;
   phone: string;
+  // Persisted for the same reason the name and the phone are: they are the
+  // fields it hurts most to retype, and losing them is the loss this draft
+  // exists to prevent.
+  fromAddress: string;
+  toAddress: string;
   // Deliberately NOT the email address: a restored form that pre-fills someone
   // else's address on a shared device is worse than one extra field to retype.
 }
@@ -185,85 +238,29 @@ function clearDraft(): void {
 }
 
 /**
- * A single-choice chip group, with the semantics a single choice actually has.
+ * The scope answers travel TWICE, on purpose.
  *
- * These were `<button aria-pressed>` inside a `fieldset`, which a screen reader
- * announces as a row of independent toggle buttons — so nothing conveyed that
- * picking one clears the others, how many options there are, or which position
- * you are at. Keyboard users also had to Tab through every chip individually.
+ * `details` is prose, rendered with `t()` in the CUSTOMER's language, and it is
+ * pasted verbatim into the email we send providers — so a Russian customer's
+ * answers arrived in Russian inside an Estonian mover's inbox, on the one cold
+ * contact we get with that business. `scope` is the same answers as raw
+ * `questionId → option index`, which the backend re-renders in the PROVIDER's
+ * language at compose time.
  *
- * `role="radiogroup"` + `role="radio"` fixes the announcement, and the roving
- * tabindex below is what the pattern requires: the group is ONE tab stop, and
- * arrows move within it. Arrow keys select as they move, which is standard radio
- * behaviour and safe here because every group's last option means "not sure" —
- * there is no destructive choice to land on by accident.
+ * `details` keeps being sent exactly as before: it also carries the customer's
+ * own free text, which is theirs and is not translatable, and nothing may
+ * regress while the two halves land separately.
  *
- * Deliberately NOT used for the optional packing add-on: that one is clearable
- * by tapping the active chip again, and a radio group cannot be un-set. It stays
- * a toggle-button group, which is what it genuinely is.
+ * Declared here rather than imported because `ConciergeRequestInput` does not
+ * carry these fields yet — the service layer is landing them in parallel. Once
+ * it has, this intersection is redundant and can go.
  */
-function ScopeRadioGroup({
-  id, options, value, label, optionLabel, onSelect, required = false,
-}: {
-  id: string;
-  options: number;
-  value: number | undefined;
-  label: string;
-  optionLabel: (n: number) => string;
-  onSelect: (n: number) => void;
-  required?: boolean;
-}) {
-  const refs = useRef<(HTMLButtonElement | null)[]>([]);
-  const choices = Array.from({ length: options }, (_, i) => i + 1);
-  // The group's single tab stop: the chosen chip, or the first one when nothing
-  // is chosen yet.
-  const tabStop = value ?? 1;
-
-  const move = (to: number) => {
-    const next = ((to - 1 + options) % options) + 1;
-    onSelect(next);
-    refs.current[next - 1]?.focus();
-  };
-
-  const onKeyDown = (event: React.KeyboardEvent, n: number) => {
-    const key = event.key;
-    if (key === "ArrowRight" || key === "ArrowDown") { event.preventDefault(); move(n + 1); }
-    else if (key === "ArrowLeft" || key === "ArrowUp") { event.preventDefault(); move(n - 1); }
-    else if (key === "Home") { event.preventDefault(); move(1); }
-    else if (key === "End") { event.preventDefault(); move(options); }
-  };
-
-  return (
-    <div>
-      <p id={`${id}-label`} className="mb-1.5 text-sm font-medium text-foreground">
-        {label}{required && <span className="text-destructive"> *</span>}
-      </p>
-      <div role="radiogroup" aria-labelledby={`${id}-label`} aria-required={required || undefined} className="flex flex-wrap gap-2">
-        {choices.map((n) => {
-          const active = value === n;
-          return (
-            <button
-              key={n}
-              ref={(el) => { refs.current[n - 1] = el; }}
-              type="button"
-              role="radio"
-              aria-checked={active}
-              tabIndex={tabStop === n ? 0 : -1}
-              onKeyDown={(e) => onKeyDown(e, n)}
-              onClick={() => onSelect(n)}
-              className={`min-h-[44px] rounded-full border px-3.5 py-2 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
-                active
-                  ? "border-navy-ink bg-navy-ink text-white"
-                  : "border-line-2 bg-card text-foreground hover:border-primary hover:text-primary"
-              }`}
-            >
-              {optionLabel(n)}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
+interface ConciergeScopeFields {
+  /** questionId → 1-based option index, for provider-language rendering. */
+  scope?: Record<string, number>;
+  /** Street address. Kept out of provider outreach and the public quote page. */
+  fromAddress?: string;
+  toAddress?: string;
 }
 
 /**
@@ -320,9 +317,15 @@ export default function RequestPage() {
   // link lands on moving with the packing add-on already answered "yes".
   const [scope, setScope] = useState<Record<string, number>>(
     () => (cameFromPackingLink(searchParams) ? { [PACKING_ADDON.id]: 1 } : (draft.scope ?? {})));
+  // Which service's scope questions are expanded on step 2. Only ever set by the
+  // visitor reopening a finished section — null means "show the first service
+  // with an unanswered question", which is what should happen almost always.
+  const [openScopeCategory, setOpenScopeCategory] = useState<ConciergeCategory | null>(null);
   const [name, setName] = useState(() => draft.name ?? "");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState(() => draft.phone ?? "");
+  const [fromAddress, setFromAddress] = useState(() => draft.fromAddress ?? "");
+  const [toAddress, setToAddress] = useState(() => draft.toAddress ?? "");
   const [stepError, setStepError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
   // Guards the one-per-visit funnel-start event against React re-renders.
@@ -362,8 +365,8 @@ export default function RequestPage() {
 
   // ── Draft persistence ──
   useEffect(() => {
-    writeDraft({ categories, city, toCity, needDate, dateFlexible, details, scope, name, phone });
-  }, [categories, city, toCity, needDate, dateFlexible, details, scope, name, phone]);
+    writeDraft({ categories, city, toCity, needDate, dateFlexible, details, scope, name, phone, fromAddress, toAddress });
+  }, [categories, city, toCity, needDate, dateFlexible, details, scope, name, phone, fromAddress, toAddress]);
 
   // ── Funnel analytics ──
   // Until now the concierge funnel — the primary product — emitted nothing at
@@ -385,7 +388,11 @@ export default function RequestPage() {
   );
 
   /** The same questions kept with their service, so step 2 can say which
-   *  question belongs to what when more than one service is selected. */
+   *  question belongs to what when more than one service is selected — and, now
+   *  that step 2 discloses one service at a time, in what order to ask. Selection
+   *  order is deliberately preserved: the visitor is walked back through the
+   *  services in the order they picked them, not in some catalogue order they
+   *  never saw. */
   const questionGroups = useMemo(
     () =>
       categories
@@ -404,7 +411,9 @@ export default function RequestPage() {
 
   /** Fold the chip answers into `details`, above whatever the visitor wrote.
    *  No migration needed — the outreach email already prints this field, so a
-   *  readable "question: answer" summary reaches providers as-is. */
+   *  readable "question: answer" summary reaches providers as-is.
+   *  Still rendered in the CUSTOMER's language: see ConciergeScopeFields for why
+   *  the same answers also travel as raw indices. */
   const composeDetails = (): string | undefined => {
     const answered = detailQuestions
       .filter((q) => scope[q.id])
@@ -412,9 +421,27 @@ export default function RequestPage() {
     return [answered.join("\n"), details.trim()].filter(Boolean).join("\n\n") || undefined;
   };
 
+  /** The same answers `composeDetails` prints, as raw indices for the backend to
+   *  render in the provider's language.
+   *
+   *  Built from `detailQuestions` rather than from `scope` directly, so the two
+   *  representations can never disagree — `scope` is a plain accumulator that
+   *  also holds answers to questions the visitor has since deselected (a mover's
+   *  chips survive unticking "moving", and a restored draft can carry the id of
+   *  a question that no longer exists). Anything not currently being ASKED must
+   *  not be reported as an answer. */
+  const composeScope = (): Record<string, number> | undefined => {
+    const answered = detailQuestions.filter((q) => scope[q.id]);
+    if (answered.length === 0) return undefined;
+    return Object.fromEntries(answered.map((q) => [q.id, scope[q.id]]));
+  };
+
   const mutation = useMutation({
-    mutationFn: () =>
-      leadService.requestConcierge({
+    mutationFn: () => {
+      // Typed as the intersection so the new fields are checked rather than
+      // silently dropped by excess-property elision at the call site, and so
+      // they start being sent before the service layer's own type catches up.
+      const payload: ConciergeRequestInput & ConciergeScopeFields = {
         name: name.trim() || undefined,
         email: email.trim(),
         phone: phone.trim() || undefined,
@@ -429,12 +456,20 @@ export default function RequestPage() {
         // day that suits you") instead of reporting silence.
         dateFlexible: dateFlexible || undefined,
         details: composeDetails(),
+        scope: composeScope(),
+        fromAddress: fromAddress.trim() || undefined,
+        // Only meaningful for a move, and only if moving is still selected —
+        // same rule as `toCity`, so a deselected mover cannot leave a stray
+        // destination behind.
+        toAddress: movingSelected && toAddress.trim() ? toAddress.trim() : undefined,
         language,
         attribution: getAttribution(),
         photoKeys: photos.length ? photos.map((p) => p.key) : undefined,
         website,
         elapsedMs: Date.now() - openedAtRef.current,
-      }),
+      };
+      return leadService.requestConcierge(payload);
+    },
     onSuccess: () => {
       // The request is filed — the half-finished copy must not outlive it.
       clearDraft();
@@ -444,6 +479,10 @@ export default function RequestPage() {
         has_date: !dateFlexible && !!needDate,
         date_flexible: dateFlexible,
         has_phone: !!phone.trim(),
+        // The address is optional and new: how often it is actually given is
+        // the only way to tell whether it saves the founder a brokering round
+        // trip or just adds a field people scroll past.
+        has_address: !!fromAddress.trim(),
       });
     },
     // Global mutation onError shows a toast; we render an inline error instead.
@@ -502,6 +541,11 @@ export default function RequestPage() {
       // Every scoping question needs an answer — "not sure" counts as one.
       if (activeQuestions.some((q) => !scope[q.id])) {
         setStepError(t("request.errors.scope"));
+        // Drop any manual override so the sectioned layout snaps back to the
+        // first service that still has an unanswered question. Without this,
+        // someone who reopened a finished section to check an answer would be
+        // told "answer everything" while looking at a section that is complete.
+        setOpenScopeCategory(null);
         return;
       }
       // A mover, a van, a trailer and a cleaner all sell a specific day. Asking
@@ -724,42 +768,22 @@ export default function RequestPage() {
                     </div>
                   )}
                   {/* Scoping questions — one set per selected service. Required,
-                      but one tap each, and every group ends in "not sure". */}
+                      but one tap each, and every group ends in "not sure".
+                      One service renders flat exactly as before; two or more
+                      disclose one service at a time. See RequestScopeSections. */}
                   {activeQuestions.length > 0 && (
                     <div className="space-y-4 rounded-xl border border-line bg-secondary/30 p-4">
                       <p className="text-xs text-muted-foreground">{t("request.scope.hint")}</p>
-                      {/* Grouped per service, and labelled only when there is
-                          more than one — because with two services picked this
-                          was four unlabelled chip groups in a row, and nothing
-                          said which question belonged to which service.
-                          Deliberately NOT collapsed: these gate the Next button,
-                          and hiding a required field behind an extra tap is
-                          both more clicks and a worse form. */}
-                      {questionGroups.map((group) => (
-                        <div key={group.category} className={questionGroups.length > 1 ? "space-y-4" : "space-y-4"}>
-                          {questionGroups.length > 1 && (
-                            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-teal-deep">
-                              {(() => { const Icon = SERVICE_TYPE_ICONS[group.category]; return <Icon className="h-3.5 w-3.5" aria-hidden />; })()}
-                              {t(`serviceType.${group.category}`)}
-                            </p>
-                          )}
-                          {group.questions.map((q) => (
-                            <ScopeRadioGroup
-                              key={q.id}
-                              id={q.id}
-                              options={q.options}
-                              value={scope[q.id]}
-                              label={t(`request.scope.${q.id}.label`)}
-                              optionLabel={(n) => t(`request.scope.${q.id}.opt${n}`)}
-                              required
-                              onSelect={(n) => {
-                                setScope((s) => ({ ...s, [q.id]: n }));
-                                setStepError(null);
-                              }}
-                            />
-                          ))}
-                        </div>
-                      ))}
+                      <RequestScopeSections
+                        groups={questionGroups}
+                        scope={scope}
+                        openCategory={openScopeCategory}
+                        onOpenCategory={setOpenScopeCategory}
+                        onSelect={(id, n) => {
+                          setScope((s) => ({ ...s, [id]: n }));
+                          setStepError(null);
+                        }}
+                      />
                     </div>
                   )}
                   {/* Optional packing add-on — moving only. Packing is never
@@ -934,6 +958,66 @@ export default function RequestPage() {
                       placeholder={t("request.phone.placeholder")}
                       className="h-12 w-full rounded-lg border border-border bg-card px-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                     />
+                  </div>
+
+                  {/* Street address — never collected before, for any service,
+                      at any stage. The founder therefore brokered it by hand on
+                      every single job: a mover cannot price stairs, parking or
+                      the real distance from a city name, so the first thing that
+                      happened after a match was another round trip.
+
+                      OPTIONAL on purpose. Asking a stranger where they live
+                      before they have seen a single offer is exactly the moment
+                      a funnel loses people, and the concierge loop works without
+                      it — it just works slower. Sitting on step 3 rather than
+                      step 2 for the same reason: it belongs with the things you
+                      hand over once you have decided to go ahead.
+
+                      The line below is a statement of what the backend actually
+                      does — the address is deliberately kept out of the provider
+                      outreach email and off the public quote page — and it must
+                      not be inflated into a broader promise. */}
+                  <div className="rounded-xl border border-line bg-secondary/30 p-4">
+                    <p className="text-xs leading-relaxed text-muted-foreground">{t("request.address.hint")}</p>
+                    <div className="mt-3 space-y-3">
+                      <div>
+                        <label htmlFor="req-from-address" className="mb-1.5 block text-sm font-medium text-foreground">
+                          {movingSelected ? t("request.fromAddress.labelMoving") : t("request.fromAddress.label")}
+                        </label>
+                        <input
+                          id="req-from-address"
+                          type="text"
+                          // `section-*` keeps the two addresses apart in the
+                          // browser's autofill: a bare `street-address` on both
+                          // fills the destination with the origin.
+                          autoComplete="section-from street-address"
+                          value={fromAddress}
+                          onChange={(e) => setFromAddress(e.target.value)}
+                          placeholder={t("request.fromAddress.placeholder")}
+                          className="h-12 w-full rounded-lg border border-border bg-card px-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                        />
+                      </div>
+                      {movingSelected && (
+                        <div>
+                          <label htmlFor="req-to-address" className="mb-1.5 block text-sm font-medium text-foreground">
+                            {t("request.toAddress.label")}
+                          </label>
+                          <input
+                            id="req-to-address"
+                            type="text"
+                            autoComplete="section-to street-address"
+                            value={toAddress}
+                            onChange={(e) => setToAddress(e.target.value)}
+                            placeholder={t("request.toAddress.placeholder")}
+                            className="h-12 w-full rounded-lg border border-border bg-card px-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <p className="mt-3 flex items-start gap-1.5 text-xs leading-relaxed text-muted-foreground">
+                      <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-teal-deep" aria-hidden />
+                      {t("request.address.private")}
+                    </p>
                   </div>
                 </div>
                 {/* The highest-hesitation moment in the funnel: three personal

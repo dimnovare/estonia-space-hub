@@ -39,6 +39,7 @@ const RequestPage = lazy(() => import("@/pages/RequestPage"));
 const OfferPage = lazy(() => import("@/pages/OfferPage"));
 const QuotePage = lazy(() => import("@/pages/QuotePage"));
 const ClaimPage = lazy(() => import("@/pages/ClaimPage"));
+const RequestStatusPage = lazy(() => import("@/pages/RequestStatusPage"));
 import RequestDetailPage from "@/pages/RequestDetailPage";
 import VerifyEmailPage from "@/pages/VerifyEmailPage";
 import { Loader2 } from "lucide-react";
@@ -173,8 +174,10 @@ function AppContent() {
   const isLoginPage = /^\/[a-z]{2}\/login$/i.test(window.location.pathname) || window.location.pathname === "/login";
   // The public offer + provider-quote pages are clean, no-nav-noise surfaces
   // (offer overhaul §5 / quote Feature B): each renders its own slim logo
-  // header instead of the full Navbar.
-  const isOfferPage = /^\/[a-z]{2}\/(offer|quote|claim)\//i.test(location.pathname);
+  // header instead of the full Navbar. request-status joins them: it is opened
+  // from an email by someone with no account, so a nav bar full of sign-in and
+  // marketing is noise in front of the one answer they came for.
+  const isOfferPage = /^\/[a-z]{2}\/(offer|quote|claim|request-status)\//i.test(location.pathname);
   // The consent banner is fixed to the bottom of the viewport, so on admin it
   // simply covers the end of every long list (locations, leads, orders) until
   // someone accepts. Admin is an authenticated internal surface, not public
@@ -234,6 +237,12 @@ function AppContent() {
                   their researched row (?token=… is the magic link), then edits
                   it. Same minimal chrome as /offer and /quote. */}
               <Route path="claim/:slug" element={<ClaimPage />} />
+              {/* Public concierge request-status page — anonymous, token-keyed,
+                  noindex. The customer has no account, so between the receipt
+                  email and an offer days later this is the only place they can
+                  tell a slow success from a silent failure. Same minimal chrome
+                  as /offer, /quote and /claim (Navbar suppressed above). */}
+              <Route path="request-status/:token" element={<RequestStatusPage />} />
               {/* SEO keyword landings → canonical storage search */}
               <Route path="laopind" element={<StorageKeywordRedirect />} />
               <Route path="miniladu" element={<StorageKeywordRedirect />} />

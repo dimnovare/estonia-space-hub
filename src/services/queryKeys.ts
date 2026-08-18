@@ -167,6 +167,11 @@ export const queryKeys = {
   claims: {
     bySlug: (slug: string) => ["claim", slug] as const,
   },
+  // Public concierge request-status page (/request-status/{token}) — anonymous,
+  // token-keyed. The customer's own view of where their request has got to.
+  requestStatus: {
+    byToken: (token: string) => ["request-status", token] as const,
+  },
   supplierTeam: {
     byId: (id: string | null) => ["supplier-team", id] as const,
   },

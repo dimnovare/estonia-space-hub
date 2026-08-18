@@ -22,6 +22,12 @@ import translations from "@/i18n/translations";
  * Only static single-quoted/double-quoted literals are checked — a computed key
  * like t(`request.scope.${id}.label`) cannot be resolved here, and pretending
  * otherwise would produce false failures rather than coverage.
+ *
+ * That exemption is a real hole, not a safe one: the ~45 scoping-chip keys are
+ * ALL computed, so they could go missing with this test green. They are covered
+ * by src/test/scopeQuestionCoverage.test.ts, which reads the funnel's question
+ * catalogue and checks each id's label and options in all five languages. Any
+ * new family of computed keys needs the same treatment.
  */
 // vitest roots cwd at the project directory; import.meta.url needs Windows
 // drive-letter unmangling and is not worth the trouble.
