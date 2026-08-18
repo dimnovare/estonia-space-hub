@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LeadWorkspace } from "@/components/admin/leads/LeadWorkspace";
+import { LeadPhotoBadge } from "@/components/admin/leads/LeadPhotos";
 import { LEAD_STATUS_STYLE, StatusBadge } from "@/components/admin/leads/leadStatusStyles";
 import {
   AdminPageHeader, StatCard, FilterBar, FilterChip, DataTable, DataTableHead, Th, EmptyState,
@@ -481,8 +482,14 @@ function LeadRow({ lead, expanded, onToggle, onStatusChange, statusPending }: {
             <span className="font-data mt-0.5 block text-[11px] font-medium text-foreground">{lead.quotedPrice.toFixed(2)} €</span>
           )}
         </td>
-        <td className="px-5 py-3.5 max-w-[180px] truncate text-muted-foreground" title={lead.query}>
-          {lead.query || "—"}
+        {/* The badge sits OUTSIDE the truncation, not inside it: "this request
+            came with pictures" is the one thing in this cell that must survive a
+            long query string. */}
+        <td className="max-w-[180px] px-5 py-3.5 text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <span className="min-w-0 truncate" title={lead.query}>{lead.query || "—"}</span>
+            <LeadPhotoBadge lead={lead} />
+          </div>
         </td>
         <td className="px-5 py-3.5">
           <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium uppercase text-muted-foreground">
@@ -543,6 +550,7 @@ function LeadCard({ lead, expanded, onToggle, onStatusChange, statusPending }: {
             <span>{lead.category}</span>
             <span>{new Date(lead.createdAt).toLocaleDateString()}</span>
             <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[10px] font-medium uppercase">{lead.language}</span>
+            <LeadPhotoBadge lead={lead} />
           </div>
         </div>
         <LeadStatusControl lead={lead} onStatusChange={onStatusChange} statusPending={statusPending} />

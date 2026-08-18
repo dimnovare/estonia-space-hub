@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { candidateToEditable, editingDraftClosed, nextLocalId, parsePrice, toEditable, toInput, type EditableOption } from "./leadWorkspaceModels";
 import { OFFER_STATUS_STYLE, StatusBadge } from "./leadStatusStyles";
+import { LeadInfoRequest } from "./LeadInfoRequest";
 
 interface LeadOfferStageProps {
   lead: AdminLead;
@@ -278,6 +279,10 @@ export function LeadOfferStage({
                       {row.note && <span className="ml-1 font-normal text-muted-foreground">· {row.note.split("\n").at(-1)}</span>}
                     </p>
                   )}
+                  {/* "Replied, but blocked" — the row's status already says
+                      needsinfo; this says what would unblock them, and offers the
+                      one action that closes it. */}
+                  <LeadInfoRequest row={row} />
                   {row.quotedAmount != null && (
                     <p className="mt-1 inline-flex items-center gap-1 rounded-md bg-success/10 px-1.5 py-0.5 text-xs font-medium text-success">
                       <Quote className="h-3 w-3" aria-hidden />

@@ -1,5 +1,6 @@
 import {
   Circle, Send, FileText, CheckCircle2, XCircle, CircleDashed, Eye, Clock, MailX, ShieldAlert,
+  CircleHelp,
   type LucideIcon,
 } from "lucide-react";
 import type { AdminLeadStatus, OfferStatus, OutreachStatus } from "@/services";
@@ -44,6 +45,14 @@ export const OUTREACH_STATUS_STYLE: Record<OutreachStatus, StatusStyle> = {
   // is a different fact from noanswer, which means a human ignored us.
   bounced:    { icon: MailX,       badge: RED },
   complained: { icon: ShieldAlert, badge: RED },
+  // The provider answered and cannot price it yet (ProviderInfoRequest). Amber,
+  // with the waiting statuses, NOT red: they have not refused the job, they asked
+  // a question, and most convert once ops answers it. Without an entry here the
+  // Record is incomplete and any lookup on a blocked row is undefined — the
+  // status arrives lowercased from the enum name, so it reaches the UI as the
+  // bare string "needsinfo" and would otherwise render raw, exactly as
+  // "noanswer" would have.
+  needsinfo:  { icon: CircleHelp,  badge: AMBER },
 };
 
 export const OFFER_STATUS_STYLE: Record<OfferStatus, StatusStyle> = {

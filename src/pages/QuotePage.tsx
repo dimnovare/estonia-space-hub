@@ -10,6 +10,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
+import { QuoteLeadPhotos } from "@/components/QuoteLeadPhotos";
+import { QuoteNeedInfo } from "@/components/QuoteNeedInfo";
+import { readQuoteFailure } from "@/components/quoteFailure";
 import { quoteService, type PublicQuote, type QuoteSubmitInput, type QuoteSubmitResult } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
 import { leadCategoryLabel } from "@/lib/serviceTypes";
@@ -34,6 +37,40 @@ import type { BillingPeriod } from "@/lib/priceUnit";
 // The unit options reuse the canonical price-unit periods used elsewhere
 // (lib/priceUnit.ts). Order: most-common concierge units first.
 const UNIT_PERIODS: BillingPeriod[] = ["month", "onetime", "day", "week", "hour"];
+
+/**
+ * What each trade actually sells in — the unit this form starts on.
+ *
+ * Not cosmetic. Whatever is preselected rides untouched into the customer's
+ * offer: a mover who types 350 against a "/mo" they never looked at has just
+ * quoted €350 a month for one day's work, and the customer is the one who finds
+ * out. Every category defaulted to month, which was right when this page only
+ * ever served the storage vertical and has been wrong for every one added since.
+ */
+const DEFAULT_UNIT_BY_CATEGORY: Record<string, BillingPeriod> = {
+  // Storage is the one genuinely recurring vertical: a unit is rented by the
+  // month and billed until it is handed back.
+  warehouse: "month",
+  // A move is one job at one price — a crew, a van, a day. Movers quote the
+  // whole thing; there is no second month of it.
+  moving: "onetime",
+  // A clean is priced per visit for the same reason: one flat, one job.
+  cleaning: "onetime",
+  // Trailers and vans go out for a Saturday or a weekend, and every provider in
+  // both verticals advertises a day rate. Hourly exists but is the exception.
+  trailer: "day",
+  vanrental: "day",
+};
+
+/**
+ * The wildcard "any" (a multi-service concierge request) and any slug we don't
+ * recognise stay on month: a multi-service ask is most often storage-led, and
+ * month is what this page has always done, so an unknown category can only ever
+ * be as wrong as it is today — never newly wrong.
+ */
+function defaultUnitFor(category: string | null | undefined): BillingPeriod {
+  return DEFAULT_UNIT_BY_CATEGORY[category?.trim().toLowerCase() ?? ""] ?? "month";
+}
 
 export default function QuotePage() {
   const { token = "" } = useParams<{ token: string }>();
@@ -84,7 +121,8 @@ export default function QuotePage() {
   const isRateLimited = isError && getErrorStatus === 429;
 
   // Prefill the form once from an already-submitted quote (spec: "update your
-  // quote"); otherwise default the unit to /month. Seeds a single time per token.
+  // quote"); otherwise start on the unit this trade sells in. Seeds a single
+  // time per token.
   useEffect(() => {
     if (!quote || seededRef.current) return;
     seededRef.current = true;
@@ -94,7 +132,13 @@ export default function QuotePage() {
       setAvailability(existing.availability ?? "");
       setNote(existing.note ?? "");
     }
-    setUnit(existing?.unit ?? t("priceUnit.month").trim());
+    // A unit the provider already chose always wins — our idea of their trade
+    // must never silently rewrite their own answer on an update. Only a stored
+    // value that says nothing at all (absent, or blank after the clamp) falls
+    // through to the category default, because a blank would otherwise show a
+    // unit in the select while submitting none.
+    const storedUnit = existing?.unit?.trim();
+    setUnit(storedUnit || t(`priceUnit.${defaultUnitFor(quote.lead.category)}`).trim());
   }, [quote, t]);
 
   const submitMutation = useMutation({
@@ -110,24 +154,17 @@ export default function QuotePage() {
     onError: (err: Error & { status?: number; body?: unknown; retryAfter?: number }) => {
       // The form state is never cleared on failure — the provider must not have
       // to retype their price because of a transient/validation error.
-      const s = err?.status;
-      // 409 + reason "lead_closed": the lead was closed while this page was
-      // open. That is a dead end, not a bad link and not a generic failure.
-      const reason = (err?.body as { reason?: string } | undefined)?.reason;
-      if (s === 409 && reason === "lead_closed") { setClosedOnSubmit(true); return; }
-      if (s === 404) { setFormError(t("quote.expiredError")); return; }
-      if (s === 429) {
-        // Prefer the server's own Retry-After over a vague "wait a bit".
-        const secs = err.retryAfter;
-        setFormError(secs && secs > 0
-          ? t("quote.rateLimitRetryAfter").replace("{seconds}", String(Math.ceil(secs)))
-          : t("quote.rateLimitError"));
-        return;
-      }
-      // 400 = server-side validation (negative amount, amount > 1,000,000,
-      // `<`/`>` in a string). Surface the backend's exact reason by the field.
-      if (s === 400) { setFormError(err.message || t("quote.submitError")); return; }
-      setFormError(t("quote.submitError"));
+      //
+      // The branch itself moved to components/quoteFailure, because the second
+      // form on this page needs the same one: both POST this token through the
+      // same rate limiter, so 404 / 409 lead_closed / 429 / 400 mean the same
+      // thing to each, and one copy is what stops the two drifting apart.
+      // Behaviour here is unchanged — `quote.submitError` is still the fallback,
+      // and 409 lead_closed is still the page-level dead end rather than a
+      // message beside the price field.
+      const failure = readQuoteFailure(err, t, t("quote.submitError"));
+      if (failure.kind === "closed") { setClosedOnSubmit(true); return; }
+      setFormError(failure.message);
     },
   });
 
@@ -371,6 +408,10 @@ export default function QuotePage() {
               {quote.lead.details}
             </p>
           )}
+          {/* Part of the ask, not an extra: for a bulky or awkward load the
+              photos ARE the brief, and the outreach email already told this
+              provider they exist. Renders nothing when there are none. */}
+          <QuoteLeadPhotos token={token} count={quote.lead.photoCount ?? 0} />
         </div>
 
         {/* Quote form */}
@@ -454,6 +495,25 @@ export default function QuotePage() {
           </Button>
           <p className="mt-2.5 text-center text-xs text-muted-foreground">{t("quote.noPii")}</p>
         </form>
+
+        {/* The provider's other honest answer: "I can't price this from what
+            you sent." It sits BELOW the price form and is quieter than it on
+            purpose — a price is still what we are asking for — and pressing it
+            withdraws nobody from the job: the form above stays live and
+            submittable while Ruumly chases the missing detail. */}
+        <QuoteNeedInfo
+          token={token}
+          // `infoRequested` is exactly `infoRequest != null` on the wire, but
+          // the two are read separately so a payload carrying only the flag
+          // still shows the provider that their question is on the record,
+          // instead of inviting them to ask the same thing a second time.
+          asked={quote.infoRequested === true || quote.infoRequest != null}
+          initial={quote.infoRequest ?? null}
+          // A request that closes mid-visit is the PAGE's state, not the
+          // panel's: the whole page becomes the closed dead-end, exactly as it
+          // does when the price submit meets the same 409.
+          onLeadClosed={() => setClosedOnSubmit(true)}
+        />
 
         {helpFooter}
       </div>
