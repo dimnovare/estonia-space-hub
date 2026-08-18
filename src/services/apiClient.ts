@@ -305,17 +305,39 @@ class ApiClient {
     config: { method?: string; body?: unknown } = {}
   ): Promise<{ blob?: Blob; json?: { url?: string } }> {
     const { method = "GET", body } = config;
-    const token = this.getToken();
-    const headers: Record<string, string> = {};
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-    headers["Accept-Language"] = localStorage.getItem("ruumly-lang") || "et";
-    if (body) headers["Content-Type"] = "application/json";
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method,
-      headers,
-      credentials: "include",
-      body: body ? JSON.stringify(body) : undefined,
-    });
+
+    const send = () => {
+      const token = this.getToken();
+      const headers: Record<string, string> = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+      headers["Accept-Language"] = localStorage.getItem("ruumly-lang") || "et";
+      if (body) headers["Content-Type"] = "application/json";
+      return fetch(`${API_BASE_URL}${endpoint}`, {
+        method,
+        headers,
+        credentials: "include",
+        body: body ? JSON.stringify(body) : undefined,
+      });
+    };
+
+    let response = await send();
+
+    // Refresh-and-retry once on 401, exactly as `request` does. Without it this
+    // path was the only authenticated fetch in the app that simply failed when
+    // an access token expired mid-flight — and it is the path used for the
+    // things where that is most visible: a contract PDF being signed, a provider
+    // export, and the admin lead-photo gallery, where every tile in the grid
+    // fails at once and reads as "the photos are gone" rather than "log in again".
+    //
+    // Deliberately does NOT log the user out on failure. `refreshAccessToken` is
+    // single-flight and distinguishes an expired session from a server blip, but
+    // acting on that distinction is `request`'s job in one place; here we retry
+    // once and otherwise report the original failure.
+    if (response.status === 401 && this.getToken()) {
+      const result = await refreshAccessToken();
+      if (result.ok) response = await send();
+    }
+
     if (!response.ok) {
       let message = `API error: ${response.status}`;
       try {

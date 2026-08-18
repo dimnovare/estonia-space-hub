@@ -4,12 +4,13 @@ import { MANUAL_OUTREACH_STATUSES, type OutreachStatus } from "@/services";
 import { OUTREACH_STATUS_STYLE } from "@/components/admin/leads/leadStatusStyles";
 
 /**
- * Bounced/complained arrive from the Resend webhook, not from a human. The
- * workspace still has to render them: a status with no label renders a blank
- * <select> and a status with no style crashes the badge.
+ * Bounced/complained arrive from the Resend webhook, not from a human, and
+ * needsinfo arrives from the provider's own quote page. The workspace still has
+ * to render all three: a status with no label renders a blank <select> and a
+ * status with no style crashes the badge.
  */
 const ALL_STATUSES: OutreachStatus[] =
-  ["sent", "replied", "declined", "noanswer", "bounced", "complained"];
+  ["sent", "replied", "declined", "noanswer", "bounced", "complained", "needsinfo"];
 
 const LANGUAGES = ["et", "en", "ru", "lv", "lt"] as const;
 
@@ -34,6 +35,12 @@ describe("provider outreach statuses", () => {
     expect([...MANUAL_OUTREACH_STATUSES]).toEqual(["sent", "replied", "declined", "noanswer"]);
     expect(MANUAL_OUTREACH_STATUSES).not.toContain("bounced");
     expect(MANUAL_OUTREACH_STATUSES).not.toContain("complained");
+    // needsinfo is the provider's own statement, set from their quote page and
+    // cleared by resolving the question. Offering it in the dropdown would let an
+    // admin claim a provider is blocked with no ProviderInfoRequest behind it —
+    // a blocked row the workspace could show no question for, and nothing to
+    // resolve. The select still LISTS it when it is the current value.
+    expect(MANUAL_OUTREACH_STATUSES).not.toContain("needsinfo");
   });
 
   it("the unreachable badges are translated everywhere", () => {

@@ -20,6 +20,7 @@ import { LeadProviderStage } from "./LeadProviderStage";
 import { LeadOfferStage } from "./LeadOfferStage";
 import { LeadDeliveryReview } from "./LeadDeliveryReview";
 import { LeadActivityTimeline } from "./LeadActivityTimeline";
+import { LeadPhotoGallery } from "./LeadPhotos";
 import { leadDateIsFlexible } from "@/components/admin/AdminLeads";
 
 // The concierge happy-path pipeline is now three clickable stages: converted is
@@ -336,6 +337,12 @@ export function LeadWorkspace({ lead }: { lead: AdminLead }) {
           {lead.details}
         </p>
       )}
+
+      {/* …and the pictures that came with them. Sits beside the details rather
+          than down with the offer stages because both answer the same question:
+          what did the customer actually send us to quote from? */}
+      <LeadPhotoGallery lead={lead} />
+
 
       {/* ── Offer panel — the three numbered stages read top-to-bottom as
              full-width bands separated by dividers (design §C). Each stage owns

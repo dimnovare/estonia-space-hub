@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, Link } from "@/i18n/routing";
-import { Loader2, MapPin, Clock, Star, ShieldCheck, Award, Box, MessageCircle, Heart, ExternalLink, Sparkles, ArrowRight } from "lucide-react";
+import { Loader2, MapPin, Clock, Star, ShieldCheck, Award, Box, MessageCircle, Heart, ExternalLink, Sparkles, ArrowRight, Info, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { usePartnerGoogleReviews, type GoogleReview } from "@/hooks/usePartnerGoogleReviews";
@@ -58,9 +58,44 @@ function buildStructuredData(partner: PartnerProfile, lang: Language) {
   };
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+type ContactFieldErrors = { name?: string; email?: string; message?: string };
+
 /**
- * Contact modal (pixel-spec §Partner header "Contact"). Captures a partner-contact
- * lead via the contact endpoint and confirms with a toast. Keeps the visitor on-page.
+ * Contact modal (pixel-spec §Partner header "Contact").
+ *
+ * ── Who actually answers ──
+ *
+ * There are two kinds of partner behind this button and only one of them can
+ * reply, so the dialog says two different things.
+ *
+ * A CLAIMED partner has a Ruumly account and a dashboard, so the lead this
+ * creates reaches them and "they'll reply by email" is a promise we keep.
+ *
+ * The branch is `repliesDirectly` — does this partner have a provider login —
+ * and deliberately NOT `isDirectory`. Those are different questions:
+ * `isDirectory` is PROVENANCE, recording that a row was imported rather than
+ * hand-added, and a partner an admin typed in has isDirectory=false while still
+ * having nobody to email. This codebase has already paid for conflating the two
+ * once, in ProviderCandidateFinder, where gating capability on provenance made
+ * every admin-added partner invisible to every lead.
+ *
+ * An UNREACHABLE partner has no account, no dashboard, no channel we can push a
+ * message down. The copy
+ * promised a reply from them anyway, in all five languages, and two real
+ * visitors sent messages that no partner ever saw; one was an Estonian lead on
+ * a self-storage page inside the Tallinn catchment. So on an unclaimed profile
+ * this form makes NO promise on the company's behalf: it is addressed to
+ * Ruumly, and it states outright that we do not forward it to them. Softer
+ * wording that still implies the partner writes back would be the same bug.
+ *
+ * ── How the partner identity travels ──
+ *
+ * As `partnerSlug`, not as a "Partner: name (slug)" line stapled onto the end
+ * of the message. The backend resolves the slug into a DemandLead routed to
+ * that supplier; prose in a free-text body could only ever be read by a human,
+ * which is how these two leads went nowhere.
  */
 function PartnerContactModal({
   partner,
@@ -72,33 +107,94 @@ function PartnerContactModal({
   onOpenChange: (v: boolean) => void;
 }) {
   const { t, language } = useLanguage();
+  // Falsy means "make no promise". A profile is cached for 60s and an entry
+  // written before RepliesDirectly existed deserializes without it, so the
+  // default has to fail towards honesty rather than towards a reply we cannot
+  // deliver.
+  const unclaimed = partner.repliesDirectly !== true;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const [errors, setErrors] = useState<ContactFieldErrors>({});
+  const [sendError, setSendError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const nameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const messageRef = useRef<HTMLTextAreaElement>(null);
+  const fieldRefs: Record<keyof ContactFieldErrors, React.RefObject<HTMLElement>> = {
+    name: nameRef,
+    email: emailRef,
+    message: messageRef,
+  };
+
+  // Reopening must not greet the visitor with the banner from a send that
+  // failed ten minutes ago. What they TYPED survives on purpose: Esc and a
+  // click on the overlay both close this dialog by accident, and losing the
+  // message to either is worse than one stale error line.
+  useEffect(() => {
+    if (open) {
+      setErrors({});
+      setSendError(null);
+    }
+  }, [open]);
+
   const inputCls =
-    "h-11 rounded-[10px] border border-input bg-card px-3.5 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40";
+    "h-11 rounded-[10px] border bg-card px-3.5 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40";
+  const borderFor = (invalid: boolean) => (invalid ? "border-destructive" : "border-input");
+
+  const validate = (): ContactFieldErrors => {
+    const next: ContactFieldErrors = {};
+    if (!name.trim()) next.name = t("contact.errorName");
+    if (!email.trim()) next.email = t("contact.errorEmail");
+    // The reply comes back to this address and nowhere else, so a typo here is
+    // the same silence the honesty fix above exists to prevent.
+    else if (!EMAIL_RE.test(email.trim())) next.email = t("contact.errorEmailInvalid");
+    // Required now that the partner identity no longer rides along in the body:
+    // an empty box used to still send the "Partner: …" line, and today it would
+    // file a lead with nothing in it for the concierge to act on.
+    // Mirror ContactRequestValidator's 10-char floor. Without it the server
+    // rejects a short message with a bare 400 and the visitor sees a generic
+    // failure naming no field — which is how "test" became a lead nobody could
+    // act on. The rule stays server-side; this only states it in their language.
+    if (!message.trim()) next.message = t("contact.errorMessage");
+    else if (message.trim().length < 10) next.message = t("contact.errorMessageShort");
+    return next;
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim()) {
-      toast.error(t("detail.requestMissingFields"));
+    const found = validate();
+    setErrors(found);
+    if (Object.keys(found).length > 0) {
+      // Put the caret on the first thing that is wrong. This was a toast, which
+      // is announced once, disappears, and never says WHICH field — leaving a
+      // keyboard or screen-reader user to hunt for it.
+      const order: (keyof ContactFieldErrors)[] = ["name", "email", "message"];
+      const firstInvalid = order.find((k) => found[k]);
+      if (firstInvalid) fieldRefs[firstInvalid].current?.focus();
       return;
     }
+    setSendError(null);
     setSubmitting(true);
     try {
       await contactService.send({
         name: name.trim(),
         email: email.trim(),
         subject: `Partner contact — ${partner.name}`,
-        message: `${message.trim()}\n\nPartner: ${partner.name} (${partner.slug})`,
+        message: message.trim(),
+        partnerSlug: partner.slug,
         language,
       });
+      setName("");
+      setEmail("");
+      setMessage("");
       onOpenChange(false);
-      toast.success(t("partner.contactToast"));
+      toast.success(unclaimed ? t("partner.contactToastDirectory") : t("partner.contactToast"));
     } catch {
-      toast.error(t("detail.requestError"));
+      // Inline, not a toast: the dialog stays open with everything still typed
+      // in it, so a retry is one click rather than a retyped message.
+      setSendError(t("detail.requestError"));
     } finally {
       setSubmitting(false);
     }
@@ -109,36 +205,95 @@ function PartnerContactModal({
       <DialogContent className="max-w-md rounded-[14px] p-0">
         <DialogHeader className="flex flex-row items-center justify-between gap-3 border-b border-border px-5 py-4 text-left">
           <DialogTitle className="font-display text-lg font-bold">
-            {t("partner.contactTitle").replace("{name}", partner.name)}
+            {(unclaimed ? t("partner.contactTitleDirectory") : t("partner.contactTitle")).replace("{name}", partner.name)}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={submit} className="space-y-3.5 px-5 pb-5">
+        {/* noValidate: the browser's own required/type=email bubbles preempt
+            this handler, and they speak the browser's language rather than the
+            visitor's — so all validation runs here, in one voice. */}
+        <form onSubmit={submit} noValidate className="space-y-3.5 px-5 pb-5">
           <DialogDescription className="text-sm text-muted-foreground">
-            {t("partner.contactIntro").replace("{name}", partner.name)}
+            {(unclaimed ? t("partner.contactIntroDirectory") : t("partner.contactIntro")).replace("{name}", partner.name)}
           </DialogDescription>
+          {/* The whole point of the branch: on an unclaimed profile, say who
+              reads this and who does not. */}
+          {unclaimed && (
+            <p className="flex items-start gap-2 rounded-lg border border-line bg-secondary/40 p-3 text-xs leading-relaxed text-muted-foreground">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-teal-deep" aria-hidden />
+              {t("partner.contactNoteDirectory").replace("{name}", partner.name)}
+            </p>
+          )}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="pc-name" className="text-[13px] font-semibold text-ink-2">{t("detail.requestNameLabel")}</label>
-            <input id="pc-name" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("detail.requestNamePlaceholder")} className={inputCls} required />
+            <label htmlFor="pc-name" className="text-[13px] font-semibold text-ink-2">
+              {t("detail.requestNameLabel")} <span className="text-destructive">*</span>
+            </label>
+            <input
+              id="pc-name"
+              ref={nameRef}
+              value={name}
+              autoComplete="name"
+              onChange={(e) => { setName(e.target.value); setErrors((p) => ({ ...p, name: undefined })); }}
+              placeholder={t("detail.requestNamePlaceholder")}
+              aria-invalid={!!errors.name}
+              aria-describedby={errors.name ? "pc-name-error" : undefined}
+              required
+              className={`${inputCls} ${borderFor(!!errors.name)}`}
+            />
+            {errors.name && <p id="pc-name-error" role="alert" className="text-xs text-destructive">{errors.name}</p>}
           </div>
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="pc-email" className="text-[13px] font-semibold text-ink-2">{t("detail.requestEmailLabel")}</label>
-            <input id="pc-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" className={inputCls} required />
+            <label htmlFor="pc-email" className="text-[13px] font-semibold text-ink-2">
+              {t("detail.requestEmailLabel")} <span className="text-destructive">*</span>
+            </label>
+            <input
+              id="pc-email"
+              ref={emailRef}
+              type="email"
+              value={email}
+              autoComplete="email"
+              inputMode="email"
+              onChange={(e) => { setEmail(e.target.value); setErrors((p) => ({ ...p, email: undefined })); }}
+              placeholder="you@email.com"
+              aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? "pc-email-error" : undefined}
+              required
+              className={`${inputCls} ${borderFor(!!errors.email)}`}
+            />
+            {errors.email && <p id="pc-email-error" role="alert" className="text-xs text-destructive">{errors.email}</p>}
           </div>
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="pc-message" className="text-[13px] font-semibold text-ink-2">{t("detail.requestMessageLabel")}</label>
+            <label htmlFor="pc-message" className="text-[13px] font-semibold text-ink-2">
+              {t("detail.requestMessageLabel")} <span className="text-destructive">*</span>
+            </label>
             <textarea
               id="pc-message"
+              ref={messageRef}
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={(e) => { setMessage(e.target.value); setErrors((p) => ({ ...p, message: undefined })); }}
               rows={3}
-              className="min-h-[88px] rounded-[10px] border border-input bg-card px-3.5 py-2.5 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              aria-invalid={!!errors.message}
+              aria-describedby={errors.message ? "pc-message-error" : undefined}
+              required
+              className={`min-h-[88px] rounded-[10px] border bg-card px-3.5 py-2.5 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${borderFor(!!errors.message)}`}
             />
+            {errors.message && <p id="pc-message-error" role="alert" className="text-xs text-destructive">{errors.message}</p>}
           </div>
+          {sendError && (
+            <div role="alert" className="flex items-start gap-2.5 rounded-lg border border-destructive/25 bg-destructive/5 p-3 text-sm text-destructive">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+              {sendError}
+            </div>
+          )}
+          {/* The spinner is added BESIDE the label rather than replacing it —
+              swapping the text out leaves the button with no accessible name
+              at the one moment a screen reader is asked what is happening. */}
           <Button
             type="submit"
             disabled={submitting}
+            aria-busy={submitting}
             className="h-12 w-full gap-2 bg-primary text-base font-semibold text-primary-foreground hover:bg-navy-ink"
           >
+            {submitting && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
             {t("detail.sendRequestBtn")}
           </Button>
         </form>
