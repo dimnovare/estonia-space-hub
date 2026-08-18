@@ -464,6 +464,12 @@ export interface ContactInput {
   subject: string;
   message: string;
   language?: string;
+  /** Set when the form was opened from a partner's profile page. The backend
+   *  resolves it to a supplier and captures the message as a DemandLead routed
+   *  to that partner, instead of dropping an untracked email into the ops inbox.
+   *  Sent as a slug rather than stapled into `message` as prose, which is what
+   *  the partner page used to do. */
+  partnerSlug?: string;
 }
 
 export const contactService = {
@@ -576,6 +582,10 @@ export type AdminLeadStatus =
 
 export interface AdminLead {
   id: string;
+  /** How many photos the customer attached. The bytes are NOT public: fetch each
+   *  from GET /admin/leads/{id}/photos/{index}, which resolves the index against
+   *  this lead's own list. Optional so the UI tolerates a backend predating it. */
+  photoCount?: number;
   name?: string | null;
   email: string;
   phone?: string | null;
@@ -696,6 +706,12 @@ export interface ProviderCandidateSearch {
 }
 
 export const adminLeadService = {
+  /** Close a provider's open question. Idempotent — a second call does not
+   *  re-stamp, and does not touch an outreach that has since moved on. */
+  async resolveInfoRequest(id: string): Promise<ResolvedInfoRequest> {
+    return apiClient.post<ResolvedInfoRequest>(
+      `/admin/info-requests/${encodeURIComponent(id)}/resolve`, {});
+  },
   async list(
     status: AdminLeadStatus | "all",
     page: number,
@@ -759,7 +775,35 @@ export const adminLeadService = {
 export type OfferStatus = "draft" | "sent" | "viewed" | "chosen" | "expired";
 /** "bounced" / "complained" are set only by the Resend webhook — the email never
  *  reached a human, which is a different fact from a provider staying silent. */
-export type OutreachStatus = "sent" | "replied" | "declined" | "noanswer" | "bounced" | "complained";
+export type OutreachStatus =
+  | "sent" | "replied" | "declined" | "noanswer" | "bounced" | "complained"
+  // The provider opened the quote page and said they cannot price it as sent.
+  // A distinct state on purpose: GetLeadMetrics counts "replied" as a supplier
+  // MATCH, and a provider blocked on missing information is precisely not one —
+  // reusing it would have inflated the north-star metric with blocked providers.
+  // Deliberately absent from MANUAL_OUTREACH_STATUSES: an admin must not be able
+  // to assert a block with no ProviderInfoRequest behind it and nothing to close.
+  | "needsinfo";
+
+/** What a blocked provider said was missing. Mirrors InfoRequestReasons. */
+export type InfoRequestReason = "photos" | "address" | "access" | "date" | "items" | "other";
+
+export interface OutreachInfoRequest {
+  id: string;
+  reasons: InfoRequestReason[];
+  note: string | null;
+  askedAt: string;
+}
+
+/** Echo from resolving one. `outreachStatus` is where the row landed — "sent",
+ *  never "replied", because closing our own question is not the provider
+ *  agreeing to quote. */
+export interface ResolvedInfoRequest {
+  id: string;
+  providerOutreachId: string;
+  resolvedAt: string;
+  outreachStatus: OutreachStatus | null;
+}
 /** The statuses an admin may pick by hand; the two delivery outcomes are system-set. */
 export const MANUAL_OUTREACH_STATUSES = ["sent", "replied", "declined", "noanswer"] as const;
 
@@ -828,6 +872,12 @@ export interface ProviderOutreachRow {
   sentAt: string;
   status: OutreachStatus;
   note: string | null;
+  /** The provider's UNRESOLVED "I cannot quote this yet". Carried on the
+   *  outreach row rather than fetched per lead: the row's status already says
+   *  `needsinfo`, and this is what that word means — splitting them across two
+   *  independently-refetching payloads would guarantee windows where the UI
+   *  shows "blocked" with no question under it. */
+  infoRequest?: OutreachInfoRequest | null;
   /** Provider self-service quote (Feature B) — populated when the provider
    *  submitted a price via the tokenized /quote/{token} page. When present the
    *  outreach-history row shows "Quoted {amount} {unit}" with QuotedAt. */
@@ -991,6 +1041,12 @@ export interface PublicQuote {
     toCity?: string | null;
     needDate?: string | null;
     details?: string | null;
+    /** How many photos the customer attached. The bytes are NOT public: fetch
+     *  each one from GET /quote/{token}/photos/{index}, which resolves the index
+     *  against this lead's own list so a token can only ever reach its own
+     *  request's photos. The backend has always sent this; the type omitted it,
+     *  so the gallery the outreach email promises was never rendered. */
+    photoCount?: number;
   };
   currency: string; // "EUR"
   alreadySubmitted: boolean;
@@ -999,6 +1055,20 @@ export interface PublicQuote {
    *  closed state instead of the form so the provider learns it upfront rather
    *  than by failing a submit (POST would 409 with reason "lead_closed"). */
   closed?: boolean;
+  /** An UNRESOLVED "I can't quote this yet" the provider already sent. The
+   *  backend stops reporting it the moment ops marks it answered, so the page
+   *  reverts on its own without needing a second signal. */
+  infoRequested?: boolean;
+  infoRequest?: PublicQuoteInfoRequest | null;
+}
+
+/** What a blocked provider told us was missing. `reasons` are slugs — the page
+ *  supplies its own localised labels, so a seventh reason added server-side
+ *  degrades to being skipped rather than rendering an English string. */
+export interface PublicQuoteInfoRequest {
+  reasons: string[];
+  note: string | null;
+  createdAt: string;
 }
 
 /** `reason` discriminator on a 409 from POST /quote/{token}. */
@@ -1022,12 +1092,32 @@ export interface QuoteSubmitResult {
   note: string | null;
 }
 
+/** Either a recognised reason or a note is required — the server enforces it and
+ *  the form mirrors it, so a blocked provider is never shown a bare 400. */
+export interface QuoteNeedInfoInput {
+  reasons?: string[] | null;
+  note?: string | null;
+}
+
+export interface QuoteNeedInfoResult {
+  ok: boolean;
+  reasons: string[];
+  note: string | null;
+}
+
 export const quoteService = {
   async get(token: string): Promise<PublicQuote> {
     return apiClient.get<PublicQuote>(`/quote/${encodeURIComponent(token)}`);
   },
   async submit(token: string, body: QuoteSubmitInput): Promise<QuoteSubmitResult> {
     return apiClient.post<QuoteSubmitResult>(`/quote/${encodeURIComponent(token)}`, body);
+  },
+  /** Record that this provider cannot price the request as sent. Submitting
+   *  again UPDATES the one open ask rather than filing a second, so `reasons` in
+   *  the result is the MERGED stored set — render that, not what was sent. */
+  async needInfo(token: string, body: QuoteNeedInfoInput): Promise<QuoteNeedInfoResult> {
+    return apiClient.post<QuoteNeedInfoResult>(
+      `/quote/${encodeURIComponent(token)}/need-info`, body);
   },
 };
 

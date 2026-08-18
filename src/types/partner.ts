@@ -37,6 +37,12 @@ export interface PartnerProfile {
   // Provider directory: unclaimed company profile — public page + map pin,
   // no listings/pricing/booking. Claimable by the company later.
   isDirectory?: boolean;
+  /** True when this partner has a provider login and therefore actually RECEIVES
+   *  a message sent from their page. Distinct from `isDirectory`, which is only
+   *  provenance: a partner hand-added by an admin is not a directory row and can
+   *  still have nobody to email. Absent/false means promise nothing — the safe
+   *  direction, and what a cached profile written before this field returns. */
+  repliesDirectly?: boolean;
   /** Service slugs: warehouse|moving|trailer|cleaning|vanrental (legacy rows may
    *  still carry the retired packing|insurance slugs — see lib/serviceTypes). */
   serviceTypes?: string[];
