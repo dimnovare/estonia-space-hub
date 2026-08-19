@@ -521,6 +521,15 @@ export type ConciergeCategory =
   | "insurance";
 
 export interface ConciergeRequestInput {
+  /** Chip answers as submitted: questionId -> 1-based option, or an array of
+   *  them for the two questions that are genuinely tick-all-that-apply. The
+   *  backend renders the labels in the PROVIDER's language, so these travel as
+   *  structure rather than as the customer's own sentence. */
+  scope?: Record<string, number | number[]>;
+  /** Street addresses. Optional, and deliberately kept out of the provider
+   *  outreach email and the public quote DTO until the customer picks someone. */
+  fromAddress?: string;
+  toAddress?: string;
   name?: string;
   email: string;
   phone?: string;

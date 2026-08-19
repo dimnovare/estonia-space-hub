@@ -12,7 +12,10 @@ import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
 import { CitySuggestInput } from "@/components/CitySuggestInput";
 import { RequestPhotoUpload, type Photo } from "@/components/RequestPhotoUpload";
-import { RequestScopeSections, type ScopeQuestion } from "@/components/RequestScopeSections";
+import {
+  RequestScopeSections, scopeAnswered, scopeSelections,
+  type ScopeAnswers, type ScopeQuestion,
+} from "@/components/RequestScopeSections";
 import { type ConciergeCategory, type ConciergeRequestInput } from "@/services";
 import { conciergeRequestService } from "@/services/conciergeRequest";
 import { trackEvent } from "@/lib/analytics";
@@ -67,6 +70,14 @@ function cameFromPackingLink(params: URLSearchParams): boolean {
  * These are required, but they are one-tap chips and the LAST option of every
  * group means "not sure". Nobody is ever hard-blocked: "not sure" is itself a
  * fact the concierge can work with, unlike a blank field.
+ *
+ * TWO OF THEM TAKE SEVERAL ANSWERS (`multi`). Both were forced into single
+ * choice to match the shape of the others, and both paid for it with a chip that
+ * described the CONTROL rather than the job — "several of these", "all three".
+ * A customer with a piano and an aquarium could not say so, and a mover pricing
+ * "several of these" is guessing at exactly the thing that decides the price;
+ * this question exists because a real mover refused to quote a Haapsalu move
+ * without knowing what was in it. Ticking two boxes says which two.
  */
 const SCOPE_QUESTIONS: Partial<Record<ConciergeCategory, ScopeQuestion[]>> = {
   warehouse: [
@@ -93,8 +104,18 @@ const SCOPE_QUESTIONS: Partial<Record<ConciergeCategory, ScopeQuestion[]>> = {
     // The biggest single price driver after size and floor. A piano or a safe
     // is a specialist sub-crew and gear, quoted separately or declined — a
     // mover who discovers it on the day either re-prices in front of the
-    // customer or walks.
-    { id: "movingHeavyItems", options: 6 },
+    // customer or walks. A home can hold more than one of them, and WHICH ones
+    // is the answer, so this is tick-all-that-apply.
+    //
+    // Chip 5 was "several of these" and is retired rather than renumbered: the
+    // position is what gets stored, so closing the gap would rewrite the meaning
+    // of every lead already taken. 6 stays "not sure".
+    {
+      id: "movingHeavyItems", options: 6, multi: true, retired: [5],
+      // "No, nothing unusual" and "not sure" are answers ABOUT the list, so
+      // neither can sit alongside an item in it.
+      exclusive: [1, 6],
+    },
   ],
   trailer: [
     { id: "trailerDuration", options: 5 },
@@ -126,8 +147,15 @@ const SCOPE_QUESTIONS: Partial<Record<ConciergeCategory, ScopeQuestion[]>> = {
     { id: "cleaningSize", options: 5 },
     // Windows, oven and fridge are priced as add-ons across the Baltics and
     // together swing the total by 30-50%. Left unasked, every cleaning quote we
-    // relayed was provisional, and the correction landed on the customer.
-    { id: "cleaningExtras", options: 6 },
+    // relayed was provisional, and the correction landed on the customer. They
+    // are three SEPARATE add-ons, so windows-and-fridge is a real answer that
+    // single choice could only round to "all three" or to one of them.
+    //
+    // Chip 5 ("all three") retired, not renumbered — see movingHeavyItems.
+    {
+      id: "cleaningExtras", options: 6, multi: true, retired: [5],
+      exclusive: [1, 6],
+    },
   ],
 };
 
@@ -202,7 +230,10 @@ interface RequestDraft {
   needDate: string;
   dateFlexible: boolean;
   details: string;
-  scope: Record<string, number>;
+  // A draft written by an older bundle holds only bare numbers, which is still
+  // a valid answer to every question — so a half-filled form survives the deploy
+  // that made two of them multi-select, with no migration and no version field.
+  scope: ScopeAnswers;
   name: string;
   phone: string;
   // Persisted for the same reason the name and the phone are: they are the
@@ -257,8 +288,12 @@ function clearDraft(): void {
  * it has, this intersection is redundant and can go.
  */
 interface ConciergeScopeFields {
-  /** questionId → 1-based option index, for provider-language rendering. */
-  scope?: Record<string, number>;
+  /** questionId → 1-based option index — or an ARRAY of them for the two
+   *  tick-all-that-apply questions — for provider-language rendering. The
+   *  backend validates both shapes against the same catalogue and stores a bare
+   *  number whenever there is only one, so a single answer is on the wire and in
+   *  the column exactly as it always was. */
+  scope?: ScopeAnswers;
   /** Street address. Kept out of provider outreach and the public quote page. */
   fromAddress?: string;
   toAddress?: string;
@@ -314,9 +349,9 @@ export default function RequestPage() {
   // Deliberately NOT persisted with the draft: the keys would outlive the
   // 30-day retention and the object URLs die with the page anyway.
   const [photos, setPhotos] = useState<Photo[]>([]);
-  // questionId → 1-based index of the chosen option. A ?category=packing deep
-  // link lands on moving with the packing add-on already answered "yes".
-  const [scope, setScope] = useState<Record<string, number>>(
+  // questionId → the chosen chip position(s). A ?category=packing deep link
+  // lands on moving with the packing add-on already answered "yes".
+  const [scope, setScope] = useState<ScopeAnswers>(
     () => (cameFromPackingLink(searchParams) ? { [PACKING_ADDON.id]: 1 } : (draft.scope ?? {})));
   // Which service's scope questions are expanded on step 2. Only ever set by the
   // visitor reopening a finished section — null means "show the first service
@@ -414,11 +449,28 @@ export default function RequestPage() {
    *  No migration needed — the outreach email already prints this field, so a
    *  readable "question: answer" summary reaches providers as-is.
    *  Still rendered in the CUSTOMER's language: see ConciergeScopeFields for why
-   *  the same answers also travel as raw indices. */
+   *  the same answers also travel as raw indices.
+   *
+   *  ONE LINE PER QUESTION, whatever the answer's shape. QuoteLeadScope strips
+   *  this summary back off by matching its line count against the number of
+   *  answers on the wire, so a multi-select question that emitted one line per
+   *  TICKED BOX would break that match and show every fact twice, in a language
+   *  the reader may not have.
+   *
+   *  Joined with a plain ", " rather than a translated conjunction: this blob is
+   *  the customer-language copy that the structured `scope` field exists to
+   *  replace, and the provider-facing join that actually matters is
+   *  EmailTranslations.ScopeJoin on the backend. Five languages of new copy for
+   *  a field we are trying to retire is the wrong trade. */
   const composeDetails = (): string | undefined => {
     const answered = detailQuestions
-      .filter((q) => scope[q.id])
-      .map((q) => `${t(`request.scope.${q.id}.label`)} ${t(`request.scope.${q.id}.opt${scope[q.id]}`)}`);
+      .filter((q) => scopeAnswered(scope[q.id]))
+      .map((q) => {
+        const value = scopeSelections(scope[q.id])
+          .map((n) => t(`request.scope.${q.id}.opt${n}`))
+          .join(", ");
+        return `${t(`request.scope.${q.id}.label`)} ${value}`;
+      });
     return [answered.join("\n"), details.trim()].filter(Boolean).join("\n\n") || undefined;
   };
 
@@ -431,8 +483,8 @@ export default function RequestPage() {
    *  chips survive unticking "moving", and a restored draft can carry the id of
    *  a question that no longer exists). Anything not currently being ASKED must
    *  not be reported as an answer. */
-  const composeScope = (): Record<string, number> | undefined => {
-    const answered = detailQuestions.filter((q) => scope[q.id]);
+  const composeScope = (): ScopeAnswers | undefined => {
+    const answered = detailQuestions.filter((q) => scopeAnswered(scope[q.id]));
     if (answered.length === 0) return undefined;
     return Object.fromEntries(answered.map((q) => [q.id, scope[q.id]]));
   };
@@ -547,8 +599,9 @@ export default function RequestPage() {
         setStepError(t("request.errors.cityAddress"));
         return;
       }
-      // Every scoping question needs an answer — "not sure" counts as one.
-      if (activeQuestions.some((q) => !scope[q.id])) {
+      // Every scoping question needs an answer — "not sure" counts as one, and
+      // for a tick-all-that-apply question so does any single box.
+      if (activeQuestions.some((q) => !scopeAnswered(scope[q.id]))) {
         setStepError(t("request.errors.scope"));
         // Drop any manual override so the sectioned layout snaps back to the
         // first service that still has an unanswered question. Without this,
@@ -822,8 +875,17 @@ export default function RequestPage() {
                         scope={scope}
                         openCategory={openScopeCategory}
                         onOpenCategory={setOpenScopeCategory}
-                        onSelect={(id, n) => {
-                          setScope((s) => ({ ...s, [id]: n }));
+                        onSelect={(id, value) => {
+                          setScope((s) => {
+                            const next = { ...s };
+                            // Unticking the last box of a multi-select question
+                            // has to REMOVE the key, not store []: an empty
+                            // answer is no answer, and the Next gate, the draft
+                            // and the payload all have to agree about that.
+                            if (Array.isArray(value) && value.length === 0) delete next[id];
+                            else next[id] = value;
+                            return next;
+                          });
                           setStepError(null);
                         }}
                       />
@@ -842,7 +904,10 @@ export default function RequestPage() {
                         <p className="mb-2 text-xs text-muted-foreground">{t("request.scope.packingHelp.hint")}</p>
                         <div className="flex flex-wrap gap-2">
                           {Array.from({ length: PACKING_ADDON.options }, (_, i) => i + 1).map((n) => {
-                            const active = scope[PACKING_ADDON.id] === n;
+                            // Single-choice and clearable, unchanged: reading it
+                            // through scopeSelections is only so the shared
+                            // answer shape has one reader, not two.
+                            const active = scopeSelections(scope[PACKING_ADDON.id])[0] === n;
                             return (
                               <button
                                 key={n}

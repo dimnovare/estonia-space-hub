@@ -13,12 +13,13 @@ import type { PublicQuote } from "@/services";
  * a provider and 9% come back with a quote; a brief the reader cannot read is
  * not a small part of that gap.
  *
- * The backend now sends the same answers structurally — `[{question, option}]`,
- * slugs and 1-based positions in catalogue order — and this component supplies
- * the wording from the funnel's own `request.scope.*` strings, which already
- * exist in all five languages. Nothing here is a server-rendered string, so a
- * question added server-side before this build knows about it degrades to being
- * SKIPPED rather than printing English at an Estonian mover.
+ * The backend now sends the same answers structurally —
+ * `[{question, option, options?}]`, slugs and 1-based positions in catalogue
+ * order — and this component supplies the wording from the funnel's own
+ * `request.scope.*` strings, which already exist in all five languages. Nothing
+ * here is a server-rendered string, so a question added server-side before this
+ * build knows about it degrades to being SKIPPED rather than printing English at
+ * an Estonian mover.
  *
  * IT ALSO OWNS `details`, and that is not incidental — it is the whole reason
  * the two are one component. `details` still opens with the same answers in the
@@ -34,13 +35,20 @@ import type { PublicQuote } from "@/services";
 /** One answered scoping question, as it arrives on the wire. */
 interface ScopeAnswer {
   question: string;
-  option: number;
+  /** Every chip position the customer picked. One for almost every question;
+   *  two or three for the tick-all-that-apply ones ("a piano AND an aquarium"). */
+  options: number[];
 }
 
 /** A row we have real wording for, ready to render. */
 interface ScopeRow extends ScopeAnswer {
   label: string;
-  answer: string;
+  answers: string[];
+}
+
+/** A whole, 1-based chip position, or null. */
+function chip(value: unknown): number | null {
+  return typeof value === "number" && Number.isInteger(value) && value >= 1 ? value : null;
 }
 
 /**
@@ -52,16 +60,33 @@ interface ScopeRow extends ScopeAnswer {
  * it cannot validate rather than failing a request, so the page has to tolerate
  * the same shapes on the way out. Anything that is not a slug plus a whole,
  * 1-based chip position is dropped here for the same reason.
+ *
+ * TWO WIRE FIELDS, AND `option` IS STILL THE ONE TO TRUST FIRST. The backend
+ * sends `options` only for an answer that has more than one chip, so its absence
+ * is not a gap — it means `option` already says everything. Reading it in that
+ * order also means a payload from a backend that predates the list renders
+ * exactly as it does today.
  */
 function readAnswers(raw: unknown): ScopeAnswer[] {
   if (!Array.isArray(raw)) return [];
   const answers: ScopeAnswer[] = [];
   for (const entry of raw) {
     if (!entry || typeof entry !== "object") continue;
-    const { question, option } = entry as { question?: unknown; option?: unknown };
+    const { question, option, options } = entry as {
+      question?: unknown; option?: unknown; options?: unknown;
+    };
     if (typeof question !== "string" || question.trim().length === 0) continue;
-    if (typeof option !== "number" || !Number.isInteger(option) || option < 1) continue;
-    answers.push({ question, option });
+
+    // Junk inside the list costs that element only — the same rule the backend
+    // applies on the way in.
+    const many = Array.isArray(options)
+      ? options.map(chip).filter((n): n is number => n !== null)
+      : [];
+    const one = chip(option);
+    const picked = many.length > 0 ? many : (one !== null ? [one] : []);
+    if (picked.length === 0) continue;
+
+    answers.push({ question, options: [...new Set(picked)] });
   }
   return answers;
 }
@@ -108,29 +133,46 @@ export function QuoteLeadScope({ lead }: { lead: PublicQuote["lead"] }) {
   const answers = readAnswers("scope" in lead ? lead.scope : null);
 
   // `t` returns the KEY when a string is missing — that is how the raw text
-  // `quote.needInfo.cta` reached production once already — so a row is only
-  // kept when BOTH halves of it resolved to something that is not their own
-  // key. This, rather than a copy of the funnel's question catalogue, is what
-  // makes an unknown question degrade to silence: a catalogue here would be a
-  // second list to keep in step, and forgetting it would either hide an answer
-  // the funnel does ask or print a key at somebody we are asking for a price.
+  // `quote.needInfo.cta` reached production once already — so nothing is
+  // rendered that resolved to its own key: not a label, not a chip. This,
+  // rather than a copy of the funnel's question catalogue, is what makes an
+  // unknown question degrade to silence: a catalogue here would be a second
+  // list to keep in step, and forgetting it would either hide an answer the
+  // funnel does ask or print a key at somebody we are asking for a price.
   const rows: ScopeRow[] = [];
-  for (const { question, option } of answers) {
+  // True while every chip of every answer found wording. Not the same as
+  // `rows.length === answers.length` any more: an answer can now be PARTLY
+  // worded — two boxes ticked, one of them a chip this build has retired — and
+  // that missing chip is as good a reason to leave `details` alone as a missing
+  // row is. See `replaced` below.
+  let whole = true;
+  for (const { question, options } of answers) {
     const labelKey = `request.scope.${question}.label`;
-    const answerKey = `request.scope.${question}.opt${option}`;
     const label = t(labelKey);
-    const answer = t(answerKey);
-    if (label === labelKey || answer === answerKey) continue;
-    rows.push({ question, option, label, answer });
+    if (label === labelKey) { whole = false; continue; }
+
+    // A chip we have no wording for drops out of the row rather than taking the
+    // row with it: two ticked boxes and one retired chip must still tell the
+    // provider about the other one.
+    const worded: string[] = [];
+    for (const option of options) {
+      const answerKey = `request.scope.${question}.opt${option}`;
+      const answer = t(answerKey);
+      if (answer === answerKey) { whole = false; continue; }
+      worded.push(answer);
+    }
+    if (worded.length === 0) continue;
+
+    rows.push({ question, options, label, answers: worded });
   }
 
   // Strip the duplicate summary ONLY when the block above replaces all of it.
   // If even one answer went unworded — a question retired between the build
-  // that took the request and the build reading it — its line in `details` is
-  // the last place that fact exists. Duplicating four facts to keep the fifth
-  // is a trade worth making every time; the reverse is a mover discovering the
-  // piano on the day.
-  const replaced = answers.length > 0 && rows.length === answers.length;
+  // that took the request and the build reading it, or one chip of a
+  // tick-all-that-apply answer — its line in `details` is the last place that
+  // fact exists. Duplicating four facts to keep the fifth is a trade worth
+  // making every time; the reverse is a mover discovering the piano on the day.
+  const replaced = answers.length > 0 && whole;
   const words = replaced ? ownWords(lead.details, answers.length) : (lead.details ?? "").trim();
 
   if (rows.length === 0 && !words) return null;
@@ -167,7 +209,20 @@ export function QuoteLeadScope({ lead }: { lead: PublicQuote["lead"] }) {
                 }`}
               >
                 <dt className="text-xs leading-snug text-muted-foreground">{row.label}</dt>
-                <dd className="text-sm font-medium leading-snug text-foreground">{row.answer}</dd>
+                {/* Several ticked boxes are STACKED, not joined into a
+                    sentence. A page has the one thing an email does not —
+                    layout — so it can show "a piano" and "an aquarium" as the
+                    two separate things a mover has to price, without a
+                    conjunction that would run one capitalised chip into the
+                    next. A list also announces its own length to a screen
+                    reader, which a joined string does not. */}
+                <dd className="text-sm font-medium leading-snug text-foreground">
+                  {row.answers.length === 1 ? row.answers[0] : (
+                    <ul className="space-y-0.5">
+                      {row.answers.map((answer) => <li key={answer}>{answer}</li>)}
+                    </ul>
+                  )}
+                </dd>
               </div>
             ))}
           </dl>

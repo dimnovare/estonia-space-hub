@@ -36,14 +36,20 @@ const LANGS = ["et", "en", "ru", "lv", "lt"] as const;
 interface Question { id: string; options: number }
 
 /**
- * Every `{ id: "…", options: n }` literal in RequestPage — that is the exact
+ * Every `{ id: "…", options: n … }` literal in RequestPage — that is the exact
  * shape of both `SCOPE_QUESTIONS` (the required per-service questions) and
  * `PACKING_ADDON` (the optional moving add-on), so one pattern collects both.
+ *
+ * The entry does not end after `options` any more: a tick-all-that-apply
+ * question carries `multi`, `retired` and `exclusive` after it, so the pattern
+ * stops at the delimiter rather than at the closing brace. Anchoring on `}` here
+ * would not fail — it would quietly stop checking the two questions most likely
+ * to have copy missing.
  */
 function questionCatalogue(): Question[] {
   const text = readFileSync(REQUEST_PAGE, "utf8");
   const found = new Map<string, number>();
-  for (const m of text.matchAll(/\{\s*id:\s*"([a-zA-Z0-9_]+)"\s*,\s*options:\s*(\d+)\s*\}/g)) {
+  for (const m of text.matchAll(/\{\s*id:\s*"([a-zA-Z0-9_]+)"\s*,\s*options:\s*(\d+)\s*[,}]/g)) {
     found.set(m[1], Number(m[2]));
   }
   return [...found].map(([id, options]) => ({ id, options }));
@@ -58,6 +64,11 @@ describe("scope question translation coverage", () => {
     // reduce this guard to checking nothing.
     expect(questions.length).toBeGreaterThanOrEqual(15);
     expect(questions.map((q) => q.id)).toContain("packingHelp");
+    // The two tick-all-that-apply questions specifically: they are the ones
+    // whose literal now has fields after `options`, so they are the ones a
+    // brace-anchored pattern would drop.
+    expect(questions.map((q) => q.id)).toContain("movingHeavyItems");
+    expect(questions.map((q) => q.id)).toContain("cleaningExtras");
     for (const q of questions) expect(q.options).toBeGreaterThan(0);
   });
 
@@ -74,6 +85,12 @@ describe("scope question translation coverage", () => {
   });
 
   for (const lang of LANGS) {
+    // EVERY option, including the two the funnel has stopped OFFERING
+    // (movingHeavyItems.opt5 "several of these" and cleaningExtras.opt5 "all
+    // three"). A chip position is the identity of a stored answer, so leads
+    // taken before those questions became tick-all-that-apply still carry a 5
+    // and still get rendered on the provider's quote page. Deleting the copy
+    // would not tidy anything up — it would blank the answer.
     it(`every question has a label and every option in "${lang}"`, () => {
       const block = translations[lang] as Record<string, string>;
       const missing: string[] = [];

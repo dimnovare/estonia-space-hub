@@ -72,6 +72,63 @@ describe("quote lead scope", () => {
     expect(container.querySelectorAll("dt").length).toBe(2);
   });
 
+  it("shows every box a tick-all-that-apply answer ticked, under one heading", async () => {
+    // The answer "several of these" could only gesture at. Two rows under one
+    // question would read as a page that lost track of itself, so the values
+    // stack inside the one row.
+    await render({
+      lead: lead({ scope: [{ question: "movingHeavyItems", option: 2, options: [2, 4] }] }),
+    });
+    expect(container.querySelectorAll("dt").length).toBe(1);
+    expect(text()).toContain("A piano");
+    expect(text()).toContain("An aquarium, artwork or something fragile");
+    expect(container.querySelectorAll("dd li").length).toBe(2);
+  });
+
+  it("falls back to `option` when the payload carries no list", async () => {
+    // Every answer stored before this existed, and every single-answer question
+    // still: the backend sends the list only when there is more than one chip,
+    // so its absence means `option` already says everything.
+    await render({ lead: lead({ scope: [{ question: "movingHeavyItems", option: 2 }] }) });
+    expect(text()).toContain("A piano");
+    expect(container.querySelectorAll("dd li").length).toBe(0);
+  });
+
+  it("still words the retired 'several of these' chip a legacy lead carries", async () => {
+    // The funnel stopped OFFERING position 5 when the question became
+    // tick-all-that-apply, and deliberately did not renumber around it: leads
+    // taken before the change still store a 5, and this page is where the mover
+    // reads them.
+    await render({ lead: lead({ scope: [{ question: "movingHeavyItems", option: 5 }] }) });
+    expect(text()).toContain("Several of these");
+  });
+
+  it("drops only the junk inside a list, not the answer around it", async () => {
+    await render({
+      lead: lead({
+        scope: [{ question: "cleaningExtras", option: 2, options: [2, 0, "3", 99.5, null, 4, 4] }],
+      }),
+    });
+    expect(text()).not.toContain("request.scope");
+    expect(container.querySelectorAll("dd li").length).toBe(2);
+    expect(text()).toContain("Windows");
+    expect(text()).toContain("Fridge");
+  });
+
+  it("keeps details whole when one chip of an answer could not be worded", async () => {
+    // Same rule as an unworded QUESTION: the line in `details` is the last place
+    // that fact exists, so nothing may be stripped. Duplicating is the cheaper
+    // mistake — the reverse is a mover discovering the piano on the day.
+    await render({
+      lead: lead({
+        scope: [{ question: "movingHeavyItems", option: 2, options: [2, 99] }],
+        details: "Kas on midagi rasket? Klaver, mingi vana vastus\n\nKolime laupäeval",
+      }),
+    });
+    expect(text()).toContain("mingi vana vastus");
+    expect(text()).toContain("Kolime laupäeval");
+  });
+
   it("still words the retired movingAccess question, which legacy leads carry", async () => {
     // The funnel split this into From/To, but leads submitted before the split
     // still send it and access is the biggest price driver a mover has.
