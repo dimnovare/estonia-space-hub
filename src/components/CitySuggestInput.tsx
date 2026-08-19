@@ -108,6 +108,15 @@ export function CitySuggestInput({
 
   const showList = open && matches.length > 0;
 
+  // The hint had no id, so aria-describedby could never point at it and the one
+  // piece of honest feedback in this control was visible-only. Announced two
+  // ways because they cover different moments: describedby reads it when focus
+  // lands on the field, role="status" reads it when it appears under a field the
+  // visitor is already typing in.
+  const hintId = `${listId}-hint`;
+  const showUnknownHint = !!unknownHint && value.trim().length > 2 && !recognised && !showList;
+  const describedByIds = [describedBy, showUnknownHint ? hintId : null].filter(Boolean).join(" ");
+
   return (
     <div ref={wrapRef} className="relative">
       <MapPin className="pointer-events-none absolute left-3 top-[26px] h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
@@ -123,11 +132,13 @@ export function CitySuggestInput({
         value={value}
         placeholder={placeholder}
         aria-invalid={invalid}
-        aria-describedby={describedBy}
+        aria-describedby={describedByIds || undefined}
         onChange={(e) => { onChange(e.target.value); setOpen(true); setActive(-1); }}
         onFocus={() => setOpen(true)}
         onKeyDown={onKeyDown}
-        className="h-12 w-full rounded-lg border border-border bg-card pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+        // text-base below sm: mobile Safari zooms the viewport whenever a focused
+        // input renders under 16px, and the user has to pinch back out mid-form.
+        className="h-12 w-full rounded-lg border border-border bg-card pl-10 pr-4 text-base focus:outline-none focus:ring-2 focus:ring-accent sm:text-sm"
       />
 
       {showList && (
@@ -160,8 +171,8 @@ export function CitySuggestInput({
       {/* Honest, non-blocking. An unknown town still submits — it is a demand
           signal worth having — but the visitor is told we may have no partner
           there rather than discovering it through silence. */}
-      {unknownHint && value.trim().length > 2 && !recognised && !showList && (
-        <p className="mt-1.5 text-xs text-muted-foreground">{unknownHint}</p>
+      {showUnknownHint && (
+        <p id={hintId} role="status" className="mt-1.5 text-xs text-muted-foreground">{unknownHint}</p>
       )}
     </div>
   );

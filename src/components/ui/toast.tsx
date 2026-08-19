@@ -4,6 +4,8 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { translateForLanguage } from "@/i18n/LanguageContext";
+import { readCurrentLang } from "@/i18n/routing";
 
 const ToastProvider = ToastPrimitives.Provider;
 
@@ -73,7 +75,13 @@ const ToastClose = React.forwardRef<
     toast-close=""
     {...props}
   >
-    <X className="h-4 w-4" />
+    <X className="h-4 w-4" aria-hidden />
+    {/* Radix supplies no name for Toast.Close, and unlike dialog/sheet this one
+        never had an sr-only string — so every toast in the app shipped a close
+        control announced as just "button". Same provider-free resolution as
+        ui/dialog.tsx: a primitive must not throw when rendered without
+        <LanguageProvider>. */}
+    <span className="sr-only">{translateForLanguage(readCurrentLang(), "common.close")}</span>
   </ToastPrimitives.Close>
 ));
 ToastClose.displayName = ToastPrimitives.Close.displayName;

@@ -19,13 +19,26 @@ export default function FeaturedPartnersStrip() {
   }
   if (!partners || partners.length === 0) return null;
 
+  // The eyebrow ("Trusted partners") and subtitle ("Verified storage and
+  // logistics partners on Ruumly") assert a property of EVERY partner in the
+  // strip, while the badge below is per-partner and gated on `isVerified`. An
+  // unverified operator therefore sat under a heading declaring it verified.
+  // Only make the blanket claim when it is true of everyone shown; otherwise the
+  // H2 ("Featured operators") carries the section on its own, which is a
+  // statement about placement and needs no backing.
+  const allVerified = partners.every((p) => p.isVerified);
+
   return (
     <section className="surface-sunken py-12 md:py-16">
       <div className="container-wide">
         <div className="mb-6 text-center">
-          <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">{t("featuredPartners.eyebrow")}</p>
+          {allVerified && (
+            <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-text">{t("featuredPartners.eyebrow")}</p>
+          )}
           <h2 className="mt-2.5 font-display text-2xl font-bold md:text-3xl">{t("featuredPartners.title")}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{t("featuredPartners.subtitle")}</p>
+          {allVerified && (
+            <p className="mt-1 text-sm text-muted-foreground">{t("featuredPartners.subtitle")}</p>
+          )}
         </div>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {partners.map((p) => {

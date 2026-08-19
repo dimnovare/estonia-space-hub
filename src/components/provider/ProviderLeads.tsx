@@ -68,14 +68,16 @@ export default function ProviderLeads() {
         <Stat label={t("provider.leads.quotedCount")} value={stats.quoted} accent="text-accent" />
       </div>
 
-      {/* Filters */}
+      {/* Filters. min-h-11 (44px): these are tradespeople answering on a phone,
+          often one-handed in a van, and a 32px pill is a mis-tap. */}
       <div className="mb-4 flex flex-wrap gap-1.5">
         {STATUS_FILTERS.map((opt) => (
           <button
             key={opt.value}
+            type="button"
             onClick={() => setStatusFilter(opt.value)}
             aria-pressed={statusFilter === opt.value}
-            className={`rounded-full px-3 py-2 text-xs font-medium transition-colors ${
+            className={`inline-flex min-h-11 items-center rounded-full px-4 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
               statusFilter === opt.value
                 ? "bg-navy-ink text-white"
                 : "border border-line-2 text-muted-foreground hover:text-navy-ink"
@@ -89,9 +91,19 @@ export default function ProviderLeads() {
       {isLoading ? (
         <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
       ) : leads.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border py-16 text-center">
-          <Inbox className="h-8 w-8 text-muted-foreground/60" />
+        // What this list actually holds: DemandLead rows carrying this supplier's
+        // id — messages sent from their public partner page, and quote requests
+        // captured on one of their own listings. Concierge requests (the ones
+        // Ruumly emails out during a match) never carry a supplier id, so they
+        // are NOT here and no amount of waiting will put them here; they arrive
+        // as a link in the message we send. A bare "no requests yet" reads as
+        // "nobody wants you", which is a different and untrue statement.
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border px-6 py-16 text-center">
+          <Inbox className="h-8 w-8 text-muted-foreground/60" aria-hidden />
           <p className="text-sm text-muted-foreground">{t("provider.leads.empty")}</p>
+          <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
+            {t("provider.leads.directoryEmptyNote")}
+          </p>
         </div>
       ) : (
         <ul className="space-y-3">
@@ -174,19 +186,25 @@ function LeadCard({
         {lead.quotedAt && ` · ${t("provider.leads.quotedOn")} ${new Date(lead.quotedAt).toLocaleDateString(locale)}`}
       </p>
 
-      {/* Respond */}
+      {/* Respond. Every control is 44px so it can be hit on a phone, and the
+          price box is a real labelled field: it had a <label> with nothing to
+          point at, so a screen reader announced an unnamed text input whose only
+          clue was the "0.00" placeholder. */}
       <div className="mt-3 flex flex-col gap-2 border-t border-border pt-3 sm:flex-row sm:items-end">
         <div className="flex flex-col gap-1">
-          <label className="text-[11px] font-semibold text-muted-foreground">{t("provider.leads.priceLabel")}</label>
+          <label htmlFor={`lead-price-${lead.id}`} className="text-xs font-semibold text-muted-foreground">
+            {t("provider.leads.priceLabel")}
+          </label>
           <div className="flex items-center gap-1">
             <input
+              id={`lead-price-${lead.id}`}
               inputMode="decimal"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
               placeholder="0.00"
-              className="h-9 w-28 rounded-lg border border-input bg-card px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
+              className="h-11 w-28 rounded-lg border border-input bg-card px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
             />
-            <span className="text-sm text-muted-foreground">€</span>
+            <span aria-hidden className="text-sm text-muted-foreground">€</span>
           </div>
         </div>
         <div className="flex flex-1 flex-col gap-1">
@@ -196,17 +214,19 @@ function LeadCard({
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder={t("provider.leads.notesPlaceholder")}
-            className="h-9 w-full rounded-lg border border-input bg-card px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
+            className="h-11 w-full rounded-lg border border-input bg-card px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
           />
         </div>
-        <div className="flex gap-2">
-          <Button size="sm" className="h-9 gap-1" disabled={respond.isPending} onClick={sendQuote}>
-            {respond.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+        <div className="flex flex-wrap gap-2">
+          <Button className="h-11 gap-1" disabled={respond.isPending} onClick={sendQuote}>
+            {respond.isPending
+              ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+              : <Check className="h-3.5 w-3.5" aria-hidden />}
             {t("provider.leads.sendQuote")}
           </Button>
           {lead.status !== "converted" && lead.status !== "dismissed" && (
             <Button
-              size="sm" variant="outline" className="h-9"
+              variant="outline" className="h-11"
               disabled={respond.isPending}
               onClick={() => respond.mutate({ status: "dismissed" })}
             >
@@ -215,7 +235,7 @@ function LeadCard({
           )}
           {lead.status === "quoted" && (
             <Button
-              size="sm" variant="outline" className="h-9"
+              variant="outline" className="h-11"
               disabled={respond.isPending}
               onClick={() => respond.mutate({ status: "converted" })}
             >

@@ -1,5 +1,5 @@
-import { List, Eye, Inbox, Search, AlertTriangle, MapPin, CheckCircle2, Sparkles, ArrowRight, Plus } from "lucide-react";
-import { useNavigate } from "@/i18n/routing";
+import { List, Eye, Inbox, Search, AlertTriangle, MapPin, CheckCircle2, Sparkles, ArrowRight, Plus, Mail, ExternalLink } from "lucide-react";
+import { useNavigate, Link } from "@/i18n/routing";
 import { useLocations } from "@/hooks/queries";
 import { useOrders } from "@/hooks/useOrders";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -71,7 +71,8 @@ export default function ProviderOverview() {
   const { data: allOrders = [], isLoading: ordersLoading } = useOrders(supplierId ?? undefined);
   const { data: locations = [] } = useLocations(supplierId ? { supplierId } : undefined);
   const { data: supplierProfile, isLoading: profileLoading } = useQuery<{
-    name?: string; isDirectoryListing?: boolean;
+    name?: string; isDirectoryListing?: boolean; slug?: string | null;
+    contactEmail?: string | null; contactPhone?: string | null; tagline?: string | null;
   }>({
     queryKey: queryKeys.supplierProfile.byId(supplierId),
     queryFn: () => apiClient.get(withSupplier("/supplier/profile", supplierId)),
@@ -158,15 +159,26 @@ export default function ProviderOverview() {
   // Profile-views / search-appearances have no metrics endpoint yet — show a neutral
   // em-dash placeholder (never a fabricated number) until the backend exposes them.
   const NO_METRIC = "—";
-  const statCards = [
-    // No new-listings-since-last-month metric is returned by /supplier/stats, so we
-    // never fabricate a delta — show the same neutral em-dash treatment as the
-    // profile-views / search-appearances cards below.
-    { label: t("provider.overview.activeListings"),    value: listingCount.toString(),    sub: NO_METRIC,                                                                            icon: List },
-    { label: t("provider.overview.profileViews"),      value: NO_METRIC,                  sub: t("provider.overview.statNoData"),                                                     icon: Eye },
-    { label: t("provider.overview.newRequests"),       value: newRequestCount.toString(), sub: t("provider.overview.statUnanswered").replace("{count}", String(newRequestCount)),     icon: Inbox },
-    { label: t("provider.overview.searchAppearances"), value: NO_METRIC,                  sub: t("provider.overview.statNoData"),                                                     icon: Search },
-  ];
+  // A claimed directory provider's first screen used to read 0 · — · 0 · —: four
+  // cards of which three CANNOT hold a number for them (they have no listings and
+  // there is no views/impressions endpoint at all). Four blanks is not a dashboard,
+  // it is a suggestion that nothing here works. Show them the one card that is
+  // theirs and put the space into telling them what claiming actually got them.
+  const statCards = isDirectoryProvider
+    ? [
+        { label: t("provider.overview.newRequests"), value: newRequestCount.toString(), sub: t("provider.overview.statUnanswered").replace("{count}", String(newRequestCount)), icon: Inbox },
+      ]
+    : [
+        // No new-listings-since-last-month metric is returned by /supplier/stats, so we
+        // never fabricate a delta — show the same neutral em-dash treatment as the
+        // profile-views / search-appearances cards below.
+        { label: t("provider.overview.activeListings"),    value: listingCount.toString(),    sub: NO_METRIC,                                                                            icon: List },
+        { label: t("provider.overview.profileViews"),      value: NO_METRIC,                  sub: t("provider.overview.statNoData"),                                                     icon: Eye },
+        { label: t("provider.overview.newRequests"),       value: newRequestCount.toString(), sub: t("provider.overview.statUnanswered").replace("{count}", String(newRequestCount)),     icon: Inbox },
+        { label: t("provider.overview.searchAppearances"), value: NO_METRIC,                  sub: t("provider.overview.statNoData"),                                                     icon: Search },
+      ];
+  const publicProfilePath = supplierProfile?.slug ? `/partner/${supplierProfile.slug}` : null;
+  const contactEmail = supplierProfile?.contactEmail?.trim() || "";
 
   return (
     <div>
@@ -201,7 +213,13 @@ export default function ProviderOverview() {
           <h1 className="font-display text-[28px] font-bold leading-tight text-navy-ink">
             {t("provider.overview.welcomeBack").replace("{name}", partnerName)}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">{t("provider.overview.subtitle")}</p>
+          {/* "Here's how your listings are doing" is a sentence about listings a
+              directory provider does not have. */}
+          <p className="mt-1 text-sm text-muted-foreground">
+            {isDirectoryProvider
+              ? t("provider.overview.directorySubtitle")
+              : t("provider.overview.subtitle")}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-xs font-semibold text-success">
@@ -216,8 +234,9 @@ export default function ProviderOverview() {
         </div>
       </div>
 
-      {/* 4 stat cards — value + delta sub-line */}
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {/* Stat cards — value + delta sub-line. One card for a directory provider
+          (see statCards), four for a marketplace partner. */}
+      <div className={`mt-6 grid gap-4 ${isDirectoryProvider ? "sm:grid-cols-2" : "sm:grid-cols-2 xl:grid-cols-4"}`}>
         {statCards.map((s, i) => {
           const Icon = s.icon;
           return (
@@ -233,8 +252,62 @@ export default function ProviderOverview() {
         })}
       </div>
 
-      {/* Zero-listings first-run CTA — only shown until the partner adds a listing */}
-      {listingCount === 0 && (
+      {/* ── What claiming actually got them ──────────────────────────────────
+          Nothing in this portal answered that question. A provider proved they
+          own the mailbox, set a password, and landed on a page of zeros with a
+          "add your first listing" button — no statement that their profile is
+          live, no address showing where we will write to them, no way to check
+          either. This panel says only what is verifiable from their own row:
+          the page exists (link it), and this is the mailbox we use (change it).
+          No lead-volume claims, no "customers are waiting". */}
+      {isDirectoryProvider && (
+        <section className="mt-6 rounded-[14px] border border-border bg-card p-6 shadow-card">
+          <h2 className="font-display text-[17px] font-bold text-navy-ink">{t("provider.overview.claimedTitle")}</h2>
+          <ul className="mt-3.5 space-y-3">
+            <li className="flex items-start gap-3">
+              <CheckCircle2 className="mt-0.5 h-[18px] w-[18px] shrink-0 text-success" aria-hidden />
+              <div className="min-w-0">
+                <p className="text-sm text-ink-2">{t("provider.overview.claimedProfileLine")}</p>
+                {publicProfilePath && (
+                  <Link
+                    to={publicProfilePath}
+                    className="mt-1 inline-flex min-h-[44px] items-center gap-1.5 text-sm font-semibold text-teal-deep hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded"
+                  >
+                    {t("claim.viewProfile")}
+                    <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                  </Link>
+                )}
+              </div>
+            </li>
+            <li className="flex items-start gap-3">
+              <Mail className="mt-0.5 h-[18px] w-[18px] shrink-0 text-muted-foreground" aria-hidden />
+              <div className="min-w-0">
+                <p className="break-words text-sm text-ink-2">
+                  {contactEmail
+                    ? t("provider.overview.claimedContactLine").replace("{email}", contactEmail)
+                    : t("provider.overview.claimedContactMissing")}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => goToTab("profile")}
+                  className="mt-1 inline-flex min-h-[44px] items-center gap-1.5 rounded text-sm font-semibold text-teal-deep hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                >
+                  {t("provider.checklist.editProfile")}
+                  <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+                </button>
+              </div>
+            </li>
+          </ul>
+        </section>
+      )}
+
+      {/* Zero-listings first-run CTA — only shown until the partner adds a listing.
+          Never to a directory provider: they arrived by claiming a directory row,
+          not by signing up to rent out units, and "add your first listing" as the
+          loudest thing on their first screen describes a business they did not
+          come here to do. The listings tab stays in the nav for anyone who wants
+          it — this is about what we put in front of them unasked. */}
+      {listingCount === 0 && !isDirectoryProvider && (
         <div className="mt-6 flex flex-col items-start gap-4 rounded-[14px] border border-dashed border-accent/40 bg-accent/5 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-4">
             <span className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[14px] bg-accent/10 text-accent">
@@ -258,14 +331,28 @@ export default function ProviderOverview() {
 
       {/* Two-column body: left activation checklist · right latest requests */}
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.5fr_1fr]">
-        <ProviderActivationChecklist locationId={locations[0]?.id} />
+        <ProviderActivationChecklist
+          locationId={locations[0]?.id}
+          isDirectoryProvider={isDirectoryProvider}
+          profile={supplierProfile}
+        />
 
         <div className="rounded-[14px] border border-border bg-card p-6 shadow-card">
           <h3 className="font-display text-[17px] font-bold text-navy-ink">{t("provider.overview.latestRequests")}</h3>
           <div className="mt-3.5 space-y-2.5">
             {isDirectoryProvider ? (
               latestLeads.length === 0 ? (
-                <p className="py-6 text-center text-sm text-muted-foreground">{t("provider.overview.noRequestsYet")}</p>
+                // "No requests yet" alone is read as "nobody has asked for you".
+                // It means something narrower: this list holds requests routed to
+                // this profile, and the concierge quote requests we email out do
+                // not appear here at all — they arrive as a link in the message.
+                // Say so, or the emptiest possible screen also becomes a wrong one.
+                <div className="py-6 text-center">
+                  <p className="text-sm text-muted-foreground">{t("provider.overview.noRequestsYet")}</p>
+                  <p className="mx-auto mt-1.5 max-w-xs text-xs leading-relaxed text-muted-foreground">
+                    {t("provider.leads.directoryEmptyNote")}
+                  </p>
+                </div>
               ) : (
                 latestLeads.map((l) => (
                   <div key={l.id} className="flex items-center justify-between gap-3 border-b border-border pb-2.5 last:border-0">
@@ -304,26 +391,36 @@ export default function ProviderOverview() {
         </div>
       </div>
 
-      {/* Optional visibility boosts banner — linear navy-ink → navy band */}
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-[14px] bg-[linear-gradient(120deg,#0E2156,#173B8D)] p-6 text-white">
-        <div className="flex items-center gap-4">
-          <span className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[14px] bg-teal/20 text-teal">
-            <Sparkles className="h-[22px] w-[22px]" />
-          </span>
-          <div>
-            <strong className="font-display text-base font-bold">{t("provider.overview.boostBannerTitle")}</strong>
-            <p className="mt-0.5 max-w-xl text-[13.5px] text-white/75">{t("provider.overview.boostBannerBody")}</p>
+      {/* Optional visibility boosts banner — linear navy-ink → navy band.
+          Hidden for a directory provider: every boost in the catalogue is scoped
+          to a listing or a location they do not have, so on their dashboard this
+          is the largest, brightest element on the page AND a paid dead end. The
+          Boosts tab stays in the nav for anyone who goes looking.
+
+          The body copy uses `boostBannerBodyPlain` rather than
+          `boostBannerBody`, which ended "featured listings get up to 3× more
+          views" — a number nothing in this codebase measures. */}
+      {!isDirectoryProvider && (
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-[14px] bg-[linear-gradient(120deg,#0E2156,#173B8D)] p-6 text-white">
+          <div className="flex items-center gap-4">
+            <span className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[14px] bg-teal/20 text-teal">
+              <Sparkles className="h-[22px] w-[22px]" aria-hidden />
+            </span>
+            <div>
+              <strong className="font-display text-base font-bold">{t("provider.overview.boostBannerTitle")}</strong>
+              <p className="mt-0.5 max-w-xl text-[13.5px] text-white/75">{t("provider.overview.boostBannerBodyPlain")}</p>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={goToBoosts}
+            className="inline-flex h-11 shrink-0 items-center gap-2 rounded-[10px] bg-white px-5 text-sm font-semibold text-navy-ink transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-navy-ink"
+          >
+            {t("provider.overview.exploreBoosts")}
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={goToBoosts}
-          className="inline-flex h-11 shrink-0 items-center gap-2 rounded-[10px] bg-white px-5 text-sm font-semibold text-navy-ink transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-navy-ink"
-        >
-          {t("provider.overview.exploreBoosts")}
-          <ArrowRight className="h-4 w-4" />
-        </button>
-      </div>
+      )}
     </div>
   );
 }

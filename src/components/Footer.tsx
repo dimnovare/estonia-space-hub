@@ -144,9 +144,12 @@ export default function Footer() {
               </a>
             ))}
           </div>
+          {/* py-1.5 matches the column links: without it this sat at a 20px tap
+              height, under the 24px WCAG 2.2 AA minimum, with nothing beside it
+              to earn the spacing exception. */}
           <a
             href="mailto:info@ruumly.eu"
-            className="text-sm text-white/70 transition-colors hover:text-white rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="inline-block py-1.5 text-sm text-white/70 transition-colors hover:text-white rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             {t("footer.supportEmail")}: info@ruumly.eu
           </a>
@@ -159,8 +162,11 @@ export default function Footer() {
           </span>
           <span>{t("footer.freeListingsAlways")}</span>
         </div>
-        {/* Legally required operator identification (Diip Solutions OÜ). */}
-        <p className="mt-3 text-xs text-white/45">{t("footer.operatedBy")}</p>
+        {/* Legally required operator identification (Diip Solutions OÜ).
+            white/55, not /45: at 12px on navy-deep the lighter value measured
+            ~4.4:1, just under AA — and this is the one line that has to be
+            legible for legal reasons. */}
+        <p className="mt-3 text-xs text-white/55">{t("footer.operatedBy")}</p>
       </div>
     </footer>
   );

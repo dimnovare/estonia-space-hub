@@ -83,14 +83,20 @@ export default function FAQPage() {
       <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">{t("faq.subtitle")}</p>
 
       <div className="mx-auto mt-12 max-w-3xl space-y-10">
-        {faqCategories.map((cat) => (
-          <section key={cat.title} aria-labelledby={`faq-${cat.title}`}>
-            <h2 id={`faq-${cat.title}`} className="mb-4 font-display text-lg font-semibold">
+        {faqCategories.map((cat, catIndex) => (
+          // IDs are built from the category INDEX, not its translated title.
+          // aria-labelledby / aria-controls take a space-separated list of ids,
+          // so a title like "Booking & payment" produced id="faq-Booking &
+          // payment" and the reference resolved to three ids, none of which
+          // exist — the section lost its accessible name and every panel lost
+          // its trigger association, in every language.
+          <section key={cat.title} aria-labelledby={`faq-cat-${catIndex}`}>
+            <h2 id={`faq-cat-${catIndex}`} className="mb-4 font-display text-lg font-semibold">
               {cat.title}
             </h2>
             <div className="space-y-2">
               {cat.items.map((item, i) => {
-                const key = `${cat.title}-${i}`;
+                const key = `${catIndex}-${i}`;
                 const isOpen = openKey === key;
                 return (
                   <div key={key} className="overflow-hidden rounded-xl border border-border bg-card">

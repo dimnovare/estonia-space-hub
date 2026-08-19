@@ -46,9 +46,12 @@ export function ErrorState({ kind, message }: ErrorStateProps) {
   const Icon = cfg.icon;
 
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
+    // role="alert": this is swapped in client-side (ProtectedRoute, failed
+    // queries) with no route change, so nothing else tells a screen reader that
+    // the page they asked for is not the page they got.
+    <div role="alert" className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-        <Icon className="h-8 w-8 text-muted-foreground" />
+        <Icon className="h-8 w-8 text-muted-foreground" aria-hidden />
       </div>
       <h1 className="mt-4 font-display text-2xl font-bold text-foreground">
         {t(cfg.titleKey)}

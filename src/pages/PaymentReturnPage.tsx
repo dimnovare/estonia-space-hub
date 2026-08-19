@@ -67,7 +67,11 @@ export default function PaymentReturnPage() {
         description=""
         noindex={true}
       />
-      <div className="mx-auto max-w-md w-full text-center">
+      {/* One live region around the whole card rather than role="alert" on the
+          failure branch: this page polls, so paid / failed / still-pending all
+          arrive after the visitor has stopped looking, and the region has to be
+          in the DOM before the swap for a screen reader to notice it at all. */}
+      <div role="status" className="mx-auto max-w-md w-full text-center">
         {!statusKey ? (
           <>
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">

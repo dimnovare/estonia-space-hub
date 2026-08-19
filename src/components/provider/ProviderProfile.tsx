@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, XCircle, Eye } from "lucide-react";
+import { AlertCircle, CheckCircle2, XCircle, Eye } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { apiClient } from "@/services/apiClient";
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,12 @@ export default function ProviderProfile() {
     tagline: "",
     about: "",
     founded: "",
+    contactEmail: "",
+    contactPhone: "",
   });
+  // Inline, at the field — a contact address rejected by a toast at the corner
+  // of the screen is a contact address the provider believes they fixed.
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   useEffect(() => {
     setFormData({
@@ -52,6 +57,8 @@ export default function ProviderProfile() {
       tagline: page?.tagline ?? "",
       about: page?.longDescription?.en ?? page?.longDescriptionEn ?? profile?.description ?? "",
       founded: page?.foundedYear ? String(page.foundedYear) : "",
+      contactEmail: profile?.contactEmail ?? "",
+      contactPhone: profile?.contactPhone ?? "",
     });
   }, [profile, page]);
 
@@ -59,9 +66,19 @@ export default function ProviderProfile() {
     "mt-1.5 w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15";
 
   const handleSave = async () => {
+    // PATCH /supplier/profile ignores an empty ContactEmail rather than clearing
+    // it, so a provider who empties the box and saves would be told "saved" and
+    // shown a blank field over an address that never changed. Refuse here
+    // instead, at the field, and say which of the two problems it is.
+    const email = formData.contactEmail.trim();
+    if (!email) { setEmailError(t("claim.emailRequiredForm")); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setEmailError(t("claim.emailInvalid")); return; }
+    setEmailError(null);
     try {
       await apiClient.patch(withSupplier("/supplier/profile", supplierId), {
         name: formData.company,
+        contactEmail: email,
+        contactPhone: formData.contactPhone.trim(),
       });
       await apiClient.patch(withSupplier("/provider/partner-page", supplierId), {
         tagline: formData.tagline,
@@ -128,26 +145,81 @@ export default function ProviderProfile() {
           <h3 className="font-display text-base font-semibold text-navy-ink">{t("provider.profile.publicDetails")}</h3>
           <div className="mt-4 space-y-4">
             <div>
-              <label className="text-[13px] font-semibold text-ink-2">{t("provider.profile.companyName")}</label>
-              <input className={inp} value={formData.company} onChange={(e) => setFormData((p) => ({ ...p, company: e.target.value }))} />
+              <label htmlFor="provider-company" className="text-[13px] font-semibold text-ink-2">{t("provider.profile.companyName")}</label>
+              <input id="provider-company" className={inp} value={formData.company} onChange={(e) => setFormData((p) => ({ ...p, company: e.target.value }))} />
+            </div>
+
+            {/* ── How Ruumly reaches this partner ──────────────────────────────
+                These two fields decided whether a directory provider could ever
+                be contacted at all, and until now the portal could not edit
+                them: the only place they were editable was the one-shot claim
+                session, which expires. A provider who changed their address a
+                month after claiming had no way to tell us, and every request we
+                routed to them went to a dead mailbox. The endpoint has always
+                accepted both — PATCH /supplier/profile takes ContactEmail and
+                ContactPhone — the form simply never sent them. */}
+            <div className="rounded-[10px] border border-line-2 bg-secondary/30 p-3.5">
+              <p className="text-[13px] font-semibold text-ink-2">{t("provider.profile.contactSection")}</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{t("provider.profile.contactHint")}</p>
+              <div className="mt-3 space-y-3">
+                <div>
+                  <label htmlFor="provider-contact-email" className="text-[13px] font-semibold text-ink-2">
+                    {t("provider.profile.contactEmail")}
+                  </label>
+                  <input
+                    id="provider-contact-email"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    required
+                    aria-invalid={emailError ? true : undefined}
+                    aria-describedby={emailError ? "provider-contact-email-error" : undefined}
+                    className={`${inp} ${emailError ? "border-destructive focus:border-destructive focus:ring-destructive/15" : ""}`}
+                    value={formData.contactEmail}
+                    onChange={(e) => { setEmailError(null); setFormData((p) => ({ ...p, contactEmail: e.target.value })); }}
+                  />
+                  {emailError && (
+                    <p id="provider-contact-email-error" role="alert" className="mt-1.5 flex items-start gap-1.5 text-xs font-medium text-destructive">
+                      <AlertCircle className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />
+                      {emailError}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="provider-contact-phone" className="text-[13px] font-semibold text-ink-2">
+                    {t("claim.form.phone")}
+                  </label>
+                  <input
+                    id="provider-contact-phone"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    className={inp}
+                    value={formData.contactPhone}
+                    onChange={(e) => setFormData((p) => ({ ...p, contactPhone: e.target.value }))}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="provider-tagline" className="text-[13px] font-semibold text-ink-2">{t("provider.profile.tagline")}</label>
+              <input id="provider-tagline" className={inp} value={formData.tagline} onChange={(e) => setFormData((p) => ({ ...p, tagline: e.target.value }))} />
             </div>
             <div>
-              <label className="text-[13px] font-semibold text-ink-2">{t("provider.profile.tagline")}</label>
-              <input className={inp} value={formData.tagline} onChange={(e) => setFormData((p) => ({ ...p, tagline: e.target.value }))} />
-            </div>
-            <div>
-              <label className="text-[13px] font-semibold text-ink-2">{t("provider.profile.about")}</label>
+              <label htmlFor="provider-about" className="text-[13px] font-semibold text-ink-2">{t("provider.profile.about")}</label>
               <textarea
+                id="provider-about"
                 className={`${inp} min-h-[110px]`}
                 value={formData.about}
                 onChange={(e) => setFormData((p) => ({ ...p, about: e.target.value }))}
               />
             </div>
             <div>
-              <label className="text-[13px] font-semibold text-ink-2">{t("provider.profile.founded")}</label>
-              <input className={inp} value={formData.founded} onChange={(e) => setFormData((p) => ({ ...p, founded: e.target.value }))} />
+              <label htmlFor="provider-founded" className="text-[13px] font-semibold text-ink-2">{t("provider.profile.founded")}</label>
+              <input id="provider-founded" inputMode="numeric" className={inp} value={formData.founded} onChange={(e) => setFormData((p) => ({ ...p, founded: e.target.value }))} />
             </div>
-            <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleSave}>
+            <Button className="h-11 w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleSave}>
               {t("provider.profile.saveChanges")}
             </Button>
           </div>

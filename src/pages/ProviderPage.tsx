@@ -190,7 +190,7 @@ export default function ProviderPage() {
       {/* ── Value: We do the marketing ── */}
       <section className="container-wide py-12 md:py-20">
         <div className="mx-auto max-w-2xl text-center">
-          <span className="font-mono-label text-xs uppercase tracking-[0.2em] text-teal-deep">
+          <span className="font-mono-label text-xs uppercase tracking-[0.2em] text-teal-text">
             {t("provPage.value.eyebrow")}
           </span>
           <h2 className="mt-3 font-display text-2xl font-bold md:text-3xl">{t("provPage.value.title")}</h2>
@@ -216,7 +216,7 @@ export default function ProviderPage() {
       <section className="surface-sunken border-y border-border py-12 md:py-20">
         <div className="container-wide">
           <div className="mx-auto max-w-2xl text-center">
-            <span className="font-mono-label text-xs uppercase tracking-[0.2em] text-teal-deep">
+            <span className="font-mono-label text-xs uppercase tracking-[0.2em] text-teal-text">
               {t("provPage.how.eyebrow")}
             </span>
             <h2 className="mt-3 font-display text-2xl font-bold md:text-3xl">{t("provPage.how.title")}</h2>
@@ -348,7 +348,7 @@ export default function ProviderPage() {
       <section className="surface-sunken border-t border-border py-12 md:py-20">
         <div className="container-wide mx-auto max-w-2xl">
           <div className="text-center">
-            <span className="font-mono-label text-xs uppercase tracking-[0.2em] text-teal-deep">
+            <span className="font-mono-label text-xs uppercase tracking-[0.2em] text-teal-text">
               {t("provPage.faq.eyebrow")}
             </span>
             <h2 className="mt-3 font-display text-2xl font-bold md:text-3xl">{t("provPage.faq.title")}</h2>

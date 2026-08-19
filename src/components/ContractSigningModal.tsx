@@ -176,7 +176,7 @@ function DokobitSigningFlow({
             : t("contract.dokobit.downloadSigned")}
         </Button>
         {downloadError && (
-          <p className="text-xs text-destructive">{t("contract.dokobit.downloadFailed")}</p>
+          <p role="alert" className="text-xs text-destructive">{t("contract.dokobit.downloadFailed")}</p>
         )}
         <Button
           onClick={onSuccess}
@@ -228,7 +228,7 @@ function DokobitSigningFlow({
     return (
       <div className="flex flex-col items-center gap-4 py-6">
         <div className="text-center">
-          <p className="text-sm font-medium text-destructive">{t("contract.dokobit.errorTitle")}</p>
+          <p role="alert" className="text-sm font-medium text-destructive">{t("contract.dokobit.errorTitle")}</p>
           <p className="mt-1 text-sm text-muted-foreground">{t("contract.dokobit.errorDesc")}</p>
         </div>
         <Button variant="outline" onClick={() => setStatus("idle")}>
@@ -255,9 +255,12 @@ function DokobitSigningFlow({
 
       {/* Optional personal ID code — fills {{tenant_id_code}} in the contract body. */}
       <div className="w-full max-w-xs">
-        <label className="text-xs font-medium">{t("contract.idCodeLabel")}</label>
+        <label htmlFor="contract-dokobit-idcode" className="text-xs font-medium">{t("contract.idCodeLabel")}</label>
         <input
-          className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50"
+          id="contract-dokobit-idcode"
+          aria-invalid={idCodeLooksOff || undefined}
+          aria-describedby="contract-dokobit-idcode-help"
+          className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-accent sm:text-sm disabled:opacity-50"
           placeholder={t("contract.idCodePlaceholder")}
           maxLength={20}
           inputMode="numeric"
@@ -265,7 +268,7 @@ function DokobitSigningFlow({
           onChange={(e) => setIdCode(e.target.value)}
           disabled={status === "initiating"}
         />
-        <p className={`mt-1 text-xs ${idCodeLooksOff ? "text-destructive" : "text-muted-foreground"}`}>
+        <p id="contract-dokobit-idcode-help" className={`mt-1 text-xs ${idCodeLooksOff ? "text-destructive-text" : "text-muted-foreground"}`}>
           {t("contract.idCodeHelp")}
         </p>
       </div>
@@ -438,9 +441,10 @@ function SmartIdSigningFlow({
 
         {/* Personal code */}
         <div>
-          <label className="text-xs font-medium">{t("contract.smartId.personalCode")}</label>
+          <label htmlFor="contract-personal-code" className="text-xs font-medium">{t("contract.smartId.personalCode")}</label>
           <input
-            className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50"
+            id="contract-personal-code"
+            className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-accent sm:text-sm disabled:opacity-50"
             placeholder="38501010000"
             maxLength={20}
             value={personalCode}
@@ -452,9 +456,10 @@ function SmartIdSigningFlow({
         {/* Phone number — Mobile-ID only */}
         {selectedMethod === "mobileid" && (
           <div>
-            <label className="text-xs font-medium">{t("contract.smartId.phoneNumber")}</label>
+            <label htmlFor="contract-phone" className="text-xs font-medium">{t("contract.smartId.phoneNumber")}</label>
             <input
-              className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50"
+              id="contract-phone"
+              className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-accent sm:text-sm disabled:opacity-50"
               placeholder="+37260000000"
               maxLength={20}
               type="tel"
@@ -500,7 +505,7 @@ function SmartIdSigningFlow({
   if (pollStatus === "failed" || pollStatus === "expired") {
     return (
       <div className="flex flex-col items-center gap-4 py-6">
-        <p className="text-sm text-destructive text-center">
+        <p role="alert" className="text-sm text-destructive text-center">
           {pollStatus === "expired"
             ? t("contract.smartId.sessionExpired")
             : t("contract.smartId.verificationFailed")}
@@ -765,7 +770,7 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
               {previewQuery.isLoading || tplQuery.isLoading ? (
                 <Skeleton className="h-[60vh] w-full rounded-xl" />
               ) : previewQuery.error || !template ? (
-                <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+                <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
                   {(previewQuery.error as Error | null)?.message || t("contract.noTemplate")}
                 </p>
               ) : (
@@ -811,9 +816,10 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
               {!dokobitEnabled && (
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="text-xs font-medium">{t("contract.fullName")}</label>
+                    <label htmlFor="contract-full-name" className="text-xs font-medium">{t("contract.fullName")}</label>
                     <input
-                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                      id="contract-full-name"
+                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-accent sm:text-sm"
                       maxLength={200}
                       value={name}
                       onChange={(e) => setName(e.target.value)}
@@ -822,9 +828,10 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium">{t("contract.idCode")}</label>
+                    <label htmlFor="contract-id-code" className="text-xs font-medium">{t("contract.idCode")}</label>
                     <input
-                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                      id="contract-id-code"
+                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-accent sm:text-sm"
                       maxLength={20}
                       placeholder="38501010000"
                       value={idCode}
@@ -922,7 +929,7 @@ export default function ContractSigningModal({ bookingId, onComplete, onClose }:
                     </label>
                     <input
                       id="contract-ack-name"
-                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-accent sm:text-sm"
                       maxLength={200}
                       autoComplete="name"
                       value={name}

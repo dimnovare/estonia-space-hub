@@ -191,7 +191,7 @@ function AccountOverview({ onNavigate }: { onNavigate: (tab: string) => void }) 
           ) : (
             <div className="mt-4 flex flex-col items-start gap-2">
               <p className="text-sm text-muted-foreground">{t("account.noCurrentBooking")}</p>
-              <Link to="/search" className="text-[13px] font-semibold text-teal-deep hover:underline">{t("account.findSpace")} →</Link>
+              <Link to="/search" className="text-[13px] font-semibold text-teal-text hover:underline">{t("account.findSpace")} →</Link>
             </div>
           )}
         </div>
@@ -719,7 +719,7 @@ function AccountMessages() {
                 ))}
               </div>
               <div className="flex gap-2 overflow-hidden border-t border-line p-3">
-                <input value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} aria-label={t("account.chat.inputPlaceholder")} placeholder={t("account.chat.inputPlaceholder")} className="min-w-0 flex-1 rounded-[10px] border border-line-2 bg-card px-3.5 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" />
+                <input value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} aria-label={t("account.chat.inputPlaceholder")} placeholder={t("account.chat.inputPlaceholder")} className="min-w-0 flex-1 rounded-[10px] border border-line-2 bg-card px-3.5 py-2.5 text-base sm:text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" />
                 <Button size="sm" aria-label={t("common.send")} onClick={sendMessage} disabled={!newMsg.trim() || sendMutation.isPending} className="min-h-[44px] bg-accent px-4 text-accent-foreground hover:bg-brand-greenDeep">
                   {sendMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 </Button>
@@ -907,7 +907,7 @@ function AccountNotifications() {
         action={hasUnread ? (
           <button
             onClick={() => markAll.mutate()}
-            className="min-h-[44px] rounded-[10px] px-3 text-sm font-semibold text-teal-deep transition-colors hover:bg-teal-deep/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className="min-h-[44px] rounded-[10px] px-3 text-sm font-semibold text-teal-text transition-colors hover:bg-teal-deep/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             {t("account.markAllRead")}
           </button>
@@ -925,7 +925,12 @@ function AccountNotifications() {
             return (
             <div
               key={n.id}
-              onClick={() => handleNotificationClick(n)}
+              // onClick is gated on actionUrl like the rest of the button
+              // affordance. It used to fire unconditionally while role/tabIndex/
+              // onKeyDown did not, so a card with no actionUrl still marked itself
+              // read on click — reachable with a mouse, invisible to a keyboard.
+              // The explicit mark-read button below covers that case for everyone.
+              onClick={n.actionUrl ? () => handleNotificationClick(n) : undefined}
               role={n.actionUrl ? "button" : undefined}
               tabIndex={n.actionUrl ? 0 : undefined}
               onKeyDown={n.actionUrl ? (e) => {
@@ -1090,16 +1095,16 @@ function AccountProfile() {
         </div>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="profile-name" className="text-[13px] font-semibold text-ink-2">{t("account.name")}</label>
-          <input id="profile-name" className="w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...form.register("name")} />
+          <input id="profile-name" className="w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-base sm:text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...form.register("name")} />
           {form.formState.errors.name && <p role="alert" className="text-xs text-destructive">{form.formState.errors.name.message}</p>}
         </div>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="profile-email" className="text-[13px] font-semibold text-ink-2">{t("account.emailLabel")}</label>
-          <input id="profile-email" className="w-full rounded-[10px] border border-line-2 bg-secondary px-3.5 py-3 text-sm text-muted-foreground" value={user?.email || ""} disabled />
+          <input id="profile-email" className="w-full rounded-[10px] border border-line-2 bg-secondary px-3.5 py-3 text-base sm:text-sm text-muted-foreground" value={user?.email || ""} disabled />
         </div>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="profile-phone" className="text-[13px] font-semibold text-ink-2">{t("account.phoneLabel")}</label>
-          <input id="profile-phone" className="w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...form.register("phone")} />
+          <input id="profile-phone" className="w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-base sm:text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...form.register("phone")} />
           {form.formState.errors.phone && <p role="alert" className="text-xs text-destructive">{form.formState.errors.phone.message}</p>}
         </div>
         <div className="flex flex-col gap-1.5">
@@ -1108,7 +1113,7 @@ function AccountProfile() {
             id="profile-language"
             value={language}
             onChange={(e) => setLanguage(e.target.value as typeof language)}
-            className="w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+            className="w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-base sm:text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
           >
             {PROFILE_LANGS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
           </select>
@@ -1152,22 +1157,22 @@ function AccountSecurity() {
       <PageHead title={t("account.security")} />
       <div className="mt-6 max-w-lg space-y-4">
         <div className="rounded-[14px] border border-line bg-card p-5 shadow-card">
-          <h3 className="font-display text-sm font-bold text-ink">{t("account.password")}</h3>
+          <h2 className="font-display text-sm font-bold text-ink">{t("account.password")}</h2>
           <p className="mt-1 text-xs text-muted-foreground">{t("account.lastChanged")}</p>
           {!changingPw ? (
             <Button variant="outline" size="sm" className="mt-3 min-h-[40px] border-line-2 text-navy-ink hover:border-navy-ink" onClick={() => setChangingPw(true)}>{t("account.changePassword")}</Button>
           ) : (
             <form onSubmit={pwForm.handleSubmit(onSubmit)} className="mt-4 space-y-3">
               <div>
-                <input type="password" aria-label={t("account.currentPasswordPlaceholder")} placeholder={t("account.currentPasswordPlaceholder")} {...pwForm.register("currentPassword")} className="w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" />
+                <input type="password" aria-label={t("account.currentPasswordPlaceholder")} placeholder={t("account.currentPasswordPlaceholder")} {...pwForm.register("currentPassword")} className="w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-base sm:text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" />
                 {pwForm.formState.errors.currentPassword && <p role="alert" className="mt-1 text-xs text-destructive">{pwForm.formState.errors.currentPassword.message}</p>}
               </div>
               <div>
-                <input type="password" aria-label={t("account.newPasswordPlaceholder")} placeholder={t("account.newPasswordPlaceholder")} {...pwForm.register("newPassword")} className="w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" />
+                <input type="password" aria-label={t("account.newPasswordPlaceholder")} placeholder={t("account.newPasswordPlaceholder")} {...pwForm.register("newPassword")} className="w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-base sm:text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" />
                 {pwForm.formState.errors.newPassword && <p role="alert" className="mt-1 text-xs text-destructive">{pwForm.formState.errors.newPassword.message}</p>}
               </div>
               <div>
-                <input type="password" aria-label={t("account.confirmPasswordPlaceholder")} placeholder={t("account.confirmPasswordPlaceholder")} {...pwForm.register("confirmPassword")} className="w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" />
+                <input type="password" aria-label={t("account.confirmPasswordPlaceholder")} placeholder={t("account.confirmPasswordPlaceholder")} {...pwForm.register("confirmPassword")} className="w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-base sm:text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" />
                 {pwForm.formState.errors.confirmPassword && <p role="alert" className="mt-1 text-xs text-destructive">{pwForm.formState.errors.confirmPassword.message}</p>}
               </div>
               <div className="flex gap-2">
@@ -1184,14 +1189,14 @@ function AccountSecurity() {
         <div className="rounded-[14px] border border-line bg-card p-5 shadow-card">
           <div className="flex items-center justify-between gap-3">
             <div>
-               <h3 className="font-display text-sm font-bold text-ink">{t("account.twoFactor")}</h3>
+               <h2 className="font-display text-sm font-bold text-ink">{t("account.twoFactor")}</h2>
                <p className="mt-1 text-xs text-muted-foreground">{t("account.comingSoonLong")}</p>
              </div>
              <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-semibold text-ink-2">{t("account.comingSoon")}</span>
           </div>
         </div>
         <div className="rounded-[14px] border border-line bg-card p-5 shadow-card">
-           <h3 className="font-display text-sm font-bold text-ink">{t("account.connectedAccounts")}</h3>
+           <h2 className="font-display text-sm font-bold text-ink">{t("account.connectedAccounts")}</h2>
           <div className="mt-3 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-xs font-bold text-ink-2">G</div>
@@ -1274,7 +1279,7 @@ function DataPrivacySection() {
       <div className="rounded-[14px] border border-line bg-card p-5 shadow-card">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h3 className="font-display text-sm font-bold text-ink">{t("account.downloadData")}</h3>
+            <h2 className="font-display text-sm font-bold text-ink">{t("account.downloadData")}</h2>
             <p className="mt-1 text-xs text-muted-foreground">{t("account.downloadDataDesc")}</p>
           </div>
           <Button variant="outline" size="sm" className="min-h-[40px] shrink-0 gap-1 border-line-2 text-navy-ink hover:border-navy-ink" onClick={handleExport} disabled={exporting}>
@@ -1287,7 +1292,7 @@ function DataPrivacySection() {
       <div className="rounded-[14px] border border-line bg-card p-5 shadow-card">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h3 className="font-display text-sm font-bold text-destructive">{t("account.deleteAccount")}</h3>
+            <h2 className="font-display text-sm font-bold text-destructive">{t("account.deleteAccount")}</h2>
             <p className="mt-1 text-xs text-muted-foreground">{t("account.deleteAccountDesc")}</p>
           </div>
           <Button variant="outline" size="sm" className="min-h-[40px] shrink-0 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => setShowDeleteDialog(true)}>

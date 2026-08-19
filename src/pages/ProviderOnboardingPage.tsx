@@ -78,7 +78,7 @@ export default function ProviderOnboardingPage() {
 
   const businessTypeLabel = businessTypes.find((b) => b.key === businessType)?.label ?? businessType;
 
-  const inputClass = "mt-1.5 w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15";
+  const inputClass = "mt-1.5 w-full rounded-[10px] border border-line-2 bg-card px-3.5 py-3 text-base sm:text-sm focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15";
 
   const goToDashboard = () => navigate("/provider/dashboard");
 

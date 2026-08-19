@@ -20,7 +20,7 @@ export function SizeBucketFilter({ selectedCode, onChange }: Props) {
   if (isLoading) {
     return (
       <div className="flex items-center gap-2">
-        <span className="font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-brand-tealDeep">
+        <span className="font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-teal-text">
           {t("search.size.label")}
         </span>
         <div className="h-7 w-64 animate-pulse rounded-full bg-secondary/40" />
@@ -31,7 +31,7 @@ export function SizeBucketFilter({ selectedCode, onChange }: Props) {
   if (isError) {
     console.error("[SizeBucketFilter] Failed to load size buckets:", error);
     return (
-      <div className="text-xs text-destructive">
+      <div role="alert" className="text-xs text-destructive">
         {t("search.size.loadError")}
       </div>
     );
@@ -45,7 +45,7 @@ export function SizeBucketFilter({ selectedCode, onChange }: Props) {
   return (
     <TooltipProvider delayDuration={200}>
       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-        <span className="font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-brand-tealDeep">
+        <span className="font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-teal-text">
           {t("search.size.label")}
         </span>
         {buckets.map((b: SizeBucket) => {

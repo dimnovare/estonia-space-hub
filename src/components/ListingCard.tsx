@@ -118,9 +118,13 @@ function ListingCard({ listing }: { listing: Listing }) {
   const { data: sizeBuckets } = useSizeBuckets();
   const priceUnitLabel = formatPriceUnit(listing.priceUnit, t);
   const bookable = !!listing.bookingEnabled;
-  // "Featured" = a promoted badge, a founding partner, OR an active paid visibility
-  // boost (featured_search / service_area_boost / pickup_location_boost — backend sets isFeatured).
-  const featured = listing.badge === "promoted" || listing.isFoundingPartner || !!listing.isFeatured;
+  // "Featured" = a promoted badge OR an active paid visibility boost
+  // (featured_search / service_area_boost / pickup_location_boost — backend sets
+  // isFeatured). `isFoundingPartner` used to qualify too, which minted an
+  // editorial-looking placement out of an early-signup flag: nothing was bought
+  // and nothing was chosen. A founding partner already carries its own chip below,
+  // with a tooltip that says what it actually means.
+  const featured = listing.badge === "promoted" || !!listing.isFeatured;
   const chipKeys = featureChipKeys(listing);
   // Vertical-aware informational chips (storage min-term, trailer deposit/licence).
   // Subtle/secondary — they sit alongside the feature chips, not the price/rating.
@@ -226,7 +230,7 @@ function ListingCard({ listing }: { listing: Listing }) {
               <span className="tabular-nums">{listing.rating}</span>
             </span>
           ) : (
-            <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-brand-tealDeep">
+            <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-teal-text">
               {t("listing.new")}
             </span>
           )}
@@ -246,7 +250,7 @@ function ListingCard({ listing }: { listing: Listing }) {
           <div className="mt-0.5 flex flex-wrap gap-1.5">
             {listing.isFoundingPartner && (
               <span
-                className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium text-brand-tealDeep"
+                className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium text-teal-text"
                 title={t("listing.badge.foundingPartnerTooltip")}
               >
                 <Award className="h-3 w-3" />
@@ -284,7 +288,15 @@ function ListingCard({ listing }: { listing: Listing }) {
 
         {/* footer: price + Book online (teal) vs Request (navy) */}
         <div className="mt-2 flex items-end justify-between gap-2 border-t border-line pt-3 tabular-nums">
-          <span className="font-display text-lg font-extrabold text-foreground">€{listing.priceFrom}<span className="text-[13px] font-medium text-muted-foreground">{priceUnitLabel}</span></span>
+          {/* The service layer defaults a missing priceFrom to 0, so a listing
+              with no price rendered a confident "€0" — a real price, and the
+              cheapest one on the page. No price is not a price; show nothing and
+              let the Book/Request tag carry the row. */}
+          {(listing.priceFrom ?? 0) > 0 ? (
+            <span className="font-display text-lg font-extrabold text-foreground">€{listing.priceFrom}<span className="text-[13px] font-medium text-muted-foreground">{priceUnitLabel}</span></span>
+          ) : (
+            <span />
+          )}
           {bookable ? (
             // Teal tag — partner has instant booking enabled.
             <span className="inline-flex items-center gap-1 rounded-full bg-brand-tealDeep px-2.5 py-1 text-[11px] font-display font-semibold text-white">

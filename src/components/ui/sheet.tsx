@@ -4,6 +4,8 @@ import { X } from "lucide-react";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { translateForLanguage } from "@/i18n/LanguageContext";
+import { readCurrentLang } from "@/i18n/routing";
 
 const Sheet = SheetPrimitive.Root;
 
@@ -49,10 +51,19 @@ const sheetVariants = cva(
 
 interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
-    VariantProps<typeof sheetVariants> {}
+    VariantProps<typeof sheetVariants> {
+  /**
+   * Screen-reader label for the close button. Optional so existing call sites
+   * keep working untouched; when omitted it resolves to the translated
+   * "common.close" rather than a hardcoded English word. See ui/dialog.tsx for
+   * why this deliberately avoids useLanguage() — a primitive must not throw when
+   * it is rendered outside <LanguageProvider>.
+   */
+  closeLabel?: string;
+}
 
 const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Content>, SheetContentProps>(
-  ({ side = "right", className, children, ...props }, ref) => (
+  ({ side = "right", className, children, closeLabel, ...props }, ref) => (
     <SheetPortal>
       <SheetOverlay />
       <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
@@ -64,8 +75,10 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
             doesn't move. The old data-[state=open]:bg-secondary was inert
             (Radix Close has no data-state) — dropped, no visual change. */}
         <SheetPrimitive.Close className="absolute right-4 top-4 -m-3.5 flex h-11 w-11 items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
-          <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
+          <X className="h-4 w-4" aria-hidden />
+          <span className="sr-only">
+            {closeLabel ?? translateForLanguage(readCurrentLang(), "common.close")}
+          </span>
         </SheetPrimitive.Close>
       </SheetPrimitive.Content>
     </SheetPortal>

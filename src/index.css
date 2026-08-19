@@ -255,15 +255,19 @@
   }
   .brand-word--on-dark { color: #ffffff; }
 
-  /* Mono eyebrow (00-foundations §3): JetBrains Mono 11.5px, .2em, uppercase,
-     teal-deep on light. Sits above section h2. */
+  /* Mono eyebrow (00-foundations §3): JetBrains Mono 11.5px, .2em, uppercase.
+     Sits above section h2.
+     Colour is --teal-text (~5.5:1 on white), NOT the #1FA6AE brand teal it used
+     to be: at 11.5px this is normal-size text and #1FA6AE reaches only ~2.9:1,
+     well under the 4.5:1 AA floor. The brand teal stays the glyph/graphic colour
+     and keeps the dark-band rule below, where it has plenty of contrast. */
   .eyebrow {
     font-family: 'JetBrains Mono', ui-monospace, monospace;
     font-size: 11.5px;
     font-weight: 500;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: #1FA6AE;
+    color: hsl(var(--teal-text));
   }
   /* On dark bands the eyebrow reads in the brighter teal. */
   .surface-dark .eyebrow,

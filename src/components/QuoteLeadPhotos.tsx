@@ -113,7 +113,10 @@ export function QuoteLeadPhotos({ token, count }: { token: string; count: number
           outreach email promised — a provider counting three and seeing two
           would otherwise assume the request itself is unreliable. */}
       {failed.size > 0 && (
-        <p className="mt-2 flex items-start gap-1.5 text-xs text-muted-foreground">
+        // role="status", not "alert": it appears as images 404 one by one, well
+        // after the page settled, and it is information rather than a failure the
+        // provider has to act on — so it should not interrupt what they are reading.
+        <p role="status" className="mt-2 flex items-start gap-1.5 text-xs text-muted-foreground">
           <ImageOff className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
           {t("quote.photos.unavailable")}
         </p>

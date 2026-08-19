@@ -96,7 +96,7 @@ export default function LocationDetailPage() {
       {/* Header */}
       <div className="mb-6">
         {location.supplierName && (
-          <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">
+          <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-text">
             {location.supplierName}
           </p>
         )}
@@ -165,8 +165,13 @@ export default function LocationDetailPage() {
         {location.fullyBooked
           ? `${location.unitCount} ${t("location.units")} · ${t("location.fullyBooked")}`
           : `${location.availableUnits ?? location.unitCount} ${t("location.availableUnits")}`}
+        {/* No "/mo" suffix: this is the location-wide minimum across units that
+            may be priced per month, per day or one-off, so stamping a period on
+            it mislabels a per-day trailer as a monthly rate. The per-unit prices
+            below carry their own stored unit. (SearchPage's location card does
+            the same, for the same reason.) */}
         {location.priceFrom != null && (
-          <> · {t("location.from")} €{location.priceFrom}{t("location.perMonth")}</>
+          <> · {t("location.from")} €{location.priceFrom}</>
         )}
       </p>
 

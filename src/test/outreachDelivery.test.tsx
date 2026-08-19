@@ -70,7 +70,27 @@ function mount(node: React.ReactNode) {
 }
 
 /** Lets the panel's query promise and its react-query callbacks land. */
-const settle = () => act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+/**
+ * Flush pending React work, optionally waiting until `until` holds.
+ *
+ * This was a bare single `setTimeout(…, 0)` inside `act`, i.e. exactly one
+ * macrotask. That is enough when this file runs on its own and is NOT enough
+ * when vitest runs 36 files in parallel and the query layer's microtask chain
+ * gets descheduled: the panel had rendered but its data had not arrived, so the
+ * assertion failed on content that was one tick away. It passed on re-run, which
+ * is the worst kind of failure -- it teaches you to re-run until green.
+ *
+ * Polling to a deadline is load-independent. It costs the same single tick when
+ * the work is already done, and only spends more when the machine is busy.
+ */
+const settle = async (until?: () => boolean, timeoutMs = 2000) => {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+    if (!until || until()) return;
+    if (Date.now() > deadline) throw new Error(`settle: condition not met within ${timeoutMs}ms`);
+  }
+};
 
 afterEach(() => {
   mounted.splice(0).forEach(({ root, container }) => {
@@ -264,7 +284,7 @@ describe("delivery aggregate — no confident zero over an empty base", () => {
       }],
     });
     const { container } = mount(<LeadDeliveryPanel delivery={metrics()} />);
-    await settle();
+    await settle(() => container.textContent!.includes("Viljandi Ladu OÜ"));
 
     expect(container.textContent).toContain("Viljandi Ladu OÜ");
     expect(container.textContent).toContain("12");

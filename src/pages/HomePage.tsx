@@ -196,7 +196,22 @@ function ConciergeHome() {
     { q: t("home.faq.partner.q"), a: t("home.faq.partner.a") },
   ];
 
-  const trustChips = t("request.hero.trustChips").split("·").map((s) => s.trim()).filter(Boolean);
+  // Hero trust chips. The authored value is four "·"-separated claims in all
+  // five languages and the LAST one is a delivery-time promise ("Usually 24 h" /
+  // "Tavaliselt 24 h" / "Обычно 24 ч" / …). We cannot substantiate it: a request
+  // is emailed to matching partners immediately, but whether — and when — any of
+  // them replies is entirely theirs. The same promise was removed from the offer,
+  // quote and admin surfaces; it survived here only because this hero borrows the
+  // request funnel's key. Dropping the trailing chip removes it in all five
+  // languages at once without touching translations.ts. "Your request goes out
+  // straight away" (home.trust.response, in the trust strip below) is the honest
+  // version of the same reassurance. Once the key itself is re-authored without a
+  // time claim, delete the slice.
+  const trustChips = t("request.hero.trustChips")
+    .split("·")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 3);
 
   return (
     <div>
@@ -237,8 +252,9 @@ function ConciergeHome() {
                 </Link>
               </Button>
               {/* Trust chips from request.hero.trustChips: Free · Every moving
-                  service, one request · 2–3 offers · Usually 24 h. Keep every
-                  chip substantiable — no blanket "verified partners" claim. */}
+                  service, one request · up to 3 offers. Keep every chip
+                  substantiable — no blanket "verified partners" claim, and no
+                  promise about when a partner replies (see trustChips above). */}
               <p className="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm text-primary-foreground/75">
                 {trustChips.map((chip, i) => (
                   <span key={chip} className="inline-flex items-center gap-2">
@@ -295,7 +311,7 @@ function ConciergeHome() {
       {/* 2 ── service grid (canonical name + one-liner per category) */}
       <section className="container-wide section-y">
         <div className="text-center">
-          <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">{t("home.services.eyebrow")}</p>
+          <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-text">{t("home.services.eyebrow")}</p>
           <h2 className="mt-2.5 font-display text-2xl font-bold md:text-3xl">{t("home.services.title")}</h2>
           <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">{t("home.services.subtitle")}</p>
         </div>
@@ -357,7 +373,7 @@ function ConciergeHome() {
       {settings.showHowItWorks && (
       <section className="surface-sunken section-y mt-10">
         <div className="container-wide">
-          <p className="text-center font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">{t("home.concierge.eyebrow")}</p>
+          <p className="text-center font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-text">{t("home.concierge.eyebrow")}</p>
           <h2 className="mt-2.5 text-center font-display text-2xl font-bold md:text-3xl">{t("home.concierge.title")}</h2>
           <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">{t("home.concierge.subtitle")}</p>
           <div className="mt-10 grid gap-6 md:grid-cols-3">
@@ -409,7 +425,7 @@ function ConciergeHome() {
       {/* 6 ── FAQ + closing CTA */}
       {settings.showFaq && (
       <section className="container-wide section-y-sm">
-        <p className="text-center font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">{t("home.faq.eyebrow")}</p>
+        <p className="text-center font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-text">{t("home.faq.eyebrow")}</p>
         <h2 className="mt-2.5 text-center font-display text-2xl font-bold md:text-3xl">{t("home.faq.title")}</h2>
         <div className="mx-auto mt-8 max-w-2xl space-y-3">
           {faqs.map((faq, i) => (
@@ -774,7 +790,7 @@ function MarketplaceHome() {
       {/* Three ways to make space — verticals */}
       <section className="container-wide section-y">
         <div className="text-center">
-          <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">{t("home.verticals.eyebrow")}</p>
+          <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-text">{t("home.verticals.eyebrow")}</p>
           <h2 className="mt-2.5 font-display text-2xl font-bold md:text-3xl">{t("home.verticals.titleNew")}</h2>
           <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">{t("home.verticals.subtitle")}</p>
         </div>
@@ -856,7 +872,7 @@ function MarketplaceHome() {
       {settings.showHowItWorks && (
       <section className="surface-sunken section-y">
         <div className="container-wide">
-        <p className="text-center font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">{t("home.how.eyebrow")}</p>
+        <p className="text-center font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-text">{t("home.how.eyebrow")}</p>
         <h2 className="mt-2.5 text-center font-display text-2xl font-bold md:text-3xl">{t("home.how.title")}</h2>
         <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">{t("home.how.subtitle")}</p>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
@@ -887,7 +903,7 @@ function MarketplaceHome() {
         <div className="container-wide">
           <div className="flex items-end justify-between">
             <div>
-              <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">{t("featured.eyebrow")}</p>
+              <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-text">{t("featured.eyebrow")}</p>
               <h2 className="mt-2.5 font-display text-2xl font-bold md:text-3xl">{t("featured.title")}</h2>
               <p className="mt-1 text-sm text-muted-foreground">{t("featured.subtitle")}</p>
             </div>
@@ -1015,7 +1031,7 @@ function MarketplaceHome() {
       {/* FAQ */}
       {settings.showFaq && (
       <section className="container-wide section-y">
-        <p className="text-center font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">{t("home.faq.eyebrow")}</p>
+        <p className="text-center font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-text">{t("home.faq.eyebrow")}</p>
         <h2 className="mt-2.5 text-center font-display text-2xl font-bold md:text-3xl">{t("home.faq.title")}</h2>
         <div className="mx-auto mt-8 max-w-2xl space-y-3">
           {faqs.map((faq, i) => (

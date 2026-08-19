@@ -152,23 +152,23 @@ export default function ContactPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label htmlFor="contact-name" className="mb-1 block text-sm font-medium">{t("contact.name")}</label>
-                    <input ref={nameRef} id="contact-name" type="text" value={name} onChange={(e) => { setName(e.target.value); if (errors.name) setErrors((p) => ({ ...p, name: undefined })); }} aria-invalid={!!errors.name} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    <input ref={nameRef} id="contact-name" type="text" value={name} onChange={(e) => { setName(e.target.value); if (errors.name) setErrors((p) => ({ ...p, name: undefined })); }} aria-invalid={!!errors.name} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                     {errors.name && <p role="alert" className="mt-1 text-xs text-destructive">{errors.name}</p>}
                   </div>
                   <div>
                     <label htmlFor="contact-email" className="mb-1 block text-sm font-medium">{t("contact.email")}</label>
-                    <input ref={emailRef} id="contact-email" type="email" value={email} onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors((p) => ({ ...p, email: undefined })); }} aria-invalid={!!errors.email} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    <input ref={emailRef} id="contact-email" type="email" value={email} onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors((p) => ({ ...p, email: undefined })); }} aria-invalid={!!errors.email} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                     {errors.email && <p role="alert" className="mt-1 text-xs text-destructive">{errors.email}</p>}
                   </div>
                 </div>
                 <div>
                   <label htmlFor="contact-subject" className="mb-1 block text-sm font-medium">{t("contact.subject")}</label>
-                  <input ref={subjectRef} id="contact-subject" type="text" value={subject} onChange={(e) => { setSubject(e.target.value); if (errors.subject) setErrors((p) => ({ ...p, subject: undefined })); }} aria-invalid={!!errors.subject} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  <input ref={subjectRef} id="contact-subject" type="text" value={subject} onChange={(e) => { setSubject(e.target.value); if (errors.subject) setErrors((p) => ({ ...p, subject: undefined })); }} aria-invalid={!!errors.subject} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                   {errors.subject && <p role="alert" className="mt-1 text-xs text-destructive">{errors.subject}</p>}
                 </div>
                 <div>
                   <label htmlFor="contact-message" className="mb-1 block text-sm font-medium">{t("contact.message")}</label>
-                  <textarea ref={messageRef} id="contact-message" value={message} onChange={(e) => { setMessage(e.target.value); if (errors.message) setErrors((p) => ({ ...p, message: undefined })); }} aria-invalid={!!errors.message} rows={5} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                  <textarea ref={messageRef} id="contact-message" value={message} onChange={(e) => { setMessage(e.target.value); if (errors.message) setErrors((p) => ({ ...p, message: undefined })); }} aria-invalid={!!errors.message} rows={5} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                   {errors.message && <p role="alert" className="mt-1 text-xs text-destructive">{errors.message}</p>}
                 </div>
                 <Button onClick={handleSubmit} disabled={sending} className="w-full bg-accent text-accent-foreground hover:bg-accent/90" size="lg">

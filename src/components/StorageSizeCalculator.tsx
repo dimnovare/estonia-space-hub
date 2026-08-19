@@ -89,7 +89,10 @@ export default function StorageSizeCalculator() {
                   : "border-border text-foreground"
               }`}
             >
-              <span>{item.emoji}</span>
+              {/* The emoji is decoration sitting next to its own translated label,
+                  so without aria-hidden a screen reader says the item twice — and
+                  the first time in the reader's own language, not the page's. */}
+              <span aria-hidden>{item.emoji}</span>
               <span>{t(item.label)}</span>
               {qty > 0 && (
                 <span className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
@@ -111,7 +114,7 @@ export default function StorageSizeCalculator() {
                 return (
                   <span key={id} className="flex items-center gap-1">
                     <span className="text-muted-foreground">
-                      {item.emoji} {t(item.label)} ×{qty}
+                      <span aria-hidden>{item.emoji}</span> {t(item.label)} ×{qty}
                     </span>
                     <button
                       onClick={() =>

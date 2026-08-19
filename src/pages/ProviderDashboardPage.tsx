@@ -222,9 +222,13 @@ export default function ProviderDashboardPage() {
         </nav>
       </aside>
 
-      {/* Mobile tab bar (<1080px) — sticky horizontal-scroll pills */}
+      {/* Mobile tab bar (<1080px) — sticky horizontal-scroll pills.
+          min-h-11 (44px): this is the only navigation a provider has on a phone,
+          and the pills were ~30px tall — under both the Apple (44pt) and Material
+          (48dp) minimum, in a horizontally scrolling strip where a mis-tap also
+          reads as a swipe. */}
       <div className="sticky top-[72px] z-20 -mx-px border-b border-border bg-card/95 backdrop-blur min-[1080px]:hidden">
-        <div className="flex gap-1.5 overflow-x-auto px-4 py-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <nav aria-label={t("provider.panel")} className="flex gap-1.5 overflow-x-auto px-4 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {navItems.map((l) => {
             const Icon = l.icon;
             const isActive = tab === l.id;
@@ -232,17 +236,18 @@ export default function ProviderDashboardPage() {
             return (
               <button
                 key={l.id}
+                type="button"
                 onClick={() => setTab(l.id)}
                 aria-current={isActive ? "page" : undefined}
-                className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${isActive ? "bg-navy-ink text-white" : "border border-line-2 text-muted-foreground hover:text-navy-ink"}`}
+                className={`flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-4 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${isActive ? "bg-navy-ink text-white" : "border border-line-2 text-muted-foreground hover:text-navy-ink"}`}
               >
-                <Icon className={`h-3.5 w-3.5 ${isActive ? "text-teal" : "text-muted-foreground"}`} />
+                <Icon aria-hidden className={`h-3.5 w-3.5 ${isActive ? "text-teal" : "text-muted-foreground"}`} />
                 {l.label}
                 {badge > 0 && <span className="ml-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-warning px-1 text-[9px] font-bold text-warning-foreground">{badge}</span>}
               </button>
             );
           })}
-        </div>
+        </nav>
       </div>
 
       <div className="min-w-0 flex-1 overflow-x-hidden px-[18px] py-6 min-[1080px]:px-10 min-[1080px]:py-9">
@@ -286,12 +291,15 @@ export default function ProviderDashboardPage() {
 
         <div className="mb-4 flex items-center justify-between gap-3">
           <div className="ml-auto flex items-center gap-2 shrink-0">
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setSoundEnabled(!soundEnabled)} aria-pressed={soundEnabled} aria-label={soundEnabled ? t("provider.notifications.soundOn") : t("provider.notifications.soundOff")} title={soundEnabled ? t("provider.notifications.soundOn") : t("provider.notifications.soundOff")}>
-              {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
+            {/* 44px: icon-only controls, and the bell is how a provider learns a
+                request came in. 32px was below the touch minimum on the device
+                most of them use. */}
+            <Button variant="ghost" size="sm" className="h-11 w-11 p-0" onClick={() => setSoundEnabled(!soundEnabled)} aria-pressed={soundEnabled} aria-label={soundEnabled ? t("provider.notifications.soundOn") : t("provider.notifications.soundOff")} title={soundEnabled ? t("provider.notifications.soundOn") : t("provider.notifications.soundOff")}>
+              {soundEnabled ? <Volume2 className="h-4 w-4" aria-hidden /> : <VolumeX className="h-4 w-4 text-muted-foreground" aria-hidden />}
             </Button>
             <div className="relative" ref={bellRef}>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 relative" onClick={() => setShowNotifications(!showNotifications)} aria-label={t("provider.notifications.title")} aria-expanded={showNotifications} aria-haspopup="dialog">
-                <Bell className="h-4 w-4" />
+              <Button variant="ghost" size="sm" className="h-11 w-11 p-0 relative" onClick={() => setShowNotifications(!showNotifications)} aria-label={t("provider.notifications.title")} aria-expanded={showNotifications} aria-haspopup="dialog">
+                <Bell className="h-4 w-4" aria-hidden />
                 {unreadCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-accent-foreground animate-pulse">
                     {unreadCount > 9 ? "9+" : unreadCount}

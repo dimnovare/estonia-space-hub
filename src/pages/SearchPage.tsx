@@ -236,6 +236,8 @@ export default function SearchPage() {
       // Any listing with a real price / footprint to filter on.
       price: pool.some(l => (l.priceFrom ?? 0) > 0),
       size:  pool.some(l => ((l as { sizeM2?: number }).sizeM2 ?? 0) > 0),
+      // Sorting by rating needs someone to have actually rated something.
+      rating: pool.some(l => ((l as { reviewCount?: number }).reviewCount ?? 0) > 0),
       // Date windows and the booking toggle need bookable inventory to mean anything.
       availability: pool.length > 0,
       bookable: pool.some(l => !!(l as { bookingEnabled?: boolean }).bookingEnabled),
@@ -515,12 +517,19 @@ export default function SearchPage() {
     }, { replace: true });
   }
 
+  // Sort options get the same facet gate as the filters. They did not, so
+  // "Cheapest" and "Best rated" were offered over the directory supply, which
+  // carries neither a price nor a review — a control that cannot do what its
+  // label says. Gate them on the same pool the filter row is derived from.
   const sortOptions = [
     { value: "best", label: t("search.sort.best") },
-    { value: "cheapest", label: t("search.sort.cheapest") },
-    { value: "rating", label: t("search.sort.rating") },
+    ...(facets.price  ? [{ value: "cheapest", label: t("search.sort.cheapest") }] : []),
+    ...(facets.rating ? [{ value: "rating",   label: t("search.sort.rating")   }] : []),
     { value: "newest", label: t("search.sort.newest") },
   ];
+  // A ?sort= carried in from a link or an earlier vertical may name an option
+  // this pool cannot offer; fall back rather than leaving the select blank.
+  const activeSort = sortOptions.some((s) => s.value === sort) ? sort : "best";
 
   const typeFilters = [
     { value: "all",       label: t("search.type.all"),       Icon: Layers   },
@@ -746,12 +755,18 @@ export default function SearchPage() {
           {/* Result count + filters/sort */}
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex flex-col">
-              <span className="font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-brand-tealDeep">
+              <span className="font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-teal-text">
                 {t("search.eyebrow")}
               </span>
               <span className="font-display text-sm font-semibold text-foreground">
                 <span className="font-extrabold text-primary">{totalCount}</span>{" "}
-                <span className="font-normal text-muted-foreground">{t("search.resultsAcross")}</span>
+                {/* "across the Baltics" is only true of the unfiltered pool. With
+                    ?city= active the header still claimed it, so a Tallinn-only
+                    search read "3 listings across the Baltics" — a count of one
+                    city presented as a count of three countries. */}
+                <span className="font-normal text-muted-foreground">
+                  {cityFilter ? t("search.results") : t("search.resultsAcross")}
+                </span>
               </span>
             </div>
             <div className="ml-auto flex items-center gap-2">
@@ -767,7 +782,7 @@ export default function SearchPage() {
                 )}
               </button>
               <div className="relative">
-                <select aria-label={t("search.sort") || "Sort results"} value={sort} onChange={(e) => updateFilters({ sort: e.target.value })} className="min-h-[44px] lg:min-h-[36px] appearance-none rounded-lg border border-line-2 bg-card py-2 sm:py-1.5 pl-3 pr-7 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-accent">
+                <select aria-label={t("search.sort") || "Sort results"} value={activeSort} onChange={(e) => updateFilters({ sort: e.target.value })} className="min-h-[44px] lg:min-h-[36px] appearance-none rounded-lg border border-line-2 bg-card py-2 sm:py-1.5 pl-3 pr-7 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-accent">
                   {sortOptions.map((s) => (
                     <option key={s.value} value={s.value}>{s.label}</option>
                   ))}
@@ -875,7 +890,7 @@ export default function SearchPage() {
                 type="button"
                 aria-expanded={calcOpen}
                 onClick={() => setCalcOpen(!calcOpen)}
-                className="inline-flex items-center gap-1.5 rounded text-[13px] font-medium text-brand-tealDeep transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                className="inline-flex items-center gap-1.5 rounded text-[13px] font-medium text-teal-text transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
                 <Calculator className="h-3.5 w-3.5" />
                 {t("search.sizeHelper")}
@@ -1068,9 +1083,9 @@ export default function SearchPage() {
                             <Building2 className={`h-[22px] w-[22px] text-primary ${loc.supplierLogoUrl ? "hidden" : ""}`} />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <h3 className="truncate font-sans text-sm font-semibold text-foreground">
+                            <h2 className="truncate font-sans text-sm font-semibold text-foreground">
                               {loc.supplierName || loc.name}
-                            </h3>
+                            </h2>
                             <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                               <MapPin className="h-3 w-3 shrink-0" />
                               {loc.city}
@@ -1082,7 +1097,7 @@ export default function SearchPage() {
                             {(loc.serviceTypes ?? []).map((st) => (
                               <span
                                 key={st}
-                                className="rounded-full bg-teal/[0.14] px-2.5 py-0.5 text-[11px] font-semibold text-teal-deep"
+                                className="rounded-full bg-teal/[0.14] px-2.5 py-0.5 text-[11px] font-semibold text-teal-text"
                               >
                                 {serviceTypeLabel(t, st)}
                               </span>
@@ -1136,7 +1151,7 @@ export default function SearchPage() {
                         </span>
                       </div>
                       <div className="p-4">
-                        <h3 className="truncate font-sans text-sm font-semibold text-foreground">{loc.name}</h3>
+                        <h2 className="truncate font-sans text-sm font-semibold text-foreground">{loc.name}</h2>
                         <p className="mt-0.5 text-xs text-muted-foreground">{loc.supplierName}</p>
                         {loc.rating != null && loc.rating > 0 && (
                           <div className="mt-1 flex items-center gap-1 text-xs">
@@ -1201,6 +1216,20 @@ export default function SearchPage() {
                     })()}
                   </div>
                   <h2 className="mt-4 font-display text-lg font-semibold text-foreground">{t("search.empty.requestTitle")}</h2>
+                  {/* Say what we do NOT have before offering what we might. This
+                      line used to sit below the request pitch, so the first thing
+                      a visitor read on an empty /search?type=vanrental&city=X was
+                      an offer to find them partners "in your area" — in the very
+                      area we had just failed to return anyone for. It is also no
+                      longer tied to having alternative cities to suggest: the
+                      absence is true whether or not we can point somewhere else. */}
+                  {cityFilter && serviceTypeLabels[activeType] && (
+                    <p className="mt-1.5 text-sm font-medium text-foreground">
+                      {t("search.noSupplyCity")
+                        .replace("{service}", serviceTypeLabels[activeType].toLowerCase())
+                        .replace("{city}", cityFilter)}
+                    </p>
+                  )}
                   <p className="mt-1.5 text-sm text-muted-foreground">{t("search.empty.requestDesc")}</p>
 
                   {/* Primary action (overhaul §4): the concierge request funnel
@@ -1231,7 +1260,7 @@ export default function SearchPage() {
                           value={notifyEmail}
                           onChange={(e) => { setNotifyEmail(e.target.value); setNotifyError(false); }}
                           onKeyDown={(e) => e.key === "Enter" && handleNotifySubmit()}
-                          className={`min-h-[44px] flex-1 rounded-[10px] border bg-card px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent ${notifyError ? "border-destructive" : "border-line-2"}`}
+                          className={`min-h-[44px] flex-1 rounded-[10px] border bg-card px-3.5 py-2.5 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-accent ${notifyError ? "border-destructive" : "border-line-2"}`}
                         />
                         <Button
                           className="min-h-[44px] bg-accent px-5 font-display text-accent-foreground hover:bg-accent/90"
@@ -1258,16 +1287,10 @@ export default function SearchPage() {
                       empty page is the one answer that helps nobody. */}
                   {nearestCities.length > 0 && (
                     <div className="mt-6 w-full border-t border-line pt-5">
-                      {/* The named-service line only makes sense on a service tab —
-                          the mixed 'all' view has no single noun to put in it. */}
-                      {cityFilter && serviceTypeLabels[activeType] && (
-                        <p className="text-sm font-medium text-foreground">
-                          {t("search.noSupplyCity")
-                            .replace("{service}", serviceTypeLabels[activeType].toLowerCase())
-                            .replace("{city}", cityFilter)}
-                        </p>
-                      )}
-                      <p className={`text-sm text-muted-foreground ${cityFilter ? "mt-1" : ""}`}>
+                      {/* search.noSupplyCity moved to the top of this card — it
+                          answers the visitor's question and had to be read before
+                          the pitch, not after it. */}
+                      <p className="text-sm text-muted-foreground">
                         {cityFilter ? t("search.nearestCities") : t("search.tryNearby")}
                       </p>
                       <div className="mt-2.5 flex flex-wrap justify-center gap-2">
@@ -1287,7 +1310,7 @@ export default function SearchPage() {
                   {activeFiltersCount > 0 && (
                     <button
                       onClick={clearAll}
-                      className="mt-5 text-sm font-medium text-brand-tealDeep transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:rounded"
+                      className="mt-5 text-sm font-medium text-teal-text transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:rounded"
                     >
                       {t("empty.search.clearFilters")}
                     </button>
@@ -1597,7 +1620,7 @@ function FilterContent({
       {/* Advanced m² range — needs inventory that records a footprint. */}
       {(activeType === "all" || activeType === "warehouse") && facets.size && (
         <div className="space-y-2">
-          <h4 className="text-sm font-medium">{t("filters.size.advanced")}</h4>
+          <h2 className="text-sm font-medium">{t("filters.size.advanced")}</h2>
           <div className="flex items-center gap-2">
             <input
               aria-label={t("filters.minSize.label")}

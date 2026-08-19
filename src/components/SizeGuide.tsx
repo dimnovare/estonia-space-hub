@@ -60,7 +60,7 @@ export default function SizeGuide({ variant = "button" }: { variant?: "button" |
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded text-[13px] font-medium text-brand-tealDeep transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+        className="inline-flex items-center gap-1.5 rounded text-[13px] font-medium text-teal-text transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
       >
         <Ruler className="h-3.5 w-3.5" />
         {t("sizeGuide.trigger")}
@@ -108,7 +108,7 @@ export default function SizeGuide({ variant = "button" }: { variant?: "button" |
                         <span className="font-display text-sm font-bold tabular-nums text-foreground">
                           {t(tier.bandKey)}
                         </span>
-                        <span className="text-[13px] font-semibold text-brand-tealDeep">
+                        <span className="text-[13px] font-semibold text-teal-text">
                           {t(tier.titleKey)}
                         </span>
                       </div>

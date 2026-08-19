@@ -29,7 +29,11 @@ export default function VerifyEmailPage() {
     <>
       <SEO title={t("verify.seoTitle")} description={t("verify.seoTitle")} noindex />
       <div className="flex min-h-[70vh] items-center justify-center px-4">
-        <div className="mx-auto max-w-md text-center space-y-6">
+        {/* The whole page is one async status machine (loading → success/error)
+            with no navigation between states, so the outcome has to be announced.
+            The live region wraps all branches and is present from first paint —
+            a role added to the error branch alone would mount too late to fire. */}
+        <div role="status" className="mx-auto max-w-md text-center space-y-6">
           {status === "loading" && (
             <>
               <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />

@@ -325,8 +325,11 @@ function DetailTagRow({ listing, typeLabel }: { listing: Listing; typeLabel: str
         {typeLabel}
       </span>
       {listing.isVerified && (
+        // teal-text, not the brand teal-deep: as a 12px label on the teal/15
+        // tint, teal-deep measures ~2.7:1 and fails AA. teal-deep stays correct
+        // for standalone glyphs elsewhere — that is why the two coexist.
         <span
-          className="inline-flex items-center gap-1.5 rounded-full bg-teal/15 px-3 py-1 text-xs font-semibold text-teal-deep"
+          className="inline-flex items-center gap-1.5 rounded-full bg-teal/15 px-3 py-1 text-xs font-semibold text-teal-text"
           title={t("listing.badge.verifiedTooltip")}
         >
           <ShieldCheck className="h-3.5 w-3.5" />
@@ -416,7 +419,7 @@ function RequestModal({
   }, [open]);
 
   const inputCls =
-    "h-11 rounded-[10px] border border-input bg-card px-3.5 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40";
+    "h-11 rounded-[10px] border border-input bg-card px-3.5 text-base sm:text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40";
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -476,7 +479,7 @@ function RequestModal({
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={3}
-              className="min-h-[88px] rounded-[10px] border border-input bg-card px-3.5 py-2.5 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="min-h-[88px] rounded-[10px] border border-input bg-card px-3.5 py-2.5 text-base sm:text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             />
           </div>
           <Button
@@ -535,7 +538,7 @@ function MovingQuoteModal({
   }, [open]);
 
   const inputCls =
-    "h-11 rounded-[10px] border border-input bg-card px-3.5 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40";
+    "h-11 rounded-[10px] border border-input bg-card px-3.5 text-base sm:text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40";
   const labelCls = "text-[13px] font-semibold text-ink-2";
 
   const crewLabel = (v: string): string =>
@@ -688,7 +691,7 @@ function MovingQuoteModal({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              className="min-h-[88px] rounded-[10px] border border-input bg-card px-3.5 py-2.5 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="min-h-[88px] rounded-[10px] border border-input bg-card px-3.5 py-2.5 text-base sm:text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             />
           </div>
 
@@ -1048,7 +1051,7 @@ export function WarehouseDetail() {
                   type="date"
                   value={moveInDate}
                   onChange={(e) => setMoveInDate(e.target.value)}
-                  className="h-11 rounded-[10px] border border-input bg-card px-3.5 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  className="h-11 rounded-[10px] border border-input bg-card px-3.5 text-base sm:text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -1057,7 +1060,7 @@ export function WarehouseDetail() {
                   id="wh-duration"
                   value={duration}
                   onChange={(e) => setDuration(e.target.value)}
-                  className="h-11 rounded-[10px] border border-input bg-card px-3.5 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  className="h-11 rounded-[10px] border border-input bg-card px-3.5 text-base sm:text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   <option value="1">{t("detail.duration1m")}</option>
                   <option value="3">{t("detail.duration3m")}</option>
@@ -1315,7 +1318,7 @@ export function TrailerDetail() {
                   type="date"
                   value={pickupDate}
                   onChange={(e) => setPickupDate(e.target.value)}
-                  className="h-11 rounded-[10px] border border-input bg-card px-3.5 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  className="h-11 rounded-[10px] border border-input bg-card px-3.5 text-base sm:text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -1324,7 +1327,7 @@ export function TrailerDetail() {
                   id="tr-days"
                   value={days}
                   onChange={(e) => setDays(e.target.value)}
-                  className="h-11 rounded-[10px] border border-input bg-card px-3.5 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  className="h-11 rounded-[10px] border border-input bg-card px-3.5 text-base sm:text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   <option value="1">{t("detail.days1")}</option>
                   <option value="2">{t("detail.days2")}</option>

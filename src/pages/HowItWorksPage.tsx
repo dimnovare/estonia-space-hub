@@ -99,7 +99,7 @@ export default function HowItWorksPage() {
       {/* Step-by-step journey */}
       <section className="container-wide py-16">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">
+          <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-text">
             {t("hiw.stepsEyebrow")}
           </p>
           <h2 className="mt-2.5 font-display text-2xl font-bold md:text-3xl">{t("hiw.stepsTitleNew")}</h2>
@@ -137,7 +137,7 @@ export default function HowItWorksPage() {
       <section className="surface-sunken py-16">
         <div className="container-wide">
           <div className="mx-auto max-w-2xl text-center">
-            <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">
+            <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-text">
               {t("hiw.whyEyebrow")}
             </p>
             <h2 className="mt-2.5 font-display text-2xl font-bold">{t("hiw.whyTitle")}</h2>
@@ -177,7 +177,7 @@ export default function HowItWorksPage() {
 
       {/* Are you a provider? — single demoted link on this customer-facing page. */}
       <section className="container-wide pb-4 text-center">
-        <Link to="/provider" className="inline-flex items-center gap-1.5 text-sm font-semibold text-teal-deep hover:text-primary hover:underline">
+        <Link to="/provider" className="inline-flex items-center gap-1.5 text-sm font-semibold text-teal-text hover:text-primary hover:underline">
           {t("hiw.providerLink")}
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
@@ -186,7 +186,14 @@ export default function HowItWorksPage() {
       {/* Final CTA */}
       <section className="container-wide pb-20 text-center">
         <h2 className="font-display text-2xl font-bold">{t("hiw.readyCta")}</h2>
-        <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{t("hiw.readyDescCross")}</p>
+        {/* Was hiw.readyDescCross: "Send your request today — offers are usually
+            in by tomorrow." We cannot promise a day. The request reaches matching
+            partners immediately, but whether one replies, and when, is theirs;
+            the same claim was pulled from the offer, quote and admin surfaces and
+            survived here. home.closing.desc ("Send your request — it takes 2
+            minutes and it's free.") is the substantiable version of the same
+            nudge and is already authored in all five languages. */}
+        <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{t("home.closing.desc")}</p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <Link to="/request">
             <Button className="bg-accent text-accent-foreground hover:bg-accent/90" size="lg">

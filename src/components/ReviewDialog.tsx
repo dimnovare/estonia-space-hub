@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Star } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,8 @@ export default function ReviewDialog({ open, onOpenChange, bookingId, listingId 
   const [hoveredRating, setHoveredRating] = useState(0);
   const [comment, setComment] = useState("");
   const createReview = useCreateReview();
+  const ratingLabelId = useId();
+  const commentId = useId();
 
   const handleSubmit = () => {
     if (rating === 0) return;
@@ -49,18 +51,27 @@ export default function ReviewDialog({ open, onOpenChange, bookingId, listingId 
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <p className="text-sm font-medium mb-2">{t("reviews.rating")}</p>
-            <div className="flex gap-1">
+            <p id={ratingLabelId} className="text-sm font-medium mb-2">{t("reviews.rating")}</p>
+            {/* The five stars were unlabelled buttons inside an unlabelled div —
+                a screen reader announced "button" five times with no way to tell
+                which score each one set. The group borrows the visible "Rating"
+                text as its name; each star states its own value and whether it is
+                part of the current score. Padding is p-2 rather than p-0.5 so the
+                primary input of this dialog is a 44px thumb target. */}
+            <div className="flex gap-1" role="group" aria-labelledby={ratingLabelId}>
               {[1, 2, 3, 4, 5].map((i) => (
                 <button
                   key={i}
                   type="button"
+                  aria-label={t("reviews.rateStars").replace("{count}", String(i))}
+                  aria-pressed={i <= rating}
                   onClick={() => setRating(i)}
                   onMouseEnter={() => setHoveredRating(i)}
                   onMouseLeave={() => setHoveredRating(0)}
-                  className="p-0.5 transition-transform hover:scale-110"
+                  className="rounded-md p-2 transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                 >
                   <Star
+                    aria-hidden
                     className={`h-7 w-7 ${i <= displayRating ? "fill-accent text-accent" : "text-muted-foreground/30"}`}
                   />
                 </button>
@@ -68,8 +79,11 @@ export default function ReviewDialog({ open, onOpenChange, bookingId, listingId 
             </div>
           </div>
           <div>
-            <p className="text-sm font-medium mb-2">{t("reviews.comment")}</p>
+            {/* A real <label>, not a <p>: the textarea had no accessible name at
+                all, so it was announced as an unlabelled edit field. */}
+            <label htmlFor={commentId} className="mb-2 block text-sm font-medium">{t("reviews.comment")}</label>
             <Textarea
+              id={commentId}
               value={comment}
               onChange={(e) => setComment(e.target.value.slice(0, 1000))}
               placeholder={t("reviews.commentPlaceholder")}

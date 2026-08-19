@@ -98,7 +98,7 @@ export function claimRetryPolicy(failureCount: number, err: unknown): boolean {
 }
 
 const inputCls =
-  "h-11 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring";
+  "h-11 w-full rounded-md border border-border bg-background px-3 text-base sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring";
 
 export default function ClaimPage() {
   const { slug = "" } = useParams<{ slug: string }>();
@@ -306,7 +306,7 @@ export default function ClaimPage() {
   const helpFooter = (
     <p className="mt-10 text-center text-sm text-muted-foreground">
       {t("claim.help").replace("{email}", "")}
-      <a href={`mailto:${supportEmail}`} className="font-medium text-teal-deep hover:underline">{supportEmail}</a>
+      <a href={`mailto:${supportEmail}`} className="font-medium text-teal-text hover:underline">{supportEmail}</a>
     </p>
   );
 
@@ -423,7 +423,7 @@ export default function ClaimPage() {
 
     return shell(t("claim.editTitle"), t("claim.editSubtitle"), (
       <div className="container-wide mx-auto max-w-xl py-8 md:py-12">
-        <span className="font-mono-label inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-teal-deep">
+        <span className="font-mono-label inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-teal-text">
           <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
           {t("claim.verifiedEyebrow")}
         </span>
@@ -438,7 +438,7 @@ export default function ClaimPage() {
             <div>
               <p className="font-display text-sm font-bold text-navy-ink">{t("claim.savedTitle")}</p>
               <p className="mt-1 text-sm text-muted-foreground">{t("claim.savedBody")}</p>
-              <Link to={`/partner/${profile.slug}`} className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-teal-deep hover:underline">
+              <Link to={`/partner/${profile.slug}`} className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-teal-text hover:underline">
                 {t("claim.viewProfile")}<ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
@@ -462,7 +462,7 @@ export default function ClaimPage() {
                 {t("claim.account.password")}
                 <input
                   type="password" autoComplete="new-password" minLength={8}
-                  className="mt-1 w-56 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="mt-1 w-56 rounded-md border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setAccountError(null); }} />
               </label>
@@ -537,7 +537,7 @@ export default function ClaimPage() {
 
           <label className="mt-4 block text-xs font-medium text-muted-foreground">
             {t("claim.form.description")}
-            <textarea className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            <textarea className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               rows={3} maxLength={160} value={form.description ?? ""}
               onChange={(e) => set({ description: e.target.value })} />
           </label>
@@ -557,7 +557,7 @@ export default function ClaimPage() {
                 {t("claim.form.priceFrom")}
                 <input
                   type="number" inputMode="decimal" min={0} step="0.01"
-                  className="mt-1 w-32 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="mt-1 w-32 rounded-md border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   value={form.priceFrom ?? ""}
                   onChange={(e) => set({ priceFrom: e.target.value === "" ? null : Number(e.target.value) })} />
               </label>
@@ -565,7 +565,7 @@ export default function ClaimPage() {
                 {t("claim.form.priceUnit")}
                 <input
                   type="text" maxLength={40} placeholder={t("claim.form.priceUnitPlaceholder")}
-                  className="mt-1 w-44 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="mt-1 w-44 rounded-md border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   value={form.priceUnit ?? ""}
                   onChange={(e) => set({ priceUnit: e.target.value })} />
               </label>
@@ -574,7 +574,7 @@ export default function ClaimPage() {
             <label className="mt-3 block text-xs font-medium text-muted-foreground">
               {t("claim.form.priceNote")}
               <textarea
-                className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 rows={2} maxLength={500} placeholder={t("claim.form.priceNotePlaceholder")}
                 value={form.priceNote ?? ""}
                 onChange={(e) => set({ priceNote: e.target.value })} />
@@ -605,7 +605,7 @@ export default function ClaimPage() {
 
   return shell(t("claim.seo.title"), t("claim.subtitle"), (
     <div className="container-wide mx-auto max-w-xl py-8 md:py-12">
-      <span className="font-mono-label text-[11px] font-medium uppercase tracking-[0.16em] text-teal-deep">
+      <span className="font-mono-label text-[11px] font-medium uppercase tracking-[0.16em] text-teal-text">
         {t("claim.eyebrow")}
       </span>
       <h1 className="mt-1.5 font-display text-2xl font-bold leading-tight text-navy-ink md:text-3xl">{askTitle}</h1>
@@ -674,7 +674,7 @@ export default function ClaimPage() {
       <div className="mt-6 rounded-xl border border-border bg-card p-4">
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("claim.whatYouGet")}</p>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t("claim.whatYouGetBody")}</p>
-        <Link to={`/partner/${profile.slug}`} className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-teal-deep hover:underline">
+        <Link to={`/partner/${profile.slug}`} className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-teal-text hover:underline">
           {t("claim.viewProfile")}<ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>

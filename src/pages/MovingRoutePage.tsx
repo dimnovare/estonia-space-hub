@@ -113,6 +113,10 @@ export default function MovingRoutePage({
     .replace("{from}", fromCity)
     .replace("{to}", toCity);
 
+  // Concierge funnel, prefilled with the origin city so the visitor does not
+  // retype what the URL already said.
+  const requestHref = `/request?category=moving&city=${encodeURIComponent(fromCity)}`;
+
   return (
     <div>
       <SEO
@@ -137,17 +141,29 @@ export default function MovingRoutePage({
           {h1}
         </h1>
         <p className="mx-auto mt-3 max-w-lg text-sm text-white/80">{intro}</p>
-        <Link to={`/search?city=${encodeURIComponent(fromCity)}&type=moving`}>
-          <Button className="mt-6 h-11 gap-2 bg-accent px-6 font-semibold text-accent-foreground hover:bg-accent/90">
-            <Search className="h-4 w-4" />
-            {t("route.searchCta").replace("{from}", fromCity)}
-          </Button>
-        </Link>
+        {/* Route pages had only a search CTA, and search on this route is empty
+            for every origin without a listed mover — a dead end on the page a
+            visitor with a concrete move (from → to) lands on. Lead with the
+            concierge, keep browsing as the alternative. */}
+        <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Link to={requestHref}>
+            <Button className="h-11 gap-2 bg-accent px-6 font-semibold text-accent-foreground hover:bg-accent/90">
+              {t("nav.getOffers")}
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+          <Link to={`/search?city=${encodeURIComponent(fromCity)}&type=moving`}>
+            <Button variant="outline" className="h-11 gap-2 border-white/30 bg-transparent px-6 font-semibold text-white hover:bg-white/10 hover:text-white">
+              <Search className="h-4 w-4" />
+              {t("route.searchCta").replace("{from}", fromCity)}
+            </Button>
+          </Link>
+        </div>
       </section>
 
       {/* Movers serving this route */}
       <section className="container-wide py-12">
-        <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">
+        <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-text">
           {t("route.listEyebrow")}
         </p>
         <h2 className="mt-1.5 font-display text-xl font-bold">
@@ -225,9 +241,13 @@ export default function MovingRoutePage({
                 .replace("{to}", toCity)}
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-              <Link to={`/search?city=${encodeURIComponent(fromCity)}&type=moving`}>
+              {/* This button says "Request a quote" but pointed at /search for
+                  the same route that just came back empty — the label promised
+                  one thing and the destination did another. It goes to the
+                  request funnel, which is what the label describes. */}
+              <Link to={requestHref}>
                 <Button className="h-11 gap-2 bg-accent px-5 font-semibold text-accent-foreground hover:bg-accent/90">
-                  <Search className="h-4 w-4" />
+                  <ArrowRight className="h-4 w-4" />
                   {t("route.empty.quoteCta")}
                 </Button>
               </Link>

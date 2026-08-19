@@ -141,8 +141,19 @@ function BookingInlineAuthInner({ onSuccess }: BookingInlineAuthProps) {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input id="b-reg-password" type={showPassword ? "text" : "password"} placeholder="••••••••" {...registerForm.register("password")} className="pl-10 pr-10" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {/* right-0 + h-10 w-10 (not right-3 + a bare icon): it centres the
+                    16px glyph exactly where right-3 put it, while the tap target
+                    grows from 16px to the full 40px height of the field — which is
+                    also the pr-10 padding the input already reserves. Labelled and
+                    focus-ringed to match the same toggle on LoginPage. */}
+                <button
+                  type="button"
+                  aria-pressed={showPassword}
+                  aria-label={showPassword ? t("login.hidePassword") : t("login.showPassword")}
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-0 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
                 </button>
               </div>
               {registerForm.formState.errors.password && <p role="alert" className="text-xs text-destructive">{registerForm.formState.errors.password.message}</p>}
@@ -184,8 +195,19 @@ function BookingInlineAuthInner({ onSuccess }: BookingInlineAuthProps) {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input id="b-login-password" type={showPassword ? "text" : "password"} placeholder="••••••••" {...loginForm.register("password")} className="pl-10 pr-10" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {/* right-0 + h-10 w-10 (not right-3 + a bare icon): it centres the
+                    16px glyph exactly where right-3 put it, while the tap target
+                    grows from 16px to the full 40px height of the field — which is
+                    also the pr-10 padding the input already reserves. Labelled and
+                    focus-ringed to match the same toggle on LoginPage. */}
+                <button
+                  type="button"
+                  aria-pressed={showPassword}
+                  aria-label={showPassword ? t("login.hidePassword") : t("login.showPassword")}
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-0 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
                 </button>
               </div>
               {loginForm.formState.errors.password && <p role="alert" className="text-xs text-destructive">{loginForm.formState.errors.password.message}</p>}

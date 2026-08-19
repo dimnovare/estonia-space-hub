@@ -5,11 +5,21 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import type { Review } from "@/services/types";
 
 function StarRating({ rating, size = 4 }: { rating: number; size?: number }) {
+  const { t } = useLanguage();
+  // role="img" + one label, rather than five unlabelled glyphs: the score is the
+  // only thing this widget says, and without a name a screen reader reads the
+  // review card with no rating in it at all. The stars are then aria-hidden so
+  // the label is not read once per star.
   return (
-    <div className="flex gap-0.5">
+    <div
+      role="img"
+      aria-label={t("reviews.starsOutOfFive").replace("{rating}", String(Math.round(rating * 10) / 10))}
+      className="flex gap-0.5"
+    >
       {[1, 2, 3, 4, 5].map((i) => (
         <Star
           key={i}
+          aria-hidden
           className={`h-${size} w-${size} ${i <= Math.round(rating) ? "fill-[#F2A900] text-[#F2A900]" : "text-muted-foreground/30"}`}
         />
       ))}

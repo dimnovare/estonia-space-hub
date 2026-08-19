@@ -123,16 +123,33 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
   const { data: listingsResult } = useListings({ city });
   const cityListings: Listing[] = listingsResult?.data ?? [];
 
+  // A directory row states the services it actually offers. Every vertical must
+  // filter on that tag — the warehouse branch used to render `locations` raw, so
+  // /storage/viljandi's "Top locations" were two van-rental firms and two
+  // trailer firms and not one of the city's storage providers. Rows carrying no
+  // tag at all are kept: a real multi-unit site created through the provider
+  // portal is described by its units, not by directory tags.
+  const matchesServiceTag = (l: { serviceTypes?: string[] }) => {
+    const tags = l.serviceTypes ?? [];
+    return tags.length === 0 || tags.includes(vertical);
+  };
+  const verticalLocations = locations.filter(matchesServiceTag);
+
+  /** Directory rows carry unitCount 0 / availableUnits 0 because they have no
+   *  inventory in Ruumly at all — every one of the ~1,180 imported profiles
+   *  does. Reading that as availability rendered a "0 available" badge on each
+   *  card, i.e. we asserted a fact about a partner's stock that we do not have.
+   *  Only a location with real units may show an availability badge. */
+  const hasUnitData = (loc: { unitCount?: number }) => Number(loc.unitCount ?? 0) > 0;
+
   // Locations aggregate storage units, so they only represent the warehouse
   // vertical. Moving/trailer hubs skip them and list their own vertical's
   // listings directly (filtered by type below).
-  const useLocations = vertical === "warehouse" && locations.length > 0;
+  const useLocations = vertical === "warehouse" && verticalLocations.length > 0;
 
   // Event-category hubs list the DIRECTORY locations tagged with this service
   // (no listings/pricing/availability — provider cards linking to the profile).
-  const categoryLocations = isDirectoryCategory
-    ? locations.filter((l: any) => (l.serviceTypes ?? []).includes(vertical))
-    : [];
+  const categoryLocations = isDirectoryCategory ? verticalLocations : [];
 
   const topItems = isDirectoryCategory
     ? categoryLocations.slice(0, 8).map((loc: any) => ({
@@ -149,14 +166,14 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
         href: loc.supplierSlug ? `/partner/${loc.supplierSlug}` : `/location/${loc.id}`,
       }))
     : useLocations
-    ? locations.slice(0, 4).map((loc: any) => ({
+    ? verticalLocations.slice(0, 4).map((loc: any) => ({
         id: loc.id,
         name: loc.name,
         images: loc.images,
         address: loc.address,
         city: loc.city,
-        availableUnits: loc.availableUnits ?? loc.unitCount,
-        fullyBooked: loc.fullyBooked,
+        availableUnits: hasUnitData(loc) ? (loc.availableUnits ?? loc.unitCount) : undefined,
+        fullyBooked: hasUnitData(loc) ? !!loc.fullyBooked : false,
         priceFrom: loc.priceFrom,
         // Locations aggregate multiple listings (possibly across verticals),
         // so there is no single price unit — render a neutral "from €X".
@@ -200,13 +217,28 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
   //  - warehouse: existing lighter cityPage.*/city.* copy;
   //  - moving/trailer: the "{service} in {city}" heading;
   //  - event categories: "{service} {city}" heading + concierge-framed copy.
+  // How many entries this hub actually has, as opposed to how many it shows.
+  // `topItems` is sliced to 4/8 for layout, so passing its length into
+  // city.introText published the display cap as the total — Viljandi, with
+  // three storage providers, read "Ruumly gathers 4 storage listings". At zero
+  // it substituted an empty string and shipped the sentence with a hole in it
+  // ("Ruumly gathers  storage listings in Tartu"), which is why the intro is
+  // now suppressed rather than rendered empty.
+  const matchCount = useLocations
+    ? verticalLocations.length
+    : isDirectoryCategory
+    ? categoryLocations.length
+    : cityListings.filter(hideDisabled).filter(matchesVertical).length;
+
   let heroTitle: string;
   let heroDesc: string;
   let introText: string;
   if (vertical === "warehouse") {
     heroTitle = t("cityPage.heroTitle").replace("{city}", city);
     heroDesc = t("cityPage.heroDesc").replace("{city}", city);
-    introText = t("city.introText").replace("{city}", city).replace("{count}", String(topItems.length || ""));
+    introText = matchCount > 0
+      ? t("city.introText").replace("{city}", city).replace("{count}", String(matchCount))
+      : "";
   } else if (isDirectoryCategory) {
     heroTitle = `${serviceLabel} ${city}`;
     heroDesc = t("cityPage.category.heroDesc").replace("{city}", city);
@@ -214,7 +246,9 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
   } else {
     heroTitle = `${t(vertical === "moving" ? "city.movingIn" : "city.trailerIn")} ${city}`;
     heroDesc = t(vertical === "moving" ? "city.movingDesc" : "city.trailerDesc").replace("{city}", city);
-    introText = t("city.introText").replace("{city}", city).replace("{count}", String(topItems.length || ""));
+    introText = matchCount > 0
+      ? t("city.introText").replace("{city}", city).replace("{count}", String(matchCount))
+      : "";
   }
 
   // FAQ. faq1 (storage pricing) and faq3 (storage security) are
@@ -236,8 +270,22 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
   // live provider count, canonical category links scoped to this city, and
   // internal links home ↔ /locations hub. Ops-geography note for cities
   // outside the Tallinn/Harjumaa full-service area (honesty rule).
-  const seoBlockSlugs = visibleServiceSlugs(showMovingService, showTrailerService);
-  const providerCount = isDirectoryCategory ? categoryLocations.length : locations.length;
+  // Chips for services this city has nobody for are a promise of supply that
+  // isn't there — every one of them landed on an empty search. Keep only the
+  // services the directory can actually show here; when we have no rows at all
+  // (still loading, or a city outside the directory) fall back to the full set
+  // rather than rendering an empty row.
+  const allVisibleSlugs = visibleServiceSlugs(showMovingService, showTrailerService);
+  const seoBlockSlugs =
+    locations.length === 0
+      ? allVisibleSlugs
+      : allVisibleSlugs.filter((s) =>
+          locations.some((l: any) => (l.serviceTypes ?? []).includes(s)),
+        );
+  // City-scoped, not vertical-scoped: this sentence sits under the "Services in
+  // {city}" heading, above the row of every service, so the whole-city directory
+  // count is the number it is describing.
+  const providerCount = locations.length;
   const isOpsArea = city === "Tallinn";
 
   // Structured data (overhaul §4). Emit as a JSON-LD array:
@@ -317,14 +365,27 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
             </Button>
           </Link>
         </div>
+        {/* Ops-geography note, moved up from the SEO block three screens below.
+            heroDesc offers to "find you up to 3 offers" on every city hub we
+            publish, including Rīga and Vilnius — but the concierge loop runs out
+            of Tallinn/Harjumaa. Sitting under the fold, the correction was not
+            reaching the person the promise was made to; it has to be adjacent to
+            the promise, not filed after it. */}
+        {!isOpsArea && (
+          <p className="mx-auto mt-5 max-w-lg text-xs leading-relaxed text-white/65">
+            {t("cityPage.opsNote").replace("{city}", city)}
+          </p>
+        )}
       </section>
 
       {/* Top locations */}
       <section className="container-wide py-12">
-        <p className="mx-auto mb-8 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-          {introText}
-        </p>
-        <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">
+        {introText && (
+          <p className="mx-auto mb-8 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+            {introText}
+          </p>
+        )}
+        <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-text">
           {t("cityPage.topEyebrow")}
         </p>
         <h2 className="mt-1.5 font-display text-xl font-bold">
@@ -405,7 +466,7 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
           internal links back to the homepage + the /locations hub index. */}
       <section className="border-t border-border px-4 py-10">
         <div className="container-wide">
-          <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">
+          <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-text">
             {t("home.services.eyebrow")}
           </p>
           <h2 className="mt-1.5 font-display text-xl font-bold">
@@ -428,19 +489,18 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
               </Link>
             ))}
           </div>
-          {!isOpsArea && (
-            <p className="mt-5 max-w-2xl text-sm text-muted-foreground">
-              {t("cityPage.opsNote").replace("{city}", city)}
-            </p>
-          )}
+          {/* cityPage.opsNote moved into the hero — it corrects a promise made
+              three screens above, and had to be read alongside it. */}
+          {/* teal-text, not teal-deep: teal-deep is the brand/glyph teal and
+              reaches only ~2.9:1 on white, below AA for link text. */}
           <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm font-medium">
-            <Link to="/" className="text-teal-deep hover:text-primary hover:underline">
+            <Link to="/" className="text-teal-text hover:text-primary hover:underline">
               {t("nav.home")}
             </Link>
-            <Link to="/locations" className="text-teal-deep hover:text-primary hover:underline">
+            <Link to="/locations" className="text-teal-text hover:text-primary hover:underline">
               {t("footer.allLocations")}
             </Link>
-            <Link to={requestHref} className="text-teal-deep hover:text-primary hover:underline">
+            <Link to={requestHref} className="text-teal-text hover:text-primary hover:underline">
               {t("nav.getOffers")}
             </Link>
           </div>
@@ -452,7 +512,7 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
       {vertical === "moving" && popularRoutes.length > 0 && (
         <section className="border-t border-border px-4 py-10">
           <div className="container-wide">
-            <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">
+            <p className="font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-text">
               {t("route.popularEyebrow")}
             </p>
             <h2 className="mt-1.5 font-display text-xl font-bold">
@@ -477,7 +537,7 @@ function CityHub({ vertical }: { vertical: CityVertical }) {
       {/* FAQ */}
       <section className="border-t border-border bg-secondary/30 px-4 py-12">
         <div className="container-wide max-w-2xl">
-          <p className="text-center font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-deep">
+          <p className="text-center font-mono-label text-[11.5px] font-medium uppercase tracking-[0.2em] text-teal-text">
             {t("cityPage.faqEyebrow")}
           </p>
           <h2 className="mt-1.5 text-center font-display text-xl font-bold">{t("cityPage.faqTitle")}</h2>

@@ -4017,7 +4017,7 @@ const et: Record<string, string> = {
     "serviceType.vanrental.desc": "Rendi kaubik, kui kolid ise",
     "serviceType.insurance.desc": "Vara kaitse kolimise ja hoiustamise ajaks",
     // ── Concierge-first homepage (overhaul §3) ──
-    "request.hero.trustChips": "Tasuta · Kõik kolimisteenused ühe päringuga · kuni 3 pakkumist · Tavaliselt 24 h",
+    "request.hero.trustChips": "Tasuta · Kõik kolimisteenused ühe päringuga · kuni 3 pakkumist",
     "home.need.label": "Populaarsed vajadused:",
     "home.need.movingHome": "Kolin uude koju",
     "home.need.renovation": "Hoiuruum remondi ajaks",
@@ -4383,6 +4383,39 @@ const et: Record<string, string> = {
     "search.noSupplyCity": "Linnas {city} pole veel ühtegi pakkujat: {service}.",
     "search.nearestCities": "Lähimad linnad, kus on pakkujaid",
     "search.nearestCityKm": "{city} · {km} km",
+
+    // ── Claimed-directory provider portal · publish-readiness · review a11y ──
+    // Provider-portal copy is formal (ET: teie) — the reader is a business owner.
+    // Nothing here claims more than the provider's own row proves: no lead-volume
+    // promise, and boostBannerBodyPlain exists precisely because boostBannerBody
+    // ended on "up to 3× more views", a number nothing measures.
+    "provider.overview.directorySubtitle": "Teie avalik profiil Ruumlys ja päringud, mis sinna jõuavad.",
+    "provider.overview.claimedTitle": "Mis teil nüüd on",
+    "provider.overview.claimedProfileLine": "Teie profiil on Ruumlys avaldatud ja saate andmeid ise parandada.",
+    "provider.overview.claimedContactLine": "Saadame kliendipäringud aadressile {email}.",
+    "provider.overview.claimedContactMissing": "Meil ei ole teie kontakt-e-posti aadressi, seega me ei saa teile päringut saata.",
+    "provider.overview.boostBannerBodyPlain": "Valikulised nähtavuse võimendused — meiega kokku lepitud, tühistage igal ajal. Teie kuulutus jääb mõlemal juhul tasuta.",
+    "provider.leads.directoryEmptyNote": "Selles loendis on päringud, mis on saadetud teie Ruumly profiililehelt. Kui meil on teile sobiv kliendipäring, saadame teile e-kirjaga lingi hinna andmiseks — sellised päringud siia ei ilmu.",
+    "provider.checklist.directory.title": "Teie andmed",
+    "provider.checklist.directory.hint": "Seda näeb klient ja nii me teieni jõuame. Saate seda kõike ise muuta.",
+    "provider.checklist.directory.email": "Kontakt-e-post on olemas",
+    "provider.checklist.directory.phone": "Telefoninumber on olemas",
+    "provider.checklist.directory.description": "Lühikirjeldus sellest, mida te teete",
+    "provider.checklist.editProfile": "Muutke oma andmeid",
+    "provider.profile.contactSection": "Kuidas me teieni jõuame",
+    "provider.profile.contactHint": "Kliendipäringud lähevad sellele aadressile. Kui see on vale, ei jõua me teieni ja te ei näe päringut kunagi.",
+    // GET /locations/{id}/publish-readiness returns hard-coded English labels;
+    // these are looked up by the item's `key` via a template literal, so the
+    // translationCoverage source scan CANNOT see them. Keep them in sync by hand.
+    "provider.checklist.api.units": "Vähemalt üks üksus koos hinnaga",
+    "provider.checklist.api.images": "Vähemalt üks foto asukohast",
+    "provider.checklist.api.description": "Asukoha kirjeldus",
+    "provider.checklist.api.moreImages": "Kolm fotot või rohkem",
+    "provider.checklist.api.unitDesc": "Kirjeldus igal üksusel",
+    // Star-rating screen-reader labels. Substituted with plain .replace(), not
+    // formatCount — a "|"-separated plural value would be read out literally.
+    "reviews.starsOutOfFive": "{rating} viiest",
+    "reviews.rateStars": "Hinda {count} viiest",
 };
 
 const en: Record<string, string> = {
@@ -8357,7 +8390,7 @@ const en: Record<string, string> = {
     "serviceType.vanrental.desc": "Van rental for a DIY move",
     "serviceType.insurance.desc": "Cover for your things in transit and storage",
     // ── Concierge-first homepage (overhaul §3) ──
-    "request.hero.trustChips": "Free · Every moving service, one request · up to 3 offers · Usually 24 h",
+    "request.hero.trustChips": "Free · Every moving service, one request · up to 3 offers",
     "home.need.label": "Popular needs:",
     "home.need.movingHome": "Moving home",
     "home.need.renovation": "Storage while renovating",
@@ -8723,6 +8756,33 @@ const en: Record<string, string> = {
     "search.noSupplyCity": "No {service} providers in {city} yet.",
     "search.nearestCities": "Nearest cities with providers",
     "search.nearestCityKm": "{city} · {km} km",
+
+    // ── Claimed-directory provider portal · publish-readiness · review a11y ──
+    "provider.overview.directorySubtitle": "Your public profile on Ruumly, and the requests that reach it.",
+    "provider.overview.claimedTitle": "What you have now",
+    "provider.overview.claimedProfileLine": "Your profile is live on Ruumly and you can correct the details yourself.",
+    "provider.overview.claimedContactLine": "We send customer requests to {email}.",
+    "provider.overview.claimedContactMissing": "We have no contact email for you, so we cannot send you a request.",
+    "provider.overview.boostBannerBodyPlain": "Optional visibility boosts — agreed with us, cancel any time. Your listing stays free either way.",
+    "provider.leads.directoryEmptyNote": "This list holds requests sent from your Ruumly profile page. When we have a customer request that matches you, we email you a link to give a price — those do not appear here.",
+    "provider.checklist.directory.title": "Your details",
+    "provider.checklist.directory.hint": "This is what a customer sees and how we reach you. You can change all of it yourself.",
+    "provider.checklist.directory.email": "Contact email on file",
+    "provider.checklist.directory.phone": "Phone number on file",
+    "provider.checklist.directory.description": "Short description of what you do",
+    "provider.checklist.editProfile": "Edit your details",
+    "provider.profile.contactSection": "How we reach you",
+    "provider.profile.contactHint": "Customer requests go to this address. If it is wrong, we cannot reach you and you never see the request.",
+    // Publish-readiness labels — resolved through a template literal, invisible
+    // to the translationCoverage source scan. Keep all five blocks in sync.
+    "provider.checklist.api.units": "At least one unit with a price",
+    "provider.checklist.api.images": "At least one photo of the location",
+    "provider.checklist.api.description": "A description of the location",
+    "provider.checklist.api.moreImages": "Three or more photos",
+    "provider.checklist.api.unitDesc": "A description on each unit",
+    // Star-rating screen-reader labels — plain .replace(), never plural forms.
+    "reviews.starsOutOfFive": "{rating} out of 5",
+    "reviews.rateStars": "Rate {count} out of 5",
 };
 
 const ru: Record<string, string> = {
@@ -12695,7 +12755,7 @@ const ru: Record<string, string> = {
     "serviceType.vanrental.desc": "Аренда фургона для самостоятельного переезда",
     "serviceType.insurance.desc": "Защита вещей при перевозке и хранении",
     // ── Concierge-first homepage (overhaul §3) ──
-    "request.hero.trustChips": "Бесплатно · Все услуги переезда по одной заявке · до 3 предложений · Обычно 24 ч",
+    "request.hero.trustChips": "Бесплатно · Все услуги переезда по одной заявке · до 3 предложений",
     "home.need.label": "Частые запросы:",
     "home.need.movingHome": "Переезжаю в новый дом",
     "home.need.renovation": "Хранение на время ремонта",
@@ -13060,6 +13120,33 @@ const ru: Record<string, string> = {
     "search.noSupplyCity": "В городе {city} пока нет партнёров по услуге «{service}».",
     "search.nearestCities": "Ближайшие города с партнёрами",
     "search.nearestCityKm": "{city} · {km} км",
+
+    // ── Claimed-directory provider portal · publish-readiness · review a11y ──
+    "provider.overview.directorySubtitle": "Ваш публичный профиль на Ruumly и запросы, которые на него приходят.",
+    "provider.overview.claimedTitle": "Что у вас теперь есть",
+    "provider.overview.claimedProfileLine": "Ваш профиль опубликован на Ruumly, и вы можете сами исправить данные.",
+    "provider.overview.claimedContactLine": "Мы отправляем клиентские запросы на адрес {email}.",
+    "provider.overview.claimedContactMissing": "У нас нет вашего контактного email, поэтому мы не можем отправить вам запрос.",
+    "provider.overview.boostBannerBodyPlain": "Дополнительные усиления видимости — по договорённости с нами, отмена в любой момент. Ваше объявление в любом случае остаётся бесплатным.",
+    "provider.leads.directoryEmptyNote": "В этом списке — запросы, отправленные со страницы вашего профиля на Ruumly. Когда у нас есть подходящий вам запрос клиента, мы отправляем вам письмом ссылку, чтобы указать цену, — такие запросы здесь не появляются.",
+    "provider.checklist.directory.title": "Ваши данные",
+    "provider.checklist.directory.hint": "Это то, что видит клиент, и то, как мы с вами связываемся. Всё это вы можете изменить сами.",
+    "provider.checklist.directory.email": "Контактный email указан",
+    "provider.checklist.directory.phone": "Номер телефона указан",
+    "provider.checklist.directory.description": "Краткое описание того, чем вы занимаетесь",
+    "provider.checklist.editProfile": "Изменить свои данные",
+    "provider.profile.contactSection": "Как мы с вами связываемся",
+    "provider.profile.contactHint": "Клиентские запросы приходят на этот адрес. Если он указан неверно, мы не сможем с вами связаться, и вы не увидите запрос.",
+    // Publish-readiness labels — built with a template literal, so the
+    // translationCoverage source scan cannot see them. Sync by hand.
+    "provider.checklist.api.units": "Хотя бы один объект с ценой",
+    "provider.checklist.api.images": "Хотя бы одно фото локации",
+    "provider.checklist.api.description": "Описание локации",
+    "provider.checklist.api.moreImages": "Три фото или больше",
+    "provider.checklist.api.unitDesc": "Описание для каждого объекта",
+    // Star-rating screen-reader labels — plain .replace(), never plural forms.
+    "reviews.starsOutOfFive": "{rating} из 5",
+    "reviews.rateStars": "Оценить на {count} из 5",
 };
 
 
@@ -16971,7 +17058,7 @@ const lv: Record<string, string> = {
     "serviceType.vanrental.desc": "Busiņa noma, ja pārvācies pats",
     "serviceType.insurance.desc": "Mantu aizsardzība pārvākšanās un uzglabāšanas laikā",
     // ── Concierge-first homepage (overhaul §3) ──
-    "request.hero.trustChips": "Bez maksas · Visi pārvākšanās pakalpojumi vienā pieprasījumā · līdz 3 piedāvājumiem · Parasti 24 h",
+    "request.hero.trustChips": "Bez maksas · Visi pārvākšanās pakalpojumi vienā pieprasījumā · līdz 3 piedāvājumiem",
     "home.need.label": "Populāras vajadzības:",
     "home.need.movingHome": "Pārvācos uz jaunu mājokli",
     "home.need.renovation": "Uzglabāšana remonta laikā",
@@ -17336,6 +17423,33 @@ const lv: Record<string, string> = {
     "search.noSupplyCity": "Pilsētā {city} vēl nav neviena pakalpojuma sniedzēja: {service}.",
     "search.nearestCities": "Tuvākās pilsētas ar pakalpojumu sniedzējiem",
     "search.nearestCityKm": "{city} · {km} km",
+
+    // ── Claimed-directory provider portal · publish-readiness · review a11y ──
+    "provider.overview.directorySubtitle": "Jūsu publiskais Ruumly profils un pieprasījumi, kas to sasniedz.",
+    "provider.overview.claimedTitle": "Kas jums tagad ir",
+    "provider.overview.claimedProfileLine": "Jūsu profils ir publicēts Ruumly, un datus varat labot patstāvīgi.",
+    "provider.overview.claimedContactLine": "Klientu pieprasījumus sūtām uz {email}.",
+    "provider.overview.claimedContactMissing": "Mums nav jūsu kontakta e-pasta, tāpēc mēs nevaram jums nosūtīt pieprasījumu.",
+    "provider.overview.boostBannerBodyPlain": "Izvēles redzamības veicinājumi — pēc vienošanās ar mums, atceliet jebkurā laikā. Jūsu sludinājums jebkurā gadījumā paliek bez maksas.",
+    "provider.leads.directoryEmptyNote": "Šajā sarakstā ir pieprasījumi, kas nosūtīti no jūsu Ruumly profila lapas. Kad mums ir jums piemērots klienta pieprasījums, mēs e-pastā nosūtām saiti, kur norādīt cenu — tie šeit neparādās.",
+    "provider.checklist.directory.title": "Jūsu dati",
+    "provider.checklist.directory.hint": "To redz klients, un tā mēs ar jums sazināmies. Visu to varat mainīt patstāvīgi.",
+    "provider.checklist.directory.email": "Kontakta e-pasts ir norādīts",
+    "provider.checklist.directory.phone": "Tālruņa numurs ir norādīts",
+    "provider.checklist.directory.description": "Īss apraksts par to, ko jūs darāt",
+    "provider.checklist.editProfile": "Rediģēt savus datus",
+    "provider.profile.contactSection": "Kā mēs ar jums sazināmies",
+    "provider.profile.contactHint": "Klientu pieprasījumi nonāk uz šo adresi. Ja tā ir nepareiza, mēs nevaram ar jums sazināties un jūs pieprasījumu neredzēsiet.",
+    // Publish-readiness labels — built with a template literal, so the
+    // translationCoverage source scan cannot see them. Sync by hand.
+    "provider.checklist.api.units": "Vismaz viena vienība ar cenu",
+    "provider.checklist.api.images": "Vismaz viens atrašanās vietas fotoattēls",
+    "provider.checklist.api.description": "Atrašanās vietas apraksts",
+    "provider.checklist.api.moreImages": "Trīs vai vairāk fotoattēlu",
+    "provider.checklist.api.unitDesc": "Apraksts katrai vienībai",
+    // Star-rating screen-reader labels — plain .replace(), never plural forms.
+    "reviews.starsOutOfFive": "{rating} no 5",
+    "reviews.rateStars": "Novērtēt ar {count} no 5",
 };
 // ── Lithuanian ──────────────────────────
 const lt: Record<string, string> = {
@@ -21244,7 +21358,7 @@ const lt: Record<string, string> = {
     "serviceType.vanrental.desc": "Furgono nuoma, jei kraustotės patys",
     "serviceType.insurance.desc": "Daiktų apsauga kraustantis ir sandėliuojant",
     // ── Concierge-first homepage (overhaul §3) ──
-    "request.hero.trustChips": "Nemokamai · Visos perkraustymo paslaugos viena užklausa · iki 3 pasiūlymų · Paprastai 24 val.",
+    "request.hero.trustChips": "Nemokamai · Visos perkraustymo paslaugos viena užklausa · iki 3 pasiūlymų",
     "home.need.label": "Dažni poreikiai:",
     "home.need.movingHome": "Kraustausi į naujus namus",
     "home.need.renovation": "Sandėliavimas remonto metu",
@@ -21609,6 +21723,33 @@ const lt: Record<string, string> = {
     "search.noSupplyCity": "Mieste {city} kol kas nėra nė vieno teikėjo: {service}.",
     "search.nearestCities": "Artimiausi miestai su teikėjais",
     "search.nearestCityKm": "{city} · {km} km",
+
+    // ── Claimed-directory provider portal · publish-readiness · review a11y ──
+    "provider.overview.directorySubtitle": "Jūsų viešas profilis Ruumly platformoje ir užklausos, kurios jį pasiekia.",
+    "provider.overview.claimedTitle": "Ką dabar turite",
+    "provider.overview.claimedProfileLine": "Jūsų profilis paskelbtas Ruumly platformoje, o duomenis galite pataisyti patys.",
+    "provider.overview.claimedContactLine": "Klientų užklausas siunčiame adresu {email}.",
+    "provider.overview.claimedContactMissing": "Neturime jūsų kontaktinio el. pašto, todėl negalime jums išsiųsti užklausos.",
+    "provider.overview.boostBannerBodyPlain": "Pasirenkami matomumo paskatinimai — susitarus su mumis, atšaukite bet kada. Jūsų skelbimas bet kuriuo atveju lieka nemokamas.",
+    "provider.leads.directoryEmptyNote": "Šiame sąraše yra užklausos, atsiųstos iš jūsų Ruumly profilio puslapio. Kai turime jums tinkančią kliento užklausą, el. paštu atsiunčiame nuorodą kainai nurodyti — tokios užklausos čia nerodomos.",
+    "provider.checklist.directory.title": "Jūsų duomenys",
+    "provider.checklist.directory.hint": "Tai mato klientas ir taip su jumis susisiekiame. Visa tai galite pakeisti patys.",
+    "provider.checklist.directory.email": "Nurodytas kontaktinis el. paštas",
+    "provider.checklist.directory.phone": "Nurodytas telefono numeris",
+    "provider.checklist.directory.description": "Trumpas aprašymas, ką veikiate",
+    "provider.checklist.editProfile": "Redaguoti savo duomenis",
+    "provider.profile.contactSection": "Kaip su jumis susisiekiame",
+    "provider.profile.contactHint": "Klientų užklausos ateina šiuo adresu. Jei jis neteisingas, negalėsime su jumis susisiekti ir užklausos nepamatysite.",
+    // Publish-readiness labels — built with a template literal, so the
+    // translationCoverage source scan cannot see them. Sync by hand.
+    "provider.checklist.api.units": "Bent vienas vienetas su kaina",
+    "provider.checklist.api.images": "Bent viena vietos nuotrauka",
+    "provider.checklist.api.description": "Vietos aprašymas",
+    "provider.checklist.api.moreImages": "Trys ar daugiau nuotraukų",
+    "provider.checklist.api.unitDesc": "Aprašymas kiekvienam vienetui",
+    // Star-rating screen-reader labels — plain .replace(), never plural forms.
+    "reviews.starsOutOfFive": "{rating} iš 5",
+    "reviews.rateStars": "Įvertinti {count} iš 5",
 };
 const translations: Record<Language, Record<string, string>> = { et, en, ru, lv, lt };
 

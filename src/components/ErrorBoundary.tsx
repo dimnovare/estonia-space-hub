@@ -36,8 +36,11 @@ export default class ErrorBoundary extends React.Component<Props, State> {
       const lang = (typeof window !== "undefined" && localStorage.getItem("ruumly-lang")) || "et";
       const strings = errorStrings[lang] || errorStrings.et;
       return (
-        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4 text-center">
-          <AlertTriangle className="h-12 w-12 text-destructive" />
+        // role="alert" because this replaces whatever the visitor was reading
+        // with no navigation and no other cue — without it a screen-reader user
+        // is left on a page that silently emptied.
+        <div role="alert" className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4 text-center">
+          <AlertTriangle className="h-12 w-12 text-destructive" aria-hidden />
           <h2 className="font-display text-xl font-bold">{strings.title}</h2>
           <p className="text-sm text-muted-foreground">{strings.sub}</p>
           <Button variant="outline" onClick={() => window.location.reload()}>
