@@ -64,7 +64,14 @@ function directoryChecklist(t: (k: string) => string, profile?: ChecklistProfile
 /** Marketplace fallback for when the readiness endpoint is unavailable. */
 function staticChecklist(t: (k: string) => string): ReadinessItem[] {
   return [
-    { key: "verify", label: t("provider.checklist.itemVerify"), done: true, blocker: false },
+    // "Verify your company — earn the Verified badge" was here, hardcoded
+    // done: true. There is no verification flow a provider can use --
+    // Supplier.IsVerified is set only by an admin toggle and by seed data, and
+    // nothing in the codebase checks a registry entry, an IBAN or a location.
+    // So this told every provider they had COMPLETED a check that has never
+    // happened. Removed rather than reworded: an item you cannot act on is not
+    // a checklist item. (Founder confirmed 2026-08-19 that the toggle has never
+    // been used deliberately; 1 of 1,187 rows carries it.)
     { key: "publish", label: t("provider.checklist.itemPublish"), done: true, blocker: false },
     { key: "photos", label: t("provider.checklist.itemPhotos"), done: false, blocker: false },
     { key: "booking", label: t("provider.checklist.itemBooking"), done: false, blocker: false },
