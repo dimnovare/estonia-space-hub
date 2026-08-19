@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "@/i18n/routing";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  CheckCircle, MapPin, ArrowRight, CalendarDays, Loader2, LinkIcon,
-  AlertCircle, RotateCcw,
+  CheckCircle, ArrowRight, Loader2, LinkIcon, AlertCircle, RotateCcw, Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,10 +10,12 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { translateForLanguage, useLanguage } from "@/i18n/LanguageContext";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
-import { OfferPresentation } from "@/components/offers/OfferPresentation";
+import { OfferComparison } from "@/components/offers/OfferComparison";
+import { OfferRequestRecap } from "@/components/offers/OfferRequestRecap";
+import { OfferHelpPanel } from "@/components/offers/OfferHelpPanel";
 import { offerService, type PublicOffer, type PublicOfferOption } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
 import { leadCategoryLabel } from "@/lib/serviceTypes";
@@ -22,19 +23,48 @@ import { leadCategoryLabel } from "@/lib/serviceTypes";
 /**
  * /offer/{token} — the public concierge offer page (overhaul spec §5).
  * Anonymous + noindex; "Your options for {category} in {city}" with option
- * cards and a confirmed "Choose this option" flow. The backend 404s unknown,
+ * cards and a confirmed "Request this offer" flow. The backend 404s unknown,
  * draft and expired tokens identically → one invalid/expired state.
  * Contract: spec §5.1 (GET /offers/{token}, POST /offers/{token}/choose).
+ *
+ * What the button actually does, because every word on this page has to match
+ * it: POST /choose flips the OFFER to Chosen and emails the ops inbox. It does
+ * NOT move the lead, does not contact the provider, does not take payment, and
+ * sends the customer no email of any kind — this page is their only receipt.
+ * An admin then confirms availability by hand and marks the lead Booked. So
+ * the customer's action is a stated preference, and nothing here may read as a
+ * booking.
  */
 export default function OfferPage() {
   const { token = "" } = useParams<{ token: string }>();
-  const { t } = useLanguage();
+  // ONE language for the whole page. It used to run on two: the headline,
+  // subtitle and error states came from the URL segment, while the request
+  // button, the confirm dialog and the confirmation banner came from
+  // `offer.language` (whatever the admin composed in). Those agree on the link
+  // in the offer email — /{offer.language}/offer/{token} — but diverge the
+  // moment the customer arrives from the status page, whose "View your offers"
+  // link is built in the language they are BROWSING in. The result was an
+  // English page with an Estonian button, and an Estonian "this is not a
+  // confirmed booking" for a reader who chose Russian.
+  //
+  // The URL segment wins, on the grounds that the sentence which must be
+  // understood is the one about it not being a booking. Judgment call: the
+  // human-written parts of the offer (option titles, notes, our note) stay in
+  // whatever language they were written in and we cannot translate them, so a
+  // reader who switches language still sees mixed content — just not mixed
+  // CHROME. If the founder wants the page pinned to the offer's language
+  // instead, this is the one line to change.
+  const { t, language } = useLanguage();
   const settings = usePlatformSettings();
   const qc = useQueryClient();
   const [confirming, setConfirming] = useState<PublicOfferOption | null>(null);
   // Inline banner for choose failures (the confirm dialog closes on error, so
   // the message must live on the page itself).
   const [chooseError, setChooseError] = useState<string | null>(null);
+  // Only true for the transition that happens in THIS session. Re-opening an
+  // already-chosen offer must not yank focus away from the top of the page.
+  const [justRequested, setJustRequested] = useState(false);
+  const confirmationRef = useRef<HTMLDivElement>(null);
 
   const { data: offer, isLoading, isError, error, refetch, isFetching } = useQuery<PublicOffer>({
     queryKey: queryKeys.offers.byToken(token),
@@ -60,6 +90,7 @@ export default function OfferPage() {
     onSuccess: (res) => {
       setConfirming(null);
       setChooseError(null);
+      setJustRequested(true);
       // Reflect the chosen state locally without waiting for a refetch.
       qc.setQueryData<PublicOffer>(queryKeys.offers.byToken(token), (prev) =>
         prev ? { ...prev, status: "chosen", chosenOptionId: res.chosenOptionId } : prev);
@@ -88,6 +119,15 @@ export default function OfferPage() {
     },
   });
 
+  // The button the customer pressed vanishes when the confirmation replaces it,
+  // which drops keyboard and screen-reader focus onto <body> at the top of the
+  // document — the one moment they most need to be told what just happened.
+  useEffect(() => {
+    if (!justRequested) return;
+    confirmationRef.current?.focus();
+    setJustRequested(false);
+  }, [justRequested]);
+
   const supportEmail = settings.siteEmail || "info@ruumly.eu";
 
   // Minimal chrome: the global Navbar is suppressed for /offer/ routes
@@ -113,10 +153,10 @@ export default function OfferPage() {
   // ── Loading skeleton ──
   if (isLoading) {
     return (
-      <div className="min-h-screen surface-sunken">
+      <div className="min-h-dvh surface-sunken">
         <SEO title={t("offer.seo.title")} description={t("offer.subtitle")} path={`/offer/${token}`} noindex />
         {header}
-        <div className="container-wide mx-auto max-w-2xl py-10">
+        <div className="container-wide mx-auto max-w-3xl py-10">
           <Skeleton className="h-8 w-3/4" />
           <Skeleton className="mt-3 h-4 w-1/2" />
           <div className="mt-8 space-y-4">
@@ -136,7 +176,7 @@ export default function OfferPage() {
   // ── Invalid / expired token — ONLY a real 404 is this dead-end. ──
   if (isNotFound) {
     return (
-      <div className="min-h-screen surface-sunken">
+      <div className="min-h-dvh surface-sunken">
         <SEO title={t("offer.invalidTitle")} description={t("offer.invalidBody")} path={`/offer/${token}`} noindex />
         {header}
         <div className="container-wide flex min-h-[60vh] items-center justify-center py-16">
@@ -163,7 +203,7 @@ export default function OfferPage() {
   //    the "invalid link" dead-end. Offer a Retry instead of forcing a re-submit.
   if (isError || !offer) {
     return (
-      <div className="min-h-screen surface-sunken">
+      <div className="min-h-dvh surface-sunken">
         <SEO title={t("offer.errorTitle")} description={t("offer.errorBody")} path={`/offer/${token}`} noindex />
         {header}
         <div className="container-wide flex min-h-[60vh] items-center justify-center py-16">
@@ -188,65 +228,84 @@ export default function OfferPage() {
     );
   }
 
-  const chosen = offer.status === "chosen";
-  const offerT = (key: string) => translateForLanguage(offer.language, key);
+  const settled = offer.status === "chosen";
+  // The API composes `lead` from a nullable navigation property and really does
+  // emit null when it is missing; the generated type says otherwise. Dereferencing
+  // it blind white-screens the last page before revenue, so narrow it here.
+  const lead = offer.lead as PublicOffer["lead"] | null | undefined;
   // `category` is the lead's, not a directory tag, so it may be the wildcard
   // "any" — a request that named several services. Left to serviceTypeLabel that
   // echoed the raw slug into the headline the customer opens.
-  const categoryLabel = leadCategoryLabel(t, offer.lead.category, t("offer.categoryAny"));
-  const title = t("offer.title")
-    .replace("{category}", categoryLabel)
-    .replace("{city}", offer.lead.city ?? "");
+  const categoryLabel = leadCategoryLabel(t, lead?.category ?? "", t("offer.categoryAny"));
+  // The title template glues category and city together with a connector
+  // ("… for {category} in {city}"), so an empty city leaves a dangling
+  // preposition. Fall back to the plain title rather than ship "… in ".
+  const title = lead?.city
+    ? t("offer.title").replace("{category}", categoryLabel).replace("{city}", lead.city)
+    : t("offer.seo.title");
 
   return (
-    <div className="min-h-screen surface-sunken">
+    <div className="min-h-dvh surface-sunken">
       <SEO title={t("offer.seo.title")} description={t("offer.subtitle")} path={`/offer/${token}`} noindex />
       {header}
-      <div className="container-wide mx-auto max-w-2xl py-8 md:py-12">
+      <div className="container-wide mx-auto max-w-3xl py-8 md:py-12">
         <h1 className="font-display text-2xl font-bold leading-tight text-navy-ink md:text-3xl">{title}</h1>
-        {!chosen && <p className="mt-2 text-sm leading-relaxed text-muted-foreground md:text-base">{t("offer.subtitle")}</p>}
+        {!settled && <p className="mt-2 text-sm leading-relaxed text-muted-foreground md:text-base">{t("offer.subtitle")}</p>}
 
-        {/* Lead summary chips — the customer's own request context */}
-        <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium text-muted-foreground">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1.5 ring-1 ring-border">
-            <MapPin className="h-3.5 w-3.5 text-teal-deep" aria-hidden />
-            {offer.lead.city}{offer.lead.toCity ? ` → ${offer.lead.toCity}` : ""}
-          </span>
-          {offer.lead.needDate && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1.5 ring-1 ring-border">
-              <CalendarDays className="h-3.5 w-3.5 text-teal-deep" aria-hidden />
-              {new Date(offer.lead.needDate).toLocaleDateString()}
-            </span>
-          )}
-        </div>
+        {/* The "this is not a booking" sentence used to exist only INSIDE the
+            confirm dialog — i.e. only after the customer had already decided.
+            It belongs where they are still deciding. */}
+        {!settled && (
+          <p className="mt-4 flex items-start gap-2.5 text-sm leading-relaxed text-muted-foreground">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-teal-deep" aria-hidden />
+            {t("offer.noBookingNote")}
+          </p>
+        )}
 
-        {/* Pending request confirmation */}
-        {chosen && (
-          <div role="status" className="mt-6 flex items-start gap-3 rounded-xl border border-success/25 bg-success/5 p-4">
-            <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-hidden />
+        {/* Pending request confirmation, directly under the heading: on a
+            settled offer this is the answer the customer came back for, and it
+            has to be the first thing on the page rather than something below
+            a recap of what they asked for weeks ago. `tabIndex={-1}` is here
+            only so focus can be moved to it (see the effect above). */}
+        {settled && (
+          <div
+            ref={confirmationRef}
+            tabIndex={-1}
+            role="status"
+            data-testid="offer-requested-banner"
+            className="mt-6 flex items-start gap-3 rounded-2xl border border-success/30 bg-success/5 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/40"
+          >
+            <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-success-text" aria-hidden />
             <div>
               <p className="font-display text-sm font-semibold text-foreground">
-                {offerT("offer.requestSent")}
+                {t("offer.requestSent")}
               </p>
-              <p className="mt-0.5 text-sm text-muted-foreground">{offerT("offer.requestSentBody")}</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">{t("offer.requestSentBody")}</p>
             </div>
           </div>
         )}
 
         {/* Choose failure banner — the confirm dialog closes on error, so the
             feedback (stale-option / rate-limit / server / network) lives here. */}
-        {chooseError && !chosen && (
-          <div role="alert" className="mt-6 flex items-start gap-3 rounded-xl border border-destructive/25 bg-destructive/5 p-4">
+        {chooseError && !settled && (
+          <div role="alert" className="mt-6 flex items-start gap-3 rounded-2xl border border-destructive/25 bg-destructive/5 p-4">
             <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" aria-hidden />
             <p className="text-sm font-medium text-destructive">{chooseError}</p>
           </div>
         )}
 
+        {lead && (
+          <div className="mt-6">
+            <OfferRequestRecap offer={offer} language={language} translate={t} />
+          </div>
+        )}
+
         <div className="mt-6">
-          <OfferPresentation
+          <OfferComparison
             offer={offer}
+            translate={t}
             action={{
-              label: offerT("offer.requestThis"),
+              label: t("offer.requestThis"),
               pendingOptionId: chooseMutation.isPending ? chooseMutation.variables ?? null : null,
               disabled: chooseMutation.isPending,
               onRequest: setConfirming,
@@ -254,25 +313,25 @@ export default function OfferPage() {
           />
         </div>
 
-        {helpFooter}
+        <OfferHelpPanel offer={offer} supportEmail={supportEmail} translate={t} settled={settled} />
       </div>
 
       {/* Request confirmation */}
       <AlertDialog open={confirming != null} onOpenChange={(open) => { if (!open) setConfirming(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{offerT("offer.requestConfirmTitle")}</AlertDialogTitle>
+            <AlertDialogTitle>{t("offer.requestConfirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {offerT("offer.requestConfirmBody")}
+              {t("offer.requestConfirmBody")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{offerT("offer.confirmCancel")}</AlertDialogCancel>
+            <AlertDialogCancel>{t("offer.confirmCancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-accent text-accent-foreground hover:bg-accent/90"
               onClick={() => confirming && chooseMutation.mutate(confirming.id)}
             >
-              {offerT("offer.requestConfirmAction")}
+              {t("offer.requestConfirmAction")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "@/i18n/routing";
 import {
   ArrowRight, ArrowLeft, CheckCircle, Check,
-  MapPin, CalendarDays, Loader2, AlertCircle, ShieldCheck, Mail,
+  MapPin, CalendarDays, Loader2, AlertCircle, ShieldCheck, Mail, ListChecks,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,8 @@ import { SEO } from "@/components/SEO";
 import { CitySuggestInput } from "@/components/CitySuggestInput";
 import { RequestPhotoUpload, type Photo } from "@/components/RequestPhotoUpload";
 import { RequestScopeSections, type ScopeQuestion } from "@/components/RequestScopeSections";
-import { leadService, type ConciergeCategory, type ConciergeRequestInput } from "@/services";
+import { type ConciergeCategory, type ConciergeRequestInput } from "@/services";
+import { conciergeRequestService } from "@/services/conciergeRequest";
 import { trackEvent } from "@/lib/analytics";
 import { getAttribution } from "@/lib/attribution";
 import {
@@ -468,9 +469,13 @@ export default function RequestPage() {
         website,
         elapsedMs: Date.now() - openedAtRef.current,
       };
-      return leadService.requestConcierge(payload);
+      // Not leadService.requestConcierge: that one discards the response body,
+      // and the body is now where the lead's status token comes from. See
+      // services/conciergeRequest.ts for why it is a separate module and for
+      // the note that the two should be folded together.
+      return conciergeRequestService.submit(payload);
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       // The request is filed — the half-finished copy must not outlive it.
       clearDraft();
       trackEvent("request_submitted", {
@@ -483,6 +488,12 @@ export default function RequestPage() {
         // the only way to tell whether it saves the founder a brokering round
         // trip or just adds a field people scroll past.
         has_address: !!fromAddress.trim(),
+        // Whether this visitor was offered the status page at all. It should be
+        // true on every submit; a run of `false` means the backend stopped
+        // returning the token and the funnel has silently gone back to being a
+        // dead end — which is the failure that is invisible from the outside.
+        // The token itself is a bearer credential and never goes to analytics.
+        has_status_link: !!result?.statusToken,
       });
     },
     // Global mutation onError shows a toast; we render an inline error instead.
@@ -594,6 +605,10 @@ export default function RequestPage() {
   const stepTitles = [t("request.steps.step1"), t("request.steps.step2"), t("request.steps.step3")];
 
   // ── Success screen ──
+  // Null on an older backend that still answers a bare `{ ok: true }`, so every
+  // read of it degrades to "no link" rather than to a broken one.
+  const statusToken = mutation.data?.statusToken;
+
   if (mutation.isSuccess) {
     return (
       <div className="container-wide flex min-h-[70vh] items-center justify-center py-16">
@@ -620,6 +635,36 @@ export default function RequestPage() {
             <Mail className="mt-0.5 h-4 w-4 shrink-0 text-teal-deep" aria-hidden />
             <span>{t("request.success.emailed").replace("{email}", email.trim())}</span>
           </p>
+
+          {/* Their own status page, offered at the one moment they are
+              certainly looking.
+              /request-status/{token} shipped with nothing linking to it: the
+              page built to end the silence between receipt and offer could not
+              be reached by anyone waiting in it. The receipt email carries the
+              same link, but a mail that lands in spam or is simply never opened
+              is not a channel to depend on — this screen is, and a link seen
+              here can be bookmarked.
+              Rendered only when the API returned a token. A cached bundle
+              talking to an older backend, or any future path that stops minting
+              one, must fall back to exactly the screen that shipped before this
+              — never to a button pointing at /request-status/undefined. */}
+          {statusToken && (
+            <div className="mt-6">
+              <Button asChild size="lg" className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                <Link to={`/request-status/${encodeURIComponent(statusToken)}`}>
+                  <ListChecks className="mr-2 h-4 w-4" aria-hidden />
+                  {t("request.success.track")}
+                </Link>
+              </Button>
+              {/* Says the link is personal. It is a bearer credential — anyone
+                  holding it sees what this customer is moving and when their
+                  home will be empty — so "keep it to yourself" is a safety
+                  instruction, not a nicety. */}
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                {t("request.success.trackHint")}
+              </p>
+            </div>
+          )}
 
           {/* Browsing stays available, but as the quiet secondary it is. */}
           <Link

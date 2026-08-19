@@ -11,6 +11,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { SEO } from "@/components/SEO";
 import { QuoteLeadPhotos } from "@/components/QuoteLeadPhotos";
+import { QuoteLeadScope } from "@/components/QuoteLeadScope";
 import { QuoteNeedInfo } from "@/components/QuoteNeedInfo";
 import { readQuoteFailure } from "@/components/quoteFailure";
 import { quoteService, type PublicQuote, type QuoteSubmitInput, type QuoteSubmitResult } from "@/services";
@@ -183,10 +184,22 @@ export default function QuotePage() {
     </header>
   );
 
+  // This is the page's only escape hatch, and it is read on a phone, outdoors,
+  // by someone who is already stuck. It was `text-teal-deep` — a BRAND/glyph
+  // teal that lands at roughly 2.9:1 as text and fails WCAG AA; the token's own
+  // comment in index.css says `--teal-text` is the readable one. Underlined as
+  // well, so the link is identifiable without relying on colour at all, and
+  // padded to a real thumb target: inline vertical padding grows the hit box
+  // without disturbing the line box around it.
   const helpFooter = (
     <p className="mt-10 text-center text-sm text-muted-foreground">
       {t("quote.help").replace("{email}", "")}
-      <a href={`mailto:${supportEmail}`} className="font-medium text-teal-deep hover:underline">{supportEmail}</a>
+      <a
+        href={`mailto:${supportEmail}`}
+        className="py-3.5 font-medium text-teal-text underline underline-offset-4 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        {supportEmail}
+      </a>
     </p>
   );
 
@@ -378,7 +391,10 @@ export default function QuotePage() {
       <SEO title={t("quote.seo.title")} description={t("quote.subtitle")} path={`/quote/${token}`} noindex />
       {header}
       <div className="container-wide mx-auto max-w-xl py-8 md:py-12">
-        <span className="font-mono-label text-[11px] font-medium uppercase tracking-[0.16em] text-teal-deep">
+        {/* Same contrast fix as the support link below: this is 11px TEXT, and
+            `teal-deep` does not reach AA at any size. It is also the line that
+            tells this provider the page is about them. */}
+        <span className="font-mono-label text-[11px] font-medium uppercase tracking-[0.16em] text-teal-text">
           {t("quote.eyebrow").replace("{provider}", quote.provider.name)}
         </span>
         <h1 className="mt-1.5 font-display text-2xl font-bold leading-tight text-navy-ink md:text-3xl">{t("quote.title")}</h1>
@@ -386,8 +402,15 @@ export default function QuotePage() {
 
         {/* The lead ask — what they are quoting. NO customer PII. */}
         <div className="mt-5 rounded-xl border border-border bg-card p-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("quote.askTitle")}</p>
-          <div className="mt-2.5 flex flex-wrap gap-2 text-xs font-medium text-foreground">
+          {/* A real heading, not a styled paragraph. The page had exactly one
+              landmark (the h1) and then three unlabelled slabs, so a screen
+              reader user had no way to jump from "what am I pricing" to the
+              form. Styling is unchanged. */}
+          <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("quote.askTitle")}</h2>
+          {/* 14px, not 12px. These three chips ARE the three-second read — what,
+              where, when — and they were the smallest text on the page, on a
+              surface used one-handed on a job site. */}
+          <div className="mt-2.5 flex flex-wrap gap-2 text-sm font-medium text-foreground">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5">
               <Tag className="h-3.5 w-3.5 text-teal-deep" aria-hidden />
               {categoryLabel}
@@ -403,11 +426,11 @@ export default function QuotePage() {
               </span>
             )}
           </div>
-          {quote.lead.details && (
-            <p className="mt-3 whitespace-pre-wrap break-words rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
-              {quote.lead.details}
-            </p>
-          )}
+          {/* The scoping answers the customer gave, in THIS provider's language,
+              and then their own words with the duplicate summary taken off the
+              front. Both used to arrive as one undifferentiated block of the
+              customer's prose. Renders nothing when the lead carries neither. */}
+          <QuoteLeadScope lead={quote.lead} />
           {/* Part of the ask, not an extra: for a bulky or awkward load the
               photos ARE the brief, and the outreach email already told this
               provider they exist. Renders nothing when there are none. */}
@@ -426,11 +449,17 @@ export default function QuotePage() {
             </p>
           )}
 
+          {/* Every control below is `text-base sm:text-sm`, matching the booking
+              form. Not cosmetic: mobile Safari zooms the viewport whenever a
+              focused field is under 16px, so tapping the price box on an iPhone
+              scaled the page up and left the provider pinching back out to find
+              the send button — on the one field this entire page exists to
+              collect, on the device most of this traffic arrives on. */}
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-xs font-medium text-muted-foreground">
               {t("quote.priceLabel")}
               <div className="mt-1 flex items-center rounded-md border border-border bg-background focus-within:ring-2 focus-within:ring-ring">
-                <span className="pl-3 text-sm text-muted-foreground" aria-hidden>€</span>
+                <span className="pl-3 text-base text-muted-foreground sm:text-sm" aria-hidden>€</span>
                 <input
                   type="text"
                   inputMode="decimal"
@@ -438,7 +467,7 @@ export default function QuotePage() {
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
                   placeholder={t("quote.pricePlaceholder")}
-                  className="h-11 w-full min-w-0 rounded-md bg-transparent px-2 text-sm text-foreground focus:outline-none"
+                  className="h-11 w-full min-w-0 rounded-md bg-transparent px-2 text-base text-foreground focus:outline-none sm:text-sm"
                 />
               </div>
             </label>
@@ -447,7 +476,7 @@ export default function QuotePage() {
               <select
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
-                className="mt-1 h-11 w-full cursor-pointer rounded-md border border-border bg-background px-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                className="mt-1 h-11 w-full cursor-pointer rounded-md border border-border bg-background px-2.5 text-base text-foreground focus:outline-none focus:ring-2 focus:ring-ring sm:text-sm"
               >
                 {unitOptions.map((o) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
@@ -463,7 +492,7 @@ export default function QuotePage() {
               value={availability}
               onChange={(e) => setAvailability(e.target.value)}
               placeholder={t("quote.availabilityPlaceholder")}
-              className="mt-1 h-11 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="mt-1 h-11 w-full rounded-md border border-border bg-background px-3 text-base text-foreground focus:outline-none focus:ring-2 focus:ring-ring sm:text-sm"
             />
           </label>
 
@@ -474,7 +503,7 @@ export default function QuotePage() {
               rows={3}
               onChange={(e) => setNote(e.target.value)}
               placeholder={t("quote.notePlaceholder")}
-              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-base text-foreground focus:outline-none focus:ring-2 focus:ring-ring sm:text-sm"
             />
           </label>
 

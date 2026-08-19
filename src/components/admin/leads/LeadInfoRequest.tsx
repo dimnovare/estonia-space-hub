@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { CircleHelp, Loader2 } from "lucide-react";
+import { CircleHelp, Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { adminLeadService, type ProviderOutreachRow } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
@@ -70,9 +70,13 @@ export function LeadInfoRequest({ row }: { row: ProviderOutreachRow }) {
 
   return (
     <div className="mt-2 rounded-md border border-warning/30 bg-warning/10 p-2.5">
-      <p className="flex items-center gap-1.5 text-xs font-semibold text-warning-text">
+      <p className="flex flex-wrap items-center gap-x-1.5 text-xs font-semibold text-warning-text">
         <CircleHelp className="h-3.5 w-3.5 shrink-0" aria-hidden />
         {t("admin.leads.infoRequestTitle")}
+        {/* Named here because the panel no longer sits under the outreach row
+            that identified them — it leads the workspace, where "which provider
+            asked this?" is otherwise unanswerable without scrolling back down. */}
+        <span className="text-navy-ink">{provider}</span>
         <span className="font-normal text-muted-foreground">
           · {t("admin.leads.infoRequestAsked").replace("{date}", formatDateTime(ask.askedAt))}
         </span>
@@ -107,6 +111,17 @@ export function LeadInfoRequest({ row }: { row: ProviderOutreachRow }) {
       )}
 
       <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+        {/* The answer goes out by email, and until now the address was three
+            sections away, on the outreach row this panel used to live under.
+            Hunting for it is the step between reading the question and answering
+            it, so the reply opens from here, pre-addressed and pre-subjected. */}
+        <a
+          href={`mailto:${encodeURIComponent(row.sentTo)}?subject=${encodeURIComponent(t("admin.leads.infoRequestReplySubject"))}`}
+          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-md border border-border bg-card px-3 text-xs font-medium text-teal-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <Mail className="h-3.5 w-3.5" aria-hidden />
+          {t("admin.leads.infoRequestReply")}
+        </a>
         <Button
           type="button"
           size="sm"

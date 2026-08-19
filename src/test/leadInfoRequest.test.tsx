@@ -148,6 +148,19 @@ describe("blocked provider — info request panel", () => {
     expect(container.textContent).toContain("Kas klaver on esimesel korrusel?");
   });
 
+  it("names the provider and opens the reply from where the question is", () => {
+    // The panel now leads the workspace instead of sitting under the outreach
+    // row, so it has to carry the two things that row used to supply: WHO asked,
+    // and the address to answer. Without them the operator scrolls back down
+    // past a provider search and a candidate list to find an email address.
+    const { container } = mount(row(ask()));
+
+    expect(container.textContent).toContain("Adduco OÜ");
+    const reply = container.querySelector<HTMLAnchorElement>('a[href^="mailto:"]');
+    expect(reply, "the reply is one click from the question").toBeTruthy();
+    expect(decodeURIComponent(reply!.getAttribute("href")!)).toContain("info@adduco.ee");
+  });
+
   it("resolves the ask by id and refetches the outreach list", async () => {
     const resolve = vi.spyOn(adminLeadService, "resolveInfoRequest").mockResolvedValue({
       id: ask().id,

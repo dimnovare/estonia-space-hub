@@ -56,4 +56,25 @@ describe("redactAnalyticsPath — offer-token leakage guard", () => {
   it("does not treat 'quotes' or other lookalikes as the quote route", () => {
     expect(redactAnalyticsPath("/et/quotes-info")).toBe("/et/quotes-info");
   });
+
+  // The status page shows a stranger what somebody is moving and when their
+  // home will be empty. It was safe to omit only while nothing linked to it;
+  // the request funnel now hands the link out on the success screen and in the
+  // receipt email, so this page gets real traffic.
+  it("redacts the customer request-status token", () => {
+    expect(redactAnalyticsPath("/et/request-status/AbC123def456GhI789jkl"))
+      .toBe("/et/request-status/redacted");
+  });
+
+  it("redacts the request-status token on every supported language prefix", () => {
+    for (const lang of ["et", "en", "ru", "lv", "lt"]) {
+      expect(redactAnalyticsPath(`/${lang}/request-status/secret-token-value`))
+        .toBe(`/${lang}/request-status/redacted`);
+    }
+  });
+
+  it("leaves the request funnel itself alone", () => {
+    expect(redactAnalyticsPath("/et/request")).toBe("/et/request");
+    expect(redactAnalyticsPath("/et/request?step=2")).toBe("/et/request?step=2");
+  });
 });

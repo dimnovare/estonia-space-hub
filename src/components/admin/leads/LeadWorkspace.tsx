@@ -21,6 +21,8 @@ import { LeadOfferStage } from "./LeadOfferStage";
 import { LeadDeliveryReview } from "./LeadDeliveryReview";
 import { LeadActivityTimeline } from "./LeadActivityTimeline";
 import { LeadPhotoGallery } from "./LeadPhotos";
+import { LeadInfoRequest } from "./LeadInfoRequest";
+import type { AdminLeadMetricsWithDelivery } from "./leadOpsApi";
 import { leadDateIsFlexible } from "@/components/admin/AdminLeads";
 
 // The concierge happy-path pipeline is now three clickable stages: converted is
@@ -83,8 +85,25 @@ export function LeadWorkspace({ lead }: { lead: AdminLead }) {
     queryFn: () => adminOfferService.listForLead(lead.id),
     staleTime: 30_000,
   });
+  // Shares the cache key AdminLeads already fetches, so this costs no request in
+  // practice; it is here only to learn when delivery receipts started existing,
+  // which is what lets an outreach row say "sent before we tracked" instead of
+  // the much stronger, and usually wrong, "no receipt".
+  const metricsQuery = useQuery<AdminLeadMetricsWithDelivery>({
+    queryKey: queryKeys.adminLeads.metrics(),
+    queryFn: () => adminLeadService.metrics(),
+    staleTime: 60_000,
+  });
+  const deliveryMeasuredFrom = metricsQuery.data?.outreachDelivery30d?.measuredFrom ?? null;
+
   const outreachRows = outreachQuery.data ?? [];
   const offers = offersQuery.data ?? [];
+  // Somebody has answered us and cannot price the job until we answer back. This
+  // is the only state in the whole workspace where a provider is waiting on US,
+  // so it is hoisted to the top rather than left where it was: three sections
+  // down, inside the outreach history, below a provider search and a candidate
+  // list — findable only by scrolling past everything you would do instead.
+  const blockedRows = useMemo(() => outreachRows.filter((row) => row.infoRequest), [outreachRows]);
   // Timeline lifecycle follows the newest offer for this lead.
   const primaryOffer = useMemo(
     () => [...offers].sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""))[0],
@@ -190,6 +209,21 @@ export function LeadWorkspace({ lead }: { lead: AdminLead }) {
           </span>
         )}
       </div>
+
+      {/* ── A provider is waiting on US ──
+             First, above the pipeline, above everything: this is the only work
+             in the workspace with somebody else's clock running on it, and the
+             one place where a single answer unblocks a quote. */}
+      {blockedRows.length > 0 && (
+        <div className="rounded-xl border border-warning/40 bg-warning/[0.07] p-3">
+          <PanelHeading>
+            {t("admin.leads.blockedTitle").replace("{count}", String(blockedRows.length))}
+          </PanelHeading>
+          <div className="mt-1 space-y-2">
+            {blockedRows.map((row) => <LeadInfoRequest key={row.id} row={row} />)}
+          </div>
+        </div>
+      )}
 
       {/* ── Status pipeline chips (converted is read-only) ── */}
       <div>
@@ -363,6 +397,7 @@ export function LeadWorkspace({ lead }: { lead: AdminLead }) {
             lead={lead}
             offers={offers}
             outreachRows={outreachRows}
+            deliveryMeasuredFrom={deliveryMeasuredFrom}
             candidateToAdd={candidateToAdd}
             onCandidateConsumed={() => setCandidateToAdd(null)}
             onOffersChanged={invalidateOffers}

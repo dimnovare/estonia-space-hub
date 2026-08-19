@@ -32,19 +32,25 @@ export function trackEvent(name: string, params?: Record<string, string | number
 /**
  * Redact secret path segments before anything reaches analytics.
  *
- * Two public pages are guarded by a token in the URL and nothing else:
+ * Three public pages are guarded by a token in the URL and nothing else:
  *  - /{lang}/offer/{token} — the customer's offer page (view details + choose,
  *    which alerts ops).
  *  - /{lang}/quote/{token} — the provider's quote form. The per-recipient token
  *    is what lets them submit a price AS that provider without an account, so
  *    it is every bit as much a bearer credential as the offer token.
+ *  - /{lang}/request-status/{token} — the customer's own status page. Added
+ *    here when the request funnel started handing that link out (success screen
+ *    + receipt email); before that the page existed but nothing linked to it,
+ *    so it got no traffic and the omission cost nothing. It shows a stranger
+ *    what somebody is moving and when their home will be empty, which is not a
+ *    thing to leave sitting in a GA report.
  *
  * gtag auto-attaches the full page_location URL to manual events, so a raw
  * token would otherwise be harvestable from GA reports by anyone with report
- * access. Strip both.
+ * access. Strip all three.
  */
 export function redactAnalyticsPath(path: string): string {
-  return path.replace(/(\/(?:offer|quote)\/)[^/?#]+/i, "$1redacted");
+  return path.replace(/(\/(?:offer|quote|request-status)\/)[^/?#]+/i, "$1redacted");
 }
 
 export function trackPageView(path: string) {

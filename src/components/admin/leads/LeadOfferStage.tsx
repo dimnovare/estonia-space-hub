@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, Copy, Eye, Loader2, MailX, Plus, Quote, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Clock, Copy, Eye, Loader2, MailX, Plus, Quote, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   adminOfferService,
@@ -21,16 +21,27 @@ import {
 } from "@/components/ui/alert-dialog";
 import { candidateToEditable, editingDraftClosed, nextLocalId, parsePrice, toEditable, toInput, type EditableOption } from "./leadWorkspaceModels";
 import { OFFER_STATUS_STYLE, StatusBadge } from "./leadStatusStyles";
-import { LeadInfoRequest } from "./LeadInfoRequest";
+import { DeliveryMark, type OutreachDeliveryFacts } from "./outreachDelivery";
 
 interface LeadOfferStageProps {
   lead: AdminLead;
   offers: AdminOffer[];
   outreachRows: ProviderOutreachRow[];
+  /** Earliest send with any delivery receipt (metrics `outreachDelivery30d.measuredFrom`).
+   *  Lets a receipt-less row say "sent before we tracked" rather than the far
+   *  stronger "no receipt". Null when nothing has ever been measured. */
+  deliveryMeasuredFrom?: string | null;
   candidateToAdd: ProviderCandidate | null;
   onCandidateConsumed(): void;
   onOffersChanged(): void;
 }
+
+/**
+ * The outreach row carries `deliveredAt`/`openedAt` on the wire (MapOutreach)
+ * but not yet on the shared `ProviderOutreachRow` type, which is owned
+ * elsewhere. Structural, so it disappears the day the field lands there.
+ */
+type OutreachRowWithDelivery = ProviderOutreachRow & Partial<OutreachDeliveryFacts>;
 
 type ApiFailure = Error & { status?: number };
 
@@ -38,7 +49,8 @@ const formatDateTime = (iso: string) =>
   new Date(iso).toLocaleString(undefined, { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
 export function LeadOfferStage({
-  lead, offers, outreachRows, candidateToAdd, onCandidateConsumed, onOffersChanged,
+  lead, offers, outreachRows, deliveryMeasuredFrom, candidateToAdd,
+  onCandidateConsumed, onOffersChanged,
 }: LeadOfferStageProps) {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
@@ -268,7 +280,14 @@ export function LeadOfferStage({
               <li key={row.id} className="grid gap-2 rounded-md border border-border bg-background p-2.5 sm:grid-cols-[minmax(0,1fr)_auto]">
                 <div className="min-w-0">
                   <p className="font-medium text-navy-ink">{row.supplierName ?? row.sentTo}</p>
-                  <p className="break-words text-xs text-muted-foreground">{row.sentTo}</p>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="break-words text-xs text-muted-foreground">{row.sentTo}</span>
+                    {/* THE question this row could not answer until today: did the
+                        mail get there? Never says "not delivered" on an absent
+                        receipt — see outreachDelivery for the rules and why. */}
+                    <DeliveryMark row={row as OutreachRowWithDelivery} measuredFrom={deliveryMeasuredFrom} t={t} />
+                    <span className="font-data text-[11px] text-muted-foreground">{formatDateTime(row.sentAt)}</span>
+                  </div>
                   {/* A bounce is not silence. Without this the row reads "sent"
                       forever and a dead address looks like a provider who chose
                       not to answer. Set only by the Resend webhook. */}
@@ -279,10 +298,10 @@ export function LeadOfferStage({
                       {row.note && <span className="ml-1 font-normal text-muted-foreground">· {row.note.split("\n").at(-1)}</span>}
                     </p>
                   )}
-                  {/* "Replied, but blocked" — the row's status already says
-                      needsinfo; this says what would unblock them, and offers the
-                      one action that closes it. */}
-                  <LeadInfoRequest row={row} />
+                  {/* The blocked provider's question itself is no longer rendered
+                      here: it now leads the workspace (LeadWorkspace), because
+                      it was unfindable three sections down. The row keeps the
+                      status word, which is what it is for. */}
                   {row.quotedAmount != null && (
                     <p className="mt-1 inline-flex items-center gap-1 rounded-md bg-success/10 px-1.5 py-0.5 text-xs font-medium text-success">
                       <Quote className="h-3 w-3" aria-hidden />
@@ -293,15 +312,36 @@ export function LeadOfferStage({
                     </p>
                   )}
                 </div>
-                <select aria-label={`${row.supplierName ?? row.sentTo} ${t("admin.leads.outreachStatus.sent")}`} value={row.status} onChange={(event) => outreachMutation.mutate({ id: row.id, body: { status: event.target.value as OutreachStatus } })} className="h-9 rounded-md border border-border bg-card px-2 text-sm">
-                  {/* The delivery outcomes are system-set, so they are not offered
-                      as choices — but the current one must still be listed or the
-                      select renders blank on a bounced row. */}
-                  {(MANUAL_OUTREACH_STATUSES.includes(row.status as typeof MANUAL_OUTREACH_STATUSES[number])
-                    ? MANUAL_OUTREACH_STATUSES
-                    : [row.status, ...MANUAL_OUTREACH_STATUSES]
-                  ).map((status) => <option key={status} value={status}>{t(`admin.leads.outreachStatus.${status}`)}</option>)}
-                </select>
+                <div className="flex items-start gap-2">
+                  {/* The single most repeated verdict in this workspace, as one
+                      click instead of open-dropdown-then-pick. Offered only on a
+                      row still waiting: "they never came back" is the answer for
+                      an outstanding ask and nonsense for a bounced or answered
+                      one. The select still holds the full vocabulary, including
+                      the way back from a mis-click. */}
+                  {row.status === "sent" && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-9 shrink-0 gap-1.5 px-2.5 text-xs"
+                      disabled={outreachMutation.isPending}
+                      onClick={() => outreachMutation.mutate({ id: row.id, body: { status: "noanswer" } })}
+                    >
+                      <Clock className="h-3.5 w-3.5" aria-hidden />
+                      {t("admin.leads.outreachStatus.noanswer")}
+                    </Button>
+                  )}
+                  <select aria-label={`${row.supplierName ?? row.sentTo} ${t("admin.leads.outreachStatus.sent")}`} value={row.status} onChange={(event) => outreachMutation.mutate({ id: row.id, body: { status: event.target.value as OutreachStatus } })} className="h-9 rounded-md border border-border bg-card px-2 text-sm">
+                    {/* The delivery outcomes are system-set, so they are not offered
+                        as choices — but the current one must still be listed or the
+                        select renders blank on a bounced row. */}
+                    {(MANUAL_OUTREACH_STATUSES.includes(row.status as typeof MANUAL_OUTREACH_STATUSES[number])
+                      ? MANUAL_OUTREACH_STATUSES
+                      : [row.status, ...MANUAL_OUTREACH_STATUSES]
+                    ).map((status) => <option key={status} value={status}>{t(`admin.leads.outreachStatus.${status}`)}</option>)}
+                  </select>
+                </div>
                 <div className="sm:col-span-2 flex flex-col gap-2 sm:flex-row">
                   <input aria-label={`${row.supplierName ?? row.sentTo} ${t("admin.leads.outreachNotePlaceholder")}`} value={outreachNotes[row.id] ?? row.note ?? ""} placeholder={t("admin.leads.outreachNotePlaceholder")} onChange={(event) => setOutreachNotes((previous) => ({ ...previous, [row.id]: event.target.value }))} className="h-9 min-w-0 flex-1 rounded-md border border-border bg-card px-2.5 text-sm" />
                   <Button type="button" size="sm" variant="outline" className="h-9" disabled={outreachMutation.isPending} onClick={() => outreachMutation.mutate({ id: row.id, body: { note: outreachNotes[row.id] ?? row.note ?? "" } })}>{t("admin.leads.save")}</Button>

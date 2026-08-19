@@ -872,6 +872,16 @@ export interface ProviderOutreachRow {
   sentAt: string;
   status: OutreachStatus;
   note: string | null;
+  /** Delivery receipts from Resend, per outreach row.
+   *
+   *  NULL MEANS UNKNOWN, never "did not arrive". Rows sent before the webhook
+   *  existed have both null -- and the webhook had never been configured at all
+   *  until 2026-08-18, so that is most of them. Open tracking is deliberately OFF
+   *  at the account level (it would put a pixel in every customer email), so
+   *  `openedAt` stays null for everyone and must never be rendered as
+   *  "nobody opened it". Only a bounced/complained STATUS may say mail failed. */
+  deliveredAt?: string | null;
+  openedAt?: string | null;
   /** The provider's UNRESOLVED "I cannot quote this yet". Carried on the
    *  outreach row rather than fetched per lead: the row's status already says
    *  `needsinfo`, and this is what that word means — splitting them across two
@@ -1047,6 +1057,11 @@ export interface PublicQuote {
      *  request's photos. The backend has always sent this; the type omitted it,
      *  so the gallery the outreach email promises was never rendered. */
     photoCount?: number;
+    /** The intake's chip answers as slugs + 1-based option numbers, in catalogue
+     *  order. Deliberately NOT rendered strings: the page supplies its own
+     *  localised wording, so a question added server-side degrades to being
+     *  skipped rather than printing English at an Estonian mover. */
+    scope?: PublicQuoteScope[];
   };
   currency: string; // "EUR"
   alreadySubmitted: boolean;
@@ -1060,6 +1075,12 @@ export interface PublicQuote {
    *  reverts on its own without needing a second signal. */
   infoRequested?: boolean;
   infoRequest?: PublicQuoteInfoRequest | null;
+}
+
+/** One answered scoping question on a lead. */
+export interface PublicQuoteScope {
+  question: string;
+  option: number;
 }
 
 /** What a blocked provider told us was missing. `reasons` are slugs — the page

@@ -12,13 +12,21 @@ import { serviceTypeLabel, SERVICE_TYPE_SLUGS } from "@/lib/serviceTypes";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import {
-  Loader2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Megaphone,
+  Loader2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, CircleHelp, Megaphone,
   TrendingUp, Timer, CalendarCheck, CheckCircle, MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LeadWorkspace } from "@/components/admin/leads/LeadWorkspace";
 import { LeadPhotoBadge } from "@/components/admin/leads/LeadPhotos";
 import { LEAD_STATUS_STYLE, StatusBadge } from "@/components/admin/leads/leadStatusStyles";
+import { LeadDeliveryPanel } from "@/components/admin/leads/LeadDeliveryPanel";
+import { LeadOutreachSummary } from "@/components/admin/leads/LeadOutreachSummary";
+import {
+  listLeads,
+  type AdminLeadMetricsWithDelivery,
+  type LeadOutreachSummary as OutreachSummary,
+  type LeadQueue,
+} from "@/components/admin/leads/leadOpsApi";
 import {
   AdminPageHeader, StatCard, FilterBar, FilterChip, DataTable, DataTableHead, Th, EmptyState,
 } from "@/components/admin/kit";
@@ -130,9 +138,12 @@ export default function AdminLeads() {
   });
   const [conciergeOnly, setConciergeOnly] = useState(false);
   const [missingInfoOnly, setMissingInfoOnly] = useState(false);
-  const [needsResponse, setNeedsResponse] = useState(() => {
+  // One selector for the three server-side queues, not three independent
+  // toggles: they are mutually exclusive views of the same list, and letting an
+  // operator switch two on at once only ever produces an empty table.
+  const [queue, setQueue] = useState<LeadQueue | null>(() => {
     const v = searchParams.get("needsResponse");
-    return v === "1" || v === "true";
+    return v === "1" || v === "true" ? "needsresponse" : null;
   });
   const [categoryFilter, setCategoryFilter] = useState<string>(() => searchParams.get("category") || "any");
   const [cityFilter, setCityFilter] = useState(() => searchParams.get("city") || "");
@@ -168,31 +179,31 @@ export default function AdminLeads() {
     if (categoryParam) { setCategoryFilter(categoryParam); touched = true; }
     if (cityParam) { setCityFilter(cityParam); touched = true; }
     if (needsResponseParam !== null) {
-      setNeedsResponse(needsResponseParam === "1" || needsResponseParam === "true");
+      setQueue(needsResponseParam === "1" || needsResponseParam === "true" ? "needsresponse" : null);
       touched = true;
     }
     if (touched) setPage(1);
   }, [statusParam, categoryParam, cityParam, needsResponseParam]);
 
-  // Optional GetLeads filters (source/category/city/needsResponse). Guarded so
-  // nothing breaks if the backend ignores a param it doesn't support yet.
+  // Optional GetLeads filters (source/category/city/queue). Guarded so nothing
+  // breaks if the backend ignores a param it doesn't support yet.
   const listOpts = {
     source: conciergeOnly ? "concierge" : undefined,
     category: categoryFilter !== "any" ? categoryFilter : undefined,
     city: cityFilter.trim() || undefined,
-    needsResponse: needsResponse || undefined,
+    queue: queue ?? undefined,
   };
   const filterKey = JSON.stringify(listOpts);
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.adminLeads.list(statusFilter, page, filterKey),
-    queryFn: () => adminLeadService.list(statusFilter, page, LIMIT, listOpts),
+    queryFn: () => listLeads(statusFilter, page, LIMIT, listOpts),
     staleTime: 30_000,
   });
 
   // Ops funnel metrics — whole-funnel numbers from the API (NOT derived from the
   // current page, which was misleading for anything beyond page 1).
-  const { data: metrics } = useQuery({
+  const { data: metrics } = useQuery<AdminLeadMetricsWithDelivery>({
     queryKey: queryKeys.adminLeads.metrics(),
     queryFn: () => adminLeadService.metrics(),
     staleTime: 60_000,
@@ -225,6 +236,15 @@ export default function AdminLeads() {
   const items = visibleItems;
   const totalPages = data ? Math.max(1, Math.ceil(data.total / LIMIT)) : 1;
   const toggleExpanded = (id: string) => setExpandedId((cur) => (cur === id ? null : id));
+  // Per-lead provider state, keyed by lead id (GET /admin/leads → `outreach`).
+  // Absent on an API older than this build: every consumer treats undefined as
+  // "we were not told", never as zero.
+  const outreachByLead = data?.outreach;
+  const queues = data?.queues;
+  const selectQueue = (next: LeadQueue) => {
+    setQueue((current) => (current === next ? null : next));
+    setPage(1);
+  };
 
   // ?lead={id} opens the workspace, but the row can sit far below the metrics —
   // the admin arrives from the alert email and sees no sign anything happened.
@@ -318,8 +338,62 @@ export default function AdminLeads() {
         />
       </div>
 
+      {/* Did the ask arrive, and who never answers it — the two questions behind
+          a 9% quote rate. */}
+      <LeadDeliveryPanel delivery={metrics?.outreachDelivery30d} />
+
+      {/* ── Work queues ──────────────────────────────────────────────────────
+          Promoted above the status filters and given real counts, because these
+          are the three reasons to open this screen at all: somebody is waiting
+          for a first reply, somebody is waiting for US, or a request has gone
+          quiet. Status is a property of a lead; a queue is a decision about the
+          next hour, and it was previously buried as the second chip of a second
+          row with no number on it.
+
+          The counts come from the server over the whole filtered set (not the
+          page), so a chip may be trusted to mean what it says. */}
+      <div className="mt-6">
+        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          {t("admin.leads.queuesTitle")}
+        </span>
+        <FilterBar className="mb-0 mt-1.5">
+          <QueueChip
+            active={queue === "needsresponse"}
+            count={queues?.needsResponse}
+            label={t("admin.leads.filterNeedsResponse")}
+            onClick={() => selectQueue("needsresponse")}
+          />
+          <QueueChip
+            active={queue === "blocked"}
+            count={queues?.blocked}
+            label={t("admin.leads.queueBlocked")}
+            tone="warning"
+            onClick={() => selectQueue("blocked")}
+          />
+          <QueueChip
+            active={queue === "stalled"}
+            count={queues?.stalled}
+            label={t("admin.leads.queueStalled")}
+            tone="warning"
+            title={queues ? t("admin.leads.queueStalledHint").replace("{days}", String(queues.stalledAfterDays)) : undefined}
+            onClick={() => selectQueue("stalled")}
+          />
+          {/* Deliberately not given a count: this one filters the loaded page,
+              not the result set (see visibleItems), and a number that quietly
+              means "…of the 50 rows you happen to have" is the kind of honest-
+              looking figure this screen is trying to stop producing. */}
+          <FilterChip
+            active={missingInfoOnly}
+            title={t("admin.leads.filterMissingInfoHint")}
+            onClick={() => setMissingInfoOnly((v) => !v)}
+          >
+            {t("admin.leads.filterMissingInfo")}
+          </FilterChip>
+        </FilterBar>
+      </div>
+
       {/* Status filter buttons */}
-      <FilterBar className="mb-0 mt-6">
+      <FilterBar className="mb-0 mt-4">
         {STATUS_OPTIONS.map((opt) => (
           <FilterChip
             key={opt.value}
@@ -331,25 +405,13 @@ export default function AdminLeads() {
         ))}
       </FilterBar>
 
-      {/* Extra filters: concierge channel, SLA "needs response" view, category + city */}
+      {/* Extra filters: concierge channel, category + city */}
       <FilterBar className="mb-0 mt-3">
         <FilterChip
           active={conciergeOnly}
           onClick={() => { setConciergeOnly((v) => !v); setPage(1); }}
         >
           {t("admin.leads.filterConcierge")}
-        </FilterChip>
-        <FilterChip
-          active={needsResponse}
-          onClick={() => { setNeedsResponse((v) => !v); setPage(1); }}
-        >
-          {t("admin.leads.filterNeedsResponse")}
-        </FilterChip>
-        <FilterChip
-          active={missingInfoOnly}
-          onClick={() => setMissingInfoOnly((v) => !v)}
-        >
-          {t("admin.leads.filterMissingInfo")}
         </FilterChip>
         <select
           value={categoryFilter}
@@ -384,6 +446,8 @@ export default function AdminLeads() {
             <LeadCard
               key={lead.id}
               lead={lead}
+              summary={outreachByLead?.[lead.id]}
+              stalledAfterDays={queues?.stalledAfterDays}
               expanded={expandedId === lead.id}
               onToggle={() => toggleExpanded(lead.id)}
               onStatusChange={(status) => updateMutation.mutate({ id: lead.id, status })}
@@ -399,7 +463,11 @@ export default function AdminLeads() {
               <Th className="px-5">{t("admin.leads.colCity")}</Th>
               <Th className="px-5">{t("admin.leads.colCategory")}</Th>
               <Th className="px-5">{t("admin.leads.colQuery")}</Th>
-              <Th className="px-5">{t("admin.leads.colLanguage")}</Th>
+              {/* Replaces the language column, which was a two-letter badge the
+                  workspace header already shows (it now rides in the contact
+                  cell). This column answers the question the operator was
+                  expanding rows one at a time to ask. */}
+              <Th className="px-5">{t("admin.leads.colProviders")}</Th>
               <Th className="px-5">{t("admin.leads.colCreated")}</Th>
               <Th className="px-5">{t("admin.leads.colStatus")}</Th>
               <Th align="right" className="px-5">{t("admin.leads.colAction")}</Th>
@@ -410,6 +478,8 @@ export default function AdminLeads() {
               <LeadRow
                 key={lead.id}
                 lead={lead}
+                summary={outreachByLead?.[lead.id]}
+                stalledAfterDays={queues?.stalledAfterDays}
                 expanded={expandedId === lead.id}
                 onToggle={() => toggleExpanded(lead.id)}
                 onStatusChange={(status) => updateMutation.mutate({ id: lead.id, status })}
@@ -454,8 +524,43 @@ export default function AdminLeads() {
   );
 }
 
-function LeadRow({ lead, expanded, onToggle, onStatusChange, statusPending }: {
+/**
+ * A queue chip that carries its own size.
+ *
+ * The count is what turns a filter into a decision: "Blocked" makes you click to
+ * find out, "Blocked 2" tells you before you do. It renders "—" rather than 0
+ * while the count is unknown (an API that has not shipped it, or a page that has
+ * not loaded yet) — a confident zero on a queue is exactly the lie that lets a
+ * blocked provider sit for a week.
+ */
+function QueueChip({ active, count, label, tone = "default", title, onClick }: {
+  active: boolean;
+  count: number | undefined;
+  label: string;
+  tone?: "default" | "warning";
+  title?: string;
+  onClick: () => void;
+}) {
+  const wants = tone === "warning" && (count ?? 0) > 0;
+  return (
+    <FilterChip
+      active={active}
+      title={title}
+      onClick={onClick}
+      className={!active && wants ? "border-warning/40 bg-warning/5 text-warning-text" : ""}
+    >
+      {label}
+      <span className={`font-data ml-1.5 ${active ? "text-white/80" : "text-muted-foreground"}`}>
+        {count ?? "—"}
+      </span>
+    </FilterChip>
+  );
+}
+
+function LeadRow({ lead, summary, stalledAfterDays, expanded, onToggle, onStatusChange, statusPending }: {
   lead: AdminLead;
+  summary: OutreachSummary | undefined;
+  stalledAfterDays: number | undefined;
   expanded: boolean;
   onToggle: () => void;
   onStatusChange: (status: AdminLeadStatus) => void;
@@ -464,10 +569,18 @@ function LeadRow({ lead, expanded, onToggle, onStatusChange, statusPending }: {
   const { t } = useLanguage();
   return (
     <>
-      <tr id={`lead-row-${lead.id}`} className="border-b border-border last:border-0 transition-colors hover:bg-secondary/30">
+      <tr
+        id={`lead-row-${lead.id}`}
+        className={`border-b border-border last:border-0 transition-colors hover:bg-secondary/30 ${summary?.blocked ? "bg-warning/[0.06]" : ""}`}
+      >
         <td className="px-5 py-3.5 font-medium text-navy-ink">
           {lead.name ? <span className="block">{lead.name}</span> : null}
           <span className={lead.name ? "block text-xs font-normal text-muted-foreground" : ""}>{lead.email}</span>
+          {/* The language moved here from its own column: it is a property of
+              this contact, and it was costing a full column to say two letters. */}
+          <span className="mt-0.5 inline-flex items-center rounded-full bg-secondary px-1.5 py-0.5 text-[10px] font-medium uppercase text-muted-foreground">
+            {lead.language}
+          </span>
           {lead.supplierName && (
             <span className="mt-0.5 block text-[11px] font-normal text-success-text">→ {lead.supplierName}</span>
           )}
@@ -491,10 +604,8 @@ function LeadRow({ lead, expanded, onToggle, onStatusChange, statusPending }: {
             <LeadPhotoBadge lead={lead} />
           </div>
         </td>
-        <td className="px-5 py-3.5">
-          <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium uppercase text-muted-foreground">
-            {lead.language}
-          </span>
+        <td className="min-w-[190px] px-5 py-3.5">
+          <LeadOutreachSummary summary={summary} stalledAfterDays={stalledAfterDays} t={t} />
         </td>
         <td className="font-data whitespace-nowrap px-5 py-3.5 text-[13px] text-muted-foreground">
           {new Date(lead.createdAt).toLocaleDateString()}
@@ -503,7 +614,22 @@ function LeadRow({ lead, expanded, onToggle, onStatusChange, statusPending }: {
           <LeadStatusControl lead={lead} onStatusChange={onStatusChange} statusPending={statusPending} />
         </td>
         <td className="px-5 py-3.5">
-          <div className="flex justify-end">
+          <div className="flex items-center justify-end gap-2">
+            {/* A blocked provider gets its own way in, at the level where the
+                operator is scanning. Expanding now lands on the question itself
+                (LeadWorkspace puts the open asks first), so this is one click
+                from "somebody is waiting on me" to the answer form. */}
+            {!!summary?.blocked && (
+              <Button
+                size="sm"
+                className="h-9 gap-1.5 bg-warning/15 text-warning-text hover:bg-warning/25"
+                aria-expanded={expanded}
+                onClick={onToggle}
+              >
+                <CircleHelp className="h-3.5 w-3.5" aria-hidden />
+                {t("admin.leads.answerProvider")}
+              </Button>
+            )}
             <Button
               size="sm"
               variant="outline"
@@ -528,8 +654,10 @@ function LeadRow({ lead, expanded, onToggle, onStatusChange, statusPending }: {
   );
 }
 
-function LeadCard({ lead, expanded, onToggle, onStatusChange, statusPending }: {
+function LeadCard({ lead, summary, stalledAfterDays, expanded, onToggle, onStatusChange, statusPending }: {
   lead: AdminLead;
+  summary: OutreachSummary | undefined;
+  stalledAfterDays: number | undefined;
   expanded: boolean;
   onToggle: () => void;
   onStatusChange: (status: AdminLeadStatus) => void;
@@ -537,7 +665,7 @@ function LeadCard({ lead, expanded, onToggle, onStatusChange, statusPending }: {
 }) {
   const { t } = useLanguage();
   return (
-    <div id={`lead-row-${lead.id}`} className="overflow-hidden rounded-xl border border-border bg-card shadow-card">
+    <div id={`lead-row-${lead.id}`} className={`overflow-hidden rounded-xl border bg-card shadow-card ${summary?.blocked ? "border-warning/40" : "border-border"}`}>
       <div className="flex items-start justify-between gap-3 p-3.5">
         <div className="min-w-0">
           {lead.name && <p className="font-medium text-navy-ink">{lead.name}</p>}
@@ -552,10 +680,24 @@ function LeadCard({ lead, expanded, onToggle, onStatusChange, statusPending }: {
             <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[10px] font-medium uppercase">{lead.language}</span>
             <LeadPhotoBadge lead={lead} />
           </div>
+          <div className="mt-2">
+            <LeadOutreachSummary summary={summary} stalledAfterDays={stalledAfterDays} t={t} />
+          </div>
         </div>
         <LeadStatusControl lead={lead} onStatusChange={onStatusChange} statusPending={statusPending} />
       </div>
-      <div className="flex items-center justify-end border-t border-border px-3.5 py-2">
+      <div className="flex items-center justify-end gap-2 border-t border-border px-3.5 py-2">
+        {!!summary?.blocked && (
+          <Button
+            size="sm"
+            className="h-9 gap-1.5 bg-warning/15 text-warning-text hover:bg-warning/25"
+            aria-expanded={expanded}
+            onClick={onToggle}
+          >
+            <CircleHelp className="h-3.5 w-3.5" aria-hidden />
+            {t("admin.leads.answerProvider")}
+          </Button>
+        )}
         <Button
           size="sm"
           variant="outline"
