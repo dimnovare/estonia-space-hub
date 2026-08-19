@@ -1,24 +1,22 @@
 import { apiClient } from "@/services/apiClient";
+// Type-only on purpose: `services/index.ts` re-exports this module, so a value
+// import from the barrel here would close a runtime import cycle.
 import type { ConciergeRequestInput } from "@/services";
 
 /**
- * Submitting the concierge request — `POST /leads/request`.
+ * Submitting the concierge request — `POST /leads/request`. The single client
+ * path to that endpoint, re-exported from `services/index.ts` so the barrel
+ * works too.
  *
- * WHY THIS IS NOT `leadService.requestConcierge`. That function does the same
- * POST and throws the response body away (`Promise<void>`), which was fine
- * while the endpoint answered `{ ok: true }` and nothing more. It now answers
- * with the lead's own `statusToken`, and the success screen needs it: the token
- * is the only way an account-less customer can reach `/request-status/{token}`,
- * and that page shipped with nothing at all linking to it.
- *
- * It lives in its own module for the same reason `services/requestStatus.ts`
- * does — `services/index.ts` is being edited concurrently, and a stale restore
- * of that file is what reverted 23 translation keys into production on
- * 2026-08-18. Nothing here needs to sit in the barrel to work.
- *
- * FOLD THESE TOGETHER once `index.ts` is free: `leadService.requestConcierge`
- * should either delegate here or be deleted in favour of this. Two call paths
- * to one endpoint is a temporary state, not a design.
+ * WHY IT IS NOT A `leadService` METHOD. It is the one lead call whose response
+ * body is load-bearing. `leadService.requestConcierge` did the same POST and
+ * threw the body away (`Promise<void>`), which was fine while the endpoint
+ * answered `{ ok: true }` and nothing more. It now answers with the lead's own
+ * `statusToken`, and the success screen needs it: the token is the only way an
+ * account-less customer can reach `/request-status/{token}`, and that page
+ * shipped with nothing at all linking to it. The void-returning twin is deleted
+ * (2026-08-19) — don't reintroduce one; a caller that picks the body-discarding
+ * path turns the funnel back into a dead end and nothing fails loudly.
  */
 
 /**

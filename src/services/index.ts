@@ -557,9 +557,6 @@ export const leadService = {
   async requestQuote(input: QuoteLeadInput): Promise<void> {
     await apiClient.post("/leads/quote", { ...input, language: input.language ?? "et" });
   },
-  async requestConcierge(input: ConciergeRequestInput): Promise<void> {
-    await apiClient.post("/leads/request", { ...input, language: input.language ?? "et" });
-  },
   async listForProvider(supplierId?: string | null, status?: string): Promise<ProviderLead[]> {
     const params = new URLSearchParams();
     if (status && status !== "all") params.set("status", status);
@@ -575,6 +572,15 @@ export const leadService = {
     await apiClient.patch(withSupplier(`/provider/leads/${id}`, supplierId ?? null), body);
   },
 };
+
+// Submitting the concierge request (`POST /leads/request`) is NOT a method on
+// `leadService`: it is the one lead call whose response body matters, and it
+// keeps its own module. Re-exported here so callers can use the barrel; both
+// import paths resolve to the same object, so a `vi.spyOn` through either one
+// patches the same function. Do not add a second `leadService` method for this
+// endpoint — one that discarded the body existed until 2026-08-19 and cost the
+// funnel its status link.
+export { conciergeRequestService, type ConciergeRequestResult } from "./conciergeRequest";
 
 // ─── Admin Lead Service (concierge match queue) ──────────────────────────────
 export type AdminLeadStatus =

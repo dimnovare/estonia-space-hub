@@ -469,10 +469,8 @@ export default function RequestPage() {
         website,
         elapsedMs: Date.now() - openedAtRef.current,
       };
-      // Not leadService.requestConcierge: that one discards the response body,
-      // and the body is now where the lead's status token comes from. See
-      // services/conciergeRequest.ts for why it is a separate module and for
-      // the note that the two should be folded together.
+      // The response body matters here: it carries the lead's statusToken, which
+      // onSuccess turns into the customer's link to /request-status/{token}.
       return conciergeRequestService.submit(payload);
     },
     onSuccess: (result) => {
