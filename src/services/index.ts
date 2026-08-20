@@ -911,6 +911,14 @@ export interface ProviderOutreachRow {
   quotedAvailability?: string | null;
   quotedNote?: string | null;
   quotedAt?: string | null;
+  /** The provider's recorded NO from the quote page. `declineReason` is a
+   *  DeclineReasons slug (or null for a bare no — which is a complete answer).
+   *  Two of the slugs say the DIRECTORY ROW is wrong rather than anything about
+   *  this lead, which is why the workspace prints the reason and not just the
+   *  status word. */
+  declineReason?: string | null;
+  declineNote?: string | null;
+  declinedAt?: string | null;
 }
 
 /** Machine reasons the backend refused to email a selected provider.

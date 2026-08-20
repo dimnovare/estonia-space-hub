@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, Clock, Copy, Eye, Loader2, MailX, Plus, Quote, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Ban, Clock, Copy, Eye, Loader2, MailX, Plus, Quote, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   adminOfferService,
@@ -302,6 +302,39 @@ export function LeadOfferStage({
                       here: it now leads the workspace (LeadWorkspace), because
                       it was unfindable three sections down. The row keeps the
                       status word, which is what it is for. */}
+                  {/* A recorded NO. Before the decline action shipped, a refusal
+                      arrived as free text in a shared inbox and this row simply
+                      read "sent" forever — the provider counted as silent in the
+                      metric built to measure silence.
+
+                      The reason is printed, not just the status word, because
+                      wrong_area and not_our_service are not statements about
+                      this lead: they say the supplier row itself is mis-filed,
+                      and every future fan-out to that provider is wasted until
+                      someone corrects it. That is flagged explicitly. */}
+                  {row.status === "declined" && (
+                    <div className="mt-1 rounded-md bg-muted px-1.5 py-1 text-xs">
+                      <p className="inline-flex items-center gap-1 font-medium text-muted-foreground">
+                        <Ban className="h-3 w-3" aria-hidden />
+                        {row.declineReason
+                          ? t(`admin.leads.declineReason.${row.declineReason}`)
+                          : t("admin.leads.declineNoReason")}
+                        {row.declinedAt && (
+                          <span className="ml-1 font-normal">· {formatDateTime(row.declinedAt)}</span>
+                        )}
+                      </p>
+                      {row.declineNote && (
+                        <p className="mt-0.5 whitespace-pre-wrap break-words text-muted-foreground">
+                          {row.declineNote}
+                        </p>
+                      )}
+                      {(row.declineReason === "wrong_area" || row.declineReason === "not_our_service") && (
+                        <p className="mt-1 font-medium text-warning-text">
+                          {t("admin.leads.declineFixDirectory")}
+                        </p>
+                      )}
+                    </div>
+                  )}
                   {row.quotedAmount != null && (
                     <p className="mt-1 inline-flex items-center gap-1 rounded-md bg-success/10 px-1.5 py-0.5 text-xs font-medium text-success">
                       <Quote className="h-3 w-3" aria-hidden />
