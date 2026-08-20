@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Link } from "@/i18n/routing";
 import {
   Megaphone, CheckCircle, CheckCircle2, CalendarCheck, Timer, ChevronRight,
-  Loader2, AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useSuppliers } from "@/hooks/queries";
@@ -11,7 +11,7 @@ import { apiClient } from "@/services/apiClient";
 import { queryKeys } from "@/services/queryKeys";
 import { adminLeadService, type AdminLead } from "@/services";
 import { serviceTypeLabel } from "@/lib/serviceTypes";
-import { AdminPageHeader, StatCard } from "@/components/admin/kit";
+import { AdminPageHeader, StatCard, SectionError } from "@/components/admin/kit";
 import { LEAD_STATUS_STYLE, StatusBadge as LeadStatusBadge } from "@/components/admin/leads/leadStatusStyles";
 
 const pct = (fraction: number) => `${Math.round((fraction ?? 0) * 100)}%`;
@@ -50,26 +50,6 @@ function ageClass(iso: string): string {
  * Retryable per-section error state (never render success/empty copy on a
  * failed fetch — an ops cockpit must not lie green).
  */
-function SectionError({ label, retryLabel, onRetry }: {
-  label: string;
-  retryLabel: string;
-  onRetry: () => void;
-}) {
-  return (
-    <div className="px-5 py-10 text-center" role="alert">
-      <AlertTriangle className="mx-auto h-6 w-6 text-warning-text" aria-hidden />
-      <p className="mt-2 text-sm text-muted-foreground">{label}</p>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="mt-3 inline-flex min-h-[36px] items-center rounded-md border border-border bg-card px-3 py-1.5 text-[13px] font-medium text-foreground transition-colors hover:border-navy-ink/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        {retryLabel}
-      </button>
-    </div>
-  );
-}
-
 /** Localized relative timestamp for the activity strip. */
 function useRelativeTime() {
   const { language } = useLanguage();

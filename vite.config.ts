@@ -40,11 +40,21 @@ export default defineConfig(({ mode }) => ({
           // Normalise the path so matching works on both win32 and posix.
           const path = id.replace(/\\/g, "/");
 
-          // The i18n translation tables are a ~1.1 MB pure-data leaf module
-          // (string maps for 5 languages, no app imports) pulled in eagerly by
-          // LanguageContext on every page. Isolating it keeps that large, stable
-          // blob out of the entry chunk and in its own long-cacheable file that
-          // doesn't bust on every app-shell change.
+          // One chunk PER LANGUAGE (locale-et, locale-ru, …). All five together
+          // are ~1.5 MB of pure string data and a visitor reads exactly one, so
+          // et (the default + fallback, statically imported by LanguageContext)
+          // loads eagerly while the other four load on demand via import().
+          // Deterministic names matter: scripts/prerender-seo.mjs greps
+          // dist/assets for locale-<lang>-*.js to inject a modulepreload per
+          // route, so the active language is in flight before React renders.
+          const locale = path.match(/\/src\/i18n\/locales\/(\w+)\.ts$/);
+          if (locale) {
+            return `locale-${locale[1]}`;
+          }
+          // The aggregate module (all five, for tests + the prerenderer) must
+          // never reach a runtime bundle — but if a future import slips in,
+          // isolating it keeps the damage visible in the build output instead
+          // of silently fattening the entry chunk.
           if (/\/src\/i18n\/translations\.ts$/.test(path)) {
             return "i18n";
           }

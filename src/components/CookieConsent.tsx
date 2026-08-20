@@ -3,6 +3,7 @@ import { Link } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { initGA } from "@/lib/analytics";
+import { safeStorage } from "@/lib/safeStorage";
 
 const CONSENT_KEY = "ruumly-cookie-consent";
 
@@ -11,13 +12,13 @@ export default function CookieConsent() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (localStorage.getItem(CONSENT_KEY) !== "true") {
+    if (safeStorage.get(CONSENT_KEY) !== "true") {
       setVisible(true);
     }
   }, []);
 
   const accept = () => {
-    localStorage.setItem(CONSENT_KEY, "true");
+    safeStorage.set(CONSENT_KEY, "true");
     setVisible(false);
     const gaId = import.meta.env.VITE_GA_ID;
     if (gaId) initGA(gaId);

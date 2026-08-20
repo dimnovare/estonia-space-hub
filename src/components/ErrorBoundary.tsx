@@ -1,6 +1,7 @@
 import React from "react";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { safeStorage } from "@/lib/safeStorage";
 
 interface Props {
   children: React.ReactNode;
@@ -33,7 +34,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
         lv: { title: "Kaut kas nogāja greizi", sub: "Lūdzu, pārlādējiet lapu.", btn: "Pārlādēt" },
         lt: { title: "Kažkas nepavyko", sub: "Prašome perkrauti puslapį.", btn: "Perkrauti" },
       };
-      const lang = (typeof window !== "undefined" && localStorage.getItem("ruumly-lang")) || "et";
+      const lang = (typeof window !== "undefined" && safeStorage.get("ruumly-lang")) || "et";
       const strings = errorStrings[lang] || errorStrings.et;
       return (
         // role="alert" because this replaces whatever the visitor was reading

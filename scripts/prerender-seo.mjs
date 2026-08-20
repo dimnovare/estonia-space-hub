@@ -32,7 +32,7 @@
  * `src/i18n/translations.ts` — the very modules the React components use, loaded
  * here through Vite's own SSR pipeline. There is no second copy of the copy.
  */
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, readdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer } from "vite";
@@ -214,9 +214,28 @@ function renderHead(shell, { lang, path, title, description, noindex = false }) 
   return html;
 }
 
+/**
+ * Per-language locale chunk lookup (see vite.config.ts manualChunks). Estonian
+ * ships inside the eager static-import graph, so only en/ru/lv/lt need a
+ * preload — injecting one puts the route's language on the wire in parallel
+ * with the entry chunk, so the lazy-locale split never costs a visible flash
+ * of Estonian fallback text on a cold load.
+ */
+async function localeChunkHrefs() {
+  const files = await readdir(resolve(DIST, "assets"));
+  const map = {};
+  for (const lang of LANGS) {
+    if (lang === "et") continue; // statically imported — already preloaded by Vite
+    const chunk = files.find((f) => f.startsWith(`locale-${lang}-`) && f.endsWith(".js"));
+    if (chunk) map[lang] = `/assets/${chunk}`;
+  }
+  return map;
+}
+
 async function main() {
   const shell = await readFile(resolve(DIST, "index.html"), "utf8");
   const { translations, CURATED_CITIES, seoMeta } = await loadAppModules();
+  const localeHrefs = await localeChunkHrefs();
 
   let written = 0;
   const missingKeys = new Set();
@@ -233,7 +252,13 @@ async function main() {
     };
 
     for (const [path, title, description, opts] of routesFor(t, { CURATED_CITIES, seoMeta })) {
-      const html = renderHead(shell, { lang, path, title, description, ...opts });
+      let html = renderHead(shell, { lang, path, title, description, ...opts });
+      if (localeHrefs[lang]) {
+        html = html.replace(
+          "</head>",
+          `  <link rel="modulepreload" crossorigin href="${localeHrefs[lang]}">\n  </head>`,
+        );
+      }
       const routePath = `${lang}${path === "/" ? "" : path}`;
 
       // Written BOTH ways on purpose. Static hosts disagree about how a clean

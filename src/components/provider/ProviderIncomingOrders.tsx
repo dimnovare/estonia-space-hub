@@ -11,6 +11,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import LeadStatusChip from "@/components/provider/LeadStatusChip";
 import LeadNotesEditor from "@/components/provider/LeadNotesEditor";
+import { csvRow } from "@/lib/csv";
 
 const LEAD_SEGMENTS: { key: "all" | LeadStatus; labelKey: string }[] = [
   { key: "all", labelKey: "provider.orders.all" },
@@ -58,7 +59,7 @@ export default function ProviderIncomingOrders() {
         t(cfg.labelKey) || cfg.label,
       ];
     });
-    const csv = [headers.join(";"), ...rows.map((r) => r.join(";"))].join("\n");
+    const csv = [csvRow(headers, ";"), ...rows.map((r) => csvRow(r, ";"))].join("\n");
     const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

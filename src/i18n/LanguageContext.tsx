@@ -1,7 +1,11 @@
-import { createContext, useContext, useCallback, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useCallback, useEffect, useSyncExternalStore, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import translations, { type Language } from "./translations";
+import { type Language } from "./translations";
+import {
+  ensureLocale, fallbackLocale, getLocaleVersion, localeFor, subscribeToLocales,
+} from "./localeRegistry";
 import { authService } from "@/services";
+import { safeStorage } from "@/lib/safeStorage";
 import {
   DEFAULT_LANG,
   detectStoredOrBrowserLang,
@@ -20,7 +24,9 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function translateForLanguage(language: string, key: string): string {
   const normalized: Language = isSupportedLang(language) ? language : DEFAULT_LANG;
-  return translations[normalized]?.[key] || translations.et[key] || key;
+  const dict = localeFor(normalized);
+  if (!dict) ensureLocale(normalized); // kick off the load; fall back meanwhile
+  return dict?.[key] || fallbackLocale[key] || key;
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
@@ -31,15 +37,21 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const fromUrl = getLangFromPath(location.pathname);
   const language: Language = fromUrl ?? detectStoredOrBrowserLang() ?? DEFAULT_LANG;
 
+  // Re-render the tree when a locale chunk lands (see registry above).
+  useSyncExternalStore(subscribeToLocales, getLocaleVersion, getLocaleVersion);
+
+  // Load the active language eagerly — before first paint of any consumer.
+  ensureLocale(language);
+
   // Keep localStorage hint in sync so unprefixed visits land in the right language next time.
   useEffect(() => {
-    try { localStorage.setItem("ruumly-lang", language); } catch {}
+    safeStorage.set("ruumly-lang", language);
   }, [language]);
 
   const setLanguage = useCallback((lang: Language) => {
     if (!isSupportedLang(lang)) return;
-    try { localStorage.setItem("ruumly-lang", lang); } catch {}
-    const hasSession = !!localStorage.getItem("ruumly-auth");
+    safeStorage.set("ruumly-lang", lang);
+    const hasSession = !!safeStorage.get("ruumly-auth");
     if (hasSession) {
       authService.updateLanguage(lang).catch(() => {});
     }
@@ -57,6 +69,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const t = useCallback((key: string): string => {
     return translateForLanguage(language, key);
+    // version is read via useSyncExternalStore above; language is the only
+    // other input. A new dictionary landing bumps the store, which re-renders
+    // this provider and rebuilds t, so memoized consumers see fresh strings.
   }, [language]);
 
   return (

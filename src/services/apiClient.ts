@@ -1,3 +1,5 @@
+import { safeStorage } from "@/lib/safeStorage";
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
 export interface ApiError extends Error {
@@ -95,7 +97,7 @@ class ApiClient {
     const token = this.getToken();
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    const lang = localStorage.getItem("ruumly-lang") || "et";
+    const lang = safeStorage.get("ruumly-lang") || "et";
     headers["Accept-Language"] = lang;
     // Per-call headers, e.g. the anonymous claim session (X-Claim-Session).
     // Merged last but never able to displace Authorization for a logged-in user
@@ -115,7 +117,7 @@ class ApiClient {
         body: body ? JSON.stringify(body) : undefined,
       });
     } catch {
-      const lang = localStorage.getItem("ruumly-lang") || "et";
+      const lang = safeStorage.get("ruumly-lang") || "et";
       const messages: Record<string, string> = {
         et: "Serveriga ei saada ühendust. Kontrolli internetiühendust.",
         en: "Cannot connect to server. Check your internet connection.",
@@ -147,7 +149,7 @@ class ApiClient {
               "Content-Type": "application/json",
               Authorization: `Bearer ${data.accessToken}`,
             };
-            const lang = localStorage.getItem("ruumly-lang") || "et";
+            const lang = safeStorage.get("ruumly-lang") || "et";
             retryHeaders["Accept-Language"] = lang;
             const retry = await fetch(`${API_BASE_URL}${endpoint}`, {
               method,
@@ -204,8 +206,8 @@ class ApiClient {
           if (e instanceof Error && (e as ApiError).status !== undefined) throw e;
         }
         tokenStore.clear();
-        localStorage.removeItem("ruumly-auth");
-        const lang = localStorage.getItem("ruumly-lang") || "et";
+        safeStorage.remove("ruumly-auth");
+        const lang = safeStorage.get("ruumly-lang") || "et";
         window.location.href = `/${lang}/login`;
       }
       throw new Error("Unauthorized");
@@ -266,7 +268,7 @@ class ApiClient {
     const token = this.getToken();
     const headers: Record<string, string> = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    headers["Accept-Language"] = localStorage.getItem("ruumly-lang") || "et";
+    headers["Accept-Language"] = safeStorage.get("ruumly-lang") || "et";
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: "POST",
       headers,
@@ -310,7 +312,7 @@ class ApiClient {
       const token = this.getToken();
       const headers: Record<string, string> = {};
       if (token) headers["Authorization"] = `Bearer ${token}`;
-      headers["Accept-Language"] = localStorage.getItem("ruumly-lang") || "et";
+      headers["Accept-Language"] = safeStorage.get("ruumly-lang") || "et";
       if (body) headers["Content-Type"] = "application/json";
       return fetch(`${API_BASE_URL}${endpoint}`, {
         method,

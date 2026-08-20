@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { useNavigate } from "@/i18n/routing";
 import {
   AdminPageHeader, StatCard, FilterBar, FilterChip,
-  DataTable, DataTableHead, Th, Tr, Td, StatusBadge,
+  DataTable, DataTableHead, Th, Tr, Td, StatusBadge, SectionError,
 } from "@/components/admin/kit";
 import { HEALTH_STATUS_BADGE, USER_STATUS_BADGE, FALLBACK_STATUS_BADGE } from "@/components/admin/kit/statusMaps";
 import ServiceTypePicker from "@/components/admin/ServiceTypePicker";
@@ -29,7 +29,7 @@ export default function AdminSuppliers() {
   const qc = useQueryClient();
   const navigate = useNavigate();
 
-  const { data: suppliers = [], isLoading } = useQuery({
+  const { data: suppliers = [], isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.suppliers.all(),
     queryFn: supplierService.getAll,
     staleTime: 30_000,
@@ -226,6 +226,10 @@ export default function AdminSuppliers() {
   };
 
   if (isLoading) return <div className="flex items-center justify-center py-20"><RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
+  // A failed fetch used to render `suppliers = []` — a fully empty, entirely
+  // believable directory. Show the failure so the operator does not read an
+  // outage as "we have no partners".
+  if (isError) return <div className="py-10"><SectionError label={t("admin.suppliers.loadError")} retryLabel={t("common.retry")} onRetry={() => refetch()} /></div>;
 
   return (
     <div>

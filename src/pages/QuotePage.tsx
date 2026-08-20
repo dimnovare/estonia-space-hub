@@ -3,7 +3,7 @@ import { useParams, Link } from "@/i18n/routing";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   CheckCircle, MapPin, ArrowRight, CalendarDays, Loader2, LinkIcon,
-  AlertCircle, RotateCcw, Send, Tag, Clock, CircleSlash,
+  AlertCircle, RotateCcw, Send, Tag, Clock, CircleSlash, Ban,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,11 +13,13 @@ import { SEO } from "@/components/SEO";
 import { QuoteLeadPhotos } from "@/components/QuoteLeadPhotos";
 import { QuoteLeadScope } from "@/components/QuoteLeadScope";
 import { QuoteNeedInfo } from "@/components/QuoteNeedInfo";
+import { QuoteDecline } from "@/components/QuoteDecline";
 import { readQuoteFailure } from "@/components/quoteFailure";
 import { quoteService, type PublicQuote, type QuoteSubmitInput, type QuoteSubmitResult } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
 import { leadCategoryLabel } from "@/lib/serviceTypes";
 import { parseMoney } from "@/lib/parseMoney";
+import { formatOfferDate } from "@/components/offers/offerDate";
 import type { BillingPeriod } from "@/lib/priceUnit";
 
 /**
@@ -75,7 +77,7 @@ function defaultUnitFor(category: string | null | undefined): BillingPeriod {
 
 export default function QuotePage() {
   const { token = "" } = useParams<{ token: string }>();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const settings = usePlatformSettings();
 
   // ── Form state ──
@@ -89,6 +91,13 @@ export default function QuotePage() {
   // The lead closed while this page was open: the GET said it was quotable but
   // the POST came back 409 lead_closed. Same destination as quote.closed.
   const [closedOnSubmit, setClosedOnSubmit] = useState(false);
+  // A decline just landed (POST /decline 200), or the GET already reported one:
+  // the page switches to its declined screen instead of the price form.
+  const [declinedOnSubmit, setDeclinedOnSubmit] = useState(false);
+  // The provider tried to decline AFTER submitting a price (409 already_quoted):
+  // a one-line notice by the decline control, not a page-level dead end —
+  // withdrawing a live offer option is a conversation, not a button.
+  const [declineBlocked, setDeclineBlocked] = useState(false);
   const seededRef = useRef(false);
 
   // Mirrors provider/ProviderListings.priceUnitOptionsFor: keep the stored value
@@ -336,6 +345,29 @@ export default function QuotePage() {
     );
   }
 
+  // ── Declined state — this provider said no, and we recorded it. Reached
+  //    from the GET (`declined`) or a fresh POST /decline. NOT a dead-end for
+  //    the job (other providers may still quote) — a dead end for THIS provider,
+  //    who has answered and needs nothing more from the page. ──
+  if (quote.declined || declinedOnSubmit) {
+    return (
+      <div className="min-h-screen surface-sunken">
+        <SEO title={t("quote.decline.doneTitle")} description={t("quote.decline.doneBody")} path={`/quote/${token}`} noindex />
+        {header}
+        <div className="container-wide flex min-h-[60vh] items-center justify-center py-16">
+          <div className="mx-auto max-w-md text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-secondary">
+              <Ban className="h-7 w-7 text-muted-foreground" />
+            </div>
+            <h1 className="mt-5 font-display text-2xl font-bold text-navy-ink">{t("quote.decline.doneTitle")}</h1>
+            <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">{t("quote.decline.doneBody")}</p>
+            {helpFooter}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ── Thank-you state ──
   if (submitted) {
     return (
@@ -419,10 +451,13 @@ export default function QuotePage() {
               <MapPin className="h-3.5 w-3.5 text-teal-deep" aria-hidden />
               {quote.lead.city}{quote.lead.toCity ? ` → ${quote.lead.toCity}` : ""}
             </span>
-            {quote.lead.needDate && (
+            {formatOfferDate(quote.lead.needDate, language) && (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5">
                 <CalendarDays className="h-3.5 w-3.5 text-teal-deep" aria-hidden />
-                {new Date(quote.lead.needDate).toLocaleDateString()}
+                {/* UTC-pinned + localised: a bare toLocaleDateString here printed
+                    the job date in the DEVICE's zone and format, a day early west
+                    of UTC — on the one date this provider prices against. */}
+                {formatOfferDate(quote.lead.needDate, language)}
               </span>
             )}
           </div>
@@ -543,6 +578,25 @@ export default function QuotePage() {
           // does when the price submit meets the same 409.
           onLeadClosed={() => setClosedOnSubmit(true)}
         />
+
+        {/* The last answer, and the quietest: "no". Below the price and the
+            question on purpose. A recorded decline stops this provider reading
+            as silence in the metric that is meant to prove the outreach is
+            failing, and if the reason is wrong-area / wrong-service it tells ops
+            the directory row itself needs fixing. */}
+        <QuoteDecline
+          token={token}
+          declined={quote.declined === true}
+          onDeclined={() => setDeclinedOnSubmit(true)}
+          onLeadClosed={() => setClosedOnSubmit(true)}
+          onAlreadyQuoted={() => setDeclineBlocked(true)}
+        />
+        {declineBlocked && (
+          <p role="alert" className="mt-2 flex items-start gap-2 px-3 text-xs leading-relaxed text-muted-foreground">
+            <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+            {t("quote.decline.alreadyQuoted")}
+          </p>
+        )}
 
         {helpFooter}
       </div>

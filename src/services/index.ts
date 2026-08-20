@@ -1090,6 +1090,10 @@ export interface PublicQuote {
    *  reverts on its own without needing a second signal. */
   infoRequested?: boolean;
   infoRequest?: PublicQuoteInfoRequest | null;
+  /** This provider already said no through this page. The page shows the
+   *  recorded decline instead of the price form — a second visit must not
+   *  invite a second answer. */
+  declined?: boolean;
 }
 
 /** One answered scoping question on a lead. */
@@ -1141,6 +1145,23 @@ export interface QuoteNeedInfoResult {
   note: string | null;
 }
 
+/** A bare decline is a complete answer — both fields optional. `reason` is a
+ *  DeclineReasons slug; unknown ones collapse to null server-side, so the page
+ *  supplies its own localised labels the same way need-info does. */
+export interface QuoteDeclineInput {
+  reason?: string | null;
+  note?: string | null;
+}
+
+export interface QuoteDeclineResult {
+  ok: boolean;
+  reason: string | null;
+  note: string | null;
+}
+
+/** `reason` discriminator on a 409 from POST /quote/{token}/decline. */
+export type QuoteDeclineConflictReason = "lead_closed" | "already_quoted";
+
 export const quoteService = {
   async get(token: string): Promise<PublicQuote> {
     return apiClient.get<PublicQuote>(`/quote/${encodeURIComponent(token)}`);
@@ -1154,6 +1175,13 @@ export const quoteService = {
   async needInfo(token: string, body: QuoteNeedInfoInput): Promise<QuoteNeedInfoResult> {
     return apiClient.post<QuoteNeedInfoResult>(
       `/quote/${encodeURIComponent(token)}/need-info`, body);
+  },
+  /** Record that this provider will not take the request. A bare call (no reason,
+   *  no note) is a complete "no". 409 with reason `already_quoted` if a price was
+   *  already submitted — that is a conversation, not a retraction. */
+  async decline(token: string, body: QuoteDeclineInput): Promise<QuoteDeclineResult> {
+    return apiClient.post<QuoteDeclineResult>(
+      `/quote/${encodeURIComponent(token)}/decline`, body);
   },
 };
 

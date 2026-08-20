@@ -10,6 +10,7 @@ import { messageService } from "@/services";
 import { queryKeys } from "@/services/queryKeys";
 import type { Booking, BookingStatus } from "@/services/types";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
+import { csvRow } from "@/lib/csv";
 
 const FILTERS = ["all", "pending", "confirmed", "awaitingconfirmation", "active", "completed", "cancelled"] as const;
 type FilterKey = typeof FILTERS[number];
@@ -114,7 +115,7 @@ export default function ProviderBookings() {
   const exportCSV = () => {
     const headers = [t("provider.bookings.id"), t("provider.bookings.client"), t("provider.bookings.listing"), t("provider.bookings.date"), t("provider.bookings.amount"), t("provider.bookings.status")];
     const rows = bookings.map(b => [b.id, customerName(b), b.listingTitle, b.startDate, `€${b.total ?? b.basePrice ?? 0}`, statusLabel(b.status)]);
-    const csv = [headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
+    const csv = [csvRow(headers, ";"), ...rows.map(r => csvRow(r, ";"))].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

@@ -3,6 +3,9 @@ import { createHead, UnheadProvider } from "@unhead/react/client";
 import App from "./App.tsx";
 import "./index.css";
 import { initGA } from "./lib/analytics";
+import { safeStorage } from "./lib/safeStorage";
+import { loadLocale } from "./i18n/localeRegistry";
+import { DEFAULT_LANG, detectStoredOrBrowserLang, getLangFromPath } from "./i18n/routing";
 
 // Keep <html lang="..."> in sync with the active language so SEO + a11y tools
 // see the right locale per route, not the hardcoded "et" baked into index.html.
@@ -24,7 +27,7 @@ window.addEventListener("popstate", updateHtmlLang);
 
 // GA4 is initialized only after cookie consent — see CookieConsent.tsx
 // If consent was already given in a previous session, init immediately
-if (localStorage.getItem("ruumly-cookie-consent") === "true") {
+if (safeStorage.get("ruumly-cookie-consent") === "true") {
   const gaId = import.meta.env.VITE_GA_ID;
   if (gaId) initGA(gaId);
 }
@@ -42,7 +45,7 @@ if ("serviceWorker" in navigator) {
 // instance and is SSR-ready for the future ruumly-next migration.
 const head = createHead();
 
-createRoot(document.getElementById("root")!).render(
+const tree = (
   <UnheadProvider head={head}>
     {/*
       GoogleOAuthProvider is intentionally NOT mounted at the root.
@@ -54,3 +57,28 @@ createRoot(document.getElementById("root")!).render(
     <App />
   </UnheadProvider>
 );
+
+// Wait for the ACTIVE language before the first paint.
+//
+// Only Estonian ships inside the entry bundle (it is both the default and the
+// fallback); the other four load as their own chunks. `t()` is synchronous and
+// falls back to Estonian while a chunk is in flight, and for anything inside a
+// React render that self-corrects — the chunk lands, the store notifies, the
+// tree re-renders. But translations are also read OUTSIDE render, where nothing
+// re-runs: offerPricing.ts builds a price-unit lookup table, ui/dialog.tsx
+// resolves its close label. Those would bake in Estonian for a Latvian visitor.
+//
+// So the language is resolved first. The prerendered HTML already carries a
+// modulepreload for exactly this chunk (scripts/prerender-seo.mjs), so it is
+// normally in the browser cache by the time this runs and the wait is ~0 ms.
+// Failure is non-fatal: mount anyway and let the Estonian fallback stand rather
+// than show a blank page.
+const activeLang = getLangFromPath(window.location.pathname)
+  ?? detectStoredOrBrowserLang()
+  ?? DEFAULT_LANG;
+
+loadLocale(activeLang)
+  .catch(() => {})
+  .finally(() => {
+    createRoot(document.getElementById("root")!).render(tree);
+  });

@@ -10,3 +10,4 @@ export {
 export { StatusBadge, type StatusTone } from "./StatusBadge";
 export { FilterBar, FilterChip } from "./FilterBar";
 export { EmptyState } from "./EmptyState";
+export { SectionError } from "./SectionError";

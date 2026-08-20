@@ -6,6 +6,7 @@ import { apiClient } from "@/services/apiClient";
 import { useImpersonatedSupplierId } from "@/hooks/useImpersonatedSupplierId";
 import { withSupplier } from "@/lib/withSupplier";
 import { queryKeys } from "@/services/queryKeys";
+import { csvRow } from "@/lib/csv";
 
 type AnalyticsData = {
   monthly: { year: number; month: number; bookings: number; revenue: number; views?: number }[];
@@ -59,7 +60,7 @@ export default function ProviderAnalytics() {
   const exportCSV = () => {
     const headers = t("provider.analytics.csvHeadersViews").split(",");
     const rows = series.map((p) => [p.month, p.views, p.requests]);
-    const csv = [headers.join(";"), ...rows.map((r) => r.join(";"))].join("\n");
+    const csv = [csvRow(headers, ";"), ...rows.map((r) => csvRow(r, ";"))].join("\n");
     const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

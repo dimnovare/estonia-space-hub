@@ -16,6 +16,7 @@ import {
   TrendingUp, Timer, CalendarCheck, CheckCircle, MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { csvRow } from "@/lib/csv";
 import { LeadWorkspace } from "@/components/admin/leads/LeadWorkspace";
 import { LeadPhotoBadge } from "@/components/admin/leads/LeadPhotos";
 import { LEAD_STATUS_STYLE, StatusBadge } from "@/components/admin/leads/leadStatusStyles";
@@ -28,7 +29,7 @@ import {
   type LeadQueue,
 } from "@/components/admin/leads/leadOpsApi";
 import {
-  AdminPageHeader, StatCard, FilterBar, FilterChip, DataTable, DataTableHead, Th, EmptyState,
+  AdminPageHeader, StatCard, FilterBar, FilterChip, DataTable, DataTableHead, Th, EmptyState, SectionError,
 } from "@/components/admin/kit";
 
 const STATUS_OPTIONS: { value: AdminLeadStatus | "all"; labelKey: string }[] = [
@@ -195,7 +196,7 @@ export default function AdminLeads() {
   };
   const filterKey = JSON.stringify(listOpts);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.adminLeads.list(statusFilter, page, filterKey),
     queryFn: () => listLeads(statusFilter, page, LIMIT, listOpts),
     staleTime: 30_000,
@@ -266,9 +267,10 @@ export default function AdminLeads() {
       l.email, l.city, l.category, l.query ?? "", l.language,
       new Date(l.createdAt).toISOString().slice(0, 10), l.status,
     ]);
-    const csv = [header, ...rows]
-      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
-      .join("\n");
+    // csvRow neutralises formula injection: these cells (city, query, email)
+    // come straight from the anonymous public lead POST, and this file is
+    // opened on the founder's own machine.
+    const csv = [header, ...rows].map((r) => csvRow(r)).join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -438,6 +440,15 @@ export default function AdminLeads() {
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
+      ) : isError ? (
+        // An ops cockpit must not lie green: a failed fetch used to fall through
+        // to "no requests yet" while the API was down, so the founder's inbox
+        // read clean during an outage. Show the failure and a retry instead.
+        <SectionError
+          label={t("admin.leads.loadError")}
+          retryLabel={t("common.retry")}
+          onRetry={() => refetch()}
+        />
       ) : items.length === 0 ? (
         <EmptyState className="mt-4" icon={Megaphone} title={t("admin.leads.empty")} />
       ) : isMobile ? (

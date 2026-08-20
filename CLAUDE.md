@@ -66,7 +66,8 @@ footprints — keep them apart:
   attach the country list to the directory noun and leave the offer promise country-free.
 
 Per-service reality check before naming a country: coverage is uneven. Storage and moving
-exist in all three; **vanrental is EE-heavy and has zero Lithuanian providers**, trailers
+exist in all three; **vanrental has 25 Lithuanian rows, 23 of them contactable** (corrected 2026-08-19; the
+earlier "zero Lithuanian providers" claim was wrong), trailers
 only three. For those, say "the Baltics" — do not enumerate Lithuania. Verify against
 `GET /api/locations` rather than assuming; the honest claim changes as supply lands.
 Never fabricate social proof: testimonials stay Estonian because the customers are. Counted-noun strings use the CLDR plural helper (`src/i18n/plural.ts`,
