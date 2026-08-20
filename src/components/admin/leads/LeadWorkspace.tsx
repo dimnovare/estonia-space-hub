@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { LEAD_STATUS_STYLE } from "./leadStatusStyles";
 import { LeadProviderStage } from "./LeadProviderStage";
 import { LeadOfferStage } from "./LeadOfferStage";
+import { LeadMessages } from "./LeadMessages";
 import { LeadDeliveryReview } from "./LeadDeliveryReview";
 import { LeadActivityTimeline } from "./LeadActivityTimeline";
 import { LeadPhotoGallery } from "./LeadPhotos";
@@ -407,6 +408,10 @@ export function LeadWorkspace({ lead }: { lead: AdminLead }) {
             offers={offers}
             onOffersChanged={invalidateOffers}
           />
+          {/* Writing to the customer or a contacted provider, from Ruumly and on
+              the record. Sits after the offer stages because it is what you reach
+              for when something in them is unanswerable as it stands. */}
+          <LeadMessages lead={lead} outreachRows={outreachRows} />
         </div>
       </div>
 

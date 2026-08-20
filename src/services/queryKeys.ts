@@ -152,6 +152,7 @@ export const queryKeys = {
       filters: { q?: string; scope: "nearby" | "all"; category: "lead" | "any"; radiusKm: number; limit: number },
     ) => ["admin-leads", "provider-candidates", id, filters.q ?? "", filters.scope, filters.category, filters.radiusKm, filters.limit] as const,
     outreach: (id: string) => ["admin-leads", "outreach", id] as const,
+    messages: (id: string) => ["admin-leads", "messages", id] as const,
     offers:   (id: string) => ["admin-leads", "offers", id] as const,
     deliveryPreview: (id: string) => ["admin-leads", "delivery-preview", id] as const,
   },

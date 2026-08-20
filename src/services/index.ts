@@ -720,7 +720,43 @@ export interface ProviderCandidateSearch {
   limit: number;
 }
 
+/** One message an operator sent by hand about a lead. */
+export interface LeadMessage {
+  id: string;
+  /** The provider it went to; null means it went to the customer. */
+  supplierId?: string | null;
+  /** The address actually used, snapshotted at send time. */
+  sentTo: string;
+  subject: string;
+  body: string;
+  sentAt: string;
+}
+
+export interface SendLeadMessageInput {
+  subject: string;
+  body: string;
+  /** Omit for the customer. Must be a provider contacted for THIS lead. */
+  supplierId?: string | null;
+}
+
 export const adminLeadService = {
+  /** Send a message about this lead FROM Ruumly (info@, Reply-To the ops inbox)
+   *  and record it against the lead.
+   *
+   *  There is deliberately no recipient-address parameter. Pass `supplierId` to
+   *  reach a provider — accepted only if they were actually contacted for this
+   *  lead — or omit it to reach the customer. The address is resolved
+   *  server-side from the lead's own data, because an authenticated endpoint
+   *  that mails any address on request is a spam cannon. */
+  async sendMessage(leadId: string, body: SendLeadMessageInput): Promise<LeadMessage> {
+    return apiClient.post<LeadMessage>(
+      `/admin/leads/${encodeURIComponent(leadId)}/messages`, body);
+  },
+  /** Everything an operator sent by hand about this lead, newest first. */
+  async messages(leadId: string): Promise<LeadMessage[]> {
+    return apiClient.get<LeadMessage[]>(
+      `/admin/leads/${encodeURIComponent(leadId)}/messages`);
+  },
   /** Close a provider's open question. Idempotent — a second call does not
    *  re-stamp, and does not touch an outreach that has since moved on. */
   async resolveInfoRequest(id: string): Promise<ResolvedInfoRequest> {
