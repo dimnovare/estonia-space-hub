@@ -144,7 +144,22 @@ const SCOPE_QUESTIONS: Partial<Record<ConciergeCategory, ScopeQuestion[]>> = {
     // Cleaning asked only WHAT KIND, never HOW BIG — so no cleaner could quote it.
     // Size is the whole basis of a cleaning price.
     { id: "cleaningType", options: 5 },
-    { id: "cleaningSize", options: 5 },
+    // cleaningSize is GONE from the funnel but still in the backend catalogue,
+    // so leads taken before today keep rendering the band they picked. Its
+    // third band was "70–110 m²" — a 57% spread that no cleaner can price, and
+    // a real Viimsi request had to be chased by email to find out which end of
+    // it was true. cleaningArea splits the same range into bands a quote can
+    // actually be built on. Positions are what the column stores, so this is a
+    // NEW id rather than a renumbering of the old one.
+    { id: "cleaningArea", options: 7 },
+    // How often, asked apart from what kind. cleaningType conflated them: the
+    // same Viimsi request ticked "Regular cleaning" and then wrote "ühekordne"
+    // (one-time) in the notes, because there was no way to say "a one-off deep
+    // clean". The answer contradicted itself and a human had to resolve it.
+    { id: "cleaningFrequency", options: 5 },
+    // The other half of the price. Same square metres, six months of neglect,
+    // completely different job — and previously invisible to the quote.
+    { id: "cleaningCondition", options: 4 },
     // Windows, oven and fridge are priced as add-ons across the Baltics and
     // together swing the total by 30-50%. Left unasked, every cleaning quote we
     // relayed was provisional, and the correction landed on the customer. They
@@ -156,6 +171,10 @@ const SCOPE_QUESTIONS: Partial<Record<ConciergeCategory, ScopeQuestion[]>> = {
       id: "cleaningExtras", options: 6, multi: true, retired: [5],
       exclusive: [1, 6],
     },
+    // Pets and small children decide which products a cleaner may use, and some
+    // firms price or refuse on it. Multi because a home can have both; "neither"
+    // and "not sure" are exclusive, since they contradict naming either one.
+    { id: "cleaningHousehold", options: 4, multi: true, exclusive: [1, 4] },
   ],
 };
 
