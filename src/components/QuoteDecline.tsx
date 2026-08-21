@@ -130,7 +130,7 @@ export function QuoteDecline({
         type="button"
         aria-expanded={open}
         aria-controls={panelId}
-        onClick={() => { open ? closePanel() : setOpen(true); }}
+        onClick={() => { if (open) closePanel(); else setOpen(true); }}
         className="flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-lg px-3 text-sm font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <Ban className="h-4 w-4 shrink-0" aria-hidden />

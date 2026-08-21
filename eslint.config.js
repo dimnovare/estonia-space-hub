@@ -5,7 +5,13 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist"] },
+  // `.claude/worktrees/` holds throwaway git worktrees an agent session created:
+  // whole copies of this repo, several commits behind. Linting them reported
+  // every finding two or three times over, from paths that are not the file you
+  // are editing — which is exactly how a single real error in QuoteDecline.tsx
+  // read as three. They are git-excluded locally, so CI never saw them and this
+  // only ever made the local signal worse than CI's.
+  { ignores: ["dist", ".claude/**"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
