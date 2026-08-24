@@ -139,6 +139,12 @@ const SCOPE_QUESTIONS: Partial<Record<ConciergeCategory, ScopeQuestion[]>> = {
     { id: "vanrentalDriver", options: 5 },
     { id: "vanrentalDuration", options: 5 },
     { id: "vanrentalSize", options: 4 },
+    // Whether the customer is ALLOWED to drive it. A Parnu rental died at the
+    // counter: provisional licence, and the company does not rent to that.
+    // Nobody asked, so the request went to a firm whose conditions the customer
+    // could not meet. Option 4 is "taking a driver", so this stays meaningful
+    // for both kinds of van rental without needing conditional questions.
+    { id: "vanrentalLicence", options: 5 },
   ],
   cleaning: [
     // Cleaning asked only WHAT KIND, never HOW BIG — so no cleaner could quote it.

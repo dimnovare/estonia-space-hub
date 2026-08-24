@@ -3830,6 +3830,12 @@ const et: Record<string, string> = {
     "request.scope.vanrentalSize.opt2": "Keskmine (~8–12 m³)",
     "request.scope.vanrentalSize.opt3": "Suur (~15 m³ või rohkem)",
     "request.scope.vanrentalSize.opt4": "Pole kindel",
+    "request.scope.vanrentalLicence.label": "Kui kaua on sul juhiluba olnud?",
+    "request.scope.vanrentalLicence.opt1": "Esmane juhiluba (alla 2 aasta)",
+    "request.scope.vanrentalLicence.opt2": "2–5 aastat",
+    "request.scope.vanrentalLicence.opt3": "Üle 5 aasta",
+    "request.scope.vanrentalLicence.opt4": "Võtan koos juhiga — ise ei sõida",
+    "request.scope.vanrentalLicence.opt5": "Ei tea veel",
     // Optional packing add-on inside the moving flow. Packing is never sold
     // standalone in the Baltics — the mover prices it in the same offer.
     "request.scope.packingHelp.label": "Vajad ka pakkimisabi?",

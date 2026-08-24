@@ -3727,6 +3727,12 @@ const lv: Record<string, string> = {
     "request.scope.vanrentalSize.opt2": "Vidējs (~8–12 m³)",
     "request.scope.vanrentalSize.opt3": "Liels (~15 m³ vai vairāk)",
     "request.scope.vanrentalSize.opt4": "Vēl nezinu",
+    "request.scope.vanrentalLicence.label": "Cik ilgi jums ir vadītāja apliecība?",
+    "request.scope.vanrentalLicence.opt1": "Sākuma apliecība (mazāk par 2 gadiem)",
+    "request.scope.vanrentalLicence.opt2": "2–5 gadi",
+    "request.scope.vanrentalLicence.opt3": "Vairāk par 5 gadiem",
+    "request.scope.vanrentalLicence.opt4": "Ņemšu ar šoferi — pats nebraukšu",
+    "request.scope.vanrentalLicence.opt5": "Vēl nezinu",
     // Optional packing add-on inside the moving flow. Packing is never sold
     // standalone in the Baltics — the mover prices it in the same offer.
     "request.scope.packingHelp.label": "Vai vajadzīga arī palīdzība ar pakošanu?",

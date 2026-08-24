@@ -3793,6 +3793,12 @@ const en: Record<string, string> = {
     "request.scope.vanrentalSize.opt2": "Medium (~8–12 m³)",
     "request.scope.vanrentalSize.opt3": "Large (~15 m³ or more)",
     "request.scope.vanrentalSize.opt4": "Not sure",
+    "request.scope.vanrentalLicence.label": "How long have you held your licence?",
+    "request.scope.vanrentalLicence.opt1": "Provisional licence (under 2 years)",
+    "request.scope.vanrentalLicence.opt2": "2–5 years",
+    "request.scope.vanrentalLicence.opt3": "Over 5 years",
+    "request.scope.vanrentalLicence.opt4": "I want a driver — I will not drive",
+    "request.scope.vanrentalLicence.opt5": "Not sure yet",
     // Optional packing add-on inside the moving flow. Packing is never sold
     // standalone in the Baltics — the mover prices it in the same offer.
     "request.scope.packingHelp.label": "Do you also need packing help?",
