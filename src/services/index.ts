@@ -1050,7 +1050,14 @@ export const adminOfferService = {
     const res = await apiClient.get<ProviderOutreachRow[] | { items: ProviderOutreachRow[] }>(`/admin/leads/${leadId}/outreach`);
     return Array.isArray(res) ? res : res.items ?? [];
   },
-  async updateOutreach(id: string, body: { status?: OutreachStatus; note?: string }): Promise<ProviderOutreachRow> {
+  /** Update an outreach row. `quotedAmount` records a price a provider sent by
+   *  EMAIL rather than through the tokenized quote page — those repliers had no
+   *  way into the statistics before, so quote counts undercounted them. Every
+   *  field is omit-means-unchanged; a recorded price cannot be cleared here. */
+  async updateOutreach(id: string, body: {
+    status?: OutreachStatus; note?: string;
+    quotedAmount?: number; quotedUnit?: string; quotedNote?: string; quotedAt?: string;
+  }): Promise<ProviderOutreachRow> {
     return apiClient.patch<ProviderOutreachRow>(`/admin/outreach/${id}`, body);
   },
 };

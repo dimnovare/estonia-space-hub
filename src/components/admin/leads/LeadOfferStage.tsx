@@ -74,6 +74,9 @@ export function LeadOfferStage({
   const [showPreview, setShowPreview] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [outreachNotes, setOutreachNotes] = useState<Record<string, string>>({});
+  // Per-row buffer for a price an operator is typing in from a provider's email.
+  const [handQuotes, setHandQuotes] =
+    useState<Record<string, { amount?: string; unit?: string }>>({});
   const dismissedDraftId = useRef<string | null>(null);
 
   const closeEditor = useCallback(() => {
@@ -203,7 +206,10 @@ export function LeadOfferStage({
   });
 
   const outreachMutation = useMutation({
-    mutationFn: ({ id, body }: { id: string; body: { status?: OutreachStatus; note?: string } }) =>
+    mutationFn: ({ id, body }: { id: string; body: {
+      status?: OutreachStatus; note?: string;
+      quotedAmount?: number; quotedUnit?: string; quotedNote?: string; quotedAt?: string;
+    } }) =>
       adminOfferService.updateOutreach(id, body),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.adminLeads.outreach(lead.id) }),
     onError: (error: Error) => toast.error(error.message || t("toast.error")),
@@ -375,6 +381,61 @@ export function LeadOfferStage({
                     ).map((status) => <option key={status} value={status}>{t(`admin.leads.outreachStatus.${status}`)}</option>)}
                   </select>
                 </div>
+                {/* Record a price a provider sent by EMAIL rather than through
+                    the quote link. Offered only while the row carries no quote
+                    of its own — a number the provider submitted themselves is
+                    their word and is not overtyped from here.
+
+                    It exists because the providers least likely to click a link
+                    are exactly the ones who just hit reply, so their prices had
+                    no way into the data at all and each one counted as silence
+                    in the metric built to measure silence. */}
+                {row.quotedAmount == null && row.status !== "bounced" && (
+                  <div className="sm:col-span-2 flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {t("admin.leads.quoteByHand.label")}
+                    </span>
+                    <input
+                      type="number" min="0" step="0.01" inputMode="decimal"
+                      aria-label={`${row.supplierName ?? row.sentTo} ${t("admin.leads.quoteByHand.label")}`}
+                      value={handQuotes[row.id]?.amount ?? ""}
+                      placeholder="170"
+                      onChange={(event) => setHandQuotes((previous) => ({
+                        ...previous, [row.id]: { ...previous[row.id], amount: event.target.value },
+                      }))}
+                      className="h-9 w-24 rounded-md border border-border bg-card px-2.5 text-sm"
+                    />
+                    <input
+                      aria-label={`${row.supplierName ?? row.sentTo} ${t("admin.leads.quoteByHand.unit")}`}
+                      value={handQuotes[row.id]?.unit ?? ""}
+                      placeholder={t("admin.leads.quoteByHand.unit")}
+                      onChange={(event) => setHandQuotes((previous) => ({
+                        ...previous, [row.id]: { ...previous[row.id], unit: event.target.value },
+                      }))}
+                      className="h-9 w-36 rounded-md border border-border bg-card px-2.5 text-sm"
+                    />
+                    <Button
+                      type="button" size="sm" variant="outline" className="h-9 gap-1.5 text-xs"
+                      disabled={outreachMutation.isPending || parsePrice(handQuotes[row.id]?.amount ?? "") == null}
+                      onClick={() => {
+                        const amount = parsePrice(handQuotes[row.id]?.amount ?? "");
+                        if (amount == null) return;
+                        outreachMutation.mutate({
+                          id: row.id,
+                          body: {
+                            quotedAmount: amount,
+                            quotedUnit: handQuotes[row.id]?.unit?.trim() || undefined,
+                            quotedNote: t("admin.leads.quoteByHand.recorded"),
+                          },
+                        });
+                        setHandQuotes((previous) => ({ ...previous, [row.id]: { amount: "", unit: "" } }));
+                      }}
+                    >
+                      <Quote className="h-3.5 w-3.5" aria-hidden />
+                      {t("admin.leads.quoteByHand.save")}
+                    </Button>
+                  </div>
+                )}
                 <div className="sm:col-span-2 flex flex-col gap-2 sm:flex-row">
                   <input aria-label={`${row.supplierName ?? row.sentTo} ${t("admin.leads.outreachNotePlaceholder")}`} value={outreachNotes[row.id] ?? row.note ?? ""} placeholder={t("admin.leads.outreachNotePlaceholder")} onChange={(event) => setOutreachNotes((previous) => ({ ...previous, [row.id]: event.target.value }))} className="h-9 min-w-0 flex-1 rounded-md border border-border bg-card px-2.5 text-sm" />
                   <Button type="button" size="sm" variant="outline" className="h-9" disabled={outreachMutation.isPending} onClick={() => outreachMutation.mutate({ id: row.id, body: { note: outreachNotes[row.id] ?? row.note ?? "" } })}>{t("admin.leads.save")}</Button>
