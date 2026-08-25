@@ -606,6 +606,12 @@ export interface AdminLead {
   phone?: string | null;
   city: string;
   toCity?: string | null;
+  /** Street addresses as the customer typed them. ADMIN-ONLY: a provider gets
+   *  them only after the customer accepts an offer, so these must never be
+   *  passed into anything provider-facing. Optional so the UI tolerates a
+   *  backend predating them. */
+  fromAddress?: string | null;
+  toAddress?: string | null;
   needDate?: string | null;
   details?: string | null;
   category: string;
@@ -783,8 +789,9 @@ export const adminLeadService = {
   async update(
     id: string,
     // Status/notes lifecycle OR request-field corrections (name/email/phone/
-    // category/city/toCity/needDate/details). Partial: omit a field to leave it
-    // unchanged; the backend UTC-normalizes needDate and validates email/category.
+    // category/city/toCity/fromAddress/toAddress/needDate/details). Partial: omit
+    // a field to leave it unchanged; the backend UTC-normalizes needDate and
+    // validates email/category. An empty string CLEARS an optional field.
     body: {
       status?: AdminLeadStatus;
       adminNotes?: string;
@@ -794,6 +801,8 @@ export const adminLeadService = {
       category?: string;
       city?: string;
       toCity?: string;
+      fromAddress?: string;
+      toAddress?: string;
       needDate?: string;
       details?: string;
     },

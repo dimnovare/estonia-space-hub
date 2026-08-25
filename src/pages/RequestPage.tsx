@@ -225,6 +225,36 @@ function looksLikeStreetAddress(city: string): boolean {
 }
 
 /**
+ * True when the city field holds a ROUTE rather than a single place.
+ *
+ * The digit rule above catches "Haapsalu Lihula mnt 10" and misses the other
+ * way this field fails. On 2026-08-25 a Daugavpils trailer request arrived with
+ * the city "Daugavpils- RIGA- DAUGAVPILS" — the customer's whole trip typed
+ * into a box that asks for one place. It carries no digit, so it sailed through,
+ * `CityMatcher` derived no anchor, and the fan-out reached none of the FOUR
+ * trailer yards sitting within a kilometre of him. Corrected by hand to
+ * "Daugavpils", the same request matched all four immediately.
+ *
+ * A trailer-only request has nowhere else to put a destination — the `toCity`
+ * field is rendered for moving only — so the error copy points at the
+ * description box, which is on this same step.
+ *
+ * The three signals are chosen to be high-precision, like the digit rule:
+ *  - an arrow or a slash: no Baltic place name contains either;
+ *  - a dash with whitespace beside it. A BARE hyphen must not block —
+ *    Kohtla-Järve and Põhja-Tallinn are real places;
+ *  - the same word twice, which is a return trip naming home at both ends.
+ * A comma is deliberately not a signal: "Tallinn, Harjumaa" is a normal answer.
+ */
+function looksLikeRoute(city: string): boolean {
+  const value = city.trim();
+  if (/[→⟶›»/]|-{2,}|->|=>/.test(value)) return true;
+  if (/\s[-–—]|[-–—]\s/.test(value)) return true;
+  const words = value.toLowerCase().split(/[^\p{L}]+/u).filter((w) => w.length > 2);
+  return new Set(words).size < words.length;
+}
+
+/**
  * OPTIONAL add-on shown inside the moving flow only.
  *
  * Packing is never sold standalone in the Baltics — it is a line item in a
@@ -622,6 +652,12 @@ export default function RequestPage() {
       // request. See looksLikeStreetAddress.
       if (looksLikeStreetAddress(city)) {
         setStepError(t("request.errors.cityAddress"));
+        return;
+      }
+      // A whole trip in the city box costs the same thing a street address does:
+      // no anchor, no providers, and a customer told nothing. See looksLikeRoute.
+      if (looksLikeRoute(city)) {
+        setStepError(t("request.errors.cityRoute"));
         return;
       }
       // Every scoping question needs an answer — "not sure" counts as one, and

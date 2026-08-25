@@ -38,6 +38,55 @@ describe("looksLikeStreetAddress", () => {
   });
 });
 
+/**
+ * The other way this one field kills a request. On 2026-08-25 a Daugavpils
+ * trailer request arrived as "Daugavpils- RIGA- DAUGAVPILS" — the whole trip in
+ * a box that asks for one place. No digit, so the rule above let it through, no
+ * anchor was derived, and the fan-out reached none of the four trailer yards
+ * within a kilometre of the customer. Mirrors `looksLikeRoute` in
+ * pages/RequestPage.tsx, including everything that must NOT be rejected.
+ */
+function looksLikeRoute(city: string): boolean {
+  const value = city.trim();
+  if (/[→⟶›»/]|-{2,}|->|=>/.test(value)) return true;
+  if (/\s[-–—]|[-–—]\s/.test(value)) return true;
+  const words = value.toLowerCase().split(/[^\p{L}]+/u).filter((w) => w.length > 2);
+  return new Set(words).size < words.length;
+}
+
+describe("looksLikeRoute", () => {
+  it("rejects the string that actually broke a lead", () => {
+    expect(looksLikeRoute("Daugavpils- RIGA- DAUGAVPILS")).toBe(true);
+  });
+
+  it("rejects a trip however it is punctuated", () => {
+    for (const s of [
+      "Riga - Daugavpils", "Riga -Daugavpils", "Riga->Daugavpils",
+      "Riga → Daugavpils", "Riga/Daugavpils", "Tallinn -- Tartu",
+      "Vilnius => Kaunas",
+    ]) {
+      expect(looksLikeRoute(s), s).toBe(true);
+    }
+  });
+
+  it("rejects a return trip that names home at both ends", () => {
+    expect(looksLikeRoute("Daugavpils Riga Daugavpils")).toBe(true);
+  });
+
+  it("accepts every legitimate place name, hyphens included", () => {
+    // A BARE hyphen must never block: these are real places, and one of them
+    // is a request we handled the week this rule was written.
+    for (const s of [
+      "Kohtla-Järve", "Põhja-Tallinn", "Kohtla-Nõmme",
+      "Haapsalu", "Haapsalu linn", "Harju maakond", "Klaipėdos rajonas",
+      "Tallinn, Harjumaa", "Rīga", "Vilniaus rajonas, Vilnius",
+      "Таллинн", "Salaspils novads",
+    ]) {
+      expect(looksLikeRoute(s), s).toBe(false);
+    }
+  });
+});
+
 const lead = (over: Partial<AdminLead> = {}): AdminLead => ({
   id: "1", email: "c@x.ee", city: "Haapsalu", category: "moving",
   language: "et", createdAt: new Date().toISOString(), status: "new",

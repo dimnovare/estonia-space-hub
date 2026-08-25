@@ -71,6 +71,8 @@ export function LeadWorkspace({ lead }: { lead: AdminLead }) {
     category: lead.category ?? "any",
     city:     lead.city ?? "",
     toCity:   lead.toCity ?? "",
+    fromAddress: lead.fromAddress ?? "",
+    toAddress:   lead.toAddress ?? "",
     needDate: lead.needDate ? new Date(lead.needDate).toISOString().slice(0, 10) : "",
     details:  lead.details ?? "",
   });
@@ -346,6 +348,14 @@ export function LeadWorkspace({ lead }: { lead: AdminLead }) {
               <input type="text" value={edit.toCity} onChange={(e) => setEditField("toCity", e.target.value)} className="mt-1 h-9 w-full rounded-md border border-border bg-background px-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent" />
             </label>
             <label className="block text-xs font-medium text-muted-foreground">
+              {t("admin.leads.fromAddress")}
+              <input type="text" value={edit.fromAddress} onChange={(e) => setEditField("fromAddress", e.target.value)} className="mt-1 h-9 w-full rounded-md border border-border bg-background px-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent" />
+            </label>
+            <label className="block text-xs font-medium text-muted-foreground">
+              {t("admin.leads.toAddress")}
+              <input type="text" value={edit.toAddress} onChange={(e) => setEditField("toAddress", e.target.value)} className="mt-1 h-9 w-full rounded-md border border-border bg-background px-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent" />
+            </label>
+            <label className="block text-xs font-medium text-muted-foreground">
               {t("admin.leads.needDate")}
               <input type="date" value={edit.needDate} onChange={(e) => setEditField("needDate", e.target.value)} className="mt-1 h-9 w-full rounded-md border border-border bg-background px-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent" />
             </label>
@@ -363,6 +373,30 @@ export function LeadWorkspace({ lead }: { lead: AdminLead }) {
               {t("admin.leads.editCancel")}
             </Button>
           </div>
+        </div>
+      )}
+
+      {/* The street addresses the customer typed, beside the details because they
+          answer the same question: what did we actually receive? Rendered at all
+          because until now they were WRITE-ONLY — collected by the intake, stored,
+          and shown nowhere — so the field that disambiguates a garbled city
+          ("Daugavpils- RIGA- DAUGAVPILS") could only be read out of Postgres by
+          hand. Operator-only: a provider sees an address after the customer
+          accepts their offer, never from this panel. */}
+      {(lead.fromAddress || lead.toAddress) && (
+        <div className="flex flex-wrap gap-x-6 gap-y-1 rounded-lg border border-dashed border-border bg-background px-3.5 py-2.5 text-sm">
+          {lead.fromAddress && (
+            <span className="inline-flex min-w-0 flex-wrap items-baseline gap-1.5">
+              <span className="text-xs text-muted-foreground">{t("admin.leads.fromAddress")}</span>
+              <span className="break-words text-foreground">{lead.fromAddress}</span>
+            </span>
+          )}
+          {lead.toAddress && (
+            <span className="inline-flex min-w-0 flex-wrap items-baseline gap-1.5">
+              <span className="text-xs text-muted-foreground">{t("admin.leads.toAddress")}</span>
+              <span className="break-words text-foreground">{lead.toAddress}</span>
+            </span>
+          )}
         </div>
       )}
 
