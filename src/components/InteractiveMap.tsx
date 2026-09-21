@@ -356,8 +356,29 @@ function InteractiveMap({
       attributionControl: true,
     });
 
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+    // CARTO withdrew anonymous access to basemaps.cartocdn.com. The failure is
+    // the quiet kind: tiles still return 200 with a real PNG, nothing errors and
+    // no request fails — each image simply arrives with "API KEY REQUIRED"
+    // printed across it, so the map degrades in place rather than breaking.
+    //
+    // Esri's light-grey canvas is the closest no-key match to the muted basemap
+    // this design was built against; the pins (navy/green/teal/amber) need a
+    // quiet background to stay legible, and standard OSM renders green
+    // landcover and full road colour, which fights them.
+    //
+    // FOR PRODUCTION: neither Esri's nor OSM's public tile endpoint is licensed
+    // for heavy commercial traffic, and this map loads on the public homepage.
+    // Set VITE_MAP_TILE_URL (+ VITE_MAP_TILE_ATTRIBUTION) to a keyed provider —
+    // CARTO, Stadia and MapTiler all have free tiers well above this volume.
+    const tileUrl =
+      import.meta.env.VITE_MAP_TILE_URL ||
+      "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}";
+    const tileAttribution =
+      import.meta.env.VITE_MAP_TILE_ATTRIBUTION ||
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; Esri';
+
+    L.tileLayer(tileUrl, {
+      attribution: tileAttribution,
       maxZoom: 18,
     }).addTo(mapInstance.current);
 
