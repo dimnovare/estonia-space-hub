@@ -48,17 +48,52 @@ export function isRetiredServiceSlug(slug: string): slug is RetiredServiceTypeSl
   return (RETIRED_SERVICE_TYPE_SLUGS as readonly string[]).includes(slug);
 }
 
-/** The categories a visitor can actually pick: nav, footer, homepage grid,
- *  /request step 1, search chips, city hubs, provider onboarding. */
-export const PUBLIC_SERVICE_TYPE_SLUGS = SERVICE_TYPE_SLUGS.filter(
+/**
+ * BROWSABLE BUT NOT SOLD — the third state a slug can be in.
+ *
+ * A slug listed here stays fully browsable: nav, map, search chips, city hubs,
+ * provider profiles. What it stops doing is entering the concierge funnel —
+ * no /request option, no "we bring you 2-3 offers".
+ *
+ * It is NOT the same as RETIRED_SERVICE_TYPE_SLUGS, which means "gone from the
+ * public surface entirely, keep the URL resolving". Mirrors the backend's
+ * ServiceCategories.BrowsableNotSoldSlugs and must stay in step with it.
+ *
+ * Empty today — naming the state before anything moves into it.
+ */
+export const BROWSABLE_NOT_SOLD_SLUGS = [] as const satisfies readonly ServiceTypeSlug[];
+
+export function isBrowsableNotSoldSlug(slug: string): boolean {
+  return (BROWSABLE_NOT_SOLD_SLUGS as readonly string[]).includes(slug);
+}
+
+/** The DIRECTORY catalogue: what a visitor may browse, filter and land on from
+ *  Google. Everything except the retired slugs. */
+export const BROWSABLE_SERVICE_TYPE_SLUGS = SERVICE_TYPE_SLUGS.filter(
   (s) => !isRetiredServiceSlug(s),
 ) as readonly Exclude<ServiceTypeSlug, RetiredServiceTypeSlug>[];
 
-export type PublicServiceTypeSlug = (typeof PUBLIC_SERVICE_TYPE_SLUGS)[number];
+export type BrowsableServiceTypeSlug = (typeof BROWSABLE_SERVICE_TYPE_SLUGS)[number];
+
+/** The SALES catalogue: what a visitor may pick in /request step 1 and what a
+ *  concierge CTA may name. Browsable minus the not-sold slugs. */
+export const SELLABLE_SERVICE_TYPE_SLUGS = BROWSABLE_SERVICE_TYPE_SLUGS.filter(
+  (s) => !isBrowsableNotSoldSlug(s),
+) as readonly BrowsableServiceTypeSlug[];
+
+/** @deprecated Ambiguous: "public" conflated browse with buy. Use
+ *  BROWSABLE_SERVICE_TYPE_SLUGS on a directory surface and
+ *  SELLABLE_SERVICE_TYPE_SLUGS on a sales one. Identical today. */
+export const PUBLIC_SERVICE_TYPE_SLUGS = BROWSABLE_SERVICE_TYPE_SLUGS;
+
+export type PublicServiceTypeSlug = BrowsableServiceTypeSlug;
 
 /** Where an old `/{lang}/{slug}/{city}` SEO hub should land now. Packing keeps
  *  its audience (movers quote packing), insurance falls back to the generic
  *  per-city hub. Mirrored by the 301s in vercel.json for crawlers. */
+/** NOTE: a BROWSABLE_NOT_SOLD slug gets NO entry here. Adding one would 301 its
+ *  city hub away and hand its search equity to another vertical — the exact
+ *  opposite of keeping the providers findable. Retired ≠ not-sold. */
 export const RETIRED_SLUG_HUB_ROUTE: Record<RetiredServiceTypeSlug, (citySlug: string) => string> = {
   packing:   (citySlug) => `/moving/${citySlug}`,
   insurance: (citySlug) => `/locations/${citySlug}`,
@@ -84,16 +119,35 @@ export const SERVICE_TYPE_ICONS: Record<ServiceTypeSlug, LucideIcon> = {
   insurance: Shield,
 };
 
-/** The public slugs minus admin-disabled verticals (moving / trailer are the
- *  only platform-toggle-gated categories; cleaning, van rental and storage are
- *  always visible). Retired categories are never returned. */
+/** Browsable slugs minus admin-disabled verticals. Use on DIRECTORY surfaces:
+ *  nav, footer, map legend, search chips, city hubs, provider onboarding. */
+export function browsableServiceSlugs(
+  showMovingService: boolean,
+  showTrailerService: boolean,
+): BrowsableServiceTypeSlug[] {
+  return BROWSABLE_SERVICE_TYPE_SLUGS.filter(
+    (s) => (s !== "moving" || showMovingService) && (s !== "trailer" || showTrailerService),
+  );
+}
+
+/** Browsable slugs minus the not-sold ones. Use on SALES surfaces: /request
+ *  step 1, "get 2-3 offers" CTAs, anything that promises we will source it.
+ *  Identical to browsableServiceSlugs while BROWSABLE_NOT_SOLD_SLUGS is empty. */
+export function sellableServiceSlugs(
+  showMovingService: boolean,
+  showTrailerService: boolean,
+): BrowsableServiceTypeSlug[] {
+  return browsableServiceSlugs(showMovingService, showTrailerService)
+    .filter((s) => !isBrowsableNotSoldSlug(s));
+}
+
+/** @deprecated Says "visible" but is read by both browse and sell surfaces, and
+ *  those are about to diverge. Pick browsableServiceSlugs or sellableServiceSlugs. */
 export function visibleServiceSlugs(
   showMovingService: boolean,
   showTrailerService: boolean,
 ): PublicServiceTypeSlug[] {
-  return PUBLIC_SERVICE_TYPE_SLUGS.filter(
-    (s) => (s !== "moving" || showMovingService) && (s !== "trailer" || showTrailerService),
-  );
+  return browsableServiceSlugs(showMovingService, showTrailerService);
 }
 
 /** Localized label for a service-type slug; unknown slugs fall back to the raw slug. */
