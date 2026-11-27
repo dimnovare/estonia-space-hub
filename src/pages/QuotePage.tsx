@@ -158,6 +158,9 @@ export default function QuotePage() {
     mutationFn: (body: QuoteSubmitInput) => quoteService.submit(token, body),
     onSuccess: (res) => {
       setFormError(null);
+      // "Ei ole võimalik" typed as the availability is a no, and the server
+      // recorded it as one — show the declined screen, not a price thank-you.
+      if (res?.declined) { setDeclinedOnSubmit(true); return; }
       // Keep the server's echo: the thank-you screen shows the amount that was
       // actually STORED, so a provider can spot a mis-read price themselves
       // instead of finding out when the customer is quoted the wrong number.

@@ -8,7 +8,10 @@ on:
 jobs:
   playwright:
     name: Playwright e2e
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moved to 26.04 in Nov 2026, which Playwright's
+    # chromium does not support yet ("Playwright does not support chromium on
+    # ubuntu26.04-x64"), so every E2E run failed before a test ran.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - name: Checkout
@@ -47,7 +50,10 @@ jobs:
     # class of regression that dev-server tests cannot catch (head flushed in dev,
     # emitted nothing in the prod bundle).
     name: SEO head-in-DOM (prod build)
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moved to 26.04 in Nov 2026, which Playwright's
+    # chromium does not support yet ("Playwright does not support chromium on
+    # ubuntu26.04-x64"), so every E2E run failed before a test ran.
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - name: Checkout

@@ -1190,6 +1190,8 @@ export interface QuoteSubmitResult {
   unit: string | null;
   availability: string | null;
   note: string | null;
+  /** The availability said only "not possible" — the server recorded a decline, not a price. */
+  declined?: boolean;
 }
 
 /** Either a recognised reason or a note is required — the server enforces it and
