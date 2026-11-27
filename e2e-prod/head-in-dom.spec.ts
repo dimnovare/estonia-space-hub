@@ -5,6 +5,7 @@ import {
   stubLoggedOut,
   stubPublicOffer,
 } from "../e2e/fixtures";
+import en from "../src/i18n/locales/en";
 
 /**
  * PRODUCTION-BUILD head-in-DOM gate (runs via playwright.prod.config.ts against
@@ -68,8 +69,13 @@ test.describe("head-in-DOM (production build, @unhead)", () => {
     await stubAll(page);
     await page.goto("/en");
 
-    const expectedTitle =
-      "Ruumly — Moving help in one place: movers, storage, trailers";
+    // Read from the copy itself, not hardcoded: the homepage title has been
+    // rewritten twice since this gate was written, and each rewrite silently
+    // turned it red (Aug–Nov 2026) without anything being wrong with the head.
+    // What this test guards is that the PAGE'S OWN copy reaches document.head.
+    // Same suffix rule as SEO.tsx.
+    const homeTitle = en["seo.homeTitle"];
+    const expectedTitle = homeTitle.includes("Ruumly") ? homeTitle : `${homeTitle} — Ruumly`;
     await waitForFlush(page, expectedTitle);
     const head = await readHead(page);
 
@@ -79,7 +85,7 @@ test.describe("head-in-DOM (production build, @unhead)", () => {
 
     // Exactly one description (unhead dedupes the static index.html one), matching this page.
     expect(head.descriptions).toHaveLength(1);
-    expect(head.descriptions[0]).toContain("Send one request");
+    expect(head.descriptions[0]).toBe(en["seo.homeDescription"]);
     expect(head.descriptions[0]).not.toContain("Laopinnad Eestis");
 
     // Self-referencing absolute canonical.
@@ -110,6 +116,13 @@ test.describe("head-in-DOM (production build, @unhead)", () => {
 
     const expectedTitle = "Storage in Tallinn — Ruumly";
     await waitForFlush(page, expectedTitle);
+    // The title can flush a beat before the JSON-LD script; reading the head
+    // on the title alone made this test flaky (failed 1 of 3 local runs).
+    await page.waitForFunction(
+      () => document.head.querySelectorAll('script[type="application/ld+json"]').length > 0,
+      undefined,
+      { timeout: 20_000 },
+    );
     const head = await readHead(page);
 
     expect(head.title).toBe(expectedTitle);
