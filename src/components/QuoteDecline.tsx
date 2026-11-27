@@ -48,6 +48,7 @@ export function QuoteDecline({
   onDeclined,
   onLeadClosed,
   onAlreadyQuoted,
+  initiallyOpen = false,
 }: {
   token: string;
   /** GET reported this provider already declined — show the recorded state. */
@@ -58,12 +59,18 @@ export function QuoteDecline({
   onLeadClosed: () => void;
   /** 409 already_quoted — a price is live; withdrawing it is a conversation. */
   onAlreadyQuoted: () => void;
+  /**
+   * Open on arrival — the provider clicked "I can't take this one" in the
+   * email (`?answer=decline`), so the page should not make them find it again
+   * below the price form.
+   */
+  initiallyOpen?: boolean;
 }) {
   const { t } = useLanguage();
   const panelId = useId();
   const errorId = useId();
 
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(initiallyOpen);
   const [reason, setReason] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -72,8 +79,12 @@ export function QuoteDecline({
   const headingRef = useRef<HTMLHeadingElement | null>(null);
 
   useEffect(() => {
-    if (open) headingRef.current?.focus();
-  }, [open]);
+    if (!open) return;
+    headingRef.current?.focus();
+    // Arriving from the email's decline button the panel sits below the price
+    // form, often off-screen on a phone — bring it into view, not just focus.
+    if (initiallyOpen) headingRef.current?.scrollIntoView?.({ block: "center" });
+  }, [open, initiallyOpen]);
 
   const mutation = useMutation({
     mutationFn: (body: QuoteDeclineInput) => quoteService.decline(token, body),

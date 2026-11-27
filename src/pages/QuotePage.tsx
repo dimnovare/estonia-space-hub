@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams, Link } from "@/i18n/routing";
+import { useParams, useSearchParams, Link } from "@/i18n/routing";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   CheckCircle, MapPin, ArrowRight, CalendarDays, Loader2, LinkIcon,
@@ -77,6 +77,9 @@ function defaultUnitFor(category: string | null | undefined): BillingPeriod {
 
 export default function QuotePage() {
   const { token = "" } = useParams<{ token: string }>();
+  // The standing-price email's "I can't take this one" button lands here.
+  const [searchParams] = useSearchParams();
+  const startDeclining = searchParams.get("answer") === "decline";
   const { t, language } = useLanguage();
   const settings = usePlatformSettings();
 
@@ -590,6 +593,7 @@ export default function QuotePage() {
           onDeclined={() => setDeclinedOnSubmit(true)}
           onLeadClosed={() => setClosedOnSubmit(true)}
           onAlreadyQuoted={() => setDeclineBlocked(true)}
+          initiallyOpen={startDeclining}
         />
         {declineBlocked && (
           <p role="alert" className="mt-2 flex items-start gap-2 px-3 text-xs leading-relaxed text-muted-foreground">
