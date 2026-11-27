@@ -12,6 +12,11 @@ export default defineConfig({
     baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:8080',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    // Every API call is stubbed, so no click or fill has a reason to wait long.
+    // Without a cap, an action whose target is gone waits out the whole 30 s
+    // test timeout (and again on the CI retry). That is how ~48 stale tests
+    // pushed the job past its 20-minute limit and got it cancelled.
+    actionTimeout: 10_000,
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
