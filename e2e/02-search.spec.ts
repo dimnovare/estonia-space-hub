@@ -31,8 +31,11 @@ test.describe("Search page", () => {
     const sortSelect = page.locator("select[aria-label]").first();
     await expect(sortSelect).toBeVisible({ timeout: 15000 });
 
-    const options = await sortSelect.locator("option").count();
-    expect(options).toBeGreaterThanOrEqual(3);
+    // Sort options follow the inventory (488c10e): "cheapest" appears only once
+    // a priced listing has loaded, so the dropdown renders with two options and
+    // grows to three. Wait for it rather than counting the first render.
+    await expect(sortSelect.locator('option[value="cheapest"]')).toHaveCount(1);
+    expect(await sortSelect.locator("option").count()).toBeGreaterThanOrEqual(3);
   });
 
   test("results-count paragraph shows the number of results", async ({ page }) => {

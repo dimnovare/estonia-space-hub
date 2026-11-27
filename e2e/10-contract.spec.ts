@@ -6,6 +6,7 @@ import {
   stubBookingCreate,
   seedAuth,
   customerUser,
+  api,
 } from "./fixtures";
 
 /**
@@ -36,13 +37,13 @@ async function stubContractEndpoints(page: import("@playwright/test").Page) {
     body: JSON.stringify(body),
   });
   // Non-empty templates → modal step-1 has a template (continue is enabled once agreed).
-  await page.route(/\/contracts\/templates/, (r) =>
+  await page.route(api(/\/contracts\/templates/), (r) =>
     r.fulfill(json([{ id: "tpl-1", name: "Rental contract" }])),
   );
   // Contract HTML preview for the modal iframe.
-  await page.route(/\/contracts\/preview/, (r) => r.fulfill(json({ html: "<p>Contract</p>" })));
+  await page.route(api(/\/contracts\/preview/), (r) => r.fulfill(json({ html: "<p>Contract</p>" })));
   // Canvas fallback path (no Dokobit, no Smart-ID/Mobile-ID).
-  await page.route(/\/contracts\/signing-method/, (r) =>
+  await page.route(api(/\/contracts\/signing-method/), (r) =>
     r.fulfill(json({ dokobitEnabled: false, smartIdEnabled: false, mobileIdEnabled: false })),
   );
 }

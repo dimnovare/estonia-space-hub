@@ -1,7 +1,8 @@
 import { test, expect } from "@playwright/test";
+import et from "../src/i18n/locales/et";
 import {
   stubCommon, stubListings, stubLoggedOut, stubLocations, stubPartner,
-  directoryLocation, partnerProfile,
+  directoryLocation, partnerProfile, completeRequestDetailsStep, api,
 } from "./fixtures";
 
 /**
@@ -11,8 +12,9 @@ import {
  * profiles: public partner page + map pin, NO listings/units/pricing/booking.
  *  (a) /et/search renders a directory location card (name, city, service chips,
  *      "Vaata profiili") linking to the partner page — no price/availability.
- *  (b) /et/partner/{slug} with isDirectory shows the claim banner, the website
- *      button and the directory note instead of the empty-listings state.
+ *  (b) /et/partner/{slug} with isDirectory shows the claim banner (→ the
+ *      /et/claim/{slug} verification flow), the website button and the
+ *      concierge CTA instead of the empty-listings state.
  *  (c) /et/request funnel: the new "Koristus" (cleaning) category card submits
  *      categories containing the exact API slug "cleaning".
  */
@@ -44,14 +46,19 @@ test.describe("Directory (search card)", () => {
   test("directory-only chip + text query still shows directory cards", async ({ page }) => {
     // Regression: listings-only filters (q, price, availability) used to blank
     // the location cards via hasRestrictiveFilter even when a directory-only
-    // category was active — a guaranteed-false "0 results".
+    // category was active — a guaranteed-false "0 results". Since 488c10e a
+    // text query matches a provider's name, city and address, so the query
+    // here names the provider; one that names nothing it has must not match.
     await stubLoggedOut(page);
     await stubCommon(page);
     await stubListings(page, { items: [] });
     await stubLocations(page, [directoryLocation()]);
 
-    await page.goto("/et/search?type=cleaning&q=kolimine");
+    await page.goto("/et/search?type=cleaning&q=kolimisfirma");
     await expect(page.getByTestId("directory-card")).toBeVisible({ timeout: 15000 });
+
+    await page.goto("/et/search?type=cleaning&q=haapsalu");
+    await expect(page.getByTestId("directory-card")).toHaveCount(0);
   });
 });
 
@@ -79,13 +86,12 @@ test.describe("Directory (partner page)", () => {
     await expect(conciergeCta).toContainText(/Küsi pakkumist/i);
     await expect(page.getByText(/avalikke kuulutusi veel pole/i)).not.toBeVisible();
 
-    // Claim banner at the bottom with mailto CTA carrying the slug
-    await expect(page.getByText("See on sinu ettevõte?")).toBeVisible();
-    const claimCta = page.getByRole("link", { name: /võta profiil üle/i });
+    // Claim banner at the bottom; its CTA opens the claim flow for this slug
+    // (a mailto until the /claim/{slug} page shipped in 975ce2e).
+    await expect(page.getByText(et["partner.claim.title"])).toBeVisible();
+    const claimCta = page.getByRole("link", { name: et["partner.claim.cta"] });
     await expect(claimCta).toBeVisible();
-    const href = await claimCta.getAttribute("href");
-    expect(href).toContain("mailto:info@ruumly.eu");
-    expect(decodeURIComponent(href ?? "")).toContain("Profiili ülevõtmine: kolimisfirma");
+    await expect(claimCta).toHaveAttribute("href", "/et/claim/kolimisfirma");
   });
 });
 
@@ -97,7 +103,7 @@ test.describe("Directory (funnel categories)", () => {
 
     // Capture the POST /leads/request body (registered last → wins over stubs).
     let postedBody: { categories?: string[] } | null = null;
-    await page.route(/\/leads\/request/, (route) => {
+    await page.route(api(/\/leads\/request/), (route) => {
       if (route.request().method() !== "POST") return route.continue();
       postedBody = route.request().postDataJSON();
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
@@ -105,27 +111,22 @@ test.describe("Directory (funnel categories)", () => {
 
     await page.goto("/et/request");
 
-    // Step 1 — select the new cleaning card ("Koristus")
-    const cleaningCard = page.getByRole("button", { name: /koristus/i }).first();
+    // Step 1 — select the cleaning card ("Koristus")
+    const cleaningCard = page.getByRole("button", { name: new RegExp(et["serviceType.cleaning"], "i") }).first();
     await expect(cleaningCard).toBeVisible({ timeout: 15000 });
     await cleaningCard.click();
     await expect(cleaningCard).toHaveAttribute("aria-pressed", "true");
-    await page.getByRole("button", { name: /edasi/i }).click();
+    await page.getByRole("button", { name: et["request.next"] }).click();
 
-    // Step 2 — city
-    const cityInput = page.locator("#req-city");
-    await expect(cityInput).toBeVisible({ timeout: 10000 });
-    await cityInput.fill("Tallinn");
-    await page.getByRole("button", { name: /edasi/i }).click();
+    // Step 2 — city, the cleaning scoping questions and the date
+    await completeRequestDetailsStep(page, "Tallinn");
 
     // Step 3 — email + submit
-    const emailInput = page.locator("#req-email");
-    await expect(emailInput).toBeVisible({ timeout: 10000 });
-    await emailInput.fill("test@example.com");
-    await page.getByRole("button", { name: /saada päring/i }).click();
+    await page.locator("#req-email").fill("test@example.com");
+    await page.getByRole("button", { name: et["request.submit"] }).click();
 
     // Success screen + exact API slug in the POST body
-    await expect(page.getByText("Saime kätte!")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("heading", { name: et["request.success.title"] })).toBeVisible({ timeout: 10000 });
     expect(postedBody).not.toBeNull();
     expect(postedBody!.categories).toContain("cleaning");
   });

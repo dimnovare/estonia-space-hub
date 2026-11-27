@@ -1,4 +1,5 @@
-import { Page, Route } from "@playwright/test";
+import { Page, Route, expect } from "@playwright/test";
+import et from "../src/i18n/locales/et";
 
 /**
  * Shared E2E fixtures + API stubs — built from the verified real API contract
@@ -23,6 +24,22 @@ type OutreachSkipReason = "no_email" | "not_found" | "already_contacted";
 
 const json = (route: Route, body: unknown, status = 200) =>
   route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
+
+/**
+ * Scope a route stub to API calls. Wrap EVERY API pattern in this:
+ * `page.route(api(/\/admin\/leads/), …)`.
+ *
+ * Playwright tests a RegExp against the whole URL, and the Vite dev server
+ * serves source modules by file path. So a bare `/\/admin\/leads/` stub also
+ * matched `/src/components/admin/leads/leadStatusStyles.tsx` and answered the
+ * module import with JSON; the browser refused it (strict MIME check) and the
+ * whole admin page fell into the ErrorBoundary. It happened on some loads
+ * and not others, so it looked like a flake. `/offers/…` collides with
+ * src/components/offers/ the same way. The app sends every API call to
+ * VITE_API_URL (…/api), and nothing the dev server serves sits under /api/.
+ */
+export const api = (pattern: RegExp) => (url: URL): boolean =>
+  url.pathname.startsWith("/api/") && pattern.test(url.href);
 
 // ─── Fixture builders ────────────────────────────────────────────────────────
 
@@ -176,14 +193,14 @@ export async function stubCommon(page: Page, opts: CommonOpts = {}): Promise<voi
   // lg+ (no showMap gate), HomePage when showMap is on, and the admin Locations
   // tab unconditionally. Leaflet just leaves unfetched tiles blank.
   await page.route(/basemaps\.cartocdn\.com|tile\.openstreetmap\.org/, (r) => r.abort());
-  await page.route(/\/settings\/public/, (r) => json(r, settings));
-  await page.route(/\/settings\/pricing/, (r) => json(r, pricingConfig()));
-  await page.route(/\/features(\b|\/|\?|$)/, (r) => json(r, {}));
-  await page.route(/\/locations\/cities/, (r) => json(r, [{ city: "Tallinn", country: "EE" }]));
-  await page.route(/\/locations(\b|\/|\?|$)/, (r) => json(r, []));
-  await page.route(/\/reviews(\b|\/|\?|$)/, (r) => json(r, { data: [], total: 0 }));
-  await page.route(/\/notifications/, (r) => json(r, []));
-  await page.route(/\/suppliers(\b|\/|\?|$)/, (r) => json(r, []));
+  await page.route(api(/\/settings\/public/), (r) => json(r, settings));
+  await page.route(api(/\/settings\/pricing/), (r) => json(r, pricingConfig()));
+  await page.route(api(/\/features(\b|\/|\?|$)/), (r) => json(r, {}));
+  await page.route(api(/\/locations\/cities/), (r) => json(r, [{ city: "Tallinn", country: "EE" }]));
+  await page.route(api(/\/locations(\b|\/|\?|$)/), (r) => json(r, []));
+  await page.route(api(/\/reviews(\b|\/|\?|$)/), (r) => json(r, { data: [], total: 0 }));
+  await page.route(api(/\/notifications/), (r) => json(r, []));
+  await page.route(api(/\/suppliers(\b|\/|\?|$)/), (r) => json(r, []));
 }
 
 /**
@@ -192,7 +209,7 @@ export async function stubCommon(page: Page, opts: CommonOpts = {}): Promise<voi
  * order, so this handler wins for /locations* (and keeps /locations/cities working).
  */
 export async function stubLocations(page: Page, items: Json[]): Promise<void> {
-  await page.route(/\/locations(\b|\/|\?|$)/, (route) => {
+  await page.route(api(/\/locations(\b|\/|\?|$)/), (route) => {
     const path = new URL(route.request().url()).pathname;
     if (/\/locations\/cities/.test(path)) return json(route, [{ city: "Tallinn", country: "EE" }]);
     const m = path.match(/\/locations\/([^/]+)$/);
@@ -212,7 +229,7 @@ export async function stubLocations(page: Page, items: Json[]): Promise<void> {
  * Register AFTER stubCommon (later route wins).
  */
 export async function stubAdminSuppliersPaged(page: Page, total: number): Promise<void> {
-  await page.route(/\/admin\/suppliers(\b|\?|$)/, (route) => {
+  await page.route(api(/\/admin\/suppliers(\b|\?|$)/), (route) => {
     const url = new URL(route.request().url());
     // Leave the single-supplier detail route (/admin/suppliers/{id}) alone.
     if (/\/admin\/suppliers\/[^/]+/.test(url.pathname)) return route.continue();
@@ -250,7 +267,7 @@ export function locationsAcrossPartners(count: number): Json[] {
 
 /** Stub GET /suppliers/by-slug/{slug}. Register AFTER stubCommon (later route wins). */
 export async function stubPartner(page: Page, profile: Json): Promise<void> {
-  await page.route(/\/suppliers\/by-slug\//, (r) => json(r, profile));
+  await page.route(api(/\/suppliers\/by-slug\//), (r) => json(r, profile));
 }
 
 export interface ListingsOpts {
@@ -264,7 +281,7 @@ export interface ListingsOpts {
  */
 export async function stubListings(page: Page, opts: ListingsOpts = {}): Promise<void> {
   const items = opts.items ?? [apiListing()];
-  await page.route(/\/listings(\b|\/|\?|$)/, (route) => {
+  await page.route(api(/\/listings(\b|\/|\?|$)/), (route) => {
     const path = new URL(route.request().url()).pathname;
     if (/\/listings\/[^/]+\/availability/.test(path))
       return json(route, { totalUnits: 5, bookedCount: 0, available: 5, isAvailable: true });
@@ -293,7 +310,7 @@ export interface AuthUser extends Json {
 
 /** Logged-out: no ruumly-auth seeded, so /auth/refresh isn't fired; guard anyway. */
 export async function stubLoggedOut(page: Page): Promise<void> {
-  await page.route(/\/auth\/refresh/, (r) => json(r, { message: "no session" }, 401));
+  await page.route(api(/\/auth\/refresh/), (r) => json(r, { message: "no session" }, 401));
 }
 
 /** Seed a logged-in session: localStorage profile + stubbed POST /auth/refresh. Call BEFORE goto. */
@@ -302,25 +319,66 @@ export async function seedAuth(page: Page, user: AuthUser): Promise<void> {
     localStorage.setItem("ruumly-auth", JSON.stringify(u));
     localStorage.setItem("ruumly-lang", "et");
   }, user);
-  await page.route(/\/auth\/refresh/, (r) =>
+  await page.route(api(/\/auth\/refresh/), (r) =>
     json(r, { accessToken: "test-access", csrfToken: "test-csrf" }),
   );
 }
 
 /** Stub POST /auth/login to return a full AuthResponse for `user`. */
 export async function stubLogin(page: Page, user: AuthUser): Promise<void> {
-  await page.route(/\/auth\/login/, (r) =>
+  await page.route(api(/\/auth\/login/), (r) =>
     json(r, { user, accessToken: "test-access", refreshToken: "test-refresh", csrfToken: "test-csrf" }),
   );
 }
 
 /** Stub POST /leads/request (concierge funnel). Pass a non-2xx status to test errors (e.g. 429). */
 export async function stubConciergeLead(page: Page, status = 200): Promise<void> {
-  await page.route(/\/leads\/request/, (route) =>
+  await page.route(api(/\/leads\/request/), (route) =>
     route.request().method() === "POST"
       ? json(route, status === 200 ? { ok: true } : { message: "error" }, status)
       : route.continue(),
   );
+}
+
+/**
+ * Fill step 2 of /request ("Where and when?") and press Next, landing on step 3.
+ *
+ * Step 2 gates Next on more than the city: every scoping question RequestPage
+ * asks for the selected services (SCOPE_QUESTIONS — size, duration, access,
+ * goods, …) must be answered, and a service sold by the day also needs a date
+ * or "date is flexible". That question list grows whenever a provider tells us
+ * what it cannot quote without, so specs that only need to get THROUGH the step
+ * call this instead of encoding the list. Each single-choice question gets its
+ * first option and each tick-all-that-apply question its first box; with two
+ * or more services the step shows one service at a time, and answering one
+ * opens the next, so this keeps going until nothing visible is unanswered.
+ */
+export async function completeRequestDetailsStep(page: Page, city = "Tallinn"): Promise<void> {
+  const cityInput = page.locator("#req-city");
+  await expect(cityInput).toBeVisible({ timeout: 10000 });
+  await cityInput.fill(city);
+
+  const unanswered = (group: string, option: string) =>
+    page.locator(`[role="${group}"]`)
+      .filter({ visible: true, has: page.locator(`[role="${option}"]`) })
+      .filter({ hasNot: page.locator('[aria-checked="true"]') })
+      .first()
+      .locator(`[role="${option}"]`)
+      .first();
+
+  for (let i = 0; i < 40; i++) {
+    const radio = unanswered("radiogroup", "radio");
+    if (await radio.count()) { await radio.click(); continue; }
+    const box = unanswered("group", "checkbox");
+    if (await box.count()) { await box.click(); continue; }
+    break;
+  }
+
+  const flexibleDate = page.getByRole("button", { name: et["request.date.flexible"] });
+  if (await flexibleDate.isVisible()) await flexibleDate.click();
+
+  await page.getByRole("button", { name: et["request.next"] }).click();
+  await expect(page.locator("#req-email")).toBeVisible({ timeout: 10000 });
 }
 
 /** Stub the admin match-queue endpoints: list, metrics and per-lead matches. */
@@ -339,7 +397,7 @@ export async function stubAdminLeads(
     medianFirstResponseMinutes: 42,
     ...(opts.metrics ?? {}),
   };
-  await page.route(/\/admin\/leads(\b|\/|\?|$)/, (route) => {
+  await page.route(api(/\/admin\/leads(\b|\/|\?|$)/), (route) => {
     const url = new URL(route.request().url());
     const path = url.pathname;
     if (/\/admin\/leads\/metrics/.test(path)) return json(route, metrics);
@@ -361,6 +419,20 @@ export async function stubAdminLeads(
       });
     }
     if (/\/admin\/leads\/[^/]+\/matches/.test(path)) return json(route, opts.matches ?? []);
+    // Provider-silence report (AdminLeads, 2026-08-20) — nobody silent.
+    if (/\/admin\/leads\/provider-silence$/.test(path)) {
+      return json(route, { providersContacted: 0, providersSilent: 0, asksUnanswered: 0, items: [] });
+    }
+    // Messages an operator sent about the lead (LeadMessages, 2026-08-20). A
+    // bare array: the workspace maps over it, so the list envelope below would
+    // crash the whole admin page.
+    if (/\/admin\/leads\/[^/]+\/messages$/.test(path)) {
+      if (route.request().method() === "POST") {
+        const body = (route.request().postDataJSON() ?? {}) as Json;
+        return json(route, { id: "msg-1", sentTo: "mari@example.com", sentAt: new Date().toISOString(), ...body });
+      }
+      return json(route, []);
+    }
     if (route.request().method() === "PATCH") return json(route, { ok: true });
     return json(route, { total: items.length, page: 1, limit: 50, items });
   });
@@ -457,7 +529,7 @@ export async function stubOfferLoop(
   let seq = 0;
   let quoteLanded = false;
   await page.route(
-    /\/admin\/(leads\/[^/]+\/(outreach(?:\/preview)?|offers)|offers\/[^/]+(\/send|\/delivery-preview|\/confirm-booking)?|outreach\/[^/]+)(\?|$)/,
+    api(/\/admin\/(leads\/[^/]+\/(outreach(?:\/preview)?|offers)|offers\/[^/]+(\/send|\/delivery-preview|\/confirm-booking)?|outreach\/[^/]+)(\?|$)/),
     async (route) => {
       const req = route.request();
       const path = new URL(req.url()).pathname;
@@ -765,7 +837,7 @@ export async function stubPublicOffer(
   opts: { offer?: Json; getStatus?: number; chooseStatus?: number } = {},
 ): Promise<void> {
   const offer = opts.offer ?? publicOffer();
-  await page.route(/\/offers\/[^/?]+(\/choose)?(\?|$)/, (route) => {
+  await page.route(api(/\/offers\/[^/?]+(\/choose)?(\?|$)/), (route) => {
     const req = route.request();
     if (req.method() === "POST" && /\/choose/.test(req.url())) {
       const status = opts.chooseStatus ?? 200;
@@ -826,7 +898,7 @@ export async function stubQuote(
 ): Promise<void> {
   const state: Json = { ...(opts.quote ?? publicQuote()) };
   await page.route(
-    (url) => /\/quote\/[^/]+$/.test(url.pathname) && !/^\/[a-z]{2}\/quote\//.test(url.pathname),
+    api(/\/quote\/[^/?]+(\?|$)/),
     (route) => {
       const req = route.request();
       if (req.method() === "POST") {
@@ -879,7 +951,7 @@ export async function stubBookingCreate(
   page: Page,
   booking: Json = { id: "booking-001", status: "pending" },
 ): Promise<void> {
-  await page.route(/\/bookings(\b|\?|$)/, (route) =>
+  await page.route(api(/\/bookings(\b|\?|$)/), (route) =>
     route.request().method() === "POST" ? json(route, booking, 201) : route.continue(),
   );
 }

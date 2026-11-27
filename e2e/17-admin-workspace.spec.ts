@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import en from "../src/i18n/locales/en";
 import {
   stubCommon, stubListings, seedAuth, adminUser,
   stubAdminLeads, stubOfferLoop, adminLead, adminMatch, tartuProviderCandidates,
@@ -226,7 +227,9 @@ test.describe("Admin lead workspace", () => {
     await expect(review).toContainText("contact@tartuladu.ee");
     await expect(review).toContainText("Ruumly availability request for Tartu Ladu");
     await expect(review).toContainText("Exact reviewed outreach body for Tartu Ladu in Tartu.");
-    await expect(review).toContainText("already_contacted");
+    // The review names the skip reason in words (287da5b); the post-send
+    // skipped list below keeps the raw code.
+    await expect(review).toContainText(en["admin.leads.skip.already_contacted"]);
     await review.getByRole("button", { name: "Resend availability request" }).click();
     const confirmation = page.getByRole("alertdialog");
     await expect(confirmation).toContainText(/explicitly resends/i);

@@ -1,5 +1,5 @@
 import { test, expect, Page, Route } from "@playwright/test";
-import { stubCommon, seedAuth, adminUser, stubAdminLeads, adminLead } from "./fixtures";
+import { stubCommon, seedAuth, adminUser, stubAdminLeads, adminLead, api } from "./fixtures";
 
 /**
  * 98 — Design-review screenshots (control-room spec §7). NOT part of the
@@ -64,23 +64,23 @@ async function setup(page: Page): Promise<void> {
       adminLead({ id: "lead-3", name: "Kati Kask", email: "kati@example.com", city: "Tartu", category: "cleaning", status: "unmatched", createdAt: hoursAgo(55) }),
     ],
   });
-  await page.route(/\/admin\/suppliers(\b|\/|\?|$)/, (route) => {
+  await page.route(api(/\/admin\/suppliers(\b|\/|\?|$)/), (route) => {
     const path = new URL(route.request().url()).pathname;
     if (/\/admin\/suppliers\/[^/]+\/(poll-log|contracts)/.test(path)) return json(route, []);
     if (/\/admin\/suppliers\/[^/]+/.test(path)) return json(route, SUPPLIERS[0]);
     return json(route, SUPPLIERS);
   });
-  await page.route(/\/admin\/dashboard\/stats/, (r) =>
+  await page.route(api(/\/admin\/dashboard\/stats/), (r) =>
     json(r, { totalListings: 12, totalOrders: 7, totalUsers: 41, totalRevenue: 940, recentInquiries: [] }),
   );
-  await page.route(/\/admin\/dashboard\/revenue/, (r) =>
+  await page.route(api(/\/admin\/dashboard\/revenue/), (r) =>
     json(r, { period: "2026-07", totalBookings: 4, totalGmv: 380, subscriptionMrr: 45, supplierBreakdown: [] }),
   );
-  await page.route(/\/admin\/paid-features\/requests/, (r) => json(r, []));
-  await page.route(/\/admin\/listings(\b|\?|$)/, (r) => json(r, [LISTING]));
-  await page.route(/\/orders(\b|\?|$)/, (r) => json(r, [ORDER]));
-  await page.route(/\/admin\/payouts(\b|\?|$)/, (r) => json(r, { data: [], total: 0 }));
-  await page.route(/\/admin\/invoices(\b|\/|\?|$)/, (r) => json(r, { data: [], total: 0 }));
+  await page.route(api(/\/admin\/paid-features\/requests/), (r) => json(r, []));
+  await page.route(api(/\/admin\/listings(\b|\?|$)/), (r) => json(r, [LISTING]));
+  await page.route(api(/\/orders(\b|\?|$)/), (r) => json(r, [ORDER]));
+  await page.route(api(/\/admin\/payouts(\b|\?|$)/), (r) => json(r, { data: [], total: 0 }));
+  await page.route(api(/\/admin\/invoices(\b|\/|\?|$)/), (r) => json(r, { data: [], total: 0 }));
 }
 
 const TARGETS: { name: string; path: string; ready: (page: Page) => Promise<void> }[] = [

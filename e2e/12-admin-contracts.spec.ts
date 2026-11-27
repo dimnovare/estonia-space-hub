@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { stubCommon, seedAuth, adminUser } from "./fixtures";
+import { stubCommon, seedAuth, adminUser, api } from "./fixtures";
 
 // Verifies the contract-management unification: an Admin on the partner detail
 // page sees the docx contract UI + placeholder cheat-sheet, and the request
@@ -10,7 +10,7 @@ test("admin partner contracts tab: docx UI + placeholders, scoped to the partner
   await stubCommon(page);
 
   // supplier detail (supplierService.getById -> GET /admin/suppliers/{id})
-  await page.route(new RegExp(`/admin/suppliers/${SUP}$`), (r) =>
+  await page.route(api(new RegExp(`/admin/suppliers/${SUP}$`)), (r) =>
     r.fulfill({
       status: 200, contentType: "application/json",
       body: JSON.stringify({
@@ -19,12 +19,12 @@ test("admin partner contracts tab: docx UI + placeholders, scoped to the partner
         partnerDiscountRate: 0, clientDiscountRate: 0,
       }),
     }));
-  await page.route(/\/admin\/suppliers\/[^/]+\/contracts/, (r) =>
+  await page.route(api(/\/admin\/suppliers\/[^/]+\/contracts/), (r) =>
     r.fulfill({ status: 200, contentType: "application/json", body: "[]" }));
 
   // the docx system endpoint — capture the URL to assert the supplierId is sent
   let ctUrl = "";
-  await page.route(/\/provider\/contract-template/, (r) => {
+  await page.route(api(/\/provider\/contract-template/), (r) => {
     ctUrl = r.request().url();
     r.fulfill({
       status: 200, contentType: "application/json",

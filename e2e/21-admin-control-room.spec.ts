@@ -1,5 +1,5 @@
 import { test, expect, Page, Route } from "@playwright/test";
-import { stubCommon, seedAuth, adminUser, stubAdminLeads, adminLead, stubOfferLoop } from "./fixtures";
+import { stubCommon, seedAuth, adminUser, stubAdminLeads, adminLead, stubOfferLoop, api } from "./fixtures";
 
 /**
  * 21 — Admin control-room shell (2026-07-16 redesign spec §2-3)
@@ -50,18 +50,18 @@ async function setupAdmin(page: Page, leads = cockpitLeads()): Promise<void> {
   await stubAdminLeads(page, { items: leads });
   // supplierService.getAll — the e2e convention stubs /admin/suppliers as a
   // bare array; the /{id} detail route returns the object.
-  await page.route(/\/admin\/suppliers(\b|\/|\?|$)/, (route) => {
+  await page.route(api(/\/admin\/suppliers(\b|\/|\?|$)/), (route) => {
     const path = new URL(route.request().url()).pathname;
     if (/\/admin\/suppliers\/[^/]+/.test(path)) return json(route, SUPPLIER);
     return json(route, [SUPPLIER]);
   });
-  await page.route(/\/admin\/dashboard\/stats/, (r) =>
+  await page.route(api(/\/admin\/dashboard\/stats/), (r) =>
     json(r, { totalListings: 5, totalOrders: 7, totalUsers: 11, totalRevenue: 490, recentInquiries: [] }),
   );
-  await page.route(/\/admin\/dashboard\/revenue/, (r) =>
+  await page.route(api(/\/admin\/dashboard\/revenue/), (r) =>
     json(r, { period: "2026-07", totalBookings: 2, totalGmv: 180, subscriptionMrr: 0, supplierBreakdown: [] }),
   );
-  await page.route(/\/admin\/paid-features\/requests/, (r) => json(r, []));
+  await page.route(api(/\/admin\/paid-features\/requests/), (r) => json(r, []));
 }
 
 test.describe("Admin control room", () => {
@@ -92,7 +92,7 @@ test.describe("Admin control room", () => {
 
   test("landing on a COMMERCE tab auto-expands the group and marks the item current", async ({ page }) => {
     await setupAdmin(page);
-    await page.route(/\/orders(\b|\?|$)/, (r) => json(r, []));
+    await page.route(api(/\/orders(\b|\?|$)/), (r) => json(r, []));
     await page.goto("/et/admin?tab=orders");
 
     const ordersLink = page.locator('aside a[href*="tab=orders"]');
