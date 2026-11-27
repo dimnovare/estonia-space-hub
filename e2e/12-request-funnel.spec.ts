@@ -1,13 +1,17 @@
 import { test, expect } from "@playwright/test";
-import { stubCommon, stubListings, stubLoggedOut, stubConciergeLead } from "./fixtures";
+import et from "../src/i18n/locales/et";
+import {
+  stubCommon, stubListings, stubLoggedOut, stubConciergeLead, completeRequestDetailsStep,
+} from "./fixtures";
 
 /**
  * 12 — Concierge request funnel (/et/request)
  *
- * Walks the 3-step funnel: pick storage → fill city → fill email → submit.
- * POST /leads/request is stubbed (200 { ok: true }); asserts the success
- * screen ("Saime kätte!" = et request.success.title). Also covers the
- * required-field guards and the 429 rate-limit error path.
+ * Walks the 3-step funnel: pick storage → city + the storage scoping questions
+ * → email → submit. POST /leads/request is stubbed (200 { ok: true }); asserts
+ * the success screen. Also covers the required-field guards and the 429
+ * rate-limit error path. Copy is read from the et locale, so a wording change
+ * does not turn this red; a missing control does.
  */
 
 async function stubAll(page: import("@playwright/test").Page) {
@@ -16,65 +20,71 @@ async function stubAll(page: import("@playwright/test").Page) {
   await stubListings(page);
 }
 
+/** Step 1: pick storage, then Next. */
+async function chooseStorage(page: import("@playwright/test").Page) {
+  const storageCard = page.getByRole("button", { name: new RegExp(et["serviceType.warehouse"], "i") }).first();
+  await expect(storageCard).toBeVisible({ timeout: 15000 });
+  await storageCard.click();
+  await page.getByRole("button", { name: et["request.next"] }).click();
+}
+
+const submit = (page: import("@playwright/test").Page) =>
+  page.getByRole("button", { name: et["request.submit"] }).click();
+
 test.describe("Request funnel", () => {
   test("completes all 3 steps and shows the success screen", async ({ page }) => {
     await stubAll(page);
     await stubConciergeLead(page, 200);
     await page.goto("/et/request");
 
-    // Step 1 — select storage ("Hoiustamine" — canonical serviceType.warehouse)
-    const storageCard = page.getByRole("button", { name: /hoiustamine/i }).first();
-    await expect(storageCard).toBeVisible({ timeout: 15000 });
-    await storageCard.click();
-    await page.getByRole("button", { name: /edasi/i }).click();
+    await chooseStorage(page);
+    await completeRequestDetailsStep(page, "Tallinn");
 
-    // Step 2 — city
-    const cityInput = page.locator("#req-city");
-    await expect(cityInput).toBeVisible({ timeout: 10000 });
-    await cityInput.fill("Tallinn");
-    await page.getByRole("button", { name: /edasi/i }).click();
-
-    // Step 3 — email + submit
-    const emailInput = page.locator("#req-email");
-    await expect(emailInput).toBeVisible({ timeout: 10000 });
-    await emailInput.fill("test@example.com");
-    await page.getByRole("button", { name: /saada päring/i }).click();
+    await page.locator("#req-email").fill("test@example.com");
+    await submit(page);
 
     // Success screen
-    await expect(page.getByText("Saime kätte!")).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole("link", { name: /sirvi vahepeal ise/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: et["request.success.title"] })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("link", { name: et["request.success.browse"] })).toBeVisible();
   });
 
   test("step 1 requires at least one service", async ({ page }) => {
     await stubAll(page);
     await page.goto("/et/request");
-    await expect(page.getByRole("button", { name: /hoiustamine/i }).first()).toBeVisible({ timeout: 15000 });
-    await page.getByRole("button", { name: /edasi/i }).click();
-    await expect(page.getByText(/vali vähemalt üks teenus/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: new RegExp(et["serviceType.warehouse"], "i") }).first()).toBeVisible({ timeout: 15000 });
+    await page.getByRole("button", { name: et["request.next"] }).click();
+    await expect(page.getByText(et["request.errors.category"])).toBeVisible();
+  });
+
+  test("step 2 requires the storage scoping questions", async ({ page }) => {
+    // A city alone is not a request a provider can price — Next stays on step 2.
+    await stubAll(page);
+    await page.goto("/et/request");
+    await chooseStorage(page);
+    await page.locator("#req-city").fill("Tallinn");
+    await page.getByRole("button", { name: et["request.next"] }).click();
+    await expect(page.getByText(et["request.errors.scope"])).toBeVisible();
+    await expect(page.locator("#req-email")).toHaveCount(0);
   });
 
   test("invalid email shows a validation error", async ({ page }) => {
     await stubAll(page);
     await page.goto("/et/request");
-    await page.getByRole("button", { name: /hoiustamine/i }).first().click();
-    await page.getByRole("button", { name: /edasi/i }).click();
-    await page.locator("#req-city").fill("Tallinn");
-    await page.getByRole("button", { name: /edasi/i }).click();
+    await chooseStorage(page);
+    await completeRequestDetailsStep(page, "Tallinn");
     await page.locator("#req-email").fill("not-an-email");
-    await page.getByRole("button", { name: /saada päring/i }).click();
-    await expect(page.getByText(/korrektne e-posti aadress/i)).toBeVisible();
+    await submit(page);
+    await expect(page.getByText(et["request.errors.email"])).toBeVisible();
   });
 
   test("429 rate limit shows the friendly inline error", async ({ page }) => {
     await stubAll(page);
     await stubConciergeLead(page, 429);
     await page.goto("/et/request");
-    await page.getByRole("button", { name: /hoiustamine/i }).first().click();
-    await page.getByRole("button", { name: /edasi/i }).click();
-    await page.locator("#req-city").fill("Tallinn");
-    await page.getByRole("button", { name: /edasi/i }).click();
+    await chooseStorage(page);
+    await completeRequestDetailsStep(page, "Tallinn");
     await page.locator("#req-email").fill("test@example.com");
-    await page.getByRole("button", { name: /saada päring/i }).click();
-    await expect(page.getByText(/liiga palju päringuid/i)).toBeVisible({ timeout: 10000 });
+    await submit(page);
+    await expect(page.getByText(et["request.errors.rateLimited"])).toBeVisible({ timeout: 10000 });
   });
 });

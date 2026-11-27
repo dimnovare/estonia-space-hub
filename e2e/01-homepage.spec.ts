@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import et from "../src/i18n/locales/et";
 import { stubCommon, stubListings, stubLoggedOut, stubLocations, directoryLocation } from "./fixtures";
 
 /**
@@ -6,7 +7,8 @@ import { stubCommon, stubListings, stubLoggedOut, stubLocations, directoryLocati
  *
  * Concierge-first hero (conciergeFirst=true in stubCommon): the hero leads with
  * a single CTA into the /request funnel ("Küsi pakkumist" = et request.hero.cta)
- * plus a subtle browse link to /search. The legacy marketplace hero (search
+ * plus a subtle browse link to /search (et request.hero.browse). Section copy
+ * is read from the et locale so a rewrite of the words does not turn this red. The legacy marketplace hero (search
  * card) renders only when the conciergeFirst platform setting is "false" —
  * covered by a dedicated test with an overridden settings stub. All API calls
  * are mocked via the shared fixtures (correct real shapes).
@@ -31,14 +33,14 @@ test.describe("Homepage (concierge-first hero)", () => {
   test("concierge CTA link is visible in the hero", async ({ page }) => {
     await stubAll(page);
     await page.goto("/et");
-    const cta = page.getByRole("link", { name: /küsi pakkumist/i }).first();
+    const cta = page.getByRole("link", { name: et["request.hero.cta"] }).first();
     await expect(cta).toBeVisible({ timeout: 15000 });
   });
 
   test("clicking the concierge CTA navigates to /et/request", async ({ page }) => {
     await stubAll(page);
     await page.goto("/et");
-    const cta = page.getByRole("link", { name: /küsi pakkumist/i }).first();
+    const cta = page.getByRole("link", { name: et["request.hero.cta"] }).first();
     await expect(cta).toBeVisible({ timeout: 15000 });
     await cta.click();
     await page.waitForURL(/\/et\/request/, { timeout: 10000 });
@@ -48,7 +50,7 @@ test.describe("Homepage (concierge-first hero)", () => {
   test("browse escape hatch links to /et/search", async ({ page }) => {
     await stubAll(page);
     await page.goto("/et");
-    const browse = page.getByRole("link", { name: /sirvi pakkumisi ise/i }).first();
+    const browse = page.getByRole("link", { name: et["request.hero.browse"] }).first();
     await expect(browse).toBeVisible({ timeout: 15000 });
     await browse.click();
     await page.waitForURL(/\/et\/search/, { timeout: 10000 });
@@ -84,25 +86,26 @@ test.describe("Homepage sections (concierge redesign, spec §3)", () => {
   test("renders the section stack: grid, steps, trust strip, FAQ, closing CTA", async ({ page }) => {
     await stubAll(page);
     await page.goto("/et");
-    // 2 — 7-service grid (5 categories with moving/trailer off in stubCommon)
-    await expect(page.getByRole("heading", { name: /kõik kolimiseks vajalik/i })).toBeVisible({ timeout: 15000 });
-    await expect(page.getByRole("heading", { name: "Hoiustamine", exact: true })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Koristus", exact: true })).toBeVisible();
+    // 2 — service grid (the consumer-sellable categories; moving/trailer off in stubCommon)
+    await expect(page.getByRole("heading", { name: et["home.services.title"] })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("heading", { name: et["serviceType.warehouse"], exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: et["serviceType.cleaning"], exact: true })).toBeVisible();
     // 4 — concierge how-it-works steps (exact: the hero h1 contains the same phrase)
-    await expect(page.getByRole("heading", { name: "Ütle, mida vajad", exact: true })).toBeVisible();
-    // 5 — trust strip fixed promises
-    await expect(page.getByText("Kliendile tasuta").first()).toBeVisible();
-    await expect(page.getByText(/pakkumised tavaliselt 24 tunniga/i).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: et["home.concierge.step1.title"], exact: true })).toBeVisible();
+    // 5 — trust strip. The "offers within 24 hours" chip is gone on purpose
+    // (2026-08: an unenforceable promise); it says when the request goes out.
+    await expect(page.getByText(et["home.trust.free"]).first()).toBeVisible();
+    await expect(page.getByText(et["home.trust.response"]).first()).toBeVisible();
     // 6 — FAQ + closing CTA
-    await expect(page.getByRole("heading", { name: /valmis alustama/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: et["home.closing.title"] })).toBeVisible();
   });
 
   test("service-grid category card deep-links browse + get offers", async ({ page }) => {
     await stubAll(page);
     await page.goto("/et");
-    const grid = page.getByRole("heading", { name: /kõik kolimiseks vajalik/i }).locator("xpath=ancestor::section");
-    await expect(grid.getByRole("link", { name: "Sirvi" }).first()).toHaveAttribute("href", /\/et\/search\?type=warehouse/);
-    await grid.getByRole("link", { name: /küsi pakkumist/i }).first().click();
+    const grid = page.getByRole("heading", { name: et["home.services.title"] }).locator("xpath=ancestor::section");
+    await expect(grid.getByRole("link", { name: et["home.services.browse"], exact: true }).first()).toHaveAttribute("href", /\/et\/search\?type=warehouse/);
+    await grid.getByRole("link", { name: et["nav.getOffers"] }).first().click();
     await page.waitForURL(/\/et\/request\?category=warehouse/, { timeout: 10000 });
   });
 

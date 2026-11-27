@@ -35,7 +35,9 @@ jobs:
           CI: "true"
 
       - name: Upload Playwright report
-        if: failure()
+        # Also on cancelled: a run that hits timeout-minutes is cancelled, not
+        # failed, and its report is the only full list of what went wrong.
+        if: failure() || cancelled()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
@@ -77,7 +79,7 @@ jobs:
           CI: "true"
 
       - name: Upload head-gate report
-        if: failure()
+        if: failure() || cancelled()
         uses: actions/upload-artifact@v4
         with:
           name: head-gate-report

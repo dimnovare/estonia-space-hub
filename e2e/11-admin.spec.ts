@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { stubCommon, seedAuth, stubLoggedOut, adminUser } from './fixtures';
+import { stubCommon, seedAuth, stubLoggedOut, adminUser, api } from './fixtures';
 
 /**
  * 11 — Admin panel smoke tests
@@ -90,26 +90,26 @@ const json = (route: import('@playwright/test').Route, body: unknown, status = 2
 /** Admin-specific endpoints layered on top of stubCommon (which handles /locations & /suppliers). */
 async function stubAdmin(page: Page): Promise<void> {
   // GET /admin/suppliers — supplierService.getAll() (unwrapPaginated handles a bare array).
-  await page.route(/\/admin\/suppliers(\b|\?|$)/, (r) => json(r, [FAKE_SUPPLIER]));
+  await page.route(api(/\/admin\/suppliers(\b|\?|$)/), (r) => json(r, [FAKE_SUPPLIER]));
 
   // Dashboard widgets.
-  await page.route(/\/admin\/dashboard\/stats/, (r) =>
+  await page.route(api(/\/admin\/dashboard\/stats/), (r) =>
     json(r, { totalListings: 1, totalOrders: 1, totalUsers: 3, totalRevenue: 49, recentInquiries: [] }),
   );
-  await page.route(/\/admin\/dashboard\/revenue/, (r) =>
+  await page.route(api(/\/admin\/dashboard\/revenue/), (r) =>
     json(r, { period: '2026-06', totalBookings: 1, totalGmv: 49, subscriptionMrr: 0, supplierBreakdown: [] }),
   );
 
   // Misc admin list endpoints — must NOT be bare arrays where the UI expects {data,total}.
-  await page.route(/\/admin\/users/, (r) => json(r, { data: [], total: 0 }));
-  await page.route(/\/admin\/audit-log/, (r) => json(r, { data: [], total: 0 }));
-  await page.route(/\/admin\/audit/, (r) => json(r, { data: [], total: 0 }));
+  await page.route(api(/\/admin\/users/), (r) => json(r, { data: [], total: 0 }));
+  await page.route(api(/\/admin\/audit-log/), (r) => json(r, { data: [], total: 0 }));
+  await page.route(api(/\/admin\/audit/), (r) => json(r, { data: [], total: 0 }));
 
   // Orders list (AdminOrders / useOrders).
-  await page.route(/\/orders(\b|\?|$)/, (r) => json(r, [FAKE_ORDER]));
+  await page.route(api(/\/orders(\b|\?|$)/), (r) => json(r, [FAKE_ORDER]));
 
   // Locations list — override stubCommon's empty array with our fake location.
-  await page.route(/\/locations(\b|\?|$)/, (r) => {
+  await page.route(api(/\/locations(\b|\?|$)/), (r) => {
     const path = new URL(r.request().url()).pathname;
     if (/\/locations\/cities/.test(path)) return json(r, [{ city: 'Tallinn', country: 'EE' }]);
     return json(r, [FAKE_LOCATION]);

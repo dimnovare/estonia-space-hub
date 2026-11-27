@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { apiListing, stubCommon, stubListings, stubLoggedOut } from "./fixtures";
+import { apiListing, stubCommon, stubListings, stubLoggedOut, api } from "./fixtures";
 
 /**
  * 08 — Listing detail page (/et/warehouse/:id).
@@ -75,7 +75,7 @@ test.describe("Listing detail page", () => {
     await stubCommon(page);
     await stubListings(page, { items: [LISTING] });
     // Override the single-listing route for a missing id with a 404.
-    await page.route(/\/listings\/missing-id($|\?)/, (route) =>
+    await page.route(api(/\/listings\/missing-id($|\?)/), (route) =>
       route.fulfill({ status: 404, contentType: "application/json", body: '{"message":"Not found"}' }),
     );
     await page.goto("/et/warehouse/missing-id");

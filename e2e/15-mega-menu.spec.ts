@@ -1,14 +1,16 @@
 import { test, expect } from "@playwright/test";
+import et from "../src/i18n/locales/et";
 import { stubCommon, stubListings, stubLoggedOut } from "./fixtures";
 
 /**
  * 15 — Navbar Services mega-menu (overhaul spec §2)
  *
  * Desktop top level: Services ▾ · How it works · [lang/auth] · CTA "Get offers".
- * The panel lists the canonical service categories (7 with all verticals on;
- * stubCommon defaults hide moving/trailer → 5) linking to /search?type={slug},
- * plus a CTA row into /request. A11y: aria-expanded/aria-controls, Escape
- * closes and returns focus to the trigger.
+ * The panel lists the browse catalogue (5 with all verticals on; stubCommon
+ * defaults hide moving/trailer → 3) linking to /search?type={slug}, plus a CTA
+ * row into /request. Packing and insurance left every public surface on
+ * 2026-08-08. A11y: aria-expanded/aria-controls, Escape closes and returns
+ * focus to the trigger.
  */
 
 async function stubAll(page: import("@playwright/test").Page, settings?: Record<string, unknown>) {
@@ -30,12 +32,13 @@ test.describe("Services mega-menu (desktop)", () => {
 
     const panel = page.locator("#services-mega-menu");
     await expect(panel).toBeVisible();
-    // All 7 canonical categories when both toggled verticals are on.
-    for (const label of [
-      "Hoiustamine", "Kolimine", "Haagise rent", "Koristus",
-      "Pakkimine", "Kaubiku rent", "Kindlustus",
-    ]) {
-      await expect(panel.getByRole("link", { name: new RegExp(label, "i") })).toBeVisible();
+    // Every browsable category when both toggled verticals are on.
+    for (const slug of ["warehouse", "moving", "trailer", "cleaning", "vanrental"]) {
+      await expect(panel.getByRole("link", { name: new RegExp(et[`serviceType.${slug}`], "i") })).toBeVisible();
+    }
+    // Retired 2026-08-08: still labels old leads, never offered in the nav.
+    for (const slug of ["packing", "insurance"]) {
+      await expect(panel.getByRole("link", { name: new RegExp(et[`serviceType.${slug}`], "i") })).toHaveCount(0);
     }
   });
 
